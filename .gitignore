@@ -1,0 +1,8 @@
+*.so
+*.o
+*.swo
+*.swp
+*.swn
+*.pyc
+
+SparseConvolutionEngine/
