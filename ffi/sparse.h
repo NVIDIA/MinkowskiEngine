@@ -29,7 +29,21 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
                          long dilation, long region_type,
                          THLongTensor *th_neighbor, long D, void **m);
 
+long convolution_transpose_forward(THFloatTensor *th_in_feat,
+                                   THFloatTensor *th_out_feat,
+                                   THFloatTensor *th_kernel,
+                                   THFloatTensor *th_bias, long pixel_dist,
+                                   long stride, long kernel_size, long dilation,
+                                   long region_type, THLongTensor *th_neighbor,
+                                   long D, void **m);
+
 long convolution_backward(
+    THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
+    THFloatTensor *th_grad_out_feat, THFloatTensor *th_kernel,
+    THFloatTensor *th_grad_kernel, THFloatTensor *th_grad_bias, long pixel_dist,
+    long stride, long kernel_size, long dilation, long D, void **m);
+
+long convolution_transpose_backward(
     THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
     THFloatTensor *th_grad_out_feat, THFloatTensor *th_kernel,
     THFloatTensor *th_grad_kernel, THFloatTensor *th_grad_bias, long pixel_dist,
@@ -42,7 +56,19 @@ long convolution_forward_gpu(THCudaTensor *th_in_feat,
                              long region_type, THLongTensor *th_neighbor,
                              long D, void **m);
 
+long convolution_transpose_forward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
+    THCudaTensor *th_kernel, THCudaTensor *th_bias, long pixel_dist,
+    long stride, long kernel_size, long dilation, long region_type,
+    THLongTensor *th_neighbor, long D, void **m);
+
 long convolution_backward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
+    THCudaTensor *th_grad_out_feat, THCudaTensor *th_kernel,
+    THCudaTensor *th_grad_kernel, THCudaTensor *th_grad_bias, long pixel_dist,
+    long stride, long kernel_size, long dilation, long D, void **m);
+
+long convolution_transpose_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_kernel,
     THCudaTensor *th_grad_kernel, THCudaTensor *th_grad_bias, long pixel_dist,

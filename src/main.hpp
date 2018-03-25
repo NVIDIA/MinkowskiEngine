@@ -3,6 +3,7 @@
 #include <array>
 #include <climits>
 #include <map>
+#include <stdexcept>
 #include <tuple>
 #include <unordered_map>
 #include <vector>
@@ -16,8 +17,8 @@
 template <uint8_t D> using Coord = std::array<int64_t, D + 1>;
 
 // Key for InOutMapping
-// (pixeldistance, stride, kernelsize, dilation)
-using InOutKey = std::array<int64_t, 4>;
+// (pixel distance, stride, kernel size, dilation, is_transpose)
+using InOutKey = std::array<int64_t, 5>;
 
 template <typename T> std::size_t hash_vec(T p) {
   uint64_t hash = UINT64_C(0x9e3779b97f4a7c15);
@@ -108,7 +109,7 @@ long t_initialize_coords(const int64_t *coords, int64_t nrows,
 
 template <uint8_t D>
 long t_initialize_out_coords(int64_t pixel_dist, int64_t stride,
-                             void **metadata);
+                             bool is_transpose, void **metadata);
 
 template <uint8_t D>
 long t_initialize_coords_with_duplicates(const int64_t *coords, int64_t nrows,
@@ -139,12 +140,28 @@ long t_conv_fw(const float *p_in_feat, int64_t in_nchannel, float *p_out_feat,
                void **metadata);
 
 template <uint8_t D>
+long t_conv_tr_fw(const float *p_in_feat, int64_t in_nchannel,
+                  float *p_out_feat, int64_t out_nchannel,
+                  const float *p_kernel, const float *p_bias, int64_t out_nrows,
+                  int64_t pixel_dist, int64_t out_stride, int64_t kernel_size,
+                  int64_t dilation, int64_t region_type, int64_t *p_offset,
+                  int64_t n_offset, void **metadata);
+
+template <uint8_t D>
 long t_conv_bw(const float *p_in_feat, float *p_grad_in_feat,
                int64_t in_nchannel, float *p_grad_out_feat,
                int64_t out_nchannel, float *p_kernel, float *p_grad_kernel,
                float *p_grad_bias, int64_t out_nrows, int64_t pixel_dist,
                int64_t stride, int64_t kernel_size, int64_t dilation,
                void **metadata);
+
+template <uint8_t D>
+long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
+                  int64_t in_nchannel, float *p_grad_out_feat,
+                  int64_t out_nchannel, float *p_kernel, float *p_grad_kernel,
+                  float *p_grad_bias, int64_t out_nrows, int64_t pixel_dist,
+                  int64_t stride, int64_t kernel_size, int64_t dilation,
+                  void **metadata);
 
 template <uint8_t D>
 long t_conv_fw_gpu(const float *d_in_feat, int64_t in_nchannel,
@@ -155,10 +172,28 @@ long t_conv_fw_gpu(const float *d_in_feat, int64_t in_nchannel,
                    cudaStream_t stream, void **metadata);
 
 template <uint8_t D>
+long t_conv_tr_fw_gpu(const float *d_in_feat, int64_t in_nchannel,
+                      float *d_out_feat, int64_t out_nchannel,
+                      const float *d_kernel, const float *d_bias,
+                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                      int64_t kernel_size, int64_t dilation,
+                      int64_t region_type, cudaStream_t stream,
+                      void **metadata);
+
+template <uint8_t D>
 long t_conv_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
                    int64_t in_nchannel, float *d_grad_out_feat,
                    int64_t out_nchannel, float *d_kernel, float *d_grad_kernel,
                    float *d_grad_bias, int64_t out_nrows, int64_t pixel_dist,
                    int64_t stride, int64_t kernel_size, int64_t dilation,
                    cudaStream_t stream, void **metadata);
+
+template <uint8_t D>
+long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
+                      int64_t in_nchannel, float *d_grad_out_feat,
+                      int64_t out_nchannel, float *d_kernel,
+                      float *d_grad_kernel, float *d_grad_bias,
+                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                      int64_t kernel_size, int64_t dilation,
+                      cudaStream_t stream, void **metadata);
 #endif

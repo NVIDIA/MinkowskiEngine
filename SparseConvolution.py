@@ -12,21 +12,21 @@ NULL = ffi.NULL
 
 
 class RegionType(Enum):
-  """
-  Define the kernel region type
-  """
-  HYPERCUBE = 0, 'HYPERCUBE'
-  HYPERCROSS = 1, 'HYPERCROSS'
-  CUSTOM = 2, 'CUSTOM'
+    """
+    Define the kernel region type
+    """
+    HYPERCUBE = 0, 'HYPERCUBE'
+    HYPERCROSS = 1, 'HYPERCROSS'
+    CUSTOM = 2, 'CUSTOM'
 
-  def __new__(cls, value, name):
-      member = object.__new__(cls)
-      member._value_ = value
-      member.fullname = name
-      return member
+    def __new__(cls, value, name):
+        member = object.__new__(cls)
+        member._value_ = value
+        member.fullname = name
+        return member
 
-  def __int__(self):
-      return self.value
+    def __int__(self):
+        return self.value
 
 
 class Metadata(object):
@@ -60,6 +60,55 @@ class SparseConvolutionFunction(Function):
         self.conv_bw_cpu = SCE.convolution_backward
         self.conv_fw_gpu = SCE.convolution_forward_gpu
         self.conv_bw_gpu = SCE.convolution_backward_gpu
+
+    def forward(ctx, *args):
+        input_features, kernel = args[0], args[1]
+        bias = args[2] if ctx.has_bias else NULL
+
+        # bias if bias is not None else NULL,
+        ctx.in_feat = input_features
+        ctx.out_feat = input_features.new()
+        ctx.kernel = kernel
+        fw_fn = ctx.conv_fw_gpu if input_features.is_cuda else ctx.conv_fw_cpu
+        ctx.bias = NULL if bias is None else bias
+        fw_fn(ctx.in_feat, ctx.out_feat, kernel, bias, ctx.pixel_dist,
+              ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
+              ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
+
+        return ctx.out_feat
+
+    def backward(ctx, grad_out_feat):
+        grad_in_feat = grad_out_feat.new()
+        grad_kernel = grad_out_feat.new()
+        grad_bias = grad_out_feat.new() if ctx.has_bias else NULL
+        bw_fn = ctx.conv_bw_gpu if grad_out_feat.is_cuda else ctx.conv_bw_cpu
+        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
+              grad_kernel, grad_bias, ctx.pixel_dist, ctx.stride,
+              ctx.kernel_size, ctx.dilation, ctx.dimension, ctx.metadata.ffi)
+        if ctx.has_bias:
+            return grad_in_feat, grad_kernel, grad_bias
+        else:
+            return grad_in_feat, grad_kernel
+
+
+class SparseConvolutionTransposeFunction(Function):
+    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
+                 region_offset, has_bias, dimension, metadata):
+        super(SparseConvolutionTransposeFunction, self).__init__()
+        assert isinstance(region_type, RegionType)
+        self.pixel_dist = pixel_dist
+        self.stride = stride
+        self.kernel_size = kernel_size
+        self.dilation = dilation
+        self.region_type = int(region_type)
+        self.has_bias = has_bias
+        self.dimension = dimension
+        self.metadata = metadata
+        self.region_offset = region_offset
+        self.conv_fw_cpu = SCE.convolution_transpose_forward
+        self.conv_bw_cpu = SCE.convolution_transpose_backward
+        self.conv_fw_gpu = SCE.convolution_transpose_forward_gpu
+        self.conv_bw_gpu = SCE.convolution_transpose_backward_gpu
 
     def forward(ctx, *args):
         input_features, kernel = args[0], args[1]
@@ -126,7 +175,7 @@ class SparseConvolution(Module):
             assert region_offset.size(1) == dimension
             kernel_volume = region_offset.size(0)
         else:
-          raise NotImplementedError()
+            raise NotImplementedError()
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -135,6 +184,7 @@ class SparseConvolution(Module):
         self.stride = stride
         self.dilation = dilation
         self.region_type = region_type
+        self.region_offset = region_offset
         std = (2.0 / in_channels / kernel_volume)**0.5
         Tensor = torch.FloatTensor
         if kernel_size > 1:
@@ -144,12 +194,11 @@ class SparseConvolution(Module):
         self.kernel = Parameter(Tensor(*kernel_shape).normal_(0, std))
         # Tensor(kernel_volume, in_channels, out_channels).zero_())
         self.has_bias = has_bias
-        self.bias = Parameter(Tensor(
-            1, out_channels).zero_()) if has_bias else None
-        self.conv = SparseConvolutionFunction(pixel_dist, stride, kernel_size,
-                                              dilation, region_type,
-                                              region_offset, has_bias,
-                                              dimension, metadata)
+        self.bias = Parameter(
+            Tensor(1, out_channels).zero_()) if has_bias else None
+        self.conv = SparseConvolutionFunction(
+            pixel_dist, stride, kernel_size, dilation, region_type,
+            region_offset, has_bias, dimension, metadata)
 
     def forward(self, input):
         if self.kernel_size == 1 and self.stride == 1:
@@ -170,3 +219,25 @@ class SparseConvolution(Module):
             self.in_channels, self.out_channels, self.pixel_dist,
             self.kernel_size, self.stride, self.dilation)
         return self.__class__.__name__ + s
+
+
+class SparseConvolutionTranspose(SparseConvolution):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 pixel_dist,
+                 kernel_size,
+                 stride,
+                 dilation=1,
+                 region_type=RegionType.HYPERCUBE,
+                 has_bias=True,
+                 region_offset=None,
+                 dimension=None,
+                 metadata=None):
+        super(SparseConvolutionTranspose, self).__init__(
+            in_channels, out_channels, pixel_dist, kernel_size, stride,
+            dilation, region_type, has_bias, region_offset, dimension,
+            metadata)
+        self.conv = SparseConvolutionTransposeFunction(
+            pixel_dist, stride, kernel_size, dilation, region_type,
+            self.region_offset, has_bias, dimension, metadata)
