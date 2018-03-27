@@ -85,10 +85,9 @@ void CreateDuplicateIndexMap(const CoordIndexMap<D> coord_map,
 */
 template <uint8_t D>
 CoordIndexMap<D> CreateOutputCoordIndexMap(const CoordIndexMap<D> in_coord_map,
-                                           int64_t pixel_dist, int64_t stride,
-                                           bool is_transpose) {
+                                           int64_t pixel_dist, int64_t stride) {
   CoordIndexMap<D> out_coord_map;
-  int new_pixel_dist = is_transpose ? (pixel_dist / stride) : (pixel_dist * stride);
+  int new_pixel_dist = pixel_dist * stride;
   if (new_pixel_dist < 1) {
     throw std::invalid_argument("Invalid pixel distance");
   }
@@ -119,7 +118,17 @@ CreateInOutPerKernel(const CoordIndexMap<D> in_coord_map,
                      const CoordIndexMap<D> out_coord_map, int64_t pixel_dist,
                      int64_t kernel_size, int64_t dilation, int64_t region_type,
                      int64_t *p_offset, int64_t n_offset) {
-  int kernel_volume = pow(kernel_size, D), kernel_ind = 0;
+  int kernel_volume, kernel_ind = 0;
+  if (region_type == 0) {
+    kernel_volume = pow(kernel_size, D);
+  } else if (region_type == 1) {
+    kernel_volume = 2 * kernel_size * D + 1;
+  } else if (region_type == 2) {
+    kernel_volume = n_offset;
+  } else {
+    throw std::invalid_argument("Invalid region type");
+  }
+
   InOutMapPerKernel in_map(kernel_volume), out_map(kernel_volume);
   for (auto const out_coord_iter : out_coord_map.map) {
     auto out_coord = out_coord_iter.first;
@@ -148,7 +157,17 @@ std::tuple<InOutMapPerKernel, InOutMapPerKernel> CreateInOutPerKernelTranspose(
     const CoordIndexMap<D> in_coord_map, const CoordIndexMap<D> out_coord_map,
     int64_t pixel_dist, int64_t kernel_size, int64_t dilation,
     int64_t region_type, int64_t *p_offset, int64_t n_offset) {
-  int kernel_volume = pow(kernel_size, D), kernel_ind = 0;
+  int kernel_volume, kernel_ind = 0;
+  if (region_type == 0) {
+    kernel_volume = pow(kernel_size, D);
+  } else if (region_type == 1) {
+    kernel_volume = 2 * kernel_size * D + 1;
+  } else if (region_type == 2) {
+    kernel_volume = n_offset;
+  } else {
+    throw std::invalid_argument("Invalid region type");
+  }
+
   InOutMapPerKernel in_map(kernel_volume), out_map(kernel_volume);
   for (auto const in_coord_iter : in_coord_map.map) {
     auto in_coord = in_coord_iter.first;
@@ -231,7 +250,8 @@ template <uint8_t D>
 long t_initialize_out_coords(int64_t pixel_dist, int64_t stride,
                              bool is_transpose, void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
-  int out_pixel_dist = is_transpose ? (pixel_dist / stride) : (pixel_dist * stride);
+  int out_pixel_dist =
+      is_transpose ? (pixel_dist / stride) : (pixel_dist * stride);
   if (out_pixel_dist < 1) {
     throw std::invalid_argument("Invalid pixel distance");
   }
@@ -244,7 +264,7 @@ long t_initialize_out_coords(int64_t pixel_dist, int64_t stride,
 
   if (stride > 1 && coord2inds->find(out_pixel_dist) == coord2inds->end()) {
     (*coord2inds)[out_pixel_dist] = CreateOutputCoordIndexMap<D>(
-        (*coord2inds)[pixel_dist], pixel_dist, stride, is_transpose);
+        (*coord2inds)[pixel_dist], pixel_dist, stride);
   }
   return 1;
 }
@@ -339,7 +359,7 @@ long t_conv_fw(const float *p_in_feat, int64_t in_nchannel, float *p_out_feat,
   if (stride > 1 &&
       p_coord2inds->find(pixel_dist * stride) == p_coord2inds->end())
     (*p_coord2inds)[pixel_dist * stride] = CreateOutputCoordIndexMap<D>(
-        (*p_coord2inds)[pixel_dist], pixel_dist, stride, false);
+        (*p_coord2inds)[pixel_dist], pixel_dist, stride);
 
   // Create in to out convolution mapping if it doesn't exist
   InOutKey key = {pixel_dist, stride, kernel_size, dilation, false};
@@ -390,9 +410,10 @@ long t_conv_tr_fw(const float *p_in_feat, int64_t in_nchannel,
   out_pixel_dist = pixel_dist / out_stride;
 
   if (out_stride > 1 &&
-      p_coord2inds->find(out_pixel_dist) == p_coord2inds->end())
-    (*p_coord2inds)[out_pixel_dist] = CreateOutputCoordIndexMap<D>(
-        (*p_coord2inds)[pixel_dist], pixel_dist, out_stride, true);
+      p_coord2inds->find(out_pixel_dist) == p_coord2inds->end()) {
+    std::cerr << "Coordinate map not defined for pixel dist.\n";
+    return -1;
+  }
 
   // Create in to out convolution mapping if it doesn't exist
   InOutKey key = {pixel_dist, out_stride, kernel_size, dilation, true};
@@ -451,7 +472,7 @@ long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
                   int64_t in_nchannel, float *p_grad_out_feat,
                   int64_t out_nchannel, float *p_kernel, float *p_grad_kernel,
                   float *p_grad_bias, int64_t out_nrows, int64_t pixel_dist,
-                  int64_t stride, int64_t kernel_size, int64_t dilation,
+                  int64_t out_stride, int64_t kernel_size, int64_t dilation,
                   void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
 
@@ -464,10 +485,10 @@ long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
   if (p_coord2inds->find(pixel_dist) == p_coord2inds->end())
     return -1;
 
-  if (p_coord2inds->find(pixel_dist / stride) == p_coord2inds->end())
+  if (p_coord2inds->find(pixel_dist / out_stride) == p_coord2inds->end())
     return -1;
 
-  InOutKey key = {pixel_dist, stride, kernel_size, dilation, true};
+  InOutKey key = {pixel_dist, out_stride, kernel_size, dilation, true};
   if (p_in_maps->find(key) == p_in_maps->end())
     return -1;
 
@@ -503,7 +524,7 @@ long t_conv_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
   if (stride > 1 &&
       p_coord2inds->find(pixel_dist * stride) == p_coord2inds->end())
     (*p_coord2inds)[pixel_dist * stride] = CreateOutputCoordIndexMap<D>(
-        (*p_coord2inds)[pixel_dist], pixel_dist, stride, false);
+        (*p_coord2inds)[pixel_dist], pixel_dist, stride);
 
   // Create in to out convolution mapping if it doesn't exist
   InOutKey key = {pixel_dist, stride, kernel_size, dilation, false};
@@ -528,7 +549,7 @@ template <uint8_t D>
 long t_conv_tr_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
                       float *p_out_feat, int64_t out_nchannel,
                       const float *p_kernel, const float *p_bias,
-                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                      int64_t out_nrows, int64_t pixel_dist, int64_t out_stride,
                       int64_t kernel_size, int64_t dilation,
                       int64_t region_type, int64_t *p_offset, int64_t n_offset,
                       cudaStream_t stream, void **metadata) {
@@ -547,24 +568,26 @@ long t_conv_tr_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
   }
 
   // Create output coordinate map if it doesn't exist
-  if (stride > 1 && pixel_dist % stride != 0) {
+  if (out_stride > 1 && pixel_dist % out_stride != 0) {
     std::cerr << "Current pixel dist is not divisibe by out_stride.\n";
     return -1;
   }
 
-  out_pixel_dist = pixel_dist / stride;
+  out_pixel_dist = pixel_dist / out_stride;
 
   // Create output coordinate map if it doesn't exist
-  if (stride > 1 && p_coord2inds->find(out_pixel_dist) == p_coord2inds->end())
-    (*p_coord2inds)[pixel_dist * stride] = CreateOutputCoordIndexMap<D>(
-        (*p_coord2inds)[pixel_dist], pixel_dist, stride, true);
+  if (out_stride > 1 &&
+      p_coord2inds->find(out_pixel_dist) == p_coord2inds->end()) {
+    std::cerr << "Coordinate map not defined for pixel dist.\n";
+    return -1;
+  }
 
   // Create in to out convolution mapping if it doesn't exist
-  InOutKey key = {pixel_dist, stride, kernel_size, dilation, true};
+  InOutKey key = {pixel_dist, out_stride, kernel_size, dilation, true};
   if (p_in_maps->find(key) == p_in_maps->end()) {
     auto in_out_tuple = CreateInOutPerKernelTranspose<D>(
         (*p_coord2inds)[pixel_dist], (*p_coord2inds)[out_pixel_dist],
-        pixel_dist, kernel_size, dilation, region_type, p_offset, n_offset);
+        out_pixel_dist, kernel_size, dilation, region_type, p_offset, n_offset);
     (*p_in_maps)[key] = std::get<0>(in_out_tuple);
     (*p_out_maps)[key] = std::get<1>(in_out_tuple);
   }
@@ -618,7 +641,7 @@ long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
                       int64_t in_nchannel, float *d_grad_out_feat,
                       int64_t out_nchannel, float *d_kernel,
                       float *d_grad_kernel, float *d_grad_bias,
-                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                      int64_t out_nrows, int64_t pixel_dist, int64_t out_stride,
                       int64_t kernel_size, int64_t dilation,
                       cudaStream_t stream, void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
@@ -632,11 +655,11 @@ long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
   if (p_coord2inds->find(pixel_dist) == p_coord2inds->end())
     return -1;
 
-  if (p_coord2inds->find(pixel_dist / stride) == p_coord2inds->end())
+  if (p_coord2inds->find(pixel_dist / out_stride) == p_coord2inds->end())
     return -1;
 
   // Create in to out convolution mapping if it doesn't exist
-  InOutKey key = {pixel_dist, stride, kernel_size, dilation, true};
+  InOutKey key = {pixel_dist, out_stride, kernel_size, dilation, true};
   if (p_in_maps->find(key) == p_in_maps->end())
     return -1;
 
