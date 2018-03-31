@@ -155,7 +155,7 @@ CreateInOutPerKernel(const CoordIndexMap<D> in_coord_map,
 template <uint8_t D>
 std::tuple<InOutMapPerKernel, InOutMapPerKernel> CreateInOutPerKernelTranspose(
     const CoordIndexMap<D> in_coord_map, const CoordIndexMap<D> out_coord_map,
-    int64_t pixel_dist, int64_t kernel_size, int64_t dilation,
+    int64_t out_pixel_dist, int64_t kernel_size, int64_t dilation,
     int64_t region_type, int64_t *p_offset, int64_t n_offset) {
   int kernel_volume, kernel_ind = 0;
   if (region_type == 0) {
@@ -172,7 +172,7 @@ std::tuple<InOutMapPerKernel, InOutMapPerKernel> CreateInOutPerKernelTranspose(
   for (auto const in_coord_iter : in_coord_map.map) {
     auto in_coord = in_coord_iter.first;
     auto kernel_region =
-        KernelRegion<D>(in_coord, pixel_dist, kernel_size, dilation,
+        KernelRegion<D>(in_coord, out_pixel_dist, kernel_size, dilation,
                         region_type, p_offset, n_offset);
     kernel_ind = 0;
     for (auto point : kernel_region) {
