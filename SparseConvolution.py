@@ -65,6 +65,7 @@ class SparseConvolutionFunction(Function):
 
     def forward(ctx, *args):
         input_features, kernel = args[0], args[1]
+        assert input_features.shape[1] == kernel.shape[1]
         bias = args[2] if ctx.has_bias else NULL
 
         # bias if bias is not None else NULL,
@@ -114,6 +115,7 @@ class SparseConvolutionTransposeFunction(Function):
 
     def forward(ctx, *args):
         input_features, kernel = args[0], args[1]
+        assert input_features.shape[1] == kernel.shape[1]
         bias = args[2] if ctx.has_bias else NULL
 
         # bias if bias is not None else NULL,
