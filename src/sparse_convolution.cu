@@ -44,28 +44,13 @@ __global__ void add_mapped_output_tr(const int n, const Dtype *in_feat,
 template <typename Dtype>
 void SparseConvolutionForwardGPU(
     const Dtype *d_in_feat, int in_nchannel, Dtype *d_out_feat,
-    int out_nchannel, const Dtype *d_kernel, const Dtype *d_bias,
+    int out_nchannel, const Dtype *d_kernel,
     const std::vector<std::vector<int64_t>> in_map,
     const std::vector<std::vector<int64_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream) {
   int kernel_volume, n_active_in_volume, num_kernels;
   thrust::device_vector<Dtype> d_input_buffer, d_output_buffer;
   thrust::device_vector<int64_t> d_in_map, d_out_map;
-
-  // Add bias if not null
-  if (d_bias) {
-    thrust::device_vector<Dtype> bias_multiplier(out_nrows);
-    thrust::fill(bias_multiplier.begin(), bias_multiplier.end(), 1);
-    gpu_gemm<Dtype>(cuhandle, CblasNoTrans, CblasNoTrans,
-                    out_nrows,                                     // M
-                    out_nchannel,                                  // N
-                    1,                                             // K
-                    (Dtype)1.,                                     // alpha
-                    thrust::raw_pointer_cast(&bias_multiplier[0]), // A
-                    d_bias,                                        // B
-                    (Dtype)0.,                                     // beta
-                    d_out_feat);                                   // C
-  }
 
   // Copy the in_map, out_map to GPU
   // First im2col, gather all indices of in2out
@@ -115,7 +100,7 @@ void SparseConvolutionForwardGPU(
 
 template void SparseConvolutionForwardGPU<float>(
     const float *d_in_feat, int in_nchannel, float *d_out_feat,
-    int out_nchannel, const float *d_kernel, const float *d_bias,
+    int out_nchannel, const float *d_kernel,
     const std::vector<std::vector<int64_t>> in_map,
     const std::vector<std::vector<int64_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
@@ -124,8 +109,7 @@ template <typename Dtype>
 void SparseConvolutionBackwardGPU(
     const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nchannel,
     const Dtype *d_grad_out_feat, int out_nchannel, const Dtype *d_kernel,
-    Dtype *d_grad_kernel, Dtype *d_grad_bias,
-    const std::vector<std::vector<int64_t>> in_map,
+    Dtype *d_grad_kernel, const std::vector<std::vector<int64_t>> in_map,
     const std::vector<std::vector<int64_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream) {
   int kernel_volume, n_active_in_volume, num_kernels;
@@ -194,28 +178,12 @@ void SparseConvolutionBackwardGPU(
                     &d_grad_kernel[k * in_nchannel * out_nchannel] // C
                     );
   }
-
-  // Add bias if not null
-  if (d_grad_bias) {
-    thrust::device_vector<Dtype> bias_multiplier(out_nrows);
-    thrust::fill(bias_multiplier.begin(), bias_multiplier.end(), 1);
-    gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasTrans,
-                    out_nrows,                                     // M
-                    1,                                             // N
-                    out_nchannel,                                  // K
-                    (Dtype)1.,                                     // alpha
-                    d_grad_out_feat,                               // B
-                    thrust::raw_pointer_cast(&bias_multiplier[0]), // A
-                    (Dtype)1.,                                     // beta
-                    d_grad_bias);                                  // C
-  }
 }
 
 template void SparseConvolutionBackwardGPU<float>(
     const float *d_in_feat, float *d_grad_in_feat, int in_nchannel,
     const float *d_grad_out_feat, int out_nchannel, const float *d_kernel,
-    float *p_grad_kernel, float *d_grad_bias,
-    const std::vector<std::vector<int64_t>> in_map,
+    float *p_grad_kernel, const std::vector<std::vector<int64_t>> in_map,
     const std::vector<std::vector<int64_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
 

@@ -46,7 +46,7 @@ class Metadata(object):
 
 class SparseConvolutionFunction(Function):
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, has_bias, dimension, metadata):
+                 region_offset, dimension, metadata):
         super(SparseConvolutionFunction, self).__init__()
         assert isinstance(region_type, RegionType)
         self.pixel_dist = pixel_dist
@@ -54,7 +54,6 @@ class SparseConvolutionFunction(Function):
         self.kernel_size = kernel_size
         self.dilation = dilation
         self.region_type = int(region_type)
-        self.has_bias = has_bias
         self.dimension = dimension
         self.metadata = metadata
         self.region_offset = region_offset
@@ -63,19 +62,15 @@ class SparseConvolutionFunction(Function):
         self.conv_fw_gpu = SCE.convolution_forward_gpu
         self.conv_bw_gpu = SCE.convolution_backward_gpu
 
-    def forward(ctx, *args):
-        input_features, kernel = args[0], args[1]
+    def forward(ctx, input_features, kernel):
         assert input_features.shape[1] == kernel.shape[1]
-        bias = args[2] if ctx.has_bias else NULL
 
-        # bias if bias is not None else NULL,
         ctx.in_feat = input_features
         ctx.out_feat = input_features.new()
         ctx.kernel = kernel
         fw_fn = ctx.conv_fw_gpu if input_features.is_cuda else ctx.conv_fw_cpu
-        ctx.bias = NULL if bias is None else bias
-        fw_fn(ctx.in_feat, ctx.out_feat, kernel, bias, ctx.pixel_dist,
-              ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
+        fw_fn(ctx.in_feat, ctx.out_feat, kernel, ctx.pixel_dist, ctx.stride,
+              ctx.kernel_size, ctx.dilation, ctx.region_type,
               ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
 
         return ctx.out_feat
@@ -83,20 +78,16 @@ class SparseConvolutionFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
-        grad_bias = grad_out_feat.new() if ctx.has_bias else NULL
         bw_fn = ctx.conv_bw_gpu if grad_out_feat.is_cuda else ctx.conv_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
-              grad_kernel, grad_bias, ctx.pixel_dist, ctx.stride,
-              ctx.kernel_size, ctx.dilation, ctx.dimension, ctx.metadata.ffi)
-        if ctx.has_bias:
-            return grad_in_feat, grad_kernel, grad_bias
-        else:
-            return grad_in_feat, grad_kernel
+              grad_kernel, ctx.pixel_dist, ctx.stride, ctx.kernel_size,
+              ctx.dilation, ctx.dimension, ctx.metadata.ffi)
+        return grad_in_feat, grad_kernel
 
 
 class SparseConvolutionTransposeFunction(Function):
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, has_bias, dimension, metadata):
+                 region_offset, dimension, metadata):
         super(SparseConvolutionTransposeFunction, self).__init__()
         assert isinstance(region_type, RegionType)
         self.pixel_dist = pixel_dist
@@ -104,7 +95,6 @@ class SparseConvolutionTransposeFunction(Function):
         self.kernel_size = kernel_size
         self.dilation = dilation
         self.region_type = int(region_type)
-        self.has_bias = has_bias
         self.dimension = dimension
         self.metadata = metadata
         self.region_offset = region_offset
@@ -113,19 +103,15 @@ class SparseConvolutionTransposeFunction(Function):
         self.conv_fw_gpu = SCE.convolution_transpose_forward_gpu
         self.conv_bw_gpu = SCE.convolution_transpose_backward_gpu
 
-    def forward(ctx, *args):
-        input_features, kernel = args[0], args[1]
+    def forward(ctx, input_features, kernel):
         assert input_features.shape[1] == kernel.shape[1]
-        bias = args[2] if ctx.has_bias else NULL
 
-        # bias if bias is not None else NULL,
         ctx.in_feat = input_features
         ctx.out_feat = input_features.new()
         ctx.kernel = kernel
         fw_fn = ctx.conv_fw_gpu if input_features.is_cuda else ctx.conv_fw_cpu
-        ctx.bias = NULL if bias is None else bias
-        fw_fn(ctx.in_feat, ctx.out_feat, kernel, bias, ctx.pixel_dist,
-              ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
+        fw_fn(ctx.in_feat, ctx.out_feat, kernel, ctx.pixel_dist, ctx.stride,
+              ctx.kernel_size, ctx.dilation, ctx.region_type,
               ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
 
         return ctx.out_feat
@@ -133,15 +119,11 @@ class SparseConvolutionTransposeFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
-        grad_bias = grad_out_feat.new() if ctx.has_bias else NULL
         bw_fn = ctx.conv_bw_gpu if grad_out_feat.is_cuda else ctx.conv_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
-              grad_kernel, grad_bias, ctx.pixel_dist, ctx.stride,
-              ctx.kernel_size, ctx.dilation, ctx.dimension, ctx.metadata.ffi)
-        if ctx.has_bias:
-            return grad_in_feat, grad_kernel, grad_bias
-        else:
-            return grad_in_feat, grad_kernel
+              grad_kernel, ctx.pixel_dist, ctx.stride, ctx.kernel_size,
+              ctx.dilation, ctx.dimension, ctx.metadata.ffi)
+        return grad_in_feat, grad_kernel
 
 
 class SparseConvolutionBase(Module):
@@ -214,18 +196,15 @@ class SparseConvolutionBase(Module):
         self.has_bias = has_bias
 
     def forward(self, input):
+        # If the kernel_size == 1, the convolution is simply a matrix
+        # multiplication
         if self.kernel_size == 1 and self.stride == 1:
-            # If the kernel_size == 1, the convolution is simply a matrix
-            # multiplication
             out = input.mm(self.kernel)
-            if self.has_bias:
-                out += self.bias
-            return out
         else:
-            if self.has_bias:
-                return self.conv(input, self.kernel, self.bias)
-            else:
-                return self.conv(input, self.kernel)
+            out = self.conv(input, self.kernel)
+        if self.has_bias:
+            out += self.bias
+        return out
 
     def reset_parameters(self, is_transpose=False):
         n = (self.out_channels
@@ -266,8 +245,8 @@ class SparseConvolution(SparseConvolutionBase):
         self.reset_parameters()
         self.conv = SparseConvolutionFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
-            self.region_type, self.region_offset, self.has_bias,
-            self.dimension, self.metadata)
+            self.region_type, self.region_offset, self.dimension,
+            self.metadata)
 
 
 class SparseConvolutionTranspose(SparseConvolutionBase):
@@ -304,5 +283,5 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
         self.reset_parameters(True)
         self.conv = SparseConvolutionTransposeFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
-            self.region_type, self.region_offset, self.has_bias,
-            self.dimension, self.metadata)
+            self.region_type, self.region_offset, self.dimension,
+            self.metadata)

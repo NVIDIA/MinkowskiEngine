@@ -340,10 +340,10 @@ template <uint8_t D> void t_clear(void **metadata) {
 
 template <uint8_t D>
 long t_conv_fw(const float *p_in_feat, int64_t in_nchannel, float *p_out_feat,
-               int64_t out_nchannel, const float *p_kernel, const float *p_bias,
-               int64_t out_nrows, int64_t pixel_dist, int64_t stride,
-               int64_t kernel_size, int64_t dilation, int64_t region_type,
-               int64_t *p_offset, int64_t n_offset, void **metadata) {
+               int64_t out_nchannel, const float *p_kernel, int64_t out_nrows,
+               int64_t pixel_dist, int64_t stride, int64_t kernel_size,
+               int64_t dilation, int64_t region_type, int64_t *p_offset,
+               int64_t n_offset, void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
 
   // Initialize all input, output coordinates, and convolution mapping
@@ -372,9 +372,9 @@ long t_conv_fw(const float *p_in_feat, int64_t in_nchannel, float *p_out_feat,
   }
 
   // Convolution
-  SparseConvolutionForward<float>(
-      p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel, p_bias,
-      (*p_in_maps)[key], (*p_out_maps)[key], out_nrows);
+  SparseConvolutionForward<float>(p_in_feat, in_nchannel, p_out_feat,
+                                  out_nchannel, p_kernel, (*p_in_maps)[key],
+                                  (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
@@ -382,10 +382,10 @@ long t_conv_fw(const float *p_in_feat, int64_t in_nchannel, float *p_out_feat,
 template <uint8_t D>
 long t_conv_tr_fw(const float *p_in_feat, int64_t in_nchannel,
                   float *p_out_feat, int64_t out_nchannel,
-                  const float *p_kernel, const float *p_bias, int64_t out_nrows,
-                  int64_t pixel_dist, int64_t out_stride, int64_t kernel_size,
-                  int64_t dilation, int64_t region_type, int64_t *p_offset,
-                  int64_t n_offset, void **metadata) {
+                  const float *p_kernel, int64_t out_nrows, int64_t pixel_dist,
+                  int64_t out_stride, int64_t kernel_size, int64_t dilation,
+                  int64_t region_type, int64_t *p_offset, int64_t n_offset,
+                  void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
 
   // Initialize all input, output coordinates, and convolution mapping
@@ -426,9 +426,9 @@ long t_conv_tr_fw(const float *p_in_feat, int64_t in_nchannel,
   }
 
   // Convolution
-  SparseConvolutionForward<float>(
-      p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel, p_bias,
-      (*p_in_maps)[key], (*p_out_maps)[key], out_nrows);
+  SparseConvolutionForward<float>(p_in_feat, in_nchannel, p_out_feat,
+                                  out_nchannel, p_kernel, (*p_in_maps)[key],
+                                  (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
@@ -437,9 +437,8 @@ template <uint8_t D>
 long t_conv_bw(const float *p_in_feat, float *p_grad_in_feat,
                int64_t in_nchannel, float *p_grad_out_feat,
                int64_t out_nchannel, float *p_kernel, float *p_grad_kernel,
-               float *p_grad_bias, int64_t out_nrows, int64_t pixel_dist,
-               int64_t stride, int64_t kernel_size, int64_t dilation,
-               void **metadata) {
+               int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+               int64_t kernel_size, int64_t dilation, void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
 
   // Initialize all input, output coordinates, and convolution mapping
@@ -459,10 +458,10 @@ long t_conv_bw(const float *p_in_feat, float *p_grad_in_feat,
     return -1;
 
   // Convolution
-  SparseConvolutionBackward<float>(
-      p_in_feat, p_grad_in_feat, in_nchannel, p_grad_out_feat, out_nchannel,
-      p_kernel, p_grad_kernel, p_grad_bias, (*p_in_maps)[key],
-      (*p_out_maps)[key], out_nrows);
+  SparseConvolutionBackward<float>(p_in_feat, p_grad_in_feat, in_nchannel,
+                                   p_grad_out_feat, out_nchannel, p_kernel,
+                                   p_grad_kernel, (*p_in_maps)[key],
+                                   (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
@@ -471,9 +470,8 @@ template <uint8_t D>
 long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
                   int64_t in_nchannel, float *p_grad_out_feat,
                   int64_t out_nchannel, float *p_kernel, float *p_grad_kernel,
-                  float *p_grad_bias, int64_t out_nrows, int64_t pixel_dist,
-                  int64_t out_stride, int64_t kernel_size, int64_t dilation,
-                  void **metadata) {
+                  int64_t out_nrows, int64_t pixel_dist, int64_t out_stride,
+                  int64_t kernel_size, int64_t dilation, void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
 
   // Initialize all input, output coordinates, and convolution mapping
@@ -493,10 +491,10 @@ long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
     return -1;
 
   // Convolution
-  SparseConvolutionBackward<float>(
-      p_in_feat, p_grad_in_feat, in_nchannel, p_grad_out_feat, out_nchannel,
-      p_kernel, p_grad_kernel, p_grad_bias, (*p_in_maps)[key],
-      (*p_out_maps)[key], out_nrows);
+  SparseConvolutionBackward<float>(p_in_feat, p_grad_in_feat, in_nchannel,
+                                   p_grad_out_feat, out_nchannel, p_kernel,
+                                   p_grad_kernel, (*p_in_maps)[key],
+                                   (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
@@ -504,11 +502,10 @@ long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
 template <uint8_t D>
 long t_conv_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
                    float *p_out_feat, int64_t out_nchannel,
-                   const float *p_kernel, const float *p_bias,
-                   int64_t out_nrows, int64_t pixel_dist, int64_t stride,
-                   int64_t kernel_size, int64_t dilation, int64_t region_type,
-                   int64_t *p_offset, int64_t n_offset, cudaStream_t stream,
-                   void **metadata) {
+                   const float *p_kernel, int64_t out_nrows, int64_t pixel_dist,
+                   int64_t stride, int64_t kernel_size, int64_t dilation,
+                   int64_t region_type, int64_t *p_offset, int64_t n_offset,
+                   cudaStream_t stream, void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
 
   // Initialize all input, output coordinates, and convolution mapping
@@ -538,9 +535,9 @@ long t_conv_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
 
   // Convolution
   SparseConvolutionForwardGPU<float>(p_in_feat, in_nchannel, p_out_feat,
-                                     out_nchannel, p_kernel, p_bias,
-                                     (*p_in_maps)[key], (*p_out_maps)[key],
-                                     out_nrows, init_metadata.cuhandle, stream);
+                                     out_nchannel, p_kernel, (*p_in_maps)[key],
+                                     (*p_out_maps)[key], out_nrows,
+                                     init_metadata.cuhandle, stream);
 
   return 1;
 }
@@ -548,8 +545,8 @@ long t_conv_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
 template <uint8_t D>
 long t_conv_tr_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
                       float *p_out_feat, int64_t out_nchannel,
-                      const float *p_kernel, const float *p_bias,
-                      int64_t out_nrows, int64_t pixel_dist, int64_t out_stride,
+                      const float *p_kernel, int64_t out_nrows,
+                      int64_t pixel_dist, int64_t out_stride,
                       int64_t kernel_size, int64_t dilation,
                       int64_t region_type, int64_t *p_offset, int64_t n_offset,
                       cudaStream_t stream, void **metadata) {
@@ -594,9 +591,9 @@ long t_conv_tr_fw_gpu(const float *p_in_feat, int64_t in_nchannel,
 
   // Convolution
   SparseConvolutionForwardGPU<float>(p_in_feat, in_nchannel, p_out_feat,
-                                     out_nchannel, p_kernel, p_bias,
-                                     (*p_in_maps)[key], (*p_out_maps)[key],
-                                     out_nrows, init_metadata.cuhandle, stream);
+                                     out_nchannel, p_kernel, (*p_in_maps)[key],
+                                     (*p_out_maps)[key], out_nrows,
+                                     init_metadata.cuhandle, stream);
 
   return 1;
 }
@@ -605,9 +602,9 @@ template <uint8_t D>
 long t_conv_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
                    int64_t in_nchannel, float *d_grad_out_feat,
                    int64_t out_nchannel, float *d_kernel, float *d_grad_kernel,
-                   float *d_grad_bias, int64_t out_nrows, int64_t pixel_dist,
-                   int64_t stride, int64_t kernel_size, int64_t dilation,
-                   cudaStream_t stream, void **metadata) {
+                   int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                   int64_t kernel_size, int64_t dilation, cudaStream_t stream,
+                   void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
 
   // Initialize all input, output coordinates, and convolution mapping
@@ -630,8 +627,8 @@ long t_conv_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
   // Convolution
   SparseConvolutionBackwardGPU<float>(
       d_in_feat, d_grad_in_feat, in_nchannel, d_grad_out_feat, out_nchannel,
-      d_kernel, d_grad_kernel, d_grad_bias, (*p_in_maps)[key],
-      (*p_out_maps)[key], out_nrows, init_metadata.cuhandle, stream);
+      d_kernel, d_grad_kernel, (*p_in_maps)[key], (*p_out_maps)[key], out_nrows,
+      init_metadata.cuhandle, stream);
 
   return 1;
 }
@@ -640,8 +637,8 @@ template <uint8_t D>
 long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
                       int64_t in_nchannel, float *d_grad_out_feat,
                       int64_t out_nchannel, float *d_kernel,
-                      float *d_grad_kernel, float *d_grad_bias,
-                      int64_t out_nrows, int64_t pixel_dist, int64_t out_stride,
+                      float *d_grad_kernel, int64_t out_nrows,
+                      int64_t pixel_dist, int64_t out_stride,
                       int64_t kernel_size, int64_t dilation,
                       cudaStream_t stream, void **metadata) {
   INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
@@ -666,8 +663,8 @@ long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
   // Convolution
   SparseConvolutionBackwardGPU<float>(
       d_in_feat, d_grad_in_feat, in_nchannel, d_grad_out_feat, out_nchannel,
-      d_kernel, d_grad_kernel, d_grad_bias, (*p_in_maps)[key],
-      (*p_out_maps)[key], out_nrows, init_metadata.cuhandle, stream);
+      d_kernel, d_grad_kernel, (*p_in_maps)[key], (*p_out_maps)[key], out_nrows,
+      init_metadata.cuhandle, stream);
 
   return 1;
 }

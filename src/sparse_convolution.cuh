@@ -20,7 +20,7 @@ __global__ void add_mapped_output(const int n, const int nchannel,
 template <typename Dtype>
 void SparseConvolutionForwardGPU(
     const Dtype *d_in_feat, int in_nchannel, Dtype *d_out_feat,
-    int out_nchannel, const Dtype *d_kernel, const Dtype *d_bias,
+    int out_nchannel, const Dtype *d_kernel,
     const std::vector<std::vector<int64_t>> in_map,
     const std::vector<std::vector<int64_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
@@ -29,8 +29,7 @@ template <typename Dtype>
 void SparseConvolutionBackwardGPU(
     const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nchannel,
     const Dtype *d_grad_out_feat, int out_nchannel, const Dtype *d_kernel,
-    Dtype *d_grad_kernel, Dtype *d_grad_bias,
-    const std::vector<std::vector<int64_t>> in_map,
+    Dtype *d_grad_kernel, const std::vector<std::vector<int64_t>> in_map,
     const std::vector<std::vector<int64_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
 #endif

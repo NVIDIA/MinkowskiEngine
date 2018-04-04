@@ -6,7 +6,7 @@
 template <typename Dtype>
 void SparseConvolutionForward(const Dtype *p_in_feat, int in_nchannel,
                               Dtype *p_out_feat, int out_nchannel,
-                              const Dtype *p_kernel, const Dtype *p_bias,
+                              const Dtype *p_kernel,
                               const InOutMapPerKernel in_map,
                               const InOutMapPerKernel out_map, int out_nrows) {
   int kernel_volume, n_active_in_volume, row;
@@ -14,11 +14,6 @@ void SparseConvolutionForward(const Dtype *p_in_feat, int in_nchannel,
 
   // Number of weights
   kernel_volume = in_map.size();
-
-  if (p_bias != nullptr) // Set bias
-    for (row = 0; row < out_nrows; row++)
-      std::memcpy(&p_out_feat[row * out_nchannel], p_bias,
-                  out_nchannel * sizeof(Dtype));
 
   // Iterate through each spatial kernel out of filter_volume spatial kernels
   // for (auto &current_in2out : in2out) {
@@ -60,7 +55,7 @@ template <typename Dtype>
 void SparseConvolutionBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                                int in_nchannel, Dtype *p_grad_out_feat,
                                int out_nchannel, Dtype *p_kernel,
-                               Dtype *p_grad_kernel, Dtype *p_grad_bias,
+                               Dtype *p_grad_kernel,
                                const InOutMapPerKernel in_map,
                                const InOutMapPerKernel out_map, int out_nrows) {
   int kernel_volume, n_active_in_volume, row;
@@ -119,13 +114,6 @@ void SparseConvolutionBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                     &p_grad_kernel[k * in_nchannel * out_nchannel] // C
                     );
   }
-
-  // Compute gradient for bias
-  if (p_grad_bias)
-    for (row = 0; row < out_nrows; row++)
-      // Accumulate gradients from the output features to the bias
-      cpu_add<Dtype>(out_nchannel, &p_grad_out_feat[row * out_nchannel],
-                     p_grad_bias, p_grad_bias);
 }
 
 #endif

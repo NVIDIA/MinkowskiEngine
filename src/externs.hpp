@@ -115,161 +115,152 @@ extern "C" void _clear(long D, void **metadata) {
 
 template <uint8_t D>
 long t_conv_fw(const float *p_in_feat, int64_t in_nchannel, float *p_out_feat,
-               int64_t out_nchannel, const float *p_kernel, const float *p_bias,
-               int64_t out_nrows, int64_t pixel_dist, int64_t stride,
-               int64_t kernel_size, int64_t dilation, int64_t region_type,
-               int64_t *p_offset, int64_t n_offset, void **metadata);
+               int64_t out_nchannel, const float *p_kernel, int64_t out_nrows,
+               int64_t pixel_dist, int64_t stride, int64_t kernel_size,
+               int64_t dilation, int64_t region_type, int64_t *p_offset,
+               int64_t n_offset, void **metadata);
 extern "C" long _conv_fw(float *p_in_feat, long in_nchannel, float *p_out_feat,
-                         long out_nchannel, float *p_kernel, float *p_bias,
-                         long out_nrows, long pixel_dist, long stride,
-                         long kernel_size, long dilation, long region_type,
-                         int64_t *p_offset, int64_t n_offset, long D,
-                         void **metadata) {
+                         long out_nchannel, float *p_kernel, long out_nrows,
+                         long pixel_dist, long stride, long kernel_size,
+                         long dilation, long region_type, int64_t *p_offset,
+                         int64_t n_offset, long D, void **metadata) {
   SWITCH_DIM(return, t_conv_fw, p_in_feat, in_nchannel, p_out_feat,
-                   out_nchannel, p_kernel, p_bias, out_nrows, pixel_dist,
-                   stride, kernel_size, dilation, region_type, p_offset,
-                   n_offset, metadata)
+                   out_nchannel, p_kernel, out_nrows, pixel_dist, stride,
+                   kernel_size, dilation, region_type, p_offset, n_offset,
+                   metadata)
 }
 
 template <uint8_t D>
 long t_conv_tr_fw(const float *p_in_feat, int64_t in_nchannel,
                   float *p_out_feat, int64_t out_nchannel,
-                  const float *p_kernel, const float *p_bias, int64_t out_nrows,
-                  int64_t pixel_dist, int64_t stride, int64_t kernel_size,
-                  int64_t dilation, int64_t region_type, int64_t *p_offset,
-                  int64_t n_offset, void **metadata);
+                  const float *p_kernel, int64_t out_nrows, int64_t pixel_dist,
+                  int64_t stride, int64_t kernel_size, int64_t dilation,
+                  int64_t region_type, int64_t *p_offset, int64_t n_offset,
+                  void **metadata);
 extern "C" long _conv_tr_fw(float *p_in_feat, long in_nchannel,
                             float *p_out_feat, long out_nchannel,
-                            float *p_kernel, float *p_bias, long out_nrows,
-                            long pixel_dist, long stride, long kernel_size,
-                            long dilation, long region_type, int64_t *p_offset,
+                            float *p_kernel, long out_nrows, long pixel_dist,
+                            long stride, long kernel_size, long dilation,
+                            long region_type, int64_t *p_offset,
                             int64_t n_offset, long D, void **metadata) {
   SWITCH_DIM(return, t_conv_tr_fw, p_in_feat, in_nchannel, p_out_feat,
-                   out_nchannel, p_kernel, p_bias, out_nrows, pixel_dist,
-                   stride, kernel_size, dilation, region_type, p_offset,
-                   n_offset, metadata)
+                   out_nchannel, p_kernel, out_nrows, pixel_dist, stride,
+                   kernel_size, dilation, region_type, p_offset, n_offset,
+                   metadata)
 }
 
 template <uint8_t D>
 long t_conv_bw(const float *p_in_feat, float *p_grad_in_feat,
                int64_t in_nchannel, float *p_grad_out_feat,
                int64_t out_nchannel, float *p_kernel, float *p_grad_kernel,
-               float *p_grad_bias, int64_t out_nrows, int64_t pixel_dist,
-               int64_t stride, int64_t kernel_size, int64_t dilation,
-               void **metadata);
+               int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+               int64_t kernel_size, int64_t dilation, void **metadata);
 extern "C" long _conv_bw(float *p_in_feat, float *p_grad_in_feat,
                          long in_nchannel, float *p_grad_out_feat,
                          long out_nchannel, float *p_kernel,
-                         float *p_grad_kernel, float *p_grad_bias,
-                         long out_nrows, long pixel_dist, long stride,
-                         long kernel_size, long dilation, long D,
+                         float *p_grad_kernel, long out_nrows, long pixel_dist,
+                         long stride, long kernel_size, long dilation, long D,
                          void **metadata) {
   SWITCH_DIM(return, t_conv_bw, p_in_feat, p_grad_in_feat, in_nchannel,
                    p_grad_out_feat, out_nchannel, p_kernel, p_grad_kernel,
-                   p_grad_bias, out_nrows, pixel_dist, stride, kernel_size,
-                   dilation, metadata)
+                   out_nrows, pixel_dist, stride, kernel_size, dilation,
+                   metadata)
 }
 
 template <uint8_t D>
 long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
                   int64_t in_nchannel, float *p_grad_out_feat,
                   int64_t out_nchannel, float *p_kernel, float *p_grad_kernel,
-                  float *p_grad_bias, int64_t out_nrows, int64_t pixel_dist,
-                  int64_t stride, int64_t kernel_size, int64_t dilation,
-                  void **metadata);
+                  int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                  int64_t kernel_size, int64_t dilation, void **metadata);
 extern "C" long _conv_tr_bw(float *p_in_feat, float *p_grad_in_feat,
                             long in_nchannel, float *p_grad_out_feat,
                             long out_nchannel, float *p_kernel,
-                            float *p_grad_kernel, float *p_grad_bias,
-                            long out_nrows, long pixel_dist, long stride,
-                            long kernel_size, long dilation, long D,
-                            void **metadata) {
+                            float *p_grad_kernel, long out_nrows,
+                            long pixel_dist, long stride, long kernel_size,
+                            long dilation, long D, void **metadata) {
   SWITCH_DIM(return, t_conv_tr_bw, p_in_feat, p_grad_in_feat, in_nchannel,
                    p_grad_out_feat, out_nchannel, p_kernel, p_grad_kernel,
-                   p_grad_bias, out_nrows, pixel_dist, stride, kernel_size,
-                   dilation, metadata)
+                   out_nrows, pixel_dist, stride, kernel_size, dilation,
+                   metadata)
 }
 
 template <uint8_t D>
 long t_conv_fw_gpu(const float *d_in_feat, int64_t in_nchannel,
                    float *d_out_feat, int64_t out_nchannel,
-                   const float *d_kernel, const float *d_bias,
-                   int64_t out_nrows, int64_t pixel_dist, int64_t stride,
-                   int64_t kernel_size, int64_t dilation, int64_t region_type,
-                   int64_t *p_offset, int64_t n_offset, cudaStream_t stream,
-                   void **metadata);
+                   const float *d_kernel, int64_t out_nrows, int64_t pixel_dist,
+                   int64_t stride, int64_t kernel_size, int64_t dilation,
+                   int64_t region_type, int64_t *p_offset, int64_t n_offset,
+                   cudaStream_t stream, void **metadata);
 extern "C" long _conv_fw_gpu(float *d_in_feat, long in_nchannel,
                              float *d_out_feat, long out_nchannel,
-                             float *d_kernel, float *d_bias, long out_nrows,
-                             long pixel_dist, long stride, long kernel_size,
-                             long dilation, long region_type, long *p_offset,
-                             long n_offset, cudaStream_t stream, long D,
-                             void **metadata) {
+                             float *d_kernel, long out_nrows, long pixel_dist,
+                             long stride, long kernel_size, long dilation,
+                             long region_type, long *p_offset, long n_offset,
+                             cudaStream_t stream, long D, void **metadata) {
   SWITCH_DIM(return, t_conv_fw_gpu, d_in_feat, in_nchannel, d_out_feat,
-                   out_nchannel, d_kernel, d_bias, out_nrows, pixel_dist,
-                   stride, kernel_size, dilation, region_type, p_offset,
-                   n_offset, stream, metadata)
+                   out_nchannel, d_kernel, out_nrows, pixel_dist, stride,
+                   kernel_size, dilation, region_type, p_offset, n_offset,
+                   stream, metadata)
 }
 
 template <uint8_t D>
 long t_conv_tr_fw_gpu(const float *d_in_feat, int64_t in_nchannel,
                       float *d_out_feat, int64_t out_nchannel,
-                      const float *d_kernel, const float *d_bias,
-                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
-                      int64_t kernel_size, int64_t dilation,
-                      int64_t region_type, int64_t *p_offset, int64_t n_offset,
-                      cudaStream_t stream, void **metadata);
+                      const float *d_kernel, int64_t out_nrows,
+                      int64_t pixel_dist, int64_t stride, int64_t kernel_size,
+                      int64_t dilation, int64_t region_type, int64_t *p_offset,
+                      int64_t n_offset, cudaStream_t stream, void **metadata);
 extern "C" long _conv_tr_fw_gpu(float *d_in_feat, long in_nchannel,
                                 float *d_out_feat, long out_nchannel,
-                                float *d_kernel, float *d_bias, long out_nrows,
+                                float *d_kernel, long out_nrows,
                                 long pixel_dist, long stride, long kernel_size,
                                 long dilation, long region_type, long *p_offset,
                                 long n_offset, cudaStream_t stream, long D,
                                 void **metadata) {
   SWITCH_DIM(return, t_conv_tr_fw_gpu, d_in_feat, in_nchannel, d_out_feat,
-                   out_nchannel, d_kernel, d_bias, out_nrows, pixel_dist,
-                   stride, kernel_size, dilation, region_type, p_offset,
-                   n_offset, stream, metadata)
+                   out_nchannel, d_kernel, out_nrows, pixel_dist, stride,
+                   kernel_size, dilation, region_type, p_offset, n_offset,
+                   stream, metadata)
 }
 
 template <uint8_t D>
 long t_conv_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
                    int64_t in_nchannel, float *d_grad_out_feat,
                    int64_t out_nchannel, float *d_kernel, float *d_grad_kernel,
-                   float *d_grad_bias, int64_t out_nrows, int64_t pixel_dist,
-                   int64_t stride, int64_t kernel_size, int64_t dilation,
-                   cudaStream_t stream, void **metadata);
+                   int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                   int64_t kernel_size, int64_t dilation, cudaStream_t stream,
+                   void **metadata);
 extern "C" long _conv_bw_gpu(float *d_in_feat, float *d_grad_in_feat,
                              long in_nchannel, float *d_grad_out_feat,
                              long out_nchannel, float *d_kernel,
-                             float *d_grad_kernel, float *d_grad_bias,
-                             long out_nrows, long pixel_dist, long stride,
-                             long kernel_size, long dilation,
-                             cudaStream_t stream, long D, void **metadata) {
+                             float *d_grad_kernel, long out_nrows,
+                             long pixel_dist, long stride, long kernel_size,
+                             long dilation, cudaStream_t stream, long D,
+                             void **metadata) {
   SWITCH_DIM(return, t_conv_bw_gpu, d_in_feat, d_grad_in_feat, in_nchannel,
                    d_grad_out_feat, out_nchannel, d_kernel, d_grad_kernel,
-                   d_grad_bias, out_nrows, pixel_dist, stride, kernel_size,
-                   dilation, stream, metadata);
+                   out_nrows, pixel_dist, stride, kernel_size, dilation, stream,
+                   metadata);
 }
 
 template <uint8_t D>
 long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
                       int64_t in_nchannel, float *d_grad_out_feat,
                       int64_t out_nchannel, float *d_kernel,
-                      float *d_grad_kernel, float *d_grad_bias,
-                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
-                      int64_t kernel_size, int64_t dilation,
-                      cudaStream_t stream, void **metadata);
+                      float *d_grad_kernel, int64_t out_nrows,
+                      int64_t pixel_dist, int64_t stride, int64_t kernel_size,
+                      int64_t dilation, cudaStream_t stream, void **metadata);
 extern "C" long _conv_tr_bw_gpu(float *d_in_feat, float *d_grad_in_feat,
                                 long in_nchannel, float *d_grad_out_feat,
                                 long out_nchannel, float *d_kernel,
-                                float *d_grad_kernel, float *d_grad_bias,
-                                long out_nrows, long pixel_dist, long stride,
-                                long kernel_size, long dilation,
-                                cudaStream_t stream, long D, void **metadata) {
+                                float *d_grad_kernel, long out_nrows,
+                                long pixel_dist, long stride, long kernel_size,
+                                long dilation, cudaStream_t stream, long D,
+                                void **metadata) {
   SWITCH_DIM(return, t_conv_tr_bw_gpu, d_in_feat, d_grad_in_feat, in_nchannel,
                    d_grad_out_feat, out_nchannel, d_kernel, d_grad_kernel,
-                   d_grad_bias, out_nrows, pixel_dist, stride, kernel_size,
-                   dilation, stream, metadata);
+                   out_nrows, pixel_dist, stride, kernel_size, dilation, stream,
+                   metadata);
 }
 #endif
