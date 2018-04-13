@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 import SparseConvolutionEngineFFI as SCE
-from SparseConvolution import SparseConvolution, Metadata
+from SparseConvolution import Metadata
 
 
 class SparseConvolutionNetwork(nn.Module, ABC):

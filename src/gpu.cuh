@@ -46,7 +46,8 @@
        i += blockDim.x * gridDim.x)
 
 // CUDA: check for error after kernel execution and exit loudly if there is one.
-#define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
+#define HANDLE_ERROR(err) (HandleError(err, __FILE__, __LINE__ ))
+#define CUDA_POST_KERNEL_CHECK HANDLE_ERROR(cudaPeekAtLastError())
 
 // CUDA: library error reporting.
 const char* cublasGetErrorString(cublasStatus_t error);
