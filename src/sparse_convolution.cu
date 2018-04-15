@@ -7,10 +7,10 @@
 #include "src/math_functions.hpp"
 #include "src/sparse_convolution.cuh"
 
-static void HandleError(cudaError_t err, const char *file, int line ) {
+static void HandleError(cudaError_t err, const char *file, int line) {
   if (err != cudaSuccess) {
-    printf( "%s in %s at line %d\n", cudaGetErrorString( err ), file, line );
-    exit( EXIT_FAILURE );
+    printf("%s in %s at line %d\n", cudaGetErrorString(err), file, line);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -82,32 +82,34 @@ void SparseConvolutionForwardGPU(
     num_kernels = in_nchannel * n_active_in_volume;
 
     // Copy features to the buffer
-    copy_mapped_input<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS>>>(
-        num_kernels, in_nchannel, d_in_feat,
-        thrust::raw_pointer_cast(d_input_buffer.data()),
-        thrust::raw_pointer_cast(d_in_map.data()));
+    copy_mapped_input<Dtype>
+        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+            num_kernels, in_nchannel, d_in_feat,
+            thrust::raw_pointer_cast(d_input_buffer.data()),
+            thrust::raw_pointer_cast(d_in_map.data()));
     CUDA_POST_KERNEL_CHECK;
 
     // GEMM
     gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasTrans,
-                    out_nchannel,                                       // M
-                    n_active_in_volume,                                 // N
-                    in_nchannel,                                        // K
-                    1,                                                  // alpha
-                    &d_kernel[k * in_nchannel * out_nchannel],          // A
-                    thrust::raw_pointer_cast(d_input_buffer.data()),    // B
-                    0,                                                  // beta
+                    out_nchannel,                                      // M
+                    n_active_in_volume,                                // N
+                    in_nchannel,                                       // K
+                    1,                                                 // alpha
+                    &d_kernel[k * in_nchannel * out_nchannel],         // A
+                    thrust::raw_pointer_cast(d_input_buffer.data()),   // B
+                    0,                                                 // beta
                     thrust::raw_pointer_cast(d_output_buffer.data())); // C
     CUDA_POST_KERNEL_CHECK;
 
     // Put it back to the correct index.
     // The out_buffer is in column major order, d_out_feat in row major
     num_kernels = out_nchannel * n_active_in_volume;
-    add_mapped_output_tr<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS>>>(
-        num_kernels, thrust::raw_pointer_cast(d_output_buffer.data()),
-        n_active_in_volume,       // In
-        d_out_feat, out_nchannel, // Out
-        thrust::raw_pointer_cast(d_out_map.data()));
+    add_mapped_output_tr<Dtype>
+        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+            num_kernels, thrust::raw_pointer_cast(d_output_buffer.data()),
+            n_active_in_volume,       // In
+            d_out_feat, out_nchannel, // Out
+            thrust::raw_pointer_cast(d_out_map.data()));
     CUDA_POST_KERNEL_CHECK;
   }
 }
@@ -152,10 +154,11 @@ void SparseConvolutionBackwardGPU(
     num_kernels = out_nchannel * n_active_in_volume;
 
     // Copy gradients to the buffer
-    copy_mapped_input<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS>>>(
-        num_kernels, out_nchannel, d_grad_out_feat,
-        thrust::raw_pointer_cast(d_output_buffer.data()),
-        thrust::raw_pointer_cast(d_out_map.data()));
+    copy_mapped_input<Dtype>
+        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+            num_kernels, out_nchannel, d_grad_out_feat,
+            thrust::raw_pointer_cast(d_output_buffer.data()),
+            thrust::raw_pointer_cast(d_out_map.data()));
     CUDA_POST_KERNEL_CHECK;
 
     gpu_gemm<Dtype>(cuhandle, CblasNoTrans, CblasTrans,
@@ -173,31 +176,33 @@ void SparseConvolutionBackwardGPU(
     // Accumulate gradients back to the input grad feat
     // Put it back to the correct index
     num_kernels = in_nchannel * n_active_in_volume;
-    add_mapped_output_tr<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS>>>(
-        num_kernels,
-        thrust::raw_pointer_cast(d_input_buffer.data()), // In
-        n_active_in_volume,                              // In channel
-        d_grad_in_feat, in_nchannel,                     // Out
-        thrust::raw_pointer_cast(d_in_map.data()));      // Out channel
+    add_mapped_output_tr<Dtype>
+        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+            num_kernels,
+            thrust::raw_pointer_cast(d_input_buffer.data()), // In
+            n_active_in_volume,                              // In channel
+            d_grad_in_feat, in_nchannel,                     // Out
+            thrust::raw_pointer_cast(d_in_map.data()));      // Out channel
     CUDA_POST_KERNEL_CHECK;
 
     // Compute gradient for kernel
     // Copy features to the buffer
-    copy_mapped_input<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS>>>(
-        num_kernels, in_nchannel, d_in_feat,
-        thrust::raw_pointer_cast(d_input_buffer.data()),
-        thrust::raw_pointer_cast(d_in_map.data()));
+    copy_mapped_input<Dtype>
+        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+            num_kernels, in_nchannel, d_in_feat,
+            thrust::raw_pointer_cast(d_input_buffer.data()),
+            thrust::raw_pointer_cast(d_in_map.data()));
     CUDA_POST_KERNEL_CHECK;
 
     gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasNoTrans,
-                    in_nchannel,                                   // M
-                    out_nchannel,                                  // N
-                    n_active_in_volume,                            // K
-                    1,                                             // alpha
+                    in_nchannel,                                      // M
+                    out_nchannel,                                     // N
+                    n_active_in_volume,                               // K
+                    1,                                                // alpha
                     thrust::raw_pointer_cast(d_input_buffer.data()),  // A
                     thrust::raw_pointer_cast(d_output_buffer.data()), // B
-                    1,                                             // beta
-                    &d_grad_kernel[k * in_nchannel * out_nchannel] // C
+                    1,                                                // beta
+                    &d_grad_kernel[k * in_nchannel * out_nchannel]    // C
                     );
     CUDA_POST_KERNEL_CHECK;
   }
