@@ -7,13 +7,6 @@
 #include "src/math_functions.hpp"
 #include "src/sparse_convolution.cuh"
 
-static void HandleError(cudaError_t err, const char *file, int line) {
-  if (err != cudaSuccess) {
-    printf("%s in %s at line %d\n", cudaGetErrorString(err), file, line);
-    exit(EXIT_FAILURE);
-  }
-}
-
 template <typename Dtype>
 __global__ void copy_mapped_input(const int n, const int nchannel,
                                   const Dtype *in_feat, Dtype *out_feat,

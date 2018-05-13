@@ -1,5 +1,5 @@
-#ifndef GPU
-#define GPU
+#ifndef GPU_H_
+#define GPU_H_
 
 #include <iostream>
 #include <vector>
@@ -60,4 +60,6 @@ inline int GET_BLOCKS(const int N) {
   return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 }
 
-#endif  // DEVICE_ALTERNATE_H_
+void HandleError(cudaError_t err, const char *file, int line);
+
+#endif  // GPU_H_
