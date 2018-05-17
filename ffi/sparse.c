@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include "ffi/sparse_convolution.h"
+#include "ffi/sparse_functions.h"
 
 #define CUDA_CHECK                                                             \
   error = cudaGetLastError();                                                  \
@@ -581,4 +581,195 @@ long convolution_transpose_backward_gpu(
                          d_grad_out_feat, out_nchannel, d_kernel, d_grad_kernel,
                          out_nrows, pixel_dist, stride, kernel_size, dilation,
                          stream, D, m);
+}
+
+long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
+                         THLongTensor *th_mask_index, long pixel_dist,
+                         long stride, long kernel_size, long dilation,
+                         long region_type, THLongTensor *th_offset, long D,
+                         void **m) {
+  // This will not take coords as the first initialization saved it in metadata
+  // th_in_feat is 2D nrows, in_channel
+  // th_kernel is 3D filter_volume, in_channel, out_channel
+  long in_nrows, nchannel, offset_size, success, out_nrows = -1;
+  long n_offset, *p_offset;
+
+  // Check if the input pixel dist map exists. Output map will be generate
+  // automatically inside the convolution kernel.
+  success = _initialize_out_coords(pixel_dist, stride, false, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // Get the number of rows required to initialize the th_out_tensor
+  success = _get_num_coords(pixel_dist * stride, &out_nrows, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // expose all variables and resize out tensor
+  in_nrows = THFloatTensor_size(th_in_feat, 0);
+  nchannel = THFloatTensor_size(th_in_feat, 1);
+
+  // Initialize output, values will be set within the forward function
+  THFloatTensor_resize2d(th_out_feat, out_nrows, nchannel);
+  THLongTensor_resize2d(th_mask_index, out_nrows, nchannel);
+
+  // Pointers
+  float *p_in_feat = THFloatTensor_data(th_in_feat);
+  float *p_out_feat = THFloatTensor_data(th_out_feat);
+  long *p_mask_index = THLongTensor_data(th_mask_index);
+
+  // Custom Region Type
+  if (region_type == 2) {
+    n_offset = THLongTensor_size(th_offset, 0);
+    p_offset = THLongTensor_data(th_offset);
+    if (THLongTensor_size(th_offset, 1) != D) {
+      printf("DSCE ERROR: Offset size does not match.");
+      return -1;
+    }
+  }
+
+  // put exposed variable into _conv_foward;
+  return _max_pooling_fw(p_in_feat, p_out_feat, p_mask_index, nchannel,
+                         out_nrows, pixel_dist, stride, kernel_size, dilation,
+                         region_type, p_offset, n_offset, D, m);
+}
+
+long max_pooling_backward(THFloatTensor *th_in_feat,
+                          THFloatTensor *th_grad_in_feat,
+                          THFloatTensor *th_grad_out_feat,
+                          THLongTensor *th_mask_index, long pixel_dist,
+                          long stride, long kernel_size, long dilation, long D,
+                          void **m) {
+  // This will not take coords as the first initialization saved it in metadata
+  // th_in_feat is 2D nrows, in_channel
+  // th_kernel is 3D filter_volume, in_channel, out_channel
+  long in_nrows, nchannel, success, out_nrows = -1;
+
+  // Check if the input pixel dist map exists. Output map will be generate
+  // automatically inside the convolution kernel.
+  success = _initialize_out_coords(pixel_dist, stride, false, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // Get the number of rows required to initialize the th_out_tensor
+  success = _get_num_coords(pixel_dist * stride, &out_nrows, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // expose all variables and resize out tensor
+  in_nrows = THFloatTensor_size(th_in_feat, 0);
+  nchannel = THFloatTensor_size(th_in_feat, 1);
+
+  // Initialize output
+  THFloatTensor_resize2d(th_grad_in_feat, in_nrows, nchannel);
+  // THFloatTensor_zero(th_grad_in_feat); set within the function
+
+  // Pointers
+  float *p_grad_in_feat = THFloatTensor_data(th_grad_in_feat);
+  float *p_grad_out_feat = THFloatTensor_data(th_grad_out_feat);
+  float *p_mask_index = THLongTensor_data(th_mask_index);
+
+  // put exposed variable into _conv_foward;
+  return _max_pooling_bw(p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows,
+                         p_mask_index, nchannel, pixel_dist, stride,
+                         kernel_size, dilation, D, m);
+}
+
+long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
+                             THCudaTensor *th_out_feat,
+                             THCudaLongTensor *th_mask_index, long pixel_dist,
+                             long stride, long kernel_size, long dilation,
+                             long region_type, THLongTensor *th_offset, long D,
+                             void **m) {
+  cudaStream_t stream = THCState_getCurrentStream(state);
+  long in_nrows, nchannel, offset_size, success, out_nrows = -1;
+  long n_offset, *p_offset;
+  cudaError_t error;
+
+  // Check if the input pixel dist map exists. Output map will be generate
+  // automatically inside the convolution kernel.
+  success = _initialize_out_coords(pixel_dist, stride, false, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // Get the number of rows required to initialize the th_out_tensor
+  success = _get_num_coords(pixel_dist * stride, &out_nrows, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // expose all variables and resize out tensor
+  in_nrows = THCudaTensor_size(state, th_in_feat, 0);
+  nchannel = THCudaTensor_size(state, th_in_feat, 1);
+
+  // Initialize output, values will be set within the forward function
+  THCudaTensor_resize2d(state, th_out_feat, out_nrows, nchannel);
+  THCudaTensor_resize2d(state, th_mask_index, out_nrows, nchannel);
+
+  // Pointers
+  float *d_in_feat = THCudaTensor_data(state, th_in_feat);
+  float *d_out_feat = THCudaTensor_data(state, th_out_feat);
+  long *d_mask_index = THCudaTensor_data(state, th_mask_index);
+
+  // Custom Region Type
+  if (region_type == 2) {
+    n_offset = THCudaTensor_size(state, th_offset, 0);
+    p_offset = THCudaTensor_data(state, th_offset);
+    if (THCudaTensor_size(state, th_offset, 1) != D) {
+      printf("DSCE ERROR: Offset size does not match.");
+      return -1;
+    }
+  }
+
+  // put exposed variable into _conv_foward;
+  return _max_pooling_fw_gpu(d_in_feat, d_out_feat, out_nrows, d_mask_index,
+                             nchannel, pixel_dist, stride, kernel_size,
+                             dilation, region_type, p_offset, n_offset, stream,
+                             D, m);
+}
+
+long max_pooling_backward_gpu(THCudaTensor *th_in_feat,
+                              THCudaTensor *th_grad_in_feat,
+                              THCudaTensor *th_grad_out_feat,
+                              THCudaLongTensor *th_mask_index, long pixel_dist,
+                              long stride, long kernel_size, long dilation,
+                              long D, void **m) {
+  cudaStream_t stream = THCState_getCurrentStream(state);
+  long in_nrows, nchannel, success, out_nrows = -1;
+
+  // Check if the input pixel dist map exists. Output map will be generate
+  // automatically inside the convolution kernel.
+  success = _initialize_out_coords(pixel_dist, stride, false, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // Get the number of rows required to initialize the th_out_tensor
+  success = _get_num_coords(pixel_dist * stride, &out_nrows, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // expose all variables and resize out tensor
+  in_nrows = THCudaTensor_size(state, th_in_feat, 0);
+  nchannel = THCudaTensor_size(state, th_in_feat, 1);
+
+  // Initialize output
+  THCudaTensor_resize2d(state, th_grad_in_feat, in_nrows, nchannel);
+  // THFloatTensor_zero(th_grad_in_feat); set within the function
+
+  // Pointers
+  float *d_grad_in_feat = THCudaTensor_data(state, th_grad_in_feat);
+  float *d_grad_out_feat = THCudaTensor_data(state, th_grad_out_feat);
+  float *d_mask_index = THCudaTensor_data(state, th_mask_index);
+
+  // put exposed variable into _conv_foward;
+  return _max_pooling_bw_gpu(d_grad_in_feat, in_nrows, d_grad_out_feat,
+                             out_nrows, d_mask_index, nchannel, pixel_dist,
+                             stride, kernel_size, dilation, stream, D, m);
 }

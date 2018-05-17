@@ -78,3 +78,33 @@ extern long _conv_tr_bw_gpu(float *d_in_feat, float *d_grad_in_feat,
                             long pixel_dist, long stride, long kernel_size,
                             long dilation, cudaStream_t stream, long D,
                             void **metadata);
+
+extern long _max_pooling_fw(float *p_in_feat, float *p_out_feat,
+                            int64_t *p_mask_index, int64_t nchannel,
+                            int64_t out_nrows, int64_t pixel_dist,
+                            int64_t stride, int64_t kernel_size,
+                            int64_t dilation, int64_t region_type,
+                            int64_t *p_offset, int64_t n_offset, long D,
+                            void **metadata);
+
+extern long _max_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                            float *p_grad_out_feat, int64_t out_nrows,
+                            int64_t *p_mask_index, int64_t nchannel,
+                            int64_t pixel_dist, int64_t stride,
+                            int64_t kernel_size, int64_t dilation, long D,
+                            void **metadata);
+
+extern long _max_pooling_fw_gpu(float *d_in_feat, float *d_out_feat,
+                                int64_t out_nrows, int64_t *d_mask_index,
+                                int64_t nchannel, int64_t pixel_dist,
+                                int64_t stride, int64_t kernel_size,
+                                int64_t dilation, int64_t region_type,
+                                int64_t *p_offset, int64_t n_offset,
+                                cudaStream_t stream, long D, void **metadata);
+
+extern long _max_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
+                                float *d_grad_out_feat, int64_t out_nrows,
+                                int64_t *d_mask_index, int64_t nchannel,
+                                int64_t pixel_dist, int64_t stride,
+                                int64_t kernel_size, int64_t dilation,
+                                cudaStream_t stream, long D, void **metadata);

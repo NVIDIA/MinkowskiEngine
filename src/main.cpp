@@ -11,6 +11,9 @@
 #include "src/sparse_convolution.cuh"
 #include "src/sparse_convolution.hpp"
 
+#include "src/sparse_pooling.cuh"
+#include "src/sparse_pooling.hpp"
+
 /**
   Create <batch index + coordinate> to feature index mapping. The mapping will
   be used to create input index to output index mapping for convolution
@@ -665,6 +668,155 @@ long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
       d_in_feat, d_grad_in_feat, in_nchannel, d_grad_out_feat, out_nchannel,
       d_kernel, d_grad_kernel, (*p_in_maps)[key], (*p_out_maps)[key], out_nrows,
       init_metadata.cuhandle, stream);
+
+  return 1;
+}
+
+template <uint8_t D>
+long t_max_pooling_fw(const float *p_in_feat, float *p_out_feat,
+                      int64_t *p_mask_index, int64_t nchannel,
+                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                      int64_t kernel_size, int64_t dilation,
+                      int64_t region_type, int64_t *p_offset, int64_t n_offset,
+                      void **metadata) {
+  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+
+  // Initialize all input, output coordinates, and convolution mapping
+  auto p_coord2inds = &init_metadata.coord2inds;
+  auto p_in_maps = &init_metadata.in_maps;
+  auto p_out_maps = &init_metadata.out_maps;
+
+  // Assume that the input coord2ind exists.
+  if (p_coord2inds->find(pixel_dist) == p_coord2inds->end())
+    return -1;
+
+  // Create output coordinate map if it doesn't exist
+  if (stride > 1 &&
+      p_coord2inds->find(pixel_dist * stride) == p_coord2inds->end())
+    (*p_coord2inds)[pixel_dist * stride] = CreateOutputCoordIndexMap<D>(
+        (*p_coord2inds)[pixel_dist], pixel_dist, stride);
+
+  // Create in to out convolution mapping if it doesn't exist
+  InOutKey key = {pixel_dist, stride, kernel_size, dilation, false};
+  if (p_in_maps->find(key) == p_in_maps->end()) {
+    auto in_out_tuple = CreateInOutPerKernel<D>(
+        (*p_coord2inds)[pixel_dist], (*p_coord2inds)[pixel_dist * stride],
+        pixel_dist, kernel_size, dilation, region_type, p_offset, n_offset);
+    (*p_in_maps)[key] = std::get<0>(in_out_tuple);
+    (*p_out_maps)[key] = std::get<1>(in_out_tuple);
+  }
+
+  // Convolution
+  SparseMaxPoolingForward<float>(p_in_feat, p_out_feat, p_mask_index, nchannel,
+                                 (*p_in_maps)[key], (*p_out_maps)[key],
+                                 out_nrows);
+
+  return 1;
+}
+
+template <uint8_t D>
+long t_max_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                      float *p_grad_out_feat, int64_t out_nrows,
+                      const int64_t *p_mask_index, int64_t nchannel,
+                      int64_t pixel_dist, int64_t stride, int64_t kernel_size,
+                      int64_t dilation, void **metadata) {
+  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+
+  // Initialize all input, output coordinates, and convolution mapping
+  auto p_coord2inds = &init_metadata.coord2inds;
+  auto p_in_maps = &init_metadata.in_maps;
+  auto p_out_maps = &init_metadata.out_maps;
+
+  // Assume that the input coord2ind exists.
+  if (p_coord2inds->find(pixel_dist) == p_coord2inds->end())
+    return -1;
+
+  if (p_coord2inds->find(pixel_dist * stride) == p_coord2inds->end())
+    return -1;
+
+  InOutKey key = {pixel_dist, stride, kernel_size, dilation, false};
+  if (p_in_maps->find(key) == p_in_maps->end())
+    return -1;
+
+  // Convolution
+  SparseMaxPoolingBackward<float>(p_grad_in_feat, in_nrows, p_grad_out_feat,
+                                  out_nrows, p_mask_index, nchannel,
+                                  (*p_in_maps)[key], (*p_out_maps)[key]);
+
+  return 1;
+}
+
+template <uint8_t D>
+long t_max_pooling_fw_gpu(const float *d_in_feat, float *d_out_feat,
+                          int64_t out_nrows, int64_t *d_mask_index,
+                          int64_t nchannel, int64_t pixel_dist, int64_t stride,
+                          int64_t kernel_size, int64_t dilation,
+                          int64_t region_type, int64_t *p_offset,
+                          int64_t n_offset, cudaStream_t stream,
+                          void **metadata) {
+  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+
+  // Initialize all input, output coordinates, and convolution mapping
+  auto p_coord2inds = &init_metadata.coord2inds;
+  auto p_in_maps = &init_metadata.in_maps;
+  auto p_out_maps = &init_metadata.out_maps;
+
+  // Assume that the input coord2ind exists.
+  if (p_coord2inds->find(pixel_dist) == p_coord2inds->end())
+    return -1;
+
+  // Create output coordinate map if it doesn't exist
+  if (stride > 1 &&
+      p_coord2inds->find(pixel_dist * stride) == p_coord2inds->end())
+    (*p_coord2inds)[pixel_dist * stride] = CreateOutputCoordIndexMap<D>(
+        (*p_coord2inds)[pixel_dist], pixel_dist, stride);
+
+  // Create in to out convolution mapping if it doesn't exist
+  InOutKey key = {pixel_dist, stride, kernel_size, dilation, false};
+  if (p_in_maps->find(key) == p_in_maps->end()) {
+    auto in_out_tuple = CreateInOutPerKernel<D>(
+        (*p_coord2inds)[pixel_dist], (*p_coord2inds)[pixel_dist * stride],
+        pixel_dist, kernel_size, dilation, region_type, p_offset, n_offset);
+    (*p_in_maps)[key] = std::get<0>(in_out_tuple);
+    (*p_out_maps)[key] = std::get<1>(in_out_tuple);
+  }
+
+  // Convolution
+  SparseMaxPoolingForwardGPU<float>(d_in_feat, d_out_feat, out_nrows,
+                                    d_mask_index, nchannel, (*p_in_maps)[key],
+                                    (*p_out_maps)[key], stream);
+
+  return 1;
+}
+
+template <uint8_t D>
+long t_max_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
+                          float *d_grad_out_feat, int64_t out_nrows,
+                          const int64_t *d_mask_index, int64_t nchannel,
+                          int64_t pixel_dist, int64_t stride,
+                          int64_t kernel_size, int64_t dilation,
+                          cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+
+  // Initialize all input, output coordinates, and convolution mapping
+  auto p_coord2inds = &init_metadata.coord2inds;
+  auto p_in_maps = &init_metadata.in_maps;
+  auto p_out_maps = &init_metadata.out_maps;
+
+  // Assume that the input coord2ind exists.
+  if (p_coord2inds->find(pixel_dist) == p_coord2inds->end())
+    return -1;
+
+  if (p_coord2inds->find(pixel_dist * stride) == p_coord2inds->end())
+    return -1;
+
+  InOutKey key = {pixel_dist, stride, kernel_size, dilation, false};
+  if (p_in_maps->find(key) == p_in_maps->end())
+    return -1;
+
+  // Convolution
+  SparseMaxPoolingBackwardGPU<float>(d_grad_in_feat, in_nrows, d_grad_out_feat,
+                                     out_nrows, d_mask_index, nchannel, stream);
 
   return 1;
 }

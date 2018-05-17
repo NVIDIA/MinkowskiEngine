@@ -8,6 +8,8 @@
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <driver_types.h>  // cuda driver types
+#include <thrust/device_vector.h>
+
 
 //
 // CUDA macros
@@ -59,6 +61,10 @@ const int CUDA_NUM_THREADS = 512;
 inline int GET_BLOCKS(const int N) {
   return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 }
+
+template <typename Dtype> void print(const thrust::device_vector<Dtype> &v);
+template <typename Dtype1, typename Dtype2>
+void print(thrust::device_vector<Dtype1> &v1, thrust::device_vector<Dtype2> v2);
 
 void HandleError(cudaError_t err, const char *file, int line);
 

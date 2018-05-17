@@ -76,3 +76,30 @@ long convolution_transpose_backward_gpu(
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_kernel,
     THCudaTensor *th_grad_kernel, long pixel_dist, long stride,
     long kernel_size, long dilation, long D, void **m);
+
+long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
+                         THLongTensor *th_mask_index, long pixel_dist,
+                         long stride, long kernel_size, long dilation,
+                         long region_type, THLongTensor *th_offset, long D,
+                         void **m);
+
+long max_pooling_backward(THFloatTensor *th_in_feat,
+                          THFloatTensor *th_grad_in_feat,
+                          THFloatTensor *th_grad_out_feat,
+                          THLongTensor *th_mask_index, long pixel_dist,
+                          long stride, long kernel_size, long dilation, long D,
+                          void **m);
+
+long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
+                             THCudaTensor *th_out_feat,
+                             THCudaLongTensor *th_mask_index, long pixel_dist,
+                             long stride, long kernel_size, long dilation,
+                             long region_type, THLongTensor *th_offset, long D,
+                             void **m);
+
+long max_pooling_backward_gpu(THCudaTensor *th_in_feat,
+                              THCudaTensor *th_grad_in_feat,
+                              THCudaTensor *th_grad_out_feat,
+                              THCudaLongTensor *th_mask_index, long pixel_dist,
+                              long stride, long kernel_size, long dilation,
+                              long D, void **m);

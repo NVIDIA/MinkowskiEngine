@@ -263,4 +263,78 @@ extern "C" long _conv_tr_bw_gpu(float *d_in_feat, float *d_grad_in_feat,
                    out_nrows, pixel_dist, stride, kernel_size, dilation, stream,
                    metadata);
 }
+
+template <uint8_t D>
+long t_max_pooling_fw(const float *p_in_feat, float *p_out_feat,
+                      int64_t *p_mask_index, int64_t nchannel,
+                      int64_t out_nrows, int64_t pixel_dist, int64_t stride,
+                      int64_t kernel_size, int64_t dilation,
+                      int64_t region_type, int64_t *p_offset, int64_t n_offset,
+                      void **metadata);
+extern "C" long _max_pooling_fw(float *p_in_feat, float *p_out_feat,
+                                int64_t *p_mask_index, int64_t nchannel,
+                                int64_t out_nrows, int64_t pixel_dist,
+                                int64_t stride, int64_t kernel_size,
+                                int64_t dilation, int64_t region_type,
+                                int64_t *p_offset, int64_t n_offset, long D,
+                                void **metadata) {
+  SWITCH_DIM(return, t_max_pooling_fw, p_in_feat, p_out_feat, p_mask_index,
+                   nchannel, out_nrows, pixel_dist, stride, kernel_size,
+                   dilation, region_type, p_offset, n_offset, metadata);
+}
+
+template <uint8_t D>
+long t_max_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                      float *p_grad_out_feat, int64_t out_nrows,
+                      const int64_t *p_mask_index, int64_t nchannel,
+                      int64_t pixel_dist, int64_t stride, int64_t kernel_size,
+                      int64_t dilation, void **metadata);
+extern "C" long _max_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                                float *p_grad_out_feat, int64_t out_nrows,
+                                int64_t *p_mask_index, int64_t nchannel,
+                                int64_t pixel_dist, int64_t stride,
+                                int64_t kernel_size, int64_t dilation, long D,
+                                void **metadata) {
+  SWITCH_DIM(return, t_max_pooling_bw, p_grad_in_feat, in_nrows,
+                   p_grad_out_feat, out_nrows, p_mask_index, nchannel,
+                   pixel_dist, stride, kernel_size, dilation, metadata);
+}
+
+template <uint8_t D>
+long t_max_pooling_fw_gpu(const float *d_in_feat, float *d_out_feat,
+                          int64_t out_nrows, int64_t *d_mask_index,
+                          int64_t nchannel, int64_t pixel_dist, int64_t stride,
+                          int64_t kernel_size, int64_t dilation,
+                          int64_t region_type, int64_t *p_offset,
+                          int64_t n_offset, cudaStream_t stream,
+                          void **metadata);
+extern "C" long
+_max_pooling_fw_gpu(float *d_in_feat, float *d_out_feat, int64_t out_nrows,
+                    int64_t *d_mask_index, int64_t nchannel, int64_t pixel_dist,
+                    int64_t stride, int64_t kernel_size, int64_t dilation,
+                    int64_t region_type, int64_t *p_offset, int64_t n_offset,
+                    cudaStream_t stream, long D, void **metadata) {
+  SWITCH_DIM(return, t_max_pooling_fw_gpu, d_in_feat, d_out_feat, out_nrows,
+                   d_mask_index, nchannel, pixel_dist, stride, kernel_size,
+                   dilation, region_type, p_offset, n_offset, stream, metadata);
+}
+
+template <uint8_t D>
+long t_max_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
+                          float *d_grad_out_feat, int64_t out_nrows,
+                          const int64_t *d_mask_index, int64_t nchannel,
+                          int64_t pixel_dist, int64_t stride,
+                          int64_t kernel_size, int64_t dilation,
+                          cudaStream_t stream, void **metadata);
+extern "C" long _max_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
+                                    float *d_grad_out_feat, int64_t out_nrows,
+                                    int64_t *d_mask_index, int64_t nchannel,
+                                    int64_t pixel_dist, int64_t stride,
+                                    int64_t kernel_size, int64_t dilation,
+                                    cudaStream_t stream, long D,
+                                    void **metadata) {
+  SWITCH_DIM(return, t_max_pooling_bw_gpu, d_grad_in_feat, in_nrows,
+                   d_grad_out_feat, out_nrows, d_mask_index, nchannel,
+                   pixel_dist, stride, kernel_size, dilation, stream, metadata);
+}
 #endif
