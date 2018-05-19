@@ -53,8 +53,8 @@ void SparseConvolutionForward(const Dtype *p_in_feat, int in_nchannel,
 
 template <typename Dtype>
 void SparseConvolutionBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
-                               int in_nchannel, Dtype *p_grad_out_feat,
-                               int out_nchannel, Dtype *p_kernel,
+                               int in_nchannel, const Dtype *p_grad_out_feat,
+                               int out_nchannel, const Dtype *p_kernel,
                                Dtype *p_grad_kernel,
                                const InOutMapPerKernel in_map,
                                const InOutMapPerKernel out_map, int out_nrows) {

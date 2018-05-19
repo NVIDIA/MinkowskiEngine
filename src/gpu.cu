@@ -14,15 +14,15 @@ template void print(const thrust::device_vector<float> &v);
 template void print(const thrust::device_vector<int64_t> &v);
 
 template <typename Dtype1, typename Dtype2>
-void print(thrust::device_vector<Dtype1> &v1,
-           thrust::device_vector<Dtype2> v2) {
+void print(const thrust::device_vector<Dtype1> &v1,
+           const thrust::device_vector<Dtype2> &v2) {
   for (size_t i = 0; i < v1.size(); i++)
     std::cout << " (" << v1[i] << "," << std::setw(2) << v2[i] << ")";
   std::cout << "\n";
 }
 
-template void print(thrust::device_vector<int64_t> &v1,
-           thrust::device_vector<int64_t> v2);
+template void print(const thrust::device_vector<int64_t> &v1,
+                    const thrust::device_vector<int64_t> &v2);
 
 void HandleError(cudaError_t err, const char *file, int line) {
   if (err != cudaSuccess) {

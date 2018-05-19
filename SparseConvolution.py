@@ -1,47 +1,12 @@
 import math
-import cffi
 from itertools import product
 
 import torch
 from torch.autograd import Function
 from torch.nn import Module, Parameter
-from enum import Enum
 
 import SparseConvolutionEngineFFI as SCE
-
-ffi = cffi.FFI()
-NULL = ffi.NULL
-
-
-class RegionType(Enum):
-    """
-    Define the kernel region type
-    """
-    HYPERCUBE = 0, 'HYPERCUBE'
-    HYPERCROSS = 1, 'HYPERCROSS'
-    CUSTOM = 2, 'CUSTOM'
-
-    def __new__(cls, value, name):
-        member = object.__new__(cls)
-        member._value_ = value
-        member.fullname = name
-        return member
-
-    def __int__(self):
-        return self.value
-
-
-class Metadata(object):
-    def __init__(self, D, ptr=0):
-        self.D = D
-        self.ffi = ffi.new('void *[1]')
-        SCE.write_ffi_ptr(ptr, self.ffi)
-
-    def clear(self):
-        """
-        Clear all coordinates and convolution maps
-        """
-        SCE.clear(self.D, self.ffi)
+from Common import RegionType, convert_to_long_tensor
 
 
 class SparseConvolutionFunction(Function):
@@ -49,6 +14,12 @@ class SparseConvolutionFunction(Function):
                  region_offset, dimension, metadata):
         super(SparseConvolutionFunction, self).__init__()
         assert isinstance(region_type, RegionType)
+
+        pixel_dist = convert_to_long_tensor(pixel_dist, dimension)
+        stride = convert_to_long_tensor(stride, dimension)
+        kernel_size = convert_to_long_tensor(kernel_size, dimension)
+        dilation = convert_to_long_tensor(dilation, dimension)
+
         self.pixel_dist = pixel_dist
         self.stride = stride
         self.kernel_size = kernel_size
@@ -90,6 +61,12 @@ class SparseConvolutionTransposeFunction(Function):
                  region_offset, dimension, metadata):
         super(SparseConvolutionTransposeFunction, self).__init__()
         assert isinstance(region_type, RegionType)
+
+        pixel_dist = convert_to_long_tensor(pixel_dist, dimension)
+        stride = convert_to_long_tensor(stride, dimension)
+        kernel_size = convert_to_long_tensor(kernel_size, dimension)
+        dilation = convert_to_long_tensor(dilation, dimension)
+
         self.pixel_dist = pixel_dist
         self.stride = stride
         self.kernel_size = kernel_size
@@ -142,33 +119,42 @@ class SparseConvolutionBase(Module):
         super(SparseConvolutionBase, self).__init__()
         if dimension is None or metadata is None:
             raise ValueError('Dimension and metadata must be defined')
-        if stride > 1:  # It is discouraged to use dilation when stride > 1
-            assert dilation == 1
-        assert kernel_size > 0
-        if kernel_size == 1:
-            assert stride == 1
         if region_offset is None:
             region_offset = torch.LongTensor()
         assert isinstance(region_type, RegionType)
 
+        pixel_dist = convert_to_long_tensor(pixel_dist, dimension)
+        stride = convert_to_long_tensor(stride, dimension)
+        kernel_size = convert_to_long_tensor(kernel_size, dimension)
+        dilation = convert_to_long_tensor(dilation, dimension)
+
         if region_type == RegionType.HYPERCUBE:
-            kernel_volume = kernel_size**dimension
+            assert torch.unique(kernel_size).numel() == 1
+            assert torch.unique(dilation).numel() == 1
+
             # Convolution kernel with even numbered kernel size not defined.
-            if kernel_size % 2 == 0:
-                off = (dilation * pixel_dist *
-                       torch.arange(kernel_size)).long().tolist()
-                iter_args = [off] * dimension
+            if (kernel_size % 2).prod() == 1:  # Odd
+                kernel_volume = int(torch.prod(kernel_size))
+            elif (kernel_size % 2).sum() == 0:  # Even
+                iter_args = []
+                for d in range(dimension):
+                    off = (dilation[d] * pixel_dist[d] *
+                           torch.arange(kernel_size[d]).long()).tolist()
+                    iter_args.append(off)
                 region_offset = list(product(*iter_args))
                 region_offset = torch.LongTensor(region_offset)
+                kernel_volume = region_offset.size(0)
                 region_type = RegionType.CUSTOM
+            else:
+                raise ValueError('All edges must have the same length.')
         elif region_type == RegionType.HYPERCROSS:
-            assert kernel_size % 2 == 1
+            assert (kernel_size % 2).prod() == 1
             # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
-            kernel_volume = (kernel_size - 1) * dimension + 1
+            kernel_volume = int(torch.sum(kernel_size - 1) * dimension + 1)
         elif region_type == RegionType.CUSTOM:
             assert region_offset.numel() > 0
             assert region_offset.size(1) == dimension
-            kernel_volume = region_offset.size(0)
+            kernel_volume = int(region_offset.size(0))
         else:
             raise NotImplementedError()
 
@@ -183,13 +169,15 @@ class SparseConvolutionBase(Module):
         self.region_offset = region_offset
         self.dimension = dimension
         self.metadata = metadata
+        self.use_mm = False  # use matrix multiplication when kernel is 1
 
         Tensor = torch.FloatTensor
-        if kernel_size > 1:
+        if torch.prod(kernel_size) == 1 and torch.prod(stride) == 1:
+            self.kernel_shape = (self.in_channels, self.out_channels)
+            self.use_mm = True
+        else:
             self.kernel_shape = (self.kernel_volume, self.in_channels,
                                  self.out_channels)
-        elif kernel_size == 1:
-            self.kernel_shape = (self.in_channels, self.out_channels)
 
         self.kernel = Parameter(Tensor(*self.kernel_shape))
         self.bias = Parameter(Tensor(1, out_channels)) if has_bias else None
@@ -198,7 +186,7 @@ class SparseConvolutionBase(Module):
     def forward(self, input):
         # If the kernel_size == 1, the convolution is simply a matrix
         # multiplication
-        if self.kernel_size == 1 and self.stride == 1:
+        if self.use_mm:
             out = input.mm(self.kernel)
         else:
             out = self.conv(input, self.kernel)
@@ -272,14 +260,27 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
             upsample_stride, dilation, region_type, has_bias, region_offset,
             dimension, metadata)
         if region_type == RegionType.HYPERCUBE:
+            assert torch.unique(self.kernel_size).numel() == 1
+            assert torch.unique(self.dilation).numel() == 1
+
             # Convolution kernel with even numbered kernel size not defined.
-            if kernel_size % 2 == 0:
-                off = (dilation * pixel_dist / upsample_stride *
-                       torch.arange(kernel_size)).long().tolist()
-                iter_args = [off] * dimension
+            if (self.kernel_size % 2).prod() == 1:  # Odd
+                pass
+            elif (self.kernel_size % 2).sum() == 0:  # Even
+                iter_args = []
+                for d in range(dimension):
+                    off = (self.dilation[d] *
+                           (self.pixel_dist[d] / self.stride[d]) *
+                           torch.arange(self.kernel_size[d]).long()).tolist()
+                    iter_args.append(off)
                 region_offset = list(product(*iter_args))
                 self.region_offset = torch.LongTensor(region_offset)
                 self.region_type = RegionType.CUSTOM
+            else:
+                raise ValueError('All edges must have the same length.')
+        elif region_type == RegionType.HYPERCROSS:
+            raise NotImplementedError()
+
         self.reset_parameters(True)
         self.conv = SparseConvolutionTransposeFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,

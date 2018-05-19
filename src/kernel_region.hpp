@@ -6,46 +6,51 @@
 template <uint8_t D> class KernelRegionIterator;
 template <uint8_t D> class KernelRegion {
 public:
-  int pixel_dist, kernel_size, dilation, region_type;
-  int64_t *p_offset, n_offset;
+  int region_type;
+  Arr<D> pixel_dists, kernel_size, dilations;
+  const int64_t *p_offset, n_offset;
   Coord<D> center;
   Coord<D> lb;
   Coord<D> ub;
 
-  KernelRegion(Coord<D> &center, int pixel_dist, int kernel_size, int dilation,
-               int region_type, int64_t *p_offset, int n_offset)
-      : center(center), pixel_dist(pixel_dist), kernel_size(kernel_size),
-        dilation(dilation), region_type(region_type), p_offset(p_offset),
+  KernelRegion(Coord<D> &center, Arr<D> pixel_dists, Arr<D> kernel_size,
+               Arr<D> dilations, int region_type, const int64_t *p_offset,
+               int n_offset)
+      : center(center), pixel_dists(pixel_dists), kernel_size(kernel_size),
+        dilations(dilations), region_type(region_type), p_offset(p_offset),
         n_offset(n_offset) {
     for (int i = 0; i < D; i++) {
-      lb[i] = center[i] - int(kernel_size / 2) * dilation * pixel_dist;
-      ub[i] = center[i] + int(kernel_size / 2) * dilation * pixel_dist;
+      lb[i] =
+          center[i] - int(kernel_size[i] / 2) * dilations[i] * pixel_dists[i];
+      ub[i] =
+          center[i] + int(kernel_size[i] / 2) * dilations[i] * pixel_dists[i];
     }
     lb[D] = ub[D] = center[D]; // set the batch index
   }
 
   KernelRegionIterator<D> begin() {
-    return KernelRegionIterator<D>(*this, pixel_dist, kernel_size, dilation,
+    return KernelRegionIterator<D>(*this, pixel_dists, kernel_size, dilations,
                                    region_type);
   }
   KernelRegionIterator<D> end() {
-    return KernelRegionIterator<D>(*this, pixel_dist, kernel_size, dilation,
+    return KernelRegionIterator<D>(*this, pixel_dists, kernel_size, dilations,
                                    region_type);
   }
 };
 
 template <uint8_t D> class KernelRegionIterator {
 private:
-  int pixel_dist, kernel_size, dilation, region_type, curr_axis, offset_ind;
+  Arr<D> pixel_dists, kernel_size, dilations;
+  int region_type, curr_axis, offset_ind;
   KernelRegion<D> &region;
   Coord<D> point;
 
 public:
   bool done;
-  KernelRegionIterator(KernelRegion<D> &region, int pixel_dist, int kernel_size,
-                       int dilation, int region_type)
-      : region(region), done(false), pixel_dist(pixel_dist),
-        kernel_size(kernel_size), dilation(dilation), region_type(region_type),
+  KernelRegionIterator(KernelRegion<D> &region, Arr<D> pixel_dists,
+                       Arr<D> kernel_size, Arr<D> dilations, int region_type)
+      : region(region), done(false), pixel_dists(pixel_dists),
+        kernel_size(kernel_size), dilations(dilations), region_type(region_type),
         curr_axis(0), offset_ind(0) {
     // First point
     switch (region_type) {
@@ -70,7 +75,7 @@ public:
     case 0:
       // Iterate only from 0 to D-1, point[D] reserved for batch index
       for (int i = D - 1;;) {
-        point[i] += dilation * pixel_dist; // point is initialized as lb
+        point[i] += dilations[i] * pixel_dists[i]; // point is initialized as lb
         if (point[i] <= region.ub[i])
           break;
         point[i] = region.lb[i];
@@ -85,7 +90,7 @@ public:
       while (curr_axis < D) {
         // Go through [4, 5, 1, 2] when kernel_size = 5, and ceter = 3.
         // Center passed at the initialization
-        point[curr_axis] += dilation * pixel_dist;
+        point[curr_axis] += dilations[curr_axis] * pixel_dists[curr_axis];
         // skip if the current point is crossing the center
         if (point[curr_axis] == region.center[curr_axis]) {
           curr_axis++;
@@ -100,8 +105,8 @@ public:
         done = true;
       }
       return *this;
-    case 2: // custom offset
-      offset_ind++;  // already past the first offset
+    case 2:         // custom offset
+      offset_ind++; // already past the first offset
       if (offset_ind >= region.n_offset) {
         done = true;
       } else {

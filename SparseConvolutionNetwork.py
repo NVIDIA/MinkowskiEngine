@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 import SparseConvolutionEngineFFI as SCE
-from SparseConvolution import Metadata
+from Common import Metadata, convert_to_long_tensor
 
 
 class SparseConvolutionNetwork(nn.Module, ABC):
@@ -32,16 +32,19 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         self.metadata.clear()
 
     def initialize_coords(self, coords):
-        SCE.initialize_coords(coords.contiguous(), 1,
-                              self.D, self.metadata.ffi)
+        pixel_dist = convert_to_long_tensor(1, self.D)
+        SCE.initialize_coords(coords.contiguous(), pixel_dist, self.D,
+                              self.metadata.ffi)
         self.n_rows = coords.size(0)
 
     def initialize_coords_with_duplicates(self, coords):
-        SCE.initialize_coords_with_duplicates(coords.contiguous(), 1, self.D,
-                                              self.metadata.ffi)
+        pixel_dist = convert_to_long_tensor(1, self.D)
+        SCE.initialize_coords_with_duplicates(
+            coords.contiguous(), pixel_dist, self.D, self.metadata.ffi)
         self.n_rows = self.get_nrows(1)
 
     def get_coords(self, pixel_dist):
+        pixel_dist = convert_to_long_tensor(pixel_dist, self.D)
         coords = torch.LongTensor()
         success = SCE.get_coords(coords, pixel_dist, self.D, self.metadata.ffi)
         if success < 0:
@@ -49,8 +52,14 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         return coords
 
     def get_permutation(self, pixel_dist_src, pixel_dist_dst):
+        pixel_dist_src = convert_to_long_tensor(pixel_dist_src, self.D)
+        pixel_dist_dst = convert_to_long_tensor(pixel_dist_dst, self.D)
+        assert pixel_dist_src.numel() == pixel_dist_dst.numel()
+
         # Mapping is surjective, Mapping to smaller space is not supported
-        assert pixel_dist_src > pixel_dist_dst
+        for i in range(pixel_dist_src.numel()):
+            assert pixel_dist_src[i] > pixel_dist_dst[i]
+
         perm = torch.LongTensor()
         success = SCE.get_permutation(perm, pixel_dist_src, pixel_dist_dst,
                                       self.D, self.metadata.ffi)
@@ -67,6 +76,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
                             coords[:, D:]), dim=1)
         """
         index_map = torch.LongTensor()
+        pixel_dist = convert_to_long_tensor(pixel_dist, self.D)
         success = SCE.get_index_map(coords.contiguous(), index_map, pixel_dist,
                                     self.D, self.metadata.ffi)
         if success < 0:
@@ -74,15 +84,17 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         return index_map
 
     def get_nrows(self, pixel_dist):
+        pixel_dist = convert_to_long_tensor(pixel_dist, self.D)
         nrows = SCE.get_nrows(pixel_dist, self.D, self.metadata.ffi)
         if nrows < 0:
             raise ValueError('No coord found at : {}'.format(pixel_dist))
         return nrows
 
     def permute_label(self, label, max_label, pixel_dist):
-        if pixel_dist == 1:
+        if pixel_dist == 1 or np.prod(pixel_dist) == 1:
             return label
 
+        pixel_dist = convert_to_long_tensor(pixel_dist, self.D)
         permutation = self.get_permutation(pixel_dist, 1)
         nrows = self.get_nrows(pixel_dist)
 
@@ -94,6 +106,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         return torch.from_numpy(np.argmax(counter, 1))
 
     def permute_feature(self, feat, pixel_dist, dtype=np.float32):
+        pixel_dist = convert_to_long_tensor(pixel_dist, self.D)
         permutation = self.get_permutation(pixel_dist, 1)
         nrows = self.get_nrows(pixel_dist)
 

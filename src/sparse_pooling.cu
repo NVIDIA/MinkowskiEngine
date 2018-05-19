@@ -101,8 +101,8 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 const std::vector<std::vector<int64_t>> out_map,
                                 cudaStream_t stream) {
   int n_active = 0;
-  thrust::device_vector<int64_t> d_in_map, d_out_map, d_curr_out_map, d_sorted_out_map,
-      d_reduced_sorted_out_map;
+  thrust::device_vector<int64_t> d_in_map, d_out_map, d_curr_out_map,
+      d_sorted_out_map, d_reduced_sorted_out_map;
   thrust::device_vector<ValInd<Dtype>> d_valind, d_reduced_valind;
   thrust::equal_to<int> equal_to;
   valind_max_operator<Dtype> valind_max;
@@ -131,6 +131,7 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
       thrust::advance(d_out_map_iter, curr_n);
     }
   }
+
   d_sorted_out_map = d_out_map;
   CUDA_POST_KERNEL_CHECK;
   d_reduced_sorted_out_map.resize(out_nrows);
@@ -145,6 +146,7 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
 
   // Create sorted d_out_map
   thrust::sort(d_sorted_out_map.begin(), d_sorted_out_map.end());
+
   for (int j = 0; j < nchannel; j++) {
     d_curr_out_map = d_out_map;
 
@@ -155,7 +157,8 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
     CUDA_POST_KERNEL_CHECK;
 
     // Sort by d_out_map for reduction
-    thrust::sort_by_key(d_curr_out_map.begin(), d_curr_out_map.end(), d_valind.begin());
+    thrust::sort_by_key(d_curr_out_map.begin(), d_curr_out_map.end(),
+                        d_valind.begin());
     CUDA_POST_KERNEL_CHECK;
 
     // reduce by key
@@ -165,10 +168,11 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
     CUDA_POST_KERNEL_CHECK;
 
     // Copy the values to the output
-    valind_to_out<Dtype><<<GET_BLOCKS(out_nrows), CUDA_NUM_THREADS, 0, stream>>>(
-        out_nrows, thrust::raw_pointer_cast(d_reduced_valind.data()),
-        thrust::raw_pointer_cast(d_sorted_out_map.data()), d_out_feat,
-        d_max_index, j, nchannel);
+    valind_to_out<Dtype>
+        <<<GET_BLOCKS(out_nrows), CUDA_NUM_THREADS, 0, stream>>>(
+            out_nrows, thrust::raw_pointer_cast(d_reduced_valind.data()),
+            thrust::raw_pointer_cast(d_reduced_sorted_out_map.data()),
+            d_out_feat, d_max_index, j, nchannel);
   }
 }
 
