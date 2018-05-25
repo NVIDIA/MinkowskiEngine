@@ -145,6 +145,12 @@ The strided convolution maps i-th index to `int(i / stride) * stride`. Thus, it 
 Uncomment `DEBUG := 1` in `Makefile` and run `gdb python` to debug in `gdb` and run `run example.py`. Set break point by `b filename:linenum` or `b functionname`. E.g., `b sparse.c:40`. If you want to access array values, use `(gdb) p *a@3` or `p (int [3])*a`.
 
 
+# Tests
+
+```
+python -m tests.test
+```
+
 # Todo
 
 - Even numbered kernel_size
