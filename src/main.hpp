@@ -19,8 +19,7 @@ template <uint8_t D> using Coord = std::array<int64_t, D + 1>;
 // Stride hash
 template <uint8_t D> using Arr = std::array<uint64_t, D>;
 
-template <typename T>
-void print_arr(T arr) {
+template <typename T> void print_arr(T arr) {
   for (auto i = arr.begin(); i != arr.end(); i++)
     std::cout << *i;
 }
@@ -173,6 +172,38 @@ public:
     }                                                                          \
   }
 
+#define INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES                              \
+  auto p_coord2inds = &init_metadata.coord2inds;                               \
+  auto p_in_maps = &init_metadata.in_maps;                                     \
+  auto p_out_maps = &init_metadata.out_maps;                                   \
+  auto pixel_dists = ToArray<D>(p_pixel_dist);                                 \
+  auto out_pixel_dists = Arr<D>();                                             \
+  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);                        \
+  auto out_pixel_dist_hash = hash_vec<Arr<D>>(out_pixel_dists);                \
+  auto stride_hash = hash_vec<Arr<D>>(Arr<D>());                               \
+  auto kernel_size_hash = hash_vec<Arr<D>>(Arr<D>());                          \
+  auto dilation_hash = hash_vec<Arr<D>>(Arr<D>());                             \
+  InOutKey key = {pixel_dist_hash, stride_hash, kernel_size_hash,              \
+                  dilation_hash, false};
+
+#define INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP                            \
+  if (p_coord2inds->find(pixel_dist_hash) == p_coord2inds->end()) {            \
+    std::cerr << "The coord map doesn't exists for the given pixel dists"      \
+              << std::endl;                                                    \
+    return -1;                                                                 \
+  }                                                                            \
+  if (p_coord2inds->find(out_pixel_dist_hash) == p_coord2inds->end())          \
+    (*p_coord2inds)[out_pixel_dist_hash] = CreateOutputOriginCoordIndexMap<D>( \
+        (*p_coord2inds)[pixel_dist_hash], 0);                                  \
+                                                                               \
+  if (p_in_maps->find(key) == p_in_maps->end()) {                              \
+    auto in_out_tuple = CreateGlobalReductionInOutMap<D>(                      \
+        (*p_coord2inds)[pixel_dist_hash],                                      \
+        (*p_coord2inds)[out_pixel_dist_hash]);                                 \
+    (*p_in_maps)[key] = std::get<0>(in_out_tuple);                             \
+    (*p_out_maps)[key] = std::get<1>(in_out_tuple);                            \
+  }
+
 // Checks for backward prop
 #define BACKWARD_PROP_CHECK                                                    \
   if (p_coord2inds->find(pixel_dist_hash) == p_coord2inds->end())              \
@@ -192,6 +223,10 @@ template <uint8_t D>
 long t_initialize_out_coords(const int64_t *p_pixel_dist,
                              const int64_t *p_stride, bool is_transpose,
                              void **metadata);
+
+template <uint8_t D>
+long t_initialize_origin_coords(const int64_t *p_pixel_dist, int64_t batch_size,
+                                void **metadata);
 
 template <uint8_t D>
 long t_initialize_coords_with_duplicates(const int64_t *coords, int64_t nrows,
@@ -321,4 +356,67 @@ long t_max_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
                           const int64_t *p_kernel_size,
                           const int64_t *p_dilation, cudaStream_t stream,
                           void **metadata);
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_fw(const float *p_in_feat, float *p_out_feat,
+                              int64_t *p_num_nonzero, int64_t nchannel,
+                              int64_t out_nrows, const int64_t *p_pixel_dist,
+                              const int64_t *p_stride,
+                              const int64_t *p_kernel_size,
+                              const int64_t *p_dilation, int64_t region_type,
+                              const int64_t *p_offset, int64_t n_offset,
+                              void **metadata);
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                              float *p_grad_out_feat, int64_t out_nrows,
+                              const int64_t *p_num_nonzero, int64_t nchannel,
+                              const int64_t *p_pixel_dist,
+                              const int64_t *p_stride,
+                              const int64_t *p_kernel_size,
+                              const int64_t *p_dilation, void **metadata);
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_fw_gpu(
+    const float *d_in_feat, float *d_out_feat, int64_t out_nrows,
+    int64_t *d_num_nonzero, int64_t nchannel, const int64_t *p_pixel_dist,
+    const int64_t *p_stride, const int64_t *p_kernel_size,
+    const int64_t *p_dilation, int64_t region_type, const int64_t *p_offset,
+    int64_t n_offset, cudaStream_t stream, void **metadata);
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_bw_gpu(
+    float *d_grad_in_feat, int64_t in_nrows, const float *d_grad_out_feat,
+    int64_t out_nrows, const int64_t *d_num_nonzero, int64_t nchannel,
+    const int64_t *p_pixel_dist, const int64_t *p_stride,
+    const int64_t *p_kernel_size, const int64_t *p_dilation,
+    cudaStream_t stream, void **metadata);
+
+template <uint8_t D>
+long t_global_avg_pooling_fw(const float *p_in_feat, float *p_out_feat,
+                             int64_t out_nrows, int64_t nchannel,
+                             int64_t *p_num_nonzero,
+                             const int64_t *p_pixel_dist, void **metadata);
+
+template <uint8_t D>
+long t_global_avg_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                             float *p_grad_out_feat, int64_t out_nrows,
+                             int64_t nchannel, const int64_t *p_num_nonzero,
+                             const int64_t *p_pixel_dist, void **metadata);
+
+template <uint8_t D>
+long t_global_avg_pooling_fw_gpu(const float *d_in_feat, float *d_out_feat,
+                                 int64_t out_nrows, int64_t nchannel,
+                                 int64_t *d_num_nonzero,
+                                 const int64_t *p_pixel_dist,
+                                 cudaStream_t stream, void **metadata);
+
+template <uint8_t D>
+long t_global_avg_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
+                                 const float *d_grad_out_feat,
+                                 int64_t out_nrows, int64_t nchannel,
+                                 const int64_t *d_num_nonzero,
+                                 const int64_t *p_pixel_dist,
+                                 cudaStream_t stream, void **metadata);
+
 #endif

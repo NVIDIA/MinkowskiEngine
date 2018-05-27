@@ -6,7 +6,7 @@
 
 template <typename Dtype> void print(const thrust::device_vector<Dtype> &v) {
   for (size_t i = 0; i < v.size(); i++)
-    std::cout << " " << std::fixed << std::setprecision(1) << v[i];
+    std::cout << " " << std::fixed << std::setprecision(3) << v[i];
   std::cout << "\n";
 }
 

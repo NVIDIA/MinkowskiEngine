@@ -55,6 +55,17 @@ extern "C" long _initialize_coords(long *coords, long nrows, long *p_pixel_dist,
 }
 
 template <uint8_t D>
+long t_initialize_coords_with_duplicates(const int64_t *coords, int64_t nrows,
+                                         const int64_t *p_pixel_dist,
+                                         void **metadata);
+extern "C" long _initialize_coords_with_duplicates(long *coords, long nrows,
+                                                   long *p_pixel_dist, long D,
+                                                   void **metadata) {
+  SWITCH_DIM(return, t_initialize_coords_with_duplicates, coords, nrows,
+                   p_pixel_dist, metadata)
+}
+
+template <uint8_t D>
 long t_initialize_out_coords(const int64_t *p_pixel_dist,
                              const int64_t *p_stride, bool is_transpose,
                              void **metadata);
@@ -66,14 +77,12 @@ extern "C" long _initialize_out_coords(long *p_pixel_dist, long *p_stride,
 }
 
 template <uint8_t D>
-long t_initialize_coords_with_duplicates(const int64_t *coords, int64_t nrows,
-                                         const int64_t *p_pixel_dist,
-                                         void **metadata);
-extern "C" long _initialize_coords_with_duplicates(long *coords, long nrows,
-                                                   long *p_pixel_dist, long D,
-                                                   void **metadata) {
-  SWITCH_DIM(return, t_initialize_coords_with_duplicates, coords, nrows,
-                   p_pixel_dist, metadata)
+long t_initialize_origin_coords(const int64_t *p_pixel_dist, int64_t batch_size,
+                                void **metadata);
+extern "C" long _initialize_origin_coords(long *p_pixel_dist, long batch_size,
+                                          long D, void **metadata) {
+  SWITCH_DIM(return, t_initialize_origin_coords, p_pixel_dist, batch_size,
+                   metadata)
 }
 
 template <uint8_t D>
@@ -360,4 +369,143 @@ extern "C" long _max_pooling_bw_gpu(float *d_grad_in_feat, long in_nrows,
                    p_pixel_dist, p_stride, p_kernel_size, p_dilation, stream,
                    metadata);
 }
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_fw(const float *p_in_feat, float *p_out_feat,
+                              int64_t *p_num_nonzero, int64_t nchannel,
+                              int64_t out_nrows, const int64_t *p_pixel_dist,
+                              const int64_t *p_stride,
+                              const int64_t *p_kernel_size,
+                              const int64_t *p_dilation, int64_t region_type,
+                              const int64_t *p_offset, int64_t n_offset,
+                              void **metadata);
+extern "C" long _nonzero_avg_pooling_fw(float *p_in_feat, float *p_out_feat,
+                                        long *p_num_nonzero, long nchannel,
+                                        long out_nrows, long *p_pixel_dist,
+                                        long *p_stride, long *p_kernel_size,
+                                        long *p_dilation, long region_type,
+                                        long *p_offset, long n_offset, long D,
+                                        void **metadata) {
+  SWITCH_DIM(return, t_nonzero_avg_pooling_fw, p_in_feat, p_out_feat,
+                   p_num_nonzero, nchannel, out_nrows, p_pixel_dist, p_stride,
+                   p_kernel_size, p_dilation, region_type, p_offset, n_offset,
+                   metadata);
+}
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                              float *p_grad_out_feat, int64_t out_nrows,
+                              const int64_t *p_num_nonzero, int64_t nchannel,
+                              const int64_t *p_pixel_dist,
+                              const int64_t *p_stride,
+                              const int64_t *p_kernel_size,
+                              const int64_t *p_dilation, void **metadata);
+extern "C" long _nonzero_avg_pooling_bw(float *p_grad_in_feat, long in_nrows,
+                                        float *p_grad_out_feat, long out_nrows,
+                                        long *p_num_nonzero, long nchannel,
+                                        long *p_pixel_dist, long *p_stride,
+                                        long *p_kernel_size, long *p_dilation,
+                                        long D, void **metadata) {
+  SWITCH_DIM(return, t_nonzero_avg_pooling_bw, p_grad_in_feat, in_nrows,
+                   p_grad_out_feat, out_nrows, p_num_nonzero, nchannel,
+                   p_pixel_dist, p_stride, p_kernel_size, p_dilation, metadata);
+}
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_fw_gpu(
+    const float *d_in_feat, float *d_out_feat, int64_t out_nrows,
+    int64_t *d_num_nonzero, int64_t nchannel, const int64_t *p_pixel_dist,
+    const int64_t *p_stride, const int64_t *p_kernel_size,
+    const int64_t *p_dilation, int64_t region_type, const int64_t *p_offset,
+    int64_t n_offset, cudaStream_t stream, void **metadata);
+extern "C" long _nonzero_avg_pooling_fw_gpu(
+    float *d_in_feat, float *d_out_feat, long out_nrows, long *d_num_nonzero,
+    long nchannel, long *p_pixel_dist, long *p_stride, long *p_kernel_size,
+    long *p_dilation, long region_type, long *p_offset, long n_offset,
+    cudaStream_t stream, long D, void **metadata) {
+  SWITCH_DIM(return, t_nonzero_avg_pooling_fw_gpu, d_in_feat, d_out_feat,
+                   out_nrows, d_num_nonzero, nchannel, p_pixel_dist, p_stride,
+                   p_kernel_size, p_dilation, region_type, p_offset, n_offset,
+                   stream, metadata);
+}
+
+template <uint8_t D>
+long t_nonzero_avg_pooling_bw_gpu(
+    float *d_grad_in_feat, int64_t in_nrows, const float *d_grad_out_feat,
+    int64_t out_nrows, const int64_t *d_num_nonzero, int64_t nchannel,
+    const int64_t *p_pixel_dist, const int64_t *p_stride,
+    const int64_t *p_kernel_size, const int64_t *p_dilation,
+    cudaStream_t stream, void **metadata);
+extern "C" long _nonzero_avg_pooling_bw_gpu(
+    float *d_grad_in_feat, long in_nrows, float *d_grad_out_feat,
+    long out_nrows, long *d_num_nonzero, long nchannel, long *p_pixel_dist,
+    long *p_stride, long *p_kernel_size, long *p_dilation, cudaStream_t stream,
+    long D, void **metadata) {
+  SWITCH_DIM(return, t_nonzero_avg_pooling_bw_gpu, d_grad_in_feat, in_nrows,
+                   d_grad_out_feat, out_nrows, d_num_nonzero, nchannel,
+                   p_pixel_dist, p_stride, p_kernel_size, p_dilation, stream,
+                   metadata);
+}
+
+template <uint8_t D>
+long t_global_avg_pooling_fw(const float *p_in_feat, float *p_out_feat,
+                             int64_t out_nrows, int64_t nchannel,
+                             int64_t *p_num_nonzero,
+                             const int64_t *p_pixel_dist, void **metadata);
+extern "C" long _global_avg_pooling_fw(float *p_in_feat, float *p_out_feat,
+                                       long out_nrows, long nchannel,
+                                       long *p_num_nonzero, long *p_pixel_dist,
+                                       long D, void **metadata) {
+  SWITCH_DIM(return, t_global_avg_pooling_fw, p_in_feat, p_out_feat, out_nrows,
+                   nchannel, p_num_nonzero, p_pixel_dist, metadata);
+}
+
+template <uint8_t D>
+long t_global_avg_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
+                             float *p_grad_out_feat, int64_t out_nrows,
+                             int64_t nchannel, const int64_t *p_num_nonzero,
+                             const int64_t *p_pixel_dist, void **metadata);
+extern "C" long _global_avg_pooling_bw(float *p_grad_in_feat, long in_nrows,
+                                       float *p_grad_out_feat, long out_nrows,
+                                       long nchannel, long *p_num_nonzero,
+                                       long *p_pixel_dist, long D,
+                                       void **metadata) {
+  SWITCH_DIM(return, t_global_avg_pooling_bw, p_grad_in_feat, in_nrows,
+                   p_grad_out_feat, out_nrows, nchannel, p_num_nonzero,
+                   p_pixel_dist, metadata);
+}
+
+template <uint8_t D>
+long t_global_avg_pooling_fw_gpu(const float *d_in_feat, float *d_out_feat,
+                                 int64_t out_nrows, int64_t nchannel,
+                                 int64_t *d_num_nonzero,
+                                 const int64_t *p_pixel_dist,
+                                 cudaStream_t stream, void **metadata);
+extern "C" long _global_avg_pooling_fw_gpu(float *d_in_feat, float *d_out_feat,
+                                           long out_nrows, long nchannel,
+                                           long *d_num_nonzero,
+                                           long *p_pixel_dist,
+                                           cudaStream_t stream, long D,
+                                           void **metadata) {
+  SWITCH_DIM(return, t_global_avg_pooling_fw_gpu, d_in_feat, d_out_feat,
+                   out_nrows, nchannel, d_num_nonzero, p_pixel_dist, stream,
+                   metadata);
+}
+
+template <uint8_t D>
+long t_global_avg_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
+                                 const float *d_grad_out_feat,
+                                 int64_t out_nrows, int64_t nchannel,
+                                 const int64_t *d_num_nonzero,
+                                 const int64_t *p_pixel_dist,
+                                 cudaStream_t stream, void **metadata);
+extern "C" long _global_avg_pooling_bw_gpu(
+    float *d_grad_in_feat, long in_nrows, float *d_grad_out_feat,
+    long out_nrows, long nchannel, long *d_num_nonzero, long *p_pixel_dist,
+    cudaStream_t stream, long D, void **metadata) {
+  SWITCH_DIM(return, t_global_avg_pooling_bw_gpu, d_grad_in_feat, in_nrows,
+                   d_grad_out_feat, out_nrows, nchannel, d_num_nonzero,
+                   p_pixel_dist, stream, metadata);
+}
+
 #endif
