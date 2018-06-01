@@ -7,31 +7,31 @@
 #include "src/gpu.cuh"
 #include "src/math_functions.hpp"
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
-                                int64_t out_nrows, int64_t *d_max_index,
-                                int64_t nchannel,
-                                const std::vector<std::vector<int64_t>> in_map,
-                                const std::vector<std::vector<int64_t>> out_map,
+                                int out_nrows, Itype *d_max_index,
+                                int nchannel,
+                                const std::vector<std::vector<Itype>> in_map,
+                                const std::vector<std::vector<Itype>> out_map,
                                 cudaStream_t stream);
 
-template <typename Dtype>
-void SparseMaxPoolingBackwardGPU(Dtype *d_grad_in_feat, int64_t in_nrows,
+template <typename Dtype, typename Itype>
+void SparseMaxPoolingBackwardGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  const Dtype *d_grad_out_feat,
-                                 int64_t out_nrows, const int64_t *d_max_index,
-                                 int64_t nchannel, cudaStream_t stream);
+                                 int out_nrows, const Itype *d_max_index,
+                                 int nchannel, cudaStream_t stream);
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingForwardGPU(
-    const Dtype *d_in_feat, Dtype *d_out_feat, int64_t out_nrows,
-    int64_t *d_num_nonzero, int64_t nchannel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, cudaStream_t stream);
+    const Dtype *d_in_feat, Dtype *d_out_feat, int out_nrows,
+    Itype *d_num_nonzero, int nchannel,
+    const std::vector<std::vector<Itype>> in_map,
+    const std::vector<std::vector<Itype>> out_map, cudaStream_t stream);
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingBackwardGPU(
-    Dtype *d_grad_in_feat, int64_t in_nrows, const Dtype *d_grad_out_feat,
-    int64_t out_nrows, const int64_t *d_num_nonzero, int64_t nchannel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, cudaStream_t stream);
+    Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
+    int out_nrows, const Itype *d_num_nonzero, int nchannel,
+    const std::vector<std::vector<Itype>> in_map,
+    const std::vector<std::vector<Itype>> out_map, cudaStream_t stream);
 #endif

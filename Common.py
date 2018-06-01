@@ -10,18 +10,18 @@ import SparseConvolutionEngineFFI as SCE
 ffi = cffi.FFI()
 
 
-def convert_to_long_tensor(arg, dimension):
-    if isinstance(arg, torch.LongTensor):
+def convert_to_int_tensor(arg, dimension):
+    if isinstance(arg, torch.IntTensor):
         assert arg.numel() == dimension
         return arg
 
     if isinstance(arg, (collections.Sequence, np.ndarray)):
-        tmp = torch.LongTensor([i for i in arg])
+        tmp = torch.IntTensor([i for i in arg])
         assert tmp.numel() == dimension
     elif isinstance(arg, str):
         raise ValueError('Input must be a scalar or a sequence')
     elif np.isscalar(arg):  # Assume that it is a scalar
-        tmp = torch.LongTensor([int(arg) for i in range(dimension)])
+        tmp = torch.IntTensor([int(arg) for i in range(dimension)])
     else:
         raise ValueError('Input must be a scalar or a sequence')
 

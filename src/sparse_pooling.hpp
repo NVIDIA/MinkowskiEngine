@@ -4,15 +4,16 @@
 #include "src/math_functions.hpp"
 #include <limits>
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseMaxPoolingForward(const Dtype *p_in_feat, Dtype *p_out_feat,
-                             int64_t *p_mask_index, int nchannel,
-                             const InOutMapPerKernel in_map,
-                             const InOutMapPerKernel out_map, int out_nrows) {
+                             Itype *p_mask_index, int nchannel,
+                             const InOutMapPerKernel<Itype> in_map,
+                             const InOutMapPerKernel<Itype> out_map,
+                             int out_nrows) {
   int kernel_volume, n_active_in_volume, row, j, k;
   const Dtype *p_curr_in;
   Dtype *p_curr_out;
-  int64_t *p_curr_mask_index;
+  Itype *p_curr_mask_index;
 
   // Number of weights
   kernel_volume = in_map.size();
@@ -47,14 +48,14 @@ void SparseMaxPoolingForward(const Dtype *p_in_feat, Dtype *p_out_feat,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseMaxPoolingBackward(Dtype *p_grad_in_feat, int in_nrows,
                               const Dtype *p_grad_out_feat, int out_nrows,
-                              const int64_t *p_mask_index, int nchannel,
-                              const InOutMapPerKernel in_map,
-                              const InOutMapPerKernel out_map) {
+                              const Itype *p_mask_index, int nchannel,
+                              const InOutMapPerKernel<Itype> in_map,
+                              const InOutMapPerKernel<Itype> out_map) {
   const Dtype *p_curr_grad_out;
-  const int64_t *p_curr_mask_index;
+  const Itype *p_curr_mask_index;
 
   // cleanup gradients
   std::fill(p_grad_in_feat, p_grad_in_feat + in_nrows * nchannel, 0);
@@ -72,16 +73,16 @@ void SparseMaxPoolingBackward(Dtype *p_grad_in_feat, int in_nrows,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingForward(const Dtype *p_in_feat, Dtype *p_out_feat,
-                                    int64_t *p_num_nonzero, int nchannel,
-                                    const InOutMapPerKernel in_map,
-                                    const InOutMapPerKernel out_map,
+                                    Itype *p_num_nonzero, int nchannel,
+                                    const InOutMapPerKernel<Itype> in_map,
+                                    const InOutMapPerKernel<Itype> out_map,
                                     int out_nrows) {
   int kernel_volume, n_active_in_volume, row, j, k;
   const Dtype *p_curr_in;
   Dtype *p_curr_out;
-  int64_t *p_curr_num_nonzero;
+  Itype *p_curr_num_nonzero;
 
   // Number of weights
   kernel_volume = in_map.size();
@@ -122,11 +123,13 @@ void SparseNonzeroAvgPoolingForward(const Dtype *p_in_feat, Dtype *p_out_feat,
   }
 }
 
-template <typename Dtype>
-void SparseNonzeroAvgPoolingBackward(
-    Dtype *p_grad_in_feat, int in_nrows, const Dtype *p_grad_out_feat,
-    int out_nrows, const int64_t *p_num_nonzero, int nchannel,
-    const InOutMapPerKernel in_map, const InOutMapPerKernel out_map) {
+template <typename Dtype, typename Itype>
+void SparseNonzeroAvgPoolingBackward(Dtype *p_grad_in_feat, int in_nrows,
+                                     const Dtype *p_grad_out_feat,
+                                     int out_nrows,
+                                     const Itype *p_num_nonzero, int nchannel,
+                                     const InOutMapPerKernel<Itype> in_map,
+                                     const InOutMapPerKernel<Itype> out_map) {
   int kernel_volume, n_active_in_volume, row, j, k, curr_num_nonzero;
   Dtype *p_curr_grad_in;
   const Dtype *p_curr_grad_out;

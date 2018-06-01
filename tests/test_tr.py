@@ -6,7 +6,7 @@ from gradcheck import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
 from SparseConvolution import SparseConvolution, SparseConvolutionTranspose
-from Common import Metadata, RegionType, convert_to_long_tensor
+from Common import Metadata, RegionType, convert_to_int_tensor
 
 
 class ConvDeconv(nn.Module):
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     pixel_dist, stride, kernel_size, dilation, D = 1, 2, 3, 1, 2
     in_nchannel, out_nchannel = 2, 2
-    coords = torch.from_numpy(np.array(coords)).long()
+    coords = torch.from_numpy(np.array(coords)).int()
     in_feat = torch.FloatTensor(coords.size(0), in_nchannel).normal_()
     # import ipdb; ipdb.set_trace()
     # in_feat[1] = 1
@@ -76,10 +76,10 @@ if __name__ == '__main__':
     # in_feat[8] = 7
     metadata = Metadata(D)
 
-    pixel_dist = convert_to_long_tensor(pixel_dist, D)
+    pixel_dist = convert_to_int_tensor(pixel_dist, D)
     SCE.initialize_coords(coords, pixel_dist, D, metadata.ffi)
 
-    coords2 = torch.LongTensor()
+    coords2 = torch.IntTensor()
     print(SCE.get_coords(coords2, pixel_dist, D, metadata.ffi))
     print(coords2)
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     in_feat.requires_grad_()
 
     # The coords get initialized after the forward pass
-    coords3 = torch.LongTensor()
+    coords3 = torch.IntTensor()
     print(SCE.get_coords(coords3, pixel_dist * stride, D, metadata.ffi))
     out = conv(in_feat)
     print(SCE.get_coords(coords3, pixel_dist * stride, D, metadata.ffi))
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     print(out.squeeze())
 
     # Permutation
-    perm = torch.LongTensor()
+    perm = torch.IntTensor()
     SCE.get_permutation(perm, pixel_dist * stride, pixel_dist, D, metadata.ffi)
     print(perm)
 

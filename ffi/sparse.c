@@ -14,16 +14,16 @@
   }
 
 #define INIT_D_DIM_ARRY(TH_ARR, P_ARR)                                         \
-  if (THLongTensor_size(TH_ARR, 0) != D) {                                     \
+  if (THIntTensor_size(TH_ARR, 0) != D) {                                      \
     printf("DSCE ERROR: arrary must be a D-dim vector\n");                     \
     return -1;                                                                 \
   }                                                                            \
-  long *P_ARR = THLongTensor_data(TH_ARR);
+  int *P_ARR = THIntTensor_data(TH_ARR);
 
 #define INIT_COORDS(TH_COORDS, P_COORDS, NROWS)                                \
-  long *P_COORDS = THLongTensor_data(TH_COORDS);                               \
-  int NROWS = THLongTensor_size(TH_COORDS, 0);                                 \
-  if (THLongTensor_size(TH_COORDS, 1) - 1 != D) {                              \
+  int *P_COORDS = THIntTensor_data(TH_COORDS);                                 \
+  int NROWS = THIntTensor_size(TH_COORDS, 0);                                  \
+  if (THIntTensor_size(TH_COORDS, 1) - 1 != D) {                               \
     printf("DSCE ERROR: coords must be a set of (D + 1)-dim vector\n");        \
     return -1;                                                                 \
   }
@@ -45,7 +45,7 @@
 
 #define GET_OUT_NUM_COORDS(SUCCESS, P_PIXEL_DIST, P_STRIDE, IS_TRANSPOSE,      \
                            NROWS)                                              \
-  long *p_out_pixel_dist =                                                     \
+  int *p_out_pixel_dist =                                                      \
       compute_out_pixel_dist(P_PIXEL_DIST, P_STRIDE, D, IS_TRANSPOSE);         \
   SUCCESS = _get_num_coords(p_out_pixel_dist, &NROWS, D, m);                   \
   if (SUCCESS < 0) {                                                           \
@@ -54,8 +54,8 @@
   }
 
 #define GET_GLOBAL_OUT_NUM_COORDS(SUCCESS, NROWS)                              \
-  long *p_out_pixel_dist = malloc(sizeof(long) * D);                           \
-  memset(p_out_pixel_dist, 0, sizeof(long) * D);                               \
+  int *p_out_pixel_dist = malloc(sizeof(int) * D);                             \
+  memset(p_out_pixel_dist, 0, sizeof(int) * D);                                \
   SUCCESS = _get_num_coords(p_out_pixel_dist, &NROWS, D, m);                   \
   if (SUCCESS < 0) {                                                           \
     printf("DSCE ERROR: Failed to get output coordinates\n");                  \
@@ -64,9 +64,9 @@
 
 extern THCState *state;
 
-long *compute_out_pixel_dist(long *p_pixel_dist, long *p_stride, long D,
+long *compute_out_pixel_dist(int *p_pixel_dist, int *p_stride, long D,
                              bool is_transpose) {
-  long *p_out_pixel_dist = malloc(D * sizeof(long));
+  int *p_out_pixel_dist = malloc(D * sizeof(int));
   int i;
   for (i = 0; i < D; i++) {
     if (is_transpose) {
@@ -82,16 +82,16 @@ long read_ffi_ptr(void **ptr) { return (long)(ptr[0]); }
 
 void write_ffi_ptr(long p, void **ptr) { ptr[0] = (void *)p; }
 
-long initialize_coords(THLongTensor *th_coords, THLongTensor *th_pixel_dist,
-                       long D, void **m) {
+long initialize_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist,
+                       int D, void **m) {
   INIT_COORDS(th_coords, p_coords, nrows)
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
   return _initialize_coords(p_coords, nrows, p_pixel_dist, D, m);
 }
 
-long initialize_coords_with_duplicates(THLongTensor *th_coords,
-                                       THLongTensor *th_pixel_dist, long D,
+long initialize_coords_with_duplicates(THIntTensor *th_coords,
+                                       THIntTensor *th_pixel_dist, long D,
                                        void **m) {
   INIT_COORDS(th_coords, p_coords, nrows)
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
@@ -100,68 +100,68 @@ long initialize_coords_with_duplicates(THLongTensor *th_coords,
                                             m);
 }
 
-long get_coords(THLongTensor *th_coords, THLongTensor *th_pixel_dist, long D,
+long get_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist, long D,
                 void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
-  long success, nrows = -1;
+  int success, nrows = -1;
   success = _get_num_coords(p_pixel_dist, &nrows, D, m);
   if (success < 0) {
     return success;
   }
   // Initialize torch and pass the pointer to fill out data
-  THLongTensor_resize2d(th_coords, nrows, D + 1);
-  THLongTensor_zero(th_coords);
-  long *p_coords = THLongTensor_data(th_coords);
+  THIntTensor_resize2d(th_coords, nrows, D + 1);
+  THIntTensor_zero(th_coords);
+  int *p_coords = THIntTensor_data(th_coords);
   success = _get_coords(p_coords, p_pixel_dist, D, m);
   return success;
 }
 
-long get_permutation(THLongTensor *th_permutation,
-                     THLongTensor *th_pixel_dist_src,
-                     THLongTensor *th_pixel_dist_dst, long D, void **m) {
+long get_permutation(THIntTensor *th_permutation,
+                     THIntTensor *th_pixel_dist_src,
+                     THIntTensor *th_pixel_dist_dst, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist_src, p_pixel_dist_src)
   INIT_D_DIM_ARRY(th_pixel_dist_dst, p_pixel_dist_dst)
 
-  long success, nrows = -1;
+  int success, nrows = -1;
   success = _get_num_coords(p_pixel_dist_dst, &nrows, D, m);
   if (success < 0) {
     return success;
   }
   // Initialize torch and pass the pointer to fill out data
-  THLongTensor_resize1d(th_permutation, nrows);
-  THLongTensor_zero(th_permutation);
-  long *p_permutation = THLongTensor_data(th_permutation);
+  THIntTensor_resize1d(th_permutation, nrows);
+  THIntTensor_zero(th_permutation);
+  int *p_permutation = THIntTensor_data(th_permutation);
   success =
       _get_permutation(p_permutation, p_pixel_dist_src, p_pixel_dist_dst, D, m);
   return success;
 }
 
-long get_index_map(THLongTensor *th_coords, THLongTensor *th_index_map,
-                   THLongTensor *th_pixel_dist, long D, void **m) {
+long get_index_map(THIntTensor *th_coords, THIntTensor *th_index_map,
+                   THIntTensor *th_pixel_dist, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
-  long success, index_map_nrows = -1;
+  int success, index_map_nrows = -1;
   success = _get_num_coords(p_pixel_dist, &index_map_nrows, D, m);
   if (success < 0) {
     return success;
   }
 
   // Set index map
-  long nrows = THLongTensor_size(th_coords, 0);
-  THLongTensor_resize1d(th_index_map, nrows);
-  THLongTensor_zero(th_index_map);
-  long *p_coords = THLongTensor_data(th_coords);
-  long *p_index_map = THLongTensor_data(th_index_map);
+  int nrows = THIntTensor_size(th_coords, 0);
+  THIntTensor_resize1d(th_index_map, nrows);
+  THIntTensor_zero(th_index_map);
+  int *p_coords = THIntTensor_data(th_coords);
+  int *p_index_map = THIntTensor_data(th_index_map);
 
   success = _get_index_map(p_coords, nrows, p_index_map, index_map_nrows,
                            p_pixel_dist, D, m);
   return success;
 }
 
-long get_nrows(THLongTensor *th_pixel_dist, long D, void **m) {
+long get_nrows(THIntTensor *th_pixel_dist, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
-  long success, nrows = -1;
+  int success, nrows = -1;
 
   success = _get_num_coords(p_pixel_dist, &nrows, D, m);
   if (success < 0) {
@@ -174,10 +174,10 @@ long get_nrows(THLongTensor *th_pixel_dist, long D, void **m) {
 void clear(long D, void **m) { _clear(D, m); }
 
 long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
-                         THFloatTensor *th_kernel, THLongTensor *th_pixel_dist,
-                         THLongTensor *th_stride, THLongTensor *th_kernel_size,
-                         THLongTensor *th_dilation, long region_type,
-                         THLongTensor *th_offset, long D, void **m) {
+                         THFloatTensor *th_kernel, THIntTensor *th_pixel_dist,
+                         THIntTensor *th_stride, THIntTensor *th_kernel_size,
+                         THIntTensor *th_dilation, long region_type,
+                         THIntTensor *th_offset, long D, void **m) {
   // This will not take coords as the first initialization saved it in metadata
   // th_in_feat is 2D nrows, in_channel
   // th_kernel is 3D filter_volume, in_channel, out_channel
@@ -186,8 +186,8 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
-  long in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   bool is_transpose = false;
 
   // Check if the input pixel dist map exists. Output map will be generate
@@ -219,9 +219,9 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -236,11 +236,11 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 long convolution_transpose_forward(THFloatTensor *th_in_feat,
                                    THFloatTensor *th_out_feat,
                                    THFloatTensor *th_kernel,
-                                   THLongTensor *th_pixel_dist,
-                                   THLongTensor *th_stride,
-                                   THLongTensor *th_kernel_size,
-                                   THLongTensor *th_dilation, long region_type,
-                                   THLongTensor *th_offset, long D, void **m) {
+                                   THIntTensor *th_pixel_dist,
+                                   THIntTensor *th_stride,
+                                   THIntTensor *th_kernel_size,
+                                   THIntTensor *th_dilation, long region_type,
+                                   THIntTensor *th_offset, long D, void **m) {
   // This will not take coords as the first initialization saved it in metadata
   // th_in_feat is 2D nrows, in_channel
   // th_kernel is 3D filter_volume, in_channel, out_channel
@@ -249,8 +249,8 @@ long convolution_transpose_forward(THFloatTensor *th_in_feat,
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
-  long in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   bool is_transpose = true;
 
   // if (pixel_dist % stride != 0) {
@@ -287,9 +287,9 @@ long convolution_transpose_forward(THFloatTensor *th_in_feat,
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -306,15 +306,15 @@ long convolution_backward(THFloatTensor *th_in_feat,
                           THFloatTensor *th_grad_out_feat,
                           THFloatTensor *th_kernel,
                           THFloatTensor *th_grad_kernel,
-                          THLongTensor *th_pixel_dist, THLongTensor *th_stride,
-                          THLongTensor *th_kernel_size,
-                          THLongTensor *th_dilation, long D, void **m) {
+                          THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                          THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+                          long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
-  long in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
+  int in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
       out_nrows = -1;
   bool is_transpose = false;
 
@@ -355,15 +355,15 @@ long convolution_backward(THFloatTensor *th_in_feat,
 long convolution_transpose_backward(
     THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
     THFloatTensor *th_grad_out_feat, THFloatTensor *th_kernel,
-    THFloatTensor *th_grad_kernel, THLongTensor *th_pixel_dist,
-    THLongTensor *th_stride, THLongTensor *th_kernel_size,
-    THLongTensor *th_dilation, long D, void **m) {
+    THFloatTensor *th_grad_kernel, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
-  long in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
+  int in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
       out_nrows = -1;
   bool is_transpose = true;
 
@@ -403,19 +403,18 @@ long convolution_transpose_backward(
 
 long convolution_forward_gpu(THCudaTensor *th_in_feat,
                              THCudaTensor *th_out_feat, THCudaTensor *th_kernel,
-                             THLongTensor *th_pixel_dist,
-                             THLongTensor *th_stride,
-                             THLongTensor *th_kernel_size,
-                             THLongTensor *th_dilation, long region_type,
-                             THLongTensor *th_offset, long D, void **m) {
+                             THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                             THIntTensor *th_kernel_size,
+                             THIntTensor *th_dilation, long region_type,
+                             THIntTensor *th_offset, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   bool is_transpose = false;
   cudaError_t error;
 
@@ -449,9 +448,9 @@ long convolution_forward_gpu(THCudaTensor *th_in_feat,
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -466,18 +465,17 @@ long convolution_forward_gpu(THCudaTensor *th_in_feat,
 
 long convolution_transpose_forward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
-    THCudaTensor *th_kernel, THLongTensor *th_pixel_dist,
-    THLongTensor *th_stride, THLongTensor *th_kernel_size,
-    THLongTensor *th_dilation, long region_type, THLongTensor *th_offset,
-    long D, void **m) {
+    THCudaTensor *th_kernel, THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long region_type,
+    THIntTensor *th_offset, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int in_nchannel, _in_nchannel, out_nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   cudaError_t error;
   bool is_transpose = true;
 
@@ -511,9 +509,9 @@ long convolution_transpose_forward_gpu(
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -529,15 +527,15 @@ long convolution_transpose_forward_gpu(
 long convolution_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_kernel,
-    THCudaTensor *th_grad_kernel, THLongTensor *th_pixel_dist,
-    THLongTensor *th_stride, THLongTensor *th_kernel_size,
-    THLongTensor *th_dilation, long D, void **m) {
+    THCudaTensor *th_grad_kernel, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
+  int in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
       out_nrows = -1;
   cudaError_t error;
   bool is_transpose = false;
@@ -582,15 +580,15 @@ long convolution_backward_gpu(
 long convolution_transpose_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_kernel,
-    THCudaTensor *th_grad_kernel, THLongTensor *th_pixel_dist,
-    THLongTensor *th_stride, THLongTensor *th_kernel_size,
-    THLongTensor *th_dilation, long D, void **m) {
+    THCudaTensor *th_grad_kernel, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
+  int in_nrows, in_nchannel, _in_nchannel, out_nchannel, success,
       out_nrows = -1;
   cudaError_t error;
   bool is_transpose = true;
@@ -633,17 +631,16 @@ long convolution_transpose_backward_gpu(
 }
 
 long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
-                         THLongTensor *th_mask_index,
-                         THLongTensor *th_pixel_dist, THLongTensor *th_stride,
-                         THLongTensor *th_kernel_size,
-                         THLongTensor *th_dilation, long region_type,
-                         THLongTensor *th_offset, long D, void **m) {
+                         THIntTensor *th_mask_index, THIntTensor *th_pixel_dist,
+                         THIntTensor *th_stride, THIntTensor *th_kernel_size,
+                         THIntTensor *th_dilation, long region_type,
+                         THIntTensor *th_offset, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
-  long nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   bool is_transpose = false;
 
   // Check if the input pixel dist map exists. Output map will be generate
@@ -658,18 +655,18 @@ long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 
   // Initialize output, values will be set within the forward function
   THFloatTensor_resize2d(th_out_feat, out_nrows, nchannel);
-  THLongTensor_resize2d(th_mask_index, out_nrows, nchannel);
+  THIntTensor_resize2d(th_mask_index, out_nrows, nchannel);
 
   // Pointers
   float *p_in_feat = THFloatTensor_data(th_in_feat);
   float *p_out_feat = THFloatTensor_data(th_out_feat);
-  long *p_mask_index = THLongTensor_data(th_mask_index);
+  int *p_mask_index = THIntTensor_data(th_mask_index);
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -684,15 +681,15 @@ long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 long max_pooling_backward(THFloatTensor *th_in_feat,
                           THFloatTensor *th_grad_in_feat,
                           THFloatTensor *th_grad_out_feat,
-                          THLongTensor *th_mask_index,
-                          THLongTensor *th_pixel_dist, THLongTensor *th_stride,
-                          THLongTensor *th_kernel_size,
-                          THLongTensor *th_dilation, long D, void **m) {
+                          THIntTensor *th_mask_index,
+                          THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                          THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+                          long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
-  long in_nrows, nchannel, success, out_nrows = -1;
+  int in_nrows, nchannel, success, out_nrows = -1;
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
@@ -709,7 +706,7 @@ long max_pooling_backward(THFloatTensor *th_in_feat,
   // Pointers
   float *p_grad_in_feat = THFloatTensor_data(th_grad_in_feat);
   float *p_grad_out_feat = THFloatTensor_data(th_grad_out_feat);
-  long *p_mask_index = THLongTensor_data(th_mask_index);
+  int *p_mask_index = THIntTensor_data(th_mask_index);
 
   // put exposed variable into _conv_foward;
   return _max_pooling_bw(p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows,
@@ -719,20 +716,19 @@ long max_pooling_backward(THFloatTensor *th_in_feat,
 
 long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
                              THCudaTensor *th_out_feat,
-                             THCudaLongTensor *th_mask_index,
-                             THLongTensor *th_pixel_dist,
-                             THLongTensor *th_stride,
-                             THLongTensor *th_kernel_size,
-                             THLongTensor *th_dilation, long region_type,
-                             THLongTensor *th_offset, long D, void **m) {
+                             THCudaIntTensor *th_mask_index,
+                             THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                             THIntTensor *th_kernel_size,
+                             THIntTensor *th_dilation, long region_type,
+                             THIntTensor *th_offset, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   bool is_transpose = false;
 
   // Check if the input pixel dist map exists. Output map will be generate
@@ -747,18 +743,18 @@ long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
 
   // Initialize output, values will be set within the forward function
   THCudaTensor_resize2d(state, th_out_feat, out_nrows, nchannel);
-  THCudaLongTensor_resize2d(state, th_mask_index, out_nrows, nchannel);
+  THCudaIntTensor_resize2d(state, th_mask_index, out_nrows, nchannel);
 
   // Pointers
   float *d_in_feat = THCudaTensor_data(state, th_in_feat);
   float *d_out_feat = THCudaTensor_data(state, th_out_feat);
-  long *d_mask_index = THCudaLongTensor_data(state, th_mask_index);
+  int *d_mask_index = THCudaIntTensor_data(state, th_mask_index);
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -773,16 +769,16 @@ long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
 
 long max_pooling_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
-    THCudaTensor *th_grad_out_feat, THCudaLongTensor *th_mask_index,
-    THLongTensor *th_pixel_dist, THLongTensor *th_stride,
-    THLongTensor *th_kernel_size, THLongTensor *th_dilation, long D, void **m) {
+    THCudaTensor *th_grad_out_feat, THCudaIntTensor *th_mask_index,
+    THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long in_nrows, nchannel, success, out_nrows = -1;
+  int in_nrows, nchannel, success, out_nrows = -1;
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
@@ -799,7 +795,7 @@ long max_pooling_backward_gpu(
   // Pointers
   float *d_grad_in_feat = THCudaTensor_data(state, th_grad_in_feat);
   float *d_grad_out_feat = THCudaTensor_data(state, th_grad_out_feat);
-  long *d_mask_index = THCudaLongTensor_data(state, th_mask_index);
+  int *d_mask_index = THCudaIntTensor_data(state, th_mask_index);
 
   // put exposed variable into _conv_foward;
   return _max_pooling_bw_gpu(d_grad_in_feat, in_nrows, d_grad_out_feat,
@@ -810,18 +806,18 @@ long max_pooling_backward_gpu(
 // Nonzero avg
 long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
                                  THFloatTensor *th_out_feat,
-                                 THLongTensor *th_num_nonzero,
-                                 THLongTensor *th_pixel_dist,
-                                 THLongTensor *th_stride,
-                                 THLongTensor *th_kernel_size,
-                                 THLongTensor *th_dilation, long region_type,
-                                 THLongTensor *th_offset, long D, void **m) {
+                                 THIntTensor *th_num_nonzero,
+                                 THIntTensor *th_pixel_dist,
+                                 THIntTensor *th_stride,
+                                 THIntTensor *th_kernel_size,
+                                 THIntTensor *th_dilation, long region_type,
+                                 THIntTensor *th_offset, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
-  long nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   bool is_transpose = false;
 
   // Check if the input pixel dist map exists. Output map will be generate
@@ -836,18 +832,18 @@ long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
 
   // Initialize output, values will be set within the forward function
   THFloatTensor_resize2d(th_out_feat, out_nrows, nchannel);
-  THLongTensor_resize1d(th_num_nonzero, out_nrows);
+  THIntTensor_resize1d(th_num_nonzero, out_nrows);
 
   // Pointers
   float *p_in_feat = THFloatTensor_data(th_in_feat);
   float *p_out_feat = THFloatTensor_data(th_out_feat);
-  long *p_num_nonzero = THLongTensor_data(th_num_nonzero);
+  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -862,14 +858,14 @@ long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
 
 long nonzero_avg_pooling_backward(
     THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
-    THFloatTensor *th_grad_out_feat, THLongTensor *th_num_nonzero,
-    THLongTensor *th_pixel_dist, THLongTensor *th_stride,
-    THLongTensor *th_kernel_size, THLongTensor *th_dilation, long D, void **m) {
+    THFloatTensor *th_grad_out_feat, THIntTensor *th_num_nonzero,
+    THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
-  long in_nrows, nchannel, success, out_nrows = -1;
+  int in_nrows, nchannel, success, out_nrows = -1;
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
@@ -886,7 +882,7 @@ long nonzero_avg_pooling_backward(
   // Pointers
   float *p_grad_in_feat = THFloatTensor_data(th_grad_in_feat);
   float *p_grad_out_feat = THFloatTensor_data(th_grad_out_feat);
-  long *p_num_nonzero = THLongTensor_data(th_num_nonzero);
+  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _nonzero_avg_pooling_bw(
@@ -894,20 +890,22 @@ long nonzero_avg_pooling_backward(
       nchannel, p_pixel_dist, p_stride, p_kernel_size, p_dilation, D, m);
 }
 
-long nonzero_avg_pooling_forward_gpu(
-    THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
-    THCudaLongTensor *th_num_nonzero, THLongTensor *th_pixel_dist,
-    THLongTensor *th_stride, THLongTensor *th_kernel_size,
-    THLongTensor *th_dilation, long region_type, THLongTensor *th_offset,
-    long D, void **m) {
+long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
+                                     THCudaTensor *th_out_feat,
+                                     THCudaIntTensor *th_num_nonzero,
+                                     THIntTensor *th_pixel_dist,
+                                     THIntTensor *th_stride,
+                                     THIntTensor *th_kernel_size,
+                                     THIntTensor *th_dilation, long region_type,
+                                     THIntTensor *th_offset, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long nchannel, success, out_nrows = -1;
-  long n_offset = 0, *p_offset = NULL;
+  int nchannel, success, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
   bool is_transpose = false;
 
   // Check if the input pixel dist map exists. Output map will be generate
@@ -922,18 +920,18 @@ long nonzero_avg_pooling_forward_gpu(
 
   // Initialize output, values will be set within the forward function
   THCudaTensor_resize2d(state, th_out_feat, out_nrows, nchannel);
-  THCudaLongTensor_resize1d(state, th_num_nonzero, out_nrows);
+  THCudaIntTensor_resize1d(state, th_num_nonzero, out_nrows);
 
   // Pointers
   float *d_in_feat = THCudaTensor_data(state, th_in_feat);
   float *d_out_feat = THCudaTensor_data(state, th_out_feat);
-  long *d_num_nonzero = THCudaLongTensor_data(state, th_num_nonzero);
+  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
 
   // Custom Region Type
   if (region_type == 2) {
-    n_offset = THLongTensor_size(th_offset, 0);
-    p_offset = THLongTensor_data(th_offset);
-    if (THLongTensor_size(th_offset, 1) != D) {
+    n_offset = THIntTensor_size(th_offset, 0);
+    p_offset = THIntTensor_data(th_offset);
+    if (THIntTensor_size(th_offset, 1) != D) {
       printf("DSCE ERROR: Offset size does not match.\n");
       return -1;
     }
@@ -948,16 +946,16 @@ long nonzero_avg_pooling_forward_gpu(
 
 long nonzero_avg_pooling_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
-    THCudaTensor *th_grad_out_feat, THCudaLongTensor *th_num_nonzero,
-    THLongTensor *th_pixel_dist, THLongTensor *th_stride,
-    THLongTensor *th_kernel_size, THLongTensor *th_dilation, long D, void **m) {
+    THCudaTensor *th_grad_out_feat, THCudaIntTensor *th_num_nonzero,
+    THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
   INIT_D_DIM_ARRY(th_dilation, p_dilation)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long in_nrows, nchannel, success, out_nrows = -1;
+  int in_nrows, nchannel, success, out_nrows = -1;
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
@@ -974,7 +972,7 @@ long nonzero_avg_pooling_backward_gpu(
   // Pointers
   float *d_grad_in_feat = THCudaTensor_data(state, th_grad_in_feat);
   float *d_grad_out_feat = THCudaTensor_data(state, th_grad_out_feat);
-  long *d_num_nonzero = THCudaLongTensor_data(state, th_num_nonzero);
+  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _nonzero_avg_pooling_bw_gpu(d_grad_in_feat, in_nrows, d_grad_out_feat,
@@ -986,11 +984,11 @@ long nonzero_avg_pooling_backward_gpu(
 // Nonzero avg
 long global_avg_pooling_forward(THFloatTensor *th_in_feat,
                                 THFloatTensor *th_out_feat,
-                                THLongTensor *th_num_nonzero,
-                                THLongTensor *th_pixel_dist, long batch_size,
+                                THIntTensor *th_num_nonzero,
+                                THIntTensor *th_pixel_dist, long batch_size,
                                 long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
-  long nchannel, success, out_nrows = -1;
+  int nchannel, success, out_nrows = -1;
 
   INIT_GLOBAL_COORDS(success, p_pixel_dist, batch_size)
   GET_GLOBAL_OUT_NUM_COORDS(success, out_nrows)
@@ -1000,12 +998,12 @@ long global_avg_pooling_forward(THFloatTensor *th_in_feat,
 
   // Initialize output, values will be set within the forward function
   THFloatTensor_resize2d(th_out_feat, out_nrows, nchannel);
-  THLongTensor_resize1d(th_num_nonzero, out_nrows);
+  THIntTensor_resize1d(th_num_nonzero, out_nrows);
 
   // Pointers
   float *p_in_feat = THFloatTensor_data(th_in_feat);
   float *p_out_feat = THFloatTensor_data(th_out_feat);
-  long *p_num_nonzero = THLongTensor_data(th_num_nonzero);
+  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _global_avg_pooling_fw(p_in_feat, p_out_feat, out_nrows, nchannel,
@@ -1015,11 +1013,10 @@ long global_avg_pooling_forward(THFloatTensor *th_in_feat,
 long global_avg_pooling_backward(THFloatTensor *th_in_feat,
                                  THFloatTensor *th_grad_in_feat,
                                  THFloatTensor *th_grad_out_feat,
-                                 THLongTensor *th_num_nonzero,
-                                 THLongTensor *th_pixel_dist, long D,
-                                 void **m) {
+                                 THIntTensor *th_num_nonzero,
+                                 THIntTensor *th_pixel_dist, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
-  long in_nrows, nchannel, success, out_nrows = -1;
+  int in_nrows, nchannel, success, out_nrows = -1;
 
   // Get the number of rows required to initialize the th_out_tensor
   GET_GLOBAL_OUT_NUM_COORDS(success, out_nrows)
@@ -1034,7 +1031,7 @@ long global_avg_pooling_backward(THFloatTensor *th_in_feat,
   // Pointers
   float *p_grad_in_feat = THFloatTensor_data(th_grad_in_feat);
   float *p_grad_out_feat = THFloatTensor_data(th_grad_out_feat);
-  long *p_num_nonzero = THLongTensor_data(th_num_nonzero);
+  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _global_avg_pooling_bw(p_grad_in_feat, in_nrows, p_grad_out_feat,
@@ -1044,13 +1041,13 @@ long global_avg_pooling_backward(THFloatTensor *th_in_feat,
 
 long global_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
                                     THCudaTensor *th_out_feat,
-                                    THCudaLongTensor *th_num_nonzero,
-                                    THLongTensor *th_pixel_dist,
-                                    long batch_size, long D, void **m) {
+                                    THCudaIntTensor *th_num_nonzero,
+                                    THIntTensor *th_pixel_dist, long batch_size,
+                                    long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long nchannel, success, out_nrows = -1;
+  int nchannel, success, out_nrows = -1;
 
   INIT_GLOBAL_COORDS(success, p_pixel_dist, batch_size)
   GET_GLOBAL_OUT_NUM_COORDS(success, out_nrows)
@@ -1060,12 +1057,12 @@ long global_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
 
   // Initialize output, values will be set within the forward function
   THCudaTensor_resize2d(state, th_out_feat, out_nrows, nchannel);
-  THCudaLongTensor_resize1d(state, th_num_nonzero, out_nrows);
+  THCudaIntTensor_resize1d(state, th_num_nonzero, out_nrows);
 
   // Pointers
   float *d_in_feat = THCudaTensor_data(state, th_in_feat);
   float *d_out_feat = THCudaTensor_data(state, th_out_feat);
-  long *d_num_nonzero = THCudaLongTensor_data(state, th_num_nonzero);
+  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _global_avg_pooling_fw_gpu(d_in_feat, d_out_feat, out_nrows, nchannel,
@@ -1075,13 +1072,13 @@ long global_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
 long global_avg_pooling_backward_gpu(THCudaTensor *th_in_feat,
                                      THCudaTensor *th_grad_in_feat,
                                      THCudaTensor *th_grad_out_feat,
-                                     THCudaLongTensor *th_num_nonzero,
-                                     THLongTensor *th_pixel_dist, long D,
+                                     THCudaIntTensor *th_num_nonzero,
+                                     THIntTensor *th_pixel_dist, long D,
                                      void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
-  long in_nrows, nchannel, success, out_nrows = -1;
+  int in_nrows, nchannel, success, out_nrows = -1;
 
   // Get the number of rows required to initialize the th_out_tensor
   GET_GLOBAL_OUT_NUM_COORDS(success, out_nrows)
@@ -1096,7 +1093,7 @@ long global_avg_pooling_backward_gpu(THCudaTensor *th_in_feat,
   // Pointers
   float *d_grad_in_feat = THCudaTensor_data(state, th_grad_in_feat);
   float *d_grad_out_feat = THCudaTensor_data(state, th_grad_out_feat);
-  long *d_num_nonzero = THCudaLongTensor_data(state, th_num_nonzero);
+  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _global_avg_pooling_bw_gpu(d_grad_in_feat, in_nrows, d_grad_out_feat,

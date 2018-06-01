@@ -19,15 +19,16 @@
  * Then, use the reduce_by_key.
  * To extract the max index, use a structure
  */
-template <typename Dtype> struct ValInd {
+template <typename Dtype, typename Itype> struct ValInd {
   Dtype val;
-  int ind;
+  Itype ind;
 };
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void convert_to_valin(const int n, const Dtype *feat,
                                  const int start_ch, const int nchannel,
-                                 const int64_t *map, ValInd<Dtype> *valind) {
+                                 const Itype *map,
+                                 ValInd<Dtype, Itype> *valind) {
   int feat_index;
   CUDA_KERNEL_LOOP(index, n) {
     feat_index = start_ch + map[index] * nchannel;
@@ -36,13 +37,13 @@ __global__ void convert_to_valin(const int n, const Dtype *feat,
   }
 }
 
-template <typename Dtype>
-__global__ void valind_to_out(const int n, const ValInd<Dtype> *valind,
-                              const int64_t *out_map, Dtype *out_feat,
-                              int64_t *out_index, const int start_ch,
+template <typename Dtype, typename Itype>
+__global__ void valind_to_out(const int n, const ValInd<Dtype, Itype> *valind,
+                              const Itype *out_map, Dtype *out_feat,
+                              Itype *out_index, const int start_ch,
                               const int nchannel) {
   int i;
-  ValInd<Dtype> curr_valind;
+  ValInd<Dtype, Itype> curr_valind;
   CUDA_KERNEL_LOOP(index, n) {
     i = out_map[index] * nchannel + start_ch;
     curr_valind = valind[index];
@@ -53,8 +54,9 @@ __global__ void valind_to_out(const int n, const ValInd<Dtype> *valind,
   }
 }
 
-template <typename Dtype> struct valind_comparator {
-  __host__ __device__ bool operator()(ValInd<Dtype> &x, ValInd<Dtype> &y) {
+template <typename Dtype, typename Itype> struct valind_comparator {
+  __host__ __device__ bool operator()(ValInd<Dtype, Itype> &x,
+                                      ValInd<Dtype, Itype> &y) {
     if (x.val < y.val)
       return true;
     else
@@ -62,12 +64,12 @@ template <typename Dtype> struct valind_comparator {
   }
 };
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 struct valind_max_operator
-    : public thrust::binary_function<ValInd<Dtype>, ValInd<Dtype>,
-                                     ValInd<Dtype>> {
-  __host__ __device__ ValInd<Dtype> operator()(ValInd<Dtype> x,
-                                               ValInd<Dtype> y) {
+    : public thrust::binary_function<ValInd<Dtype, Itype>, ValInd<Dtype, Itype>,
+                                     ValInd<Dtype, Itype>> {
+  __host__ __device__ ValInd<Dtype, Itype> operator()(ValInd<Dtype, Itype> x,
+                                                      ValInd<Dtype, Itype> y) {
     if (x.val > y.val)
       return x;
     else
@@ -75,20 +77,20 @@ struct valind_max_operator
   }
 };
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void set_gradient(const int n, const Dtype *d_grad_out,
-                             Dtype *d_grad_in, const int64_t *out_index,
+                             Dtype *d_grad_in, const Itype *out_index,
                              int nchannel) {
   CUDA_KERNEL_LOOP(index, n) {
     atomicAdd(&d_grad_in[out_index[index]], d_grad_out[index]);
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void
 set_gradient_nonzero(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
-                     int nchannel, const int64_t *d_num_nonzero,
-                     const int64_t *in_map, const int64_t *out_map) {
+                     int nchannel, const Itype *d_num_nonzero,
+                     const Itype *in_map, const Itype *out_map) {
   CUDA_KERNEL_LOOP(index, n) {
     int nrow = index / nchannel;
     int ch = index % nchannel;
@@ -98,10 +100,10 @@ set_gradient_nonzero(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void in_map_feat(const int n, const Dtype *in_feat,
                             const int start_ch, const int nchannel,
-                            const int64_t *in_map, Dtype *out_feat) {
+                            const Itype *in_map, Dtype *out_feat) {
   int feat_index;
   CUDA_KERNEL_LOOP(index, n) {
     feat_index = start_ch + in_map[index] * nchannel;
@@ -109,10 +111,10 @@ __global__ void in_map_feat(const int n, const Dtype *in_feat,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void out_map_feat(const int n, const Dtype *in_feat,
                              const int start_ch, const int nchannel,
-                             const int64_t *out_map, Dtype *out_feat) {
+                             const Itype *out_map, Dtype *out_feat) {
   int i;
   CUDA_KERNEL_LOOP(index, n) {
     i = out_map[index] * nchannel + start_ch;
@@ -120,11 +122,11 @@ __global__ void out_map_feat(const int n, const Dtype *in_feat,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void out_map_feat_div(const int n, const Dtype *in_feat,
                                  const int start_ch, const int nchannel,
-                                 const int64_t *out_map,
-                                 const int64_t *num_nonzero, Dtype *out_feat) {
+                                 const Itype *out_map, const Itype *num_nonzero,
+                                 Dtype *out_feat) {
   int out_map_index;
   CUDA_KERNEL_LOOP(index, n) {
     out_map_index = out_map[index];
@@ -133,28 +135,27 @@ __global__ void out_map_feat_div(const int n, const Dtype *in_feat,
   }
 }
 
-void print(const thrust::device_vector<ValInd<float>> &v) {
-  for (size_t i = 0; i < v.size(); i++) {
-    auto tmp = static_cast<ValInd<float>>(v[i]);
+void print(const thrust::device_vector<ValInd<float, int32_t>> &v) {
+  for (int i = 0; i < v.size(); i++) {
+    auto tmp = static_cast<ValInd<float, int32_t>>(v[i]);
     std::cout << " " << std::fixed << i << "th v: " << tmp.val
               << ", i: " << tmp.ind;
   }
   std::cout << "\n";
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
-                                int64_t out_nrows, int64_t *d_max_index,
-                                int64_t nchannel,
-                                const std::vector<std::vector<int64_t>> in_map,
-                                const std::vector<std::vector<int64_t>> out_map,
+                                int out_nrows, Itype *d_max_index, int nchannel,
+                                const std::vector<std::vector<Itype>> in_map,
+                                const std::vector<std::vector<Itype>> out_map,
                                 cudaStream_t stream) {
   int n_active = 0;
-  thrust::device_vector<int64_t> d_in_map, d_out_map, d_curr_out_map,
+  thrust::device_vector<Itype> d_in_map, d_out_map, d_curr_out_map,
       d_sorted_out_map, d_reduced_sorted_out_map;
-  thrust::device_vector<ValInd<Dtype>> d_valind, d_reduced_valind;
+  thrust::device_vector<ValInd<Dtype, Itype>> d_valind, d_reduced_valind;
   thrust::equal_to<int> equal_to;
-  valind_max_operator<Dtype> valind_max;
+  valind_max_operator<Dtype, Itype> valind_max;
 
   // Fill the output with -FLT_MAX
   thrust::fill(thrust::device, d_out_feat, d_out_feat + nchannel * out_nrows,
@@ -190,8 +191,8 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   d_reduced_valind.resize(out_nrows);
   CUDA_POST_KERNEL_CHECK;
 
-  const int64_t *d_in_map_ptr = thrust::raw_pointer_cast(d_in_map.data());
-  ValInd<Dtype> *d_valind_ptr = thrust::raw_pointer_cast(d_valind.data());
+  const Itype *d_in_map_ptr = thrust::raw_pointer_cast(d_in_map.data());
+  ValInd<Dtype, Itype> *d_valind_ptr = thrust::raw_pointer_cast(d_valind.data());
 
   // Create sorted d_out_map
   thrust::sort(d_sorted_out_map.begin(), d_sorted_out_map.end());
@@ -225,17 +226,17 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   }
 }
 
-template void SparseMaxPoolingForwardGPU<float>(
-    const float *d_in_feat, float *d_out_feat, int64_t out_nrows,
-    int64_t *d_max_index, int64_t nchannel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, cudaStream_t stream);
+template void SparseMaxPoolingForwardGPU<float, int32_t>(
+    const float *d_in_feat, float *d_out_feat, int out_nrows,
+    int32_t *d_max_index, int nchannel,
+    const std::vector<std::vector<int32_t>> in_map,
+    const std::vector<std::vector<int32_t>> out_map, cudaStream_t stream);
 
-template <typename Dtype>
-void SparseMaxPoolingBackwardGPU(Dtype *d_grad_in_feat, int64_t in_nrows,
-                                 const Dtype *d_grad_out_feat,
-                                 int64_t out_nrows, const int64_t *d_max_index,
-                                 int64_t nchannel, cudaStream_t stream) {
+template <typename Dtype, typename Itype>
+void SparseMaxPoolingBackwardGPU(Dtype *d_grad_in_feat, int in_nrows,
+                                 const Dtype *d_grad_out_feat, int out_nrows,
+                                 const Itype *d_max_index, int nchannel,
+                                 cudaStream_t stream) {
   int num_kernels = out_nrows * nchannel;
   // Cleanup gradients
   HANDLE_ERROR(
@@ -244,21 +245,20 @@ void SparseMaxPoolingBackwardGPU(Dtype *d_grad_in_feat, int64_t in_nrows,
       num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index, nchannel);
 }
 
-template void SparseMaxPoolingBackwardGPU<float>(
-    float *d_grad_in_feat, int64_t in_nrows, const float *d_grad_out_feat,
-    int64_t out_nrows, const int64_t *d_max_index, int64_t nchannel,
-    cudaStream_t stream);
+template void SparseMaxPoolingBackwardGPU<float, int32_t>(
+    float *d_grad_in_feat, int in_nrows, const float *d_grad_out_feat,
+    int out_nrows, const int32_t *d_max_index, int nchannel, cudaStream_t stream);
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingForwardGPU(
-    const Dtype *d_in_feat, Dtype *d_out_feat, int64_t out_nrows,
-    int64_t *d_num_nonzero, int64_t nchannel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, cudaStream_t stream) {
+    const Dtype *d_in_feat, Dtype *d_out_feat, int out_nrows,
+    Itype *d_num_nonzero, int nchannel,
+    const std::vector<std::vector<Itype>> in_map,
+    const std::vector<std::vector<Itype>> out_map, cudaStream_t stream) {
   int n_active = 0;
-  thrust::device_vector<int64_t> d_in_map, d_out_map, d_curr_out_map,
+  thrust::device_vector<Itype> d_in_map, d_out_map, d_curr_out_map,
       d_sorted_out_map, d_reduced_sorted_out_map;
-  thrust::device_ptr<int64_t> d_reduced_num_nonzero =
+  thrust::device_ptr<Itype> d_reduced_num_nonzero =
       thrust::device_pointer_cast(d_num_nonzero);
   thrust::device_vector<Dtype> d_in_feat_per_ch, d_reduced_in_feat_per_ch;
 
@@ -298,7 +298,7 @@ void SparseNonzeroAvgPoolingForwardGPU(
   d_reduced_in_feat_per_ch.resize(out_nrows);
   CUDA_POST_KERNEL_CHECK;
 
-  const int64_t *d_in_map_ptr = thrust::raw_pointer_cast(d_in_map.data());
+  const Itype *d_in_map_ptr = thrust::raw_pointer_cast(d_in_map.data());
 
   // Create sorted d_out_map
   thrust::sort(d_sorted_out_map.begin(), d_sorted_out_map.end());
@@ -339,20 +339,20 @@ void SparseNonzeroAvgPoolingForwardGPU(
   }
 }
 
-template void SparseNonzeroAvgPoolingForwardGPU<float>(
-    const float *d_in_feat, float *d_out_feat, int64_t out_nrows,
-    int64_t *d_max_index, int64_t nchannel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, cudaStream_t stream);
+template void SparseNonzeroAvgPoolingForwardGPU<float, int32_t>(
+    const float *d_in_feat, float *d_out_feat, int out_nrows,
+    int32_t *d_max_index, int nchannel,
+    const std::vector<std::vector<int32_t>> in_map,
+    const std::vector<std::vector<int32_t>> out_map, cudaStream_t stream);
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingBackwardGPU(
-    Dtype *d_grad_in_feat, int64_t in_nrows, const Dtype *d_grad_out_feat,
-    int64_t out_nrows, const int64_t *d_num_nonzero, int64_t nchannel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, cudaStream_t stream) {
+    Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
+    int out_nrows, const Itype *d_num_nonzero, int nchannel,
+    const std::vector<std::vector<Itype>> in_map,
+    const std::vector<std::vector<Itype>> out_map, cudaStream_t stream) {
   int curr_n, n_active = 0;
-  thrust::device_vector<int64_t> d_in_map, d_out_map;
+  thrust::device_vector<Itype> d_in_map, d_out_map;
 
   // Cleanup gradients
   HANDLE_ERROR(
@@ -386,10 +386,10 @@ void SparseNonzeroAvgPoolingBackwardGPU(
           thrust::raw_pointer_cast(d_out_map.data()));
 }
 
-template void SparseNonzeroAvgPoolingBackwardGPU<float>(
-    float *d_grad_in_feat, int64_t in_nrows, const float *d_grad_out_feat,
-    int64_t out_nrows, const int64_t *d_num_nonzero, int64_t nchannel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, cudaStream_t stream);
+template void SparseNonzeroAvgPoolingBackwardGPU<float, int32_t>(
+    float *d_grad_in_feat, int in_nrows, const float *d_grad_out_feat,
+    int out_nrows, const int32_t *d_num_nonzero, int nchannel,
+    const std::vector<std::vector<int32_t>> in_map,
+    const std::vector<std::vector<int32_t>> out_map, cudaStream_t stream);
 
 #endif

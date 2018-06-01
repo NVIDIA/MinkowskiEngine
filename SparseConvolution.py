@@ -6,7 +6,7 @@ from torch.autograd import Function
 from torch.nn import Module, Parameter
 
 import SparseConvolutionEngineFFI as SCE
-from Common import RegionType, convert_to_long_tensor
+from Common import RegionType, convert_to_int_tensor
 
 
 class SparseConvolutionFunction(Function):
@@ -15,10 +15,10 @@ class SparseConvolutionFunction(Function):
         super(SparseConvolutionFunction, self).__init__()
         assert isinstance(region_type, RegionType)
 
-        pixel_dist = convert_to_long_tensor(pixel_dist, dimension)
-        stride = convert_to_long_tensor(stride, dimension)
-        kernel_size = convert_to_long_tensor(kernel_size, dimension)
-        dilation = convert_to_long_tensor(dilation, dimension)
+        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
 
         self.pixel_dist = pixel_dist
         self.stride = stride
@@ -62,10 +62,10 @@ class SparseConvolutionTransposeFunction(Function):
         super(SparseConvolutionTransposeFunction, self).__init__()
         assert isinstance(region_type, RegionType)
 
-        pixel_dist = convert_to_long_tensor(pixel_dist, dimension)
-        stride = convert_to_long_tensor(stride, dimension)
-        kernel_size = convert_to_long_tensor(kernel_size, dimension)
-        dilation = convert_to_long_tensor(dilation, dimension)
+        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
 
         self.pixel_dist = pixel_dist
         self.stride = stride
@@ -120,13 +120,13 @@ class SparseConvolutionBase(Module):
         if dimension is None or metadata is None:
             raise ValueError('Dimension and metadata must be defined')
         if region_offset is None:
-            region_offset = torch.LongTensor()
+            region_offset = torch.IntTensor()
         assert isinstance(region_type, RegionType)
 
-        pixel_dist = convert_to_long_tensor(pixel_dist, dimension)
-        stride = convert_to_long_tensor(stride, dimension)
-        kernel_size = convert_to_long_tensor(kernel_size, dimension)
-        dilation = convert_to_long_tensor(dilation, dimension)
+        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
 
         if region_type == RegionType.HYPERCUBE:
             assert torch.unique(kernel_size).numel() == 1
@@ -139,10 +139,10 @@ class SparseConvolutionBase(Module):
                 iter_args = []
                 for d in range(dimension):
                     off = (dilation[d] * pixel_dist[d] *
-                           torch.arange(kernel_size[d]).long()).tolist()
+                           torch.arange(kernel_size[d]).int()).tolist()
                     iter_args.append(off)
                 region_offset = list(product(*iter_args))
-                region_offset = torch.LongTensor(region_offset)
+                region_offset = torch.IntTensor(region_offset)
                 kernel_volume = region_offset.size(0)
                 region_type = RegionType.CUSTOM
             else:
@@ -271,10 +271,10 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
                 for d in range(dimension):
                     off = (self.dilation[d] *
                            (self.pixel_dist[d] / self.stride[d]) *
-                           torch.arange(self.kernel_size[d]).long()).tolist()
+                           torch.arange(self.kernel_size[d]).int()).tolist()
                     iter_args.append(off)
                 region_offset = list(product(*iter_args))
-                self.region_offset = torch.LongTensor(region_offset)
+                self.region_offset = torch.IntTensor(region_offset)
                 self.region_type = RegionType.CUSTOM
             else:
                 raise ValueError('All edges must have the same length.')

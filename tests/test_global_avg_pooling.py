@@ -1,11 +1,11 @@
 import numpy as np
 
 import torch
-from torch.autograd import gradcheck
+from gradcheck import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
-from SparseConvolution import SparseConvolution
 from Common import Metadata, RegionType, convert_to_int_tensor
+from SparsePooling import SparseGlobalAvgPooling
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -22,12 +22,14 @@ if __name__ == '__main__':
             if col != ' ':
                 coords.append([i, j, 1])  # Last element for batch index
 
-    pixel_dist, stride, kernel_size, dilation, D = 1, 2, 3, 1, 2
-    in_nchannel, out_nchannel = 2, 2
+    pixel_dist, stride, kernel_size, dilation, D = 1, 2, 2, 1, 2
+    in_nchannel = 2
     coords = torch.from_numpy(np.array(coords)).int()
-    in_feat = torch.FloatTensor(coords.size(0), in_nchannel).zero_()
-    in_feat[1] = 1
-    in_feat[2] = 2
+    in_feat = torch.FloatTensor(coords.size(0), in_nchannel).normal_()
+    # .zero_()
+    # in_feat[1, 0] = 1
+    # in_feat[1, 2] = 1
+    # in_feat[2] = 2
     metadata = Metadata(D)
 
     pixel_dist = convert_to_int_tensor(pixel_dist, D)
@@ -36,66 +38,61 @@ if __name__ == '__main__':
     coords2 = torch.IntTensor()
     print(SCE.get_coords(coords2, pixel_dist, D, metadata.ffi))
     print(coords2)
+    print(in_feat)
 
-    conv = SparseConvolution(
-        in_nchannel,
-        out_nchannel,
+    pooling = SparseGlobalAvgPooling(
         pixel_dist,
-        kernel_size,
-        stride,
-        dilation,
-        region_type=RegionType.HYPERCUBE,
-        has_bias=True,
+        batch_size=0,
         dimension=D,
         metadata=metadata)
 
-    # conv.kernel.data[:] = torch.arange(9)
-    # conv.bias.data[:] = torch.arange(out_nchannel) + 1
-    print(conv.kernel.data.squeeze())
-    print(in_feat)
     in_feat.requires_grad_()
 
     # The coords get initialized after the forward pass
-    print(SCE.get_coords(coords2, pixel_dist * stride, D, metadata.ffi))
-    out = conv(in_feat)
-    print(SCE.get_coords(coords2, pixel_dist * stride, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist * 0, D, metadata.ffi))
+    out = pooling(in_feat)
+    print(SCE.get_coords(coords2, pixel_dist * 0, D, metadata.ffi))
     print(coords2)
 
     print(out.data.squeeze())
+    print(in_feat.mean(0))
 
     # Permutation
     perm = torch.IntTensor()
-    stride = convert_to_int_tensor(stride, D)
-    SCE.get_permutation(perm, stride, pixel_dist, D, metadata.ffi)
+    SCE.get_permutation(perm, pixel_dist * 0, pixel_dist, D, metadata.ffi)
     print(perm)
 
     grad = torch.zeros(out.size())
-    grad[0] = 0.2
-    grad[1] = 1
+    grad[0] = 1
+    # grad[1, 1] = 3
+    # # grad[1, 0] = 1
+    # # grad[1, 1] = - 1
+    # # grad[0, 1] = 0.2
     out.backward(grad)
     print(in_feat.grad)
 
     print(
         gradcheck(
-            conv, (in_feat, ),
+            pooling, (in_feat, ),
             atol=1e-3,
             rtol=1e-2,
             eps=1e-4))
 
     # GPU
     if use_gpu:
-        conv = conv.to(device)
+        pooling = pooling.to(device)
         in_feat_cu = in_feat.to(device)
-        out = conv(in_feat_cu)
+        print(in_feat_cu)
+        out = pooling(in_feat_cu)
         print(out)
 
-        grad = grad.to(device)
+        grad = grad.cuda()
         out.backward(grad)
         print(in_feat_cu.grad)
 
         print(
             gradcheck(
-                conv, (in_feat_cu, ),
+                pooling, (in_feat_cu, ),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))

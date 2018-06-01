@@ -3,19 +3,19 @@
 
 #include "src/main.hpp"
 
-template <uint8_t D> class KernelRegionIterator;
-template <uint8_t D> class KernelRegion {
+template <uint8_t D, typename Itype> class KernelRegionIterator;
+template <uint8_t D, typename Itype> class KernelRegion {
 public:
   int region_type;
-  Arr<D> pixel_dists, kernel_size, dilations;
-  const int64_t *p_offset, n_offset;
-  Coord<D> center;
-  Coord<D> lb;
-  Coord<D> ub;
+  Arr<D, Itype> pixel_dists, kernel_size, dilations;
+  const Itype *p_offset, n_offset;
+  Coord<D, Itype> center;
+  Coord<D, Itype> lb;
+  Coord<D, Itype> ub;
 
-  KernelRegion(Coord<D> &center, Arr<D> pixel_dists, Arr<D> kernel_size,
-               Arr<D> dilations, int region_type, const int64_t *p_offset,
-               int n_offset)
+  KernelRegion(Coord<D, Itype> &center, Arr<D, Itype> pixel_dists,
+               Arr<D, Itype> kernel_size, Arr<D, Itype> dilations,
+               int region_type, const Itype *p_offset, int n_offset)
       : center(center), pixel_dists(pixel_dists), kernel_size(kernel_size),
         dilations(dilations), region_type(region_type), p_offset(p_offset),
         n_offset(n_offset) {
@@ -28,30 +28,31 @@ public:
     lb[D] = ub[D] = center[D]; // set the batch index
   }
 
-  KernelRegionIterator<D> begin() {
-    return KernelRegionIterator<D>(*this, pixel_dists, kernel_size, dilations,
-                                   region_type);
+  KernelRegionIterator<D, Itype> begin() {
+    return KernelRegionIterator<D, Itype>(*this, pixel_dists, kernel_size,
+                                          dilations, region_type);
   }
-  KernelRegionIterator<D> end() {
-    return KernelRegionIterator<D>(*this, pixel_dists, kernel_size, dilations,
-                                   region_type);
+  KernelRegionIterator<D, Itype> end() {
+    return KernelRegionIterator<D, Itype>(*this, pixel_dists, kernel_size,
+                                          dilations, region_type);
   }
 };
 
-template <uint8_t D> class KernelRegionIterator {
+template <uint8_t D, typename Itype> class KernelRegionIterator {
 private:
-  Arr<D> pixel_dists, kernel_size, dilations;
+  Arr<D, Itype> pixel_dists, kernel_size, dilations;
   int region_type, curr_axis, offset_ind;
-  KernelRegion<D> &region;
-  Coord<D> point;
+  KernelRegion<D, Itype> &region;
+  Coord<D, Itype> point;
 
 public:
   bool done;
-  KernelRegionIterator(KernelRegion<D> &region, Arr<D> pixel_dists,
-                       Arr<D> kernel_size, Arr<D> dilations, int region_type)
+  KernelRegionIterator(KernelRegion<D, Itype> &region,
+                       Arr<D, Itype> pixel_dists, Arr<D, Itype> kernel_size,
+                       Arr<D, Itype> dilations, int region_type)
       : region(region), done(false), pixel_dists(pixel_dists),
-        kernel_size(kernel_size), dilations(dilations), region_type(region_type),
-        curr_axis(0), offset_ind(0) {
+        kernel_size(kernel_size), dilations(dilations),
+        region_type(region_type), curr_axis(0), offset_ind(0) {
     // First point
     switch (region_type) {
     case 0:
@@ -70,7 +71,7 @@ public:
       break;
     }
   }
-  KernelRegionIterator<D> &operator++() {
+  KernelRegionIterator<D, Itype> &operator++() {
     switch (region_type) {
     case 0:
       // Iterate only from 0 to D-1, point[D] reserved for batch index
@@ -117,13 +118,13 @@ public:
       return *this;
     }
   }
-  Coord<D> &operator*() { return point; }
+  Coord<D, Itype> &operator*() { return point; }
 };
 
 // Only to be used for checking the end point of range based for loops.
-template <uint8_t D>
-inline bool operator!=(const KernelRegionIterator<D> &lhs,
-                       const KernelRegionIterator<D> &rhs) {
+template <uint8_t D, typename Itype>
+inline bool operator!=(const KernelRegionIterator<D, Itype> &lhs,
+                       const KernelRegionIterator<D, Itype> &rhs) {
   return !lhs.done;
 }
 #endif

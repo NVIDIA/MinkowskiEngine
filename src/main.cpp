@@ -14,10 +14,11 @@
 #include "src/sparse_pooling.cuh"
 #include "src/sparse_pooling.hpp"
 
-template <uint8_t D>
-Arr<D> ComputeOutPixelDist(const Arr<D> pixel_dists, const Arr<D> strides,
-                           bool is_transpose) {
-  Arr<D> out_pixel_dists;
+template <uint8_t D, typename Itype>
+Arr<D, Itype> ComputeOutPixelDist(const Arr<D, Itype> pixel_dists,
+                                  const Arr<D, Itype> strides,
+                                  bool is_transpose) {
+  Arr<D, Itype> out_pixel_dists;
   for (int i = 0; i < D; i++) {
     if (is_transpose)
       out_pixel_dists[i] = pixel_dists[i] / strides[i];
@@ -31,8 +32,8 @@ Arr<D> ComputeOutPixelDist(const Arr<D> pixel_dists, const Arr<D> strides,
   return out_pixel_dists;
 }
 
-template <uint8_t D> Arr<D> ToArray(const int64_t *ptr) {
-  Arr<D> arr;
+template <uint8_t D, typename Itype> Arr<D, Itype> ToArray(const Itype *ptr) {
+  Arr<D, Itype> arr;
   std::copy(ptr, ptr + D, arr.begin());
   return arr;
 }
@@ -42,13 +43,13 @@ template <uint8_t D> Arr<D> ToArray(const int64_t *ptr) {
   be used to create input index to output index mapping for convolution
   computation.
 */
-template <uint8_t D>
-CoordIndexMap<D> CreateCoordIndexMap(const int64_t *loc, int64_t nrows,
-                                     int64_t ncols) {
+template <uint8_t D, typename Itype>
+CoordIndexMap<D, Itype> CreateCoordIndexMap(const Itype *loc, Itype nrows,
+                                            Itype ncols) {
   assert(ncols - 1 == D); // D+1 th coord is the batch index
-  CoordIndexMap<D> coord_map;
+  CoordIndexMap<D, Itype> coord_map;
   coord_map.map.resize(nrows);
-  Coord<D> coord;
+  Coord<D, Itype> coord;
   for (int i = 0; i < nrows; i++) {
     std::copy(&loc[i * ncols], &loc[(i + 1) * ncols], coord.data());
     if (coord_map.map.find(coord) == coord_map.map.end()) {
@@ -67,14 +68,14 @@ CoordIndexMap<D> CreateCoordIndexMap(const int64_t *loc, int64_t nrows,
   duplicate check. The mapping will be used to create input index to output
   index mapping for convolution computation.
 */
-template <uint8_t D>
-CoordIndexMap<D> CreateDuplicateCoordIndexMap(const int64_t *loc, int64_t nrows,
-                                              int64_t ncols) {
+template <uint8_t D, typename Itype>
+CoordIndexMap<D, Itype> CreateDuplicateCoordIndexMap(const Itype *loc,
+                                                     Itype nrows, Itype ncols) {
   assert(ncols - 1 == D); // D+1 th coord is the batch index
   int counter = 0;
-  CoordIndexMap<D> coord_map;
+  CoordIndexMap<D, Itype> coord_map;
   coord_map.map.resize(nrows);
-  Coord<D> coord;
+  Coord<D, Itype> coord;
   for (int i = 0; i < nrows; i++) {
     std::copy(&loc[i * ncols], &loc[(i + 1) * ncols], coord.data());
     if (coord_map.map.find(coord) == coord_map.map.end()) {
@@ -87,12 +88,12 @@ CoordIndexMap<D> CreateDuplicateCoordIndexMap(const int64_t *loc, int64_t nrows,
 /**
  * Get coords index. Used to write index to given index_map pointer
  */
-template <uint8_t D>
-void CreateDuplicateIndexMap(CoordIndexMap<D> coord_map, const int64_t *loc,
-                             int64_t nrows, int64_t *index_map,
-                             int64_t index_map_nrows) {
+template <uint8_t D, typename Itype>
+void CreateDuplicateIndexMap(CoordIndexMap<D, Itype> coord_map,
+                             const Itype *loc, Itype nrows, Itype *index_map,
+                             Itype index_map_nrows) {
   int ncols = D + 1;
-  Coord<D> coord;
+  Coord<D, Itype> coord;
   for (int i = 0; i < nrows; i++) {
     std::copy(&loc[i * ncols], &loc[(i + 1) * ncols], coord.data());
     auto coord_iter = coord_map.map.find(coord);
@@ -111,11 +112,12 @@ void CreateDuplicateIndexMap(CoordIndexMap<D> coord_map, const int64_t *loc,
   is_transpose is not used as we assume that the unpooled coords should
   correspond to one of the existing coord maps.
 */
-template <uint8_t D>
-CoordIndexMap<D> CreateOutputCoordIndexMap(const CoordIndexMap<D> in_coord_map,
-                                           const Arr<D> pixel_dists,
-                                           const Arr<D> strides) {
-  CoordIndexMap<D> out_coord_map;
+template <uint8_t D, typename Itype>
+CoordIndexMap<D, Itype>
+CreateOutputCoordIndexMap(const CoordIndexMap<D, Itype> in_coord_map,
+                          const Arr<D, Itype> pixel_dists,
+                          const Arr<D, Itype> strides) {
+  CoordIndexMap<D, Itype> out_coord_map;
   bool gt_one = false;
   for (auto s : strides) {
     if (s < 1)
@@ -124,12 +126,12 @@ CoordIndexMap<D> CreateOutputCoordIndexMap(const CoordIndexMap<D> in_coord_map,
       gt_one = true;
   }
   if (gt_one) {
-    Arr<D> new_pixel_dists;
+    Arr<D, Itype> new_pixel_dists;
     int n_out = 0;
     for (int i = 0; i < D; i++)
       new_pixel_dists[i] = pixel_dists[i] * strides[i];
     for (auto in_pair : in_coord_map.map) {
-      Coord<D> coord(in_pair.first);
+      Coord<D, Itype> coord(in_pair.first);
       for (int j = 0; j < D; j++)
         coord[j] = int(coord[j] / new_pixel_dists[j]) * new_pixel_dists[j];
       if (out_coord_map.map.find(coord) == out_coord_map.map.end())
@@ -145,16 +147,16 @@ CoordIndexMap<D> CreateOutputCoordIndexMap(const CoordIndexMap<D> in_coord_map,
 /*
  * Coord map with the origin only
  */
-template <uint8_t D>
-CoordIndexMap<D>
-CreateOutputOriginCoordIndexMap(const CoordIndexMap<D> in_coord_map,
-                                int batch_size) {
-  CoordIndexMap<D> out_coord_map;
-  Coord<D> coord;
+template <uint8_t D, typename Itype>
+CoordIndexMap<D, Itype>
+CreateOutputOriginCoordIndexMap(const CoordIndexMap<D, Itype> in_coord_map,
+                                Itype batch_size) {
+  CoordIndexMap<D, Itype> out_coord_map;
+  Coord<D, Itype> coord;
   int n_out = 0;
   if (batch_size < 1) {
     for (auto in_pair : in_coord_map.map) {
-      Coord<D> coord(in_pair.first);
+      Coord<D, Itype> coord(in_pair.first);
       for (int j = 0; j < D; j++)
         coord[j] = 0;
       if (out_coord_map.map.find(coord) == out_coord_map.map.end())
@@ -162,7 +164,7 @@ CreateOutputOriginCoordIndexMap(const CoordIndexMap<D> in_coord_map,
     }
   } else {
     for (int b = 0; b < batch_size; b++) {
-      Coord<D> coord;
+      Coord<D, Itype> coord;
       for (int j = 0; j < D; j++)
         coord[j] = 0;
       coord[D] = b;
@@ -172,9 +174,9 @@ CreateOutputOriginCoordIndexMap(const CoordIndexMap<D> in_coord_map,
   return out_coord_map;
 }
 
-template <uint8_t D>
-int ComputeKernelVolume(int region_type, const Arr<D> kernel_size,
-                        int n_offset) {
+template <uint8_t D, typename Itype>
+int ComputeKernelVolume(Itype region_type, const Arr<D, Itype> kernel_size,
+                        Itype n_offset) {
   int kernel_volume;
   if (region_type == 0) { // Hypercube
     kernel_volume = 1;
@@ -196,20 +198,23 @@ int ComputeKernelVolume(int region_type, const Arr<D> kernel_size,
   Given the index map, kernel size, stride, and dilation, compute the input
   index to output index. Returns {in_map, out_map}
 */
-template <uint8_t D>
-std::tuple<InOutMapPerKernel, InOutMapPerKernel> CreateInOutPerKernel(
-    const CoordIndexMap<D> in_coord_map, const CoordIndexMap<D> out_coord_map,
-    const Arr<D> pixel_dists, const Arr<D> kernel_size, const Arr<D> dilations,
-    int64_t region_type, const int64_t *p_offset, int64_t n_offset) {
+template <uint8_t D, typename Itype>
+std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
+CreateInOutPerKernel(const CoordIndexMap<D, Itype> in_coord_map,
+                     const CoordIndexMap<D, Itype> out_coord_map,
+                     const Arr<D, Itype> pixel_dists,
+                     const Arr<D, Itype> kernel_size,
+                     const Arr<D, Itype> dilations, Itype region_type,
+                     const Itype *p_offset, Itype n_offset) {
   int kernel_volume, kernel_ind = 0;
   kernel_volume = ComputeKernelVolume<D>(region_type, kernel_size, n_offset);
 
-  InOutMapPerKernel in_map(kernel_volume), out_map(kernel_volume);
+  InOutMapPerKernel<Itype> in_map(kernel_volume), out_map(kernel_volume);
   for (auto const out_coord_iter : out_coord_map.map) {
     auto out_coord = out_coord_iter.first;
     auto kernel_region =
-        KernelRegion<D>(out_coord, pixel_dists, kernel_size, dilations,
-                        region_type, p_offset, n_offset);
+        KernelRegion<D, Itype>(out_coord, pixel_dists, kernel_size, dilations,
+                               region_type, p_offset, n_offset);
     kernel_ind = 0;
     for (auto point : kernel_region) {
       auto in_coord_iter = in_coord_map.map.find(point);
@@ -223,14 +228,14 @@ std::tuple<InOutMapPerKernel, InOutMapPerKernel> CreateInOutPerKernel(
   return std::make_tuple(in_map, out_map);
 }
 
-template <uint8_t D>
-std::tuple<InOutMapPerKernel, InOutMapPerKernel>
-CreateGlobalReductionInOutMap(const CoordIndexMap<D> in_coord_map,
-                              const CoordIndexMap<D> out_coord_map) {
-  InOutMapPerKernel in_map(1), out_map(1);
+template <uint8_t D, typename Itype>
+std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
+CreateGlobalReductionInOutMap(const CoordIndexMap<D, Itype> in_coord_map,
+                              const CoordIndexMap<D, Itype> out_coord_map) {
+  InOutMapPerKernel<Itype> in_map(1), out_map(1);
   // The out_coord_map.size() == 1
   for (auto const in_coord_iter : in_coord_map.map) {
-    Coord<D> coord(in_coord_iter.first);
+    Coord<D, Itype> coord(in_coord_iter.first);
     for (int j = 0; j < D; j++)
       coord[j] = 0;
     auto out_coord_iter = out_coord_map.map.find(coord);
@@ -248,21 +253,23 @@ CreateGlobalReductionInOutMap(const CoordIndexMap<D> in_coord_map,
   Given the index map, kernel size, stride, and dilation, compute the input
   index to output index. Returns {in_map, out_map} for transposed convolution
 */
-template <uint8_t D>
-std::tuple<InOutMapPerKernel, InOutMapPerKernel> CreateInOutPerKernelTranspose(
-    const CoordIndexMap<D> in_coord_map, const CoordIndexMap<D> out_coord_map,
-    const Arr<D> out_pixel_dists, const Arr<D> kernel_size,
-    const Arr<D> dilations, int64_t region_type, const int64_t *p_offset,
-    int64_t n_offset) {
+template <uint8_t D, typename Itype>
+std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
+CreateInOutPerKernelTranspose(const CoordIndexMap<D, Itype> in_coord_map,
+                              const CoordIndexMap<D, Itype> out_coord_map,
+                              const Arr<D, Itype> out_pixel_dists,
+                              const Arr<D, Itype> kernel_size,
+                              const Arr<D, Itype> dilations, Itype region_type,
+                              const Itype *p_offset, Itype n_offset) {
   int kernel_volume, kernel_ind = 0;
   kernel_volume = ComputeKernelVolume<D>(region_type, kernel_size, n_offset);
 
-  InOutMapPerKernel in_map(kernel_volume), out_map(kernel_volume);
+  InOutMapPerKernel<Itype> in_map(kernel_volume), out_map(kernel_volume);
   for (auto const in_coord_iter : in_coord_map.map) {
     auto in_coord = in_coord_iter.first;
     auto kernel_region =
-        KernelRegion<D>(in_coord, out_pixel_dists, kernel_size, dilations,
-                        region_type, p_offset, n_offset);
+        KernelRegion<D, Itype>(in_coord, out_pixel_dists, kernel_size,
+                               dilations, region_type, p_offset, n_offset);
     kernel_ind = 0;
     for (auto point : kernel_region) {
       auto out_coord_iter = out_coord_map.map.find(point);
@@ -282,15 +289,15 @@ std::tuple<InOutMapPerKernel, InOutMapPerKernel> CreateInOutPerKernelTranspose(
 /*
  * Given coordinates and the pixel distance, create index map
  */
-template <uint8_t D>
-long t_initialize_coords(const int64_t *coords, int64_t nrows,
-                         const int64_t *p_pixel_dist, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Itype>
+int t_initialize_coords(const Itype *coords, Itype nrows,
+                        const Itype *p_pixel_dist, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
 
   // Create index map and put it in the metadata
   auto coord2inds = &init_metadata.coord2inds;
-  auto pixel_dists = ToArray<D>(p_pixel_dist);
-  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   if (coord2inds->find(pixel_dist_hash) != coord2inds->end()) {
     std::cerr << "The coord map for the given pixel dists exists" << std::endl;
     return -1;
@@ -302,16 +309,16 @@ long t_initialize_coords(const int64_t *coords, int64_t nrows,
 /*
  * Given coordinates and the pixel distance, create index map and index map
  */
-template <uint8_t D>
-long t_initialize_coords_with_duplicates(const int64_t *coords, int64_t nrows,
-                                         const int64_t *p_pixel_dist,
-                                         void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Itype>
+int t_initialize_coords_with_duplicates(const Itype *coords, Itype nrows,
+                                        const Itype *p_pixel_dist,
+                                        void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
 
   // Create index map and put it in the metadata
   auto coord2inds = &init_metadata.coord2inds;
-  auto pixel_dists = ToArray<D>(p_pixel_dist);
-  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   if (coord2inds->find(pixel_dist_hash) != coord2inds->end()) {
     std::cerr << "The coord map for the given pixel dists exists" << std::endl;
     return -1;
@@ -324,16 +331,16 @@ long t_initialize_coords_with_duplicates(const int64_t *coords, int64_t nrows,
 /*
  * Given coordinates and the pixel distance, create index map and index map
  */
-template <uint8_t D>
-long t_get_index_map(const int64_t *coords, int64_t nrows, int64_t *p_index_map,
-                     int64_t index_map_nrows, const int64_t *p_pixel_dist,
-                     void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Itype>
+int t_get_index_map(const Itype *coords, Itype nrows, Itype *p_index_map,
+                    Itype index_map_nrows, const Itype *p_pixel_dist,
+                    void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
 
   // Create index map and put it in the metadata
   auto coord2inds = &init_metadata.coord2inds;
-  auto pixel_dists = ToArray<D>(p_pixel_dist);
-  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   if (coord2inds->find(pixel_dist_hash) == coord2inds->end()) {
     std::cerr << "The coord map doesn't exists for the given pixel dists"
               << std::endl;
@@ -347,26 +354,25 @@ long t_get_index_map(const int64_t *coords, int64_t nrows, int64_t *p_index_map,
  * Create output map for a specific pixeldist, stride if coordmap[pixeldist]
  * exists.
  */
-template <uint8_t D>
-long t_initialize_out_coords(const int64_t *p_pixel_dist,
-                             const int64_t *p_stride, bool is_transpose,
-                             void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Itype>
+int t_initialize_out_coords(const Itype *p_pixel_dist, const Itype *p_stride,
+                            bool is_transpose, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
 
-  auto pixel_dists = ToArray<D>(p_pixel_dist);
-  auto strides = ToArray<D>(p_stride);
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto strides = ToArray<D, Itype>(p_stride);
   auto out_pixel_dists =
       ComputeOutPixelDist<D>(pixel_dists, strides, is_transpose);
 
   // Create index map and put it in the metadata
   auto coord2inds = &init_metadata.coord2inds;
-  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   if (coord2inds->find(pixel_dist_hash) == coord2inds->end()) {
     std::cerr << "Given input map for pixel dists does not exist";
     return -1;
   }
 
-  auto out_pixel_dist_hash = hash_vec<Arr<D>>(out_pixel_dists);
+  auto out_pixel_dist_hash = hash_vec<Arr<D, Itype>>(out_pixel_dists);
   if (coord2inds->find(out_pixel_dist_hash) == coord2inds->end()) {
     if (is_transpose) {
       std::cerr << "The output coordinate map for transposed functions (e.g. "
@@ -374,7 +380,7 @@ long t_initialize_out_coords(const int64_t *p_pixel_dist,
                 << std::endl;
       return -1;
     }
-    (*coord2inds)[out_pixel_dist_hash] = CreateOutputCoordIndexMap<D>(
+    (*coord2inds)[out_pixel_dist_hash] = CreateOutputCoordIndexMap<D, Itype>(
         (*coord2inds)[pixel_dist_hash], pixel_dists, strides);
   }
   return 1;
@@ -383,14 +389,14 @@ long t_initialize_out_coords(const int64_t *p_pixel_dist,
 /*
  * Initialize origin map, if batch size is positive, use it for initialization.
  */
-template <uint8_t D>
-long t_initialize_origin_coords(const int64_t *p_pixel_dist, int64_t batch_size,
-                                void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
-  auto pixel_dists = ToArray<D>(p_pixel_dist);
+template <uint8_t D, typename Itype>
+int t_initialize_origin_coords(const Itype *p_pixel_dist, Itype batch_size,
+                               void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
   // Create index map and put it in the metadata
   auto coord2inds = &init_metadata.coord2inds;
-  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   if (coord2inds->find(pixel_dist_hash) == coord2inds->end()) {
     std::cerr << "The coord map for the given pixel dists does not exists"
               << std::endl;
@@ -398,17 +404,17 @@ long t_initialize_origin_coords(const int64_t *p_pixel_dist, int64_t batch_size,
   }
 
   // 0 initialized array for out pixel dist
-  auto out_pixel_dist_hash = hash_vec<Arr<D>>(Arr<D>());
+  auto out_pixel_dist_hash = hash_vec<Arr<D, Itype>>(Arr<D, Itype>());
   (*coord2inds)[out_pixel_dist_hash] = CreateOutputOriginCoordIndexMap<D>(
       (*coord2inds)[pixel_dist_hash], batch_size);
 }
 
-template <uint8_t D>
-long t_get_num_coords(const int64_t *p_pixel_dist, int64_t *p_nrows,
-                      void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
-  auto pixel_dists = ToArray<D>(p_pixel_dist);
-  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);
+template <uint8_t D, typename Itype>
+int t_get_num_coords(const Itype *p_pixel_dist, Itype *p_nrows,
+                     void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   if (init_metadata.coord2inds.find(pixel_dist_hash) ==
       init_metadata.coord2inds.end()) {
     return -1;
@@ -417,15 +423,14 @@ long t_get_num_coords(const int64_t *p_pixel_dist, int64_t *p_nrows,
   return 1;
 }
 
-template <uint8_t D>
-long t_get_coords(int64_t *p_coords, const int64_t *p_pixel_dist,
-                  void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Itype>
+int t_get_coords(Itype *p_coords, const Itype *p_pixel_dist, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   auto coord2inds = &init_metadata.coord2inds;
   int nrows = 0, ncols = D + 1;
 
-  auto pixel_dists = ToArray<D>(p_pixel_dist);
-  auto pixel_dist_hash = hash_vec<Arr<D>>(pixel_dists);
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   if (coord2inds->find(pixel_dist_hash) == coord2inds->end()) {
     return -1;
   }
@@ -437,7 +442,7 @@ long t_get_coords(int64_t *p_coords, const int64_t *p_pixel_dist,
   // TODO Replace memcpy with copy
   for (auto pair : *coord2ind)
     std::memcpy(&p_coords[ncols * pair.second], &pair.first,
-                (D + 1) * sizeof(long));
+                (D + 1) * sizeof(Itype));
 
   return 1;
 }
@@ -446,19 +451,19 @@ long t_get_coords(int64_t *p_coords, const int64_t *p_pixel_dist,
  * Given pixel_dist_src and pixel_dist_dst, find the respective coord_maps and
  * return the indices of the coord_map_ind in coord_map_dst
  */
-template <uint8_t D>
-long t_get_permutation(long *p_permutation, const int64_t *p_pixel_dist_src,
-                       const int64_t *p_pixel_dist_dst, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Itype>
+int t_get_permutation(Itype *p_permutation, const Itype *p_pixel_dist_src,
+                      const Itype *p_pixel_dist_dst, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   auto coord2inds = &init_metadata.coord2inds;
   int out_ind, in_ind;
-  auto pixel_dists_src = ToArray<D>(p_pixel_dist_src);
-  auto pixel_dist_src_hash = hash_vec<Arr<D>>(pixel_dists_src);
+  auto pixel_dists_src = ToArray<D, Itype>(p_pixel_dist_src);
+  auto pixel_dist_src_hash = hash_vec<Arr<D, Itype>>(pixel_dists_src);
 
-  auto pixel_dists_dst = ToArray<D>(p_pixel_dist_dst);
-  auto pixel_dist_dst_hash = hash_vec<Arr<D>>(pixel_dists_dst);
+  auto pixel_dists_dst = ToArray<D, Itype>(p_pixel_dist_dst);
+  auto pixel_dist_dst_hash = hash_vec<Arr<D, Itype>>(pixel_dists_dst);
 
-  auto strides = std::vector<int64_t>(D);
+  auto strides = std::vector<Itype>(D);
 
   for (int i = 0; i < D; i++) {
     strides[i] = pixel_dists_src[i] / pixel_dists_dst[i];
@@ -480,7 +485,7 @@ long t_get_permutation(long *p_permutation, const int64_t *p_pixel_dist_src,
 
   for (auto dst_pair : *coord2ind_dst) {
     out_ind = dst_pair.second;
-    Coord<D> coord = dst_pair.first;
+    Coord<D, Itype> coord = dst_pair.first;
     for (int i = 0; i < D; i++) {
       coord[i] = (coord[i] / strides[i]) * strides[i];
     }
@@ -490,141 +495,138 @@ long t_get_permutation(long *p_permutation, const int64_t *p_pixel_dist_src,
   return 1;
 }
 
-template <uint8_t D> void t_clear(void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Itype> void t_clear(void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   init_metadata.clear();
 }
 
-template <uint8_t D>
-long t_conv_fw(const float *p_in_feat, int64_t in_nchannel, float *p_out_feat,
-               int64_t out_nchannel, const float *p_kernel, int64_t out_nrows,
-               const int64_t *p_pixel_dist, const int64_t *p_stride,
-               const int64_t *p_kernel_size, const int64_t *p_dilation,
-               int64_t region_type, const int64_t *p_offset, int64_t n_offset,
-               void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_fw(const Dtype *p_in_feat, Itype in_nchannel, Dtype *p_out_feat,
+              Itype out_nchannel, const Dtype *p_kernel, Itype out_nrows,
+              const Itype *p_pixel_dist, const Itype *p_stride,
+              const Itype *p_kernel_size, const Itype *p_dilation,
+              Itype region_type, const Itype *p_offset, Itype n_offset,
+              void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
 
-  SparseConvolutionForward<float>(p_in_feat, in_nchannel, p_out_feat,
-                                  out_nchannel, p_kernel, (*p_in_maps)[key],
-                                  (*p_out_maps)[key], out_nrows);
+  SparseConvolutionForward<Dtype, Itype>(
+      p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel,
+      (*p_in_maps)[key], (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_conv_tr_fw(const float *p_in_feat, int64_t in_nchannel,
-                  float *p_out_feat, int64_t out_nchannel,
-                  const float *p_kernel, int64_t out_nrows,
-                  const int64_t *p_pixel_dist, const int64_t *p_stride,
-                  const int64_t *p_kernel_size, const int64_t *p_dilation,
-                  int64_t region_type, const int64_t *p_offset,
-                  int64_t n_offset, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_tr_fw(const Dtype *p_in_feat, Itype in_nchannel, Dtype *p_out_feat,
+                 Itype out_nchannel, const Dtype *p_kernel, Itype out_nrows,
+                 const Itype *p_pixel_dist, const Itype *p_stride,
+                 const Itype *p_kernel_size, const Itype *p_dilation,
+                 Itype region_type, const Itype *p_offset, Itype n_offset,
+                 void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(true)
 
-  SparseConvolutionForward<float>(p_in_feat, in_nchannel, p_out_feat,
-                                  out_nchannel, p_kernel, (*p_in_maps)[key],
-                                  (*p_out_maps)[key], out_nrows);
+  SparseConvolutionForward<Dtype, Itype>(
+      p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel,
+      (*p_in_maps)[key], (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_conv_bw(const float *p_in_feat, float *p_grad_in_feat,
-               int64_t in_nchannel, const float *p_grad_out_feat,
-               int64_t out_nchannel, const float *p_kernel,
-               float *p_grad_kernel, int64_t out_nrows,
-               const int64_t *p_pixel_dist, const int64_t *p_stride,
-               const int64_t *p_kernel_size, const int64_t *p_dilation,
-               void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_bw(const Dtype *p_in_feat, Dtype *p_grad_in_feat, Itype in_nchannel,
+              const Dtype *p_grad_out_feat, Itype out_nchannel,
+              const Dtype *p_kernel, Dtype *p_grad_kernel, Itype out_nrows,
+              const Itype *p_pixel_dist, const Itype *p_stride,
+              const Itype *p_kernel_size, const Itype *p_dilation,
+              void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   BACKWARD_PROP_CHECK
 
-  SparseConvolutionBackward<float>(p_in_feat, p_grad_in_feat, in_nchannel,
-                                   p_grad_out_feat, out_nchannel, p_kernel,
-                                   p_grad_kernel, (*p_in_maps)[key],
-                                   (*p_out_maps)[key], out_nrows);
+  SparseConvolutionBackward<Dtype, Itype>(
+      p_in_feat, p_grad_in_feat, in_nchannel, p_grad_out_feat, out_nchannel,
+      p_kernel, p_grad_kernel, (*p_in_maps)[key], (*p_out_maps)[key],
+      out_nrows);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_conv_tr_bw(const float *p_in_feat, float *p_grad_in_feat,
-                  int64_t in_nchannel, const float *p_grad_out_feat,
-                  int64_t out_nchannel, const float *p_kernel,
-                  float *p_grad_kernel, int64_t out_nrows,
-                  const int64_t *p_pixel_dist, const int64_t *p_stride,
-                  const int64_t *p_kernel_size, const int64_t *p_dilation,
-                  void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_tr_bw(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
+                 Itype in_nchannel, const Dtype *p_grad_out_feat,
+                 Itype out_nchannel, const Dtype *p_kernel,
+                 Dtype *p_grad_kernel, Itype out_nrows,
+                 const Itype *p_pixel_dist, const Itype *p_stride,
+                 const Itype *p_kernel_size, const Itype *p_dilation,
+                 void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
   BACKWARD_PROP_CHECK
 
-  SparseConvolutionBackward<float>(p_in_feat, p_grad_in_feat, in_nchannel,
-                                   p_grad_out_feat, out_nchannel, p_kernel,
-                                   p_grad_kernel, (*p_in_maps)[key],
-                                   (*p_out_maps)[key], out_nrows);
+  SparseConvolutionBackward<Dtype, Itype>(
+      p_in_feat, p_grad_in_feat, in_nchannel, p_grad_out_feat, out_nchannel,
+      p_kernel, p_grad_kernel, (*p_in_maps)[key], (*p_out_maps)[key],
+      out_nrows);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_conv_fw_gpu(const float *d_in_feat, int64_t in_nchannel,
-                   float *d_out_feat, int64_t out_nchannel,
-                   const float *d_kernel, int64_t out_nrows,
-                   const int64_t *p_pixel_dist, const int64_t *p_stride,
-                   const int64_t *p_kernel_size, const int64_t *p_dilation,
-                   int64_t region_type, const int64_t *p_offset,
-                   int64_t n_offset, cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_fw_gpu(const Dtype *d_in_feat, Itype in_nchannel, Dtype *d_out_feat,
+                  Itype out_nchannel, const Dtype *d_kernel, Itype out_nrows,
+                  const Itype *p_pixel_dist, const Itype *p_stride,
+                  const Itype *p_kernel_size, const Itype *p_dilation,
+                  Itype region_type, const Itype *p_offset, Itype n_offset,
+                  cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false);
 
-  SparseConvolutionForwardGPU<float>(d_in_feat, in_nchannel, d_out_feat,
-                                     out_nchannel, d_kernel, (*p_in_maps)[key],
-                                     (*p_out_maps)[key], out_nrows,
-                                     init_metadata.cuhandle, stream);
+  SparseConvolutionForwardGPU<Dtype, Itype>(
+      d_in_feat, in_nchannel, d_out_feat, out_nchannel, d_kernel,
+      (*p_in_maps)[key], (*p_out_maps)[key], out_nrows, init_metadata.cuhandle,
+      stream);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_conv_tr_fw_gpu(const float *d_in_feat, int64_t in_nchannel,
-                      float *d_out_feat, int64_t out_nchannel,
-                      const float *d_kernel, int64_t out_nrows,
-                      const int64_t *p_pixel_dist, const int64_t *p_stride,
-                      const int64_t *p_kernel_size, const int64_t *p_dilation,
-                      int64_t region_type, const int64_t *p_offset,
-                      int64_t n_offset, cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_tr_fw_gpu(const Dtype *d_in_feat, Itype in_nchannel,
+                     Dtype *d_out_feat, Itype out_nchannel,
+                     const Dtype *d_kernel, Itype out_nrows,
+                     const Itype *p_pixel_dist, const Itype *p_stride,
+                     const Itype *p_kernel_size, const Itype *p_dilation,
+                     Itype region_type, const Itype *p_offset, Itype n_offset,
+                     cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(true)
 
-  SparseConvolutionForwardGPU<float>(d_in_feat, in_nchannel, d_out_feat,
-                                     out_nchannel, d_kernel, (*p_in_maps)[key],
-                                     (*p_out_maps)[key], out_nrows,
-                                     init_metadata.cuhandle, stream);
+  SparseConvolutionForwardGPU<Dtype, Itype>(
+      d_in_feat, in_nchannel, d_out_feat, out_nchannel, d_kernel,
+      (*p_in_maps)[key], (*p_out_maps)[key], out_nrows, init_metadata.cuhandle,
+      stream);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_conv_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
-                   int64_t in_nchannel, const float *d_grad_out_feat,
-                   int64_t out_nchannel, const float *d_kernel,
-                   float *d_grad_kernel, int64_t out_nrows,
-                   const int64_t *p_pixel_dist, const int64_t *p_stride,
-                   const int64_t *p_kernel_size, const int64_t *p_dilation,
-                   cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_bw_gpu(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
+                  Itype in_nchannel, const Dtype *d_grad_out_feat,
+                  Itype out_nchannel, const Dtype *d_kernel,
+                  Dtype *d_grad_kernel, Itype out_nrows,
+                  const Itype *p_pixel_dist, const Itype *p_stride,
+                  const Itype *p_kernel_size, const Itype *p_dilation,
+                  cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   BACKWARD_PROP_CHECK
 
-  SparseConvolutionBackwardGPU<float>(
+  SparseConvolutionBackwardGPU<Dtype, Itype>(
       d_in_feat, d_grad_in_feat, in_nchannel, d_grad_out_feat, out_nchannel,
       d_kernel, d_grad_kernel, (*p_in_maps)[key], (*p_out_maps)[key], out_nrows,
       init_metadata.cuhandle, stream);
@@ -632,19 +634,19 @@ long t_conv_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
   return 1;
 }
 
-template <uint8_t D>
-long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
-                      int64_t in_nchannel, const float *d_grad_out_feat,
-                      int64_t out_nchannel, const float *d_kernel,
-                      float *d_grad_kernel, int64_t out_nrows,
-                      const int64_t *p_pixel_dist, const int64_t *p_stride,
-                      const int64_t *p_kernel_size, const int64_t *p_dilation,
-                      cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_conv_tr_bw_gpu(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
+                     Itype in_nchannel, const Dtype *d_grad_out_feat,
+                     Itype out_nchannel, const Dtype *d_kernel,
+                     Dtype *d_grad_kernel, Itype out_nrows,
+                     const Itype *p_pixel_dist, const Itype *p_stride,
+                     const Itype *p_kernel_size, const Itype *p_dilation,
+                     cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
   BACKWARD_PROP_CHECK
 
-  SparseConvolutionBackwardGPU<float>(
+  SparseConvolutionBackwardGPU<Dtype, Itype>(
       d_in_feat, d_grad_in_feat, in_nchannel, d_grad_out_feat, out_nchannel,
       d_kernel, d_grad_kernel, (*p_in_maps)[key], (*p_out_maps)[key], out_nrows,
       init_metadata.cuhandle, stream);
@@ -652,216 +654,214 @@ long t_conv_tr_bw_gpu(const float *d_in_feat, float *d_grad_in_feat,
   return 1;
 }
 
-template <uint8_t D>
-long t_max_pooling_fw(const float *p_in_feat, float *p_out_feat,
-                      int64_t *p_mask_index, int64_t nchannel,
-                      int64_t out_nrows, const int64_t *p_pixel_dist,
-                      const int64_t *p_stride, const int64_t *p_kernel_size,
-                      const int64_t *p_dilation, int64_t region_type,
-                      const int64_t *p_offset, int64_t n_offset,
-                      void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Dtype, typename Itype>
+int t_max_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
+                     Itype *p_mask_index, Itype nchannel, Itype out_nrows,
+                     const Itype *p_pixel_dist, const Itype *p_stride,
+                     const Itype *p_kernel_size, const Itype *p_dilation,
+                     Itype region_type, const Itype *p_offset, Itype n_offset,
+                     void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false);
 
-  SparseMaxPoolingForward<float>(p_in_feat, p_out_feat, p_mask_index, nchannel,
-                                 (*p_in_maps)[key], (*p_out_maps)[key],
-                                 out_nrows);
-
-  return 1;
-}
-
-template <uint8_t D>
-long t_max_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
-                      float *p_grad_out_feat, int64_t out_nrows,
-                      const int64_t *p_mask_index, int64_t nchannel,
-                      const int64_t *p_pixel_dist, const int64_t *p_stride,
-                      const int64_t *p_kernel_size, const int64_t *p_dilation,
-                      void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
-  INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
-  BACKWARD_PROP_CHECK
-
-  SparseMaxPoolingBackward<float>(p_grad_in_feat, in_nrows, p_grad_out_feat,
-                                  out_nrows, p_mask_index, nchannel,
-                                  (*p_in_maps)[key], (*p_out_maps)[key]);
-
-  return 1;
-}
-
-template <uint8_t D>
-long t_max_pooling_fw_gpu(const float *d_in_feat, float *d_out_feat,
-                          int64_t out_nrows, int64_t *d_mask_index,
-                          int64_t nchannel, const int64_t *p_pixel_dist,
-                          const int64_t *p_stride, const int64_t *p_kernel_size,
-                          const int64_t *p_dilation, int64_t region_type,
-                          const int64_t *p_offset, int64_t n_offset,
-                          cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
-  INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
-  INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
-
-  SparseMaxPoolingForwardGPU<float>(d_in_feat, d_out_feat, out_nrows,
-                                    d_mask_index, nchannel, (*p_in_maps)[key],
-                                    (*p_out_maps)[key], stream);
-
-  return 1;
-}
-
-template <uint8_t D>
-long t_max_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
-                          const float *d_grad_out_feat, int64_t out_nrows,
-                          const int64_t *d_mask_index, int64_t nchannel,
-                          const int64_t *p_pixel_dist, const int64_t *p_stride,
-                          const int64_t *p_kernel_size,
-                          const int64_t *p_dilation, cudaStream_t stream,
-                          void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
-  INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
-  BACKWARD_PROP_CHECK
-
-  SparseMaxPoolingBackwardGPU<float>(d_grad_in_feat, in_nrows, d_grad_out_feat,
-                                     out_nrows, d_mask_index, nchannel, stream);
-
-  return 1;
-}
-
-template <uint8_t D>
-long t_nonzero_avg_pooling_fw(const float *p_in_feat, float *p_out_feat,
-                              int64_t *p_num_nonzero, int64_t nchannel,
-                              int64_t out_nrows, const int64_t *p_pixel_dist,
-                              const int64_t *p_stride,
-                              const int64_t *p_kernel_size,
-                              const int64_t *p_dilation, int64_t region_type,
-                              const int64_t *p_offset, int64_t n_offset,
-                              void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
-  INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
-  INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false);
-
-  SparseNonzeroAvgPoolingForward<float>(p_in_feat, p_out_feat, p_num_nonzero,
+  SparseMaxPoolingForward<Dtype, Itype>(p_in_feat, p_out_feat, p_mask_index,
                                         nchannel, (*p_in_maps)[key],
                                         (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_nonzero_avg_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
-                              float *p_grad_out_feat, int64_t out_nrows,
-                              const int64_t *p_num_nonzero, int64_t nchannel,
-                              const int64_t *p_pixel_dist,
-                              const int64_t *p_stride,
-                              const int64_t *p_kernel_size,
-                              const int64_t *p_dilation, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_max_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
+                     Dtype *p_grad_out_feat, Itype out_nrows,
+                     const Itype *p_mask_index, Itype nchannel,
+                     const Itype *p_pixel_dist, const Itype *p_stride,
+                     const Itype *p_kernel_size, const Itype *p_dilation,
+                     void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   BACKWARD_PROP_CHECK
 
-  SparseNonzeroAvgPoolingBackward<float>(
+  SparseMaxPoolingBackward<Dtype, Itype>(
+      p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_mask_index,
+      nchannel, (*p_in_maps)[key], (*p_out_maps)[key]);
+
+  return 1;
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+int t_max_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
+                         Itype out_nrows, Itype *d_mask_index, Itype nchannel,
+                         const Itype *p_pixel_dist, const Itype *p_stride,
+                         const Itype *p_kernel_size, const Itype *p_dilation,
+                         Itype region_type, const Itype *p_offset,
+                         Itype n_offset, cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
+  INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
+
+  SparseMaxPoolingForwardGPU<Dtype, Itype>(
+      d_in_feat, d_out_feat, out_nrows, d_mask_index, nchannel,
+      (*p_in_maps)[key], (*p_out_maps)[key], stream);
+
+  return 1;
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+int t_max_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
+                         const Dtype *d_grad_out_feat, Itype out_nrows,
+                         const Itype *d_mask_index, Itype nchannel,
+                         const Itype *p_pixel_dist, const Itype *p_stride,
+                         const Itype *p_kernel_size, const Itype *p_dilation,
+                         cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
+  BACKWARD_PROP_CHECK
+
+  SparseMaxPoolingBackwardGPU<Dtype, Itype>(d_grad_in_feat, in_nrows,
+                                            d_grad_out_feat, out_nrows,
+                                            d_mask_index, nchannel, stream);
+
+  return 1;
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+int t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
+                             Itype *p_num_nonzero, Itype nchannel,
+                             Itype out_nrows, const Itype *p_pixel_dist,
+                             const Itype *p_stride, const Itype *p_kernel_size,
+                             const Itype *p_dilation, Itype region_type,
+                             const Itype *p_offset, Itype n_offset,
+                             void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
+  INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false);
+
+  SparseNonzeroAvgPoolingForward<Dtype, Itype>(p_in_feat, p_out_feat, p_num_nonzero,
+                                        nchannel, (*p_in_maps)[key],
+                                        (*p_out_maps)[key], out_nrows);
+
+  return 1;
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+int t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
+                             Dtype *p_grad_out_feat, Itype out_nrows,
+                             const Itype *p_num_nonzero, Itype nchannel,
+                             const Itype *p_pixel_dist, const Itype *p_stride,
+                             const Itype *p_kernel_size,
+                             const Itype *p_dilation, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
+  BACKWARD_PROP_CHECK
+
+  SparseNonzeroAvgPoolingBackward<Dtype, Itype>(
       p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
       nchannel, (*p_in_maps)[key], (*p_out_maps)[key]);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_nonzero_avg_pooling_fw_gpu(
-    const float *d_in_feat, float *d_out_feat, int64_t out_nrows,
-    int64_t *d_num_nonzero, int64_t nchannel, const int64_t *p_pixel_dist,
-    const int64_t *p_stride, const int64_t *p_kernel_size,
-    const int64_t *p_dilation, int64_t region_type, const int64_t *p_offset,
-    int64_t n_offset, cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_nonzero_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
+                                 Itype out_nrows, Itype *d_num_nonzero,
+                                 Itype nchannel, const Itype *p_pixel_dist,
+                                 const Itype *p_stride,
+                                 const Itype *p_kernel_size,
+                                 const Itype *p_dilation, Itype region_type,
+                                 const Itype *p_offset, Itype n_offset,
+                                 cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
 
-  SparseNonzeroAvgPoolingForwardGPU<float>(
+  SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, d_out_feat, out_nrows, d_num_nonzero, nchannel,
       (*p_in_maps)[key], (*p_out_maps)[key], stream);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_nonzero_avg_pooling_bw_gpu(
-    float *d_grad_in_feat, int64_t in_nrows, const float *d_grad_out_feat,
-    int64_t out_nrows, const int64_t *d_num_nonzero, int64_t nchannel,
-    const int64_t *p_pixel_dist, const int64_t *p_stride,
-    const int64_t *p_kernel_size, const int64_t *p_dilation,
-    cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_nonzero_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
+                                 const Dtype *d_grad_out_feat, Itype out_nrows,
+                                 const Itype *d_num_nonzero, Itype nchannel,
+                                 const Itype *p_pixel_dist,
+                                 const Itype *p_stride,
+                                 const Itype *p_kernel_size,
+                                 const Itype *p_dilation, cudaStream_t stream,
+                                 void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   BACKWARD_PROP_CHECK
 
-  SparseNonzeroAvgPoolingBackwardGPU<float>(
+  SparseNonzeroAvgPoolingBackwardGPU<Dtype>(
       d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
       nchannel, (*p_in_maps)[key], (*p_out_maps)[key], stream);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_global_avg_pooling_fw(const float *p_in_feat, float *p_out_feat,
-                             int64_t out_nrows, int64_t nchannel,
-                             int64_t *p_num_nonzero,
-                             const int64_t *p_pixel_dist, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata);
+template <uint8_t D, typename Dtype, typename Itype>
+int t_global_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
+                            Itype out_nrows, Itype nchannel,
+                            Itype *p_num_nonzero, const Itype *p_pixel_dist,
+                            void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP
 
-  SparseNonzeroAvgPoolingForward<float>(p_in_feat, p_out_feat, p_num_nonzero,
+  SparseNonzeroAvgPoolingForward<Dtype, Itype>(p_in_feat, p_out_feat, p_num_nonzero,
                                         nchannel, (*p_in_maps)[key],
                                         (*p_out_maps)[key], out_nrows);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_global_avg_pooling_bw(float *p_grad_in_feat, int64_t in_nrows,
-                             float *p_grad_out_feat, int64_t out_nrows,
-                             int64_t nchannel, const int64_t *p_num_nonzero,
-                             const int64_t *p_pixel_dist, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_global_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
+                            Dtype *p_grad_out_feat, Itype out_nrows,
+                            Itype nchannel, const Itype *p_num_nonzero,
+                            const Itype *p_pixel_dist, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   BACKWARD_PROP_CHECK
 
-  SparseNonzeroAvgPoolingBackward<float>(
+  SparseNonzeroAvgPoolingBackward<Dtype, Itype>(
       p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
       nchannel, (*p_in_maps)[key], (*p_out_maps)[key]);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_global_avg_pooling_fw_gpu(const float *d_in_feat, float *d_out_feat,
-                                 int64_t out_nrows, int64_t nchannel,
-                                 int64_t *d_num_nonzero,
-                                 const int64_t *p_pixel_dist,
-                                 cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
+                                Itype out_nrows, Itype nchannel,
+                                Itype *d_num_nonzero, const Itype *p_pixel_dist,
+                                cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP
 
-  SparseNonzeroAvgPoolingForwardGPU<float>(
+  SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, d_out_feat, out_nrows, d_num_nonzero, nchannel,
       (*p_in_maps)[key], (*p_out_maps)[key], stream);
 
   return 1;
 }
 
-template <uint8_t D>
-long t_global_avg_pooling_bw_gpu(float *d_grad_in_feat, int64_t in_nrows,
-                                 const float *d_grad_out_feat,
-                                 int64_t out_nrows, int64_t nchannel,
-                                 const int64_t *d_num_nonzero,
-                                 const int64_t *p_pixel_dist,
-                                 cudaStream_t stream, void **metadata) {
-  INITIALIZE_AND_REFERENCE(Metadata<D>, metadata, init_metadata)
+template <uint8_t D, typename Dtype, typename Itype>
+int t_global_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
+                                const Dtype *d_grad_out_feat, Itype out_nrows,
+                                Itype nchannel, const Itype *d_num_nonzero,
+                                const Itype *p_pixel_dist, cudaStream_t stream,
+                                void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   BACKWARD_PROP_CHECK
 
-  SparseNonzeroAvgPoolingBackwardGPU<float>(
+  SparseNonzeroAvgPoolingBackwardGPU<Dtype, Itype>(
       d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
       nchannel, (*p_in_maps)[key], (*p_out_maps)[key], stream);
 

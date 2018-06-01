@@ -7,10 +7,10 @@
 #include "src/math_functions.hpp"
 #include "src/sparse_convolution.cuh"
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void copy_mapped_input(const int n, const int nchannel,
                                   const Dtype *in_feat, Dtype *out_feat,
-                                  const int64_t *map) {
+                                  const Itype *map) {
   CUDA_KERNEL_LOOP(index, n) {
     const int row = index / nchannel;
     const int col = index % nchannel;
@@ -18,10 +18,10 @@ __global__ void copy_mapped_input(const int n, const int nchannel,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void add_mapped_output(const int n, const int nchannel,
                                   const Dtype *in_feat, Dtype *out_feat,
-                                  const int64_t *map) {
+                                  const Itype *map) {
   CUDA_KERNEL_LOOP(index, n) {
     const int row = index / nchannel;
     const int col = index % nchannel;
@@ -29,11 +29,11 @@ __global__ void add_mapped_output(const int n, const int nchannel,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 __global__ void add_mapped_output_tr(const int n, const Dtype *in_feat,
                                      const int in_nchannel, Dtype *out_feat,
                                      const int out_nchannel,
-                                     const int64_t *map) {
+                                     const Itype *map) {
   CUDA_KERNEL_LOOP(index, n) {
     const int row = index % in_nchannel;
     const int col = index / in_nchannel;
@@ -41,16 +41,16 @@ __global__ void add_mapped_output_tr(const int n, const Dtype *in_feat,
   }
 }
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseConvolutionForwardGPU(
     const Dtype *d_in_feat, int in_nchannel, Dtype *d_out_feat,
     int out_nchannel, const Dtype *d_kernel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, int out_nrows,
+    const std::vector<std::vector<Itype>> in_map,
+    const std::vector<std::vector<Itype>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream) {
   int kernel_volume, n_active_in_volume, num_kernels;
   thrust::device_vector<Dtype> d_input_buffer, d_output_buffer;
-  thrust::device_vector<int64_t> d_in_map, d_out_map;
+  thrust::device_vector<Itype> d_in_map, d_out_map;
 
   // Copy the in_map, out_map to GPU
   // First im2col, gather all indices of in2out
@@ -75,7 +75,7 @@ void SparseConvolutionForwardGPU(
     num_kernels = in_nchannel * n_active_in_volume;
 
     // Copy features to the buffer
-    copy_mapped_input<Dtype>
+    copy_mapped_input<Dtype, Itype>
         <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
             num_kernels, in_nchannel, d_in_feat,
             thrust::raw_pointer_cast(d_input_buffer.data()),
@@ -107,23 +107,23 @@ void SparseConvolutionForwardGPU(
   }
 }
 
-template void SparseConvolutionForwardGPU<float>(
+template void SparseConvolutionForwardGPU<float, int32_t>(
     const float *d_in_feat, int in_nchannel, float *d_out_feat,
     int out_nchannel, const float *d_kernel,
-    const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, int out_nrows,
+    const std::vector<std::vector<int32_t>> in_map,
+    const std::vector<std::vector<int32_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
 
-template <typename Dtype>
+template <typename Dtype, typename Itype>
 void SparseConvolutionBackwardGPU(
     const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nchannel,
     const Dtype *d_grad_out_feat, int out_nchannel, const Dtype *d_kernel,
-    Dtype *d_grad_kernel, const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, int out_nrows,
+    Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> in_map,
+    const std::vector<std::vector<Itype>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream) {
   int kernel_volume, n_active_in_volume, num_kernels;
   thrust::device_vector<Dtype> d_input_buffer, d_output_buffer;
-  thrust::device_vector<int64_t> d_in_map, d_out_map;
+  thrust::device_vector<Itype> d_in_map, d_out_map;
 
   // Copy the in_map, out_map to GPU
   // First im2col, gather all indices of in2out
@@ -147,7 +147,7 @@ void SparseConvolutionBackwardGPU(
     num_kernels = out_nchannel * n_active_in_volume;
 
     // Copy gradients to the buffer
-    copy_mapped_input<Dtype>
+    copy_mapped_input<Dtype, Itype>
         <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
             num_kernels, out_nchannel, d_grad_out_feat,
             thrust::raw_pointer_cast(d_output_buffer.data()),
@@ -180,7 +180,7 @@ void SparseConvolutionBackwardGPU(
 
     // Compute gradient for kernel
     // Copy features to the buffer
-    copy_mapped_input<Dtype>
+    copy_mapped_input<Dtype, Itype>
         <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
             num_kernels, in_nchannel, d_in_feat,
             thrust::raw_pointer_cast(d_input_buffer.data()),
@@ -201,11 +201,11 @@ void SparseConvolutionBackwardGPU(
   }
 }
 
-template void SparseConvolutionBackwardGPU<float>(
+template void SparseConvolutionBackwardGPU<float, int32_t>(
     const float *d_in_feat, float *d_grad_in_feat, int in_nchannel,
     const float *d_grad_out_feat, int out_nchannel, const float *d_kernel,
-    float *p_grad_kernel, const std::vector<std::vector<int64_t>> in_map,
-    const std::vector<std::vector<int64_t>> out_map, int out_nrows,
+    float *p_grad_kernel, const std::vector<std::vector<int32_t>> in_map,
+    const std::vector<std::vector<int32_t>> out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
 
 #endif

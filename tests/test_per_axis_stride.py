@@ -4,7 +4,7 @@ import torch
 from gradcheck import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
-from Common import Metadata, RegionType, convert_to_long_tensor
+from Common import Metadata, RegionType, convert_to_int_tensor
 from SparsePooling import SparseMaxPooling
 
 if __name__ == '__main__':
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     pixel_dist, stride, kernel_size, dilation, D = 1, [1, 2], 2, 1, 2
     in_nchannel = 2
-    coords = torch.from_numpy(np.array(coords)).long()
+    coords = torch.from_numpy(np.array(coords)).int()
     in_feat = torch.FloatTensor(coords.size(0), in_nchannel).normal_()
     # .zero_()
     # in_feat[1, 0] = 1
@@ -32,11 +32,11 @@ if __name__ == '__main__':
     # in_feat[2] = 2
     metadata = Metadata(D)
 
-    pixel_dist = convert_to_long_tensor(pixel_dist, D)
-    stride = convert_to_long_tensor(stride, D)
+    pixel_dist = convert_to_int_tensor(pixel_dist, D)
+    stride = convert_to_int_tensor(stride, D)
     SCE.initialize_coords(coords, pixel_dist, D, metadata.ffi)
 
-    coords2 = torch.LongTensor()
+    coords2 = torch.IntTensor()
     print(SCE.get_coords(coords2, pixel_dist, D, metadata.ffi))
     print(coords2)
     print(in_feat)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     print(out.data.squeeze())
 
     # Permutation
-    perm = torch.LongTensor()
+    perm = torch.IntTensor()
     SCE.get_permutation(perm, stride, pixel_dist, D, metadata.ffi)
     print(perm)
 

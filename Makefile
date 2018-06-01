@@ -26,7 +26,7 @@ CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
 		-gencode arch=compute_61,code=sm_61 \
 		-gencode arch=compute_61,code=compute_61
 
-CXX := /usr/bin/g++
+CXX := /usr/bin/g++-5
 # We will also explicitly add stdc++ to the link target.
 LIBRARIES += stdc++ cudart cublas
 
