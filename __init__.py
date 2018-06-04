@@ -14,3 +14,7 @@ from SparsePooling import SparseMaxPoolingFunction, SparseMaxPooling, \
     SparseGlobalAvgPoolingFunction, SparseGlobalAvgPooling
 
 from SparseConvolutionNetwork import SparseConvolutionNetwork
+
+from SparseBroadcast import SparseGlobalBroadcastFunction, \
+    SparseGlobalBroadcast, SparseGlobalBroadcastAddition, \
+    SparseGlobalBroadcastMultiplication

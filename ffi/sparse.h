@@ -166,3 +166,31 @@ int global_avg_pooling_backward_gpu(THCudaTensor *th_in_feat,
                                     THCudaIntTensor *th_num_nonzero,
                                     THIntTensor *th_pixel_dist, int D,
                                     void **m);
+
+long global_broadcast_forward(THFloatTensor *th_in_feat,
+                              THFloatTensor *th_in_feat_global,
+                              THFloatTensor *th_out_feat,
+                              THIntTensor *th_pixel_dist, long op, long D,
+                              void **m);
+
+long global_broadcast_backward(THFloatTensor *th_in_feat,
+                               THFloatTensor *th_grad_in_feat,
+                               THFloatTensor *th_in_feat_global,
+                               THFloatTensor *th_grad_in_feat_global,
+                               THFloatTensor *th_grad_out_feat,
+                               THIntTensor *th_pixel_dist, long op, long D,
+                               void **m);
+
+long global_broadcast_forward_gpu(THCudaTensor *th_in_feat,
+                                  THCudaTensor *th_in_feat_global,
+                                  THCudaTensor *th_out_feat,
+                                  THIntTensor *th_pixel_dist, long op, long D,
+                                  void **m);
+
+long global_broadcast_backward_gpu(THCudaTensor *th_in_feat,
+                                   THCudaTensor *th_grad_in_feat,
+                                   THCudaTensor *th_in_feat_global,
+                                   THCudaTensor *th_grad_in_feat_global,
+                                   THCudaTensor *th_grad_out_feat,
+                                   THIntTensor *th_pixel_dist, long op, long D,
+                                   void **m);

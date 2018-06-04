@@ -47,3 +47,23 @@ template <>
 void cpu_add<double>(const int n, const double *a, const double *b, double *y) {
   vdAdd(n, a, b, y);
 }
+
+template <>
+void cpu_mul<float>(const int n, const float *a, const float *b, float *y) {
+  vsMul(n, a, b, y);
+}
+
+template <>
+void cpu_mul<double>(const int n, const double *a, const double *b, double *y) {
+  vdMul(n, a, b, y);
+}
+
+template <>
+void cpu_div<float>(const int n, const float *a, const float *b, float *y) {
+  vsDiv(n, a, b, y);
+}
+
+template <>
+void cpu_div<double>(const int n, const double *a, const double *b, double *y) {
+  vdMul(n, a, b, y);
+}

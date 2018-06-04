@@ -1,13 +1,16 @@
 #ifndef GPU_H_
 #define GPU_H_
 
-#include <cublas_v2.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <curand.h>
 #include <driver_types.h> // cuda driver types
-#include <iostream>
+#include <cublas_v2.h>
+#include <cusparse_v2.h>
+
 #include <thrust/device_vector.h>
+
+#include <iostream>
 #include <vector>
 
 //
@@ -30,6 +33,22 @@
       std::cerr << " " << cublasGetErrorString(status);                        \
   } while (0)
 
+#define CUSPARSE_CHECK(call)                                                   \
+{                                                                              \
+    cusparseStatus_t err;                                                      \
+    if ((err = (call)) != CUSPARSE_STATUS_SUCCESS)                             \
+    {                                                                          \
+        fprintf(stderr, "Got error %d at %s:%d\n", err, __FILE__, __LINE__);   \
+        cudaError_t cuda_err = cudaGetLastError();                             \
+        if (cuda_err != cudaSuccess)                                           \
+        {                                                                      \
+            fprintf(stderr, "  CUDA error \"%s\" also detected\n",             \
+                    cudaGetErrorString(cuda_err));                             \
+        }                                                                      \
+        exit(1);                                                               \
+    }                                                                          \
+}
+
 #define CURAND_CHECK(condition)                                                \
   do {                                                                         \
     curandStatus_t status = condition;                                         \
@@ -49,8 +68,11 @@
 // CUDA: library error reporting.
 const char *cublasGetErrorString(cublasStatus_t error);
 
-// CUDA: use 512 threads per block
-const int CUDA_NUM_THREADS = 512;
+// CUSparse error reporting.
+const char* cusparseGetErrorString(cusparseStatus_t error);
+
+// CUDA: use 1024 threads per block
+const int CUDA_NUM_THREADS = 1024;
 
 // CUDA: number of blocks for threads.
 inline int GET_BLOCKS(const int N) {

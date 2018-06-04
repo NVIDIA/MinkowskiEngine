@@ -103,11 +103,7 @@ void SparseNonzeroAvgPoolingForward(const Dtype *p_in_feat, Dtype *p_out_feat,
       p_curr_out = p_out_feat + out_map[k][row] * nchannel;
       p_curr_num_nonzero = p_num_nonzero + out_map[k][row];
       (*p_curr_num_nonzero)++;
-      for (j = 0; j < nchannel; j++) {
-        *p_curr_out += *p_curr_in;
-        p_curr_in++;
-        p_curr_out++;
-      }
+      cpu_add<Dtype>(nchannel, p_curr_in, p_curr_out, p_curr_out);
     }
   }
 
