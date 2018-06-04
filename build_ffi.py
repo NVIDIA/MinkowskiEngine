@@ -16,6 +16,7 @@ ffi = create_extension(
     with_cuda=True,
     libraries=['sparse'],
     library_dirs=[this_dir + '/SparseConvolutionEngineFFI'],
+    extra_compile_args=['-std=c99'],
     extra_link_args=["-Wl,-rpath=$ORIGIN"],
 )
 

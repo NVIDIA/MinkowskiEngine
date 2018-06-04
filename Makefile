@@ -1,12 +1,30 @@
+###############################################################################
 # Uncomment for debugging
 # DEBUG := 1
 # Pretty build
 # Q ?= @
 
-INCLUDE_DIRS := ./
-LIBRARY_DIRS :=
+CXX := g++
 
-CUDA_DIR := /usr
+# CUDA ROOT DIR that contains bin/ lib64/ and include/
+CUDA_DIR := /usr/local/cuda
+
+INCLUDE_DIRS := ./ $(CUDA_DIR)/include
+LIBRARY_DIRS := $(CUDA_DIR)/lib64
+
+# BLAS choice:
+# atlas for ATLAS
+# mkl for MKL
+# open for OpenBlas (default)
+BLAS := open
+
+# Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
+# Leave commented to accept the defaults for your choice of BLAS
+# (which should work)!
+# BLAS_INCLUDE := /path/to/your/blas
+# BLAS_LIB := /path/to/your/blas
+
+###############################################################################
 SRC_DIR := ./src
 OBJ_DIR := ./SparseConvolutionEngineFFI
 CPP_SRCS := $(wildcard $(SRC_DIR)/*.cpp)
@@ -26,20 +44,8 @@ CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
 		-gencode arch=compute_61,code=sm_61 \
 		-gencode arch=compute_61,code=compute_61
 
-CXX := /usr/bin/g++-5
 # We will also explicitly add stdc++ to the link target.
 LIBRARIES += stdc++ cudart cublas
-
-# BLAS choice:
-# atlas for ATLAS (default)
-# mkl for MKL
-# open for OpenBlas
-BLAS := open
-# Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
-# Leave commented to accept the defaults for your choice of BLAS
-# (which should work)!
-# BLAS_INCLUDE := /path/to/your/blas
-# BLAS_LIB := /path/to/your/blas
 
 # BLAS configuration (default = open)
 BLAS ?= open
@@ -62,7 +68,8 @@ endif
 # Debugging
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
-	NVCCFLAGS += -G
+	# https://gcoe-dresden.de/reaching-the-shore-with-a-fog-warning-my-eurohack-day-4-morning-session/
+	NVCCFLAGS += -G -rdc true
 else
 	COMMON_FLAGS += -DNDEBUG -O2
 endif
@@ -93,15 +100,15 @@ $(OBJ_DIR):
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	@ echo CXX $<
-	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
-	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 
 $(OBJ_DIR)/cuda/%.o: $(SRC_DIR)/%.cu | $(OBJ_DIR)
 	@ echo NVCC $<
-	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
-	$(Q)$(CUDA_DIR)/bin/nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 
 $(DYNAMIC_LIB): $(OBJS) $(CU_OBJS) | $(OBJ_DIR)
 	@ echo LD -o $@

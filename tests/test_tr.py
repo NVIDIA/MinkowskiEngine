@@ -2,7 +2,7 @@ import numpy as np
 
 import torch
 import torch.nn as nn
-from gradcheck import gradcheck
+from torch.autograd import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
 from SparseConvolution import SparseConvolution, SparseConvolutionTranspose

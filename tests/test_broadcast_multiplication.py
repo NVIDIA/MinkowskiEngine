@@ -1,8 +1,7 @@
 import numpy as np
 
 import torch
-from torch.autograd import Variable
-from gradcheck import gradcheck
+from torch.autograd import Variable, gradcheck
 
 import SparseConvolutionEngineFFI as SCE
 from Common import Metadata, convert_to_int_tensor

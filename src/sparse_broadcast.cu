@@ -7,9 +7,9 @@
 #include "src/math_functions.hpp"
 #include "src/sparse_broadcast.cuh"
 
-template <typename Itype> bool IsIntType() { return false; }
+template <class T> struct IsIntType { static const bool value = false; };
 
-template <> bool IsIntType<int>() { return true; };
+template <> struct IsIntType<int> { static const bool value = true; };
 
 template <typename Dtype, typename Itype>
 __global__ void
@@ -133,7 +133,7 @@ void SparseBroadcastBackwardGPU(
   const Dtype beta = 0;
   int nnz = in_nrows;
 
-  if (!IsIntType<Itype>)
+  if (!IsIntType<Itype>::value)
     throw std::invalid_argument("Not implemented"); // Due to cusparseXcoo2csr
 
   if (sorted_in_map.size() != 1)

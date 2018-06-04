@@ -15,7 +15,9 @@
 
 #define INIT_D_DIM_ARRY(TH_ARR, P_ARR)                                         \
   if (THIntTensor_size(TH_ARR, 0) != D) {                                      \
-    printf("DSCE ERROR: arrary must be a D-dim vector\n");                     \
+    printf(                                                                    \
+        "DSCE ERROR: arrary must be a D-dim vector. size: %ld, expects %ld\n", \
+        THIntTensor_size(TH_ARR, 0), D);                                       \
     return -1;                                                                 \
   }                                                                            \
   int *P_ARR = THIntTensor_data(TH_ARR);
@@ -83,7 +85,7 @@ long read_ffi_ptr(void **ptr) { return (long)(ptr[0]); }
 void write_ffi_ptr(long p, void **ptr) { ptr[0] = (void *)p; }
 
 long initialize_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist,
-                       int D, void **m) {
+                       long D, void **m) {
   INIT_COORDS(th_coords, p_coords, nrows)
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
