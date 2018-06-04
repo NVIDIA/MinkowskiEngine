@@ -101,7 +101,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         label = label.contiguous().numpy()
         permutation = permutation.numpy()
 
-        counter = np.zeros((nrows, max_label), dtype='int')
+        counter = np.zeros((nrows, max_label), dtype='int32')
         np.add.at(counter, (permutation, label), 1)
         return torch.from_numpy(np.argmax(counter, 1))
 
@@ -112,7 +112,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
 
         feat_np = feat.contiguous().numpy()
         warped_feat = np.zeros((nrows, feat.size(1)), dtype=dtype)
-        counter = np.zeros((nrows, 1), dtype='int')
+        counter = np.zeros((nrows, 1), dtype='int32')
         for j in range(feat.size(1)):
             np.add.at(warped_feat, (permutation, j), feat_np[:, j])
         np.add.at(counter, permutation, 1)
