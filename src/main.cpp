@@ -521,6 +521,7 @@ long t_conv_fw(const Dtype *p_in_feat, Itype in_nchannel, Dtype *p_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseConvolutionForward<Dtype, Itype>(
       p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel,
@@ -539,6 +540,7 @@ long t_conv_tr_fw(const Dtype *p_in_feat, Itype in_nchannel, Dtype *p_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(true)
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseConvolutionForward<Dtype, Itype>(
       p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel,
@@ -596,6 +598,7 @@ long t_conv_fw_gpu(const Dtype *d_in_feat, Itype in_nchannel, Dtype *d_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false);
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseConvolutionForwardGPU<Dtype, Itype>(
       d_in_feat, in_nchannel, d_out_feat, out_nchannel, d_kernel,
@@ -616,6 +619,7 @@ long t_conv_tr_fw_gpu(const Dtype *d_in_feat, Itype in_nchannel,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(true)
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseConvolutionForwardGPU<Dtype, Itype>(
       d_in_feat, in_nchannel, d_out_feat, out_nchannel, d_kernel,
@@ -675,6 +679,7 @@ long t_max_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false);
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseMaxPoolingForward<Dtype, Itype>(p_in_feat, p_out_feat, p_mask_index,
                                         nchannel, (*p_in_maps)[key],
@@ -712,6 +717,7 @@ long t_max_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseMaxPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, d_out_feat, out_nrows, d_mask_index, nchannel,
@@ -749,6 +755,7 @@ long t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false);
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseNonzeroAvgPoolingForward<Dtype, Itype>(
       p_in_feat, p_out_feat, p_num_nonzero, nchannel, (*p_in_maps)[key],
@@ -787,6 +794,7 @@ long t_nonzero_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, d_out_feat, out_nrows, d_num_nonzero, nchannel,
@@ -823,6 +831,7 @@ long t_global_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseNonzeroAvgPoolingForward<Dtype, Itype>(
       p_in_feat, p_out_feat, p_num_nonzero, nchannel, (*p_in_maps)[key],
@@ -856,6 +865,7 @@ long t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, d_out_feat, out_nrows, d_num_nonzero, nchannel,
@@ -894,6 +904,7 @@ long t_global_broadcast_fw(const Dtype *p_in_feat, int in_nrows,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP
+  ASSERT_EQ((*p_coord2inds)[pixel_dist_hash].size(), in_nrows)
 
   SparseBroadcastForward<Dtype, Itype>(
       p_in_feat, in_nrows, p_in_feat_global, in_nrows_global, p_out_feat,
@@ -925,6 +936,7 @@ long t_global_broadcast_fw_gpu(const Dtype *d_in_feat, int in_nrows,
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
   INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP
+  ASSERT_EQ((*p_coord2inds)[pixel_dist_hash].size(), in_nrows)
 
   SparseBroadcastForwardGPU<Dtype, Itype>(
       d_in_feat, in_nrows, d_in_feat_global, in_nrows_global, d_out_feat,

@@ -68,18 +68,14 @@ using _CoordIndexMap =
 
 template <uint8_t D, typename Itype> class CoordIndexMap {
 public:
-  uint64_t
-      ctr; // Count #active sites during output hash construction. Then store
-           // offset within a batch.
   _CoordIndexMap<D, Itype> map;
-  CoordIndexMap() : ctr(0) {
-    // Sparsehash needs a key to be set aside and never used - we use
-    // (Int_MAX,...,Int_MAX)
+  CoordIndexMap() {
     Coord<D, Itype> empty_key;
     for (int i = 0; i < D + 1; ++i)
       empty_key[i] = -std::numeric_limits<Itype>::max();
     map.set_empty_key(empty_key);
   }
+  size_t size() { return map.size(); }
 };
 
 template <uint8_t D, typename Itype> class Metadata {
@@ -148,6 +144,14 @@ public:
                                                                                \
   InOutKey key = {pixel_dist_hash, stride_hash, kernel_size_hash,              \
                   dilation_hash, IS_TRANSPOSE};
+
+// Basic check
+#define ASSERT_EQ(A, B)                                                        \
+  if (A != B) {                                                                \
+    std::cerr << "Assertion failed: " << #A << ": " << A << " != " << #B       \
+              << ": " << B << std::endl;                                       \
+    return -1;                                                                 \
+  }
 
 // Macro for out map and kernel map initialization
 #define INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(IS_TRANSPOSE)                     \

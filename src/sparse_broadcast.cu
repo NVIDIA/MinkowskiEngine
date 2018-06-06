@@ -87,8 +87,11 @@ void SparseBroadcastForwardGPU(
   if (sorted_in_map.size() != 1)
     throw std::invalid_argument("InOut map must have one kernel for Broadcast");
 
-  if (sorted_in_map[0].size() != in_nrows)
+  if (sorted_in_map[0].size() != in_nrows) {
+    std::cout << "sorted_in_map[0].size(): " << sorted_in_map[0].size()
+              << ", in_nrows: " << in_nrows << std::endl;
     throw std::invalid_argument("Invalid in_map");
+  }
 
   thrust::device_vector<Itype> d_sorted_out_map = sorted_out_map[0];
 
