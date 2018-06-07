@@ -129,6 +129,55 @@ template void gpu_multiplication<double>(const int N, const double *a,
                                          const double *b, double *y,
                                          cudaStream_t stream);
 
+template <typename Dtype>
+__global__ void col2row_major_kernel(const int n, const int nrows,
+                                     const int ncols, const Dtype *colA,
+                                     Dtype *rowA) {
+  int i, j;
+  CUDA_KERNEL_LOOP(index, n) {
+    i = index % nrows;
+    j = index / nrows;
+    rowA[i * ncols + j] = colA[index];
+  }
+}
+
+template <typename Dtype>
+void col2row_major(const int nrows, const int ncols, const Dtype *colA,
+                   Dtype *rowA, cudaStream_t stream) {
+  col2row_major_kernel<Dtype>
+      <<<GET_BLOCKS(nrows * ncols), CUDA_NUM_THREADS, 0, stream>>>(
+          nrows * ncols, nrows, ncols, colA, rowA);
+}
+
+template void col2row_major<float>(const int nrows, const int ncols,
+                                   const float *colA, float *rowA,
+                                   cudaStream_t stream);
+
+template <typename Dtype>
+__global__ void row2col_major_kernel(const int n, const int nrows,
+                                     const int ncols, const Dtype *rowA,
+                                     Dtype *colA) {
+  int i, j;
+  CUDA_KERNEL_LOOP(index, n) {
+    i = index / ncols;
+    j = index % ncols;
+    colA[i + j * nrows] = rowA[index];
+  }
+}
+
+template <typename Dtype>
+void row2col_major(const int nrows, const int ncols, const Dtype *colA,
+                   Dtype *rowA, cudaStream_t stream) {
+  row2col_major_kernel<Dtype>
+      <<<GET_BLOCKS(nrows * ncols), CUDA_NUM_THREADS, 0, stream>>>(
+          nrows * ncols, nrows, ncols, colA, rowA);
+}
+
+template void row2col_major<float>(const int nrows, const int ncols,
+                                   const float *colA, float *rowA,
+                                   cudaStream_t stream);
+
+// Sort the row, col pairs row-major order.
 void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,
                   const int nnz, int *d_coo_row, int *d_coo_col) {
   size_t pBufferSizeInBytes = 0;

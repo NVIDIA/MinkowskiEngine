@@ -34,6 +34,14 @@ void gpu_multiplication(const int N, const Dtype *a, const Dtype *b, Dtype *y,
                         cudaStream_t stream);
 
 template <typename Dtype>
+void col2row_major(const int nrows, const int ncols, const Dtype *colA,
+                   Dtype *rowA, cudaStream_t stream);
+
+template <typename Dtype>
+void row2col_major(const int nrows, const int ncols, const Dtype *colA,
+                   Dtype *rowA, cudaStream_t stream);
+
+template <typename Dtype>
 cusparseStatus_t
 cusparse_csrmv(cusparseHandle_t handle, cusparseOperation_t transA, int m,
                int n, int nnz, const Dtype *alpha,

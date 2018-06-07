@@ -820,7 +820,7 @@ long max_pooling_backward_gpu(
 // Nonzero avg
 long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
                                  THFloatTensor *th_out_feat,
-                                 THIntTensor *th_num_nonzero,
+                                 THFloatTensor *th_num_nonzero,
                                  THIntTensor *th_pixel_dist,
                                  THIntTensor *th_stride,
                                  THIntTensor *th_kernel_size,
@@ -847,12 +847,12 @@ long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
 
   // Initialize output, values will be set within the forward function
   THFloatTensor_resize2d(th_out_feat, out_nrows, nchannel);
-  THIntTensor_resize1d(th_num_nonzero, out_nrows);
+  THFloatTensor_resize1d(th_num_nonzero, out_nrows);
 
   // Pointers
   float *p_in_feat = THFloatTensor_data(th_in_feat);
   float *p_out_feat = THFloatTensor_data(th_out_feat);
-  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
+  float *p_num_nonzero = THFloatTensor_data(th_num_nonzero);
 
   // Custom Region Type
   if (region_type == 2) {
@@ -873,7 +873,7 @@ long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
 
 long nonzero_avg_pooling_backward(
     THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
-    THFloatTensor *th_grad_out_feat, THIntTensor *th_num_nonzero,
+    THFloatTensor *th_grad_out_feat, THFloatTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
     THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
@@ -898,7 +898,7 @@ long nonzero_avg_pooling_backward(
   // Pointers
   float *p_grad_in_feat = THFloatTensor_data(th_grad_in_feat);
   float *p_grad_out_feat = THFloatTensor_data(th_grad_out_feat);
-  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
+  float *p_num_nonzero = THFloatTensor_data(th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _nonzero_avg_pooling_bw(
@@ -908,7 +908,7 @@ long nonzero_avg_pooling_backward(
 
 long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
                                      THCudaTensor *th_out_feat,
-                                     THCudaIntTensor *th_num_nonzero,
+                                     THCudaTensor *th_num_nonzero,
                                      THIntTensor *th_pixel_dist,
                                      THIntTensor *th_stride,
                                      THIntTensor *th_kernel_size,
@@ -921,7 +921,7 @@ long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
 
   cudaStream_t stream = THCState_getCurrentStream(state);
   long success;
-  int nchannel, out_nrows = -1;
+  int nchannel, in_nrows, out_nrows = -1;
   int n_offset = 0, *p_offset = NULL;
   bool is_transpose = false;
 
@@ -933,16 +933,17 @@ long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
   GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
+  in_nrows = THCudaTensor_size(state, th_in_feat, 0);
   nchannel = THCudaTensor_size(state, th_in_feat, 1);
 
   // Initialize output, values will be set within the forward function
   THCudaTensor_resize2d(state, th_out_feat, out_nrows, nchannel);
-  THCudaIntTensor_resize1d(state, th_num_nonzero, out_nrows);
+  THCudaTensor_resize1d(state, th_num_nonzero, out_nrows);
 
   // Pointers
   float *d_in_feat = THCudaTensor_data(state, th_in_feat);
   float *d_out_feat = THCudaTensor_data(state, th_out_feat);
-  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
+  float *d_num_nonzero = THCudaTensor_data(state, th_num_nonzero);
 
   // Custom Region Type
   if (region_type == 2) {
@@ -956,14 +957,14 @@ long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
 
   // put exposed variable into _conv_foward;
   return _nonzero_avg_pooling_fw_gpu(
-      d_in_feat, d_out_feat, out_nrows, d_num_nonzero, nchannel, p_pixel_dist,
-      p_stride, p_kernel_size, p_dilation, region_type, p_offset, n_offset,
-      stream, D, m);
+      d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
+      p_pixel_dist, p_stride, p_kernel_size, p_dilation, region_type, p_offset,
+      n_offset, stream, D, m);
 }
 
 long nonzero_avg_pooling_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
-    THCudaTensor *th_grad_out_feat, THCudaIntTensor *th_num_nonzero,
+    THCudaTensor *th_grad_out_feat, THCudaTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
     THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
@@ -990,7 +991,7 @@ long nonzero_avg_pooling_backward_gpu(
   // Pointers
   float *d_grad_in_feat = THCudaTensor_data(state, th_grad_in_feat);
   float *d_grad_out_feat = THCudaTensor_data(state, th_grad_out_feat);
-  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
+  float *d_num_nonzero = THCudaTensor_data(state, th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _nonzero_avg_pooling_bw_gpu(d_grad_in_feat, in_nrows, d_grad_out_feat,
@@ -1001,7 +1002,7 @@ long nonzero_avg_pooling_backward_gpu(
 
 long global_avg_pooling_forward(THFloatTensor *th_in_feat,
                                 THFloatTensor *th_out_feat,
-                                THIntTensor *th_num_nonzero,
+                                THFloatTensor *th_num_nonzero,
                                 THIntTensor *th_pixel_dist, long batch_size,
                                 long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
@@ -1016,12 +1017,12 @@ long global_avg_pooling_forward(THFloatTensor *th_in_feat,
 
   // Initialize output, values will be set within the forward function
   THFloatTensor_resize2d(th_out_feat, out_nrows, nchannel);
-  THIntTensor_resize1d(th_num_nonzero, out_nrows);
+  THFloatTensor_resize1d(th_num_nonzero, out_nrows);
 
   // Pointers
   float *p_in_feat = THFloatTensor_data(th_in_feat);
   float *p_out_feat = THFloatTensor_data(th_out_feat);
-  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
+  float *p_num_nonzero = THFloatTensor_data(th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _global_avg_pooling_fw(p_in_feat, p_out_feat, out_nrows, nchannel,
@@ -1031,7 +1032,7 @@ long global_avg_pooling_forward(THFloatTensor *th_in_feat,
 long global_avg_pooling_backward(THFloatTensor *th_in_feat,
                                  THFloatTensor *th_grad_in_feat,
                                  THFloatTensor *th_grad_out_feat,
-                                 THIntTensor *th_num_nonzero,
+                                 THFloatTensor *th_num_nonzero,
                                  THIntTensor *th_pixel_dist, long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   long success;
@@ -1050,7 +1051,7 @@ long global_avg_pooling_backward(THFloatTensor *th_in_feat,
   // Pointers
   float *p_grad_in_feat = THFloatTensor_data(th_grad_in_feat);
   float *p_grad_out_feat = THFloatTensor_data(th_grad_out_feat);
-  int *p_num_nonzero = THIntTensor_data(th_num_nonzero);
+  float *p_num_nonzero = THFloatTensor_data(th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _global_avg_pooling_bw(p_grad_in_feat, in_nrows, p_grad_out_feat,
@@ -1060,39 +1061,41 @@ long global_avg_pooling_backward(THFloatTensor *th_in_feat,
 
 long global_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
                                     THCudaTensor *th_out_feat,
-                                    THCudaIntTensor *th_num_nonzero,
+                                    THCudaTensor *th_num_nonzero,
                                     THIntTensor *th_pixel_dist, long batch_size,
                                     long D, void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
   cudaStream_t stream = THCState_getCurrentStream(state);
   long success;
-  int nchannel, out_nrows = -1;
+  int nchannel, in_nrows, out_nrows = -1;
 
   INIT_GLOBAL_COORDS(success, p_pixel_dist, batch_size)
   GET_GLOBAL_OUT_NUM_COORDS(success, out_nrows)
 
   // expose all variables and resize out tensor
+  in_nrows = THCudaTensor_size(state, th_in_feat, 0);
   nchannel = THCudaTensor_size(state, th_in_feat, 1);
 
   // Initialize output, values will be set within the forward function
   THCudaTensor_resize2d(state, th_out_feat, out_nrows, nchannel);
-  THCudaIntTensor_resize1d(state, th_num_nonzero, out_nrows);
+  THCudaTensor_resize1d(state, th_num_nonzero, out_nrows);
 
   // Pointers
   float *d_in_feat = THCudaTensor_data(state, th_in_feat);
   float *d_out_feat = THCudaTensor_data(state, th_out_feat);
-  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
+  float *d_num_nonzero = THCudaTensor_data(state, th_num_nonzero);
 
   // put exposed variable into _conv_foward;
-  return _global_avg_pooling_fw_gpu(d_in_feat, d_out_feat, out_nrows, nchannel,
-                                    d_num_nonzero, p_pixel_dist, stream, D, m);
+  return _global_avg_pooling_fw_gpu(d_in_feat, in_nrows, d_out_feat, out_nrows,
+                                    nchannel, d_num_nonzero, p_pixel_dist,
+                                    stream, D, m);
 }
 
 long global_avg_pooling_backward_gpu(THCudaTensor *th_in_feat,
                                      THCudaTensor *th_grad_in_feat,
                                      THCudaTensor *th_grad_out_feat,
-                                     THCudaIntTensor *th_num_nonzero,
+                                     THCudaTensor *th_num_nonzero,
                                      THIntTensor *th_pixel_dist, long D,
                                      void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
@@ -1113,7 +1116,7 @@ long global_avg_pooling_backward_gpu(THCudaTensor *th_in_feat,
   // Pointers
   float *d_grad_in_feat = THCudaTensor_data(state, th_grad_in_feat);
   float *d_grad_out_feat = THCudaTensor_data(state, th_grad_out_feat);
-  int *d_num_nonzero = THCudaIntTensor_data(state, th_num_nonzero);
+  float *d_num_nonzero = THCudaTensor_data(state, th_num_nonzero);
 
   // put exposed variable into _conv_foward;
   return _global_avg_pooling_bw_gpu(d_grad_in_feat, in_nrows, d_grad_out_feat,

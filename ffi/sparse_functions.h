@@ -110,7 +110,7 @@ extern long _max_pooling_bw_gpu(float *d_grad_in_feat, int in_nrows,
                                 cudaStream_t stream, int D, void **metadata);
 
 extern long _nonzero_avg_pooling_fw(float *p_in_feat, float *p_out_feat,
-                                    int *p_num_nonzero, int nchannel,
+                                    float *p_num_nonzero, int nchannel,
                                     int out_nrows, int *p_pixel_dist,
                                     int *p_stride, int *p_kernel_size,
                                     int *p_dilation, int region_type,
@@ -119,21 +119,20 @@ extern long _nonzero_avg_pooling_fw(float *p_in_feat, float *p_out_feat,
 
 extern long _nonzero_avg_pooling_bw(float *p_grad_in_feat, int in_nrows,
                                     float *p_grad_out_feat, int out_nrows,
-                                    int *p_num_nonzero, int nchannel,
+                                    float *p_num_nonzero, int nchannel,
                                     int *p_pixel_dist, int *p_stride,
                                     int *p_kernel_size, int *p_dilation, int D,
                                     void **metadata);
 
-extern long
-_nonzero_avg_pooling_fw_gpu(float *d_in_feat, float *d_out_feat, int out_nrows,
-                            int *d_num_nonzero, int nchannel, int *p_pixel_dist,
-                            int *p_stride, int *p_kernel_size, int *p_dilation,
-                            int region_type, int *p_offset, int n_offset,
-                            cudaStream_t stream, int D, void **metadata);
+extern long _nonzero_avg_pooling_fw_gpu(
+    float *d_in_feat, int in_nrows, float *d_out_feat, int out_nrows,
+    float *d_num_nonzero, int nchannel, int *p_pixel_dist, int *p_stride,
+    int *p_kernel_size, int *p_dilation, int region_type, int *p_offset,
+    int n_offset, cudaStream_t stream, int D, void **metadata);
 
 extern long _nonzero_avg_pooling_bw_gpu(float *d_grad_in_feat, int in_nrows,
                                         float *d_grad_out_feat, int out_nrows,
-                                        int *d_num_nonzero, int nchannel,
+                                        float *d_num_nonzero, int nchannel,
                                         int *p_pixel_dist, int *p_stride,
                                         int *p_kernel_size, int *p_dilation,
                                         cudaStream_t stream, int D,
@@ -141,23 +140,23 @@ extern long _nonzero_avg_pooling_bw_gpu(float *d_grad_in_feat, int in_nrows,
 
 extern long _global_avg_pooling_fw(float *p_in_feat, float *p_out_feat,
                                    int out_nrows, int nchannel,
-                                   int *p_num_nonzero, int *p_pixel_dist, int D,
-                                   void **metadata);
+                                   float *p_num_nonzero, int *p_pixel_dist,
+                                   int D, void **metadata);
 
 extern long _global_avg_pooling_bw(float *p_grad_in_feat, int in_nrows,
                                    float *p_grad_out_feat, int out_nrows,
-                                   int nchannel, int *p_num_nonzero,
+                                   int nchannel, float *p_num_nonzero,
                                    int *p_pixel_dist, int D, void **metadata);
 
-extern long _global_avg_pooling_fw_gpu(float *d_in_feat, float *d_out_feat,
-                                       int out_nrows, int nchannel,
-                                       int *d_num_nonzero, int *p_pixel_dist,
-                                       cudaStream_t stream, int D,
-                                       void **metadata);
+extern long _global_avg_pooling_fw_gpu(float *d_in_feat, int in_nrows,
+                                       float *d_out_feat, int out_nrows,
+                                       int nchannel, float *d_num_nonzero,
+                                       int *p_pixel_dist, cudaStream_t stream,
+                                       int D, void **metadata);
 
 extern long _global_avg_pooling_bw_gpu(float *d_grad_in_feat, int in_nrows,
                                        float *d_grad_out_feat, int out_nrows,
-                                       int nchannel, int *d_num_nonzero,
+                                       int nchannel, float *d_num_nonzero,
                                        int *p_pixel_dist, cudaStream_t stream,
                                        int D, void **metadata);
 

@@ -114,7 +114,7 @@ long max_pooling_backward_gpu(
 
 long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
                                  THFloatTensor *th_out_feat,
-                                 THIntTensor *th_num_nonzero,
+                                 THFloatTensor *th_num_nonzero,
                                  THIntTensor *th_pixel_dist,
                                  THIntTensor *th_stride,
                                  THIntTensor *th_kernel_size,
@@ -123,13 +123,13 @@ long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
 
 long nonzero_avg_pooling_backward(
     THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
-    THFloatTensor *th_grad_out_feat, THIntTensor *th_num_nonzero,
+    THFloatTensor *th_grad_out_feat, THFloatTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
     THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m);
 
 long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
                                      THCudaTensor *th_out_feat,
-                                     THCudaIntTensor *th_num_nonzero,
+                                     THCudaTensor *th_num_nonzero,
                                      THIntTensor *th_pixel_dist,
                                      THIntTensor *th_stride,
                                      THIntTensor *th_kernel_size,
@@ -138,32 +138,32 @@ long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
 
 long nonzero_avg_pooling_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
-    THCudaTensor *th_grad_out_feat, THCudaIntTensor *th_num_nonzero,
+    THCudaTensor *th_grad_out_feat, THCudaTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
     THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m);
 
 long global_avg_pooling_forward(THFloatTensor *th_in_feat,
                                 THFloatTensor *th_out_feat,
-                                THIntTensor *th_num_nonzero,
+                                THFloatTensor *th_num_nonzero,
                                 THIntTensor *th_pixel_dist, long batch_size,
                                 long D, void **m);
 
 long global_avg_pooling_backward(THFloatTensor *th_in_feat,
                                  THFloatTensor *th_grad_in_feat,
                                  THFloatTensor *th_grad_out_feat,
-                                 THIntTensor *th_num_nonzero,
+                                 THFloatTensor *th_num_nonzero,
                                  THIntTensor *th_pixel_dist, long D, void **m);
 
 long global_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
                                     THCudaTensor *th_out_feat,
-                                    THCudaIntTensor *th_num_nonzero,
+                                    THCudaTensor *th_num_nonzero,
                                     THIntTensor *th_pixel_dist, long batch_size,
                                     long D, void **m);
 
 long global_avg_pooling_backward_gpu(THCudaTensor *th_in_feat,
                                      THCudaTensor *th_grad_in_feat,
                                      THCudaTensor *th_grad_out_feat,
-                                     THCudaIntTensor *th_num_nonzero,
+                                     THCudaTensor *th_num_nonzero,
                                      THIntTensor *th_pixel_dist, long D,
                                      void **m);
 

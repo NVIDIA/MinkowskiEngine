@@ -143,7 +143,7 @@ class SparseNonzeroAvgPoolingFunction(Function):
     def forward(ctx, input_features):
         ctx.in_feat = input_features
         ctx.out_feat = input_features.new()
-        ctx.num_nonzero = input_features.new().int()
+        ctx.num_nonzero = input_features.new()
 
         fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
         fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,
@@ -242,7 +242,7 @@ class SparseGlobalAvgPoolingFunction(Function):
     def forward(ctx, input_features):
         ctx.in_feat = input_features
         ctx.out_feat = input_features.new()
-        ctx.num_nonzero = input_features.new().int()
+        ctx.num_nonzero = input_features.new()
 
         fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
         fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,

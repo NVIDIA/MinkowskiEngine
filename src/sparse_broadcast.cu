@@ -48,29 +48,6 @@ channelwise_division(const int n, const int nchannel, const Dtype *d_glob_feat,
   }
 }
 
-template <typename Dtype>
-__global__ void col2row_major(const int n, const int nrows, const int ncols,
-                              const Dtype *colA, Dtype *rowA) {
-  int i, j;
-  CUDA_KERNEL_LOOP(index, n) {
-    i = index % nrows;
-    j = index / nrows;
-    rowA[i * ncols + j] = colA[index];
-  }
-}
-
-template <typename Dtype>
-__global__ void row2col_major(const int n, const int nrows, const int ncols,
-                              const Dtype *rowA, Dtype *colA) {
-  int i, j;
-  CUDA_KERNEL_LOOP(index, n) {
-    i = index / ncols;
-    j = index % ncols;
-    colA[i + j * nrows] = rowA[index];
-  }
-}
-
-
 template <typename Dtype, typename Itype>
 void SparseBroadcastForwardGPU(
     const Dtype *d_in_feat, int in_nrows, const Dtype *d_in_feat_global,
@@ -157,8 +134,8 @@ void SparseBroadcastBackwardGPU(
 
   // Sort COO first
   sort_coo_gpu(cushandle, in_nrows_global, in_nrows, nnz,
-      thrust::raw_pointer_cast(d_sorted_out_map.data()),
-      thrust::raw_pointer_cast(d_sorted_in_map.data()));
+               thrust::raw_pointer_cast(d_sorted_out_map.data()),
+               thrust::raw_pointer_cast(d_sorted_in_map.data()));
   // For CRS, sort row and col inds by row major.
   CUSPARSE_CHECK(cusparseXcoo2csr(
       cushandle, thrust::raw_pointer_cast(d_sorted_out_map.data()), nnz,
@@ -193,11 +170,10 @@ void SparseBroadcastBackwardGPU(
         in_nrows_global                                             // ldc
         ));
 
-    col2row_major<Dtype>
-        <<<GET_BLOCKS(in_nrows_global * nchannel), CUDA_NUM_THREADS, 0,
-           stream>>>(in_nrows_global * nchannel, in_nrows_global, nchannel,
-                     thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()),
-                     d_grad_in_feat_global);
+    col2row_major<Dtype>(
+        in_nrows_global, nchannel,
+        thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()),
+        d_grad_in_feat_global, stream);
     CUDA_POST_KERNEL_CHECK;
     break;
   case 1: // *
@@ -205,33 +181,29 @@ void SparseBroadcastBackwardGPU(
     // Copy in_feat_global to tmp, then multiply the tmp with grad_out_feat
     d_tmp_grad_in_feat.resize(in_nrows * nchannel);
     d_tmp_grad_in_feat_global.resize(in_nrows_global * nchannel);
-    row2col_major<Dtype>
-        <<<GET_BLOCKS(in_nrows_global * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-            in_nrows_global * nchannel, in_nrows_global, nchannel,
-            d_in_feat_global,
-            thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()));
+    row2col_major<Dtype>(
+        in_nrows_global, nchannel, d_in_feat_global,
+        thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()), stream);
     CUSPARSE_CHECK(cusparse_csrmm<Dtype>(
         cushandle,
         CUSPARSE_OPERATION_TRANSPOSE,     // op(A)
         CUSPARSE_OPERATION_NON_TRANSPOSE, // op(B)
-        in_nrows_global,              // M
-        nchannel,                     // N
-        in_nrows,                     // K
+        in_nrows_global,                  // M
+        nchannel,                         // N
+        in_nrows,                         // K
         nnz, &alpha, descr,
-        thrust::raw_pointer_cast(d_csr_val.data()),       // val
-        thrust::raw_pointer_cast(d_csr_row.data()),       // row
-        thrust::raw_pointer_cast(d_sorted_in_map.data()), // col
+        thrust::raw_pointer_cast(d_csr_val.data()),                 // val
+        thrust::raw_pointer_cast(d_csr_row.data()),                 // row
+        thrust::raw_pointer_cast(d_sorted_in_map.data()),           // col
         thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()), // B
         in_nrows_global,                                            // ldb
         &beta,
         thrust::raw_pointer_cast(d_tmp_grad_in_feat.data()), // C
         in_nrows                                             // ldc
         ));
-    col2row_major<Dtype>
-        <<<GET_BLOCKS(in_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-            in_nrows * nchannel, in_nrows, nchannel,
-            thrust::raw_pointer_cast(d_tmp_grad_in_feat.data()),
-            d_grad_in_feat);
+    col2row_major<Dtype>(in_nrows, nchannel,
+                         thrust::raw_pointer_cast(d_tmp_grad_in_feat.data()),
+                         d_grad_in_feat, stream);
     gpu_multiplication<Dtype>(nchannel * in_nrows, d_grad_out_feat,
                               d_grad_in_feat, d_grad_in_feat, stream);
     CUDA_POST_KERNEL_CHECK;
@@ -262,14 +234,15 @@ void SparseBroadcastBackwardGPU(
         thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()), // C
         in_nrows_global                                             // ldc
         ));
-    col2row_major<Dtype>
-        <<<GET_BLOCKS(in_nrows_global * nchannel), CUDA_NUM_THREADS, 0,
-           stream>>>(in_nrows_global * nchannel, in_nrows_global, nchannel,
-                     thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()),
-                     d_grad_in_feat_global);
+    col2row_major<Dtype>(
+        in_nrows_global, nchannel,
+        thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()),
+        d_grad_in_feat_global, stream);
     CUDA_POST_KERNEL_CHECK;
     break;
   }
+
+  CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
 }
 
 template void SparseBroadcastBackwardGPU<float, int32_t>(

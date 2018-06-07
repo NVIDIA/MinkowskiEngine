@@ -746,7 +746,7 @@ long t_max_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
-                              Itype *p_num_nonzero, Itype nchannel,
+                              Dtype *p_num_nonzero, Itype nchannel,
                               Itype out_nrows, const Itype *p_pixel_dist,
                               const Itype *p_stride, const Itype *p_kernel_size,
                               const Itype *p_dilation, Itype region_type,
@@ -767,7 +767,7 @@ long t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                               Dtype *p_grad_out_feat, Itype out_nrows,
-                              const Itype *p_num_nonzero, Itype nchannel,
+                              const Dtype *p_num_nonzero, Itype nchannel,
                               const Itype *p_pixel_dist, const Itype *p_stride,
                               const Itype *p_kernel_size,
                               const Itype *p_dilation, void **metadata) {
@@ -783,22 +783,20 @@ long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
-long t_nonzero_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
-                                  Itype out_nrows, Itype *d_num_nonzero,
-                                  Itype nchannel, const Itype *p_pixel_dist,
-                                  const Itype *p_stride,
-                                  const Itype *p_kernel_size,
-                                  const Itype *p_dilation, Itype region_type,
-                                  const Itype *p_offset, Itype n_offset,
-                                  cudaStream_t stream, void **metadata) {
+long t_nonzero_avg_pooling_fw_gpu(
+    const Dtype *d_in_feat, Itype in_nrows, Dtype *d_out_feat, Itype out_nrows,
+    Dtype *d_num_nonzero, Itype nchannel, const Itype *p_pixel_dist,
+    const Itype *p_stride, const Itype *p_kernel_size, const Itype *p_dilation,
+    Itype region_type, const Itype *p_offset, Itype n_offset,
+    cudaStream_t stream, void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(false)
   ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
-      d_in_feat, d_out_feat, out_nrows, d_num_nonzero, nchannel,
-      (*p_in_maps)[key], (*p_out_maps)[key], stream);
+      d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
+      (*p_in_maps)[key], (*p_out_maps)[key], init_metadata.cushandle, stream);
 
   return 1;
 }
@@ -806,7 +804,7 @@ long t_nonzero_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
                                   const Dtype *d_grad_out_feat, Itype out_nrows,
-                                  const Itype *d_num_nonzero, Itype nchannel,
+                                  const Dtype *d_num_nonzero, Itype nchannel,
                                   const Itype *p_pixel_dist,
                                   const Itype *p_stride,
                                   const Itype *p_kernel_size,
@@ -826,7 +824,7 @@ long t_nonzero_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                              Itype out_nrows, Itype nchannel,
-                             Itype *p_num_nonzero, const Itype *p_pixel_dist,
+                             Dtype *p_num_nonzero, const Itype *p_pixel_dist,
                              void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
@@ -843,7 +841,7 @@ long t_global_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                              Dtype *p_grad_out_feat, Itype out_nrows,
-                             Itype nchannel, const Itype *p_num_nonzero,
+                             Itype nchannel, const Dtype *p_num_nonzero,
                              const Itype *p_pixel_dist, void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
   INITIALIZE_DEFAULT_GLOBAL_VARS_AND_HASHES
@@ -857,9 +855,9 @@ long t_global_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
-long t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
-                                 Itype out_nrows, Itype nchannel,
-                                 Itype *d_num_nonzero,
+long t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Itype in_nrows,
+                                 Dtype *d_out_feat, Itype out_nrows,
+                                 Itype nchannel, Dtype *d_num_nonzero,
                                  const Itype *p_pixel_dist, cudaStream_t stream,
                                  void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
@@ -868,8 +866,8 @@ long t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
   ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
 
   SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
-      d_in_feat, d_out_feat, out_nrows, d_num_nonzero, nchannel,
-      (*p_in_maps)[key], (*p_out_maps)[key], stream);
+      d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
+      (*p_in_maps)[key], (*p_out_maps)[key], init_metadata.cushandle, stream);
 
   return 1;
 }
@@ -877,7 +875,7 @@ long t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
                                  const Dtype *d_grad_out_feat, Itype out_nrows,
-                                 Itype nchannel, const Itype *d_num_nonzero,
+                                 Itype nchannel, const Dtype *d_num_nonzero,
                                  const Itype *p_pixel_dist, cudaStream_t stream,
                                  void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata)
