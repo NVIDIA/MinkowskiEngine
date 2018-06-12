@@ -9,6 +9,14 @@ from Common import RegionType, convert_to_int_tensor
 
 
 class SparseMaxPoolingFunction(Function):
+    '''
+    Due to ctx.mask_index = in_feat.new()....,
+    Should the function be called multiple times, this function must be first
+    instantiated and then reused every time it needs to be called. Otherwise,
+    PyTorch cannot free, ctx.out_feat, ctx.mask_index, which are initialized inside
+    the ffi function.
+    '''
+
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
                  region_offset, dimension, metadata):
         super(SparseMaxPoolingFunction, self).__init__()
@@ -117,6 +125,14 @@ class SparseMaxPooling(Module):
 
 
 class SparseNonzeroAvgPoolingFunction(Function):
+    '''
+    Due to ctx.num_nonzero = in_feat.new()....,
+    Should the function be called multiple times, this function must be first
+    instantiated and then reused every time it needs to be called. Otherwise,
+    PyTorch cannot free, ctx.out_feat, ctx.num_nonzero, which are initialized inside
+    the ffi function.
+    '''
+
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
                  region_offset, dimension, metadata):
         super(SparseNonzeroAvgPoolingFunction, self).__init__()
@@ -258,10 +274,7 @@ class SparseGlobalAvgPoolingFunction(Function):
 
 
 class SparseGlobalAvgPooling(Module):
-    def __init__(self,
-                 pixel_dist,
-                 batch_size=0,
-                 dimension=None,
+    def __init__(self, pixel_dist, batch_size=0, dimension=None,
                  metadata=None):
         super(SparseGlobalAvgPooling, self).__init__()
         if dimension is None or metadata is None:

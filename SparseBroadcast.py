@@ -37,12 +37,13 @@ class SparseGlobalBroadcastFunction(Function):
     def forward(ctx, input_features, input_features_global):
         ctx.in_feat = input_features
         ctx.in_feat_glob = input_features_global
-        ctx.out_feat = input_features.new()
+
+        out_feat = input_features.new()
 
         fw_fn = ctx.broadcast_fw_gpu if input_features.is_cuda else ctx.broadcast_fw_cpu
-        fw_fn(ctx.in_feat, ctx.in_feat_glob, ctx.out_feat, ctx.pixel_dist,
+        fw_fn(ctx.in_feat, ctx.in_feat_glob, out_feat, ctx.pixel_dist,
               ctx.op, ctx.dimension, ctx.metadata.ffi)
-        return ctx.out_feat
+        return out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()

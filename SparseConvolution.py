@@ -37,14 +37,16 @@ class SparseConvolutionFunction(Function):
         assert input_features.shape[1] == kernel.shape[1]
 
         ctx.in_feat = input_features
-        ctx.out_feat = input_features.new()
         ctx.kernel = kernel
+
+        out_feat = input_features.new()
+
         fw_fn = ctx.conv_fw_gpu if input_features.is_cuda else ctx.conv_fw_cpu
-        fw_fn(ctx.in_feat, ctx.out_feat, kernel, ctx.pixel_dist, ctx.stride,
+        fw_fn(ctx.in_feat, out_feat, kernel, ctx.pixel_dist, ctx.stride,
               ctx.kernel_size, ctx.dilation, ctx.region_type,
               ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
 
-        return ctx.out_feat
+        return out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
@@ -84,22 +86,26 @@ class SparseConvolutionTransposeFunction(Function):
         assert input_features.shape[1] == kernel.shape[1]
 
         ctx.in_feat = input_features
-        ctx.out_feat = input_features.new()
         ctx.kernel = kernel
+
+        out_feat = input_features.new()
+
         fw_fn = ctx.conv_fw_gpu if input_features.is_cuda else ctx.conv_fw_cpu
-        fw_fn(ctx.in_feat, ctx.out_feat, kernel, ctx.pixel_dist, ctx.stride,
+        fw_fn(ctx.in_feat, out_feat, kernel, ctx.pixel_dist, ctx.stride,
               ctx.kernel_size, ctx.dilation, ctx.region_type,
               ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
 
-        return ctx.out_feat
+        return out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
+
         bw_fn = ctx.conv_bw_gpu if grad_out_feat.is_cuda else ctx.conv_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
               grad_kernel, ctx.pixel_dist, ctx.stride, ctx.kernel_size,
               ctx.dilation, ctx.dimension, ctx.metadata.ffi)
+
         return grad_in_feat, grad_kernel
 
 
