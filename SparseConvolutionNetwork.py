@@ -32,12 +32,14 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         self.metadata.clear()
 
     def initialize_coords(self, coords):
+        assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         pixel_dist = convert_to_int_tensor(1, self.D)
         SCE.initialize_coords(coords.contiguous(), pixel_dist, self.D,
                               self.metadata.ffi)
         self.n_rows = coords.size(0)
 
     def initialize_coords_with_duplicates(self, coords):
+        assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         pixel_dist = convert_to_int_tensor(1, self.D)
         SCE.initialize_coords_with_duplicates(
             coords.contiguous(), pixel_dist, self.D, self.metadata.ffi)
@@ -75,6 +77,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         coords = torch.cat(((coords[:, :D] / pixel_dist) * pixel_dist,
                             coords[:, D:]), dim=1)
         """
+        assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         index_map = torch.IntTensor()
         pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
         success = SCE.get_index_map(coords.contiguous(), index_map, pixel_dist,

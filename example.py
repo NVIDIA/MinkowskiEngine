@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     in_feat = torch.randn(len(coords), 3)
     label = (torch.rand(len(coords)) * max_label).long()
-    coords = torch.from_numpy(np.array(coords)).long()
+    coords = torch.from_numpy(np.array(coords)).int()
 
     net.initialize_coords(coords)
     input = Variable(in_feat, requires_grad=True)
