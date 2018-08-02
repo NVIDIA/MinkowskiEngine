@@ -113,20 +113,19 @@ class SparseConvolutionBase(Module):
     def __init__(self,
                  in_channels,
                  out_channels,
-                 pixel_dist,
-                 kernel_size,
-                 stride,
+                 pixel_dist=1,
+                 kernel_size=-1,
+                 stride=1,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
                  has_bias=True,
+                 region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 axis_types=None,
                  dimension=None,
                  metadata=None):
         super(SparseConvolutionBase, self).__init__()
         if dimension is None or metadata is None:
             raise ValueError('Dimension and metadata must be defined')
-        if region_offset is None:
-            region_offset = torch.IntTensor()
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -136,7 +135,7 @@ class SparseConvolutionBase(Module):
 
         region_type, region_offset, kernel_volume = convert_region_type(
             region_type, pixel_dist, kernel_size, dilation, region_offset,
-            dimension)
+            axis_types, dimension)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -183,9 +182,15 @@ class SparseConvolutionBase(Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def __repr__(self):
-        s = '({}, {}, pixel_dist={}, kernel_size={}, stride={}, dilation={})'.format(
-            self.in_channels, self.out_channels, self.pixel_dist,
-            self.kernel_size, self.stride, self.dilation)
+        s = '(in={}, out={}, region_type={}'.format(
+            self.in_channels, self.out_channels, self.region_type)
+        if self.region_type in [RegionType.HYBRID, RegionType.CUSTOM]:
+            s += ', kernel_volume={})'.format(self.kernel_volume)
+        else:
+            s += ', pixel_dist={}, kernel_size={}'.format(
+                self.pixel_dist.tolist(), self.kernel_size.tolist())
+            s += ', stride={}, dilation={})'.format(
+                self.stride.tolist(), self.dilation.tolist())
         return self.__class__.__name__ + s
 
 
@@ -193,23 +198,24 @@ class SparseConvolution(SparseConvolutionBase):
     def __init__(self,
                  in_channels,
                  out_channels,
-                 pixel_dist,
-                 kernel_size,
-                 stride,
+                 pixel_dist=1,
+                 kernel_size=-1,
+                 stride=1,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
                  has_bias=True,
+                 region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 axis_types=None,
                  dimension=None,
                  metadata=None):
         """
         kernel_size: if odd, kernel is centered at the input coordinate.
             If even, top left is aligned at the input coordinate.
         """
-        super(SparseConvolution,
-              self).__init__(in_channels, out_channels, pixel_dist,
-                             kernel_size, stride, dilation, region_type,
-                             has_bias, region_offset, dimension, metadata)
+        super(SparseConvolution, self).__init__(
+            in_channels, out_channels, pixel_dist, kernel_size, stride,
+            dilation, has_bias, region_type, region_offset, axis_types,
+            dimension, metadata)
         self.reset_parameters()
         self.conv = SparseConvolutionFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
@@ -221,13 +227,14 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
     def __init__(self,
                  in_channels,
                  out_channels,
-                 pixel_dist,
-                 kernel_size,
-                 upsample_stride,
+                 pixel_dist=1,
+                 kernel_size=-1,
+                 upsample_stride=1,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
                  has_bias=True,
+                 region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 axis_types=None,
                  dimension=None,
                  metadata=None):
         """
@@ -237,8 +244,8 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
         """
         super(SparseConvolutionTranspose, self).__init__(
             in_channels, out_channels, pixel_dist, kernel_size,
-            upsample_stride, dilation, region_type, has_bias, region_offset,
-            dimension, metadata)
+            upsample_stride, dilation, has_bias, region_type, region_offset,
+            axis_types, dimension, metadata)
         if region_type == RegionType.HYPERCUBE:
             assert torch.unique(self.kernel_size).numel() == 1
             assert torch.unique(self.dilation).numel() == 1

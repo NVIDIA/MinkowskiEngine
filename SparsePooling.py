@@ -1,4 +1,3 @@
-import torch
 from torch.nn import Module
 from torch.autograd import Function
 
@@ -66,13 +65,12 @@ class SparseMaxPooling(Module):
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 axis_types=None,
                  dimension=None,
                  metadata=None):
         super(SparseMaxPooling, self).__init__()
         if dimension is None or metadata is None:
             raise ValueError('Dimension and metadata must be defined')
-        if region_offset is None:
-            region_offset = torch.IntTensor()
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -82,7 +80,7 @@ class SparseMaxPooling(Module):
 
         region_type, region_offset, kernel_volume = convert_region_type(
             region_type, pixel_dist, kernel_size, dilation, region_offset,
-            dimension)
+            axis_types, dimension)
 
         self.pixel_dist = pixel_dist
         self.kernel_size = kernel_size
@@ -127,10 +125,6 @@ class SparseNonzeroAvgPoolingFunction(Function):
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
-        region_type, region_offset, kernel_volume = convert_region_type(
-            region_type, pixel_dist, kernel_size, dilation, region_offset,
-            dimension)
-
         self.pixel_dist = pixel_dist
         self.stride = stride
         self.kernel_size = kernel_size
@@ -172,13 +166,12 @@ class SparseNonzeroAvgPooling(Module):
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 axis_types=None,
                  dimension=None,
                  metadata=None):
         super(SparseNonzeroAvgPooling, self).__init__()
         if dimension is None or metadata is None:
             raise ValueError('Dimension and metadata must be defined')
-        if region_offset is None:
-            region_offset = torch.IntTensor()
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -188,7 +181,7 @@ class SparseNonzeroAvgPooling(Module):
 
         region_type, region_offset, kernel_volume = convert_region_type(
             region_type, pixel_dist, kernel_size, dilation, region_offset,
-            dimension)
+            axis_types, dimension)
 
         self.pixel_dist = pixel_dist
         self.kernel_size = kernel_size

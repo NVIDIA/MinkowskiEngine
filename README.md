@@ -110,9 +110,28 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
     print(net.get_coords(2))
 ```
 
+
 ## Running the Example
 
 After installing the package, run `python example.py` in the package root directory.
+
+
+## Complex Convolution Kernels
+
+`SparseConvolution` class takes `region_type` and `region_offset` as arguments.
+The `region_type` must be the Enum `from Common import RegionType`.
+
+There are 4 types of kernel regions. `RegionType.HYPERCUBE`, `RegionType.HYPERCROSS`, `RegionType.HYBRID`, and `RegionType.CUSTOM`.
+`RegionType.HYPERCUBE` is the basic square shape kernel,
+`RegionType.HYPERCROSS` is the cross shape kernel. If
+`RegionType.CUSTOM`, you must define the torch.IntTensor
+`region_offset` that defines the offset of the region.
+Finally, `RegionType.HYBRID`, you can mix HYPERCUBE and HYPERCROSS
+for each axis arbitrarily.
+
+By default `region_type` is `RegionType.HYPERCUBE`.
+
+See `tests/test_conv_types.py` for more details.
 
 
 # Variables

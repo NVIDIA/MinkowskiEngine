@@ -23,7 +23,8 @@
   do {                                                                         \
     cudaError_t error = condition;                                             \
     if (error != cudaSuccess)                                                  \
-      std::cerr << " " << cudaGetErrorString(error);                           \
+      std::cerr << " " << cudaGetErrorString(error) << " at " << __FILE__      \
+                << ":" << __LINE__ << std::endl;                               \
   } while (0)
 
 #define CUBLAS_CHECK(condition)                                                \
@@ -38,7 +39,7 @@
     cusparseStatus_t err;                                                      \
     if ((err = (call)) != CUSPARSE_STATUS_SUCCESS)                             \
     {                                                                          \
-        fprintf(stderr, "Got error %d at %s:%d\n", err, __FILE__, __LINE__);   \
+        fprintf(stderr, ": Got error %d at %s:%d\n", err, __FILE__, __LINE__); \
         cudaError_t cuda_err = cudaGetLastError();                             \
         if (cuda_err != cudaSuccess)                                           \
         {                                                                      \
