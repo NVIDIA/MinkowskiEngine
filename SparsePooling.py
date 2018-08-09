@@ -1,11 +1,9 @@
-from itertools import product
-
 import torch
 from torch.nn import Module
 from torch.autograd import Function
 
 import SparseConvolutionEngineFFI as SCE
-from Common import RegionType, convert_to_int_tensor
+from Common import RegionType, convert_to_int_tensor, convert_region_type
 
 
 class SparseMaxPoolingFunction(Function):
@@ -78,27 +76,13 @@ class SparseMaxPooling(Module):
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
 
-        if region_type == RegionType.HYPERCUBE:
-            # Convolution kernel with even numbered kernel size not defined.
-            if (kernel_size % 2).sum() == 0:  # Even
-                iter_args = []
-                for d in range(dimension):
-                    off = (pixel_dist[d] *
-                           torch.arange(kernel_size[d]).int()).tolist()
-                    iter_args.append(off)
-                region_offset = list(product(*iter_args))
-                region_offset = torch.IntTensor(region_offset)
-                region_type = RegionType.CUSTOM
-        elif region_type == RegionType.HYPERCROSS:
-            assert (kernel_size % 2).prod() == 1  # Odd
-            # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
-        elif region_type == RegionType.CUSTOM:
-            assert region_offset.numel() > 0
-            assert region_offset.size(1) == dimension
-        else:
-            raise NotImplementedError()
+        region_type, region_offset, kernel_volume = convert_region_type(
+            region_type, pixel_dist, kernel_size, dilation, region_offset,
+            dimension)
 
         self.pixel_dist = pixel_dist
         self.kernel_size = kernel_size
@@ -143,11 +127,15 @@ class SparseNonzeroAvgPoolingFunction(Function):
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
+        region_type, region_offset, kernel_volume = convert_region_type(
+            region_type, pixel_dist, kernel_size, dilation, region_offset,
+            dimension)
+
         self.pixel_dist = pixel_dist
         self.stride = stride
         self.kernel_size = kernel_size
         self.dilation = dilation
-        self.region_type = int(region_type)
+        self.region_type = region_type
         self.dimension = dimension
         self.metadata = metadata
         self.region_offset = region_offset
@@ -194,27 +182,13 @@ class SparseNonzeroAvgPooling(Module):
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
 
-        if region_type == RegionType.HYPERCUBE:
-            # Convolution kernel with even numbered kernel size not defined.
-            if (kernel_size % 2).sum() == 0:  # Even
-                iter_args = []
-                for d in range(dimension):
-                    off = (pixel_dist[d] *
-                           torch.arange(kernel_size[d]).int()).tolist()
-                    iter_args.append(off)
-                region_offset = list(product(*iter_args))
-                region_offset = torch.IntTensor(region_offset)
-                region_type = RegionType.CUSTOM
-        elif region_type == RegionType.HYPERCROSS:
-            assert (kernel_size % 2).prod() == 1  # Odd
-            # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
-        elif region_type == RegionType.CUSTOM:
-            assert region_offset.numel() > 0
-            assert region_offset.size(1) == dimension
-        else:
-            raise NotImplementedError()
+        region_type, region_offset, kernel_volume = convert_region_type(
+            region_type, pixel_dist, kernel_size, dilation, region_offset,
+            dimension)
 
         self.pixel_dist = pixel_dist
         self.kernel_size = kernel_size

@@ -3,6 +3,7 @@ import cffi
 import collections
 import numpy as np
 from enum import Enum
+from itertools import product
 
 import torch
 import SparseConvolutionEngineFFI as SCE
@@ -44,6 +45,40 @@ class RegionType(Enum):
 
     def __int__(self):
         return self.value
+
+
+def convert_region_type(region_type, pixel_dist, kernel_size, dilation,
+                        region_offset, dimension):
+    if region_type == RegionType.HYPERCUBE:
+        assert torch.unique(kernel_size).numel() == 1
+        assert torch.unique(dilation).numel() == 1
+
+        # Convolution kernel with even numbered kernel size not defined.
+        if (kernel_size % 2).prod() == 1:  # Odd
+            kernel_volume = int(torch.prod(kernel_size))
+        elif (kernel_size % 2).sum() == 0:  # Even
+            iter_args = []
+            for d in range(dimension):
+                off = (dilation[d] * pixel_dist[d] * torch.arange(
+                    kernel_size[d]).int()).tolist()
+                iter_args.append(off)
+            region_offset = list(product(*iter_args))
+            region_offset = torch.IntTensor(region_offset)
+            kernel_volume = region_offset.size(0)
+            region_type = RegionType.CUSTOM
+        else:
+            raise ValueError('All edges must have the same length.')
+    elif region_type == RegionType.HYPERCROSS:
+        assert (kernel_size % 2).prod() == 1
+        # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
+        kernel_volume = int(torch.sum(kernel_size - 1) + 1)
+    elif region_type == RegionType.CUSTOM:
+        assert region_offset.numel() > 0
+        assert region_offset.size(1) == dimension
+        kernel_volume = int(region_offset.size(0))
+    else:
+        raise NotImplementedError()
+    return region_type, region_offset, kernel_volume
 
 
 class Metadata(object):

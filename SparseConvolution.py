@@ -6,7 +6,7 @@ from torch.autograd import Function
 from torch.nn import Module, Parameter
 
 import SparseConvolutionEngineFFI as SCE
-from Common import RegionType, convert_to_int_tensor
+from Common import RegionType, convert_to_int_tensor, convert_region_type
 
 
 class SparseConvolutionFunction(Function):
@@ -134,35 +134,9 @@ class SparseConvolutionBase(Module):
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
-        if region_type == RegionType.HYPERCUBE:
-            assert torch.unique(kernel_size).numel() == 1
-            assert torch.unique(dilation).numel() == 1
-
-            # Convolution kernel with even numbered kernel size not defined.
-            if (kernel_size % 2).prod() == 1:  # Odd
-                kernel_volume = int(torch.prod(kernel_size))
-            elif (kernel_size % 2).sum() == 0:  # Even
-                iter_args = []
-                for d in range(dimension):
-                    off = (dilation[d] * pixel_dist[d] *
-                           torch.arange(kernel_size[d]).int()).tolist()
-                    iter_args.append(off)
-                region_offset = list(product(*iter_args))
-                region_offset = torch.IntTensor(region_offset)
-                kernel_volume = region_offset.size(0)
-                region_type = RegionType.CUSTOM
-            else:
-                raise ValueError('All edges must have the same length.')
-        elif region_type == RegionType.HYPERCROSS:
-            assert (kernel_size % 2).prod() == 1
-            # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
-            kernel_volume = int(torch.sum(kernel_size - 1) * dimension + 1)
-        elif region_type == RegionType.CUSTOM:
-            assert region_offset.numel() > 0
-            assert region_offset.size(1) == dimension
-            kernel_volume = int(region_offset.size(0))
-        else:
-            raise NotImplementedError()
+        region_type, region_offset, kernel_volume = convert_region_type(
+            region_type, pixel_dist, kernel_size, dilation, region_offset,
+            dimension)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -232,10 +206,10 @@ class SparseConvolution(SparseConvolutionBase):
         kernel_size: if odd, kernel is centered at the input coordinate.
             If even, top left is aligned at the input coordinate.
         """
-        super(SparseConvolution, self).__init__(
-            in_channels, out_channels, pixel_dist, kernel_size, stride,
-            dilation, region_type, has_bias, region_offset, dimension,
-            metadata)
+        super(SparseConvolution,
+              self).__init__(in_channels, out_channels, pixel_dist,
+                             kernel_size, stride, dilation, region_type,
+                             has_bias, region_offset, dimension, metadata)
         self.reset_parameters()
         self.conv = SparseConvolutionFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
