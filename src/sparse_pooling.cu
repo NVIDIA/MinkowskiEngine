@@ -14,6 +14,7 @@
 #include <thrust/sort.h>
 
 #include "src/sparse_pooling.cuh"
+#include "src/utils.hpp"
 
 /* Sort by output key (reduce will generate output that doesn't require mapping
  * Sort in_map by out_map using sort_by_key.
@@ -279,9 +280,11 @@ void SparseNonzeroAvgPoolingForwardGPU(
     }
   }
 
-  if (nnz != in_nrows || in_nrows < out_nrows)
+  if (in_nrows < out_nrows)
     throw std::invalid_argument(
-        "Incorrect in_map for SparseNonzeroAvgPoolingForwardGPU");
+        Formatter() << "Incorrect in_map for SparseNonzeroAvgPoolingForwardGPU."
+                    << ", in_nrows: " << in_nrows
+                    << ", out_nrows: " << out_nrows);
 
   d_csr_row.resize(out_nrows + 1); // CSR returns n_row + 1
   d_csr_val.resize(nnz);
