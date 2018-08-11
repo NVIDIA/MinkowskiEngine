@@ -60,7 +60,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
 
         # Mapping is surjective, Mapping to smaller space is not supported
         for i in range(pixel_dist_src.numel()):
-            assert pixel_dist_src[i] > pixel_dist_dst[i]
+            assert pixel_dist_src[i] >= pixel_dist_dst[i]
 
         perm = torch.IntTensor()
         success = SCE.get_permutation(perm, pixel_dist_src, pixel_dist_dst,
