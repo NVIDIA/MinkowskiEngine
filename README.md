@@ -26,13 +26,13 @@ from SparseConvolutionEngine import SparseConvolution, SparseConvolutionNetwork
 
 ## Creating a Network
 
-All `SparseConvolutionNetwork` has `self.metadatat`. The metadata contains all information regarding mappings used for coordinate to features, mappings for sparse convolutions. Thus, you have to pass the metadata to all sparse convolution layers.
+All `SparseConvolutionNetwork` has `self.net_metadatat`. The net_metadata contains all information regarding mappings used for coordinate to features, mappings for sparse convolutions. Thus, you have to pass the net_metadata to all sparse convolution layers.
 
 ```python
 class ExampleSparseNetwork(SparseConvolutionNetwork):
     def __init__(self, D):
         super(ExampleSparseNetwork, self).__init__(D)
-        metadata = self.metadata
+        net_metadata = self.net_metadata
         kernel_size, dilation = 3, 1
         self.conv1 = SparseConvolution(
             in_channels=3,
@@ -43,7 +43,7 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
             dilation=dilation,
             has_bias=False,
             dimension=D,
-            metadata=metadata)
+            net_metadata=net_metadata)
         self.bn1 = nn.BatchNorm1d(64)
         self.conv2 = SparseConvolution(
             in_channels=64,
@@ -54,7 +54,7 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
             dilation=dilation,
             has_bias=False,
             dimension=D,
-            metadata=metadata)
+            net_metadata=net_metadata)
         self.bn2 = nn.BatchNorm1d(128)
         self.relu = nn.ReLU(inplace=True)
 

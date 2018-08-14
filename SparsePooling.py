@@ -15,7 +15,7 @@ class SparseMaxPoolingFunction(Function):
     '''
 
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, dimension, metadata):
+                 region_offset, dimension, net_metadata):
         super(SparseMaxPoolingFunction, self).__init__()
         assert isinstance(region_type, RegionType)
 
@@ -30,7 +30,7 @@ class SparseMaxPoolingFunction(Function):
         self.dilation = dilation
         self.region_type = int(region_type)
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
         self.region_offset = region_offset
         self.pooling_fw_cpu = SCE.max_pooling_forward
         self.pooling_bw_cpu = SCE.max_pooling_backward
@@ -45,7 +45,7 @@ class SparseMaxPoolingFunction(Function):
         fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
         fw_fn(ctx.in_feat, ctx.out_feat, ctx.mask_index, ctx.pixel_dist,
               ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
-              ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
+              ctx.region_offset, ctx.dimension, ctx.net_metadata.ffi)
         return ctx.out_feat
 
     def backward(ctx, grad_out_feat):
@@ -53,7 +53,7 @@ class SparseMaxPoolingFunction(Function):
         bw_fn = ctx.pooling_bw_gpu if grad_out_feat.is_cuda else ctx.pooling_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.mask_index,
               ctx.pixel_dist, ctx.stride, ctx.kernel_size, ctx.dilation,
-              ctx.dimension, ctx.metadata.ffi)
+              ctx.dimension, ctx.net_metadata.ffi)
         return grad_in_feat
 
 
@@ -67,10 +67,10 @@ class SparseMaxPooling(Module):
                  region_offset=None,
                  axis_types=None,
                  dimension=None,
-                 metadata=None):
+                 net_metadata=None):
         super(SparseMaxPooling, self).__init__()
-        if dimension is None or metadata is None:
-            raise ValueError('Dimension and metadata must be defined')
+        if dimension is None or net_metadata is None:
+            raise ValueError('Dimension and net_metadata must be defined')
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -89,12 +89,12 @@ class SparseMaxPooling(Module):
         self.region_type = region_type
         self.region_offset = region_offset
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
 
         self.pooling = SparseMaxPoolingFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
             self.region_type, self.region_offset, self.dimension,
-            self.metadata)
+            self.net_metadata)
 
     def forward(self, input):
         out = self.pooling(input)
@@ -116,7 +116,7 @@ class SparseNonzeroAvgPoolingFunction(Function):
     '''
 
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, dimension, metadata):
+                 region_offset, dimension, net_metadata):
         super(SparseNonzeroAvgPoolingFunction, self).__init__()
         assert isinstance(region_type, RegionType)
 
@@ -131,7 +131,7 @@ class SparseNonzeroAvgPoolingFunction(Function):
         self.dilation = dilation
         self.region_type = region_type
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
         self.region_offset = region_offset
         self.pooling_fw_cpu = SCE.nonzero_avg_pooling_forward
         self.pooling_bw_cpu = SCE.nonzero_avg_pooling_backward
@@ -146,7 +146,7 @@ class SparseNonzeroAvgPoolingFunction(Function):
         fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
         fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,
               ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
-              ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
+              ctx.region_offset, ctx.dimension, ctx.net_metadata.ffi)
         return ctx.out_feat
 
     def backward(ctx, grad_out_feat):
@@ -154,7 +154,7 @@ class SparseNonzeroAvgPoolingFunction(Function):
         bw_fn = ctx.pooling_bw_gpu if grad_out_feat.is_cuda else ctx.pooling_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               ctx.pixel_dist, ctx.stride, ctx.kernel_size, ctx.dilation,
-              ctx.dimension, ctx.metadata.ffi)
+              ctx.dimension, ctx.net_metadata.ffi)
         return grad_in_feat
 
 
@@ -168,10 +168,10 @@ class SparseNonzeroAvgPooling(Module):
                  region_offset=None,
                  axis_types=None,
                  dimension=None,
-                 metadata=None):
+                 net_metadata=None):
         super(SparseNonzeroAvgPooling, self).__init__()
-        if dimension is None or metadata is None:
-            raise ValueError('Dimension and metadata must be defined')
+        if dimension is None or net_metadata is None:
+            raise ValueError('Dimension and net_metadata must be defined')
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -190,12 +190,12 @@ class SparseNonzeroAvgPooling(Module):
         self.region_type = region_type
         self.region_offset = region_offset
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
 
         self.pooling = SparseNonzeroAvgPoolingFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
             self.region_type, self.region_offset, self.dimension,
-            self.metadata)
+            self.net_metadata)
 
     def forward(self, input):
         out = self.pooling(input)
@@ -208,7 +208,7 @@ class SparseNonzeroAvgPooling(Module):
 
 
 class SparseGlobalAvgPoolingFunction(Function):
-    def __init__(self, pixel_dist, batch_size, dimension, metadata):
+    def __init__(self, pixel_dist, batch_size, dimension, net_metadata):
         super(SparseGlobalAvgPoolingFunction, self).__init__()
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -216,7 +216,7 @@ class SparseGlobalAvgPoolingFunction(Function):
         self.pixel_dist = pixel_dist
         self.batch_size = batch_size
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
         self.pooling_fw_cpu = SCE.global_avg_pooling_forward
         self.pooling_bw_cpu = SCE.global_avg_pooling_backward
         self.pooling_fw_gpu = SCE.global_avg_pooling_forward_gpu
@@ -229,32 +229,36 @@ class SparseGlobalAvgPoolingFunction(Function):
 
         fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
         fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,
-              ctx.batch_size, ctx.dimension, ctx.metadata.ffi)
+              ctx.batch_size, ctx.dimension, ctx.net_metadata.ffi)
         return ctx.out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         bw_fn = ctx.pooling_bw_gpu if grad_out_feat.is_cuda else ctx.pooling_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
-              ctx.pixel_dist, ctx.dimension, ctx.metadata.ffi)
+              ctx.pixel_dist, ctx.dimension, ctx.net_metadata.ffi)
         return grad_in_feat
 
 
 class SparseGlobalAvgPooling(Module):
-    def __init__(self, pixel_dist, batch_size=0, dimension=None,
-                 metadata=None):
+    def __init__(self,
+                 pixel_dist,
+                 batch_size=0,
+                 dimension=None,
+                 net_metadata=None):
         super(SparseGlobalAvgPooling, self).__init__()
-        if dimension is None or metadata is None:
-            raise ValueError('Dimension and metadata must be defined')
+        if dimension is None or net_metadata is None:
+            raise ValueError('Dimension and net_metadata must be defined')
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
         self.pixel_dist = pixel_dist
         self.batch_size = batch_size
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
 
         self.pooling = SparseGlobalAvgPoolingFunction(
-            self.pixel_dist, self.batch_size, self.dimension, self.metadata)
+            self.pixel_dist, self.batch_size, self.dimension,
+            self.net_metadata)
 
     def forward(self, input):
         out = self.pooling(input)

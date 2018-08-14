@@ -11,7 +11,7 @@ from Common import RegionType, convert_to_int_tensor, convert_region_type
 
 class SparseConvolutionFunction(Function):
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, dimension, metadata):
+                 region_offset, dimension, net_metadata):
         super(SparseConvolutionFunction, self).__init__()
         assert isinstance(region_type, RegionType)
 
@@ -26,7 +26,7 @@ class SparseConvolutionFunction(Function):
         self.dilation = dilation
         self.region_type = int(region_type)
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
         self.region_offset = region_offset
         self.conv_fw_cpu = SCE.convolution_forward
         self.conv_bw_cpu = SCE.convolution_backward
@@ -44,7 +44,7 @@ class SparseConvolutionFunction(Function):
         fw_fn = ctx.conv_fw_gpu if input_features.is_cuda else ctx.conv_fw_cpu
         fw_fn(ctx.in_feat, out_feat, kernel, ctx.pixel_dist, ctx.stride,
               ctx.kernel_size, ctx.dilation, ctx.region_type,
-              ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
+              ctx.region_offset, ctx.dimension, ctx.net_metadata.ffi)
 
         return out_feat
 
@@ -54,13 +54,13 @@ class SparseConvolutionFunction(Function):
         bw_fn = ctx.conv_bw_gpu if grad_out_feat.is_cuda else ctx.conv_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
               grad_kernel, ctx.pixel_dist, ctx.stride, ctx.kernel_size,
-              ctx.dilation, ctx.dimension, ctx.metadata.ffi)
+              ctx.dilation, ctx.dimension, ctx.net_metadata.ffi)
         return grad_in_feat, grad_kernel
 
 
 class SparseConvolutionTransposeFunction(Function):
     def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, dimension, metadata):
+                 region_offset, dimension, net_metadata):
         super(SparseConvolutionTransposeFunction, self).__init__()
         assert isinstance(region_type, RegionType)
 
@@ -75,7 +75,7 @@ class SparseConvolutionTransposeFunction(Function):
         self.dilation = dilation
         self.region_type = int(region_type)
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
         self.region_offset = region_offset
         self.conv_fw_cpu = SCE.convolution_transpose_forward
         self.conv_bw_cpu = SCE.convolution_transpose_backward
@@ -93,7 +93,7 @@ class SparseConvolutionTransposeFunction(Function):
         fw_fn = ctx.conv_fw_gpu if input_features.is_cuda else ctx.conv_fw_cpu
         fw_fn(ctx.in_feat, out_feat, kernel, ctx.pixel_dist, ctx.stride,
               ctx.kernel_size, ctx.dilation, ctx.region_type,
-              ctx.region_offset, ctx.dimension, ctx.metadata.ffi)
+              ctx.region_offset, ctx.dimension, ctx.net_metadata.ffi)
 
         return out_feat
 
@@ -104,7 +104,7 @@ class SparseConvolutionTransposeFunction(Function):
         bw_fn = ctx.conv_bw_gpu if grad_out_feat.is_cuda else ctx.conv_bw_cpu
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
               grad_kernel, ctx.pixel_dist, ctx.stride, ctx.kernel_size,
-              ctx.dilation, ctx.dimension, ctx.metadata.ffi)
+              ctx.dilation, ctx.dimension, ctx.net_metadata.ffi)
 
         return grad_in_feat, grad_kernel
 
@@ -122,10 +122,11 @@ class SparseConvolutionBase(Module):
                  region_offset=None,
                  axis_types=None,
                  dimension=None,
-                 metadata=None):
+                 net_metadata=None):
         super(SparseConvolutionBase, self).__init__()
-        if dimension is None or metadata is None:
-            raise ValueError('Dimension and metadata must be defined')
+        if dimension is None or net_metadata is None:
+            raise ValueError(
+                'Dimension and net_metadata must be defined')
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -147,7 +148,7 @@ class SparseConvolutionBase(Module):
         self.region_type = region_type
         self.region_offset = region_offset
         self.dimension = dimension
-        self.metadata = metadata
+        self.net_metadata = net_metadata
         self.use_mm = False  # use matrix multiplication when kernel is 1
 
         Tensor = torch.FloatTensor
@@ -189,8 +190,8 @@ class SparseConvolutionBase(Module):
         else:
             s += ', pixel_dist={}, kernel_size={}'.format(
                 self.pixel_dist.tolist(), self.kernel_size.tolist())
-            s += ', stride={}, dilation={})'.format(
-                self.stride.tolist(), self.dilation.tolist())
+            s += ', stride={}, dilation={})'.format(self.stride.tolist(),
+                                                    self.dilation.tolist())
         return self.__class__.__name__ + s
 
 
@@ -207,7 +208,7 @@ class SparseConvolution(SparseConvolutionBase):
                  region_offset=None,
                  axis_types=None,
                  dimension=None,
-                 metadata=None):
+                 net_metadata=None):
         """
         kernel_size: if odd, kernel is centered at the input coordinate.
             If even, top left is aligned at the input coordinate.
@@ -215,12 +216,12 @@ class SparseConvolution(SparseConvolutionBase):
         super(SparseConvolution, self).__init__(
             in_channels, out_channels, pixel_dist, kernel_size, stride,
             dilation, has_bias, region_type, region_offset, axis_types,
-            dimension, metadata)
+            dimension, net_metadata)
         self.reset_parameters()
         self.conv = SparseConvolutionFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
             self.region_type, self.region_offset, self.dimension,
-            self.metadata)
+            self.net_metadata)
 
 
 class SparseConvolutionTranspose(SparseConvolutionBase):
@@ -236,7 +237,7 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
                  region_offset=None,
                  axis_types=None,
                  dimension=None,
-                 metadata=None):
+                 net_metadata=None):
         """
         kernel_size: if odd, kernel is centered at the input coordinate.
             If even, top left is aligned at the input coordinate.
@@ -245,7 +246,7 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
         super(SparseConvolutionTranspose, self).__init__(
             in_channels, out_channels, pixel_dist, kernel_size,
             upsample_stride, dilation, has_bias, region_type, region_offset,
-            axis_types, dimension, metadata)
+            axis_types, dimension, net_metadata)
         if region_type == RegionType.HYPERCUBE:
             assert torch.unique(self.kernel_size).numel() == 1
             assert torch.unique(self.dilation).numel() == 1
@@ -272,4 +273,4 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
         self.conv = SparseConvolutionTransposeFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
             self.region_type, self.region_offset, self.dimension,
-            self.metadata)
+            self.net_metadata)

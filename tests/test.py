@@ -5,7 +5,7 @@ from torch.autograd import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
 from SparseConvolution import SparseConvolution
-from Common import Metadata, RegionType, convert_to_int_tensor
+from Common import NetMetadata, RegionType, convert_to_int_tensor
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -28,13 +28,13 @@ if __name__ == '__main__':
     in_feat = torch.FloatTensor(coords.size(0), in_nchannel).zero_()
     in_feat[1] = 1
     in_feat[2] = 2
-    metadata = Metadata(D)
+    net_metadata = NetMetadata(D)
 
     pixel_dist = convert_to_int_tensor(pixel_dist, D)
-    SCE.initialize_coords(coords, pixel_dist, D, metadata.ffi)
+    SCE.initialize_coords(coords, pixel_dist, D, net_metadata.ffi)
 
     coords2 = torch.IntTensor()
-    print(SCE.get_coords(coords2, pixel_dist, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist, D, net_metadata.ffi))
     print(coords2)
 
     conv = SparseConvolution(
@@ -47,7 +47,7 @@ if __name__ == '__main__':
         region_type=RegionType.HYPERCUBE,
         has_bias=True,
         dimension=D,
-        metadata=metadata)
+        net_metadata=net_metadata)
 
     # conv.kernel.data[:] = torch.arange(9)
     # conv.bias.data[:] = torch.arange(out_nchannel) + 1
@@ -56,9 +56,9 @@ if __name__ == '__main__':
     in_feat.requires_grad_()
 
     # The coords get initialized after the forward pass
-    print(SCE.get_coords(coords2, pixel_dist * stride, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist * stride, D, net_metadata.ffi))
     out = conv(in_feat)
-    print(SCE.get_coords(coords2, pixel_dist * stride, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist * stride, D, net_metadata.ffi))
     print(coords2)
 
     print(out.data.squeeze())
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # Permutation
     perm = torch.IntTensor()
     stride = convert_to_int_tensor(stride, D)
-    SCE.get_permutation(perm, stride, pixel_dist, D, metadata.ffi)
+    SCE.get_permutation(perm, stride, pixel_dist, D, net_metadata.ffi)
     print(perm)
 
     grad = torch.zeros(out.size())
@@ -100,4 +100,4 @@ if __name__ == '__main__':
                 rtol=1e-2,
                 eps=1e-4))
 
-    metadata.clear()
+    net_metadata.clear()

@@ -136,7 +136,7 @@ def convert_region_type(region_type, pixel_dist, kernel_size, dilation,
     return region_type, region_offset, kernel_volume
 
 
-class Metadata(object):
+class NetMetadata(object):
     def __init__(self, D, ptr=0):
         self.D = D
         self.ffi = ffi.new('void *[1]')

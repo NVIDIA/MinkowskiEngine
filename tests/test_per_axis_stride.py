@@ -4,7 +4,7 @@ import torch
 from torch.autograd import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
-from Common import Metadata, RegionType, convert_to_int_tensor
+from Common import NetMetadata, RegionType, convert_to_int_tensor
 from SparsePooling import SparseMaxPooling
 
 if __name__ == '__main__':
@@ -30,14 +30,14 @@ if __name__ == '__main__':
     # in_feat[1, 0] = 1
     # in_feat[1, 2] = 1
     # in_feat[2] = 2
-    metadata = Metadata(D)
+    net_metadata = NetMetadata(D)
 
     pixel_dist = convert_to_int_tensor(pixel_dist, D)
     stride = convert_to_int_tensor(stride, D)
-    SCE.initialize_coords(coords, pixel_dist, D, metadata.ffi)
+    SCE.initialize_coords(coords, pixel_dist, D, net_metadata.ffi)
 
     coords2 = torch.IntTensor()
-    print(SCE.get_coords(coords2, pixel_dist, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist, D, net_metadata.ffi))
     print(coords2)
     print(in_feat)
 
@@ -48,21 +48,21 @@ if __name__ == '__main__':
         dilation,
         region_type=RegionType.HYPERCUBE,
         dimension=D,
-        metadata=metadata)
+        net_metadata=net_metadata)
 
     in_feat.requires_grad_()
 
     # The coords get initialized after the forward pass
-    print(SCE.get_coords(coords2, stride, D, metadata.ffi))
+    print(SCE.get_coords(coords2, stride, D, net_metadata.ffi))
     out = pooling(in_feat)
-    print(SCE.get_coords(coords2, stride, D, metadata.ffi))
+    print(SCE.get_coords(coords2, stride, D, net_metadata.ffi))
     print(coords2)
 
     print(out.data.squeeze())
 
     # Permutation
     perm = torch.IntTensor()
-    SCE.get_permutation(perm, stride, pixel_dist, D, metadata.ffi)
+    SCE.get_permutation(perm, stride, pixel_dist, D, net_metadata.ffi)
     print(perm)
 
     grad = torch.zeros(out.size())
@@ -100,4 +100,4 @@ if __name__ == '__main__':
                 rtol=1e-2,
                 eps=1e-4))
 
-    metadata.clear()
+    net_metadata.clear()

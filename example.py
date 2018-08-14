@@ -9,7 +9,7 @@ from SparseConvolutionEngine import SparseConvolution, SparseConvolutionNetwork
 class ExampleSparseNetwork(SparseConvolutionNetwork):
     def __init__(self, D):
         super(ExampleSparseNetwork, self).__init__(D)
-        metadata = self.metadata
+        net_metadata = self.net_metadata
         kernel_size, dilation = 3, 1
         self.conv1 = SparseConvolution(
             in_channels=3,
@@ -20,7 +20,7 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
             dilation=dilation,
             has_bias=False,
             dimension=D,
-            metadata=metadata)
+            net_metadata=net_metadata)
         self.bn1 = nn.BatchNorm1d(64)
         self.conv2 = SparseConvolution(
             in_channels=64,
@@ -31,7 +31,7 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
             dilation=dilation,
             has_bias=False,
             dimension=D,
-            metadata=metadata)
+            net_metadata=net_metadata)
         self.bn2 = nn.BatchNorm1d(128)
         self.conv3 = SparseConvolution(
             in_channels=128,
@@ -42,7 +42,7 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
             dilation=dilation,
             has_bias=False,
             dimension=D,
-            metadata=metadata)
+            net_metadata=net_metadata)
         self.bn3 = nn.BatchNorm1d(32)
         self.relu = nn.ReLU(inplace=True)
 

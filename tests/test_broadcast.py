@@ -5,7 +5,7 @@ from torch.autograd import Variable
 from torch.autograd import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
-from Common import Metadata, convert_to_int_tensor
+from Common import NetMetadata, convert_to_int_tensor
 from SparsePooling import SparseGlobalAvgPooling
 from SparseBroadcast import SparseGlobalBroadcastAddition
 
@@ -45,13 +45,13 @@ if __name__ == '__main__':
     # in_feat[1, 0] = 1
     # in_feat[1, 2] = 1
     # in_feat[2] = 2
-    metadata = Metadata(D)
+    net_metadata = NetMetadata(D)
 
     pixel_dist = convert_to_int_tensor(pixel_dist, D)
-    SCE.initialize_coords(coords, pixel_dist, D, metadata.ffi)
+    SCE.initialize_coords(coords, pixel_dist, D, net_metadata.ffi)
 
     coords2 = torch.IntTensor()
-    print(SCE.get_coords(coords2, pixel_dist, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist, D, net_metadata.ffi))
     print(coords2)
     print(in_feat)
 
@@ -59,16 +59,16 @@ if __name__ == '__main__':
         pixel_dist,
         batch_size=0,
         dimension=D,
-        metadata=metadata)
+        net_metadata=net_metadata)
 
     # The coords get initialized after the forward pass
-    print(SCE.get_coords(coords2, pixel_dist * 0, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist * 0, D, net_metadata.ffi))
     in_feat_glob = pooling(in_feat)
     print(in_feat_glob)
-    print(SCE.get_coords(coords2, pixel_dist * 0, D, metadata.ffi))
+    print(SCE.get_coords(coords2, pixel_dist * 0, D, net_metadata.ffi))
     print(coords2)
 
-    broadcast_addition = SparseGlobalBroadcastAddition(pixel_dist, D, metadata)
+    broadcast_addition = SparseGlobalBroadcastAddition(pixel_dist, D, net_metadata)
 
     in_feat.requires_grad_()
     in_feat_glob.requires_grad_()
@@ -114,4 +114,4 @@ if __name__ == '__main__':
                 rtol=1e-2,
                 eps=1e-4))
 
-    metadata.clear()
+    net_metadata.clear()
