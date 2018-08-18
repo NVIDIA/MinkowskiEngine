@@ -78,9 +78,11 @@ class SparseMaxPooling(Module):
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
+        is_transpose = False
+        up_stride = stride if is_transpose else [1, ] * dimension
         region_type, region_offset, kernel_volume = convert_region_type(
-            region_type, pixel_dist, kernel_size, dilation, region_offset,
-            axis_types, dimension)
+            region_type, pixel_dist, kernel_size, up_stride, dilation,
+            region_offset, axis_types, dimension)
 
         self.pixel_dist = pixel_dist
         self.kernel_size = kernel_size
@@ -179,9 +181,11 @@ class SparseNonzeroAvgPooling(Module):
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
+        is_transpose = False
+        up_stride = stride if is_transpose else [1, ] * dimension
         region_type, region_offset, kernel_volume = convert_region_type(
-            region_type, pixel_dist, kernel_size, dilation, region_offset,
-            axis_types, dimension)
+            region_type, pixel_dist, kernel_size, up_stride, dilation,
+            region_offset, axis_types, dimension)
 
         self.pixel_dist = pixel_dist
         self.kernel_size = kernel_size

@@ -1,5 +1,4 @@
 import math
-from itertools import product
 
 import torch
 from torch.autograd import Function
@@ -121,12 +120,12 @@ class SparseConvolutionBase(Module):
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
                  axis_types=None,
+                 is_transpose=False,
                  dimension=None,
                  net_metadata=None):
         super(SparseConvolutionBase, self).__init__()
         if dimension is None or net_metadata is None:
-            raise ValueError(
-                'Dimension and net_metadata must be defined')
+            raise ValueError('Dimension and net_metadata must be defined')
         assert isinstance(region_type, RegionType)
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
@@ -134,9 +133,10 @@ class SparseConvolutionBase(Module):
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
+        up_stride = stride if is_transpose else [1, ] * dimension
         region_type, region_offset, kernel_volume = convert_region_type(
-            region_type, pixel_dist, kernel_size, dilation, region_offset,
-            axis_types, dimension)
+            region_type, pixel_dist, kernel_size, up_stride, dilation,
+            region_offset, axis_types, dimension)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -214,9 +214,19 @@ class SparseConvolution(SparseConvolutionBase):
             If even, top left is aligned at the input coordinate.
         """
         super(SparseConvolution, self).__init__(
-            in_channels, out_channels, pixel_dist, kernel_size, stride,
-            dilation, has_bias, region_type, region_offset, axis_types,
-            dimension, net_metadata)
+            in_channels,
+            out_channels,
+            pixel_dist,
+            kernel_size,
+            stride,
+            dilation,
+            has_bias,
+            region_type,
+            region_offset,
+            axis_types,
+            is_transpose=False,
+            dimension=dimension,
+            net_metadata=net_metadata)
         self.reset_parameters()
         self.conv = SparseConvolutionFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
@@ -244,31 +254,19 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
         stride: upsample stride
         """
         super(SparseConvolutionTranspose, self).__init__(
-            in_channels, out_channels, pixel_dist, kernel_size,
-            upsample_stride, dilation, has_bias, region_type, region_offset,
-            axis_types, dimension, net_metadata)
-        if region_type == RegionType.HYPERCUBE:
-            assert torch.unique(self.kernel_size).numel() == 1
-            assert torch.unique(self.dilation).numel() == 1
-
-            # Convolution kernel with even numbered kernel size not defined.
-            if (self.kernel_size % 2).prod() == 1:  # Odd
-                pass
-            elif (self.kernel_size % 2).sum() == 0:  # Even
-                iter_args = []
-                for d in range(dimension):
-                    off = (self.dilation[d] *
-                           (self.pixel_dist[d] / self.stride[d]) *
-                           torch.arange(self.kernel_size[d]).int()).tolist()
-                    iter_args.append(off)
-                region_offset = list(product(*iter_args))
-                self.region_offset = torch.IntTensor(region_offset)
-                self.region_type = RegionType.CUSTOM
-            else:
-                raise ValueError('All edges must have the same length.')
-        elif region_type == RegionType.HYPERCROSS:
-            raise NotImplementedError()
-
+            in_channels,
+            out_channels,
+            pixel_dist,
+            kernel_size,
+            upsample_stride,
+            dilation,
+            has_bias,
+            region_type,
+            region_offset,
+            axis_types,
+            is_transpose=True,
+            dimension=dimension,
+            net_metadata=net_metadata)
         self.reset_parameters(True)
         self.conv = SparseConvolutionTransposeFunction(
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,

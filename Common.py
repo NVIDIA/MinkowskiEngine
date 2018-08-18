@@ -49,8 +49,14 @@ class RegionType(Enum):
         return self.value
 
 
-def convert_region_type(region_type, pixel_dist, kernel_size, dilation,
-                        region_offset, axis_types, dimension):
+def convert_region_type(region_type,
+                        pixel_dist,
+                        kernel_size,
+                        up_stride,
+                        dilation,
+                        region_offset,
+                        axis_types,
+                        dimension):
     if region_type == RegionType.HYPERCUBE:
         assert region_offset is None
         assert axis_types is None
@@ -64,8 +70,9 @@ def convert_region_type(region_type, pixel_dist, kernel_size, dilation,
         elif (kernel_size % 2).sum() == 0:  # Even
             iter_args = []
             for d in range(dimension):
-                off = (dilation[d] * pixel_dist[d] *
-                       torch.arange(kernel_size[d]).int()).tolist()
+                off_center = int(math.floor((kernel_size[d] - 1) / 2))
+                off = (dilation[d] * (pixel_dist[d] / up_stride[d]) * (
+                    torch.arange(kernel_size[d]).int() - off_center)).tolist()
                 iter_args.append(off)
 
             region_type = RegionType.CUSTOM
@@ -87,33 +94,36 @@ def convert_region_type(region_type, pixel_dist, kernel_size, dilation,
         region_offset = [[0, ] * dimension]
         kernel_size_list = kernel_size.tolist()
         # First HYPERCUBE
-        for axis_type, curr_kernel_size, curr_dim in \
+        for axis_type, curr_kernel_size, d in \
                 zip(axis_types, kernel_size_list, range(dimension)):
             new_offset = []
             if axis_type == RegionType.HYPERCUBE:
                 for offset in region_offset:
                     for curr_offset in range(curr_kernel_size):
-                        offset_center = int(math.floor((curr_kernel_size - 1) / 2))
+                        off_center = int(
+                            math.floor((curr_kernel_size - 1) / 2))
                         offset = offset.copy()  # Do not modify the original
                         # Exclude the coord (0, 0, ..., 0)
-                        if curr_offset == offset_center:
+                        if curr_offset == off_center:
                             continue
-                        offset[curr_dim] = curr_offset - offset_center
+                        offset[d] = (curr_offset - off_center) * \
+                            dilation[d] * (pixel_dist[d] / up_stride[d])
                         new_offset.append(offset)
             region_offset.extend(new_offset)
 
         # Second, HYPERCROSS
-        for axis_type, curr_kernel_size, curr_dim in \
+        for axis_type, curr_kernel_size, d in \
                 zip(axis_types, kernel_size_list, range(dimension)):
             new_offset = []
             if axis_type == RegionType.HYPERCROSS:
                 for curr_offset in range(curr_kernel_size):
-                    offset_center = int(math.floor((curr_kernel_size - 1) / 2))
+                    off_center = int(math.floor((curr_kernel_size - 1) / 2))
                     offset = [0, ] * dimension
                     # Exclude the coord (0, 0, ..., 0)
-                    if curr_offset == offset_center:
+                    if curr_offset == off_center:
                         continue
-                    offset[curr_dim] = curr_offset - offset_center
+                    offset[d] = (curr_offset - off_center) * \
+                        dilation[d] * (pixel_dist[d] / up_stride[d])
                     new_offset.append(offset)
             region_offset.extend(new_offset)
 
