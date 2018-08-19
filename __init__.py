@@ -11,6 +11,7 @@ from SparseConvolution import SparseConvolutionFunction, SparseConvolution, \
 
 from SparsePooling import SparseMaxPoolingFunction, SparseMaxPooling, \
     SparseNonzeroAvgPoolingFunction, SparseNonzeroAvgPooling, \
+    SparseNonzeroAvgUnpoolingFunction, SparseNonzeroAvgUnpooling, \
     SparseGlobalAvgPoolingFunction, SparseGlobalAvgPooling
 
 from SparseConvolutionNetwork import SparseConvolutionNetwork

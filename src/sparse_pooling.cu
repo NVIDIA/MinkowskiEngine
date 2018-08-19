@@ -280,11 +280,12 @@ void SparseNonzeroAvgPoolingForwardGPU(
     }
   }
 
-  if (in_nrows < out_nrows)
-    throw std::invalid_argument(
-        Formatter() << "Incorrect in_map for SparseNonzeroAvgPoolingForwardGPU."
-                    << ", in_nrows: " << in_nrows
-                    << ", out_nrows: " << out_nrows);
+  // No longer required: Unpooling has more out_nrows
+  // if (in_nrows < out_nrows)
+  //   throw std::invalid_argument(
+  //       Formatter() << "Incorrect in_map for SparseNonzeroAvgPoolingForwardGPU."
+  //                   << ", in_nrows: " << in_nrows
+  //                   << ", out_nrows: " << out_nrows);
 
   d_csr_row.resize(out_nrows + 1); // CSR returns n_row + 1
   d_csr_val.resize(nnz);

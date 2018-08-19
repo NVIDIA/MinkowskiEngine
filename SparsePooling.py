@@ -79,7 +79,9 @@ class SparseMaxPooling(Module):
         dilation = convert_to_int_tensor(dilation, dimension)
 
         is_transpose = False
-        up_stride = stride if is_transpose else [1, ] * dimension
+        up_stride = stride if is_transpose else [
+            1,
+        ] * dimension
         region_type, region_offset, kernel_volume = convert_region_type(
             region_type, pixel_dist, kernel_size, up_stride, dilation,
             region_offset, axis_types, dimension)
@@ -182,7 +184,9 @@ class SparseNonzeroAvgPooling(Module):
         dilation = convert_to_int_tensor(dilation, dimension)
 
         is_transpose = False
-        up_stride = stride if is_transpose else [1, ] * dimension
+        up_stride = stride if is_transpose else [
+            1,
+        ] * dimension
         region_type, region_offset, kernel_volume = convert_region_type(
             region_type, pixel_dist, kernel_size, up_stride, dilation,
             region_offset, axis_types, dimension)
@@ -203,6 +207,123 @@ class SparseNonzeroAvgPooling(Module):
 
     def forward(self, input):
         out = self.pooling(input)
+        return out
+
+    def __repr__(self):
+        s = '(pixel_dist={}, kernel_size={}, stride={}, dilation={})'.format(
+            self.pixel_dist, self.kernel_size, self.stride, self.dilation)
+        return self.__class__.__name__ + s
+
+
+class SparseNonzeroAvgUnpoolingFunction(Function):
+    '''
+    Due to ctx.num_nonzero = in_feat.new()....,
+    Should the function be called multiple times, this function must be first
+    instantiated and then reused every time it needs to be called. Otherwise,
+    PyTorch cannot free, ctx.out_feat, ctx.num_nonzero, which are initialized inside
+    the ffi function.
+    '''
+
+    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
+                 region_offset, dimension, net_metadata):
+        super(SparseNonzeroAvgUnpoolingFunction, self).__init__()
+        assert isinstance(region_type, RegionType)
+
+        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
+
+        self.pixel_dist = pixel_dist
+        self.stride = stride
+        self.kernel_size = kernel_size
+        self.dilation = dilation
+        self.region_type = region_type
+        self.dimension = dimension
+        self.net_metadata = net_metadata
+        self.region_offset = region_offset
+
+        self.unpooling_fw_cpu = SCE.unpooling_forward
+        self.unpooling_bw_cpu = SCE.unpooling_backward
+        self.unpooling_fw_gpu = SCE.unpooling_forward_gpu
+        self.unpooling_bw_gpu = SCE.unpooling_backward_gpu
+
+    def forward(ctx, input_features):
+        ctx.in_feat = input_features
+        ctx.out_feat = input_features.new()
+        ctx.num_nonzero = input_features.new()
+
+        fw_fn = ctx.unpooling_fw_gpu if input_features.is_cuda else ctx.unpooling_fw_cpu
+        fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,
+              ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
+              ctx.region_offset, ctx.dimension, ctx.net_metadata.ffi)
+        return ctx.out_feat
+
+    def backward(ctx, grad_out_feat):
+        grad_in_feat = grad_out_feat.new()
+        bw_fn = ctx.unpooling_bw_gpu if grad_out_feat.is_cuda else ctx.unpooling_bw_cpu
+        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
+              ctx.pixel_dist, ctx.stride, ctx.kernel_size, ctx.dilation,
+              ctx.dimension, ctx.net_metadata.ffi)
+        return grad_in_feat
+
+
+class SparseNonzeroAvgUnpooling(Module):
+    """
+    Unpool the features and divide it by the number of non zero elements that
+    contributed.
+    """
+
+    def __init__(self,
+                 pixel_dist,
+                 kernel_size,
+                 stride,
+                 dilation=1,
+                 region_type=RegionType.HYPERCUBE,
+                 region_offset=None,
+                 axis_types=None,
+                 center=False,
+                 dimension=None,
+                 net_metadata=None):
+        """
+        when center=True, for custom kernels, use centered region_offset.
+        currently, when RegionType is CUBE, CROS with all kernel_sizes are odd,
+        center has no effect and will be centered regardless.
+        """
+        super(SparseNonzeroAvgUnpooling, self).__init__()
+        if dimension is None or net_metadata is None:
+            raise ValueError('Dimension and net_metadata must be defined')
+        assert isinstance(region_type, RegionType)
+
+        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
+
+        is_transpose = True
+        up_stride = stride if is_transpose else [
+            1,
+        ] * dimension
+        region_type, region_offset, kernel_volume = convert_region_type(
+            region_type, pixel_dist, kernel_size, up_stride, dilation,
+            region_offset, axis_types, dimension, center=center)
+
+        self.pixel_dist = pixel_dist
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.dilation = dilation
+        self.region_type = region_type
+        self.region_offset = region_offset
+        self.dimension = dimension
+        self.net_metadata = net_metadata
+
+        self.unpooling = SparseNonzeroAvgUnpoolingFunction(
+            self.pixel_dist, self.stride, self.kernel_size, self.dilation,
+            self.region_type, self.region_offset, self.dimension,
+            self.net_metadata)
+
+    def forward(self, input):
+        out = self.unpooling(input)
         return out
 
     def __repr__(self):

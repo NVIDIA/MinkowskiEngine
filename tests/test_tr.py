@@ -69,11 +69,6 @@ if __name__ == '__main__':
     in_nchannel, out_nchannel = 2, 2
     coords = torch.from_numpy(np.array(coords)).int()
     in_feat = torch.FloatTensor(coords.size(0), in_nchannel).normal_()
-    # import ipdb; ipdb.set_trace()
-    # in_feat[1] = 1
-    # in_feat[2] = 2
-    # in_feat[4] = 5
-    # in_feat[8] = 7
     net_metadata = NetMetadata(D)
 
     pixel_dist = convert_to_int_tensor(pixel_dist, D)

@@ -469,16 +469,94 @@ long t_nonzero_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
                                   const Itype *p_kernel_size,
                                   const Itype *p_dilation, cudaStream_t stream,
                                   void **metadata);
-extern "C" long
-_nonzero_avg_pooling_bw_gpu(float *d_grad_in_feat, int in_nrows,
-                            float *d_grad_out_feat, int out_nrows,
-                            float *d_num_nonzero, int nchannel, int *p_pixel_dist,
-                            int *p_stride, int *p_kernel_size, int *p_dilation,
-                            cudaStream_t stream, int D, void **metadata) {
+extern "C" long _nonzero_avg_pooling_bw_gpu(
+    float *d_grad_in_feat, int in_nrows, float *d_grad_out_feat, int out_nrows,
+    float *d_num_nonzero, int nchannel, int *p_pixel_dist, int *p_stride,
+    int *p_kernel_size, int *p_dilation, cudaStream_t stream, int D,
+    void **metadata) {
   SWITCH_DIM_TYPES(return, t_nonzero_avg_pooling_bw_gpu, float, int32_t,
                          d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows,
                          d_num_nonzero, nchannel, p_pixel_dist, p_stride,
                          p_kernel_size, p_dilation, stream, metadata);
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
+                    Dtype *p_num_nonzero, Itype nchannel, Itype out_nrows,
+                    const Itype *p_pixel_dist, const Itype *p_stride,
+                    const Itype *p_kernel_size, const Itype *p_dilation,
+                    Itype region_type, const Itype *p_offset, Itype n_offset,
+                    void **metadata);
+extern "C" long _unpooling_fw(float *p_in_feat, float *p_out_feat,
+                              float *p_num_nonzero, int nchannel, int out_nrows,
+                              int *p_pixel_dist, int *p_stride,
+                              int *p_kernel_size, int *p_dilation,
+                              int region_type, int *p_offset, int n_offset,
+                              int D, void **metadata) {
+  SWITCH_DIM_TYPES(return, t_unpooling_fw, float, int32_t, p_in_feat,
+                         p_out_feat, p_num_nonzero, nchannel, out_nrows,
+                         p_pixel_dist, p_stride, p_kernel_size, p_dilation,
+                         region_type, p_offset, n_offset, metadata);
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
+                    Dtype *p_grad_out_feat, Itype out_nrows,
+                    const Dtype *p_num_nonzero, Itype nchannel,
+                    const Itype *p_pixel_dist, const Itype *p_stride,
+                    const Itype *p_kernel_size, const Itype *p_dilation,
+                    void **metadata);
+extern "C" long _unpooling_bw(float *p_grad_in_feat, int in_nrows,
+                              float *p_grad_out_feat, int out_nrows,
+                              float *p_num_nonzero, int nchannel,
+                              int *p_pixel_dist, int *p_stride,
+                              int *p_kernel_size, int *p_dilation, int D,
+                              void **metadata) {
+  SWITCH_DIM_TYPES(return, t_unpooling_bw, float, int32_t, p_grad_in_feat,
+                         in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
+                         nchannel, p_pixel_dist, p_stride, p_kernel_size,
+                         p_dilation, metadata);
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_fw_gpu(const Dtype *d_in_feat, Itype in_nrows,
+                        Dtype *d_out_feat, Itype out_nrows,
+                        Dtype *d_num_nonzero, Itype nchannel,
+                        const Itype *p_pixel_dist, const Itype *p_stride,
+                        const Itype *p_kernel_size, const Itype *p_dilation,
+                        Itype region_type, const Itype *p_offset,
+                        Itype n_offset, cudaStream_t stream, void **metadata);
+extern "C" long _unpooling_fw_gpu(float *d_in_feat, int in_nrows,
+                                  float *d_out_feat, int out_nrows,
+                                  float *d_num_nonzero, int nchannel,
+                                  int *p_pixel_dist, int *p_stride,
+                                  int *p_kernel_size, int *p_dilation,
+                                  int region_type, int *p_offset, int n_offset,
+                                  cudaStream_t stream, int D, void **metadata) {
+  SWITCH_DIM_TYPES(return, t_unpooling_fw_gpu, float, int32_t, d_in_feat,
+                         in_nrows, d_out_feat, out_nrows, d_num_nonzero,
+                         nchannel, p_pixel_dist, p_stride, p_kernel_size,
+                         p_dilation, region_type, p_offset, n_offset, stream,
+                         metadata);
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
+                        const Dtype *d_grad_out_feat, Itype out_nrows,
+                        const Dtype *d_num_nonzero, Itype nchannel,
+                        const Itype *p_pixel_dist, const Itype *p_stride,
+                        const Itype *p_kernel_size, const Itype *p_dilation,
+                        cudaStream_t stream, void **metadata);
+extern "C" long _unpooling_bw_gpu(float *d_grad_in_feat, int in_nrows,
+                                  float *d_grad_out_feat, int out_nrows,
+                                  float *d_num_nonzero, int nchannel,
+                                  int *p_pixel_dist, int *p_stride,
+                                  int *p_kernel_size, int *p_dilation,
+                                  cudaStream_t stream, int D, void **metadata) {
+  SWITCH_DIM_TYPES(return, t_unpooling_bw_gpu, float, int32_t, d_grad_in_feat,
+                         in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
+                         nchannel, p_pixel_dist, p_stride, p_kernel_size,
+                         p_dilation, stream, metadata);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>

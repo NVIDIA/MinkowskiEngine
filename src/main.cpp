@@ -822,6 +822,80 @@ long t_nonzero_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
+                    Dtype *p_num_nonzero, Itype nchannel, Itype out_nrows,
+                    const Itype *p_pixel_dist, const Itype *p_stride,
+                    const Itype *p_kernel_size, const Itype *p_dilation,
+                    Itype region_type, const Itype *p_offset, Itype n_offset,
+                    void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(true);
+  INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(true);
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
+
+  SparseNonzeroAvgPoolingForward<Dtype, Itype>(
+      p_in_feat, p_out_feat, p_num_nonzero, nchannel, (*p_in_maps)[key],
+      (*p_out_maps)[key], out_nrows);
+
+  return 1;
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
+                    Dtype *p_grad_out_feat, Itype out_nrows,
+                    const Dtype *p_num_nonzero, Itype nchannel,
+                    const Itype *p_pixel_dist, const Itype *p_stride,
+                    const Itype *p_kernel_size, const Itype *p_dilation,
+                    void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
+  BACKWARD_PROP_CHECK
+
+  SparseNonzeroAvgPoolingBackward<Dtype, Itype>(
+      p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
+      nchannel, (*p_in_maps)[key], (*p_out_maps)[key]);
+
+  return 1;
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_fw_gpu(const Dtype *d_in_feat, Itype in_nrows,
+                        Dtype *d_out_feat, Itype out_nrows,
+                        Dtype *d_num_nonzero, Itype nchannel,
+                        const Itype *p_pixel_dist, const Itype *p_stride,
+                        const Itype *p_kernel_size, const Itype *p_dilation,
+                        Itype region_type, const Itype *p_offset,
+                        Itype n_offset, cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
+  INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(true)
+  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
+
+  SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
+      d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
+      (*p_in_maps)[key], (*p_out_maps)[key], init_metadata.cushandle, stream);
+
+  return 1;
+}
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_unpooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
+                        const Dtype *d_grad_out_feat, Itype out_nrows,
+                        const Dtype *d_num_nonzero, Itype nchannel,
+                        const Itype *p_pixel_dist, const Itype *p_stride,
+                        const Itype *p_kernel_size, const Itype *p_dilation,
+                        cudaStream_t stream, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata)
+  INITIALIZE_DEFAULT_VARS_AND_HASHES(true)
+  BACKWARD_PROP_CHECK
+
+  SparseNonzeroAvgPoolingBackwardGPU<Dtype>(
+      d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
+      nchannel, (*p_in_maps)[key], (*p_out_maps)[key], stream);
+
+  return 1;
+}
+template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                              Itype out_nrows, Itype nchannel,
                              Dtype *p_num_nonzero, const Itype *p_pixel_dist,

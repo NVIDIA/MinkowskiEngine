@@ -158,6 +158,9 @@ See `tests/test_conv_types.py` for more details.
 
 The strided convolution maps i-th index to `int(i / stride) * stride`. Thus, it is encouraged to use dilation == 1 and kernel_size > stide when stride > 1.
 
+## Unpooling
+
+When using unpooling, some outputs might return `nan` when there are no corresponding input features.
 
 # Debugging
 

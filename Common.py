@@ -56,7 +56,13 @@ def convert_region_type(region_type,
                         dilation,
                         region_offset,
                         axis_types,
-                        dimension):
+                        dimension,
+                        center=True):
+    """
+    when center is True, the custom region_offset will be centered at the
+    origin. Currently, for HYPERCUBE, HYPERCROSS with odd kernel sizes cannot
+    use center=False.
+    """
     if region_type == RegionType.HYPERCUBE:
         assert region_offset is None
         assert axis_types is None
@@ -70,7 +76,8 @@ def convert_region_type(region_type,
         elif (kernel_size % 2).sum() == 0:  # Even
             iter_args = []
             for d in range(dimension):
-                off_center = int(math.floor((kernel_size[d] - 1) / 2))
+                off_center = int(math.floor(
+                    (kernel_size[d] - 1) / 2)) if center else 0
                 off = (dilation[d] * (pixel_dist[d] / up_stride[d]) * (
                     torch.arange(kernel_size[d]).int() - off_center)).tolist()
                 iter_args.append(off)
@@ -91,7 +98,9 @@ def convert_region_type(region_type,
 
     elif region_type == RegionType.HYBRID:
         assert region_offset is None
-        region_offset = [[0, ] * dimension]
+        region_offset = [[
+            0,
+        ] * dimension]
         kernel_size_list = kernel_size.tolist()
         # First HYPERCUBE
         for axis_type, curr_kernel_size, d in \
@@ -101,7 +110,8 @@ def convert_region_type(region_type,
                 for offset in region_offset:
                     for curr_offset in range(curr_kernel_size):
                         off_center = int(
-                            math.floor((curr_kernel_size - 1) / 2))
+                            math.floor(
+                                (curr_kernel_size - 1) / 2)) if center else 0
                         offset = offset.copy()  # Do not modify the original
                         # Exclude the coord (0, 0, ..., 0)
                         if curr_offset == off_center:
@@ -117,8 +127,11 @@ def convert_region_type(region_type,
             new_offset = []
             if axis_type == RegionType.HYPERCROSS:
                 for curr_offset in range(curr_kernel_size):
-                    off_center = int(math.floor((curr_kernel_size - 1) / 2))
-                    offset = [0, ] * dimension
+                    off_center = int(math.floor(
+                        (curr_kernel_size - 1) / 2)) if center else 0
+                    offset = [
+                        0,
+                    ] * dimension
                     # Exclude the coord (0, 0, ..., 0)
                     if curr_offset == off_center:
                         continue
