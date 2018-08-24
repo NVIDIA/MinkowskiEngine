@@ -371,6 +371,15 @@ class SparseGlobalAvgPooling(Module):
                  batch_size=0,
                  dimension=None,
                  net_metadata=None):
+        """
+        Reduces sparse coords into points at origin, i.e. reduce each point
+        cloud into a point at the origin, returning batch_size number of points
+        [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
+        of the coords is the batch index.
+
+        batch_size: when given a positive integer, use the batch size to
+                    initialize coords.
+        """
         super(SparseGlobalAvgPooling, self).__init__()
         if dimension is None or net_metadata is None:
             raise ValueError('Dimension and net_metadata must be defined')
