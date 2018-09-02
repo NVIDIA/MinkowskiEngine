@@ -56,10 +56,7 @@ if __name__ == '__main__':
     print(in_feat)
 
     pooling = SparseGlobalAvgPooling(
-        pixel_dist,
-        batch_size=0,
-        dimension=D,
-        net_metadata=net_metadata)
+        pixel_dist, batch_size=0, dimension=D, net_metadata=net_metadata)
 
     # The coords get initialized after the forward pass
     print(SCE.get_coords(coords2, pixel_dist * 0, D, net_metadata.ffi))
@@ -68,7 +65,8 @@ if __name__ == '__main__':
     print(SCE.get_coords(coords2, pixel_dist * 0, D, net_metadata.ffi))
     print(coords2)
 
-    broadcast_addition = SparseGlobalBroadcastAddition(pixel_dist, D, net_metadata)
+    broadcast_addition = SparseGlobalBroadcastAddition(
+        pixel_dist, dimension=D, net_metadata=net_metadata)
 
     in_feat.requires_grad_()
     in_feat_glob.requires_grad_()
@@ -85,12 +83,11 @@ if __name__ == '__main__':
     out_t.backward(grad)
     print(in_feat_glob.grad)
 
-    print(
-        gradcheck(
-            broadcast_addition, (in_feat, in_feat_glob),
-            atol=1e-3,
-            rtol=1e-2,
-            eps=1e-4))
+    print(gradcheck(
+        broadcast_addition, (in_feat, in_feat_glob),
+        atol=1e-3,
+        rtol=1e-2,
+        eps=1e-4))
 
     # GPU
     if use_gpu:
@@ -107,11 +104,10 @@ if __name__ == '__main__':
         print(in_feat_cu.grad)
         print(in_feat_glob_cu.grad)
 
-        print(
-            gradcheck(
-                broadcast_addition, (in_feat_cu, in_feat_glob_cu),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+        print(gradcheck(
+            broadcast_addition, (in_feat_cu, in_feat_glob_cu),
+            atol=1e-3,
+            rtol=1e-2,
+            eps=1e-4))
 
     net_metadata.clear()

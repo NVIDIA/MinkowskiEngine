@@ -52,8 +52,8 @@ template <typename Dtype, typename Itype>
 void SparseBroadcastForwardGPU(
     const Dtype *d_in_feat, int in_nrows, const Dtype *d_in_feat_global,
     int in_nrows_global, Dtype *d_out_feat, int nchannel, int op,
-    const std::vector<std::vector<Itype>> sorted_in_map,
-    const std::vector<std::vector<Itype>> sorted_out_map,
+    const std::vector<std::vector<Itype>> &sorted_in_map,
+    const std::vector<std::vector<Itype>> &sorted_out_map,
     cusparseHandle_t cushandle, cudaStream_t stream) {
 
   // Copy all in_feat to out_feat
@@ -93,8 +93,8 @@ void SparseBroadcastForwardGPU(
 template void SparseBroadcastForwardGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, const float *d_in_feat_global,
     int in_nrows_global, float *d_out_feat, int nchannel, int op,
-    const std::vector<std::vector<int32_t>> orderd_in_map,
-    const std::vector<std::vector<int32_t>> orderd_out_map,
+    const std::vector<std::vector<int32_t>> &sorted_in_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map,
     cusparseHandle_t cuhandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
@@ -102,8 +102,8 @@ void SparseBroadcastBackwardGPU(
     const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nrows,
     const Dtype *d_in_feat_global, Dtype *d_grad_in_feat_global,
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
-    const std::vector<std::vector<Itype>> sorted_in_map,
-    const std::vector<std::vector<Itype>> sorted_out_map,
+    const std::vector<std::vector<Itype>> &sorted_in_map,
+    const std::vector<std::vector<Itype>> &sorted_out_map,
     cusparseHandle_t cushandle, cudaStream_t stream) {
   thrust::device_vector<Itype> d_sorted_in_map, d_sorted_out_map, d_csr_row;
   thrust::device_vector<Dtype> d_csr_val, d_tmp_grad_in_feat,
@@ -249,8 +249,8 @@ template void SparseBroadcastBackwardGPU<float, int32_t>(
     const float *d_in_feat, float *d_grad_in_feat, int in_nrows,
     const float *d_in_feat_global, float *d_grad_in_feat_global,
     int in_nrows_global, const float *d_grad_out_feat, int nchannel, int op,
-    const std::vector<std::vector<int32_t>> sorted_in_map,
-    const std::vector<std::vector<int32_t>> sorted_out_map,
+    const std::vector<std::vector<int32_t>> &sorted_in_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 #endif

@@ -7,8 +7,8 @@ template <typename Dtype, typename Itype>
 void SparseBroadcastForward(const Dtype *p_in_feat, int in_nrows,
                             const Dtype *p_in_feat_global, int in_nrows_global,
                             Dtype *p_out_feat, int nchannel, int op,
-                            const InOutMapPerKernel<Itype> in_map,
-                            const InOutMapPerKernel<Itype> glob_map) {
+                            const InOutMapPerKernel<Itype> &in_map,
+                            const InOutMapPerKernel<Itype> &glob_map) {
   Dtype *p_curr_out_feat;
   const Dtype *p_curr_in_feat_global;
 
@@ -55,8 +55,8 @@ void SparseBroadcastBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                              int in_nrows, const Dtype *p_in_feat_global,
                              Dtype *p_grad_in_feat_global, int in_nrows_global,
                              const Dtype *p_grad_out_feat, int nchannel, int op,
-                             const InOutMapPerKernel<Itype> in_map,
-                             const InOutMapPerKernel<Itype> glob_map) {
+                             const InOutMapPerKernel<Itype> &in_map,
+                             const InOutMapPerKernel<Itype> &glob_map) {
   Dtype *p_curr_out_feat, *p_curr_grad_in_feat, *p_curr_grad_in_feat_global;
   const Dtype *p_curr_in_feat_global, *p_curr_in_feat, *p_curr_grad_out_feat;
 
@@ -95,7 +95,8 @@ void SparseBroadcastBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                      p_curr_grad_in_feat);
       // In feat glob
       for (int j = 0; j < nchannel; j++) {
-        p_curr_grad_in_feat_global[j] += p_curr_grad_out_feat[j] * p_curr_in_feat[j];
+        p_curr_grad_in_feat_global[j] +=
+            p_curr_grad_out_feat[j] * p_curr_in_feat[j];
       }
     }
   }

@@ -149,8 +149,8 @@ void print(const thrust::device_vector<ValInd<float, int32_t>> &v) {
 template <typename Dtype, typename Itype>
 void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 int out_nrows, Itype *d_max_index, int nchannel,
-                                const std::vector<std::vector<Itype>> in_map,
-                                const std::vector<std::vector<Itype>> out_map,
+                                const std::vector<std::vector<Itype>> &in_map,
+                                const std::vector<std::vector<Itype>> &out_map,
                                 cudaStream_t stream) {
   int n_active = 0;
   thrust::device_vector<Itype> d_in_map, d_out_map, d_curr_out_map,
@@ -226,8 +226,8 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
 template void SparseMaxPoolingForwardGPU<float, int32_t>(
     const float *d_in_feat, float *d_out_feat, int out_nrows,
     int32_t *d_max_index, int nchannel,
-    const std::vector<std::vector<int32_t>> in_map,
-    const std::vector<std::vector<int32_t>> out_map, cudaStream_t stream);
+    const std::vector<std::vector<int32_t>> &in_map,
+    const std::vector<std::vector<int32_t>> &out_map, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void SparseMaxPoolingBackwardGPU(Dtype *d_grad_in_feat, int in_nrows,
@@ -251,8 +251,8 @@ template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingForwardGPU(
     const Dtype *d_in_feat, int in_nrows, Dtype *d_out_feat, int out_nrows,
     Dtype *d_num_nonzero, int nchannel,
-    const std::vector<std::vector<Itype>> in_map,
-    const std::vector<std::vector<Itype>> out_map, cusparseHandle_t cushandle,
+    const std::vector<std::vector<Itype>> &in_map,
+    const std::vector<std::vector<Itype>> &out_map, cusparseHandle_t cushandle,
     cudaStream_t stream) {
   int nnz = 0;
   const Dtype alpha = 1;
@@ -289,8 +289,8 @@ void SparseNonzeroAvgPoolingForwardGPU(
 
   d_csr_row.resize(out_nrows + 1); // CSR returns n_row + 1
   d_csr_val.resize(nnz);
-  d_tmp_out_feat.resize(nchannel * out_nrows);
   thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
+  d_tmp_out_feat.resize(nchannel * out_nrows);
 
   CUSPARSE_CHECK(cusparseCreateMatDescr(&descr));
   cusparseSetMatType(descr, CUSPARSE_MATRIX_TYPE_GENERAL);
@@ -349,16 +349,16 @@ void SparseNonzeroAvgPoolingForwardGPU(
 template void SparseNonzeroAvgPoolingForwardGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, float *d_out_feat, int out_nrows,
     float *d_num_nonzero, int nchannel,
-    const std::vector<std::vector<int32_t>> in_map,
-    const std::vector<std::vector<int32_t>> out_map, cusparseHandle_t cushandle,
+    const std::vector<std::vector<int32_t>> &in_map,
+    const std::vector<std::vector<int32_t>> &out_map, cusparseHandle_t cushandle,
     cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingBackwardGPU(
     Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
     int out_nrows, const Dtype *d_num_nonzero, int nchannel,
-    const std::vector<std::vector<Itype>> in_map,
-    const std::vector<std::vector<Itype>> out_map, cudaStream_t stream) {
+    const std::vector<std::vector<Itype>> &in_map,
+    const std::vector<std::vector<Itype>> &out_map, cudaStream_t stream) {
   int curr_n, n_active = 0;
   thrust::device_vector<Itype> d_in_map, d_out_map;
 
@@ -395,7 +395,7 @@ void SparseNonzeroAvgPoolingBackwardGPU(
 template void SparseNonzeroAvgPoolingBackwardGPU<float, int32_t>(
     float *d_grad_in_feat, int in_nrows, const float *d_grad_out_feat,
     int out_nrows, const float *d_num_nonzero, int nchannel,
-    const std::vector<std::vector<int32_t>> in_map,
-    const std::vector<std::vector<int32_t>> out_map, cudaStream_t stream);
+    const std::vector<std::vector<int32_t>> &in_map,
+    const std::vector<std::vector<int32_t>> &out_map, cudaStream_t stream);
 
 #endif

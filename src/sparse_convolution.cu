@@ -3,6 +3,7 @@
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+#include <iostream>
 
 #include "src/math_functions.hpp"
 #include "src/sparse_convolution.cuh"
@@ -45,8 +46,8 @@ template <typename Dtype, typename Itype>
 void SparseConvolutionForwardGPU(
     const Dtype *d_in_feat, int in_nchannel, Dtype *d_out_feat,
     int out_nchannel, const Dtype *d_kernel,
-    const std::vector<std::vector<Itype>> in_map,
-    const std::vector<std::vector<Itype>> out_map, int out_nrows,
+    const std::vector<std::vector<Itype>> &in_map,
+    const std::vector<std::vector<Itype>> &out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream) {
   int kernel_volume, n_active_in_volume, num_kernels;
   thrust::device_vector<Dtype> d_input_buffer, d_output_buffer;
@@ -67,9 +68,9 @@ void SparseConvolutionForwardGPU(
     CUDA_POST_KERNEL_CHECK;
     d_out_map = out_map[k];
     CUDA_POST_KERNEL_CHECK;
-    d_input_buffer.resize(n_active_in_volume * in_nchannel);
+    d_input_buffer.reserve(n_active_in_volume * in_nchannel);
     CUDA_POST_KERNEL_CHECK;
-    d_output_buffer.resize(n_active_in_volume * out_nchannel);
+    d_output_buffer.reserve(n_active_in_volume * out_nchannel);
     CUDA_POST_KERNEL_CHECK;
 
     num_kernels = in_nchannel * n_active_in_volume;
@@ -110,16 +111,16 @@ void SparseConvolutionForwardGPU(
 template void SparseConvolutionForwardGPU<float, int32_t>(
     const float *d_in_feat, int in_nchannel, float *d_out_feat,
     int out_nchannel, const float *d_kernel,
-    const std::vector<std::vector<int32_t>> in_map,
-    const std::vector<std::vector<int32_t>> out_map, int out_nrows,
+    const std::vector<std::vector<int32_t>> &in_map,
+    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void SparseConvolutionBackwardGPU(
     const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nchannel,
     const Dtype *d_grad_out_feat, int out_nchannel, const Dtype *d_kernel,
-    Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> in_map,
-    const std::vector<std::vector<Itype>> out_map, int out_nrows,
+    Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> &in_map,
+    const std::vector<std::vector<Itype>> &out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream) {
   int kernel_volume, n_active_in_volume, num_kernels;
   thrust::device_vector<Dtype> d_input_buffer, d_output_buffer;
@@ -140,9 +141,9 @@ void SparseConvolutionBackwardGPU(
     CUDA_POST_KERNEL_CHECK;
     d_out_map = out_map[k];
     CUDA_POST_KERNEL_CHECK;
-    d_input_buffer.resize(n_active_in_volume * in_nchannel);
+    d_input_buffer.reserve(n_active_in_volume * in_nchannel);
     CUDA_POST_KERNEL_CHECK;
-    d_output_buffer.resize(n_active_in_volume * out_nchannel);
+    d_output_buffer.reserve(n_active_in_volume * out_nchannel);
     CUDA_POST_KERNEL_CHECK;
     num_kernels = out_nchannel * n_active_in_volume;
 
@@ -204,8 +205,8 @@ void SparseConvolutionBackwardGPU(
 template void SparseConvolutionBackwardGPU<float, int32_t>(
     const float *d_in_feat, float *d_grad_in_feat, int in_nchannel,
     const float *d_grad_out_feat, int out_nchannel, const float *d_kernel,
-    float *p_grad_kernel, const std::vector<std::vector<int32_t>> in_map,
-    const std::vector<std::vector<int32_t>> out_map, int out_nrows,
+    float *p_grad_kernel, const std::vector<std::vector<int32_t>> &in_map,
+    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
 
 #endif

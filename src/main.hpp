@@ -4,6 +4,7 @@
 #include <climits>
 #include <limits>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <tuple>
 #include <unordered_map>
@@ -27,9 +28,11 @@ template <typename T> void print_arr(T arr) {
 }
 
 // Key for InOutMapping
-// (pixel distance hash, stride hash, kernel size, dilation, is_transpose)
-using InOutKey = std::array<uint64_t, 5>;
+// (in_coords_key, out_coords_key, stride hash, kernel size, dilation,
+// is_transpose)
+using InOutKey = std::array<uint64_t, 6>;
 
+// uint64_t for unsigned long, must use CXX -m64
 template <typename T> uint64_t hash_vec(T p) {
   uint64_t hash = UINT64_C(14695981039346656037);
   for (uint64_t x : p) {
@@ -140,53 +143,81 @@ public:
                                                                                \
   auto out_pixel_dists =                                                       \
       ComputeOutPixelDist<D>(pixel_dists, strides, IS_TRANSPOSE);              \
-  auto out_pixel_dist_hash = hash_vec<Arr<D, Itype>>(out_pixel_dists);         \
-                                                                               \
-  InOutKey key = {pixel_dist_hash, stride_hash, kernel_size_hash,              \
-                  dilation_hash, IS_TRANSPOSE};
+  auto out_pixel_dist_hash = hash_vec<Arr<D, Itype>>(out_pixel_dists);
 
 // Basic check
 #define ASSERT_EQ(A, B)                                                        \
   if (A != B) {                                                                \
     std::cerr << "Assertion failed: " << #A << ": " << A << " != " << #B       \
-              << ": " << B << std::endl;                                       \
+              << ": " << B << " at " << __FILE__ << ":" << __LINE__            \
+              << std::endl;                                                    \
     return -1;                                                                 \
   }
 
-// Macro for out map and kernel map initialization
-#define INITIALIZE_OUT_COORDS_AND_KERNEL_MAP(IS_TRANSPOSE)                     \
-  if (p_coord2inds->find(pixel_dist_hash) == p_coord2inds->end()) {            \
-    std::cerr << "The coord map doesn't exists for the given pixel dists"      \
-              << std::endl;                                                    \
-    return -1;                                                                 \
-  }                                                                            \
-                                                                               \
-  if (IS_TRANSPOSE) {                                                          \
-    if (p_coord2inds->find(out_pixel_dist_hash) == p_coord2inds->end()) {      \
-      std::cerr << "Out coordinate map not defined for pixel dist.\n";         \
+#define INITIALIZE_IN_COORDS_KEY                                               \
+  /* Prioritize the p_in_coords_key */                                         \
+  if (p_coord2inds->find(pixel_dist_hash) != p_coord2inds->end() &&            \
+      *p_in_coords_key == 0) {                                                 \
+    *p_in_coords_key = pixel_dist_hash;                                        \
+  } else if (p_in_coords_key > 0) {                                            \
+    /* Check the validity of the key */                                        \
+    if (p_coord2inds->find(*p_in_coords_key) == p_coord2inds->end()) {         \
+      std::cerr << "Given in_coords_key is invalid" << std::endl               \
+                << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
+                << ":" << __LINE__ << std::endl;                               \
       return -1;                                                               \
     }                                                                          \
-    if (p_in_maps->find(key) == p_in_maps->end()) {                            \
-      auto in_out_tuple = CreateInOutPerKernelTranspose<D, Itype>(             \
+  } else {                                                                     \
+    std::cerr << "The coord map doesn't exists for the given pixel dists"      \
+              << " and in_coords_key." << std::endl                            \
+              << "pixel_dist_hash: " << pixel_dist_hash << std::endl           \
+              << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__   \
+              << ":" << __LINE__ << std::endl;                                 \
+    return -1;                                                                 \
+  }
+
+#define INITIALIZE_OUT_COORDS_KEY                                              \
+  /* Similarly, the p_out_coords_key takes priority */                         \
+  /* If an out_coords does not exist, create one. */                           \
+  if (p_coord2inds->find(out_pixel_dist_hash) == p_coord2inds->end() &&        \
+      *p_out_coords_key == 0) {                                                \
+    /* For valid convolution, implement a new function */                      \
+    (*p_coord2inds)[out_pixel_dist_hash] =                                     \
+        CreateOutputCoordIndexMap<D, Itype>((*p_coord2inds)[*p_in_coords_key], \
+                                            pixel_dists, strides);             \
+    *p_out_coords_key = out_pixel_dist_hash;                                   \
+  } else if (p_coord2inds->find(out_pixel_dist_hash) != p_coord2inds->end() && \
+             *p_out_coords_key == 0) {                                         \
+    *p_out_coords_key = out_pixel_dist_hash;                                   \
+  } else if (p_out_coords_key > 0) {                                           \
+    if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
+      std::cerr << "Given out_coords_key is invalid" << std::endl              \
+                << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
+                << ":" << __LINE__ << std::endl;                               \
+      return -1;                                                               \
+    }                                                                          \
+  }
+
+#define CREATE_KERNEL_MAP(KERNEL_MAP_KEY, IS_TRANSPOSE)                        \
+  /* Create InOutKernelMap */                                                  \
+  InOutKey KERNEL_MAP_KEY = {                                                  \
+      *p_in_coords_key, *p_out_coords_key, stride_hash,                        \
+      kernel_size_hash, dilation_hash,     IS_TRANSPOSE};                      \
+  if (p_in_maps->find(KERNEL_MAP_KEY) == p_in_maps->end()) {                   \
+    if (IS_TRANSPOSE) {                                                        \
+      auto in_out = CreateInOutPerKernelTranspose<D, Itype>(                   \
           (*p_coord2inds)[pixel_dist_hash],                                    \
           (*p_coord2inds)[out_pixel_dist_hash], out_pixel_dists, kernel_size,  \
           dilations, region_type, p_offset, n_offset);                         \
-      (*p_in_maps)[key] = std::get<0>(in_out_tuple);                           \
-      (*p_out_maps)[key] = std::get<1>(in_out_tuple);                          \
-    }                                                                          \
-  } else {                                                                     \
-    if (p_coord2inds->find(out_pixel_dist_hash) == p_coord2inds->end())        \
-      (*p_coord2inds)[out_pixel_dist_hash] =                                   \
-          CreateOutputCoordIndexMap<D, Itype>(                                 \
-              (*p_coord2inds)[pixel_dist_hash], pixel_dists, strides);         \
-                                                                               \
-    if (p_in_maps->find(key) == p_in_maps->end()) {                            \
-      auto in_out_tuple = CreateInOutPerKernel<D, Itype>(                      \
-          (*p_coord2inds)[pixel_dist_hash],                                    \
-          (*p_coord2inds)[out_pixel_dist_hash], pixel_dists, kernel_size,      \
+      (*p_in_maps)[KERNEL_MAP_KEY] = std::move(std::get<0>(in_out));           \
+      (*p_out_maps)[KERNEL_MAP_KEY] = std::move(std::get<1>(in_out));          \
+    } else {                                                                   \
+      auto in_out = CreateInOutPerKernel<D, Itype>(                            \
+          (*p_coord2inds)[*p_in_coords_key],                                   \
+          (*p_coord2inds)[*p_out_coords_key], pixel_dists, kernel_size,        \
           dilations, region_type, p_offset, n_offset);                         \
-      (*p_in_maps)[key] = std::get<0>(in_out_tuple);                           \
-      (*p_out_maps)[key] = std::get<1>(in_out_tuple);                          \
+      (*p_in_maps)[KERNEL_MAP_KEY] = std::move(std::get<0>(in_out));           \
+      (*p_out_maps)[KERNEL_MAP_KEY] = std::move(std::get<1>(in_out));          \
     }                                                                          \
   }
 
@@ -200,39 +231,70 @@ public:
   auto out_pixel_dist_hash = hash_vec<Arr<D, Itype>>(out_pixel_dists);         \
   auto stride_hash = hash_vec<Arr<D, Itype>>(Arr<D, Itype>());                 \
   auto kernel_size_hash = hash_vec<Arr<D, Itype>>(Arr<D, Itype>());            \
-  auto dilation_hash = hash_vec<Arr<D, Itype>>(Arr<D, Itype>());               \
-  InOutKey key = {pixel_dist_hash, stride_hash, kernel_size_hash,              \
-                  dilation_hash, false};
+  auto dilation_hash = hash_vec<Arr<D, Itype>>(Arr<D, Itype>());
 
-#define INITIALIZE_GLOBAL_OUT_COORDS_AND_KERNEL_MAP                            \
-  if (p_coord2inds->find(pixel_dist_hash) == p_coord2inds->end()) {            \
-    std::cerr << "The coord map doesn't exists for the given pixel dists"      \
-              << std::endl;                                                    \
-    return -1;                                                                 \
-  }                                                                            \
-  if (p_coord2inds->find(out_pixel_dist_hash) == p_coord2inds->end())          \
+#define INITIALIZE_GLOBAL_OUT_COORDS_KEY                                       \
+  /* Similarly, the p_out_coords_key takes priority */                         \
+  /* If an out_coords does not exist, create one. */                           \
+  if (p_coord2inds->find(out_pixel_dist_hash) == p_coord2inds->end() &&        \
+      *p_out_coords_key == 0) {                                                \
     (*p_coord2inds)[out_pixel_dist_hash] =                                     \
         CreateOutputOriginCoordIndexMap<D, Itype>(                             \
-            (*p_coord2inds)[pixel_dist_hash], 0);                              \
-                                                                               \
-  if (p_in_maps->find(key) == p_in_maps->end()) {                              \
-    auto in_out_tuple = CreateGlobalReductionInOutMap<D, Itype>(               \
-        (*p_coord2inds)[pixel_dist_hash],                                      \
-        (*p_coord2inds)[out_pixel_dist_hash]);                                 \
-    (*p_in_maps)[key] = std::get<0>(in_out_tuple);                             \
-    (*p_out_maps)[key] = std::get<1>(in_out_tuple);                            \
+            (*p_coord2inds)[*p_in_coords_key], 0);                             \
+    *p_out_coords_key = out_pixel_dist_hash;                                   \
+  } else if (p_coord2inds->find(out_pixel_dist_hash) != p_coord2inds->end() && \
+             *p_out_coords_key == 0) {                                         \
+    *p_out_coords_key = out_pixel_dist_hash;                                   \
+  } else if (p_out_coords_key > 0) {                                           \
+    if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
+      std::cerr << "Given out_coords_key is invalid" << std::endl              \
+                << "in_coords_key: " << *p_in_coords_key <<                    \
+          " at " << __FILE__ << ":" << __LINE__ << std::endl;                  \
+      return -1;                                                               \
+    }                                                                          \
   }
 
-// Checks for backward prop
-#define BACKWARD_PROP_CHECK                                                    \
-  if (p_coord2inds->find(pixel_dist_hash) == p_coord2inds->end())              \
+#define CREATE_GLOBAL_KERNEL_MAP(KERNEL_MAP_KEY, IS_TRANSPOSE)                 \
+  /* Create InOutKernelMap */                                                  \
+  InOutKey KERNEL_MAP_KEY = {                                                  \
+      *p_in_coords_key, *p_out_coords_key, stride_hash,                        \
+      kernel_size_hash, dilation_hash,     IS_TRANSPOSE};                      \
+  if (p_in_maps->find(KERNEL_MAP_KEY) == p_in_maps->end()) {                   \
+    auto in_out_tuple = CreateGlobalReductionInOutMap<D, Itype>(               \
+        (*p_coord2inds)[*p_in_coords_key],                                     \
+        (*p_coord2inds)[*p_out_coords_key]);                                   \
+    (*p_in_maps)[KERNEL_MAP_KEY] = std::move(std::get<0>(in_out_tuple));       \
+    (*p_out_maps)[KERNEL_MAP_KEY] = std::move(std::get<1>(in_out_tuple));      \
+  }
+
+#define BACKWARD_PROP_WITH_COORDS_KEYS_CHECK(KERNEL_MAP_KEY, IS_TRANSPOSE)     \
+  /* Checks for backward pro */                                                \
+  if (p_coord2inds->find(*p_in_coords_key) == p_coord2inds->end()) {           \
+    std::cerr << "Given in_coords_key not found" << std::endl                  \
+              << "in_coords_key: " << *p_in_coords_key <<                      \
+        " at " << __FILE__ << ":" << __LINE__ << std::endl;                    \
     return -1;                                                                 \
+  }                                                                            \
                                                                                \
-  if (p_coord2inds->find(out_pixel_dist_hash) == p_coord2inds->end())          \
+  if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {          \
+    std::cerr << "Given out_coords_key not found" << std::endl                 \
+              << "out_coords_key: " << *p_out_coords_key <<                    \
+        " at " << __FILE__ << ":" << __LINE__ << std::endl;                    \
     return -1;                                                                 \
+  }                                                                            \
                                                                                \
-  if (p_in_maps->find(key) == p_in_maps->end())                                \
-    return -1;
+  /* Create InOutKernelMap */                                                  \
+  InOutKey KERNEL_MAP_KEY = {                                                  \
+      *p_in_coords_key, *p_out_coords_key, stride_hash,                        \
+      kernel_size_hash, dilation_hash,     IS_TRANSPOSE};                      \
+                                                                               \
+  if (p_in_maps->find(KERNEL_MAP_KEY) == p_in_maps->end()) {                   \
+    std::cerr << "InOutKernelMap not found" << std::endl                       \
+              << "#KERNEL_MAP_KEY hash: "                                      \
+              << hash_vec<InOutKey>(KERNEL_MAP_KEY) << " at " << __FILE__      \
+              << ":" << __LINE__ << std::endl;                                 \
+    return -1;                                                                 \
+  }
 
 template <uint8_t D, typename Itype>
 long t_initialize_coords(const Itype *coords, int nrows,
@@ -274,6 +336,16 @@ long t_conv_fw(const Dtype *p_in_feat, Itype in_nchannel, Dtype *p_out_feat,
                const Itype *p_pixel_dist, const Itype *p_stride,
                const Itype *p_kernel_size, const Itype *p_dilation,
                Itype region_type, const Itype *p_offset, Itype n_offset,
+               uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
+               void **metadata);
+
+template <uint8_t D, typename Dtype, typename Itype>
+long t_conv_bw(const Dtype *p_in_feat, Dtype *p_grad_in_feat, Itype in_nchannel,
+               const Dtype *p_grad_out_feat, Itype out_nchannel,
+               const Dtype *p_kernel, Dtype *p_grad_kernel, Itype out_nrows,
+               const Itype *p_pixel_dist, const Itype *p_stride,
+               const Itype *p_kernel_size, const Itype *p_dilation,
+               uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -282,15 +354,8 @@ long t_conv_tr_fw(const Dtype *p_in_feat, Itype in_nchannel, Dtype *p_out_feat,
                   const Itype *p_pixel_dist, const Itype *p_stride,
                   const Itype *p_kernel_size, const Itype *p_dilation,
                   Itype region_type, const Itype *p_offset, Itype n_offset,
+                  uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                   void **metadata);
-
-template <uint8_t D, typename Dtype, typename Itype>
-long t_conv_bw(const Dtype *p_in_feat, Dtype *p_grad_in_feat, Itype in_nchannel,
-               const Dtype *p_grad_out_feat, Itype out_nchannel,
-               const Dtype *p_kernel, Dtype *p_grad_kernel, Itype out_nrows,
-               const Itype *p_pixel_dist, const Itype *p_stride,
-               const Itype *p_kernel_size, const Itype *p_dilation,
-               void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_conv_tr_bw(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
@@ -299,6 +364,7 @@ long t_conv_tr_bw(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                   Dtype *p_grad_kernel, Itype out_nrows,
                   const Itype *p_pixel_dist, const Itype *p_stride,
                   const Itype *p_kernel_size, const Itype *p_dilation,
+                  uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                   void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -307,6 +373,7 @@ long t_conv_fw_gpu(const Dtype *d_in_feat, Itype in_nchannel, Dtype *d_out_feat,
                    const Itype *p_pixel_dist, const Itype *p_stride,
                    const Itype *p_kernel_size, const Itype *p_dilation,
                    Itype region_type, const Itype *p_offset, Itype n_offset,
+                   uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                    cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -316,6 +383,7 @@ long t_conv_tr_fw_gpu(const Dtype *d_in_feat, Itype in_nchannel,
                       const Itype *p_pixel_dist, const Itype *p_stride,
                       const Itype *p_kernel_size, const Itype *p_dilation,
                       Itype region_type, const Itype *p_offset, Itype n_offset,
+                      uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                       cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -325,6 +393,7 @@ long t_conv_bw_gpu(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
                    Dtype *d_grad_kernel, Itype out_nrows,
                    const Itype *p_pixel_dist, const Itype *p_stride,
                    const Itype *p_kernel_size, const Itype *p_dilation,
+                   uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                    cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -334,6 +403,7 @@ long t_conv_tr_bw_gpu(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
                       Dtype *d_grad_kernel, Itype out_nrows,
                       const Itype *p_pixel_dist, const Itype *p_stride,
                       const Itype *p_kernel_size, const Itype *p_dilation,
+                      uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                       cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -342,6 +412,7 @@ long t_max_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                       const Itype *p_pixel_dist, const Itype *p_stride,
                       const Itype *p_kernel_size, const Itype *p_dilation,
                       Itype region_type, const Itype *p_offset, Itype n_offset,
+                      uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                       void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -350,6 +421,7 @@ long t_max_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                       const Itype *p_mask_index, Itype nchannel,
                       const Itype *p_pixel_dist, const Itype *p_stride,
                       const Itype *p_kernel_size, const Itype *p_dilation,
+                      uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                       void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -358,7 +430,9 @@ long t_max_pooling_fw_gpu(const Dtype *d_in_feat, Dtype *d_out_feat,
                           const Itype *p_pixel_dist, const Itype *p_stride,
                           const Itype *p_kernel_size, const Itype *p_dilation,
                           Itype region_type, const Itype *p_offset,
-                          Itype n_offset, cudaStream_t stream, void **metadata);
+                          Itype n_offset, uint64_t *p_in_coords_key,
+                          uint64_t *p_out_coords_key, cudaStream_t stream,
+                          void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_max_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
@@ -366,6 +440,7 @@ long t_max_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
                           const Itype *d_mask_index, Itype nchannel,
                           const Itype *p_pixel_dist, const Itype *p_stride,
                           const Itype *p_kernel_size, const Itype *p_dilation,
+                          uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                           cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -375,7 +450,8 @@ long t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                               const Itype *p_stride, const Itype *p_kernel_size,
                               const Itype *p_dilation, Itype region_type,
                               const Itype *p_offset, Itype n_offset,
-                              void **metadata);
+                              uint64_t *p_in_coords_key,
+                              uint64_t *p_out_coords_key, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
@@ -383,7 +459,9 @@ long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                               const Dtype *p_num_nonzero, Itype nchannel,
                               const Itype *p_pixel_dist, const Itype *p_stride,
                               const Itype *p_kernel_size,
-                              const Itype *p_dilation, void **metadata);
+                              const Itype *p_dilation,
+                              uint64_t *p_in_coords_key,
+                              uint64_t *p_out_coords_key, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_fw_gpu(
@@ -391,17 +469,17 @@ long t_nonzero_avg_pooling_fw_gpu(
     Dtype *d_num_nonzero, Itype nchannel, const Itype *p_pixel_dist,
     const Itype *p_stride, const Itype *p_kernel_size, const Itype *p_dilation,
     Itype region_type, const Itype *p_offset, Itype n_offset,
-    cudaStream_t stream, void **metadata);
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
+    void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
-long t_nonzero_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
-                                  const Dtype *d_grad_out_feat, Itype out_nrows,
-                                  const Dtype *d_num_nonzero, Itype nchannel,
-                                  const Itype *p_pixel_dist,
-                                  const Itype *p_stride,
-                                  const Itype *p_kernel_size,
-                                  const Itype *p_dilation, cudaStream_t stream,
-                                  void **metadata);
+long t_nonzero_avg_pooling_bw_gpu(
+    Dtype *d_grad_in_feat, Itype in_nrows, const Dtype *d_grad_out_feat,
+    Itype out_nrows, const Dtype *d_num_nonzero, Itype nchannel,
+    const Itype *p_pixel_dist, const Itype *p_stride,
+    const Itype *p_kernel_size, const Itype *p_dilation,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
+    void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_unpooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
@@ -409,6 +487,7 @@ long t_unpooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                     const Itype *p_pixel_dist, const Itype *p_stride,
                     const Itype *p_kernel_size, const Itype *p_dilation,
                     Itype region_type, const Itype *p_offset, Itype n_offset,
+                    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                     void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -417,6 +496,7 @@ long t_unpooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                     const Dtype *p_num_nonzero, Itype nchannel,
                     const Itype *p_pixel_dist, const Itype *p_stride,
                     const Itype *p_kernel_size, const Itype *p_dilation,
+                    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                     void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -426,7 +506,9 @@ long t_unpooling_fw_gpu(const Dtype *d_in_feat, Itype in_nrows,
                         const Itype *p_pixel_dist, const Itype *p_stride,
                         const Itype *p_kernel_size, const Itype *p_dilation,
                         Itype region_type, const Itype *p_offset,
-                        Itype n_offset, cudaStream_t stream, void **metadata);
+                        Itype n_offset, uint64_t *p_in_coords_key,
+                        uint64_t *p_out_coords_key, cudaStream_t stream,
+                        void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_unpooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
@@ -434,60 +516,73 @@ long t_unpooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
                         const Dtype *d_num_nonzero, Itype nchannel,
                         const Itype *p_pixel_dist, const Itype *p_stride,
                         const Itype *p_kernel_size, const Itype *p_dilation,
+                        uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                         cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                              Itype out_nrows, Itype nchannel,
                              Dtype *p_num_nonzero, const Itype *p_pixel_dist,
-                             void **metadata);
+                             uint64_t *p_in_coords_key,
+                             uint64_t *p_out_coords_key, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                              Dtype *p_grad_out_feat, Itype out_nrows,
                              Itype nchannel, const Dtype *p_num_nonzero,
-                             const Itype *p_pixel_dist, void **metadata);
+                             const Itype *p_pixel_dist,
+                             uint64_t *p_in_coords_key,
+                             uint64_t *p_out_coords_key, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Itype in_nrows,
                                  Dtype *d_out_feat, Itype out_nrows,
                                  Itype nchannel, Dtype *d_num_nonzero,
-                                 const Itype *p_pixel_dist, cudaStream_t stream,
-                                 void **metadata);
+                                 const Itype *p_pixel_dist,
+                                 uint64_t *p_in_coords_key,
+                                 uint64_t *p_out_coords_key,
+                                 cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
                                  const Dtype *d_grad_out_feat, Itype out_nrows,
                                  Itype nchannel, const Dtype *d_num_nonzero,
-                                 const Itype *p_pixel_dist, cudaStream_t stream,
-                                 void **metadata);
+                                 const Itype *p_pixel_dist,
+                                 uint64_t *p_in_coords_key,
+                                 uint64_t *p_out_coords_key,
+                                 cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_broadcast_fw(const Dtype *p_in_feat, int in_nrows,
                            const Dtype *p_in_feat_global, int in_nrows_global,
                            Dtype *p_out_feat, int nchannel,
-                           const Itype *p_pixel_dist, int op, void **metadata);
+                           const Itype *p_pixel_dist, int op,
+                           uint64_t *p_in_coords_key,
+                           uint64_t *p_out_coords_key, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_broadcast_bw(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                            int in_nrows, const Dtype *p_in_feat_global,
                            Dtype *p_grad_in_feat_global, int in_nrows_global,
                            const Dtype *p_grad_out_feat, int nchannel,
-                           const Itype *p_pixel_dist, int op, void **metadata);
+                           const Itype *p_pixel_dist, int op,
+                           uint64_t *p_in_coords_key,
+                           uint64_t *p_out_coords_key, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_broadcast_fw_gpu(const Dtype *d_in_feat, int in_nrows,
                                const Dtype *d_in_feat_global,
                                int in_nrows_global, Dtype *d_out_feat,
                                int nchannel, const Itype *p_pixel_dist, int op,
-                               cudaStream_t stream, void **metadata);
+                               uint64_t *p_in_coords_key,
+                               uint64_t *p_out_coords_key, cudaStream_t stream,
+                               void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
-long t_global_broadcast_bw_gpu(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
-                               int in_nrows, const Dtype *d_in_feat_global,
-                               Dtype *d_grad_in_feat_global,
-                               int in_nrows_global,
-                               const Dtype *d_grad_out_feat, int nchannel,
-                               const Itype *p_pixel_dist, int op,
-                               cudaStream_t stream, void **metadata);
+long t_global_broadcast_bw_gpu(
+    const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nrows,
+    const Dtype *d_in_feat_global, Dtype *d_grad_in_feat_global,
+    int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel,
+    const Itype *p_pixel_dist, int op, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, cudaStream_t stream, void **metadata);
 #endif

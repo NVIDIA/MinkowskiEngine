@@ -30,16 +30,8 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
                          THFloatTensor *th_kernel, THIntTensor *th_pixel_dist,
                          THIntTensor *th_stride, THIntTensor *th_kernel_size,
                          THIntTensor *th_dilation, long region_type,
-                         THIntTensor *th_neighbor, long D, void **m);
-
-long convolution_transpose_forward(THFloatTensor *th_in_feat,
-                                   THFloatTensor *th_out_feat,
-                                   THFloatTensor *th_kernel,
-                                   THIntTensor *th_pixel_dist,
-                                   THIntTensor *th_stride,
-                                   THIntTensor *th_kernel_size,
-                                   THIntTensor *th_dilation, long region_type,
-                                   THIntTensor *th_neighbor, long D, void **m);
+                         THIntTensor *th_neighbor, uint64_t *p_in_coords_key,
+                         uint64_t *p_out_coords_key, long D, void **m);
 
 long convolution_backward(THFloatTensor *th_in_feat,
                           THFloatTensor *th_grad_in_feat,
@@ -48,47 +40,62 @@ long convolution_backward(THFloatTensor *th_in_feat,
                           THFloatTensor *th_grad_kernel,
                           THIntTensor *th_pixel_dist, THIntTensor *th_stride,
                           THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+                          uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                           long D, void **m);
+
+long convolution_transpose_forward(
+    THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
+    THFloatTensor *th_kernel, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long region_type, THIntTensor *th_neighbor,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
 long convolution_transpose_backward(
     THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
     THFloatTensor *th_grad_out_feat, THFloatTensor *th_kernel,
     THFloatTensor *th_grad_kernel, THIntTensor *th_pixel_dist,
     THIntTensor *th_stride, THIntTensor *th_kernel_size,
-    THIntTensor *th_dilation, long D, void **m);
+    THIntTensor *th_dilation, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, long D, void **m);
 
 long convolution_forward_gpu(THCudaTensor *th_in_feat,
                              THCudaTensor *th_out_feat, THCudaTensor *th_kernel,
                              THIntTensor *th_pixel_dist, THIntTensor *th_stride,
                              THIntTensor *th_kernel_size,
                              THIntTensor *th_dilation, long region_type,
-                             THIntTensor *th_neighbor, long D, void **m);
+                             THIntTensor *th_neighbor,
+                             uint64_t *p_in_coords_key,
+                             uint64_t *p_out_coords_key, long D, void **m);
 
 long convolution_transpose_forward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
     THCudaTensor *th_kernel, THIntTensor *th_pixel_dist, THIntTensor *th_stride,
     THIntTensor *th_kernel_size, THIntTensor *th_dilation, long region_type,
-    THIntTensor *th_neighbor, long D, void **m);
+    THIntTensor *th_neighbor, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, long D, void **m);
 
 long convolution_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_kernel,
     THCudaTensor *th_grad_kernel, THIntTensor *th_pixel_dist,
     THIntTensor *th_stride, THIntTensor *th_kernel_size,
-    THIntTensor *th_dilation, long D, void **m);
+    THIntTensor *th_dilation, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, long D, void **m);
 
 long convolution_transpose_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_kernel,
     THCudaTensor *th_grad_kernel, THIntTensor *th_pixel_dist,
     THIntTensor *th_stride, THIntTensor *th_kernel_size,
-    THIntTensor *th_dilation, long D, void **m);
+    THIntTensor *th_dilation, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, long D, void **m);
 
 long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
                          THIntTensor *th_mask_index, THIntTensor *th_pixel_dist,
                          THIntTensor *th_stride, THIntTensor *th_kernel_size,
                          THIntTensor *th_dilation, long region_type,
-                         THIntTensor *th_offset, long D, void **m);
+                         THIntTensor *th_offset, uint64_t *p_in_coords_key,
+                         uint64_t *p_out_coords_key, long D, void **m);
 
 long max_pooling_backward(THFloatTensor *th_in_feat,
                           THFloatTensor *th_grad_in_feat,
@@ -96,6 +103,7 @@ long max_pooling_backward(THFloatTensor *th_in_feat,
                           THIntTensor *th_mask_index,
                           THIntTensor *th_pixel_dist, THIntTensor *th_stride,
                           THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+                          uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
                           long D, void **m);
 
 long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
@@ -104,125 +112,128 @@ long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
                              THIntTensor *th_pixel_dist, THIntTensor *th_stride,
                              THIntTensor *th_kernel_size,
                              THIntTensor *th_dilation, long region_type,
-                             THIntTensor *th_offset, long D, void **m);
+                             THIntTensor *th_offset, uint64_t *p_in_coords_key,
+                             uint64_t *p_out_coords_key, long D, void **m);
 
 long max_pooling_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
     THCudaTensor *th_grad_out_feat, THCudaIntTensor *th_mask_index,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
-    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m);
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
 // avg pooling
-long nonzero_avg_pooling_forward(THFloatTensor *th_in_feat,
-                                 THFloatTensor *th_out_feat,
-                                 THFloatTensor *th_num_nonzero,
-                                 THIntTensor *th_pixel_dist,
-                                 THIntTensor *th_stride,
-                                 THIntTensor *th_kernel_size,
-                                 THIntTensor *th_dilation, long region_type,
-                                 THIntTensor *th_offset, long D, void **m);
+long nonzero_avg_pooling_forward(
+    THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
+    THFloatTensor *th_num_nonzero, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long region_type, THIntTensor *th_offset,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
 long nonzero_avg_pooling_backward(
     THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
     THFloatTensor *th_grad_out_feat, THFloatTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
-    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m);
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
-long nonzero_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
-                                     THCudaTensor *th_out_feat,
-                                     THCudaTensor *th_num_nonzero,
-                                     THIntTensor *th_pixel_dist,
-                                     THIntTensor *th_stride,
-                                     THIntTensor *th_kernel_size,
-                                     THIntTensor *th_dilation, long region_type,
-                                     THIntTensor *th_offset, long D, void **m);
+long nonzero_avg_pooling_forward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
+    THCudaTensor *th_num_nonzero, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long region_type, THIntTensor *th_offset,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
 long nonzero_avg_pooling_backward_gpu(
     THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
-    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m);
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
 // unpooling
-long unpooling_forward(THFloatTensor *th_in_feat,
-                                 THFloatTensor *th_out_feat,
-                                 THFloatTensor *th_num_nonzero,
-                                 THIntTensor *th_pixel_dist,
-                                 THIntTensor *th_stride,
-                                 THIntTensor *th_kernel_size,
-                                 THIntTensor *th_dilation, long region_type,
-                                 THIntTensor *th_offset, long D, void **m);
+long unpooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
+                       THFloatTensor *th_num_nonzero,
+                       THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                       THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+                       long region_type, THIntTensor *th_offset,
+                       uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
+                       long D, void **m);
 
-long unpooling_backward(
-    THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
-    THFloatTensor *th_grad_out_feat, THFloatTensor *th_num_nonzero,
-    THIntTensor *th_pixel_dist, THIntTensor *th_stride,
-    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m);
+long unpooling_backward(THFloatTensor *th_in_feat,
+                        THFloatTensor *th_grad_in_feat,
+                        THFloatTensor *th_grad_out_feat,
+                        THFloatTensor *th_num_nonzero,
+                        THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                        THIntTensor *th_kernel_size, THIntTensor *th_dilation,
+                        uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
+                        long D, void **m);
 
-long unpooling_forward_gpu(THCudaTensor *th_in_feat,
-                                     THCudaTensor *th_out_feat,
-                                     THCudaTensor *th_num_nonzero,
-                                     THIntTensor *th_pixel_dist,
-                                     THIntTensor *th_stride,
-                                     THIntTensor *th_kernel_size,
-                                     THIntTensor *th_dilation, long region_type,
-                                     THIntTensor *th_offset, long D, void **m);
+long unpooling_forward_gpu(THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
+                           THCudaTensor *th_num_nonzero,
+                           THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                           THIntTensor *th_kernel_size,
+                           THIntTensor *th_dilation, long region_type,
+                           THIntTensor *th_offset, uint64_t *p_in_coords_key,
+                           uint64_t *p_out_coords_key, long D, void **m);
 
-long unpooling_backward_gpu(
-    THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
-    THCudaTensor *th_grad_out_feat, THCudaTensor *th_num_nonzero,
-    THIntTensor *th_pixel_dist, THIntTensor *th_stride,
-    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long D, void **m);
+long unpooling_backward_gpu(THCudaTensor *th_in_feat,
+                            THCudaTensor *th_grad_in_feat,
+                            THCudaTensor *th_grad_out_feat,
+                            THCudaTensor *th_num_nonzero,
+                            THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+                            THIntTensor *th_kernel_size,
+                            THIntTensor *th_dilation, uint64_t *p_in_coords_key,
+                            uint64_t *p_out_coords_key, long D, void **m);
 
 long global_avg_pooling_forward(THFloatTensor *th_in_feat,
                                 THFloatTensor *th_out_feat,
                                 THFloatTensor *th_num_nonzero,
                                 THIntTensor *th_pixel_dist, long batch_size,
-                                long D, void **m);
+                                uint64_t *p_in_coords_key,
+                                uint64_t *p_out_coords_key, long D, void **m);
 
 long global_avg_pooling_backward(THFloatTensor *th_in_feat,
                                  THFloatTensor *th_grad_in_feat,
                                  THFloatTensor *th_grad_out_feat,
                                  THFloatTensor *th_num_nonzero,
-                                 THIntTensor *th_pixel_dist, long D, void **m);
+                                 THIntTensor *th_pixel_dist,
+                                 uint64_t *p_in_coords_key,
+                                 uint64_t *p_out_coords_key, long D, void **m);
 
-long global_avg_pooling_forward_gpu(THCudaTensor *th_in_feat,
-                                    THCudaTensor *th_out_feat,
-                                    THCudaTensor *th_num_nonzero,
-                                    THIntTensor *th_pixel_dist, long batch_size,
-                                    long D, void **m);
+long global_avg_pooling_forward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
+    THCudaTensor *th_num_nonzero, THIntTensor *th_pixel_dist, long batch_size,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
-long global_avg_pooling_backward_gpu(THCudaTensor *th_in_feat,
-                                     THCudaTensor *th_grad_in_feat,
-                                     THCudaTensor *th_grad_out_feat,
-                                     THCudaTensor *th_num_nonzero,
-                                     THIntTensor *th_pixel_dist, long D,
-                                     void **m);
+long global_avg_pooling_backward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
+    THCudaTensor *th_grad_out_feat, THCudaTensor *th_num_nonzero,
+    THIntTensor *th_pixel_dist, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, long D, void **m);
 
 long global_broadcast_forward(THFloatTensor *th_in_feat,
                               THFloatTensor *th_in_feat_global,
                               THFloatTensor *th_out_feat,
-                              THIntTensor *th_pixel_dist, long op, long D,
-                              void **m);
+                              THIntTensor *th_pixel_dist, long op,
+                              uint64_t *p_in_coords_key,
+                              uint64_t *p_out_coords_key, long D, void **m);
 
-long global_broadcast_backward(THFloatTensor *th_in_feat,
-                               THFloatTensor *th_grad_in_feat,
-                               THFloatTensor *th_in_feat_global,
-                               THFloatTensor *th_grad_in_feat_global,
-                               THFloatTensor *th_grad_out_feat,
-                               THIntTensor *th_pixel_dist, long op, long D,
-                               void **m);
+long global_broadcast_backward(
+    THFloatTensor *th_in_feat, THFloatTensor *th_grad_in_feat,
+    THFloatTensor *th_in_feat_global, THFloatTensor *th_grad_in_feat_global,
+    THFloatTensor *th_grad_out_feat, THIntTensor *th_pixel_dist, long op,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
 long global_broadcast_forward_gpu(THCudaTensor *th_in_feat,
                                   THCudaTensor *th_in_feat_global,
                                   THCudaTensor *th_out_feat,
-                                  THIntTensor *th_pixel_dist, long op, long D,
-                                  void **m);
+                                  THIntTensor *th_pixel_dist, long op,
+                                  uint64_t *p_in_coords_key,
+                                  uint64_t *p_out_coords_key, long D, void **m);
 
-long global_broadcast_backward_gpu(THCudaTensor *th_in_feat,
-                                   THCudaTensor *th_grad_in_feat,
-                                   THCudaTensor *th_in_feat_global,
-                                   THCudaTensor *th_grad_in_feat_global,
-                                   THCudaTensor *th_grad_out_feat,
-                                   THIntTensor *th_pixel_dist, long op, long D,
-                                   void **m);
+long global_broadcast_backward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_grad_in_feat,
+    THCudaTensor *th_in_feat_global, THCudaTensor *th_grad_in_feat_global,
+    THCudaTensor *th_grad_out_feat, THIntTensor *th_pixel_dist, long op,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);

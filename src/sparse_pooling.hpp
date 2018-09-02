@@ -7,8 +7,8 @@
 template <typename Dtype, typename Itype>
 void SparseMaxPoolingForward(const Dtype *p_in_feat, Dtype *p_out_feat,
                              Itype *p_mask_index, int nchannel,
-                             const InOutMapPerKernel<Itype> in_map,
-                             const InOutMapPerKernel<Itype> out_map,
+                             const InOutMapPerKernel<Itype> &in_map,
+                             const InOutMapPerKernel<Itype> &out_map,
                              int out_nrows) {
   int kernel_volume, n_active_in_volume, row, j, k;
   const Dtype *p_curr_in;
@@ -52,8 +52,8 @@ template <typename Dtype, typename Itype>
 void SparseMaxPoolingBackward(Dtype *p_grad_in_feat, int in_nrows,
                               const Dtype *p_grad_out_feat, int out_nrows,
                               const Itype *p_mask_index, int nchannel,
-                              const InOutMapPerKernel<Itype> in_map,
-                              const InOutMapPerKernel<Itype> out_map) {
+                              const InOutMapPerKernel<Itype> &in_map,
+                              const InOutMapPerKernel<Itype> &out_map) {
   const Dtype *p_curr_grad_out;
   const Itype *p_curr_mask_index;
 
@@ -76,8 +76,8 @@ void SparseMaxPoolingBackward(Dtype *p_grad_in_feat, int in_nrows,
 template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingForward(const Dtype *p_in_feat, Dtype *p_out_feat,
                                     Dtype *p_num_nonzero, int nchannel,
-                                    const InOutMapPerKernel<Itype> in_map,
-                                    const InOutMapPerKernel<Itype> out_map,
+                                    const InOutMapPerKernel<Itype> &in_map,
+                                    const InOutMapPerKernel<Itype> &out_map,
                                     int out_nrows) {
   int kernel_volume, n_active_in_volume, row, j, k;
   const Dtype *p_curr_in;
@@ -124,8 +124,8 @@ void SparseNonzeroAvgPoolingBackward(Dtype *p_grad_in_feat, int in_nrows,
                                      const Dtype *p_grad_out_feat,
                                      int out_nrows,
                                      const Dtype *p_num_nonzero, int nchannel,
-                                     const InOutMapPerKernel<Itype> in_map,
-                                     const InOutMapPerKernel<Itype> out_map) {
+                                     const InOutMapPerKernel<Itype> &in_map,
+                                     const InOutMapPerKernel<Itype> &out_map) {
   int kernel_volume, n_active_in_volume, row, j, k;
   Dtype *p_curr_grad_in, curr_num_nonzero;
   const Dtype *p_curr_grad_out;
