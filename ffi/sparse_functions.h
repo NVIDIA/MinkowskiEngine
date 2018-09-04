@@ -13,6 +13,11 @@ extern long _initialize_out_coords(uint64_t *p_in_coords_key,
                                    int *p_pixel_dist, int *p_stride,
                                    bool is_transpose, int D, void **metadata);
 
+extern long _initialize_valid_conv_out_coords(
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, int *p_pixel_dist,
+    int *p_stride, int *p_kernel_size, int *p_dilation, bool is_transpose,
+    int D, void **metadata);
+
 extern long _initialize_origin_coords(uint64_t *p_in_coords_key,
                                       int *p_pixel_dist, int batch_size, int D,
                                       void **metadata);

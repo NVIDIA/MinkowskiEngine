@@ -40,6 +40,17 @@
     return SUCCESS;                                                            \
   }
 
+#define INIT_VALID_CONV_OUT_COORDS(SUCCESS, P_IN_COORDS_KEY, P_OUT_COORDS_KEY, \
+                                   P_PIXEL_DIST, P_STRIDE, P_KERNEL_SIZE,      \
+                                   P_DILATION, IS_TRANSPOSE)                   \
+  SUCCESS = _initialize_valid_conv_out_coords(                                 \
+      P_IN_COORDS_KEY, P_OUT_COORDS_KEY, P_PIXEL_DIST, P_STRIDE,               \
+      P_KERNEL_SIZE, P_DILATION, IS_TRANSPOSE, D, m);                          \
+  if (SUCCESS < 0) {                                                           \
+    printf("DSCE ERROR: Failed to initialize output coordinates\n");           \
+    return SUCCESS;                                                            \
+  }
+
 #define INIT_GLOBAL_COORDS(SUCCESS, P_COORDS_KEY, P_PIXEL_DIST, BATCH_SIZE)    \
   SUCCESS =                                                                    \
       _initialize_origin_coords(P_COORDS_KEY, P_PIXEL_DIST, BATCH_SIZE, D, m); \
@@ -686,6 +697,118 @@ long convolution_transpose_backward_gpu(
       d_in_feat, d_grad_in_feat, in_nchannel, d_grad_out_feat, out_nchannel,
       d_kernel, d_grad_kernel, out_nrows, p_pixel_dist, p_stride, p_kernel_size,
       p_dilation, p_in_coords_key, p_out_coords_key, stream, D, m);
+}
+
+// Convolution that expands the current in coords
+long valid_convolution_forward(
+    THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
+    THFloatTensor *th_kernel, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long region_type, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, long D, void **m) {
+  // This will not take coords as the first initialization saved it in metadata
+  // th_in_feat is 2D nrows, in_channel
+  // th_kernel is 3D filter_volume, in_channel, out_channel
+  INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
+  INIT_D_DIM_ARRY(th_stride, p_stride)
+  INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
+  INIT_D_DIM_ARRY(th_dilation, p_dilation)
+
+  long success;
+  int in_nchannel, _in_nchannel, out_nchannel, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
+  bool is_transpose = false;
+
+  // Check if the input pixel dist map exists. Output map will be generate
+  // automatically inside the convolution kernel.
+  INIT_VALID_CONV_OUT_COORDS(success, p_in_coords_key, p_out_coords_key,
+                             p_pixel_dist, p_stride, p_kernel_size, p_dilation,
+                             is_transpose)
+
+  // Get the number of rows required to initialize the th_out_tensor
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
+
+  // expose all variables and resize out tensor
+  _in_nchannel = THFloatTensor_size(th_kernel, 1);
+  out_nchannel = THFloatTensor_size(th_kernel, 2);
+  in_nchannel = THFloatTensor_size(th_in_feat, 1);
+
+  // Checks
+  if (_in_nchannel != in_nchannel) {
+    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    return -1;
+  }
+
+  // Initialize output
+  THFloatTensor_resize2d(th_out_feat, out_nrows, out_nchannel);
+  THFloatTensor_zero(th_out_feat);
+
+  // Pointers
+  float *p_in_feat = THFloatTensor_data(th_in_feat);
+  float *p_out_feat = THFloatTensor_data(th_out_feat);
+  float *p_kernel = THFloatTensor_data(th_kernel);
+
+  // put exposed variable into _conv_foward;
+  return _conv_fw(p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel,
+                  out_nrows, p_pixel_dist, p_stride, p_kernel_size, p_dilation,
+                  region_type, p_offset, n_offset, p_in_coords_key,
+                  p_out_coords_key, D, m);
+}
+
+long valid_convolution_forward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
+    THCudaTensor *th_kernel, THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long region_type,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m) {
+  INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
+  INIT_D_DIM_ARRY(th_stride, p_stride)
+  INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
+  INIT_D_DIM_ARRY(th_dilation, p_dilation)
+
+  cudaStream_t stream = THCState_getCurrentStream(state);
+  long success;
+  int in_nchannel, _in_nchannel, out_nchannel, out_nrows = -1;
+  int n_offset = 0, *p_offset = NULL;
+  bool is_transpose = false;
+  cudaError_t error;
+
+  // Check if the input pixel dist map exists. Output map will be generate
+  // automatically inside the convolution kernel.
+  INIT_VALID_CONV_OUT_COORDS(success, p_in_coords_key, p_out_coords_key,
+                             p_pixel_dist, p_stride, p_kernel_size, p_dilation,
+                             is_transpose)
+
+  // Get the number of rows required to initialize the th_out_tensor
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
+
+  // expose all variables and resize out tensor
+  _in_nchannel = THCudaTensor_size(state, th_kernel, 1);
+  out_nchannel = THCudaTensor_size(state, th_kernel, 2);
+  in_nchannel = THCudaTensor_size(state, th_in_feat, 1);
+
+  // Checks
+  if (_in_nchannel != in_nchannel) {
+    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    return -1;
+  }
+
+  // Initialize output
+  THCudaTensor_resize2d(state, th_out_feat, out_nrows, out_nchannel);
+  CUDA_CHECK
+  THCudaTensor_zero(state, th_out_feat);
+
+  // Pointers
+  float *d_in_feat = THCudaTensor_data(state, th_in_feat);
+  float *d_out_feat = THCudaTensor_data(state, th_out_feat);
+  float *d_kernel = THCudaTensor_data(state, th_kernel);
+
+  // put exposed variable into _conv_foward;
+  return _conv_fw_gpu(
+      d_in_feat, in_nchannel, d_out_feat, out_nchannel, d_kernel, out_nrows,
+      p_pixel_dist, p_stride, p_kernel_size, p_dilation, region_type, p_offset,
+      n_offset, p_in_coords_key, p_out_coords_key, stream, D, m);
 }
 
 long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,

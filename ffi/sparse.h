@@ -94,12 +94,25 @@ long convolution_transpose_backward_gpu(
     THIntTensor *th_dilation, uint64_t *p_in_coords_key,
     uint64_t *p_out_coords_key, long D, void **m);
 
+long valid_convolution_forward(
+    THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
+    THFloatTensor *th_kernel, THIntTensor *th_pixel_dist,
+    THIntTensor *th_stride, THIntTensor *th_kernel_size,
+    THIntTensor *th_dilation, long region_type, uint64_t *p_in_coords_key,
+    uint64_t *p_out_coords_key, long D, void **m);
+
 long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
                          THIntTensor *th_mask_index, THIntTensor *th_pixel_dist,
                          THIntTensor *th_stride, THIntTensor *th_kernel_size,
                          THIntTensor *th_dilation, long region_type,
                          THIntTensor *th_offset, uint64_t *p_in_coords_key,
                          uint64_t *p_out_coords_key, long D, void **m);
+
+long valid_convolution_forward_gpu(
+    THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
+    THCudaTensor *th_kernel, THIntTensor *th_pixel_dist, THIntTensor *th_stride,
+    THIntTensor *th_kernel_size, THIntTensor *th_dilation, long region_type,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m);
 
 long max_pooling_backward(THFloatTensor *th_in_feat,
                           THFloatTensor *th_grad_in_feat,

@@ -214,8 +214,8 @@ CoordIndexMap<D, Itype> CreateValidOutputCoordIndexMap(
     auto kernel_region = KernelRegion<D, Itype>(coord, pixel_dists, kernel_size,
                                                 dilations, 0, NULL, 0);
     for (auto point : kernel_region) {
-      if (out_coord_map.map.find(coord) == out_coord_map.map.end())
-        out_coord_map.map[coord] = n_out++;
+      if (out_coord_map.map.find(point) == out_coord_map.map.end())
+        out_coord_map.map[point] = n_out++;
     }
   }
 
@@ -456,6 +456,34 @@ long t_initialize_out_coords(uint64_t *p_in_coords_key,
 }
 
 /*
+ * Create out_coords for valid convolution.
+ * This will expand the in_coords.
+ */
+template <uint8_t D, typename Itype>
+long t_initialize_valid_conv_out_coords(uint64_t *p_in_coords_key,
+                                        uint64_t *p_out_coords_key,
+                                        const Itype *p_pixel_dist,
+                                        const Itype *p_stride,
+                                        const Itype *p_kernel_size,
+                                        const Itype *p_dilation,
+                                        bool is_transpose, void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata);
+  auto p_coord2inds = &init_metadata.coord2inds;
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto kernel_size = ToArray<D, Itype>(p_kernel_size);
+  auto dilations = ToArray<D, Itype>(p_dilation);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
+  auto strides = ToArray<D, Itype>(p_stride);
+  auto out_pixel_dists =
+      ComputeOutPixelDist<D>(pixel_dists, strides, is_transpose);
+  auto out_pixel_dist_hash = hash_vec<Arr<D, Itype>>(out_pixel_dists);
+  INITIALIZE_IN_COORDS_KEY;
+  INITIALIZE_VALID_OUT_COORDS_KEY;
+
+  return 1;
+}
+
+/*
  * Initialize origin map, if batch size is positive, use it for initialization.
  */
 template <uint8_t D, typename Itype>
@@ -466,8 +494,8 @@ long t_initialize_origin_coords(const uint64_t *p_in_coords_key,
   auto p_coord2inds = &init_metadata.coord2inds;
   uint64_t coords_key;
   try {
-    coords_key =
-        GetValidCoordsKey<D, Itype>(p_in_coords_key, p_pixel_dist, p_coord2inds);
+    coords_key = GetValidCoordsKey<D, Itype>(p_in_coords_key, p_pixel_dist,
+                                             p_coord2inds);
   } catch (std::invalid_argument &e) {
     std::cerr << "Invalid argument: " << e.what() << std::endl;
     return -1;
@@ -489,7 +517,6 @@ long t_get_num_coords(const uint64_t *p_coords_key, const Itype *p_pixel_dist,
   uint64_t coords_key;
 
   auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
-  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
   try {
     coords_key =
         GetValidCoordsKey<D, Itype>(p_coords_key, p_pixel_dist, p_coord2inds);
@@ -506,18 +533,25 @@ template <uint8_t D, typename Itype>
 long t_get_coords(Itype *p_coords, const uint64_t *p_coords_key,
                   const Itype *p_pixel_dist, void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata);
-  auto coord2inds = &init_metadata.coord2inds;
+  auto p_coord2inds = &init_metadata.coord2inds;
   int nrows = 0, ncols = D + 1;
+  uint64_t coords_key;
 
   auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
-  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
-  if (coord2inds->find(pixel_dist_hash) == coord2inds->end()) {
+  try {
+    coords_key =
+        GetValidCoordsKey<D, Itype>(p_coords_key, p_pixel_dist, p_coord2inds);
+  } catch (std::invalid_argument &e) {
+    std::cerr << "Invalid argument: " << e.what() << std::endl;
     return -1;
   }
-  auto coord2ind = &(*coord2inds)[pixel_dist_hash].map;
+
+  auto coord2ind = &(*p_coord2inds)[coords_key].map;
   nrows = coord2ind->size();
-  if (nrows < 1)
+  if (nrows < 1) {
+    std::cerr << "No coordinates found on the given coords_key or pixel_dist";
     return -1;
+  }
 
   // TODO Replace memcpy with copy
   for (auto pair : *coord2ind)
@@ -754,36 +788,6 @@ long t_conv_tr_bw_gpu(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
       d_in_feat, d_grad_in_feat, in_nchannel, d_grad_out_feat, out_nchannel,
       d_kernel, d_grad_kernel, (*p_in_maps)[kernel_map_key],
       (*p_out_maps)[kernel_map_key], out_nrows, init_metadata.cuhandle, stream);
-
-  return 1;
-}
-
-/*
- * Force creation of new out_coords
- */
-template <uint8_t D, typename Dtype, typename Itype>
-long t_valid_conv_fw(const Dtype *p_in_feat, Itype in_nchannel,
-                     Dtype *p_out_feat, Itype out_nchannel,
-                     const Dtype *p_kernel, Itype out_nrows,
-                     const Itype *p_pixel_dist, const Itype *p_stride,
-                     const Itype *p_kernel_size, const Itype *p_dilation,
-                     Itype region_type, const Itype *p_offset, Itype n_offset,
-                     uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
-                     void **metadata) {
-  // Does not support custom kernel
-  ASSERT_EQ(n_offset, 0);
-
-  INITIALIZE_AND_REFERENCE(metadata, init_metadata);
-  INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
-  INITIALIZE_IN_COORDS_KEY;
-  INITIALIZE_VALID_OUT_COORDS_KEY;
-  CREATE_KERNEL_MAP(kernel_map_key, false);
-
-  ASSERT_EQ((*p_coord2inds)[*p_out_coords_key].size(), out_nrows);
-
-  SparseConvolutionForward<Dtype, Itype>(
-      p_in_feat, in_nchannel, p_out_feat, out_nchannel, p_kernel,
-      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], out_nrows);
 
   return 1;
 }

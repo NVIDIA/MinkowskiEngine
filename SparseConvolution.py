@@ -300,3 +300,90 @@ class SparseConvolutionTranspose(SparseConvolutionBase):
             self.pixel_dist, self.stride, self.kernel_size, self.dilation,
             self.region_type, self.region_offset, self.in_coords_key,
             self.out_coords_key, self.dimension, self.net_metadata)
+
+
+class SparseValidConvolutionFunction(Function):
+    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
+                 in_coords_key, out_coords_key, dimension, net_metadata):
+        super(SparseValidConvolutionFunction, self).__init__()
+        assert isinstance(region_type, RegionType)
+
+        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
+
+        self.pixel_dist = pixel_dist
+        self.stride = stride
+        self.kernel_size = kernel_size
+        self.dilation = dilation
+        self.region_type = int(region_type)
+        self.dimension = dimension
+        self.net_metadata = net_metadata
+        self.in_coords_key = in_coords_key
+        self.out_coords_key = out_coords_key
+
+    def forward(ctx, input_features, kernel):
+        assert input_features.shape[1] == kernel.shape[1]
+
+        ctx.in_feat = input_features
+        ctx.kernel = kernel
+        out_feat = input_features.new()
+        fw_fn = SCE.valid_convolution_forward_gpu \
+            if input_features.is_cuda else SCE.valid_convolution_forward
+        fw_fn(ctx.in_feat, out_feat, kernel, ctx.pixel_dist, ctx.stride,
+              ctx.kernel_size, ctx.dilation, ctx.region_type,
+              ctx.in_coords_key, ctx.out_coords_key, ctx.dimension,
+              ctx.net_metadata.ffi)
+        return out_feat
+
+    def backward(ctx, grad_out_feat):
+        grad_in_feat = grad_out_feat.new()
+        grad_kernel = grad_out_feat.new()
+        bw_fn = SCE.convolution_backward_gpu \
+            if grad_out_feat.is_cuda else SCE.convolution_backward
+        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
+              grad_kernel, ctx.pixel_dist, ctx.stride, ctx.kernel_size,
+              ctx.dilation, ctx.in_coords_key, ctx.out_coords_key,
+              ctx.dimension, ctx.net_metadata.ffi)
+        return grad_in_feat, grad_kernel
+
+
+class SparseValidConvolution(SparseConvolutionBase):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 pixel_dist=1,
+                 kernel_size=-1,
+                 stride=1,
+                 dilation=1,
+                 has_bias=True,
+                 region_type=RegionType.HYPERCUBE,
+                 in_coords_key=None,
+                 out_coords_key=None,
+                 dimension=None,
+                 net_metadata=None):
+        """
+        kernel_size: all elements must be odd
+        """
+        super(SparseValidConvolution, self).__init__(
+            in_channels,
+            out_channels,
+            pixel_dist,
+            kernel_size,
+            stride,
+            dilation,
+            has_bias,
+            region_type,
+            region_offset=None,
+            axis_types=None,
+            is_transpose=False,
+            in_coords_key=in_coords_key,
+            out_coords_key=out_coords_key,
+            dimension=dimension,
+            net_metadata=net_metadata)
+        self.reset_parameters()
+        self.conv = SparseValidConvolutionFunction(
+            self.pixel_dist, self.stride, self.kernel_size, self.dilation,
+            self.region_type, self.in_coords_key, self.out_coords_key,
+            self.dimension, self.net_metadata)

@@ -327,6 +327,15 @@ long t_initialize_out_coords(uint64_t *p_in_coords_key,
                              bool is_transpose, void **metadata);
 
 template <uint8_t D, typename Itype>
+long t_initialize_valid_conv_out_coords(uint64_t *p_in_coords_key,
+                                        uint64_t *p_out_coords_key,
+                                        const Itype *p_pixel_dist,
+                                        const Itype *p_stride,
+                                        const Itype *p_kernel_size,
+                                        const Itype *p_dilation,
+                                        bool is_transpose, void **metadata);
+
+template <uint8_t D, typename Itype>
 long t_initialize_origin_coords(const uint64_t *p_in_coords_key,
                                 const Itype *p_pixel_dist, int batch_size,
                                 void **metadata);

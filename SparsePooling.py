@@ -43,15 +43,15 @@ class SparseMaxPoolingFunction(Function):
 
     def forward(ctx, input_features):
         ctx.in_feat = input_features
-        ctx.out_feat = input_features.new()
+        out_feat = input_features.new()
         ctx.mask_index = input_features.new().int()
 
         fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
-        fw_fn(ctx.in_feat, ctx.out_feat, ctx.mask_index, ctx.pixel_dist,
+        fw_fn(ctx.in_feat, out_feat, ctx.mask_index, ctx.pixel_dist,
               ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
               ctx.region_offset, ctx.in_coords_key, ctx.out_coords_key,
               ctx.dimension, ctx.net_metadata.ffi)
-        return ctx.out_feat
+        return out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
@@ -162,15 +162,15 @@ class SparseNonzeroAvgPoolingFunction(Function):
 
     def forward(ctx, input_features):
         ctx.in_feat = input_features
-        ctx.out_feat = input_features.new()
+        out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
 
         fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
-        fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,
+        fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero, ctx.pixel_dist,
               ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
               ctx.region_offset, ctx.in_coords_key, ctx.out_coords_key,
               ctx.dimension, ctx.net_metadata.ffi)
-        return ctx.out_feat
+        return out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
