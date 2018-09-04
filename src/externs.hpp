@@ -100,22 +100,29 @@ extern "C" long _initialize_coords_with_duplicates(int *coords, int nrows,
 }
 
 template <uint8_t D, typename Itype>
-long t_initialize_out_coords(const Itype *p_pixel_dist, const Itype *p_stride,
+long t_initialize_out_coords(uint64_t *p_in_coords_key,
+                             uint64_t *p_out_coords_key,
+                             const Itype *p_pixel_dist, const Itype *p_stride,
                              bool is_transpose, void **metadata);
-extern "C" long _initialize_out_coords(int *p_pixel_dist, int *p_stride,
+extern "C" long _initialize_out_coords(uint64_t *p_in_coords_key,
+                                       uint64_t *p_out_coords_key,
+                                       int *p_pixel_dist, int *p_stride,
                                        bool is_transpose, int D,
                                        void **metadata) {
-  SWITCH_DIM_ITYPE(return, t_initialize_out_coords, int32_t, p_pixel_dist,
-                         p_stride, is_transpose, metadata)
+  SWITCH_DIM_ITYPE(return, t_initialize_out_coords, int32_t, p_in_coords_key,
+                         p_out_coords_key, p_pixel_dist, p_stride, is_transpose,
+                         metadata)
 }
 
 template <uint8_t D, typename Itype>
-long t_initialize_origin_coords(const Itype *p_pixel_dist, int batch_size,
+long t_initialize_origin_coords(const uint64_t *p_in_coords_key,
+                                const Itype *p_pixel_dist, int batch_size,
                                 void **metadata);
-extern "C" long _initialize_origin_coords(int *p_pixel_dist, int batch_size,
+extern "C" long _initialize_origin_coords(uint64_t *p_in_coords_key,
+                                          int *p_pixel_dist, int batch_size,
                                           int D, void **metadata) {
-  SWITCH_DIM_ITYPE(return, t_initialize_origin_coords, int32_t, p_pixel_dist,
-                         batch_size, metadata)
+  SWITCH_DIM_ITYPE(return, t_initialize_origin_coords, int32_t, p_in_coords_key,
+                         p_pixel_dist, batch_size, metadata)
 }
 
 template <uint8_t D, typename Itype>
@@ -130,19 +137,21 @@ extern "C" long _get_index_map(int *coords, int nrows, int *p_index_map,
 }
 
 template <uint8_t D, typename Itype>
-long t_get_num_coords(const Itype *p_pixel_dist, int *nrows, void **metadata);
-extern "C" long _get_num_coords(int *p_pixel_dist, int *p_nrows, int D,
-                                void **metadata) {
-  SWITCH_DIM_ITYPE(return, t_get_num_coords, int32_t, p_pixel_dist, p_nrows,
-                         metadata)
+long t_get_num_coords(const uint64_t *p_coords_key, const Itype *p_pixel_dist,
+                      int *nrows, void **metadata);
+extern "C" long _get_num_coords(uint64_t *p_coords_key, int *p_pixel_dist,
+                                int *p_nrows, int D, void **metadata) {
+  SWITCH_DIM_ITYPE(return, t_get_num_coords, int32_t, p_coords_key,
+                         p_pixel_dist, p_nrows, metadata)
 }
 
 template <uint8_t D, typename Itype>
-long t_get_coords(Itype *coords, const Itype *p_pixel_dist, void **metadata);
-extern "C" long _get_coords(int *coords, int *p_pixel_dist, int D,
-                            void **metadata) {
-  SWITCH_DIM_ITYPE(return, t_get_coords, int32_t, coords, p_pixel_dist,
-                         metadata)
+long t_get_coords(Itype *coords, const uint64_t *p_coords_key,
+                  const Itype *p_pixel_dist, void **metadata);
+extern "C" long _get_coords(int *coords, uint64_t *p_coords_key,
+                            int *p_pixel_dist, int D, void **metadata) {
+  SWITCH_DIM_ITYPE(return, t_get_coords, int32_t, coords, p_coords_key,
+                         p_pixel_dist, metadata)
 }
 
 template <uint8_t D, typename Itype>
@@ -707,8 +716,8 @@ _global_broadcast_bw(float *p_in_feat, float *p_grad_in_feat, int in_nrows,
   SWITCH_DIM_TYPES(return, t_global_broadcast_bw, float, int32_t, p_in_feat,
                          p_grad_in_feat, in_nrows, p_in_feat_global,
                          p_grad_in_feat_global, in_nrows_global,
-                         p_grad_out_feat, nchannel, p_pixel_dist,
-                         op, p_in_coords_key, p_out_coords_key, metadata);
+                         p_grad_out_feat, nchannel, p_pixel_dist, op,
+                         p_in_coords_key, p_out_coords_key, metadata);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>

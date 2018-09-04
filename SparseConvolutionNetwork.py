@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 import SparseConvolutionEngineFFI as SCE
-from Common import NetMetadata, convert_to_int_tensor
+from Common import NetMetadata, convert_to_int_tensor, ffi
 
 
 class SparseConvolutionNetwork(nn.Module, ABC):
@@ -41,15 +41,26 @@ class SparseConvolutionNetwork(nn.Module, ABC):
     def initialize_coords_with_duplicates(self, coords):
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         pixel_dist = convert_to_int_tensor(1, self.D)
-        SCE.initialize_coords_with_duplicates(
-            coords.contiguous(), pixel_dist, self.D, self.net_metadata.ffi)
+        SCE.initialize_coords_with_duplicates(coords.contiguous(), pixel_dist,
+                                              self.D, self.net_metadata.ffi)
         self.n_rows = self.get_nrows(1)
 
-    def get_coords(self, pixel_dist):
-        pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
+    def get_coords(self, key_or_pixel_dist):
+        """
+        if the input is ffi pointer, use it as the coords_key,
+        otherwise, use it as the pixel_dist.
+        """
+        coords_key, pixel_dist = 0, 0
         coords = torch.IntTensor()
-        success = SCE.get_coords(coords, pixel_dist, self.D,
-                                 self.net_metadata.ffi)
+        if isinstance(key_or_pixel_dist, ffi.CData):
+            coords_key = key_or_pixel_dist
+            success = SCE.get_coords_key(coords, coords_key, self.D,
+                                         self.net_metadata.ffi)
+        else:
+            coords_key = ffi.new('uint64_t*', 0)
+            pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
+            success = SCE.get_coords(coords, pixel_dist, self.D,
+                                     self.net_metadata.ffi)
         if success < 0:
             raise ValueError('No coord found at : {}'.format(pixel_dist))
         return coords
@@ -87,9 +98,21 @@ class SparseConvolutionNetwork(nn.Module, ABC):
             raise ValueError('get_index_map failed')
         return index_map
 
-    def get_nrows(self, pixel_dist):
+    def get_nrows(self, key_or_pixel_dist):
+        """
+        if the input is ffi pointer, use it as the coords_key,
+        otherwise, use it as the pixel_dist.
+        """
+        coords_key, pixel_dist = 0, 0
+        if isinstance(key_or_pixel_dist, ffi.CData):
+            coords_key = key_or_pixel_dist
+        else:
+            coords_key = ffi.new('uint64_t*', 0)
+            pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
+
         pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
-        nrows = SCE.get_nrows(pixel_dist, self.D, self.net_metadata.ffi)
+        nrows = SCE.get_nrows(coords_key, pixel_dist, self.D,
+                              self.net_metadata.ffi)
         if nrows < 0:
             raise ValueError('No coord found at : {}'.format(pixel_dist))
         return nrows

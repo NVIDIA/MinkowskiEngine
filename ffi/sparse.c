@@ -30,26 +30,29 @@
     return -1;                                                                 \
   }
 
-#define INIT_OUT_COORDS(SUCCESS, P_PIXEL_DIST, P_STRIDE, IS_TRANSPOSE)         \
+#define INIT_OUT_COORDS(SUCCESS, P_IN_COORDS_KEY, P_OUT_COORDS_KEY,            \
+                        P_PIXEL_DIST, P_STRIDE, IS_TRANSPOSE)                  \
   SUCCESS =                                                                    \
-      _initialize_out_coords(P_PIXEL_DIST, P_STRIDE, IS_TRANSPOSE, D, m);      \
+      _initialize_out_coords(P_IN_COORDS_KEY, P_OUT_COORDS_KEY, P_PIXEL_DIST,  \
+                             P_STRIDE, IS_TRANSPOSE, D, m);                    \
   if (SUCCESS < 0) {                                                           \
     printf("DSCE ERROR: Failed to initialize output coordinates\n");           \
     return SUCCESS;                                                            \
   }
 
-#define INIT_GLOBAL_COORDS(SUCCESS, P_PIXEL_DIST, BATCH_SIZE)                  \
-  SUCCESS = _initialize_origin_coords(P_PIXEL_DIST, BATCH_SIZE, D, m);         \
+#define INIT_GLOBAL_COORDS(SUCCESS, P_COORDS_KEY, P_PIXEL_DIST, BATCH_SIZE)    \
+  SUCCESS =                                                                    \
+      _initialize_origin_coords(P_COORDS_KEY, P_PIXEL_DIST, BATCH_SIZE, D, m); \
   if (SUCCESS < 0) {                                                           \
     printf("DSCE ERROR: Failed to initialize output origin coordinates\n");    \
     return SUCCESS;                                                            \
   }
 
-#define GET_OUT_NUM_COORDS(SUCCESS, P_PIXEL_DIST, P_STRIDE, IS_TRANSPOSE,      \
-                           NROWS)                                              \
+#define GET_OUT_NUM_COORDS(SUCCESS, P_COORDS_KEY, P_PIXEL_DIST, P_STRIDE,      \
+                           IS_TRANSPOSE, NROWS)                                \
   int *p_out_pixel_dist =                                                      \
       compute_out_pixel_dist(P_PIXEL_DIST, P_STRIDE, D, IS_TRANSPOSE);         \
-  SUCCESS = _get_num_coords(p_out_pixel_dist, &NROWS, D, m);                   \
+  SUCCESS = _get_num_coords(P_COORDS_KEY, p_out_pixel_dist, &NROWS, D, m);     \
   if (SUCCESS < 0) {                                                           \
     printf("DSCE ERROR: Failed to get output coordinates\n");                  \
     return SUCCESS;                                                            \
@@ -58,7 +61,8 @@
 #define GET_GLOBAL_OUT_NUM_COORDS(SUCCESS, NROWS)                              \
   int *p_out_pixel_dist = malloc(sizeof(int) * D);                             \
   memset(p_out_pixel_dist, 0, sizeof(int) * D);                                \
-  SUCCESS = _get_num_coords(p_out_pixel_dist, &NROWS, D, m);                   \
+  uint64_t tmp = 0;                                                            \
+  SUCCESS = _get_num_coords(&tmp, p_out_pixel_dist, &NROWS, D, m);             \
   if (SUCCESS < 0) {                                                           \
     printf("DSCE ERROR: Failed to get output coordinates\n");                  \
     return SUCCESS;                                                            \
@@ -108,7 +112,8 @@ long get_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist, long D,
 
   long success;
   int nrows = -1;
-  success = _get_num_coords(p_pixel_dist, &nrows, D, m);
+  uint64_t tmp = 0;
+  success = _get_num_coords(&tmp, p_pixel_dist, &nrows, D, m);
   if (success < 0) {
     return success;
   }
@@ -116,7 +121,26 @@ long get_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist, long D,
   THIntTensor_resize2d(th_coords, nrows, D + 1);
   THIntTensor_zero(th_coords);
   int *p_coords = THIntTensor_data(th_coords);
-  success = _get_coords(p_coords, p_pixel_dist, D, m);
+  success = _get_coords(p_coords, &tmp, p_pixel_dist, D, m);
+  return success;
+}
+
+long get_coords_key(THIntTensor *th_coords, uint64_t *p_coords_key, long D,
+                    void **m) {
+  long success;
+  int nrows = -1;
+  int *p_pixel_dist = malloc(sizeof(int) * D);
+  memset(p_pixel_dist, 0, sizeof(int) * D);
+  success = _get_num_coords(p_coords_key, p_pixel_dist, &nrows, D, m);
+  if (success < 0) {
+    return success;
+  }
+
+  // Initialize torch and pass the pointer to fill out data
+  THIntTensor_resize2d(th_coords, nrows, D + 1);
+  THIntTensor_zero(th_coords);
+  int *p_coords = THIntTensor_data(th_coords);
+  success = _get_coords(p_coords, p_coords_key, p_pixel_dist, D, m);
   return success;
 }
 
@@ -128,7 +152,8 @@ long get_permutation(THIntTensor *th_permutation,
 
   long success;
   int nrows = -1;
-  success = _get_num_coords(p_pixel_dist_dst, &nrows, D, m);
+  uint64_t tmp = 0;
+  success = _get_num_coords(&tmp, p_pixel_dist_dst, &nrows, D, m);
   if (success < 0) {
     return success;
   }
@@ -147,7 +172,8 @@ long get_index_map(THIntTensor *th_coords, THIntTensor *th_index_map,
 
   long success;
   int index_map_nrows = -1;
-  success = _get_num_coords(p_pixel_dist, &index_map_nrows, D, m);
+  uint64_t tmp = 0;
+  success = _get_num_coords(&tmp, p_pixel_dist, &index_map_nrows, D, m);
   if (success < 0) {
     return success;
   }
@@ -164,12 +190,13 @@ long get_index_map(THIntTensor *th_coords, THIntTensor *th_index_map,
   return success;
 }
 
-long get_nrows(THIntTensor *th_pixel_dist, long D, void **m) {
+long get_nrows(uint64_t *p_coords_key, THIntTensor *th_pixel_dist, long D,
+               void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   long success;
   int nrows = -1;
 
-  success = _get_num_coords(p_pixel_dist, &nrows, D, m);
+  success = _get_num_coords(p_coords_key, p_pixel_dist, &nrows, D, m);
   if (success < 0) {
     return success;
   } else {
@@ -200,10 +227,12 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THFloatTensor_size(th_kernel, 1);
@@ -268,10 +297,12 @@ long convolution_transpose_forward(
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THFloatTensor_size(th_kernel, 1);
@@ -329,7 +360,8 @@ long convolution_backward(THFloatTensor *th_in_feat,
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THFloatTensor_size(th_kernel, 1);
@@ -380,7 +412,8 @@ long convolution_transpose_backward(
   bool is_transpose = true;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THFloatTensor_size(th_kernel, 1);
@@ -435,10 +468,12 @@ long convolution_forward_gpu(THCudaTensor *th_in_feat,
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THCudaTensor_size(state, th_kernel, 1);
@@ -498,10 +533,12 @@ long convolution_transpose_forward_gpu(
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THCudaTensor_size(state, th_kernel, 1);
@@ -559,7 +596,8 @@ long convolution_backward_gpu(
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THCudaTensor_size(state, th_kernel, 1);
@@ -613,7 +651,8 @@ long convolution_transpose_backward_gpu(
   bool is_transpose = true;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   _in_nchannel = THCudaTensor_size(state, th_kernel, 1);
@@ -666,10 +705,12 @@ long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   nchannel = THFloatTensor_size(th_in_feat, 1);
@@ -717,7 +758,8 @@ long max_pooling_backward(THFloatTensor *th_in_feat,
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THFloatTensor_size(th_in_feat, 0);
@@ -760,10 +802,12 @@ long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   nchannel = THCudaTensor_size(state, th_in_feat, 1);
@@ -811,7 +855,8 @@ long max_pooling_backward_gpu(
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THCudaTensor_size(state, th_in_feat, 0);
@@ -851,10 +896,12 @@ long nonzero_avg_pooling_forward(
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   nchannel = THFloatTensor_size(th_in_feat, 1);
@@ -900,7 +947,8 @@ long nonzero_avg_pooling_backward(
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THFloatTensor_size(th_in_feat, 0);
@@ -941,10 +989,12 @@ long nonzero_avg_pooling_forward_gpu(
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THCudaTensor_size(state, th_in_feat, 0);
@@ -993,7 +1043,8 @@ long nonzero_avg_pooling_backward_gpu(
   bool is_transpose = false;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THCudaTensor_size(state, th_in_feat, 0);
@@ -1035,10 +1086,12 @@ long unpooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   nchannel = THFloatTensor_size(th_in_feat, 1);
@@ -1086,7 +1139,8 @@ long unpooling_backward(THFloatTensor *th_in_feat,
   bool is_transpose = true;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THFloatTensor_size(th_in_feat, 0);
@@ -1128,10 +1182,12 @@ long unpooling_forward_gpu(THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
 
   // Check if the input pixel dist map exists. Output map will be generate
   // automatically inside the convolution kernel.
-  INIT_OUT_COORDS(success, p_pixel_dist, p_stride, is_transpose)
+  INIT_OUT_COORDS(success, p_in_coords_key, p_out_coords_key, p_pixel_dist,
+                  p_stride, is_transpose)
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THCudaTensor_size(state, th_in_feat, 0);
@@ -1182,7 +1238,8 @@ long unpooling_backward_gpu(THCudaTensor *th_in_feat,
   bool is_transpose = true;
 
   // Get the number of rows required to initialize the th_out_tensor
-  GET_OUT_NUM_COORDS(success, p_pixel_dist, p_stride, is_transpose, out_nrows)
+  GET_OUT_NUM_COORDS(success, p_out_coords_key, p_pixel_dist, p_stride,
+                     is_transpose, out_nrows)
 
   // expose all variables and resize out tensor
   in_nrows = THCudaTensor_size(state, th_in_feat, 0);
@@ -1214,7 +1271,7 @@ long global_avg_pooling_forward(THFloatTensor *th_in_feat,
   long success;
   int nchannel, out_nrows = -1;
 
-  INIT_GLOBAL_COORDS(success, p_pixel_dist, batch_size)
+  INIT_GLOBAL_COORDS(success, p_in_coords_key, p_pixel_dist, batch_size)
   GET_GLOBAL_OUT_NUM_COORDS(success, out_nrows)
 
   // expose all variables and resize out tensor
@@ -1277,7 +1334,7 @@ long global_avg_pooling_forward_gpu(
   long success;
   int nchannel, in_nrows, out_nrows = -1;
 
-  INIT_GLOBAL_COORDS(success, p_pixel_dist, batch_size)
+  INIT_GLOBAL_COORDS(success, p_in_coords_key, p_pixel_dist, batch_size)
   GET_GLOBAL_OUT_NUM_COORDS(success, out_nrows)
 
   // expose all variables and resize out tensor

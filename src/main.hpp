@@ -159,7 +159,7 @@ public:
   if (p_coord2inds->find(pixel_dist_hash) != p_coord2inds->end() &&            \
       *p_in_coords_key == 0) {                                                 \
     *p_in_coords_key = pixel_dist_hash;                                        \
-  } else if (p_in_coords_key > 0) {                                            \
+  } else if (*p_in_coords_key > 0) {                                           \
     /* Check the validity of the key */                                        \
     if (p_coord2inds->find(*p_in_coords_key) == p_coord2inds->end()) {         \
       std::cerr << "Given in_coords_key is invalid" << std::endl               \
@@ -189,7 +189,27 @@ public:
   } else if (p_coord2inds->find(out_pixel_dist_hash) != p_coord2inds->end() && \
              *p_out_coords_key == 0) {                                         \
     *p_out_coords_key = out_pixel_dist_hash;                                   \
-  } else if (p_out_coords_key > 0) {                                           \
+  } else if (*p_out_coords_key > 0) {                                          \
+    if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
+      std::cerr << "Given out_coords_key is invalid" << std::endl              \
+                << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
+                << ":" << __LINE__ << std::endl;                               \
+      return -1;                                                               \
+    }                                                                          \
+  }
+
+#define INITIALIZE_VALID_OUT_COORDS_KEY                                        \
+  /* If an out_coords does not exist, create one. */                           \
+  if (*p_out_coords_key == 0) {                                                \
+    *p_out_coords_key = random();                                              \
+    while (p_coord2inds->find(*p_out_coords_key) != p_coord2inds->end()) {     \
+      *p_out_coords_key = random();                                            \
+    }                                                                          \
+    (*p_coord2inds)[*p_out_coords_key] =                                       \
+        CreateValidOutputCoordIndexMap<D, Itype>(                              \
+            (*p_coord2inds)[*p_in_coords_key], pixel_dists, kernel_size,       \
+            dilations);                                                        \
+  } else if (*p_out_coords_key > 0) {                                          \
     if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
       std::cerr << "Given out_coords_key is invalid" << std::endl              \
                 << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
@@ -245,11 +265,11 @@ public:
   } else if (p_coord2inds->find(out_pixel_dist_hash) != p_coord2inds->end() && \
              *p_out_coords_key == 0) {                                         \
     *p_out_coords_key = out_pixel_dist_hash;                                   \
-  } else if (p_out_coords_key > 0) {                                           \
+  } else if (*p_out_coords_key > 0) {                                          \
     if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
       std::cerr << "Given out_coords_key is invalid" << std::endl              \
-                << "in_coords_key: " << *p_in_coords_key <<                    \
-          " at " << __FILE__ << ":" << __LINE__ << std::endl;                  \
+                << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
+                << ":" << __LINE__ << std::endl;                               \
       return -1;                                                               \
     }                                                                          \
   }
@@ -271,15 +291,15 @@ public:
   /* Checks for backward pro */                                                \
   if (p_coord2inds->find(*p_in_coords_key) == p_coord2inds->end()) {           \
     std::cerr << "Given in_coords_key not found" << std::endl                  \
-              << "in_coords_key: " << *p_in_coords_key <<                      \
-        " at " << __FILE__ << ":" << __LINE__ << std::endl;                    \
+              << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__   \
+              << ":" << __LINE__ << std::endl;                                 \
     return -1;                                                                 \
   }                                                                            \
                                                                                \
   if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {          \
     std::cerr << "Given out_coords_key not found" << std::endl                 \
-              << "out_coords_key: " << *p_out_coords_key <<                    \
-        " at " << __FILE__ << ":" << __LINE__ << std::endl;                    \
+              << "out_coords_key: " << *p_out_coords_key << " at " << __FILE__ \
+              << ":" << __LINE__ << std::endl;                                 \
     return -1;                                                                 \
   }                                                                            \
                                                                                \
@@ -301,11 +321,14 @@ long t_initialize_coords(const Itype *coords, int nrows,
                          const Itype *p_pixel_dist, void **metadata);
 
 template <uint8_t D, typename Itype>
-long t_initialize_out_coords(const Itype *p_pixel_dist, const Itype *p_stride,
+long t_initialize_out_coords(uint64_t *p_in_coords_key,
+                             uint64_t *p_out_coords_key,
+                             const Itype *p_pixel_dist, const Itype *p_stride,
                              bool is_transpose, void **metadata);
 
 template <uint8_t D, typename Itype>
-long t_initialize_origin_coords(const Itype *p_pixel_dist, int batch_size,
+long t_initialize_origin_coords(const uint64_t *p_in_coords_key,
+                                const Itype *p_pixel_dist, int batch_size,
                                 void **metadata);
 
 template <uint8_t D, typename Itype>
@@ -319,10 +342,12 @@ long t_get_index_map(const Itype *coords, int nrows, Itype *p_index_map,
                      void **metadata);
 
 template <uint8_t D, typename Itype>
-long t_get_num_coords(const Itype *p_pixel_dist, int *nrows, void **metadata);
+long t_get_num_coords(const uint64_t *p_coords_key, const Itype *p_pixel_dist,
+                      int *nrows, void **metadata);
 
 template <uint8_t D, typename Itype>
-long t_get_coords(Itype *coords, const Itype *p_pixel_dist, void **metadata);
+long t_get_coords(Itype *coords, const uint64_t *p_coords_key,
+                  const Itype *p_pixel_dist, void **metadata);
 
 template <uint8_t D, typename Itype> void t_clear(void **metadata);
 

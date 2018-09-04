@@ -8,20 +8,24 @@ extern long _initialize_coords_with_duplicates(int *coords, int nrows,
                                                int *p_pixel_dist, int D,
                                                void **metadata);
 
-extern long _initialize_out_coords(int *p_pixel_dist, int *p_stride,
+extern long _initialize_out_coords(uint64_t *p_in_coords_key,
+                                   uint64_t *p_out_coords_key,
+                                   int *p_pixel_dist, int *p_stride,
                                    bool is_transpose, int D, void **metadata);
 
-extern long _initialize_origin_coords(int *p_pixel_dist, int batch_size, int D,
+extern long _initialize_origin_coords(uint64_t *p_in_coords_key,
+                                      int *p_pixel_dist, int batch_size, int D,
                                       void **metadata);
 
 extern long _get_index_map(int *coords, int nrows, int *p_index_map,
                            int index_map_nrows, int *p_pixel_dist, int D,
                            void **metadata);
 
-extern long _get_coords(int *coords, int *p_pixel_dist, int D, void **metadata);
+extern long _get_coords(int *coords, uint64_t *p_coords_key, int *p_pixel_dist,
+                        int D, void **metadata);
 
-extern long _get_num_coords(int *p_pixel_dist, int *p_nrows, int D,
-                            void **metadata);
+extern long _get_num_coords(uint64_t *p_coords_key, int *p_pixel_dist,
+                            int *p_nrows, int D, void **metadata);
 
 extern long _get_permutation(int *p_permutation, int *p_pixel_dist_src,
                              int *p_pixel_dist_dst, int D, void **metadata);

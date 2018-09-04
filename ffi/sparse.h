@@ -13,7 +13,11 @@ long initialize_coords_with_duplicates(THIntTensor *th_coords,
 long get_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist, long D,
                 void **m);
 
-long get_nrows(THIntTensor *th_pixel_dist, long D, void **m);
+long get_coords_key(THIntTensor *th_coords, uint64_t *p_coords_key, long D,
+                    void **m);
+
+long get_nrows(uint64_t *p_coords_key, THIntTensor *th_pixel_dist, long D,
+               void **m);
 
 long get_permutation(THIntTensor *th_permutation,
                      THIntTensor *th_pixel_dist_src,
