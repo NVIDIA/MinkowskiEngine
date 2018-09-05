@@ -68,9 +68,9 @@ void SparseConvolutionForwardGPU(
     CUDA_POST_KERNEL_CHECK;
     d_out_map = out_map[k];
     CUDA_POST_KERNEL_CHECK;
-    d_input_buffer.reserve(n_active_in_volume * in_nchannel);
+    d_input_buffer.resize(n_active_in_volume * in_nchannel);
     CUDA_POST_KERNEL_CHECK;
-    d_output_buffer.reserve(n_active_in_volume * out_nchannel);
+    d_output_buffer.resize(n_active_in_volume * out_nchannel);
     CUDA_POST_KERNEL_CHECK;
 
     num_kernels = in_nchannel * n_active_in_volume;
@@ -141,9 +141,9 @@ void SparseConvolutionBackwardGPU(
     CUDA_POST_KERNEL_CHECK;
     d_out_map = out_map[k];
     CUDA_POST_KERNEL_CHECK;
-    d_input_buffer.reserve(n_active_in_volume * in_nchannel);
+    d_input_buffer.resize(n_active_in_volume * in_nchannel);
     CUDA_POST_KERNEL_CHECK;
-    d_output_buffer.reserve(n_active_in_volume * out_nchannel);
+    d_output_buffer.resize(n_active_in_volume * out_nchannel);
     CUDA_POST_KERNEL_CHECK;
     num_kernels = out_nchannel * n_active_in_volume;
 

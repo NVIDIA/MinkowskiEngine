@@ -109,11 +109,11 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         coords_key, pixel_dist = 0, 0
         if isinstance(key_or_pixel_dist, ffi.CData):
             coords_key = key_or_pixel_dist
+            pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
         else:
             coords_key = ffi.new('uint64_t*', 0)
-            pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
+            pixel_dist = convert_to_int_tensor(key_or_pixel_dist, self.D)
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
         nrows = SCE.get_nrows(coords_key, pixel_dist, self.D,
                               self.net_metadata.ffi)
         if nrows < 0:
