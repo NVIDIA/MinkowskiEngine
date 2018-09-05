@@ -16,7 +16,7 @@
 #define INIT_D_DIM_ARRY(TH_ARR, P_ARR)                                         \
   if (THIntTensor_size(TH_ARR, 0) != D) {                                      \
     printf(                                                                    \
-        "DSCE ERROR: arrary must be a D-dim vector. size: %ld, expects %ld\n", \
+        "SCE ERROR: arrary must be a D-dim vector. size: %ld, expects %ld\n",  \
         THIntTensor_size(TH_ARR, 0), D);                                       \
     return -1;                                                                 \
   }                                                                            \
@@ -26,7 +26,7 @@
   int *P_COORDS = THIntTensor_data(TH_COORDS);                                 \
   int NROWS = THIntTensor_size(TH_COORDS, 0);                                  \
   if (THIntTensor_size(TH_COORDS, 1) - 1 != D) {                               \
-    printf("DSCE ERROR: coords must be a set of (D + 1)-dim vector\n");        \
+    printf("SCE ERROR: coords must be a set of (D + 1)-dim vector\n");         \
     return -1;                                                                 \
   }
 
@@ -36,7 +36,7 @@
       _initialize_out_coords(P_IN_COORDS_KEY, P_OUT_COORDS_KEY, P_PIXEL_DIST,  \
                              P_STRIDE, IS_TRANSPOSE, D, m);                    \
   if (SUCCESS < 0) {                                                           \
-    printf("DSCE ERROR: Failed to initialize output coordinates\n");           \
+    printf("SCE ERROR: Failed to initialize output coordinates\n");            \
     return SUCCESS;                                                            \
   }
 
@@ -47,7 +47,7 @@
       P_IN_COORDS_KEY, P_OUT_COORDS_KEY, P_PIXEL_DIST, P_STRIDE,               \
       P_KERNEL_SIZE, P_DILATION, IS_TRANSPOSE, D, m);                          \
   if (SUCCESS < 0) {                                                           \
-    printf("DSCE ERROR: Failed to initialize output coordinates\n");           \
+    printf("SCE ERROR: Failed to initialize output coordinates\n");            \
     return SUCCESS;                                                            \
   }
 
@@ -55,7 +55,7 @@
   SUCCESS =                                                                    \
       _initialize_origin_coords(P_COORDS_KEY, P_PIXEL_DIST, BATCH_SIZE, D, m); \
   if (SUCCESS < 0) {                                                           \
-    printf("DSCE ERROR: Failed to initialize output origin coordinates\n");    \
+    printf("SCE ERROR: Failed to initialize output origin coordinates\n");     \
     return SUCCESS;                                                            \
   }
 
@@ -65,7 +65,7 @@
       compute_out_pixel_dist(P_PIXEL_DIST, P_STRIDE, D, IS_TRANSPOSE);         \
   SUCCESS = _get_num_coords(P_COORDS_KEY, p_out_pixel_dist, &NROWS, D, m);     \
   if (SUCCESS < 0) {                                                           \
-    printf("DSCE ERROR: Failed to get output coordinates\n");                  \
+    printf("SCE ERROR: Failed to get output coordinates\n");                   \
     return SUCCESS;                                                            \
   }
 
@@ -75,7 +75,7 @@
   uint64_t tmp = 0;                                                            \
   SUCCESS = _get_num_coords(&tmp, p_out_pixel_dist, &NROWS, D, m);             \
   if (SUCCESS < 0) {                                                           \
-    printf("DSCE ERROR: Failed to get output coordinates\n");                  \
+    printf("SCE ERROR: Failed to get output coordinates\n");                   \
     return SUCCESS;                                                            \
   }
 
@@ -252,7 +252,7 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -270,7 +270,7 @@ long convolution_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -302,7 +302,7 @@ long convolution_transpose_forward(
   bool is_transpose = true;
 
   // if (pixel_dist % stride != 0) {
-  //   printf("DSCE ERROR: pixel distance not divisible by stride.\n");
+  //   printf("SCE ERROR: pixel distance not divisible by stride.\n");
   //   return -1;
   // }
 
@@ -322,7 +322,7 @@ long convolution_transpose_forward(
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -340,7 +340,7 @@ long convolution_transpose_forward(
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -382,7 +382,7 @@ long convolution_backward(THFloatTensor *th_in_feat,
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -434,7 +434,7 @@ long convolution_transpose_backward(
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -493,7 +493,7 @@ long convolution_forward_gpu(THCudaTensor *th_in_feat,
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -512,7 +512,7 @@ long convolution_forward_gpu(THCudaTensor *th_in_feat,
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -558,7 +558,7 @@ long convolution_transpose_forward_gpu(
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -577,7 +577,7 @@ long convolution_transpose_forward_gpu(
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -618,7 +618,7 @@ long convolution_backward_gpu(
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -673,7 +673,7 @@ long convolution_transpose_backward_gpu(
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -736,7 +736,7 @@ long valid_convolution_forward(
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -790,7 +790,7 @@ long valid_convolution_forward_gpu(
 
   // Checks
   if (_in_nchannel != in_nchannel) {
-    printf("DSCE ERROR: Kernel channel size and input channel size mismatch\n");
+    printf("SCE ERROR: Kernel channel size and input channel size mismatch\n");
     return -1;
   }
 
@@ -852,7 +852,7 @@ long max_pooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -949,7 +949,7 @@ long max_pooling_forward_gpu(THCudaTensor *th_in_feat,
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -1043,7 +1043,7 @@ long nonzero_avg_pooling_forward(
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -1137,7 +1137,7 @@ long nonzero_avg_pooling_forward_gpu(
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -1233,7 +1233,7 @@ long unpooling_forward(THFloatTensor *th_in_feat, THFloatTensor *th_out_feat,
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }
@@ -1330,7 +1330,7 @@ long unpooling_forward_gpu(THCudaTensor *th_in_feat, THCudaTensor *th_out_feat,
     n_offset = THIntTensor_size(th_offset, 0);
     p_offset = THIntTensor_data(th_offset);
     if (THIntTensor_size(th_offset, 1) != D) {
-      printf("DSCE ERROR: Offset size does not match.\n");
+      printf("SCE ERROR: Offset size does not match.\n");
       return -1;
     }
   }

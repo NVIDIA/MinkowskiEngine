@@ -20,7 +20,7 @@ def operation_type_to_int(op):
 
 class SparseGlobalBroadcastFunction(Function):
     def __init__(self, operation_type, pixel_dist, in_coords_key,
-                 out_coords_key, dimension, net_metadata):
+                 glob_coords_key, dimension, net_metadata):
         super(SparseGlobalBroadcastFunction, self).__init__()
         assert isinstance(operation_type, OperationType)
 
@@ -31,7 +31,7 @@ class SparseGlobalBroadcastFunction(Function):
         self.dimension = dimension
         self.net_metadata = net_metadata
         self.in_coords_key = in_coords_key
-        self.out_coords_key = out_coords_key
+        self.out_coords_key = glob_coords_key
 
         self.broadcast_fw_cpu = SCE.global_broadcast_forward
         self.broadcast_bw_cpu = SCE.global_broadcast_backward
@@ -65,7 +65,7 @@ class SparseGlobalBroadcast(Module, SparseModuleBase):
                  operation_type,
                  pixel_dist,
                  in_coords_key=None,
-                 out_coords_key=None,
+                 glob_coords_key=None,
                  dimension=None,
                  net_metadata=None):
         super(SparseGlobalBroadcast, self).__init__()
@@ -82,8 +82,8 @@ class SparseGlobalBroadcast(Module, SparseModuleBase):
         # Initializes all with 0
         self.in_coords_key = in_coords_key \
             if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = out_coords_key \
-            if out_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = glob_coords_key \
+            if glob_coords_key else ffi.new('uint64_t *', 0)
 
         self.broadcast = SparseGlobalBroadcastFunction(
             self.operation_type, self.pixel_dist, self.in_coords_key,
@@ -102,11 +102,11 @@ class SparseGlobalBroadcastAddition(SparseGlobalBroadcast):
     def __init__(self,
                  pixel_dist,
                  in_coords_key=None,
-                 out_coords_key=None,
+                 glob_coords_key=None,
                  dimension=None,
                  net_metadata=None):
         super(SparseGlobalBroadcastAddition, self).__init__(
-            OperationType.ADDITION, pixel_dist, in_coords_key, out_coords_key,
+            OperationType.ADDITION, pixel_dist, in_coords_key, glob_coords_key,
             dimension, net_metadata)
 
 
@@ -114,9 +114,9 @@ class SparseGlobalBroadcastMultiplication(SparseGlobalBroadcast):
     def __init__(self,
                  pixel_dist,
                  in_coords_key=None,
-                 out_coords_key=None,
+                 glob_coords_key=None,
                  dimension=None,
                  net_metadata=None):
         super(SparseGlobalBroadcastMultiplication, self).__init__(
             OperationType.MULTIPLICATION, pixel_dist, in_coords_key,
-            out_coords_key, dimension, net_metadata)
+            glob_coords_key, dimension, net_metadata)

@@ -1142,6 +1142,9 @@ long t_global_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
  *
  * The p_in_feat is defined in the p_in_coords_key coordinate, and
  * p_in_feat_global is defined in the p_out_coords_key.
+ *
+ * in_coords_key is for in_feat
+ * out_coords_key is for in_feat_global
  */
 template <uint8_t D, typename Dtype, typename Itype>
 long t_global_broadcast_fw(const Dtype *p_in_feat, int in_nrows,
