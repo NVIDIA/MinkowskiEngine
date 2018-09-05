@@ -172,7 +172,8 @@ class SparseConvolutionBase(Module, SparseModuleBase):
             if out_coords_key else ffi.new('uint64_t *', 0)
 
         Tensor = torch.FloatTensor
-        if torch.prod(kernel_size) == 1 and torch.prod(stride) == 1:
+        if torch.prod(kernel_size) == 1 and torch.prod(stride) == 1 \
+                and not (in_coords_key or out_coords_key):
             self.kernel_shape = (self.in_channels, self.out_channels)
             self.use_mm = True
         else:
