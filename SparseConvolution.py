@@ -5,7 +5,7 @@ from torch.autograd import Function
 from torch.nn import Module, Parameter
 
 import SparseConvolutionEngineFFI as SCE
-from Common import RegionType, convert_to_int_tensor, convert_region_type, ffi
+from Common import RegionType, convert_to_int_tensor, convert_region_type, ffi, SparseModuleBase
 
 
 class SparseConvolutionFunction(Function):
@@ -118,7 +118,7 @@ class SparseConvolutionTransposeFunction(Function):
         return grad_in_feat, grad_kernel
 
 
-class SparseConvolutionBase(Module):
+class SparseConvolutionBase(Module, SparseModuleBase):
     def __init__(self,
                  in_channels,
                  out_channels,

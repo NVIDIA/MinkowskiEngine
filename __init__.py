@@ -7,6 +7,7 @@ sys.path.append(file_dir)
 from Common import NetMetadata, RegionType
 
 from SparseConvolution import SparseConvolutionFunction, SparseConvolution, \
+    SparseValidConvolutionFunction, SparseValidConvolution, \
     SparseConvolutionTransposeFunction, SparseConvolutionTranspose
 
 from SparsePooling import SparseMaxPoolingFunction, SparseMaxPooling, \

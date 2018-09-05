@@ -1,5 +1,6 @@
 import math
 import cffi
+from abc import ABC
 
 import collections
 import numpy as np
@@ -157,6 +158,14 @@ def convert_region_type(region_type,
         region_offset = torch.IntTensor()
 
     return region_type, region_offset, kernel_volume
+
+
+class SparseModuleBase(ABC):
+
+    def clear(self):
+        """ Must be run after each new data instance. """
+        self.in_coords_key[0] = 0
+        self.out_coords_key[0] = 0
 
 
 class NetMetadata(object):

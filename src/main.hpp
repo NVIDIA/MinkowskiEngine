@@ -192,8 +192,8 @@ public:
   } else if (*p_out_coords_key > 0) {                                          \
     if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
       std::cerr << "Given out_coords_key is invalid" << std::endl              \
-                << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
-                << ":" << __LINE__ << std::endl;                               \
+                << "out_coords_key: " << *p_out_coords_key << " at "           \
+                << __FILE__ << ":" << __LINE__ << std::endl;                   \
       return -1;                                                               \
     }                                                                          \
   }
@@ -212,8 +212,8 @@ public:
   } else if (*p_out_coords_key > 0) {                                          \
     if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
       std::cerr << "Given out_coords_key is invalid" << std::endl              \
-                << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
-                << ":" << __LINE__ << std::endl;                               \
+                << "out_coords_key: " << *p_out_coords_key << " at "           \
+                << __FILE__ << ":" << __LINE__ << std::endl;                   \
       return -1;                                                               \
     }                                                                          \
   }
@@ -268,8 +268,8 @@ public:
   } else if (*p_out_coords_key > 0) {                                          \
     if (p_coord2inds->find(*p_out_coords_key) == p_coord2inds->end()) {        \
       std::cerr << "Given out_coords_key is invalid" << std::endl              \
-                << "in_coords_key: " << *p_in_coords_key << " at " << __FILE__ \
-                << ":" << __LINE__ << std::endl;                               \
+                << "out_coords_key: " << *p_out_coords_key << " at "           \
+                << __FILE__ << ":" << __LINE__ << std::endl;                   \
       return -1;                                                               \
     }                                                                          \
   }

@@ -2,7 +2,7 @@ from torch.nn import Module
 from torch.autograd import Function
 
 import SparseConvolutionEngineFFI as SCE
-from Common import RegionType, convert_to_int_tensor, convert_region_type, ffi
+from Common import RegionType, convert_to_int_tensor, convert_region_type, ffi, SparseModuleBase
 
 
 class SparseMaxPoolingFunction(Function):
@@ -63,7 +63,7 @@ class SparseMaxPoolingFunction(Function):
         return grad_in_feat
 
 
-class SparseMaxPooling(Module):
+class SparseMaxPooling(Module, SparseModuleBase):
     def __init__(self,
                  pixel_dist,
                  kernel_size,
@@ -182,7 +182,7 @@ class SparseNonzeroAvgPoolingFunction(Function):
         return grad_in_feat
 
 
-class SparseNonzeroAvgPooling(Module):
+class SparseNonzeroAvgPooling(Module, SparseModuleBase):
     def __init__(self,
                  pixel_dist,
                  kernel_size,
@@ -301,7 +301,7 @@ class SparseNonzeroAvgUnpoolingFunction(Function):
         return grad_in_feat
 
 
-class SparseNonzeroAvgUnpooling(Module):
+class SparseNonzeroAvgUnpooling(Module, SparseModuleBase):
     """
     Unpool the features and divide it by the number of non zero elements that
     contributed.
@@ -418,7 +418,7 @@ class SparseGlobalAvgPoolingFunction(Function):
         return grad_in_feat
 
 
-class SparseGlobalAvgPooling(Module):
+class SparseGlobalAvgPooling(Module, SparseModuleBase):
     def __init__(self,
                  pixel_dist,
                  batch_size=0,

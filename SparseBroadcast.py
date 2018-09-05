@@ -4,7 +4,7 @@ from torch.nn import Module
 from torch.autograd import Function
 
 import SparseConvolutionEngineFFI as SCE
-from Common import convert_to_int_tensor, ffi
+from Common import convert_to_int_tensor, ffi, SparseModuleBase
 
 
 class OperationType(Enum):
@@ -60,7 +60,7 @@ class SparseGlobalBroadcastFunction(Function):
         return grad_in_feat, grad_in_feat_glob
 
 
-class SparseGlobalBroadcast(Module):
+class SparseGlobalBroadcast(Module, SparseModuleBase):
     def __init__(self,
                  operation_type,
                  pixel_dist,

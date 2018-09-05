@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 import SparseConvolutionEngineFFI as SCE
-from Common import NetMetadata, convert_to_int_tensor, ffi
+from Common import SparseModuleBase, NetMetadata, convert_to_int_tensor, ffi
 
 
 class SparseConvolutionNetwork(nn.Module, ABC):
@@ -30,6 +30,9 @@ class SparseConvolutionNetwork(nn.Module, ABC):
 
     def clear(self):
         self.net_metadata.clear()
+        for m in self.modules():
+            if isinstance(m, SparseModuleBase):
+                m.clear()
 
     def initialize_coords(self, coords):
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
