@@ -5,12 +5,12 @@ from torch.autograd import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
 from Common import NetMetadata, RegionType, convert_to_int_tensor
-from SparsePooling import SparseNonzeroAvgPooling
+from SparsePooling import SparseSumPooling
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     use_gpu = True
-    IN1 = [" X  ", "XXX ", "    "]
+    IN1 = [" XX ", "XXX ", "    "]
     # IN1 = ["X   ", "  XX", "X  X"]
     coords = []
     for i, row in enumerate(IN1):
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     print(coords2)
     print(in_feat)
 
-    pooling = SparseNonzeroAvgPooling(
+    pooling = SparseSumPooling(
         pixel_dist,
         kernel_size,
         stride,

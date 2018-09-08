@@ -485,7 +485,8 @@ long t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                               const Itype *p_dilation, Itype region_type,
                               const Itype *p_offset, Itype n_offset,
                               uint64_t *p_in_coords_key,
-                              uint64_t *p_out_coords_key, void **metadata);
+                              uint64_t *p_out_coords_key, Itype use_avg,
+                              void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
@@ -495,7 +496,8 @@ long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                               const Itype *p_kernel_size,
                               const Itype *p_dilation,
                               uint64_t *p_in_coords_key,
-                              uint64_t *p_out_coords_key, void **metadata);
+                              uint64_t *p_out_coords_key, Itype use_avg,
+                              void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_fw_gpu(
@@ -503,8 +505,8 @@ long t_nonzero_avg_pooling_fw_gpu(
     Dtype *d_num_nonzero, Itype nchannel, const Itype *p_pixel_dist,
     const Itype *p_stride, const Itype *p_kernel_size, const Itype *p_dilation,
     Itype region_type, const Itype *p_offset, Itype n_offset,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
-    void **metadata);
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, Itype use_avg,
+    cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_nonzero_avg_pooling_bw_gpu(
@@ -512,8 +514,8 @@ long t_nonzero_avg_pooling_bw_gpu(
     Itype out_nrows, const Dtype *d_num_nonzero, Itype nchannel,
     const Itype *p_pixel_dist, const Itype *p_stride,
     const Itype *p_kernel_size, const Itype *p_dilation,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
-    void **metadata);
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, Itype use_avg,
+    cudaStream_t stream, void **metadata);
 
 template <uint8_t D, typename Dtype, typename Itype>
 long t_unpooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,

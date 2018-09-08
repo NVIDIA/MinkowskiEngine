@@ -459,19 +459,19 @@ long t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                               const Itype *p_dilation, Itype region_type,
                               const Itype *p_offset, Itype n_offset,
                               uint64_t *p_in_coords_key,
-                              uint64_t *p_out_coords_key, void **metadata);
-extern "C" long
-_nonzero_avg_pooling_fw(float *p_in_feat, float *p_out_feat,
-                        float *p_num_nonzero, int nchannel, int out_nrows,
-                        int *p_pixel_dist, int *p_stride, int *p_kernel_size,
-                        int *p_dilation, int region_type, int *p_offset,
-                        int n_offset, uint64_t *p_in_coords_key,
-                        uint64_t *p_out_coords_key, int D, void **metadata) {
+                              uint64_t *p_out_coords_key, Itype use_avg,
+                              void **metadata);
+extern "C" long _nonzero_avg_pooling_fw(
+    float *p_in_feat, float *p_out_feat, float *p_num_nonzero, int nchannel,
+    int out_nrows, int *p_pixel_dist, int *p_stride, int *p_kernel_size,
+    int *p_dilation, int region_type, int *p_offset, int n_offset,
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, int use_avg, int D,
+    void **metadata) {
   SWITCH_DIM_TYPES(return, t_nonzero_avg_pooling_fw, float, int32_t, p_in_feat,
                          p_out_feat, p_num_nonzero, nchannel, out_nrows,
                          p_pixel_dist, p_stride, p_kernel_size, p_dilation,
                          region_type, p_offset, n_offset, p_in_coords_key,
-                         p_out_coords_key, metadata);
+                         p_out_coords_key, use_avg, metadata);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -482,17 +482,18 @@ long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                               const Itype *p_kernel_size,
                               const Itype *p_dilation,
                               uint64_t *p_in_coords_key,
-                              uint64_t *p_out_coords_key, void **metadata);
+                              uint64_t *p_out_coords_key, Itype use_avg,
+                              void **metadata);
 extern "C" long _nonzero_avg_pooling_bw(
     float *p_grad_in_feat, int in_nrows, float *p_grad_out_feat, int out_nrows,
     float *p_num_nonzero, int nchannel, int *p_pixel_dist, int *p_stride,
     int *p_kernel_size, int *p_dilation, uint64_t *p_in_coords_key,
-    uint64_t *p_out_coords_key, int D, void **metadata) {
+    uint64_t *p_out_coords_key, int use_avg, int D, void **metadata) {
   SWITCH_DIM_TYPES(return, t_nonzero_avg_pooling_bw, float, int32_t,
                          p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows,
                          p_num_nonzero, nchannel, p_pixel_dist, p_stride,
                          p_kernel_size, p_dilation, p_in_coords_key,
-                         p_out_coords_key, metadata);
+                         p_out_coords_key, use_avg, metadata);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -501,19 +502,20 @@ long t_nonzero_avg_pooling_fw_gpu(
     Dtype *d_num_nonzero, Itype nchannel, const Itype *p_pixel_dist,
     const Itype *p_stride, const Itype *p_kernel_size, const Itype *p_dilation,
     Itype region_type, const Itype *p_offset, Itype n_offset,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
-    void **metadata);
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, Itype use_avg,
+    cudaStream_t stream, void **metadata);
 extern "C" long _nonzero_avg_pooling_fw_gpu(
     float *d_in_feat, int in_nrows, float *d_out_feat, int out_nrows,
     float *d_num_nonzero, int nchannel, int *p_pixel_dist, int *p_stride,
     int *p_kernel_size, int *p_dilation, int region_type, int *p_offset,
     int n_offset, uint64_t *p_in_coords_key, uint64_t *p_out_coords_key,
-    cudaStream_t stream, int D, void **metadata) {
-  SWITCH_DIM_TYPES(
-      return, t_nonzero_avg_pooling_fw_gpu, float, int32_t, d_in_feat, in_nrows,
-            d_out_feat, out_nrows, d_num_nonzero, nchannel, p_pixel_dist,
-            p_stride, p_kernel_size, p_dilation, region_type, p_offset,
-            n_offset, p_in_coords_key, p_out_coords_key, stream, metadata);
+    int use_avg, cudaStream_t stream, int D, void **metadata) {
+  SWITCH_DIM_TYPES(return, t_nonzero_avg_pooling_fw_gpu, float, int32_t,
+                         d_in_feat, in_nrows, d_out_feat, out_nrows,
+                         d_num_nonzero, nchannel, p_pixel_dist, p_stride,
+                         p_kernel_size, p_dilation, region_type, p_offset,
+                         n_offset, p_in_coords_key, p_out_coords_key, use_avg,
+                         stream, metadata);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -522,18 +524,19 @@ long t_nonzero_avg_pooling_bw_gpu(
     Itype out_nrows, const Dtype *d_num_nonzero, Itype nchannel,
     const Itype *p_pixel_dist, const Itype *p_stride,
     const Itype *p_kernel_size, const Itype *p_dilation,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
-    void **metadata);
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, Itype use_avg,
+    cudaStream_t stream, void **metadata);
 extern "C" long _nonzero_avg_pooling_bw_gpu(
     float *d_grad_in_feat, int in_nrows, float *d_grad_out_feat, int out_nrows,
     float *d_num_nonzero, int nchannel, int *p_pixel_dist, int *p_stride,
     int *p_kernel_size, int *p_dilation, uint64_t *p_in_coords_key,
-    uint64_t *p_out_coords_key, cudaStream_t stream, int D, void **metadata) {
+    uint64_t *p_out_coords_key, int use_avg, cudaStream_t stream, int D,
+    void **metadata) {
   SWITCH_DIM_TYPES(return, t_nonzero_avg_pooling_bw_gpu, float, int32_t,
                          d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows,
                          d_num_nonzero, nchannel, p_pixel_dist, p_stride,
                          p_kernel_size, p_dilation, p_in_coords_key,
-                         p_out_coords_key, stream, metadata);
+                         p_out_coords_key, use_avg, stream, metadata);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>

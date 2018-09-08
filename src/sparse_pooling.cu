@@ -13,6 +13,7 @@
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
 
+#include "src/gpu.cuh"
 #include "src/sparse_pooling.cuh"
 #include "src/utils.hpp"
 
@@ -91,14 +92,27 @@ __global__ void set_gradient(const int n, const Dtype *d_grad_out,
 template <typename Dtype, typename Itype>
 __global__ void
 set_gradient_nonzero(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
-                     int nchannel, const Dtype *d_num_nonzero,
-                     const Itype *in_map, const Itype *out_map) {
+                     int nchannel, const Itype *in_map, const Itype *out_map) {
   CUDA_KERNEL_LOOP(index, n) {
     int nrow = index / nchannel;
     int ch = index % nchannel;
     atomicAdd(&d_grad_in[in_map[nrow] * nchannel + ch],
-              d_grad_out[out_map[nrow] * nchannel + ch] /
-                  d_num_nonzero[out_map[nrow]]);
+              d_grad_out[out_map[nrow] * nchannel + ch]);
+  }
+}
+
+template <typename Dtype, typename Itype>
+__global__ void
+set_gradient_nonzero_avg(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
+                         int nchannel, const Dtype *d_num_nonzero,
+                         const Itype *in_map, const Itype *out_map) {
+  CUDA_KERNEL_LOOP(index, n) {
+    int nrow = index / nchannel;
+    int ch = index % nchannel;
+    int curr_num_nonzero = d_num_nonzero[out_map[nrow]];
+    if (curr_num_nonzero > 0)
+      atomicAdd(&d_grad_in[in_map[nrow] * nchannel + ch],
+                d_grad_out[out_map[nrow] * nchannel + ch] / curr_num_nonzero);
   }
 }
 
@@ -125,6 +139,17 @@ __global__ void out_map_feat(const int n, const Dtype *in_feat,
 }
 
 template <typename Dtype>
+__global__ void col2row_major(const int n, const int nrows, const int ncols,
+                              const Dtype *colA, Dtype *rowA) {
+  int i, j;
+  CUDA_KERNEL_LOOP(index, n) {
+    i = index % nrows;
+    j = index / nrows;
+    rowA[i * ncols + j] = colA[index];
+  }
+}
+
+template <typename Dtype>
 __global__ void col2row_major_with_div(const int n, const int nrows,
                                        const int ncols,
                                        const Dtype *num_nonzero,
@@ -133,7 +158,11 @@ __global__ void col2row_major_with_div(const int n, const int nrows,
   CUDA_KERNEL_LOOP(index, n) {
     i = index % nrows;
     j = index / nrows;
-    rowA[i * ncols + j] = colA[index] / num_nonzero[i];
+    if (num_nonzero[i]) {
+      rowA[i * ncols + j] = colA[index] / num_nonzero[i];
+    } else {
+      rowA[i * ncols + j] = colA[index];
+    }
   }
 }
 
@@ -252,14 +281,14 @@ void SparseNonzeroAvgPoolingForwardGPU(
     const Dtype *d_in_feat, int in_nrows, Dtype *d_out_feat, int out_nrows,
     Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_map,
-    const std::vector<std::vector<Itype>> &out_map, cusparseHandle_t cushandle,
-    cudaStream_t stream) {
+    const std::vector<std::vector<Itype>> &out_map, bool use_avg,
+    cusparseHandle_t cushandle, cudaStream_t stream) {
   int nnz = 0;
   const Dtype alpha = 1;
   const Dtype beta = 0;
   cusparseMatDescr_t descr = 0;
   thrust::device_vector<Itype> d_in_map, d_out_map, d_csr_row;
-  thrust::device_vector<Dtype> d_csr_val, d_tmp_out_feat, d_tmp_num_nonzero;
+  thrust::device_vector<Dtype> d_ones, d_csr_val, d_tmp_out_feat, d_tmp_num_nonzero;
 
   // Copy all maps to one vector
   for (int k = 0; k < in_map.size(); k++)
@@ -283,13 +312,16 @@ void SparseNonzeroAvgPoolingForwardGPU(
   // No longer required: Unpooling has more out_nrows
   // if (in_nrows < out_nrows)
   //   throw std::invalid_argument(
-  //       Formatter() << "Incorrect in_map for SparseNonzeroAvgPoolingForwardGPU."
+  //       Formatter() << "Incorrect in_map for
+  //       SparseNonzeroAvgPoolingForwardGPU."
   //                   << ", in_nrows: " << in_nrows
   //                   << ", out_nrows: " << out_nrows);
 
   d_csr_row.resize(out_nrows + 1); // CSR returns n_row + 1
+  d_ones.resize(in_nrows);  // one vector used for d_num_nonzero
   d_csr_val.resize(nnz);
   thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
+  thrust::fill(d_ones.begin(), d_ones.end(), 1);
   d_tmp_out_feat.resize(nchannel * out_nrows);
 
   CUSPARSE_CHECK(cusparseCreateMatDescr(&descr));
@@ -315,7 +347,7 @@ void SparseNonzeroAvgPoolingForwardGPU(
       thrust::raw_pointer_cast(d_csr_val.data()), // val
       thrust::raw_pointer_cast(d_csr_row.data()), // row
       thrust::raw_pointer_cast(d_in_map.data()),  // col
-      thrust::raw_pointer_cast(d_csr_val.data()), // B (in_nrows > out_nrows)
+      thrust::raw_pointer_cast(d_ones.data()), // B (in_nrows > out_nrows)
       &beta,
       d_num_nonzero)); // C
 
@@ -337,10 +369,17 @@ void SparseNonzeroAvgPoolingForwardGPU(
       out_nrows                                        // ldc
       ));
 
-  col2row_major_with_div<Dtype>
-      <<<GET_BLOCKS(out_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-          out_nrows * nchannel, out_nrows, nchannel, d_num_nonzero,
-          thrust::raw_pointer_cast(d_tmp_out_feat.data()), d_out_feat);
+  if (use_avg) {
+    col2row_major_with_div<Dtype>
+        <<<GET_BLOCKS(out_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
+            out_nrows * nchannel, out_nrows, nchannel, d_num_nonzero,
+            thrust::raw_pointer_cast(d_tmp_out_feat.data()), d_out_feat);
+  } else {
+    col2row_major<Dtype>
+        <<<GET_BLOCKS(out_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
+            out_nrows * nchannel, out_nrows, nchannel,
+            thrust::raw_pointer_cast(d_tmp_out_feat.data()), d_out_feat);
+  }
   CUDA_POST_KERNEL_CHECK;
 
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
@@ -350,15 +389,16 @@ template void SparseNonzeroAvgPoolingForwardGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, float *d_out_feat, int out_nrows,
     float *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, cusparseHandle_t cushandle,
-    cudaStream_t stream);
+    const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
+    cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void SparseNonzeroAvgPoolingBackwardGPU(
     Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
     int out_nrows, const Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_map,
-    const std::vector<std::vector<Itype>> &out_map, cudaStream_t stream) {
+    const std::vector<std::vector<Itype>> &out_map, bool use_avg,
+    cudaStream_t stream) {
   int curr_n, n_active = 0;
   thrust::device_vector<Itype> d_in_map, d_out_map;
 
@@ -385,17 +425,26 @@ void SparseNonzeroAvgPoolingBackwardGPU(
     }
   }
 
-  set_gradient_nonzero<Dtype>
-      <<<GET_BLOCKS(n_active * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-          n_active * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
-          d_num_nonzero, thrust::raw_pointer_cast(d_in_map.data()),
-          thrust::raw_pointer_cast(d_out_map.data()));
+  if (use_avg) {
+    set_gradient_nonzero_avg<Dtype>
+        <<<GET_BLOCKS(n_active * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
+            n_active * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
+            d_num_nonzero, thrust::raw_pointer_cast(d_in_map.data()),
+            thrust::raw_pointer_cast(d_out_map.data()));
+  } else {
+    set_gradient_nonzero<Dtype>
+        <<<GET_BLOCKS(n_active * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
+            n_active * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
+            thrust::raw_pointer_cast(d_in_map.data()),
+            thrust::raw_pointer_cast(d_out_map.data()));
+  }
 }
 
 template void SparseNonzeroAvgPoolingBackwardGPU<float, int32_t>(
     float *d_grad_in_feat, int in_nrows, const float *d_grad_out_feat,
     int out_nrows, const float *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, cudaStream_t stream);
+    const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
+    cudaStream_t stream);
 
 #endif

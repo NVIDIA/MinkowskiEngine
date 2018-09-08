@@ -885,18 +885,20 @@ long t_nonzero_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
                               const Itype *p_dilation, Itype region_type,
                               const Itype *p_offset, Itype n_offset,
                               uint64_t *p_in_coords_key,
-                              uint64_t *p_out_coords_key, void **metadata) {
+                              uint64_t *p_out_coords_key, Itype use_avg,
+                              void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata);
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false);
   INITIALIZE_IN_COORDS_KEY;
   INITIALIZE_OUT_COORDS_KEY;
   CREATE_KERNEL_MAP(kernel_map_key, false);
 
-  ASSERT_EQ((*p_coord2inds)[out_pixel_dist_hash].size(), out_nrows)
+  ASSERT_EQ((*p_coord2inds)[*p_out_coords_key].size(), out_nrows)
 
   SparseNonzeroAvgPoolingForward<Dtype, Itype>(
       p_in_feat, p_out_feat, p_num_nonzero, nchannel,
-      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], out_nrows);
+      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], out_nrows,
+      use_avg);
 
   return 1;
 }
@@ -909,14 +911,16 @@ long t_nonzero_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
                               const Itype *p_kernel_size,
                               const Itype *p_dilation,
                               uint64_t *p_in_coords_key,
-                              uint64_t *p_out_coords_key, void **metadata) {
+                              uint64_t *p_out_coords_key, Itype use_avg,
+                              void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata);
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   BACKWARD_PROP_WITH_COORDS_KEYS_CHECK(kernel_map_key, false);
 
   SparseNonzeroAvgPoolingBackward<Dtype, Itype>(
       p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
-      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key]);
+      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key],
+      use_avg);
 
   return 1;
 }
@@ -927,8 +931,8 @@ long t_nonzero_avg_pooling_fw_gpu(
     Dtype *d_num_nonzero, Itype nchannel, const Itype *p_pixel_dist,
     const Itype *p_stride, const Itype *p_kernel_size, const Itype *p_dilation,
     Itype region_type, const Itype *p_offset, Itype n_offset,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
-    void **metadata) {
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, Itype use_avg,
+    cudaStream_t stream, void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata);
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   INITIALIZE_IN_COORDS_KEY;
@@ -939,7 +943,7 @@ long t_nonzero_avg_pooling_fw_gpu(
 
   SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
-      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key],
+      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], use_avg,
       init_metadata.cushandle, stream);
 
   return 1;
@@ -951,8 +955,8 @@ long t_nonzero_avg_pooling_bw_gpu(
     Itype out_nrows, const Dtype *d_num_nonzero, Itype nchannel,
     const Itype *p_pixel_dist, const Itype *p_stride,
     const Itype *p_kernel_size, const Itype *p_dilation,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, cudaStream_t stream,
-    void **metadata) {
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, Itype use_avg,
+    cudaStream_t stream, void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata);
   INITIALIZE_DEFAULT_VARS_AND_HASHES(false)
   BACKWARD_PROP_WITH_COORDS_KEYS_CHECK(kernel_map_key, false);
@@ -960,7 +964,7 @@ long t_nonzero_avg_pooling_bw_gpu(
   SparseNonzeroAvgPoolingBackwardGPU<Dtype>(
       d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
       nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key],
-      stream);
+      use_avg, stream);
 
   return 1;
 }
@@ -983,7 +987,8 @@ long t_unpooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
 
   SparseNonzeroAvgPoolingForward<Dtype, Itype>(
       p_in_feat, p_out_feat, p_num_nonzero, nchannel,
-      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], out_nrows);
+      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], out_nrows,
+      0);
 
   return 1;
 }
@@ -1002,7 +1007,7 @@ long t_unpooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
 
   SparseNonzeroAvgPoolingBackward<Dtype, Itype>(
       p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
-      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key]);
+      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], 0);
 
   return 1;
 }
@@ -1027,7 +1032,7 @@ long t_unpooling_fw_gpu(const Dtype *d_in_feat, Itype in_nrows,
 
   SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
-      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key],
+      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], 0,
       init_metadata.cushandle, stream);
 
   return 1;
@@ -1047,7 +1052,7 @@ long t_unpooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
 
   SparseNonzeroAvgPoolingBackwardGPU<Dtype>(
       d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
-      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key],
+      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], 0,
       stream);
 
   return 1;
@@ -1068,7 +1073,8 @@ long t_global_avg_pooling_fw(const Dtype *p_in_feat, Dtype *p_out_feat,
 
   SparseNonzeroAvgPoolingForward<Dtype, Itype>(
       p_in_feat, p_out_feat, p_num_nonzero, nchannel,
-      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], out_nrows);
+      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], out_nrows,
+      1);
 
   return 1;
 }
@@ -1086,7 +1092,7 @@ long t_global_avg_pooling_bw(Dtype *p_grad_in_feat, Itype in_nrows,
 
   SparseNonzeroAvgPoolingBackward<Dtype, Itype>(
       p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
-      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key]);
+      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], 1);
 
   return 1;
 }
@@ -1109,7 +1115,7 @@ long t_global_avg_pooling_fw_gpu(const Dtype *d_in_feat, Itype in_nrows,
 
   SparseNonzeroAvgPoolingForwardGPU<Dtype, Itype>(
       d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
-      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key],
+      (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], 1,
       init_metadata.cushandle, stream);
 
   return 1;
@@ -1129,7 +1135,7 @@ long t_global_avg_pooling_bw_gpu(Dtype *d_grad_in_feat, Itype in_nrows,
 
   SparseNonzeroAvgPoolingBackwardGPU<Dtype, Itype>(
       d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
-      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key],
+      nchannel, (*p_in_maps)[kernel_map_key], (*p_out_maps)[kernel_map_key], 1,
       stream);
 
   return 1;

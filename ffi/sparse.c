@@ -1007,7 +1007,8 @@ long nonzero_avg_pooling_forward(
     THFloatTensor *th_num_nonzero, THIntTensor *th_pixel_dist,
     THIntTensor *th_stride, THIntTensor *th_kernel_size,
     THIntTensor *th_dilation, long region_type, THIntTensor *th_offset,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m) {
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long use_avg, long D,
+    void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
@@ -1052,7 +1053,7 @@ long nonzero_avg_pooling_forward(
   return _nonzero_avg_pooling_fw(
       p_in_feat, p_out_feat, p_num_nonzero, nchannel, out_nrows, p_pixel_dist,
       p_stride, p_kernel_size, p_dilation, region_type, p_offset, n_offset,
-      p_in_coords_key, p_out_coords_key, D, m);
+      p_in_coords_key, p_out_coords_key, use_avg, D, m);
 }
 
 long nonzero_avg_pooling_backward(
@@ -1060,7 +1061,8 @@ long nonzero_avg_pooling_backward(
     THFloatTensor *th_grad_out_feat, THFloatTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
     THIntTensor *th_kernel_size, THIntTensor *th_dilation,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m) {
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long use_avg, long D,
+    void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
@@ -1090,7 +1092,7 @@ long nonzero_avg_pooling_backward(
   return _nonzero_avg_pooling_bw(
       p_grad_in_feat, in_nrows, p_grad_out_feat, out_nrows, p_num_nonzero,
       nchannel, p_pixel_dist, p_stride, p_kernel_size, p_dilation,
-      p_in_coords_key, p_out_coords_key, D, m);
+      p_in_coords_key, p_out_coords_key, use_avg, D, m);
 }
 
 long nonzero_avg_pooling_forward_gpu(
@@ -1098,7 +1100,8 @@ long nonzero_avg_pooling_forward_gpu(
     THCudaTensor *th_num_nonzero, THIntTensor *th_pixel_dist,
     THIntTensor *th_stride, THIntTensor *th_kernel_size,
     THIntTensor *th_dilation, long region_type, THIntTensor *th_offset,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m) {
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long use_avg, long D,
+    void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
@@ -1146,7 +1149,7 @@ long nonzero_avg_pooling_forward_gpu(
   return _nonzero_avg_pooling_fw_gpu(
       d_in_feat, in_nrows, d_out_feat, out_nrows, d_num_nonzero, nchannel,
       p_pixel_dist, p_stride, p_kernel_size, p_dilation, region_type, p_offset,
-      n_offset, p_in_coords_key, p_out_coords_key, stream, D, m);
+      n_offset, p_in_coords_key, p_out_coords_key, use_avg, stream, D, m);
 }
 
 long nonzero_avg_pooling_backward_gpu(
@@ -1154,7 +1157,8 @@ long nonzero_avg_pooling_backward_gpu(
     THCudaTensor *th_grad_out_feat, THCudaTensor *th_num_nonzero,
     THIntTensor *th_pixel_dist, THIntTensor *th_stride,
     THIntTensor *th_kernel_size, THIntTensor *th_dilation,
-    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long D, void **m) {
+    uint64_t *p_in_coords_key, uint64_t *p_out_coords_key, long use_avg, long D,
+    void **m) {
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
   INIT_D_DIM_ARRY(th_stride, p_stride)
   INIT_D_DIM_ARRY(th_kernel_size, p_kernel_size)
@@ -1186,7 +1190,7 @@ long nonzero_avg_pooling_backward_gpu(
   return _nonzero_avg_pooling_bw_gpu(
       d_grad_in_feat, in_nrows, d_grad_out_feat, out_nrows, d_num_nonzero,
       nchannel, p_pixel_dist, p_stride, p_kernel_size, p_dilation,
-      p_in_coords_key, p_out_coords_key, stream, D, m);
+      p_in_coords_key, p_out_coords_key, use_avg, stream, D, m);
 }
 
 // Unpooling
