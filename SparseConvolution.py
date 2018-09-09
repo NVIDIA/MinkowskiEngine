@@ -138,7 +138,8 @@ class SparseConvolutionBase(Module, SparseModuleBase):
         super(SparseConvolutionBase, self).__init__()
         if dimension is None or net_metadata is None:
             raise ValueError('Dimension and net_metadata must be defined')
-        assert isinstance(region_type, RegionType)
+        assert isinstance(region_type, RegionType), \
+            "region offset must be of type RegionType"
 
         pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
         stride = convert_to_int_tensor(stride, dimension)

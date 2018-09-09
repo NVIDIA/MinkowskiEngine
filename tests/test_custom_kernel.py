@@ -4,32 +4,32 @@ import torch
 from torch.autograd import gradcheck
 
 import SparseConvolutionEngineFFI as SCE
+from SparseConvolution import SparseConvolution
 from Common import NetMetadata, RegionType, convert_to_int_tensor
-from SparsePooling import SparseNonzeroAvgPooling
 
 if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     use_gpu = True
-    IN1 = [" XX ", "XXX ", "X   "]
-    # IN1 = ["X   ", "  XX", "X  X"]
+    IN1 = [[" X  ", "XXX ", "    "], ["X   ", "  XX", "X  X"]]
+    IN2 = [["X   ", "  XX", "X  X"], [" X  ", "XXX ", "    "]]
     coords = []
-    for i, row in enumerate(IN1):
-        for j, col in enumerate(row):
+    for i, height in enumerate(IN1):
+        for j, row in enumerate(height):
+          for k, col in enumerate(row):
             if col != ' ':
-                coords.append([i, j, 0])  # Last element for batch index
-    # for i, row in enumerate(IN2):
-    #     for j, col in enumerate(row):
-    #         if col != ' ':
-    #             coords.append([i, j, 1])  # Last element for batch index
+                coords.append([i, j, k, 0])  # Last element for batch index
+    for i, height in enumerate(IN2):
+        for j, row in enumerate(height):
+          for k, col in enumerate(row):
+            if col != ' ':
+                coords.append([i, j, k, 1])  # Last element for batch index
 
-    pixel_dist, stride, kernel_size, dilation, D = 1, 2, 1, 1, 2
-    in_nchannel = 2
+    pixel_dist, stride, kernel_size, dilation, D = 1, 2, 3, 1, 3
+    in_nchannel, out_nchannel = 2, 2
     coords = torch.from_numpy(np.array(coords)).int()
-    in_feat = torch.FloatTensor(coords.size(0), in_nchannel).normal_()
-    # .zero_()
-    # in_feat[1, 0] = 1
-    # in_feat[1, 2] = 1
-    # in_feat[2] = 2
+    in_feat = torch.FloatTensor(coords.size(0), in_nchannel).zero_()
+    in_feat[1] = 1
+    in_feat[2] = 2
     net_metadata = NetMetadata(D)
 
     pixel_dist = convert_to_int_tensor(pixel_dist, D)
@@ -38,22 +38,29 @@ if __name__ == '__main__':
     coords2 = torch.IntTensor()
     print(SCE.get_coords(coords2, pixel_dist, D, net_metadata.ffi))
     print(coords2)
-    print(in_feat)
 
-    pooling = SparseNonzeroAvgPooling(
+    conv = SparseConvolution(
+        in_nchannel,
+        out_nchannel,
         pixel_dist,
-        kernel_size,
-        stride,
-        dilation,
-        region_type=RegionType.HYPERCUBE,
+        kernel_size=[2, 2, 2],
+        stride=stride,
+        region_type=RegionType.HYBRID,
+        axis_types=[RegionType.HYPERCUBE, RegionType.HYPERCUBE, RegionType.HYPERCROSS],
+        has_bias=True,
         dimension=D,
         net_metadata=net_metadata)
 
+    # conv.kernel.data[:] = torch.arange(9)
+    # conv.bias.data[:] = torch.arange(out_nchannel) + 1
+    print(conv.kernel.data.squeeze())
+    print(conv.region_offset)
+    print(in_feat)
     in_feat.requires_grad_()
 
     # The coords get initialized after the forward pass
     print(SCE.get_coords(coords2, pixel_dist * stride, D, net_metadata.ffi))
-    out = pooling(in_feat)
+    out = conv(in_feat)
     print(SCE.get_coords(coords2, pixel_dist * stride, D, net_metadata.ffi))
     print(coords2)
 
@@ -61,40 +68,37 @@ if __name__ == '__main__':
 
     # Permutation
     perm = torch.IntTensor()
-    SCE.get_permutation(perm, pixel_dist * stride, pixel_dist, D, net_metadata.ffi)
+    stride = convert_to_int_tensor(stride, D)
+    SCE.get_permutation(perm, stride, pixel_dist, D, net_metadata.ffi)
     print(perm)
 
     grad = torch.zeros(out.size())
+    grad[0] = 0.2
     grad[1] = 1
-    # grad[1, 1] = 3
-    # # grad[1, 0] = 1
-    # # grad[1, 1] = - 1
-    # # grad[0, 1] = 0.2
     out.backward(grad)
     print(in_feat.grad)
 
     print(
         gradcheck(
-            pooling, (in_feat, ),
+            conv, (in_feat, ),
             atol=1e-3,
             rtol=1e-2,
             eps=1e-4))
 
     # GPU
     if use_gpu:
-        pooling = pooling.to(device)
+        conv = conv.to(device)
         in_feat_cu = in_feat.to(device)
-        print(in_feat_cu)
-        out = pooling(in_feat_cu)
+        out = conv(in_feat_cu)
         print(out)
 
-        grad = grad.cuda()
+        grad = grad.to(device)
         out.backward(grad)
         print(in_feat_cu.grad)
 
         print(
             gradcheck(
-                pooling, (in_feat_cu, ),
+                conv, (in_feat_cu, ),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))

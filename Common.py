@@ -65,8 +65,8 @@ def convert_region_type(region_type,
     use center=False.
     """
     if region_type == RegionType.HYPERCUBE:
-        assert region_offset is None
-        assert axis_types is None
+        assert region_offset is None, "Region offset must be None when region_type is given"
+        assert axis_types is None, "Axis types must be None when region_type is given"
         # Typical convolution kernel
         assert torch.prod(kernel_size > 0) == 1
         assert torch.unique(dilation).numel() == 1
@@ -92,13 +92,15 @@ def convert_region_type(region_type,
             raise ValueError('All edges must have the same length.')
 
     elif region_type == RegionType.HYPERCROSS:
-        assert torch.prod(kernel_size > 0) == 1
-        assert (kernel_size % 2).prod() == 1
+        assert torch.prod(kernel_size > 0) == 1, "kernel_size must be positive"
+        assert (kernel_size % 2).prod(
+        ) == 1, "kernel_size must be odd for region_type HYPERCROSS"
         # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
         kernel_volume = int(torch.sum(kernel_size - 1) * dimension + 1)
 
     elif region_type == RegionType.HYBRID:
-        assert region_offset is None
+        assert region_offset is None, \
+            "region_offset must be None when region_type is HYBRID"
         region_offset = [[
             0,
         ] * dimension]
@@ -147,8 +149,11 @@ def convert_region_type(region_type,
         kernel_volume = int(region_offset.size(0))
 
     elif region_type == RegionType.CUSTOM:
-        assert region_offset.numel() > 0
-        assert region_offset.size(1) == dimension
+        assert region_offset.numel(
+        ) > 0, "region_offset must be non empty when region_type is CUSTOM"
+        assert region_offset.size(
+            1
+        ) == dimension, "region_offset must have the same dimension as the network"
         kernel_volume = int(region_offset.size(0))
 
     else:
@@ -161,7 +166,6 @@ def convert_region_type(region_type,
 
 
 class SparseModuleBase(ABC):
-
     def clear(self):
         """ Must be run after each new data instance. """
         self.in_coords_key[0] = 0
