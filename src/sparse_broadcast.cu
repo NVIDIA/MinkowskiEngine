@@ -124,8 +124,8 @@ void SparseBroadcastBackwardGPU(
 
   d_sorted_in_map = sorted_in_map[0];    // COO cols
   d_sorted_out_map = sorted_out_map[0];  // COO rows
-  d_csr_row.resize(in_nrows_global + 1); // CSR returns n_row + 1
-  d_csr_val.resize(nnz);
+  THRUST_CHECK(d_csr_row.resize(in_nrows_global + 1)); // CSR returns n_row + 1
+  THRUST_CHECK(d_csr_val.resize(nnz));
   thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
 
   CUSPARSE_CHECK(cusparseCreateMatDescr(&descr));
@@ -151,7 +151,7 @@ void SparseBroadcastBackwardGPU(
                           cudaMemcpyDeviceToDevice));
 
     // For grad_in_feat_glob, add all grad_out_feat
-    d_tmp_grad_in_feat_global.resize(in_nrows_global * nchannel);
+    THRUST_CHECK(d_tmp_grad_in_feat_global.resize(in_nrows_global * nchannel));
     CUSPARSE_CHECK(cusparse_csrmm<Dtype>(
         cushandle,
         CUSPARSE_OPERATION_NON_TRANSPOSE, // op(A)
@@ -179,8 +179,8 @@ void SparseBroadcastBackwardGPU(
   case 1: // *
     // First, for grad_in_feat
     // Copy in_feat_global to tmp, then multiply the tmp with grad_out_feat
-    d_tmp_grad_in_feat.resize(in_nrows * nchannel);
-    d_tmp_grad_in_feat_global.resize(in_nrows_global * nchannel);
+    THRUST_CHECK(d_tmp_grad_in_feat.resize(in_nrows * nchannel));
+    THRUST_CHECK(d_tmp_grad_in_feat_global.resize(in_nrows_global * nchannel));
     row2col_major<Dtype>(
         in_nrows_global, nchannel, d_in_feat_global,
         thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()), stream);

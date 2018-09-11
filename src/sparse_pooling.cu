@@ -196,8 +196,8 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   for (int k = 0; k < in_map.size(); k++)
     n_active += in_map[k].size();
 
-  d_in_map.resize(n_active);
-  d_out_map.resize(n_active);
+  THRUST_CHECK(d_in_map.resize(n_active));
+  THRUST_CHECK(d_out_map.resize(n_active));
 
   auto d_in_map_iter = d_in_map.begin();
   auto d_out_map_iter = d_out_map.begin();
@@ -212,9 +212,9 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   }
 
   d_sorted_out_map = d_out_map;
-  d_reduced_sorted_out_map.resize(out_nrows);
-  d_valind.resize(n_active);
-  d_reduced_valind.resize(out_nrows);
+  THRUST_CHECK(d_reduced_sorted_out_map.resize(out_nrows));
+  THRUST_CHECK(d_valind.resize(n_active));
+  THRUST_CHECK(d_reduced_valind.resize(out_nrows));
 
   const Itype *d_in_map_ptr = thrust::raw_pointer_cast(d_in_map.data());
   ValInd<Dtype, Itype> *d_valind_ptr =
@@ -294,8 +294,8 @@ void SparseNonzeroAvgPoolingForwardGPU(
   for (int k = 0; k < in_map.size(); k++)
     nnz += in_map[k].size();
 
-  d_in_map.resize(nnz);
-  d_out_map.resize(nnz);
+  THRUST_CHECK(d_in_map.resize(nnz));
+  THRUST_CHECK(d_out_map.resize(nnz));
 
   auto d_in_map_iter = d_in_map.begin();
   auto d_out_map_iter = d_out_map.begin();
@@ -317,12 +317,12 @@ void SparseNonzeroAvgPoolingForwardGPU(
   //                   << ", in_nrows: " << in_nrows
   //                   << ", out_nrows: " << out_nrows);
 
-  d_csr_row.resize(out_nrows + 1); // CSR returns n_row + 1
-  d_ones.resize(in_nrows);  // one vector used for d_num_nonzero
-  d_csr_val.resize(nnz);
+  THRUST_CHECK(d_csr_row.resize(out_nrows + 1)); // CSR returns n_row + 1
+  THRUST_CHECK(d_ones.resize(in_nrows));  // one vector used for d_num_nonzero
+  THRUST_CHECK(d_csr_val.resize(nnz));
   thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
   thrust::fill(d_ones.begin(), d_ones.end(), 1);
-  d_tmp_out_feat.resize(nchannel * out_nrows);
+  THRUST_CHECK(d_tmp_out_feat.resize(nchannel * out_nrows));
 
   CUSPARSE_CHECK(cusparseCreateMatDescr(&descr));
   cusparseSetMatType(descr, CUSPARSE_MATRIX_TYPE_GENERAL);
@@ -410,8 +410,8 @@ void SparseNonzeroAvgPoolingBackwardGPU(
   for (int k = 0; k < in_map.size(); k++)
     n_active += in_map[k].size();
 
-  d_in_map.resize(n_active);
-  d_out_map.resize(n_active);
+  THRUST_CHECK(d_in_map.resize(n_active));
+  THRUST_CHECK(d_out_map.resize(n_active));
 
   auto d_in_map_iter = d_in_map.begin();
   auto d_out_map_iter = d_out_map.begin();

@@ -68,10 +68,8 @@ void SparseConvolutionForwardGPU(
     CUDA_POST_KERNEL_CHECK;
     d_out_map = out_map[k];
     CUDA_POST_KERNEL_CHECK;
-    d_input_buffer.resize(n_active_in_volume * in_nchannel);
-    CUDA_POST_KERNEL_CHECK;
-    d_output_buffer.resize(n_active_in_volume * out_nchannel);
-    CUDA_POST_KERNEL_CHECK;
+    THRUST_CHECK(d_input_buffer.resize(n_active_in_volume * in_nchannel));
+    THRUST_CHECK(d_output_buffer.resize(n_active_in_volume * out_nchannel));
 
     num_kernels = in_nchannel * n_active_in_volume;
 
@@ -141,10 +139,8 @@ void SparseConvolutionBackwardGPU(
     CUDA_POST_KERNEL_CHECK;
     d_out_map = out_map[k];
     CUDA_POST_KERNEL_CHECK;
-    d_input_buffer.resize(n_active_in_volume * in_nchannel);
-    CUDA_POST_KERNEL_CHECK;
-    d_output_buffer.resize(n_active_in_volume * out_nchannel);
-    CUDA_POST_KERNEL_CHECK;
+    THRUST_CHECK(d_input_buffer.resize(n_active_in_volume * in_nchannel));
+    THRUST_CHECK(d_output_buffer.resize(n_active_in_volume * out_nchannel));
     num_kernels = out_nchannel * n_active_in_volume;
 
     // Copy gradients to the buffer

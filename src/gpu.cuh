@@ -60,6 +60,15 @@
 #define HANDLE_ERROR(err) (HandleError(err, __FILE__, __LINE__))
 #define CUDA_POST_KERNEL_CHECK HANDLE_ERROR(cudaPeekAtLastError())
 
+#define THRUST_CHECK(condition)                                                \
+  try {                                                                        \
+    condition;                                                                 \
+  } catch (thrust::system_error e) {                                           \
+    std::cerr << "Thrust error: " << e.what() << " at " << __FILE__ << ":"     \
+              << __LINE__ << std::endl;                                        \
+    throw std::runtime_error("Thrust error");                                  \
+  }
+
 // CUDA: library error reporting.
 const char *cublasGetErrorString(cublasStatus_t error);
 
