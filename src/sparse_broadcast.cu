@@ -55,7 +55,7 @@ void SparseBroadcastForwardGPU(
     const std::vector<std::vector<Itype>> &sorted_in_map,
     const std::vector<std::vector<Itype>> &sorted_out_map,
     cusparseHandle_t cushandle, cudaStream_t stream) {
-
+  thrust::device_vector<Itype> d_sorted_out_map;
   // Copy all in_feat to out_feat
   CUDA_CHECK(cudaMemcpy(d_out_feat, d_in_feat,
                         sizeof(Dtype) * nchannel * in_nrows,
@@ -70,7 +70,7 @@ void SparseBroadcastForwardGPU(
     throw std::invalid_argument("Invalid in_map");
   }
 
-  thrust::device_vector<Itype> d_sorted_out_map = sorted_out_map[0];
+  THRUST_CHECK(d_sorted_out_map = sorted_out_map[0]);
 
   // To speed up, put switch outside for loops
   switch (op) {
@@ -87,7 +87,6 @@ void SparseBroadcastForwardGPU(
             thrust::raw_pointer_cast(d_sorted_out_map.data()), d_out_feat);
     break;
   }
-  CUDA_POST_KERNEL_CHECK;
 }
 
 template void SparseBroadcastForwardGPU<float, int32_t>(
@@ -122,8 +121,8 @@ void SparseBroadcastBackwardGPU(
   if (sorted_in_map[0].size() != in_nrows)
     throw std::invalid_argument("Invalid in_map");
 
-  d_sorted_in_map = sorted_in_map[0];    // COO cols
-  d_sorted_out_map = sorted_out_map[0];  // COO rows
+  THRUST_CHECK(d_sorted_in_map = sorted_in_map[0]);    // COO cols
+  THRUST_CHECK(d_sorted_out_map = sorted_out_map[0]);  // COO rows
   THRUST_CHECK(d_csr_row.resize(in_nrows_global + 1)); // CSR returns n_row + 1
   THRUST_CHECK(d_csr_val.resize(nnz));
   thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
@@ -174,7 +173,6 @@ void SparseBroadcastBackwardGPU(
         in_nrows_global, nchannel,
         thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()),
         d_grad_in_feat_global, stream);
-    CUDA_POST_KERNEL_CHECK;
     break;
   case 1: // *
     // First, for grad_in_feat
@@ -206,7 +204,6 @@ void SparseBroadcastBackwardGPU(
                          d_grad_in_feat, stream);
     gpu_multiplication<Dtype>(nchannel * in_nrows, d_grad_out_feat,
                               d_grad_in_feat, d_grad_in_feat, stream);
-    CUDA_POST_KERNEL_CHECK;
 
     // Second, for grad_in_feat_global, copy in_feat to tmp,
     CUDA_CHECK(cudaMemcpy(thrust::raw_pointer_cast(d_tmp_grad_in_feat.data()),
@@ -216,7 +213,6 @@ void SparseBroadcastBackwardGPU(
         nchannel * in_nrows, d_in_feat,
         thrust::raw_pointer_cast(d_tmp_grad_in_feat.data()),
         thrust::raw_pointer_cast(d_tmp_grad_in_feat.data()), stream);
-    CUDA_POST_KERNEL_CHECK;
     CUSPARSE_CHECK(cusparse_csrmm<Dtype>(
         cushandle,
         CUSPARSE_OPERATION_NON_TRANSPOSE, // op(A)
@@ -238,7 +234,6 @@ void SparseBroadcastBackwardGPU(
         in_nrows_global, nchannel,
         thrust::raw_pointer_cast(d_tmp_grad_in_feat_global.data()),
         d_grad_in_feat_global, stream);
-    CUDA_POST_KERNEL_CHECK;
     break;
   }
 

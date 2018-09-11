@@ -20,19 +20,24 @@
 // CUDA: various checks for different function calls.
 #define CUDA_CHECK(condition)                                                  \
   /* Code block avoids redefinition of cudaError_t error */                    \
-  do {                                                                         \
+  {                                                                            \
     cudaError_t error = condition;                                             \
-    if (error != cudaSuccess)                                                  \
+    if (error != cudaSuccess) {                                                \
       std::cerr << " " << cudaGetErrorString(error) << " at " << __FILE__      \
                 << ":" << __LINE__ << std::endl;                               \
-  } while (0)
+      throw std::runtime_error("CUDA Error");                                  \
+    }                                                                          \
+  }
 
 #define CUBLAS_CHECK(condition)                                                \
-  do {                                                                         \
+  {                                                                            \
     cublasStatus_t status = condition;                                         \
-    if (status != CUBLAS_STATUS_SUCCESS)                                       \
-      std::cerr << " " << cublasGetErrorString(status);                        \
-  } while (0)
+    if (status != CUBLAS_STATUS_SUCCESS) {                                     \
+      std::cerr << cublasGetErrorString(status) << " at " << __FILE__ << ":"   \
+                << __LINE__ << std::endl;                                      \
+      throw std::runtime_error("CUBLAS Error");                                \
+    }                                                                          \
+  }
 
 #define CUSPARSE_CHECK(call)                                                   \
   {                                                                            \
@@ -45,11 +50,14 @@
   }
 
 #define CURAND_CHECK(condition)                                                \
-  do {                                                                         \
+  {                                                                            \
     curandStatus_t status = condition;                                         \
-    if (status != CURAND_STATUS_SUCCESS)                                       \
-      std::cerr << " " << curandGetErrorString(status);                        \
-  } while (0)
+    if (status != CURAND_STATUS_SUCCESS) {                                     \
+      std::cerr << " " << curandGetErrorString(status) << " at " << __FILE__   \
+                << ":" << __LINE__ << std::endl;                               \
+      throw std::runtime_error("CURAND Error");                                \
+    }                                                                          \
+  }
 
 // CUDA: grid stride looping
 #define CUDA_KERNEL_LOOP(i, n)                                                 \

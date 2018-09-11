@@ -211,7 +211,7 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
     }
   }
 
-  d_sorted_out_map = d_out_map;
+  THRUST_CHECK(d_sorted_out_map = d_out_map);
   THRUST_CHECK(d_reduced_sorted_out_map.resize(out_nrows));
   THRUST_CHECK(d_valind.resize(n_active));
   THRUST_CHECK(d_reduced_valind.resize(out_nrows));
@@ -221,27 +221,25 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
       thrust::raw_pointer_cast(d_valind.data());
 
   // Create sorted d_out_map
-  thrust::sort(d_sorted_out_map.begin(), d_sorted_out_map.end());
+  THRUST_CHECK(thrust::sort(d_sorted_out_map.begin(), d_sorted_out_map.end()));
 
   for (int j = 0; j < nchannel; j++) {
-    d_curr_out_map = d_out_map;
+    THRUST_CHECK(d_curr_out_map = d_out_map);
 
     // Fill the d_valind
     convert_to_valin<Dtype>
         <<<GET_BLOCKS(n_active), CUDA_NUM_THREADS, 0, stream>>>(
             n_active, d_in_feat, j, nchannel, d_in_map_ptr, d_valind_ptr);
-    CUDA_POST_KERNEL_CHECK;
 
     // Sort by d_out_map for reduction
-    thrust::sort_by_key(d_curr_out_map.begin(), d_curr_out_map.end(),
-                        d_valind.begin());
-    CUDA_POST_KERNEL_CHECK;
+    THRUST_CHECK(thrust::sort_by_key(d_curr_out_map.begin(),
+                                     d_curr_out_map.end(), d_valind.begin()));
 
     // reduce by key
-    thrust::reduce_by_key(d_sorted_out_map.begin(), d_sorted_out_map.end(),
-                          d_valind.begin(), d_reduced_sorted_out_map.begin(),
-                          d_reduced_valind.begin(), equal_to, valind_max);
-    CUDA_POST_KERNEL_CHECK;
+    THRUST_CHECK(thrust::reduce_by_key(
+        d_sorted_out_map.begin(), d_sorted_out_map.end(), d_valind.begin(),
+        d_reduced_sorted_out_map.begin(), d_reduced_valind.begin(), equal_to,
+        valind_max));
 
     // Copy the values to the output
     valind_to_out<Dtype>
@@ -288,7 +286,8 @@ void SparseNonzeroAvgPoolingForwardGPU(
   const Dtype beta = 0;
   cusparseMatDescr_t descr = 0;
   thrust::device_vector<Itype> d_in_map, d_out_map, d_csr_row;
-  thrust::device_vector<Dtype> d_ones, d_csr_val, d_tmp_out_feat, d_tmp_num_nonzero;
+  thrust::device_vector<Dtype> d_ones, d_csr_val, d_tmp_out_feat,
+      d_tmp_num_nonzero;
 
   // Copy all maps to one vector
   for (int k = 0; k < in_map.size(); k++)
@@ -318,7 +317,7 @@ void SparseNonzeroAvgPoolingForwardGPU(
   //                   << ", out_nrows: " << out_nrows);
 
   THRUST_CHECK(d_csr_row.resize(out_nrows + 1)); // CSR returns n_row + 1
-  THRUST_CHECK(d_ones.resize(in_nrows));  // one vector used for d_num_nonzero
+  THRUST_CHECK(d_ones.resize(in_nrows)); // one vector used for d_num_nonzero
   THRUST_CHECK(d_csr_val.resize(nnz));
   thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
   thrust::fill(d_ones.begin(), d_ones.end(), 1);
@@ -347,7 +346,7 @@ void SparseNonzeroAvgPoolingForwardGPU(
       thrust::raw_pointer_cast(d_csr_val.data()), // val
       thrust::raw_pointer_cast(d_csr_row.data()), // row
       thrust::raw_pointer_cast(d_in_map.data()),  // col
-      thrust::raw_pointer_cast(d_ones.data()), // B (in_nrows > out_nrows)
+      thrust::raw_pointer_cast(d_ones.data()),    // B (in_nrows > out_nrows)
       &beta,
       d_num_nonzero)); // C
 
@@ -380,7 +379,6 @@ void SparseNonzeroAvgPoolingForwardGPU(
             out_nrows * nchannel, out_nrows, nchannel,
             thrust::raw_pointer_cast(d_tmp_out_feat.data()), d_out_feat);
   }
-  CUDA_POST_KERNEL_CHECK;
 
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
 }

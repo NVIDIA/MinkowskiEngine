@@ -63,7 +63,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
                                          self.net_metadata.ffi)
         else:
             coords_key = ffi.new('uint64_t*', 0)
-            pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
+            pixel_dist = convert_to_int_tensor(key_or_pixel_dist, self.D)
             success = SCE.get_coords(coords, pixel_dist, self.D,
                                      self.net_metadata.ffi)
         if success < 0:

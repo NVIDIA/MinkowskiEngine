@@ -64,10 +64,8 @@ void SparseConvolutionForwardGPU(
       continue;
 
     // Copy (*p_in_maps)[k] to GPU
-    d_in_map = in_map[k];
-    CUDA_POST_KERNEL_CHECK;
-    d_out_map = out_map[k];
-    CUDA_POST_KERNEL_CHECK;
+    THRUST_CHECK(d_in_map = in_map[k]);
+    THRUST_CHECK(d_out_map = out_map[k]);
     THRUST_CHECK(d_input_buffer.resize(n_active_in_volume * in_nchannel));
     THRUST_CHECK(d_output_buffer.resize(n_active_in_volume * out_nchannel));
 
@@ -79,7 +77,6 @@ void SparseConvolutionForwardGPU(
             num_kernels, in_nchannel, d_in_feat,
             thrust::raw_pointer_cast(d_input_buffer.data()),
             thrust::raw_pointer_cast(d_in_map.data()));
-    CUDA_POST_KERNEL_CHECK;
 
     // GEMM
     gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasTrans,
@@ -91,7 +88,6 @@ void SparseConvolutionForwardGPU(
                     thrust::raw_pointer_cast(d_input_buffer.data()),   // B
                     0,                                                 // beta
                     thrust::raw_pointer_cast(d_output_buffer.data())); // C
-    CUDA_POST_KERNEL_CHECK;
 
     // Put it back to the correct index.
     // The out_buffer is in column major order, d_out_feat in row major
@@ -102,7 +98,6 @@ void SparseConvolutionForwardGPU(
             n_active_in_volume,       // In
             d_out_feat, out_nchannel, // Out
             thrust::raw_pointer_cast(d_out_map.data()));
-    CUDA_POST_KERNEL_CHECK;
   }
 }
 
@@ -135,10 +130,8 @@ void SparseConvolutionBackwardGPU(
       continue;
 
     // Copy (*p_in_maps)[k] to GPU
-    d_in_map = in_map[k];
-    CUDA_POST_KERNEL_CHECK;
-    d_out_map = out_map[k];
-    CUDA_POST_KERNEL_CHECK;
+    THRUST_CHECK(d_in_map = in_map[k]);
+    THRUST_CHECK(d_out_map = out_map[k]);
     THRUST_CHECK(d_input_buffer.resize(n_active_in_volume * in_nchannel));
     THRUST_CHECK(d_output_buffer.resize(n_active_in_volume * out_nchannel));
     num_kernels = out_nchannel * n_active_in_volume;
@@ -149,7 +142,6 @@ void SparseConvolutionBackwardGPU(
             num_kernels, out_nchannel, d_grad_out_feat,
             thrust::raw_pointer_cast(d_output_buffer.data()),
             thrust::raw_pointer_cast(d_out_map.data()));
-    CUDA_POST_KERNEL_CHECK;
 
     gpu_gemm<Dtype>(cuhandle, CblasNoTrans, CblasTrans,
                     in_nchannel,                                      // M
@@ -161,7 +153,6 @@ void SparseConvolutionBackwardGPU(
                     0,                                                // beta
                     thrust::raw_pointer_cast(d_input_buffer.data())   // C
                     );
-    CUDA_POST_KERNEL_CHECK;
 
     // Accumulate gradients back to the input grad feat
     // Put it back to the correct index
@@ -173,7 +164,6 @@ void SparseConvolutionBackwardGPU(
             n_active_in_volume,                              // In channel
             d_grad_in_feat, in_nchannel,                     // Out
             thrust::raw_pointer_cast(d_in_map.data()));      // Out channel
-    CUDA_POST_KERNEL_CHECK;
 
     // Compute gradient for kernel
     // Copy features to the buffer
@@ -182,7 +172,6 @@ void SparseConvolutionBackwardGPU(
             num_kernels, in_nchannel, d_in_feat,
             thrust::raw_pointer_cast(d_input_buffer.data()),
             thrust::raw_pointer_cast(d_in_map.data()));
-    CUDA_POST_KERNEL_CHECK;
 
     gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasNoTrans,
                     in_nchannel,                                      // M
@@ -194,7 +183,6 @@ void SparseConvolutionBackwardGPU(
                     1,                                                // beta
                     &d_grad_kernel[k * in_nchannel * out_nchannel]    // C
                     );
-    CUDA_POST_KERNEL_CHECK;
   }
 }
 
