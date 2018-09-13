@@ -74,7 +74,7 @@ def convert_region_type(region_type,
         # Convolution kernel with even numbered kernel size not defined.
         if (kernel_size % 2).prod() == 1:  # Odd
             kernel_volume = int(torch.prod(kernel_size))
-        elif (kernel_size % 2).sum() == 0:  # Even
+        else:  # At least one of the edge is even
             iter_args = []
             for d in range(dimension):
                 off_center = int(math.floor(
@@ -88,8 +88,6 @@ def convert_region_type(region_type,
 
             region_offset = torch.IntTensor(region_offset)
             kernel_volume = int(region_offset.size(0))
-        else:
-            raise ValueError('All edges must have the same length.')
 
     elif region_type == RegionType.HYPERCROSS:
         assert torch.prod(kernel_size > 0) == 1, "kernel_size must be positive"
