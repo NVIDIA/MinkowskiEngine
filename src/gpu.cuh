@@ -25,7 +25,7 @@
     if (error != cudaSuccess) {                                                \
       std::cerr << " " << cudaGetErrorString(error) << " at " << __FILE__      \
                 << ":" << __LINE__ << std::endl;                               \
-      throw std::runtime_error("CUDA Error");                                  \
+      exit(1);                                                                 \
     }                                                                          \
   }
 
@@ -35,7 +35,7 @@
     if (status != CUBLAS_STATUS_SUCCESS) {                                     \
       std::cerr << cublasGetErrorString(status) << " at " << __FILE__ << ":"   \
                 << __LINE__ << std::endl;                                      \
-      throw std::runtime_error("CUBLAS Error");                                \
+      exit(1);                                                                 \
     }                                                                          \
   }
 
@@ -55,7 +55,7 @@
     if (status != CURAND_STATUS_SUCCESS) {                                     \
       std::cerr << " " << curandGetErrorString(status) << " at " << __FILE__   \
                 << ":" << __LINE__ << std::endl;                               \
-      throw std::runtime_error("CURAND Error");                                \
+      exit(1);                                                                 \
     }                                                                          \
   }
 
@@ -74,7 +74,7 @@
   } catch (thrust::system_error e) {                                           \
     std::cerr << "Thrust error: " << e.what() << " at " << __FILE__ << ":"     \
               << __LINE__ << std::endl;                                        \
-    throw std::runtime_error("Thrust error");                                  \
+    exit(1);                                                                   \
   }
 
 // CUDA: library error reporting.
