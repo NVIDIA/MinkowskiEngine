@@ -28,8 +28,11 @@ class SparseConvolutionFunction(Function):
         self.dimension = dimension
         self.net_metadata = net_metadata
         self.region_offset = region_offset
-        self.in_coords_key = in_coords_key
-        self.out_coords_key = out_coords_key
+        # Initializes all with 0
+        self.in_coords_key = in_coords_key \
+            if in_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = out_coords_key \
+            if out_coords_key else ffi.new('uint64_t *', 0)
         self.conv_fw_cpu = SCE.convolution_forward
         self.conv_bw_cpu = SCE.convolution_backward
         self.conv_fw_gpu = SCE.convolution_forward_gpu
@@ -82,8 +85,11 @@ class SparseConvolutionTransposeFunction(Function):
         self.dimension = dimension
         self.net_metadata = net_metadata
         self.region_offset = region_offset
-        self.in_coords_key = in_coords_key
-        self.out_coords_key = out_coords_key
+        # Initializes all with 0
+        self.in_coords_key = in_coords_key \
+            if in_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = out_coords_key \
+            if out_coords_key else ffi.new('uint64_t *', 0)
         self.conv_fw_cpu = SCE.convolution_transpose_forward
         self.conv_bw_cpu = SCE.convolution_transpose_backward
         self.conv_fw_gpu = SCE.convolution_transpose_forward_gpu

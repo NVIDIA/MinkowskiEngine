@@ -33,8 +33,11 @@ class SparseMaxPoolingFunction(Function):
         self.dimension = dimension
         self.net_metadata = net_metadata
         self.region_offset = region_offset
-        self.in_coords_key = in_coords_key
-        self.out_coords_key = out_coords_key
+        # Initializes all with 0
+        self.in_coords_key = in_coords_key \
+            if in_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = out_coords_key \
+            if out_coords_key else ffi.new('uint64_t *', 0)
 
         self.pooling_fw_cpu = SCE.max_pooling_forward
         self.pooling_bw_cpu = SCE.max_pooling_backward
@@ -152,8 +155,11 @@ class SparseAvgPoolingFunctionBase(Function):
         self.dimension = dimension
         self.net_metadata = net_metadata
         self.region_offset = region_offset
-        self.in_coords_key = in_coords_key
-        self.out_coords_key = out_coords_key
+        # Initializes all with 0
+        self.in_coords_key = in_coords_key \
+            if in_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = out_coords_key \
+            if out_coords_key else ffi.new('uint64_t *', 0)
 
         self.pooling_fw_cpu = SCE.nonzero_avg_pooling_forward
         self.pooling_bw_cpu = SCE.nonzero_avg_pooling_backward
@@ -366,8 +372,11 @@ class SparseNonzeroAvgUnpoolingFunction(Function):
         self.dimension = dimension
         self.net_metadata = net_metadata
         self.region_offset = region_offset
-        self.in_coords_key = in_coords_key
-        self.out_coords_key = out_coords_key
+        # Initializes all with 0
+        self.in_coords_key = in_coords_key \
+            if in_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = out_coords_key \
+            if out_coords_key else ffi.new('uint64_t *', 0)
 
         self.unpooling_fw_cpu = SCE.unpooling_forward
         self.unpooling_bw_cpu = SCE.unpooling_backward
@@ -444,8 +453,12 @@ class SparseGlobalAvgPoolingFunction(Function):
 
         self.pixel_dist = pixel_dist
         self.batch_size = batch_size
-        self.in_coords_key = in_coords_key
-        self.out_coords_key = out_coords_key
+        # Initializes all with 0
+        self.in_coords_key = in_coords_key \
+            if in_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = out_coords_key \
+            if out_coords_key else ffi.new('uint64_t *', 0)
+
         self.dimension = dimension
         self.net_metadata = net_metadata
         self.pooling_fw_cpu = SCE.global_avg_pooling_forward

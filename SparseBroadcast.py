@@ -30,8 +30,11 @@ class SparseGlobalBroadcastFunction(Function):
         self.pixel_dist = pixel_dist
         self.dimension = dimension
         self.net_metadata = net_metadata
-        self.in_coords_key = in_coords_key
-        self.out_coords_key = glob_coords_key
+        # Initializes all with 0
+        self.in_coords_key = in_coords_key \
+            if in_coords_key else ffi.new('uint64_t *', 0)
+        self.out_coords_key = glob_coords_key \
+            if glob_coords_key else ffi.new('uint64_t *', 0)
 
         self.broadcast_fw_cpu = SCE.global_broadcast_forward
         self.broadcast_bw_cpu = SCE.global_broadcast_backward
