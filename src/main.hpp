@@ -342,7 +342,8 @@ long t_initialize_origin_coords(const uint64_t *p_in_coords_key,
                                 void **metadata);
 
 template <uint8_t D, typename Itype>
-long t_initialize_coords_with_duplicates(const Itype *coords, int nrows,
+long t_initialize_coords_with_duplicates(const Itype *coords,
+                                         Itype *coord_indices, int nrows,
                                          const Itype *p_pixel_dist,
                                          void **metadata);
 

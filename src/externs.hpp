@@ -89,14 +89,16 @@ extern "C" long _initialize_coords(int *coords, int nrows, int *p_pixel_dist,
 }
 
 template <uint8_t D, typename Itype>
-long t_initialize_coords_with_duplicates(const Itype *coords, int nrows,
+long t_initialize_coords_with_duplicates(const Itype *coords,
+                                         Itype *coord_indices, int nrows,
                                          const Itype *p_pixel_dist,
                                          void **metadata);
-extern "C" long _initialize_coords_with_duplicates(int *coords, int nrows,
-                                                   int *p_pixel_dist, int D,
-                                                   void **metadata) {
+extern "C" long _initialize_coords_with_duplicates(int *coords,
+                                                   int *coord_indices,
+                                                   int nrows, int *p_pixel_dist,
+                                                   int D, void **metadata) {
   SWITCH_DIM_ITYPE(return, t_initialize_coords_with_duplicates, int32_t, coords,
-                         nrows, p_pixel_dist, metadata)
+                         coord_indices, nrows, p_pixel_dist, metadata)
 }
 
 template <uint8_t D, typename Itype>

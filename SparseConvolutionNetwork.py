@@ -43,12 +43,19 @@ class SparseConvolutionNetwork(nn.Module, ABC):
             raise ValueError('Coordinate initialization failed')
 
     def initialize_coords_with_duplicates(self, coords):
+        """
+        Given the coords with duplicates, returns the indices of the
+        corresponding coords
+        """
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         pixel_dist = convert_to_int_tensor(1, self.D)
+        coord_indices = torch.IntTensor()
         success = SCE.initialize_coords_with_duplicates(
-            coords.contiguous(), pixel_dist, self.D, self.net_metadata.ffi)
+            coords.contiguous(), coord_indices, pixel_dist, self.D,
+            self.net_metadata.ffi)
         if success < 0:
             raise ValueError('Coordinate initialization failed')
+        return coord_indices
 
     def get_coords(self, key_or_pixel_dist):
         """

@@ -7,6 +7,7 @@ long initialize_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist,
                        long D, void **m);
 
 long initialize_coords_with_duplicates(THIntTensor *th_coords,
+                                       THIntTensor *th_coord_indices,
                                        THIntTensor *th_pixel_dist, long D,
                                        void **m);
 

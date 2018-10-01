@@ -107,14 +107,22 @@ long initialize_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist,
   return _initialize_coords(p_coords, nrows, p_pixel_dist, D, m);
 }
 
+/*
+ * Initialize the coordinates at the pixel_dist and return the indices of the
+ * coords in th_coords_indices
+ */
 long initialize_coords_with_duplicates(THIntTensor *th_coords,
+                                       THIntTensor *th_coord_indices,
                                        THIntTensor *th_pixel_dist, long D,
                                        void **m) {
   INIT_COORDS(th_coords, p_coords, nrows)
   INIT_D_DIM_ARRY(th_pixel_dist, p_pixel_dist)
 
-  return _initialize_coords_with_duplicates(p_coords, nrows, p_pixel_dist, D,
-                                            m);
+  THIntTensor_resize1d(th_coord_indices, nrows);
+  int *p_coord_indices = THIntTensor_data(th_coord_indices);
+
+  return _initialize_coords_with_duplicates(p_coords, p_coord_indices, nrows,
+                                            p_pixel_dist, D, m);
 }
 
 long get_coords(THIntTensor *th_coords, THIntTensor *th_pixel_dist, long D,

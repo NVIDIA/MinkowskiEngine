@@ -4,9 +4,9 @@
 extern long _initialize_coords(int *coords, int nrows, int *p_pixel_dist, int D,
                                void **metadata);
 
-extern long _initialize_coords_with_duplicates(int *coords, int nrows,
-                                               int *p_pixel_dist, int D,
-                                               void **metadata);
+extern long _initialize_coords_with_duplicates(int *coords, int *coord_indices,
+                                               int nrows, int *p_pixel_dist,
+                                               int D, void **metadata);
 
 extern long _initialize_out_coords(uint64_t *p_in_coords_key,
                                    uint64_t *p_out_coords_key,

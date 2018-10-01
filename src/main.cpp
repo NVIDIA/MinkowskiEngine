@@ -122,7 +122,8 @@ CoordIndexMap<D, Itype> CreateCoordIndexMap(const Itype *loc, Itype nrows,
   index mapping for convolution computation.
 */
 template <uint8_t D, typename Itype>
-CoordIndexMap<D, Itype> CreateDuplicateCoordIndexMap(const Itype *loc,
+CoordIndexMap<D, Itype> CreateDuplicateCoordIndexMap(const Itype *coords,
+                                                     Itype *coord_indices,
                                                      Itype nrows, Itype ncols) {
   assert(ncols - 1 == D); // D+1 th coord is the batch index
   int counter = 0;
@@ -130,9 +131,14 @@ CoordIndexMap<D, Itype> CreateDuplicateCoordIndexMap(const Itype *loc,
   coord_map.map.resize(nrows);
   Coord<D, Itype> coord;
   for (int i = 0; i < nrows; i++) {
-    std::copy(&loc[i * ncols], &loc[(i + 1) * ncols], coord.data());
-    if (coord_map.map.find(coord) == coord_map.map.end()) {
-      coord_map.map[coord] = counter++;
+    std::copy(&coords[i * ncols], &coords[(i + 1) * ncols], coord.data());
+    auto coord_iter = coord_map.map.find(coord);
+    if (coord_iter == coord_map.map.end()) {
+      coord_map.map[coord] = counter;
+      coord_indices[i] = counter;
+      counter++;
+    } else {
+      coord_indices[i] = coord_iter->second;
     }
   }
   return coord_map;
@@ -394,7 +400,8 @@ long t_initialize_coords(const Itype *coords, int nrows,
  * Given coordinates and the pixel distance, create index map and index map
  */
 template <uint8_t D, typename Itype>
-long t_initialize_coords_with_duplicates(const Itype *coords, int nrows,
+long t_initialize_coords_with_duplicates(const Itype *coords,
+                                         Itype *coord_indices, int nrows,
                                          const Itype *p_pixel_dist,
                                          void **metadata) {
   INITIALIZE_AND_REFERENCE(metadata, init_metadata);
@@ -408,7 +415,7 @@ long t_initialize_coords_with_duplicates(const Itype *coords, int nrows,
   }
 
   (*coord2inds)[pixel_dist_hash] =
-      CreateDuplicateCoordIndexMap<D>(coords, nrows, D + 1);
+      CreateDuplicateCoordIndexMap<D>(coords, coord_indices, nrows, D + 1);
 }
 
 /*
