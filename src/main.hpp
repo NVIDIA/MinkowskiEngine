@@ -32,12 +32,13 @@ template <typename T> void print_arr(T arr) {
 // is_transpose)
 using InOutKey = std::array<uint64_t, 6>;
 
+// FNV64-1a
 // uint64_t for unsigned long, must use CXX -m64
 template <typename T> uint64_t hash_vec(T p) {
   uint64_t hash = UINT64_C(14695981039346656037);
-  for (uint64_t x : p) {
-    hash *= UINT64_C(1099511628211);
+  for (uint32_t x : p) {
     hash ^= x;
+    hash *= UINT64_C(1099511628211);
   }
   return hash;
 }

@@ -186,7 +186,7 @@ CreateOutputCoordIndexMap(const CoordIndexMap<D, Itype> in_coord_map,
     for (auto in_pair : in_coord_map.map) {
       Coord<D, Itype> coord(in_pair.first);
       for (int j = 0; j < D; j++)
-        coord[j] = int(coord[j] / new_pixel_dists[j]) * new_pixel_dists[j];
+        coord[j] = int(floor(((float)coord[j]) / new_pixel_dists[j])) * new_pixel_dists[j];
       if (out_coord_map.map.find(coord) == out_coord_map.map.end())
         out_coord_map.map[coord] = n_out++;
     }
@@ -601,7 +601,7 @@ long t_get_permutation(Itype *p_permutation, const Itype *p_pixel_dist_src,
     out_ind = dst_pair.second;
     Coord<D, Itype> coord = dst_pair.first;
     for (int i = 0; i < D; i++) {
-      coord[i] = (coord[i] / strides[i]) * strides[i];
+      coord[i] = int(floor(((float)coord[i]) / strides[i])) * strides[i];
     }
     in_ind = (*coord2ind_src)[coord];
     p_permutation[out_ind] = in_ind;
