@@ -5,27 +5,38 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import SparseConvolutionEngineFFI as SCE
+import MinkowskiEngineFFI as ME
+from SparseTensor import SparseTensor
 from Common import SparseModuleBase, NetMetadata, convert_to_int_tensor, ffi
 
 
-class SparseConvolutionNetwork(nn.Module, ABC):
+class MinkowskiNetwork(nn.Module, ABC):
     """
-    SparseConvolutionNetwork: an abstract class for sparse convnets.
+    MinkowskiNetwork: an abstract class for sparse convnets.
 
     Note: All modules that use the same coordinates must use the same net_metadata
     """
 
     def __init__(self, D):
-        super(SparseConvolutionNetwork, self).__init__()
+        super(MinkowskiNetwork, self).__init__()
         self.D = D
         self.net_metadata = NetMetadata(D)
 
     @abstractmethod
     def forward(self, x):
-        if self.n_rows < 0:
-            raise ValueError('Initialize input coordinates')
-        elif self.n_rows != x.size(0):
+        pass
+
+    def init(self, x):
+        """
+        Initialize coordinates if it does not exist
+        """
+        nrows = self.get_nrows(1)
+        if nrows < 0:
+            if isinstance(x, SparseTensor):
+                self.initialize_coords(x.C)
+            else:
+                raise ValueError('Initialize input coordinates')
+        elif nrows != x.F.size(0):
             raise ValueError('Input size does not match the coordinate size')
 
     def clear(self):
@@ -37,8 +48,8 @@ class SparseConvolutionNetwork(nn.Module, ABC):
     def initialize_coords(self, coords):
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         pixel_dist = convert_to_int_tensor(1, self.D)
-        success = SCE.initialize_coords(coords.contiguous(), pixel_dist,
-                                        self.D, self.net_metadata.ffi)
+        success = ME.initialize_coords(coords.contiguous(), pixel_dist, self.D,
+                                       self.net_metadata.ffi)
         if success < 0:
             raise ValueError('Coordinate initialization failed')
 
@@ -50,7 +61,7 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         pixel_dist = convert_to_int_tensor(1, self.D)
         coord_indices = torch.IntTensor()
-        success = SCE.initialize_coords_with_duplicates(
+        success = ME.initialize_coords_with_duplicates(
             coords.contiguous(), coord_indices, pixel_dist, self.D,
             self.net_metadata.ffi)
         if success < 0:
@@ -66,13 +77,13 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         coords = torch.IntTensor()
         if isinstance(key_or_pixel_dist, ffi.CData):
             coords_key = key_or_pixel_dist
-            success = SCE.get_coords_key(coords, coords_key, self.D,
-                                         self.net_metadata.ffi)
+            success = ME.get_coords_key(coords, coords_key, self.D,
+                                        self.net_metadata.ffi)
         else:
             coords_key = ffi.new('uint64_t*', 0)
             pixel_dist = convert_to_int_tensor(key_or_pixel_dist, self.D)
-            success = SCE.get_coords(coords, pixel_dist, self.D,
-                                     self.net_metadata.ffi)
+            success = ME.get_coords(coords, pixel_dist, self.D,
+                                    self.net_metadata.ffi)
         if success < 0:
             raise ValueError('No coord found at : {}'.format(pixel_dist))
         return coords
@@ -87,8 +98,8 @@ class SparseConvolutionNetwork(nn.Module, ABC):
             assert pixel_dist_src[i] >= pixel_dist_dst[i]
 
         perm = torch.IntTensor()
-        success = SCE.get_permutation(perm, pixel_dist_src, pixel_dist_dst,
-                                      self.D, self.net_metadata.ffi)
+        success = ME.get_permutation(perm, pixel_dist_src, pixel_dist_dst,
+                                     self.D, self.net_metadata.ffi)
         if success < 0:
             raise ValueError('get_permutation failed')
         return perm
@@ -104,8 +115,8 @@ class SparseConvolutionNetwork(nn.Module, ABC):
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         index_map = torch.IntTensor()
         pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
-        success = SCE.get_index_map(coords.contiguous(), index_map, pixel_dist,
-                                    self.D, self.net_metadata.ffi)
+        success = ME.get_index_map(coords.contiguous(), index_map, pixel_dist,
+                                   self.D, self.net_metadata.ffi)
         if success < 0:
             raise ValueError('get_index_map failed')
         return index_map
@@ -123,10 +134,8 @@ class SparseConvolutionNetwork(nn.Module, ABC):
             coords_key = ffi.new('uint64_t*', 0)
             pixel_dist = convert_to_int_tensor(key_or_pixel_dist, self.D)
 
-        nrows = SCE.get_nrows(coords_key, pixel_dist, self.D,
-                              self.net_metadata.ffi)
-        if nrows < 0:
-            raise ValueError('No coord found at : {}'.format(pixel_dist))
+        nrows = ME.get_nrows(coords_key, pixel_dist, self.D,
+                             self.net_metadata.ffi)
         return nrows
 
     def permute_label(self, label, max_label, pixel_dist):

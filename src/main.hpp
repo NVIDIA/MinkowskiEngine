@@ -34,6 +34,7 @@ using InOutKey = std::array<uint64_t, 6>;
 
 // FNV64-1a
 // uint64_t for unsigned long, must use CXX -m64
+// WARNING: IType for T must be int32
 template <typename T> uint64_t hash_vec(T p) {
   uint64_t hash = UINT64_C(14695981039346656037);
   for (uint32_t x : p) {

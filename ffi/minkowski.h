@@ -20,6 +20,9 @@ long get_coords_key(THIntTensor *th_coords, uint64_t *p_coords_key, long D,
 long get_nrows(uint64_t *p_coords_key, THIntTensor *th_pixel_dist, long D,
                void **m);
 
+long check_coords(THIntTensor *th_pixel_dist, uint64_t *p_coords_key, long D,
+                  void **m);
+
 long get_permutation(THIntTensor *th_permutation,
                      THIntTensor *th_pixel_dist_src,
                      THIntTensor *th_pixel_dist_dst, long D, void **m);

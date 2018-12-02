@@ -32,6 +32,9 @@ extern long _get_coords(int *coords, uint64_t *p_coords_key, int *p_pixel_dist,
 extern long _get_num_coords(uint64_t *p_coords_key, int *p_pixel_dist,
                             int *p_nrows, int D, void **metadata);
 
+extern long _check_coords(uint64_t *p_coords_key, int *p_pixel_dist, int D,
+                          void **metadata);
+
 extern long _get_permutation(int *p_permutation, int *p_pixel_dist_src,
                              int *p_pixel_dist_dst, int D, void **metadata);
 

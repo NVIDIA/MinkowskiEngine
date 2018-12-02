@@ -2,22 +2,22 @@ from os import system
 from setuptools import setup, find_packages
 assert system('make') == 0
 setup(
-    name='SparseConvolutionEngine',
+    name='MinkowskiEngine',
     version='0.1.0',
     install_requires=['torch', 'cffi'],
-    packages=['SparseConvolutionEngine'],
-    package_dir={'SparseConvolutionEngine': './'},
+    packages=['MinkowskiEngine'],
+    package_dir={'MinkowskiEngine': './'},
     package_data={
-        'SparseConvolutionEngine': [
-            'SparseConvolutionEngineFFI/__init__.py',
-            'SparseConvolutionEngineFFI/_SparseConvolutionEngineFFI.so',
-            'SparseConvolutionEngineFFI/libsparse.so',
+        'MinkowskiEngine': [
+            'MinkowskiEngineFFI/__init__.py',
+            'MinkowskiEngineFFI/_MinkowskiEngineFFI.so',
+            'MinkowskiEngineFFI/libminkowski.so',
         ],
     },
     author='Christopher B. Choy',
     author_email='chrischoy@ai.stanford.edu',
-    description='Sparse Convolution Engine',
-    keywords='Sparse Convolution Neural Network',
-    url='https://github.com/chrischoy/SparseConvolutionEngine',
+    description='Autodiff Sparse Tensor Library',
+    keywords='Minkowski Engine Neural Network',
+    url='https://github.com/chrischoy/MinkowskiEngine',
     zip_safe=False,
 )

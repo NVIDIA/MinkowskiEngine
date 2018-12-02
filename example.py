@@ -1,23 +1,26 @@
 import numpy as np
+import logging
+
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from SparseConvolutionEngine import SparseConvolution, SparseConvolutionNetwork
+from MinkowskiEngine import SparseConvolution, SparseGlobalAvgPooling, MinkowskiNetwork
+
+from tests.common import data_loader
 
 
-class ExampleSparseNetwork(SparseConvolutionNetwork):
-    def __init__(self, D):
-        super(ExampleSparseNetwork, self).__init__(D)
+class ExampleNetwork(MinkowskiNetwork):
+    def __init__(self, in_feat, out_feat, D):
+        super(ExampleNetwork, self).__init__(D)
         net_metadata = self.net_metadata
-        kernel_size, dilation = 3, 1
         self.conv1 = SparseConvolution(
-            in_channels=3,
+            in_channels=in_feat,
             out_channels=64,
             pixel_dist=1,
-            kernel_size=kernel_size,
+            kernel_size=3,
             stride=2,
-            dilation=dilation,
+            dilation=1,
             has_bias=False,
             dimension=D,
             net_metadata=net_metadata)
@@ -26,30 +29,19 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
             in_channels=64,
             out_channels=128,
             pixel_dist=2,
-            kernel_size=kernel_size,
+            kernel_size=3,
             stride=2,
-            dilation=dilation,
-            has_bias=False,
             dimension=D,
             net_metadata=net_metadata)
         self.bn2 = nn.BatchNorm1d(128)
-        self.conv3 = SparseConvolution(
-            in_channels=128,
-            out_channels=32,
+        self.pooling = SparseGlobalAvgPooling(
             pixel_dist=4,
-            kernel_size=kernel_size,
-            stride=1,
-            dilation=dilation,
-            has_bias=False,
             dimension=D,
             net_metadata=net_metadata)
-        self.bn3 = nn.BatchNorm1d(32)
+        self.linear = nn.Linear(128, out_feat)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        # Run basic checks
-        super(ExampleSparseNetwork, self).forward(x)
-
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
@@ -58,46 +50,27 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
         out = self.bn2(out)
         out = self.relu(out)
 
-        return self.conv3(out)
+        out = self.pooling(out)
+        return self.linear(out)
 
 
 if __name__ == '__main__':
-    net = ExampleSparseNetwork(2)  # 2 dimensional sparse convnet
+    # loss and network
+    criterion = nn.CrossEntropyLoss()
+    net = ExampleNetwork(in_feat=3, out_feat=5, D=2)
     print(net)
 
-    max_label = 5
-    IN = [" X      ", "X XX   X", "        ", " XX    X"]
-    coords = []
-    for i, row in enumerate(IN):
-        for j, col in enumerate(row):
-            if col != ' ':
-                coords.append([i, j, 0])  # Last element for batch index
+    # a data loader must return a tuple of coords, features, and labels.
+    coords, feat, label = data_loader()
+    # for training, convert to a var
+    input = Variable(feat, requires_grad=True)
 
-    for i, row in enumerate(IN):
-        for j, col in enumerate(row):
-            if col != ' ':
-                coords.append([i, j, 1])  # Last element for batch index
-
-    in_feat = torch.randn(len(coords), 3)
-    label = (torch.rand(len(coords)) * max_label).long()
-    coords = torch.from_numpy(np.array(coords)).int()
-
-    net.initialize_coords(coords)
-    input = Variable(in_feat, requires_grad=True)
+    # Forward
+    net.initialize_coords(coords)  # net must be initialized
     output = net(input)
-    print(output)
 
+    # Loss
+    loss = criterion(output, label)
     # Gradient
-    grad = torch.zeros(output.size())
-    grad[0] = 1
-    output.backward(grad)
-    print(input.grad)
-
-    print(net.get_coords(1))
-    print(net.get_coords(2))
-    print(net.get_coords(4))
-
-    print(net.get_permutation(4, 1))
-    print(net.permute_label(label, max_label, 4))
-
+    loss.backward()
     net.clear()

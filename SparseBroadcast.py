@@ -3,8 +3,9 @@ from enum import Enum
 from torch.nn import Module
 from torch.autograd import Function
 
-import SparseConvolutionEngineFFI as SCE
-from Common import convert_to_int_tensor, ffi, SparseModuleBase
+import MinkowskiEngineFFI as ME
+from SparseTensor import SparseTensor
+from Common import convert_to_int_tensor, prep_coords_keys
 
 
 class OperationType(Enum):
@@ -19,82 +20,73 @@ def operation_type_to_int(op):
 
 
 class SparseGlobalBroadcastFunction(Function):
-    def __init__(self, operation_type, pixel_dist, in_coords_key,
-                 glob_coords_key, dimension, net_metadata):
-        super(SparseGlobalBroadcastFunction, self).__init__()
+
+    @staticmethod
+    def forward(ctx,
+                input_features,
+                input_features_global,
+                pixel_dist,
+                operation_type,
+                in_coords_key=None,
+                glob_coords_key=None,
+                net_metadata=None):
         assert isinstance(operation_type, OperationType)
+        ctx.pixel_dist = convert_to_int_tensor(pixel_dist, net_metadata.D)
+        ctx.op = operation_type_to_int(operation_type)
+        ctx.pixel_dist = pixel_dist
+        ctx.net_metadata = net_metadata
+        ctx.in_coords_key, ctx.out_coords_key = prep_coords_keys(
+            in_coords_key, glob_coords_key)
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
-
-        self.op = operation_type_to_int(operation_type)
-        self.pixel_dist = pixel_dist
-        self.dimension = dimension
-        self.net_metadata = net_metadata
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = glob_coords_key \
-            if glob_coords_key else ffi.new('uint64_t *', 0)
-
-        self.broadcast_fw_cpu = SCE.global_broadcast_forward
-        self.broadcast_bw_cpu = SCE.global_broadcast_backward
-        self.broadcast_fw_gpu = SCE.global_broadcast_forward_gpu
-        self.broadcast_bw_gpu = SCE.global_broadcast_backward_gpu
-
-    def forward(ctx, input_features, input_features_global):
         ctx.in_feat = input_features
         ctx.in_feat_glob = input_features_global
 
         out_feat = input_features.new()
 
-        fw_fn = ctx.broadcast_fw_gpu if input_features.is_cuda else ctx.broadcast_fw_cpu
+        fw_fn = ME.global_broadcast_forward_gpu if input_features.is_cuda else ME.global_broadcast_forward
         fw_fn(ctx.in_feat, ctx.in_feat_glob, out_feat, ctx.pixel_dist, ctx.op,
-              ctx.in_coords_key, ctx.out_coords_key, ctx.dimension,
+              ctx.in_coords_key, ctx.out_coords_key, ctx.net_metadata.D,
               ctx.net_metadata.ffi)
         return out_feat
 
+    @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         grad_in_feat_glob = grad_out_feat.new()
-        bw_fn = ctx.broadcast_bw_gpu if grad_out_feat.is_cuda else ctx.broadcast_bw_cpu
+        bw_fn = ME.global_broadcast_backward_gpu if grad_out_feat.is_cuda else ME.global_broadcast_backward
         bw_fn(ctx.in_feat, grad_in_feat, ctx.in_feat_glob, grad_in_feat_glob,
               grad_out_feat, ctx.pixel_dist, ctx.op, ctx.in_coords_key,
-              ctx.out_coords_key, ctx.dimension, ctx.net_metadata.ffi)
-        return grad_in_feat, grad_in_feat_glob
+              ctx.out_coords_key, ctx.net_metadata.D, ctx.net_metadata.ffi)
+        return grad_in_feat, grad_in_feat_glob, None, None, None, None, None
 
 
-class SparseGlobalBroadcast(Module, SparseModuleBase):
-    def __init__(self,
-                 operation_type,
-                 pixel_dist,
-                 in_coords_key=None,
-                 glob_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
+class SparseGlobalBroadcast(Module):
+
+    def __init__(self, operation_type, dimension=-1):
         super(SparseGlobalBroadcast, self).__init__()
-        if dimension is None or net_metadata is None:
-            raise ValueError('Dimension and net_metadata must be defined')
         assert isinstance(operation_type, OperationType)
+        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
         self.operation_type = operation_type
-        self.pixel_dist = pixel_dist
         self.dimension = dimension
-        self.net_metadata = net_metadata
 
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = glob_coords_key \
-            if glob_coords_key else ffi.new('uint64_t *', 0)
-
-        self.broadcast = SparseGlobalBroadcastFunction(
-            self.operation_type, self.pixel_dist, self.in_coords_key,
-            self.out_coords_key, self.dimension, self.net_metadata)
+        self.broadcast = SparseGlobalBroadcastFunction()
 
     def forward(self, input, input_glob):
-        out = self.broadcast(input, input_glob)
-        return out
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+        if not input.initialize():
+            raise ValueError('The input coordinates not initialized')
+
+        output = self.broadcast.apply(input.F, input_glob.F, input.pixel_dist,
+                                      self.operation_type, input.coords_key,
+                                      input_glob.coords_key, input.m)
+        return SparseTensor(
+            output,
+            coords=input.C,
+            coords_key=input.coords_key,
+            pixel_dist=input.pixel_dist,
+            net_metadata=input.m)
 
     def __repr__(self):
         s = '(pixel_dist={})'.format(self.pixel_dist)
@@ -102,24 +94,14 @@ class SparseGlobalBroadcast(Module, SparseModuleBase):
 
 
 class SparseGlobalBroadcastAddition(SparseGlobalBroadcast):
-    def __init__(self,
-                 pixel_dist,
-                 in_coords_key=None,
-                 glob_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
+
+    def __init__(self, dimension=-1):
         super(SparseGlobalBroadcastAddition, self).__init__(
-            OperationType.ADDITION, pixel_dist, in_coords_key, glob_coords_key,
-            dimension, net_metadata)
+            OperationType.ADDITION, dimension)
 
 
 class SparseGlobalBroadcastMultiplication(SparseGlobalBroadcast):
-    def __init__(self,
-                 pixel_dist,
-                 in_coords_key=None,
-                 glob_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
+
+    def __init__(self, dimension=-1):
         super(SparseGlobalBroadcastMultiplication, self).__init__(
-            OperationType.MULTIPLICATION, pixel_dist, in_coords_key,
-            glob_coords_key, dimension, net_metadata)
+            OperationType.MULTIPLICATION, dimension)

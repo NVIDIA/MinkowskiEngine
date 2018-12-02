@@ -1,8 +1,10 @@
+import torch
 from torch.nn import Module
 from torch.autograd import Function
 
-import SparseConvolutionEngineFFI as SCE
-from Common import RegionType, convert_to_int_tensor, convert_region_type, ffi, SparseModuleBase
+import MinkowskiEngineFFI as ME
+from SparseTensor import SparseTensor
+from Common import RegionType, SparseModuleBase, convert_to_int_tensor, convert_region_type, ffi, prep_args, prep_coords_keys, save_ctx
 
 
 class SparseMaxPoolingFunction(Function):
@@ -14,116 +16,113 @@ class SparseMaxPoolingFunction(Function):
     the ffi function.
     '''
 
-    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, in_coords_key, out_coords_key, dimension,
-                 net_metadata):
-        super(SparseMaxPoolingFunction, self).__init__()
-        assert isinstance(region_type, RegionType)
+    @staticmethod
+    def forward(ctx,
+                input_features,
+                pixel_dist=1,
+                stride=1,
+                kernel_size=-1,
+                dilation=1,
+                region_type=-1,
+                region_offset=None,
+                in_coords_key=None,
+                out_coords_key=None,
+                net_metadata=None):
+        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
+            pixel_dist, stride, kernel_size, dilation, region_type,
+            net_metadata.D)
+        in_coords_key, out_coords_key = prep_coords_keys(
+            in_coords_key, out_coords_key)
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
+        if region_offset is None:
+            region_offset = torch.IntTensor()
 
-        self.pixel_dist = pixel_dist
-        self.stride = stride
-        self.kernel_size = kernel_size
-        self.dilation = dilation
-        self.region_type = int(region_type)
-        self.dimension = dimension
-        self.net_metadata = net_metadata
-        self.region_offset = region_offset
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = out_coords_key \
-            if out_coords_key else ffi.new('uint64_t *', 0)
-
-        self.pooling_fw_cpu = SCE.max_pooling_forward
-        self.pooling_bw_cpu = SCE.max_pooling_backward
-        self.pooling_fw_gpu = SCE.max_pooling_forward_gpu
-        self.pooling_bw_gpu = SCE.max_pooling_backward_gpu
-
-    def forward(ctx, input_features):
         ctx.in_feat = input_features
-        out_feat = input_features.new()
         ctx.mask_index = input_features.new().int()
+        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+                       in_coords_key, out_coords_key, net_metadata)
 
-        fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
-        fw_fn(ctx.in_feat, out_feat, ctx.mask_index, ctx.pixel_dist,
-              ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
-              ctx.region_offset, ctx.in_coords_key, ctx.out_coords_key,
-              ctx.dimension, ctx.net_metadata.ffi)
+        out_feat = input_features.new()
+
+        fw_fn = ME.max_pooling_foward_gpu if input_features.is_cuda else ME.max_pooling_forward
+        fw_fn(ctx.in_feat, out_feat, ctx.mask_index, ctx.pixel_dist, ctx.stride,
+              ctx.kernel_size, ctx.dilation, region_type, region_offset,
+              ctx.in_coords_key, ctx.out_coords_key, ctx.net_metadata.D,
+              ctx.net_metadata.ffi)
         return out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
-        bw_fn = ctx.pooling_bw_gpu if grad_out_feat.is_cuda else ctx.pooling_bw_cpu
+        bw_fn = ME.max_pooling_backward_gpu if grad_out_feat.is_cuda else ME.max_pooling_backward
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.mask_index,
               ctx.pixel_dist, ctx.stride, ctx.kernel_size, ctx.dilation,
-              ctx.in_coords_key, ctx.out_coords_key, ctx.dimension,
+              ctx.in_coords_key, ctx.out_coords_key, ctx.net_metadata.D,
               ctx.net_metadata.ffi)
-        return grad_in_feat
+        return grad_in_feat, None, None, None, None, None, None, None, None, None
 
 
 class SparseMaxPooling(Module, SparseModuleBase):
+
     def __init__(self,
-                 pixel_dist,
                  kernel_size,
                  stride,
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
                  axis_types=None,
-                 in_coords_key=None,
                  out_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
+                 dimension=-1):
         super(SparseMaxPooling, self).__init__()
-        if dimension is None or net_metadata is None:
-            raise ValueError('Dimension and net_metadata must be defined')
         assert isinstance(region_type, RegionType)
+        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
         stride = convert_to_int_tensor(stride, dimension)
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
-        is_transpose = False
-        up_stride = stride if is_transpose else [
+        up_stride = [
             1,
         ] * dimension
-        region_type, region_offset, kernel_volume = convert_region_type(
-            region_type, pixel_dist, kernel_size, up_stride, dilation,
-            region_offset, axis_types, dimension)
 
-        self.pixel_dist = pixel_dist
         self.kernel_size = kernel_size
         self.stride = stride
+        self.up_stride = up_stride
         self.dilation = dilation
         self.region_type = region_type
         self.region_offset = region_offset
+        self.axis_types = axis_types
         self.dimension = dimension
-        self.net_metadata = net_metadata
-
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
         self.out_coords_key = out_coords_key \
             if out_coords_key else ffi.new('uint64_t *', 0)
 
-        self.pooling = SparseMaxPoolingFunction(
-            self.pixel_dist, self.stride, self.kernel_size, self.dilation,
-            self.region_type, self.region_offset, self.in_coords_key,
-            self.out_coords_key, self.dimension, self.net_metadata)
+        self.pooling = SparseMaxPoolingFunction()
 
     def forward(self, input):
-        out = self.pooling(input)
-        return out
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+        if not input.initialize():
+            raise ValueError('The input coordinates not initialized')
+        # Create a region_offset
+        self.region_type_, self.region_offset_, _ = convert_region_type(
+            self.region_type, input.pixel_dist, self.kernel_size,
+            self.up_stride, self.dilation, self.region_offset, self.axis_types,
+            self.dimension)
+
+        output = self.pooling.apply(
+            input.F, input.pixel_dist, self.stride, self.kernel_size,
+            self.dilation, self.region_type_, self.region_offset_,
+            input.coords_key, self.out_coords_key, input.m)
+
+        return SparseTensor(
+            output,
+            coords=input.C,
+            coords_key=self.out_coords_key,
+            pixel_dist=self.stride * input.pixel_dist,
+            net_metadata=input.m)
 
     def __repr__(self):
-        s = '(pixel_dist={}, kernel_size={}, stride={}, dilation={})'.format(
-            self.pixel_dist, self.kernel_size, self.stride, self.dilation)
+        s = '(kernel_size={}, stride={}, dilation={})'.format(
+            self.kernel_size, self.stride, self.dilation)
         return self.__class__.__name__ + s
 
 
@@ -136,115 +135,53 @@ class SparseAvgPoolingFunctionBase(Function):
     the ffi function.
     '''
 
-    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, in_coords_key, out_coords_key, dimension,
-                 net_metadata):
-        super(SparseAvgPoolingFunctionBase, self).__init__()
+    @staticmethod
+    def forward(ctx,
+                input_features,
+                pixel_dist=1,
+                stride=1,
+                kernel_size=-1,
+                dilation=1,
+                region_type=0,
+                region_offset=None,
+                in_coords_key=None,
+                out_coords_key=None,
+                net_metadata=None):
         assert isinstance(region_type, RegionType)
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
+        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
+            pixel_dist, stride, kernel_size, dilation, region_type,
+            net_metadata.D)
+        in_coords_key, out_coords_key = prep_coords_keys(
+            in_coords_key, out_coords_key)
 
-        self.pixel_dist = pixel_dist
-        self.stride = stride
-        self.kernel_size = kernel_size
-        self.dilation = dilation
-        self.region_type = region_type
-        self.dimension = dimension
-        self.net_metadata = net_metadata
-        self.region_offset = region_offset
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = out_coords_key \
-            if out_coords_key else ffi.new('uint64_t *', 0)
+        if region_offset is None:
+            region_offset = torch.IntTensor()
 
-        self.pooling_fw_cpu = SCE.nonzero_avg_pooling_forward
-        self.pooling_bw_cpu = SCE.nonzero_avg_pooling_backward
-        self.pooling_fw_gpu = SCE.nonzero_avg_pooling_forward_gpu
-        self.pooling_bw_gpu = SCE.nonzero_avg_pooling_backward_gpu
+        ctx.in_feat = input_features
+        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+                       in_coords_key, out_coords_key, net_metadata)
+        ctx.use_avg = True
 
-        # Overwrite if needed
-        self.use_avg = True
-
-    def forward(ctx, input_features):
         ctx.in_feat = input_features
         out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
 
-        fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
+        fw_fn = ME.nonzero_avg_pooling_forward_gpu if input_features.is_cuda else ME.nonzero_avg_pooling_forward
         fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero, ctx.pixel_dist,
-              ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
-              ctx.region_offset, ctx.in_coords_key, ctx.out_coords_key,
-              ctx.use_avg, ctx.dimension, ctx.net_metadata.ffi)
+              ctx.stride, ctx.kernel_size, ctx.dilation, region_type,
+              region_offset, ctx.in_coords_key, ctx.out_coords_key, ctx.use_avg,
+              ctx.net_metadata.D, ctx.net_metadata.ffi)
         return out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
-        bw_fn = ctx.pooling_bw_gpu if grad_out_feat.is_cuda else ctx.pooling_bw_cpu
+        bw_fn = ME.nonzero_avg_pooling_backward_gpu if grad_out_feat.is_cuda else ME.nonzero_avg_pooling_backward
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               ctx.pixel_dist, ctx.stride, ctx.kernel_size, ctx.dilation,
               ctx.in_coords_key, ctx.out_coords_key, ctx.use_avg,
-              ctx.dimension, ctx.net_metadata.ffi)
-        return grad_in_feat
-
-
-class SparsePoolingBase(Module, SparseModuleBase):
-    def __init__(self,
-                 pixel_dist,
-                 kernel_size,
-                 stride,
-                 dilation=1,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
-                 axis_types=None,
-                 in_coords_key=None,
-                 out_coords_key=None,
-                 is_transpose=False,
-                 dimension=None,
-                 net_metadata=None):
-        super(SparsePoolingBase, self).__init__()
-        if dimension is None or net_metadata is None:
-            raise ValueError('Dimension and net_metadata must be defined')
-        assert isinstance(region_type, RegionType)
-
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
-
-        up_stride = stride if is_transpose else [
-            1,
-        ] * dimension
-        region_type, region_offset, kernel_volume = convert_region_type(
-            region_type, pixel_dist, kernel_size, up_stride, dilation,
-            region_offset, axis_types, dimension)
-
-        self.pixel_dist = pixel_dist
-        self.kernel_size = kernel_size
-        self.stride = stride
-        self.dilation = dilation
-        self.region_type = region_type
-        self.region_offset = region_offset
-        self.dimension = dimension
-        self.net_metadata = net_metadata
-
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = out_coords_key \
-            if out_coords_key else ffi.new('uint64_t *', 0)
-
-    def forward(self, input):
-        out = self.pooling(input)
-        return out
-
-    def __repr__(self):
-        s = '(pixel_dist={}, kernel_size={}, stride={}, dilation={})'.format(
-            self.pixel_dist, self.kernel_size, self.stride, self.dilation)
-        return self.__class__.__name__ + s
+              ctx.net_metadata.D, ctx.net_metadata.ffi)
+        return grad_in_feat, None, None, None, None, None, None, None, None, None
 
 
 class SparseNonzeroAvgPoolingFunction(SparseAvgPoolingFunctionBase):
@@ -255,39 +192,7 @@ class SparseNonzeroAvgPoolingFunction(SparseAvgPoolingFunctionBase):
     PyTorch cannot free, ctx.out_feat, ctx.num_nonzero, which are initialized inside
     the ffi function.
     '''
-
-    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, in_coords_key, out_coords_key, dimension,
-                 net_metadata):
-        super(SparseNonzeroAvgPoolingFunction, self).__init__(
-            pixel_dist, stride, kernel_size, dilation, region_type,
-            region_offset, in_coords_key, out_coords_key, dimension,
-            net_metadata)
-        self.use_avg = True
-
-
-class SparseNonzeroAvgPooling(SparsePoolingBase):
-    def __init__(self,
-                 pixel_dist,
-                 kernel_size,
-                 stride,
-                 dilation=1,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
-                 axis_types=None,
-                 in_coords_key=None,
-                 out_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
-        is_transpose = False
-        super(SparseNonzeroAvgPooling, self).__init__(
-            pixel_dist, kernel_size, stride, dilation, region_type,
-            region_offset, axis_types, in_coords_key, out_coords_key,
-            is_transpose, dimension, net_metadata)
-        self.pooling = SparseNonzeroAvgPoolingFunction(
-            self.pixel_dist, self.stride, self.kernel_size, self.dilation,
-            self.region_type, self.region_offset, self.in_coords_key,
-            self.out_coords_key, self.dimension, self.net_metadata)
+    pass
 
 
 class SparseSumPoolingFunction(SparseAvgPoolingFunctionBase):
@@ -299,14 +204,123 @@ class SparseSumPoolingFunction(SparseAvgPoolingFunctionBase):
     the ffi function.
     '''
 
-    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, in_coords_key, out_coords_key, dimension,
-                 net_metadata):
-        super(SparseSumPoolingFunction,
-              self).__init__(pixel_dist, stride, kernel_size, dilation,
-                             region_type, region_offset, in_coords_key,
-                             out_coords_key, dimension, net_metadata)
-        self.use_avg = False
+    @staticmethod
+    def forward(ctx,
+                input_features,
+                pixel_dist=1,
+                stride=1,
+                kernel_size=-1,
+                dilation=1,
+                region_type=0,
+                region_offset=None,
+                in_coords_key=None,
+                out_coords_key=None,
+                net_metadata=None):
+        assert isinstance(region_type, RegionType)
+
+        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
+            pixel_dist, stride, kernel_size, dilation, region_type,
+            net_metadata.D)
+        in_coords_key, out_coords_key = prep_coords_keys(
+            in_coords_key, out_coords_key)
+
+        if region_offset is None:
+            region_offset = torch.IntTensor()
+
+        ctx.in_feat = input_features
+        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+                       in_coords_key, out_coords_key, net_metadata)
+        ctx.use_avg = False
+
+        ctx.in_feat = input_features
+        out_feat = input_features.new()
+        ctx.num_nonzero = input_features.new()
+
+        fw_fn = ME.nonzero_avg_pooling_forward_gpu if input_features.is_cuda else ME.nonzero_avg_pooling_forward
+        fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero, ctx.pixel_dist,
+              ctx.stride, ctx.kernel_size, ctx.dilation, region_type,
+              region_offset, ctx.in_coords_key, ctx.out_coords_key,
+              ctx.use_avg, ctx.net_metadata.D, ctx.net_metadata.ffi)
+        return out_feat
+
+
+class SparsePoolingBase(Module, SparseModuleBase):
+
+    def __init__(self,
+                 kernel_size,
+                 stride=1,
+                 dilation=1,
+                 region_type=RegionType.HYPERCUBE,
+                 region_offset=None,
+                 axis_types=None,
+                 out_coords_key=None,
+                 is_transpose=False,
+                 dimension=-1):
+        super(SparsePoolingBase, self).__init__()
+        assert isinstance(region_type, RegionType)
+        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
+
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
+
+        self.up_stride = stride if is_transpose else [
+            1,
+        ] * dimension
+
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.dilation = dilation
+        self.region_type = region_type
+        self.region_offset = region_offset
+        self.axis_types = axis_types
+        self.dimension = dimension
+        self.out_coords_key = out_coords_key \
+            if out_coords_key else ffi.new('uint64_t *', 0)
+
+    def forward(self, input):
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+        if not input.initialize():
+            raise ValueError('The input coordinates not initialized')
+        # Create a region_offset
+        self.region_type_, self.region_offset_, _ = convert_region_type(
+            self.region_type, input.pixel_dist, self.kernel_size,
+            self.up_stride, self.dilation, self.region_offset, self.axis_types,
+            self.dimension)
+
+        output = self.pooling.apply(
+            input.F, input.pixel_dist, self.stride, self.kernel_size,
+            self.dilation, self.region_type_, self.region_offset_,
+            input.coords_key, self.out_coords_key, input.m)
+        return SparseTensor(
+            output,
+            coords_key=self.out_coords_key,
+            pixel_dist=input.pixel_dist * self.stride,
+            net_metadata=input.m)
+
+    def __repr__(self):
+        s = '(kernel_size={}, stride={}, dilation={})'.format(
+            self.kernel_size, self.stride, self.dilation)
+        return self.__class__.__name__ + s
+
+
+class SparseNonzeroAvgPooling(SparsePoolingBase):
+
+    def __init__(self,
+                 kernel_size,
+                 stride=1,
+                 dilation=1,
+                 region_type=RegionType.HYPERCUBE,
+                 region_offset=None,
+                 axis_types=None,
+                 out_coords_key=None,
+                 dimension=None):
+        is_transpose = False
+        super(SparseNonzeroAvgPooling, self).__init__(
+            kernel_size, stride, dilation, region_type, region_offset,
+            axis_types, out_coords_key, is_transpose, dimension)
+        self.pooling = SparseNonzeroAvgPoolingFunction()
 
 
 class SparseSumPooling(SparsePoolingBase):
@@ -316,32 +330,19 @@ class SparseSumPooling(SparsePoolingBase):
     """
 
     def __init__(self,
-                 pixel_dist,
                  kernel_size,
-                 stride,
+                 stride=1,
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
                  axis_types=None,
-                 center=False,
-                 in_coords_key=None,
                  out_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
-        """
-        when center=True, for custom kernels, use centered region_offset.
-        currently, when RegionType is CUBE, CROS with all kernel_sizes are odd,
-        center has no effect and will be centered regardless.
-        """
+                 dimension=None):
         is_transpose = False
         super(SparseSumPooling, self).__init__(
-            pixel_dist, kernel_size, stride, dilation, region_type,
-            region_offset, axis_types, in_coords_key, out_coords_key,
-            is_transpose, dimension, net_metadata)
-        self.pooling = SparseSumPoolingFunction(
-            self.pixel_dist, self.stride, self.kernel_size, self.dilation,
-            self.region_type, self.region_offset, self.in_coords_key,
-            self.out_coords_key, self.dimension, self.net_metadata)
+            kernel_size, stride, dilation, region_type, region_offset,
+            axis_types, out_coords_key, is_transpose, dimension)
+        self.pooling = SparseSumPoolingFunction()
 
 
 class SparseNonzeroAvgUnpoolingFunction(Function):
@@ -353,56 +354,50 @@ class SparseNonzeroAvgUnpoolingFunction(Function):
     the ffi function.
     '''
 
-    def __init__(self, pixel_dist, stride, kernel_size, dilation, region_type,
-                 region_offset, in_coords_key, out_coords_key, dimension,
-                 net_metadata):
-        super(SparseNonzeroAvgUnpoolingFunction, self).__init__()
+    @staticmethod
+    def forward(ctx,
+                input_features,
+                pixel_dist=1,
+                stride=1,
+                kernel_size=-1,
+                dilation=1,
+                region_type=-1,
+                region_offset=None,
+                in_coords_key=None,
+                out_coords_key=None,
+                net_metadata=None):
         assert isinstance(region_type, RegionType)
+        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
+            pixel_dist, stride, kernel_size, dilation, region_type,
+            net_metadata.D)
+        in_coords_key, out_coords_key = prep_coords_keys(
+            in_coords_key, out_coords_key)
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
+        if region_offset is None:
+            region_offset = torch.IntTensor()
 
-        self.pixel_dist = pixel_dist
-        self.stride = stride
-        self.kernel_size = kernel_size
-        self.dilation = dilation
-        self.region_type = region_type
-        self.dimension = dimension
-        self.net_metadata = net_metadata
-        self.region_offset = region_offset
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = out_coords_key \
-            if out_coords_key else ffi.new('uint64_t *', 0)
-
-        self.unpooling_fw_cpu = SCE.unpooling_forward
-        self.unpooling_bw_cpu = SCE.unpooling_backward
-        self.unpooling_fw_gpu = SCE.unpooling_forward_gpu
-        self.unpooling_bw_gpu = SCE.unpooling_backward_gpu
-
-    def forward(ctx, input_features):
         ctx.in_feat = input_features
         ctx.out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
+        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+                       in_coords_key, out_coords_key, net_metadata)
 
-        fw_fn = ctx.unpooling_fw_gpu if input_features.is_cuda else ctx.unpooling_fw_cpu
+        fw_fn = ME.unpooling_forward_gpu if input_features.is_cuda else ME.unpooling_forward
         fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,
-              ctx.stride, ctx.kernel_size, ctx.dilation, ctx.region_type,
-              ctx.region_offset, ctx.in_coords_key, ctx.out_coords_key,
-              ctx.dimension, ctx.net_metadata.ffi)
+              ctx.stride, ctx.kernel_size, ctx.dilation, region_type,
+              region_offset, ctx.in_coords_key, ctx.out_coords_key,
+              ctx.net_metadata.D, ctx.net_metadata.ffi)
         return ctx.out_feat
 
+    @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
-        bw_fn = ctx.unpooling_bw_gpu if grad_out_feat.is_cuda else ctx.unpooling_bw_cpu
+        bw_fn = ME.unpooling_backward_gpu if grad_out_feat.is_cuda else ME.unpooling_backward
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               ctx.pixel_dist, ctx.stride, ctx.kernel_size, ctx.dilation,
-              ctx.in_coords_key, ctx.out_coords_key, ctx.dimension,
+              ctx.in_coords_key, ctx.out_coords_key, ctx.net_metadata.D,
               ctx.net_metadata.ffi)
-        return grad_in_feat
+        return grad_in_feat, None, None, None, None, None, None, None, None, None
 
 
 class SparseNonzeroAvgUnpooling(SparsePoolingBase):
@@ -412,88 +407,84 @@ class SparseNonzeroAvgUnpooling(SparsePoolingBase):
     """
 
     def __init__(self,
-                 pixel_dist,
                  kernel_size,
                  stride,
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
                  axis_types=None,
-                 center=False,
-                 in_coords_key=None,
                  out_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
-        """
-        when center=True, for custom kernels, use centered region_offset.
-        currently, when RegionType is CUBE, CROS with all kernel_sizes are odd,
-        center has no effect and will be centered regardless.
-        """
+                 dimension=None):
         is_transpose = True
         super(SparseNonzeroAvgUnpooling, self).__init__(
-            pixel_dist, kernel_size, stride, dilation, region_type,
-            region_offset, axis_types, in_coords_key, out_coords_key,
-            is_transpose, dimension, net_metadata)
-        self.unpooling = SparseNonzeroAvgUnpoolingFunction(
-            self.pixel_dist, self.stride, self.kernel_size, self.dilation,
-            self.region_type, self.region_offset, self.in_coords_key,
-            self.out_coords_key, self.dimension, self.net_metadata)
+            kernel_size, stride, dilation, region_type, region_offset,
+            axis_types, out_coords_key, is_transpose, dimension)
+        self.unpooling = SparseNonzeroAvgUnpoolingFunction()
 
     def forward(self, input):
-        out = self.unpooling(input)
-        return out
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+        if not input.initialize():
+            raise ValueError('The input coordinates not initialized')
+        # Create a region_offset
+        self.region_type_, self.region_offset_, _ = convert_region_type(
+            self.region_type, input.pixel_dist, self.kernel_size,
+            self.up_stride, self.dilation, self.region_offset, self.axis_types,
+            self.dimension)
+
+        output = self.unpooling.apply(
+            input.F, input.pixel_dist, self.stride, self.kernel_size,
+            self.dilation, self.region_type_, self.region_offset_,
+            input.coords_key, self.out_coords_key, input.m)
+        return SparseTensor(
+            output,
+            coords_key=self.out_coords_key,
+            pixel_dist=input.pixel_dist / self.stride,
+            net_metadata=input.m)
 
 
 class SparseGlobalAvgPoolingFunction(Function):
-    def __init__(self, pixel_dist, batch_size, in_coords_key, out_coords_key,
-                 dimension, net_metadata):
-        super(SparseGlobalAvgPoolingFunction, self).__init__()
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
+    @staticmethod
+    def forward(ctx,
+                input_features,
+                pixel_dist=1,
+                batch_size=0,
+                in_coords_key=None,
+                out_coords_key=None,
+                net_metadata=None):
+        pixel_dist = convert_to_int_tensor(pixel_dist, net_metadata.D)
+        in_coords_key, out_coords_key = prep_coords_keys(
+            in_coords_key, out_coords_key)
 
-        self.pixel_dist = pixel_dist
-        self.batch_size = batch_size
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
-        self.out_coords_key = out_coords_key \
-            if out_coords_key else ffi.new('uint64_t *', 0)
+        ctx.pixel_dist = pixel_dist
+        ctx.batch_size = batch_size
+        ctx.in_coords_key = in_coords_key
+        ctx.out_coords_key = out_coords_key
 
-        self.dimension = dimension
-        self.net_metadata = net_metadata
-        self.pooling_fw_cpu = SCE.global_avg_pooling_forward
-        self.pooling_bw_cpu = SCE.global_avg_pooling_backward
-        self.pooling_fw_gpu = SCE.global_avg_pooling_forward_gpu
-        self.pooling_bw_gpu = SCE.global_avg_pooling_backward_gpu
-
-    def forward(ctx, input_features):
         ctx.in_feat = input_features
         ctx.out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
+        ctx.net_metadata = net_metadata
 
-        fw_fn = ctx.pooling_fw_gpu if input_features.is_cuda else ctx.pooling_fw_cpu
+        fw_fn = ME.global_avg_pooling_forward_gpu if input_features.is_cuda else ME.global_avg_pooling_forward
         fw_fn(ctx.in_feat, ctx.out_feat, ctx.num_nonzero, ctx.pixel_dist,
               ctx.batch_size, ctx.in_coords_key, ctx.out_coords_key,
-              ctx.dimension, ctx.net_metadata.ffi)
+              ctx.net_metadata.D, ctx.net_metadata.ffi)
         return ctx.out_feat
 
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
-        bw_fn = ctx.pooling_bw_gpu if grad_out_feat.is_cuda else ctx.pooling_bw_cpu
+        bw_fn = ME.global_avg_pooling_backward_gpu if grad_out_feat.is_cuda else ME.global_avg_pooling_backward
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               ctx.pixel_dist, ctx.in_coords_key, ctx.out_coords_key,
-              ctx.dimension, ctx.net_metadata.ffi)
-        return grad_in_feat
+              ctx.net_metadata.D, ctx.net_metadata.ffi)
+        return grad_in_feat, None, None, None, None, None
 
 
 class SparseGlobalAvgPooling(Module, SparseModuleBase):
-    def __init__(self,
-                 pixel_dist,
-                 batch_size=0,
-                 in_coords_key=None,
-                 out_coords_key=None,
-                 dimension=None,
-                 net_metadata=None):
+
+    def __init__(self, batch_size=0, out_coords_key=None, dimension=-1):
         """
         Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
@@ -504,28 +495,31 @@ class SparseGlobalAvgPooling(Module, SparseModuleBase):
                     initialize coords.
         """
         super(SparseGlobalAvgPooling, self).__init__()
-        if dimension is None or net_metadata is None:
-            raise ValueError('Dimension and net_metadata must be defined')
+        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
-        pixel_dist = convert_to_int_tensor(pixel_dist, dimension)
-        self.pixel_dist = pixel_dist
         self.batch_size = batch_size
         self.dimension = dimension
-        self.net_metadata = net_metadata
-        # Initializes all with 0
-        self.in_coords_key = in_coords_key \
-            if in_coords_key else ffi.new('uint64_t *', 0)
         self.out_coords_key = out_coords_key \
             if out_coords_key else ffi.new('uint64_t *', 0)
+        # 0 initialized array for out pixel dist
 
-        self.pooling = SparseGlobalAvgPoolingFunction(
-            self.pixel_dist, self.batch_size, self.in_coords_key,
-            self.out_coords_key, self.dimension, self.net_metadata)
+        self.pooling = SparseGlobalAvgPoolingFunction()
 
     def forward(self, input):
-        out = self.pooling(input)
-        return out
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+        if not input.initialize():
+            raise ValueError('The input coordinates not initialized')
+
+        output = self.pooling.apply(input.F, input.pixel_dist, self.batch_size,
+                                    input.coords_key, self.out_coords_key,
+                                    input.m)
+        return SparseTensor(
+            output,
+            pixel_dist=convert_to_int_tensor(0, input.D),
+            coords=None,
+            coords_key=self.out_coords_key,
+            net_metadata=input.m)
 
     def __repr__(self):
-        s = '(pixel_dist={})'.format(self.pixel_dist)
-        return self.__class__.__name__ + s
+        return self.__class__.__name__

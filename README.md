@@ -1,47 +1,47 @@
-# Sparse Convolution Engine
+# Minkowski Engine
 
-Sparse convolution on pytorch. Sparse convolution is a special type of convolution defined only over non-zero regions. The Sparse Convolution Engine (SCE) provides CPU and GPU convolution functions that support arbitrary stride, and dilation.
+The Minkowski Engine is an auto-differentiation library for sparse tensors. We use Pytorch as the wrapper for the library, but it can be extended to other neural network libraries such as tensorflow. It mainly supports convolution on sparse tensors, pooling, unpooling, and broadcasting operations for sparse tensors.
 
 
 # Installation
 
+You must install `pytorch` and `cffi` python packages first. Then, execute the following lines. These will install the MinkowskiEngine for import.
+
 ```
 sudo apt install libsparsehash-dev
 sudo apt install libblas-dev libopenblas-dev
-git clone https://github.com/chrischoy/SparseConvolutionEngine.git
-cd SparseConvolutionEngine
+# Must install pytorch first
+git clone https://github.com/chrischoy/MinkowskiEngine.git
+cd MinkowskiEngine
 python setup.py install
 ```
-
 
 # Usage
 
 Using the sparse convolution engine is quite straight forward.
 
+
 ## Import
 
 ```python
-from SparseConvolutionEngine import SparseConvolution, SparseConvolutionNetwork
+from MinkowskiEngine import SparseConvolution, MinkowskiNetwork
 ```
 
 ## Creating a Network
 
-All `SparseConvolutionNetwork` has `self.net_metadatat`. The net_metadata contains all information regarding mappings used for coordinate to features, mappings for sparse convolutions. Thus, you have to pass the net_metadata to all sparse convolution layers.
+All `MinkowskiNetwork` has `self.net_metadata`. The `net_metadata` contains all the information regarding the coordinates for each feature, and mappings for sparse convolutions.
 
 ```python
-class ExampleSparseNetwork(SparseConvolutionNetwork):
+class ExampleNetwork(MinkowskiNetwork):
     def __init__(self, D):
-        super(ExampleSparseNetwork, self).__init__(D)
+        super(MinkowskiNetwork, self).__init__(D)
         net_metadata = self.net_metadata
-        kernel_size, dilation = 3, 1
         self.conv1 = SparseConvolution(
             in_channels=3,
             out_channels=64,
             pixel_dist=1,
-            kernel_size=kernel_size,
+            kernel_size=3,
             stride=2,
-            dilation=dilation,
-            has_bias=False,
             dimension=D,
             net_metadata=net_metadata)
         self.bn1 = nn.BatchNorm1d(64)
@@ -49,10 +49,8 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
             in_channels=64,
             out_channels=128,
             pixel_dist=2,
-            kernel_size=kernel_size,
+            kernel_size=3,
             stride=2,
-            dilation=dilation,
-            has_bias=False,
             dimension=D,
             net_metadata=net_metadata)
         self.bn2 = nn.BatchNorm1d(128)
@@ -73,20 +71,16 @@ class ExampleSparseNetwork(SparseConvolutionNetwork):
 ## Forward and backward using the custom network
 
 ```python
-    net = ExampleSparseNetwork(2)  # Create a 2 dimensional sparse convnet
+    net = ExampleNetwork(2)  # Create a 2 dimensional sparse convnet
     print(net)
 
+    # An example input. In practice, use the CUDA sparse voxelization algorithm.
     IN = [" X  ", "X XX", "    ", " XX "]
     coords = []
     for i, row in enumerate(IN):
         for j, col in enumerate(row):
             if col != ' ':
                 coords.append([i, j, 0])  # Last element for batch index
-
-    for i, row in enumerate(IN):
-        for j, col in enumerate(row):
-            if col != ' ':
-                coords.append([i, j, 1])  # Last element for batch index
 
     in_feat = torch.randn(len(coords), 3)
     coords = torch.from_numpy(np.array(coords)).long()

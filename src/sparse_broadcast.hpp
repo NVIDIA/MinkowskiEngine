@@ -99,6 +99,7 @@ void SparseBroadcastBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
             p_curr_grad_out_feat[j] * p_curr_in_feat[j];
       }
     }
+    break;
   }
 }
 

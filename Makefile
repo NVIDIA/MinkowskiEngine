@@ -26,12 +26,12 @@ BLAS := open
 
 ###############################################################################
 SRC_DIR := ./src
-OBJ_DIR := ./SparseConvolutionEngineFFI
+OBJ_DIR := ./MinkowskiEngineFFI
 CPP_SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 CU_SRCS := $(wildcard $(SRC_DIR)/*.cu)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRCS))
 CU_OBJS := $(patsubst $(SRC_DIR)/%.cu,$(OBJ_DIR)/cuda/%.o,$(CU_SRCS))
-DYNAMIC_LIB := $(OBJ_DIR)/libsparse.so
+DYNAMIC_LIB := $(OBJ_DIR)/libminkowski.so
 
 # CUDA architecture setting: going with all of them.
 # For CUDA < 6.0, comment the *_50 through *_61 lines for compatibility.

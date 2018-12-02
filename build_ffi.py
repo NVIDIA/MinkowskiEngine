@@ -7,15 +7,15 @@ torch_dir = os.path.dirname(torch.__file__)
 this_dir = osp.dirname(osp.realpath(__file__))
 
 ffi = create_extension(
-    'SparseConvolutionEngineFFI',
-    headers=['ffi/sparse.h'],
-    sources=['ffi/sparse.c'],
+    'MinkowskiEngineFFI',
+    headers=['ffi/minkowski.h'],
+    sources=['ffi/minkowski.c'],
     include_dirs=[this_dir],
     relative_to=__file__,
     define_macros=[('WITH_CUDA', None)],
     with_cuda=True,
-    libraries=['sparse'],
-    library_dirs=[this_dir + '/SparseConvolutionEngineFFI'],
+    libraries=['minkowski'],
+    library_dirs=[this_dir + '/MinkowskiEngineFFI'],
     extra_compile_args=['-std=c99'],
     extra_link_args=["-Wl,-rpath=$ORIGIN"],
 )

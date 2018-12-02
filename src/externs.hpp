@@ -175,6 +175,15 @@ extern "C" long _get_coords(int *coords, uint64_t *p_coords_key,
 }
 
 template <uint8_t D, typename Itype>
+long t_check_coords(const uint64_t *p_coords_key, const Itype *p_pixel_dist,
+                    void **metadata);
+extern "C" long _check_coords(uint64_t *p_coords_key, int *p_pixel_dist, int D,
+                              void **metadata) {
+  SWITCH_DIM_ITYPE(return, t_check_coords, int32_t, p_coords_key, p_pixel_dist,
+                         metadata)
+}
+
+template <uint8_t D, typename Itype>
 long t_get_permutation(Itype *p_permutation, const Itype *p_pixel_dist_src,
                        const Itype *p_pixel_dist_dst, void **metadata);
 extern "C" long _get_permutation(int *p_permutation, int *p_pixel_dist_src,

@@ -60,6 +60,28 @@ Arr<D, Itype> ComputeOutPixelDist(const Arr<D, Itype> pixel_dists,
 }
 
 template <uint8_t D, typename Itype>
+long CheckCoordsKey(
+    const uint64_t *p_coords_key, const Itype *p_pixel_dist,
+    const std::map<uint64_t, CoordIndexMap<D, Itype>> *p_coord2inds) {
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  auto pixel_dist_hash = hash_vec<Arr<D, Itype>>(pixel_dists);
+  long exist = -1;
+
+  // Following lines are from INITIALIZE_IN_COORDS
+  /* Prioritize the p_coords_key */
+  if (p_coord2inds->find(pixel_dist_hash) != p_coord2inds->end() &&
+      *p_coords_key == 0) {
+    exist = 1;
+  } else if (*p_coords_key > 0) {
+    /* Check the validity of the key */
+    if (p_coord2inds->find(*p_coords_key) != p_coord2inds->end())
+      exist = 1;
+  }
+
+  return exist;
+}
+
+template <uint8_t D, typename Itype>
 uint64_t GetValidCoordsKey(
     const uint64_t *p_coords_key, const Itype *p_pixel_dist,
     const std::map<uint64_t, CoordIndexMap<D, Itype>> *p_coord2inds) {
@@ -192,7 +214,8 @@ CreateOutputCoordIndexMap(const CoordIndexMap<D, Itype> in_coord_map,
     for (auto in_pair : in_coord_map.map) {
       Coord<D, Itype> coord(in_pair.first);
       for (int j = 0; j < D; j++)
-        coord[j] = int(floor(((float)coord[j]) / new_pixel_dists[j])) * new_pixel_dists[j];
+        coord[j] = int(floor(((float)coord[j]) / new_pixel_dists[j])) *
+                   new_pixel_dists[j];
       if (out_coord_map.map.find(coord) == out_coord_map.map.end())
         out_coord_map.map[coord] = n_out++;
     }
@@ -394,6 +417,8 @@ long t_initialize_coords(const Itype *coords, int nrows,
 
   (*p_coord2inds)[pixel_dist_hash] =
       CreateCoordIndexMap<D>(coords, nrows, D + 1);
+
+  return 1;
 }
 
 /*
@@ -568,6 +593,18 @@ long t_get_coords(Itype *p_coords, const uint64_t *p_coords_key,
   return 1;
 }
 
+// Follow convention and use *p_(in|out)_coords_key as an input.
+template <uint8_t D, typename Itype>
+long t_check_coords(const uint64_t *p_coords_key, const Itype *p_pixel_dist,
+                    void **metadata) {
+  INITIALIZE_AND_REFERENCE(metadata, init_metadata);
+  auto p_coord2inds = &init_metadata.coord2inds;
+  long exist;
+
+  auto pixel_dists = ToArray<D, Itype>(p_pixel_dist);
+  exist = CheckCoordsKey<D, Itype>(p_coords_key, p_pixel_dist, p_coord2inds);
+  return exist;
+}
 /*
  * Given pixel_dist_src and pixel_dist_dst, find the respective coord_maps and
  * return the indices of the coord_map_ind in coord_map_dst
