@@ -224,9 +224,8 @@ class SparseConvolutionBase(Module, SparseModuleBase):
             self.bias.data.uniform_(-stdv, stdv)
 
     def __repr__(self):
-        s = '(in={}, out={}, region_type={}, pixel_dist={}, '.format(
-            self.in_channels, self.out_channels, self.region_type,
-            self.pixel_dist)
+        s = '(in={}, out={}, region_type={}, '.format(
+            self.in_channels, self.out_channels, self.region_type)
         if self.region_type in [RegionType.HYBRID, RegionType.CUSTOM]:
             s += 'kernel_volume={}, '.format(self.kernel_volume)
         else:

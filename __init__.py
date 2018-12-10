@@ -23,8 +23,10 @@ from SparseBroadcast import SparseGlobalBroadcastFunction, \
 
 from SparseNonlinearity import SparseReLU
 
-from SparseNormalization import SparseBatchNorm1d
+from SparseNormalization import SparseBatchNorm
 
 from MinkowskiNetwork import MinkowskiNetwork
 
 import SparseOps
+
+from SparseOps import SparseLinear, cat

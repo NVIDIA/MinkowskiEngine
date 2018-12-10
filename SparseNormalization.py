@@ -4,7 +4,7 @@ from torch.nn import Module
 from SparseTensor import SparseTensor
 
 
-class SparseBatchNorm1d(Module):
+class SparseBatchNorm(Module):
 
     def __init__(self,
                  num_features,
@@ -12,7 +12,7 @@ class SparseBatchNorm1d(Module):
                  momentum=0.1,
                  affine=True,
                  track_running_stats=True):
-        super(SparseBatchNorm1d, self).__init__()
+        super(SparseBatchNorm, self).__init__()
         self.bn = torch.nn.BatchNorm1d(
             num_features,
             eps=eps,

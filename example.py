@@ -1,45 +1,33 @@
-import numpy as np
-import logging
-
-import torch
 import torch.nn as nn
-from torch.autograd import Variable
 
-from MinkowskiEngine import SparseConvolution, SparseGlobalAvgPooling, MinkowskiNetwork
+import MinkowskiEngine as ME
 
 from tests.common import data_loader
 
 
-class ExampleNetwork(MinkowskiNetwork):
+class ExampleNetwork(ME.MinkowskiNetwork):
+
     def __init__(self, in_feat, out_feat, D):
         super(ExampleNetwork, self).__init__(D)
-        net_metadata = self.net_metadata
-        self.conv1 = SparseConvolution(
+        self.conv1 = ME.SparseConvolution(
             in_channels=in_feat,
             out_channels=64,
-            pixel_dist=1,
             kernel_size=3,
             stride=2,
             dilation=1,
             has_bias=False,
-            dimension=D,
-            net_metadata=net_metadata)
-        self.bn1 = nn.BatchNorm1d(64)
-        self.conv2 = SparseConvolution(
+            dimension=D)
+        self.bn1 = ME.SparseBatchNorm(64)
+        self.conv2 = ME.SparseConvolution(
             in_channels=64,
             out_channels=128,
-            pixel_dist=2,
             kernel_size=3,
             stride=2,
-            dimension=D,
-            net_metadata=net_metadata)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.pooling = SparseGlobalAvgPooling(
-            pixel_dist=4,
-            dimension=D,
-            net_metadata=net_metadata)
-        self.linear = nn.Linear(128, out_feat)
-        self.relu = nn.ReLU(inplace=True)
+            dimension=D)
+        self.bn2 = ME.SparseBatchNorm(128)
+        self.pooling = ME.SparseGlobalAvgPooling(dimension=D)
+        self.linear = ME.SparseLinear(128, out_feat)
+        self.relu = ME.SparseReLU(inplace=True)
 
     def forward(self, x):
         out = self.conv1(x)
@@ -62,15 +50,13 @@ if __name__ == '__main__':
 
     # a data loader must return a tuple of coords, features, and labels.
     coords, feat, label = data_loader()
-    # for training, convert to a var
-    input = Variable(feat, requires_grad=True)
-
+    input = ME.SparseTensor(feat, coords=coords, net_metadata=net.net_metadata)
     # Forward
-    net.initialize_coords(coords)  # net must be initialized
     output = net(input)
 
     # Loss
-    loss = criterion(output, label)
+    loss = criterion(output.F, label)
+
     # Gradient
     loss.backward()
     net.clear()

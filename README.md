@@ -5,7 +5,20 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. We u
 
 # Installation
 
-You must install `pytorch` and `cffi` python packages first. Then, execute the following lines. These will install the MinkowskiEngine for import.
+You must install `pytorch` 0.4.x and `cffi` python packages first.
+For this, we recommend the python 3.6 virtual environment using anaconda (`conda create -n NAME_OF_THE_VENV python=3.6`. Then activate the env using `conda activate NAME_OF_THE_VENV`).
+
+
+## Pytorch 0.4.x Installation
+
+Please follow the instruction on [the pytorch old version installation guide](https://pytorch.org/get-started/previous-versions/) for pytorch 0.4.x installation.
+If you have python 3.6 and CUDA 9.1. use the following command.
+
+```
+pip install https://download.pytorch.org/whl/cu91/torch-0.4.0-cp36-cp36m-linux_x86_64.whl`.
+```
+
+Then, execute the following lines. These will install the MinkowskiEngine for import.
 
 ```
 sudo apt install libsparsehash-dev
@@ -32,29 +45,29 @@ from MinkowskiEngine import SparseConvolution, MinkowskiNetwork
 All `MinkowskiNetwork` has `self.net_metadata`. The `net_metadata` contains all the information regarding the coordinates for each feature, and mappings for sparse convolutions.
 
 ```python
-class ExampleNetwork(MinkowskiNetwork):
-    def __init__(self, D):
-        super(MinkowskiNetwork, self).__init__(D)
-        net_metadata = self.net_metadata
-        self.conv1 = SparseConvolution(
-            in_channels=3,
+class ExampleNetwork(ME.MinkowskiNetwork):
+
+    def __init__(self, in_feat, out_feat, D):
+        super(ExampleNetwork, self).__init__(D)
+        self.conv1 = ME.SparseConvolution(
+            in_channels=in_feat,
             out_channels=64,
-            pixel_dist=1,
             kernel_size=3,
             stride=2,
-            dimension=D,
-            net_metadata=net_metadata)
-        self.bn1 = nn.BatchNorm1d(64)
-        self.conv2 = SparseConvolution(
+            dilation=1,
+            has_bias=False,
+            dimension=D)
+        self.bn1 = ME.SparseBatchNorm(64)
+        self.conv2 = ME.SparseConvolution(
             in_channels=64,
             out_channels=128,
-            pixel_dist=2,
             kernel_size=3,
             stride=2,
-            dimension=D,
-            net_metadata=net_metadata)
-        self.bn2 = nn.BatchNorm1d(128)
-        self.relu = nn.ReLU(inplace=True)
+            dimension=D)
+        self.bn2 = ME.SparseBatchNorm(128)
+        self.pooling = ME.SparseGlobalAvgPooling(dimension=D)
+        self.linear = ME.SparseLinear(128, out_feat)
+        self.relu = ME.SparseReLU(inplace=True)
 
     def forward(self, x):
         out = self.conv1(x)
@@ -65,43 +78,31 @@ class ExampleNetwork(MinkowskiNetwork):
         out = self.bn2(out)
         out = self.relu(out)
 
-        return out
+        out = self.pooling(out)
+        return self.linear(out)
 ```
 
 ## Forward and backward using the custom network
 
 ```python
-    net = ExampleNetwork(2)  # Create a 2 dimensional sparse convnet
+    # loss and network
+    criterion = nn.CrossEntropyLoss()
+    net = ExampleNetwork(in_feat=3, out_feat=5, D=2)
     print(net)
 
-    # An example input. In practice, use the CUDA sparse voxelization algorithm.
-    IN = [" X  ", "X XX", "    ", " XX "]
-    coords = []
-    for i, row in enumerate(IN):
-        for j, col in enumerate(row):
-            if col != ' ':
-                coords.append([i, j, 0])  # Last element for batch index
-
-    in_feat = torch.randn(len(coords), 3)
-    coords = torch.from_numpy(np.array(coords)).long()
-
-    # Initialize coordinates
-    net.initialize_coords(coords)
-
-    # Forward pass
-    input = Variable(in_feat, requires_grad=True)
+    # a data loader must return a tuple of coords, features, and labels.
+    coords, feat, label = data_loader()
+    # for training, convert to a var
+    input = ME.SparseTensor(feat, coords=coords, net_metadata=net.net_metadata)
+    # Forward
     output = net(input)
-    print(output)
 
-    # Backward pass
-    grad = torch.zeros(output.size())
-    grad[0] = 1
-    output.backward(grad)
-    print(input.grad)
+    # Loss
+    loss = criterion(output.F, label)
 
-    # Get coordinates
-    print(net.get_coords(1))
-    print(net.get_coords(2))
+    # Gradient
+    loss.backward()
+    net.clear()
 ```
 
 
@@ -164,10 +165,5 @@ Uncomment `DEBUG := 1` in `Makefile` and run `gdb python` to debug in `gdb` and 
 # Tests
 
 ```
-python -m tests.test
+python -m tests.conv
 ```
-
-# Todo
-
-- Even numbered kernel_size
-- Maxpool
