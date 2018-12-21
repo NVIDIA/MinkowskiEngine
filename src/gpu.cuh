@@ -12,6 +12,9 @@
 
 #include <iostream>
 #include <vector>
+#include <exception>
+
+#include "utils.hpp"
 
 //
 // CUDA macros
@@ -23,9 +26,8 @@
   {                                                                            \
     cudaError_t error = condition;                                             \
     if (error != cudaSuccess) {                                                \
-      std::cerr << " " << cudaGetErrorString(error) << " at " << __FILE__      \
-                << ":" << __LINE__ << std::endl;                               \
-      exit(1);                                                                 \
+      throw std::runtime_error(Formatter() << " " << cudaGetErrorString(error) \
+                << " at " << __FILE__ << ":" << __LINE__);                     \
     }                                                                          \
   }
 
@@ -33,9 +35,8 @@
   {                                                                            \
     cublasStatus_t status = condition;                                         \
     if (status != CUBLAS_STATUS_SUCCESS) {                                     \
-      std::cerr << cublasGetErrorString(status) << " at " << __FILE__ << ":"   \
-                << __LINE__ << std::endl;                                      \
-      exit(1);                                                                 \
+      throw std::runtime_error(Formatter() << cublasGetErrorString(status)     \
+                << " at " << __FILE__ << ":" << __LINE__);                     \
     }                                                                          \
   }
 
@@ -43,9 +44,8 @@
   {                                                                            \
     cusparseStatus_t err;                                                      \
     if ((err = (call)) != CUSPARSE_STATUS_SUCCESS) {                           \
-      fprintf(stderr, "Got error %d at %s:%d\n\"%s\"", err, __FILE__,          \
-              __LINE__, cusparseGetErrorString(err));                          \
-      exit(1);                                                                 \
+      throw std::runtime_error(Formatter() << cusparseGetErrorString(err)      \
+              << " at " <<  __FILE__ << ":" << __LINE__);                      \
     }                                                                          \
   }
 
@@ -53,9 +53,8 @@
   {                                                                            \
     curandStatus_t status = condition;                                         \
     if (status != CURAND_STATUS_SUCCESS) {                                     \
-      std::cerr << " " << curandGetErrorString(status) << " at " << __FILE__   \
-                << ":" << __LINE__ << std::endl;                               \
-      exit(1);                                                                 \
+      throw std::runtime_error(Formatter() << curandGetErrorString(status)     \
+                << " at " << __FILE__ << ":" << __LINE__);                     \
     }                                                                          \
   }
 
@@ -72,9 +71,8 @@
   try {                                                                        \
     condition;                                                                 \
   } catch (thrust::system_error e) {                                           \
-    std::cerr << "Thrust error: " << e.what() << " at " << __FILE__ << ":"     \
-              << __LINE__ << std::endl;                                        \
-    exit(1);                                                                   \
+    throw std::runtime_error(Formatter() << "Thrust error: " << e.what()       \
+              << " at " << __FILE__ << ":" << __LINE__);                       \
   }
 
 // CUDA: library error reporting.
@@ -84,11 +82,20 @@ const char *cublasGetErrorString(cublasStatus_t error);
 const char *cusparseGetErrorString(cusparseStatus_t error);
 
 // CUDA: use 1024 threads per block
-const int CUDA_NUM_THREADS = 1024;
+constexpr int CUDA_NUM_THREADS = 128;
 
-// CUDA: number of blocks for threads.
+constexpr int MAXIMUM_NUM_BLOCKS = 4096;
+
+/**
+ * @brief Compute the number of blocks needed to run N threads.
+ */
 inline int GET_BLOCKS(const int N) {
-  return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
+  return std::max(
+      std::min(
+          (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS,
+          MAXIMUM_NUM_BLOCKS),
+      // Use at least 1 block, since CUDA does not allow empty block
+      1);
 }
 
 template <typename Dtype> void print(const thrust::device_vector<Dtype> &v);

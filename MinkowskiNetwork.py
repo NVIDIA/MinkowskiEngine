@@ -5,9 +5,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import MinkowskiEngineFFI as ME
+import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import SparseModuleBase, NetMetadata, convert_to_int_tensor, ffi
+from Common import convert_to_int_tensor
 
 
 class MinkowskiNetwork(nn.Module, ABC):
@@ -20,7 +20,6 @@ class MinkowskiNetwork(nn.Module, ABC):
     def __init__(self, D):
         super(MinkowskiNetwork, self).__init__()
         self.D = D
-        self.net_metadata = NetMetadata(D)
 
     @abstractmethod
     def forward(self, x):
@@ -39,55 +38,6 @@ class MinkowskiNetwork(nn.Module, ABC):
         elif nrows != x.F.size(0):
             raise ValueError('Input size does not match the coordinate size')
 
-    def clear(self):
-        self.net_metadata.clear()
-        for m in self.modules():
-            if isinstance(m, SparseModuleBase):
-                m.clear()
-
-    def initialize_coords(self, coords):
-        assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
-        pixel_dist = convert_to_int_tensor(1, self.D)
-        success = ME.initialize_coords(coords.contiguous(), pixel_dist, self.D,
-                                       self.net_metadata.ffi)
-        if success < 0:
-            raise ValueError('Coordinate initialization failed')
-
-    def initialize_coords_with_duplicates(self, coords):
-        """
-        Given the coords with duplicates, returns the indices of the
-        corresponding coords
-        """
-        assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
-        pixel_dist = convert_to_int_tensor(1, self.D)
-        coord_indices = torch.IntTensor()
-        success = ME.initialize_coords_with_duplicates(
-            coords.contiguous(), coord_indices, pixel_dist, self.D,
-            self.net_metadata.ffi)
-        if success < 0:
-            raise ValueError('Coordinate initialization failed')
-        return coord_indices
-
-    def get_coords(self, key_or_pixel_dist):
-        """
-        if the input is ffi pointer, use it as the coords_key,
-        otherwise, use it as the pixel_dist.
-        """
-        coords_key, pixel_dist = 0, 0
-        coords = torch.IntTensor()
-        if isinstance(key_or_pixel_dist, ffi.CData):
-            coords_key = key_or_pixel_dist
-            success = ME.get_coords_key(coords, coords_key, self.D,
-                                        self.net_metadata.ffi)
-        else:
-            coords_key = ffi.new('uint64_t*', 0)
-            pixel_dist = convert_to_int_tensor(key_or_pixel_dist, self.D)
-            success = ME.get_coords(coords, pixel_dist, self.D,
-                                    self.net_metadata.ffi)
-        if success < 0:
-            raise ValueError('No coord found at : {}'.format(pixel_dist))
-        return coords
-
     def get_permutation(self, pixel_dist_src, pixel_dist_dst):
         pixel_dist_src = convert_to_int_tensor(pixel_dist_src, self.D)
         pixel_dist_dst = convert_to_int_tensor(pixel_dist_dst, self.D)
@@ -98,8 +48,8 @@ class MinkowskiNetwork(nn.Module, ABC):
             assert pixel_dist_src[i] >= pixel_dist_dst[i]
 
         perm = torch.IntTensor()
-        success = ME.get_permutation(perm, pixel_dist_src, pixel_dist_dst,
-                                     self.D, self.net_metadata.ffi)
+        success = MEB.get_permutation(perm, pixel_dist_src, pixel_dist_dst,
+                                      self.D, self.net_metadata.ffi)
         if success < 0:
             raise ValueError('get_permutation failed')
         return perm
@@ -115,28 +65,11 @@ class MinkowskiNetwork(nn.Module, ABC):
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         index_map = torch.IntTensor()
         pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
-        success = ME.get_index_map(coords.contiguous(), index_map, pixel_dist,
-                                   self.D, self.net_metadata.ffi)
+        success = MEB.get_index_map(coords.contiguous(), index_map, pixel_dist,
+                                    self.D, self.net_metadata.ffi)
         if success < 0:
             raise ValueError('get_index_map failed')
         return index_map
-
-    def get_nrows(self, key_or_pixel_dist):
-        """
-        if the input is ffi pointer, use it as the coords_key,
-        otherwise, use it as the pixel_dist.
-        """
-        coords_key, pixel_dist = 0, 0
-        if isinstance(key_or_pixel_dist, ffi.CData):
-            coords_key = key_or_pixel_dist
-            pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
-        else:
-            coords_key = ffi.new('uint64_t*', 0)
-            pixel_dist = convert_to_int_tensor(key_or_pixel_dist, self.D)
-
-        nrows = ME.get_nrows(coords_key, pixel_dist, self.D,
-                             self.net_metadata.ffi)
-        return nrows
 
     def permute_label(self, label, max_label, pixel_dist):
         if pixel_dist == 1 or np.prod(pixel_dist) == 1:

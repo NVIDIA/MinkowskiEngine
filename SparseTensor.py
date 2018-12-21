@@ -1,98 +1,81 @@
 import os
 import torch
 
-import MinkowskiEngineFFI as ME
-from Common import NetMetadata, convert_to_int_tensor, ffi
+from Common import convert_to_int_list, CoordsKey, CoordsManager
 
 
 class SparseTensor():
 
-    def __init__(self,
-                 feats,
-                 coords=None,
-                 coords_key=None,
-                 pixel_dist=1,
-                 net_metadata=None):
+    def __init__(self, feats, coords=None, coords_key=None,
+                 coords_manager=None):
         """
         Either coords or coords_key must be provided.
         pixel_distance defines the minimum space between coordinates
+        coords_manager: of type CoordsManager.
         """
         assert isinstance(feats, torch.Tensor), "Features must be torch.Tensor"
-        assert coords is None or isinstance(
-            coords, torch.IntTensor), "Coordinate must be torch.IntTensor"
+
         if coords is None and coords_key is None:
             raise ValueError('Coordinates or Coordinate key must be provided')
-        self.C = coords
+
+        if coords_key is None:
+            assert coords_manager is not None or coords is not None
+            D = -1
+            if coords_manager is None:
+                D = coords.size(1) - 1
+            else:
+                D = coords_manager.D
+            coords_key = CoordsKey(D)
+            coords_key.setPixelDist(convert_to_int_list(1, D))
+
+        if coords is not None:
+            assert isinstance(coords, torch.IntTensor), \
+                "Coordinate must be of type torch.IntTensor"
+
+        if coords_manager is None:
+            assert coords is not None, "Initial coordinates must be given"
+            D = coords.size(1) - 1
+            coords_manager = CoordsManager(D)
+            coords_manager.initialize(coords, coords_key)
+
         self.F = feats
-        if net_metadata is None:
-            assert coords is not None, "Either provide metadata or coords"
-            net_metadata = NetMetadata(coords.size(1) - 1)
-        self.D = net_metadata.D
-        self.use_coords_key = coords_key is not None
-        self.pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
-        self.coords_key = coords_key if coords_key else ffi.new('uint64_t *', 0)
-        self.m = net_metadata
+        self.coords_key = coords_key
+        self.coords_man = coords_manager
+
+    @property
+    def pixel_dist(self):
+        return self.coords_key.getPixelDist()
+
+    @property
+    def C(self):
+        return self.coords_man
+
+    @property
+    def D(self):
+        return self.coords_key.D
 
     def stride(self, s):
-        self.pixel_dist *= s
+        pixel_dist = self.coords_key.getPixelDist()
+        # TODO support list multiplication
+        self.coords_key.setPixelDist(pixel_dist * s)
 
     def __add__(self, other):
         return SparseTensor(
             self.F + (other.F if isinstance(other, SparseTensor) else other),
-            pixel_dist=self.pixel_dist,
             coords=self.C,
-            coords_key=self.coords_key,
-            net_metadata=self.m)
+            coords_key=self.coords_key)
 
     def __power__(self, other):
         return SparseTensor(
-            self.F**other,
-            pixel_dist=self.pixel_dist,
-            coords=self.C,
-            coords_key=self.coords_key,
-            net_metadata=self.m)
+            self.F**other, coords=self.C, coords_key=self.coords_key)
 
     def __repr__(self):
-        if self.use_coords_key:
-            return self.__class__.__name__ + '(' + os.linesep \
-                + '  Feats=' + str(self.F) + os.linesep \
-                + '  coords_key=' + str(self.coords_key[0]) + os.linesep \
-                + '  pixel_dist=' + str(self.pixel_dist) + ')'
-        else:
-            return self.__class__.__name__ + '(' + os.linesep \
-                + '  Feats=' + str(self.F) + os.linesep \
-                + '  Coords=' + str(self.C) + os.linesep \
-                + '  pixel_dist=' + str(self.pixel_dist) + ')'
+        return self.__class__.__name__ + '(' + os.linesep \
+            + '  Feats=' + str(self.F) + os.linesep \
+            + '  coords_key=' + str(self.coords_key) + os.linesep \
+            + '  pixel_dist=' + str(self.coords_key.getPixelDist()) + os.linesep \
+            + '  coords_man=' + str(self.coords_man) + ')'
 
     def to(self, device):
         self.F = self.F.to(device)
         return self
-
-    def check_coords_by_coords_key(self, coords_key):
-        pixel_dist = convert_to_int_tensor(0, self.D)
-        exist = ME.check_coords(pixel_dist, coords_key, self.D, self.m.ffi)
-        return exist
-
-    def check_coords_by_pixel_dist(self, pixel_dist):
-        """
-        if the input is ffi pointer, use it as the coords_key,
-        otherwise, use it as the pixel_dist.
-        """
-        coords_key = ffi.new('uint64_t*', 0)
-        pixel_dist = convert_to_int_tensor(pixel_dist, self.D)
-        exist = ME.check_coords(pixel_dist, coords_key, self.D, self.m.ffi)
-        return exist
-
-    def initialize(self):
-        initialized = False
-        if self.use_coords_key:
-            if self.check_coords_by_coords_key(self.coords_key) > 0:
-                initialized = True
-        else:
-            if self.check_coords_by_pixel_dist(self.pixel_dist) > 0:
-                initialized = True
-
-        if not initialized and self.C is not None:
-            initialized = ME.initialize_coords(
-                self.C.contiguous(), self.pixel_dist, self.D, self.m.ffi) > 0
-        return initialized

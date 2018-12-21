@@ -1,14 +1,29 @@
 import math
-import cffi
 import collections
 import numpy as np
 from enum import Enum
 from itertools import product
 
 import torch
-import MinkowskiEngineFFI as ME
+import MinkowskiEngineBackend as MEB
 
-ffi = cffi.FFI()
+from torch.nn import Module
+
+
+def convert_to_int_list(arg, dimension):
+    if isinstance(arg, list):
+        assert len(arg) == dimension
+        return arg
+
+    if isinstance(arg, (collections.Sequence, np.ndarray, torch.Tensor)):
+        tmp = [i for i in arg]
+        assert len(tmp) == dimension
+    elif np.isscalar(arg):  # Assume that it is a scalar
+        tmp = [int(arg) for i in range(dimension)]
+    else:
+        raise ValueError('Input must be a scalar or a sequence')
+
+    return tmp
 
 
 def convert_to_int_tensor(arg, dimension):
@@ -44,24 +59,17 @@ def prep_args(pixel_dist, stride, kernel_size, dilation, region_type, D=-1):
     return pixel_dist, stride, kernel_size, dilation, region_type,
 
 
-def save_ctx(ctx, pixel_dist, stride, kernel_size, dilation, in_coords_key,
-             out_coords_key, net_metadata):
+def save_ctx(ctx, pixel_dist, stride, kernel_size, dilation, region_type,
+             in_coords_key, out_coords_key, coords_man):
     ctx.pixel_dist = pixel_dist
     ctx.stride = stride
     ctx.kernel_size = kernel_size
     ctx.dilation = dilation
+    ctx.region_type = region_type
     ctx.in_coords_key = in_coords_key
     ctx.out_coords_key = out_coords_key
-    ctx.net_metadata = net_metadata
+    ctx.coords_man = coords_man
     return ctx
-
-
-def prep_coords_keys(in_coords_key, out_coords_key):
-    in_coords_key = in_coords_key \
-        if in_coords_key else ffi.new('uint64_t *', 0)
-    out_coords_key = out_coords_key \
-        if out_coords_key else ffi.new('uint64_t *', 0)
-    return in_coords_key, out_coords_key
 
 
 class RegionType(Enum):
@@ -253,22 +261,45 @@ def convert_region_type(region_type,
     return region_type, region_offset, kernel_volume
 
 
-class SparseModuleBase():
-
-    def clear(self):
-        """ Must be run after each new data instance. """
-        self.out_coords_key[0] = 0
+class MinkowskiModuleBase(Module):
+    pass
 
 
-class NetMetadata(object):
+class CoordsKey():
 
-    def __init__(self, D, ptr=0):
+    def __init__(self, D):
         self.D = D
-        self.ffi = ffi.new('void *[1]')
-        ME.write_ffi_ptr(ptr, self.ffi)
+        self.CPPCoordsKey = getattr(MEB, f'PyCoordsKey{self.D}')()
 
-    def clear(self):
-        """
-        Clear all coordinates and convolution maps
-        """
-        ME.clear(self.D, self.ffi)
+    def setKey(self, key):
+        self.CPPCoordsKey.setKey(key)
+
+    def getKey(self):
+        return self.CPPCoordsKey.getKey()
+
+    def setPixelDist(self, pixel_dist):
+        pixel_dist = convert_to_int_list(pixel_dist, self.D)
+        self.CPPCoordsKey.setPixelDist(pixel_dist)
+
+    def getPixelDist(self):
+        return self.CPPCoordsKey.getPixelDist()
+
+    def __repr__(self):
+        return str(self.CPPCoordsKey)
+
+
+class CoordsManager():
+
+    def __init__(self, D):
+        self.D = D
+        self.CPPCoordsManager = getattr(MEB, f'PyCoordsManager{D}int32')()
+
+    def initialize(self, coords, coords_key):
+        self.CPPCoordsManager.initializeCoords(coords, coords_key.CPPCoordsKey)
+
+    def initialize_pixel_dist(self, coords, pixel_dist=1):
+        pixel_dist = convert_to_int_list(pixel_dist, self.D)
+        return self.CPPCoordsManager.initializeCoords(coords, pixel_dist)
+
+    def __repr__(self):
+        return str(self.CPPCoordsManager)

@@ -4,29 +4,31 @@ import sys
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
 
-from Common import NetMetadata, RegionType, convert_to_int_tensor, convert_region_type
+import torch
 
 from SparseTensor import SparseTensor
 
-from SparseConvolution import SparseConvolutionFunction, SparseConvolution, \
-    SparseConvolutionTransposeFunction, SparseConvolutionTranspose
+from Common import RegionType, convert_to_int_tensor, convert_region_type, \
+        MinkowskiModuleBase, CoordsKey, CoordsManager
 
-from SparsePooling import SparseMaxPoolingFunction, SparseMaxPooling, \
-    SparseNonzeroAvgPoolingFunction, SparseNonzeroAvgPooling, \
-    SparseSumPoolingFunction, SparseSumPooling, \
-    SparseNonzeroAvgUnpoolingFunction, SparseNonzeroAvgUnpooling, \
-    SparseGlobalAvgPoolingFunction, SparseGlobalAvgPooling
+from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
+    MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose
 
-from SparseBroadcast import SparseGlobalBroadcastFunction, \
-    SparseGlobalBroadcast, SparseGlobalBroadcastAddition, \
-    SparseGlobalBroadcastMultiplication, OperationType
+from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
+    MinkowskiSumPoolingFunction, MinkowskiSumPooling, \
+    MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
+    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling
 
-from SparseNonlinearity import SparseReLU
+from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
+    MinkowskiBroadcast, MinkowskiBroadcastAddition, \
+    MinkowskiBroadcastMultiplication, OperationType
 
-from SparseNormalization import SparseBatchNorm
+from MinkowskiNonlinearity import MinkowskiReLU
+
+from MinkowskiNormalization import MinkowskiBatchNorm
 
 from MinkowskiNetwork import MinkowskiNetwork
 
-import SparseOps
+import MinkowskiOps
 
-from SparseOps import SparseLinear, cat
+from MinkowskiOps import MinkowskiLinear, cat

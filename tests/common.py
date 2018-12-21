@@ -13,11 +13,10 @@ def get_coords(data, batch_index=0):
 
 
 def data_loader(in_feat_channel=3, max_label=5, is_classification=True):
-    data = ["   X   ",
-            "  X X  ",
-            " XXXXX "]
+    data = ["   X   ", "  X X  ", " XXXXX "]
 
-    coords = get_coords(data)
+    coords = get_coords(data, 0)
+    # coords.extend(get_coords(data, 1))
     coords = torch.from_numpy(np.array(coords)).int()
     N = len(coords)
     feats = torch.randn(N, in_feat_channel)

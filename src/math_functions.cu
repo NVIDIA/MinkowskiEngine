@@ -1,4 +1,4 @@
-#include "src/math_functions.hpp"
+#include "math_functions.hpp"
 
 // CUBLAS, CUSPARSE assume all dense matrices to be col major
 template <>
@@ -6,7 +6,7 @@ void gpu_gemm<float>(cublasHandle_t handle, const CBLAS_TRANSPOSE TransA,
                      const CBLAS_TRANSPOSE TransB, const int M, const int N,
                      const int K, const float alpha, const float *A,
                      const float *B, const float beta, float *C) {
-  // Note that cublas follows fortran order.
+  // Note that cublas follows (column-major) fortran order.
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
   cublasOperation_t cuTransA =

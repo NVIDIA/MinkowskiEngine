@@ -1,23 +1,33 @@
 from os import system
-from setuptools import setup, find_packages
-assert system('make') == 0
+
+from setuptools import setup
+from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
+
+# Python interface
 setup(
     name='MinkowskiEngine',
     version='0.1.0',
-    install_requires=['torch', 'cffi'],
+    install_requires=['torch'],
     packages=['MinkowskiEngine'],
     package_dir={'MinkowskiEngine': './'},
-    package_data={
-        'MinkowskiEngine': [
-            'MinkowskiEngineFFI/__init__.py',
-            'MinkowskiEngineFFI/_MinkowskiEngineFFI.so',
-            'MinkowskiEngineFFI/libminkowski.so',
-        ],
-    },
+    ext_modules=[
+        CUDAExtension(
+            name='MinkowskiEngineBackend',
+            include_dirs=['./'],
+            sources=[
+                'pybind/minkowski.cpp',
+            ],
+            libraries=['minkowski'],
+            library_dirs=['MinkowskiEngineObjs'],
+            extra_link_args=['-lminkowski'],
+            extra_compile_args=['-g'])
+    ],
+    cmdclass={'build_ext': BuildExtension},
     author='Christopher B. Choy',
     author_email='chrischoy@ai.stanford.edu',
-    description='Autodiff Sparse Tensor Library',
-    keywords='Minkowski Engine Neural Network',
+    description='Minkowski Engine, a Sparse Tensor Library for Neural Networks',
+    keywords=
+    'Minkowski Engine Sparse Tensor Library Convolutional Neural Networks',
     url='https://github.com/chrischoy/MinkowskiEngine',
     zip_safe=False,
 )

@@ -1,15 +1,15 @@
 #ifndef CPU_CONVOLUTION
 #define CPU_CONVOLUTION
 
-#include "src/math_functions.hpp"
+#include "common.hpp"
+#include "math_functions.hpp"
 
 template <typename Dtype, typename Itype>
-void SparseConvolutionForward(const Dtype *p_in_feat, int in_nchannel,
-                              Dtype *p_out_feat, int out_nchannel,
-                              const Dtype *p_kernel,
-                              const InOutMapPerKernel<Itype>& in_map,
-                              const InOutMapPerKernel<Itype>& out_map,
-                              int out_nrows) {
+void ConvolutionForwardKernelCPU(const Dtype *p_in_feat, int in_nchannel,
+                                 Dtype *p_out_feat, int out_nchannel,
+                                 const Dtype *p_kernel,
+                                 const InOutMapPerKernel<Itype> &in_map,
+                                 const InOutMapPerKernel<Itype> &out_map) {
   int kernel_volume, n_active_in_volume, row;
   std::vector<Dtype> input_buffer, output_buffer;
 
@@ -53,13 +53,12 @@ void SparseConvolutionForward(const Dtype *p_in_feat, int in_nchannel,
 }
 
 template <typename Dtype, typename Itype>
-void SparseConvolutionBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
-                               int in_nchannel, const Dtype *p_grad_out_feat,
-                               int out_nchannel, const Dtype *p_kernel,
-                               Dtype *p_grad_kernel,
-                               const InOutMapPerKernel<Itype>& in_map,
-                               const InOutMapPerKernel<Itype>& out_map,
-                               int out_nrows) {
+void ConvolutionBackwardKernelCPU(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
+                                  int in_nchannel, const Dtype *p_grad_out_feat,
+                                  int out_nchannel, const Dtype *p_kernel,
+                                  Dtype *p_grad_kernel,
+                                  const InOutMapPerKernel<Itype> &in_map,
+                                  const InOutMapPerKernel<Itype> &out_map) {
   int kernel_volume, n_active_in_volume, row;
   std::vector<Dtype> input_buffer, output_buffer;
 
@@ -90,7 +89,7 @@ void SparseConvolutionBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                     &output_buffer[0],                         // B
                     0,                                         // beta
                     &input_buffer[0]                           // C
-                    );
+    );
 
     // Accumulate gradients back to the input grad feat
     for (row = 0; row < n_active_in_volume; row++) {
@@ -114,7 +113,7 @@ void SparseConvolutionBackward(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                     &input_buffer[0],                              // B
                     1,                                             // beta
                     &p_grad_kernel[k * in_nchannel * out_nchannel] // C
-                    );
+    );
   }
 }
 

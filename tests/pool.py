@@ -1,10 +1,11 @@
+import torch
 import unittest
-from MinkowskiEngine import SparseTensor, SparseConvolution, \
-    SparseMaxPoolingFunction, SparseMaxPooling, \
-    SparseSumPoolingFunction, SparseSumPooling, \
-    SparseNonzeroAvgPoolingFunction, SparseNonzeroAvgPooling, \
-    SparseNonzeroAvgUnpoolingFunction, SparseNonzeroAvgUnpooling, \
-    SparseGlobalAvgPoolingFunction, SparseGlobalAvgPooling
+
+from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
+    MinkowskiSumPoolingFunction, MinkowskiSumPooling, \
+    MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
+    MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
+    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling
 from gradcheck import gradcheck
 
 from tests.common import data_loader
@@ -12,64 +13,92 @@ from tests.common import data_loader
 
 class TestPooling(unittest.TestCase):
 
-    def test_maxpool(self):
-        in_channels, D = 2, 2
-        coords, feats, labels = data_loader(in_channels)
-        feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
-        pool = SparseMaxPooling(kernel_size=3, stride=2, dimension=D)
-        output = pool(input)
-        print(output)
+    # def test_maxpooling(self):
+    #     in_channels, D = 2, 2
+    #     coords, feats, labels = data_loader(in_channels)
+    #     feats.requires_grad_()
+    #     input = SparseTensor(feats, coords=coords)
+    #     pool = MinkowskiMaxPooling(kernel_size=3, stride=2, dimension=D)
+    #     output = pool(input)
+    #     print(output)
 
-        # Check backward
-        fn = SparseMaxPoolingFunction()
-
-        self.assertTrue(
-            gradcheck(
-                fn,
-                (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                 pool.dilation, pool.region_type, None, None, None, input.m),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+    #     # Check backward
+    #     fn = MinkowskiMaxPoolingFunction()
+    #     self.assertTrue(
+    #         gradcheck(
+    #             fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+    #                  pool.dilation, pool.region_type, None, input.coords_key,
+    #                  None, input.C),
+    #             atol=1e-3,
+    #             rtol=1e-2,
+    #             eps=1e-4))
 
     def test_sumpooling(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        pool = SparseSumPooling(kernel_size=3, stride=2, dimension=D)
+        pool = MinkowskiSumPooling(kernel_size=3, stride=2, dimension=D)
         output = pool(input)
         print(output)
 
         # Check backward
-        fn = SparseSumPoolingFunction()
+        fn = MinkowskiSumPoolingFunction()
         self.assertTrue(
             gradcheck(
-                fn,
-                (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                 pool.dilation, pool.region_type, None, None, None, input.m),
+                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                     pool.dilation, pool.region_type, None, input.coords_key,
+                     None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))
 
+    def test_avgpooling_gpu(self):
+        if not torch.cuda.is_available():
+            return
+
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords=coords)
+        pool = MinkowskiAvgPooling(kernel_size=3, stride=2, dimension=D)
+        output = pool(input)
+        print(output)
+
+        device = torch.device('cuda')
+        with torch.cuda.device(0):
+            input = input.to(device)
+            pool = pool.to(device)
+            output = pool(input)
+            print(output)
+
+        # Check backward
+        fn = MinkowskiAvgPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                     pool.dilation, pool.region_type, None, input.coords_key,
+                     None, input.C),
+                atol=1e-3,
+                rtol=1e-2,
+                eps=1e-4))
 
     def test_avgpooling(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        pool = SparseNonzeroAvgPooling(kernel_size=3, stride=2, dimension=D)
+        pool = MinkowskiAvgPooling(kernel_size=3, stride=2, dimension=D)
         output = pool(input)
         print(output)
 
         # Check backward
-        fn = SparseNonzeroAvgPoolingFunction()
+        fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
             gradcheck(
-                fn,
-                (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                 pool.dilation, pool.region_type, None, None, None, input.m),
+                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                     pool.dilation, pool.region_type, None, input.coords_key,
+                     None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))
@@ -79,15 +108,15 @@ class TestPooling(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels)
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        pool = SparseGlobalAvgPooling(dimension=D)
+        pool = MinkowskiGlobalPooling(dimension=D)
         output = pool(input)
         print(output)
 
         # Check backward
-        fn = SparseGlobalAvgPoolingFunction()
+        fn = MinkowskiGlobalPoolingFunction()
         self.assertTrue(
             gradcheck(
-                fn, (input.F, input.pixel_dist, 0, None, None, input.m),
+                fn, (input.F, 0, True, input.coords_key, None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))
@@ -96,21 +125,21 @@ class TestPooling(unittest.TestCase):
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
         input = SparseTensor(feats, coords=coords)
-        conv = SparseConvolution(
+        conv = MinkowskiConvolution(
             in_channels, out_channels, kernel_size=3, stride=2, dimension=D)
-        unpool = SparseNonzeroAvgUnpooling(kernel_size=3, stride=2, dimension=D)
-        input_tr = conv(input)
-        output = unpool(input_tr)
+        unpool = MinkowskiPoolingTranspose(kernel_size=3, stride=2, dimension=D)
+        input = conv(input)
+        output = unpool(input)
         print(output)
 
         # Check backward
-        fn = SparseNonzeroAvgUnpoolingFunction()
+        fn = MinkowskiPoolingTransposeFunction()
 
         self.assertTrue(
             gradcheck(
-                fn, (input_tr.F, input_tr.pixel_dist, unpool.stride,
+                fn, (input.F, input.pixel_dist, unpool.stride,
                      unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, None, None, input_tr.m),
+                     None, input.coords_key, None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))

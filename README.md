@@ -5,29 +5,20 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. We u
 
 # Installation
 
-You must install `pytorch` 0.4.x and `cffi` python packages first.
-For this, we recommend the python 3.6 virtual environment using anaconda (`conda create -n NAME_OF_THE_VENV python=3.6`. Then activate the env using `conda activate NAME_OF_THE_VENV`).
-
-
-## Pytorch 0.4.x Installation
-
-Please follow the instruction on [the pytorch old version installation guide](https://pytorch.org/get-started/previous-versions/) for pytorch 0.4.x installation.
-If you have python 3.6 and CUDA 9.1. use the following command.
-
-```
-pip install https://download.pytorch.org/whl/cu91/torch-0.4.0-cp36-cp36m-linux_x86_64.whl`.
-```
-
-Then, execute the following lines. These will install the MinkowskiEngine for import.
+You must install `pytorch`. Please read before you execute the following lines.
 
 ```
 sudo apt install libsparsehash-dev
 sudo apt install libblas-dev libopenblas-dev
+# within a python3 environment
+pip install torch
 # Must install pytorch first
 git clone https://github.com/chrischoy/MinkowskiEngine.git
 cd MinkowskiEngine
-python setup.py install
+# within a python3 environment
+make # -j8 for parallel build
 ```
+
 
 # Usage
 
@@ -37,8 +28,9 @@ Using the sparse convolution engine is quite straight forward.
 ## Import
 
 ```python
-from MinkowskiEngine import SparseConvolution, MinkowskiNetwork
+import MinkowskiEngine as ME
 ```
+
 
 ## Creating a Network
 
@@ -49,7 +41,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
     def __init__(self, in_feat, out_feat, D):
         super(ExampleNetwork, self).__init__(D)
-        self.conv1 = ME.SparseConvolution(
+        self.conv1 = ME.MinkowskiConvolution(
             in_channels=in_feat,
             out_channels=64,
             kernel_size=3,
@@ -57,17 +49,17 @@ class ExampleNetwork(ME.MinkowskiNetwork):
             dilation=1,
             has_bias=False,
             dimension=D)
-        self.bn1 = ME.SparseBatchNorm(64)
-        self.conv2 = ME.SparseConvolution(
+        self.bn1 = ME.MinkowskiBatchNorm(64)
+        self.conv2 = ME.MinkowskiConvolution(
             in_channels=64,
             out_channels=128,
             kernel_size=3,
             stride=2,
             dimension=D)
-        self.bn2 = ME.SparseBatchNorm(128)
-        self.pooling = ME.SparseGlobalAvgPooling(dimension=D)
-        self.linear = ME.SparseLinear(128, out_feat)
-        self.relu = ME.SparseReLU(inplace=True)
+        self.bn2 = ME.MinkowskiBatchNorm(128)
+        self.pooling = ME.MinkowskiGlobalPooling(dimension=D)
+        self.linear = ME.MinkowskiLinear(128, out_feat)
+        self.relu = ME.MinkowskiReLU(inplace=True)
 
     def forward(self, x):
         out = self.conv1(x)
@@ -82,6 +74,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
         return self.linear(out)
 ```
 
+
 ## Forward and backward using the custom network
 
 ```python
@@ -92,17 +85,12 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
     # a data loader must return a tuple of coords, features, and labels.
     coords, feat, label = data_loader()
-    # for training, convert to a var
-    input = ME.SparseTensor(feat, coords=coords, net_metadata=net.net_metadata)
+    input = ME.SparseTensor(feat, coords=coords)
     # Forward
     output = net(input)
 
     # Loss
     loss = criterion(output.F, label)
-
-    # Gradient
-    loss.backward()
-    net.clear()
 ```
 
 
@@ -153,9 +141,11 @@ See `tests/test_conv_types.py` for more details.
 
 The strided convolution maps i-th index to `int(i / stride) * stride`. Thus, it is encouraged to use dilation == 1 and kernel_size > stide when stride > 1.
 
+
 ## Unpooling
 
 When using unpooling, some outputs might return `nan` when there are no corresponding input features.
+
 
 # Debugging
 

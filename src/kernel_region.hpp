@@ -1,24 +1,17 @@
-#ifndef RECTANGULAR_REGION
-#define RECTANGULAR_REGION
+#ifndef REGION
+#define REGION
 
-#include "src/main.hpp"
+#include "common.hpp"
 
 template <uint8_t D, typename Itype> class KernelRegionIterator;
 template <uint8_t D, typename Itype> class KernelRegion {
 public:
-  int region_type;
-  Arr<D, Itype> pixel_dists, kernel_size, dilations;
-  const Itype *p_offset, n_offset;
-  Coord<D, Itype> center;
-  Coord<D, Itype> lb;
-  Coord<D, Itype> ub;
-
   KernelRegion(Coord<D, Itype> &center, Arr<D, Itype> pixel_dists,
                Arr<D, Itype> kernel_size, Arr<D, Itype> dilations,
                int region_type, const Itype *p_offset, int n_offset)
-      : center(center), pixel_dists(pixel_dists), kernel_size(kernel_size),
-        dilations(dilations), region_type(region_type), p_offset(p_offset),
-        n_offset(n_offset) {
+      : region_type(region_type), pixel_dists(pixel_dists),
+        kernel_size(kernel_size), dilations(dilations), p_offset(p_offset),
+        n_offset(n_offset), center(center) {
     for (int i = 0; i < D; i++) {
       lb[i] =
           center[i] - int(kernel_size[i] / 2) * dilations[i] * pixel_dists[i];
@@ -36,6 +29,13 @@ public:
     return KernelRegionIterator<D, Itype>(*this, pixel_dists, kernel_size,
                                           dilations, region_type);
   }
+
+  int region_type;
+  Arr<D, Itype> pixel_dists, kernel_size, dilations;
+  const Itype *p_offset, n_offset;
+  Coord<D, Itype> center;
+  Coord<D, Itype> lb;
+  Coord<D, Itype> ub;
 };
 
 template <uint8_t D, typename Itype> class KernelRegionIterator {
@@ -50,9 +50,9 @@ public:
   KernelRegionIterator(KernelRegion<D, Itype> &region,
                        Arr<D, Itype> pixel_dists, Arr<D, Itype> kernel_size,
                        Arr<D, Itype> dilations, int region_type)
-      : region(region), done(false), pixel_dists(pixel_dists),
-        kernel_size(kernel_size), dilations(dilations),
-        region_type(region_type), curr_axis(0), offset_ind(0) {
+      : pixel_dists(pixel_dists), kernel_size(kernel_size),
+        dilations(dilations), region_type(region_type), curr_axis(0),
+        offset_ind(0), region(region), done(false) {
     // First point
     switch (region_type) {
     case 0:
@@ -75,13 +75,13 @@ public:
     switch (region_type) {
     case 0:
       // Iterate only from 0 to D-1, point[D] reserved for batch index
-      for (int i = D - 1;;) {
-        point[i] += dilations[i] * pixel_dists[i]; // point is initialized as lb
-        if (point[i] <= region.ub[i])
+      for (int d = 0; d < D;) {
+        point[d] += dilations[d] * pixel_dists[d]; // point is initialized as lb
+        if (point[d] <= region.ub[d])
           break;
-        point[i] = region.lb[i];
-        i--;
-        if (i == -1) {
+        point[d] = region.lb[d];
+        d++;
+        if (d >= D) {
           done = true; // Signal to operator!= to end iteration
           break;
         }
@@ -117,6 +117,8 @@ public:
       }
       return *this;
     }
+    // To make the compiler happy
+    return *this;
   }
   Coord<D, Itype> &operator*() { return point; }
 };

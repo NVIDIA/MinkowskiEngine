@@ -1,4 +1,4 @@
-#include "src/math_functions.hpp"
+#include "math_functions.hpp"
 
 template <>
 void cpu_gemm<float>(const CBLAS_ORDER Layout, const CBLAS_TRANSPOSE TransA,
@@ -6,7 +6,7 @@ void cpu_gemm<float>(const CBLAS_ORDER Layout, const CBLAS_TRANSPOSE TransA,
                      const int K, const float alpha, const float *A,
                      const float *B, const float beta, float *C) {
   int lda, ldb, ldc;
-  if (Layout == CblasRowMajor){
+  if (Layout == CblasRowMajor) {
     lda = (TransA == CblasNoTrans) ? K : M;
     ldb = (TransB == CblasNoTrans) ? N : K;
     ldc = N;
@@ -25,7 +25,7 @@ void cpu_gemm<double>(const CBLAS_ORDER Layout, const CBLAS_TRANSPOSE TransA,
                       const int K, const double alpha, const double *A,
                       const double *B, const double beta, double *C) {
   int lda, ldb, ldc;
-  if (Layout == CblasRowMajor){
+  if (Layout == CblasRowMajor) {
     lda = (TransA == CblasNoTrans) ? K : M;
     ldb = (TransB == CblasNoTrans) ? N : K;
     ldc = N;

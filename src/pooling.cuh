@@ -1,14 +1,14 @@
-#ifndef SPARSE_POOLING_CUH
-#define SPARSE_POOLING_CUH
+#ifndef POOLING_CUH
+#define POOLING_CUH
 
 #include <array>
 #include <vector>
 
-#include "src/gpu.cuh"
-#include "src/math_functions.hpp"
+#include "gpu.cuh"
+#include "math_functions.hpp"
 
 template <typename Dtype, typename Itype>
-void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
+void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 int out_nrows, Itype *d_max_index,
                                 int nchannel,
                                 const std::vector<std::vector<Itype>> &in_map,
@@ -16,13 +16,13 @@ void SparseMaxPoolingForwardGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
-void SparseMaxPoolingBackwardGPU(Dtype *d_grad_in_feat, int in_nrows,
+void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  const Dtype *d_grad_out_feat,
                                  int out_nrows, const Itype *d_max_index,
                                  int nchannel, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
-void SparseNonzeroAvgPoolingForwardGPU(
+void NonzeroAvgPoolingForwardKernelGPU(
     const Dtype *d_in_feat, int in_nrows, Dtype *d_out_feat, int out_nrows,
     Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_map,
@@ -30,7 +30,7 @@ void SparseNonzeroAvgPoolingForwardGPU(
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
-void SparseNonzeroAvgPoolingBackwardGPU(
+void NonzeroAvgPoolingBackwardKernelGPU(
     Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
     int out_nrows, const Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_map,

@@ -1,8 +1,8 @@
 #ifndef MATH_FUNCTIONS
 #define MATH_FUNCTIONS
 
-#include "src/gpu.cuh"
-#include "src/mkl_alternate.hpp"
+#include "gpu.cuh"
+#include "mkl_alternate.hpp"
 
 template <typename Dtype>
 void cpu_gemm(const CBLAS_ORDER Layout, const CBLAS_TRANSPOSE TransA,

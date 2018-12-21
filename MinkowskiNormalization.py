@@ -4,7 +4,7 @@ from torch.nn import Module
 from SparseTensor import SparseTensor
 
 
-class SparseBatchNorm(Module):
+class MinkowskiBatchNorm(Module):
 
     def __init__(self,
                  num_features,
@@ -12,7 +12,7 @@ class SparseBatchNorm(Module):
                  momentum=0.1,
                  affine=True,
                  track_running_stats=True):
-        super(SparseBatchNorm, self).__init__()
+        super(MinkowskiBatchNorm, self).__init__()
         self.bn = torch.nn.BatchNorm1d(
             num_features,
             eps=eps,
@@ -23,8 +23,4 @@ class SparseBatchNorm(Module):
     def forward(self, input):
         output = self.bn(input.F)
         return SparseTensor(
-            output,
-            coords=input.C,
-            coords_key=input.coords_key,
-            pixel_dist=input.pixel_dist,
-            net_metadata=input.m)
+            output, coords_key=input.coords_key, coords_manager=input.C)
