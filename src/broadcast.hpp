@@ -63,7 +63,7 @@ void BroadcastBackwardKernelCPU(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                                 const Dtype *p_grad_out_feat, int nchannel,
                                 int op, const InOutMapPerKernel<Itype> &in_map,
                                 const InOutMapPerKernel<Itype> &glob_map) {
-  Dtype *p_curr_out_feat, *p_curr_grad_in_feat, *p_curr_grad_in_feat_global;
+  Dtype *p_curr_grad_in_feat, *p_curr_grad_in_feat_global;
   const Dtype *p_curr_in_feat_global, *p_curr_in_feat, *p_curr_grad_out_feat;
 
   // Clear grad memory

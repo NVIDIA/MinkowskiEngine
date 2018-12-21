@@ -77,9 +77,6 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   num_nonzero.resize_({out_nrows});
   num_nonzero.zero_();
 
-  cusparseHandle_t handle =
-      THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
-
   MaxPoolingForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), out_nrows,
       num_nonzero.data<Itype>(), in_feat.size(1), std::get<0>(in_out),
@@ -93,12 +90,6 @@ void MaxPoolingBackwardGPU(
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
-  InOutMapKey map_key = p_coords_manager->getMapHashKey(
-      pixel_dists, strides, kernel_sizes, dilations, region_type,
-      py_in_coords_key, py_out_coords_key, false);
-
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 

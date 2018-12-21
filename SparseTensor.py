@@ -55,19 +55,19 @@ class SparseTensor():
         return self.coords_key.D
 
     def stride(self, s):
-        pixel_dist = self.coords_key.getPixelDist()
-        # TODO support list multiplication
-        self.coords_key.setPixelDist(pixel_dist * s)
+        ss = convert_to_int_list(s)
+        pixel_dists = self.coords_key.getPixelDist()
+        self.coords_key.setPixelDist([s * p for s, p in zip(ss, pixel_dists)])
 
     def __add__(self, other):
         return SparseTensor(
             self.F + (other.F if isinstance(other, SparseTensor) else other),
-            coords=self.C,
-            coords_key=self.coords_key)
+            coords_key=self.coords_key,
+            coords_manager=self.C)
 
     def __power__(self, other):
         return SparseTensor(
-            self.F**other, coords=self.C, coords_key=self.coords_key)
+            self.F**other, coords_key=self.coords_key, coords_manager=self.C)
 
     def __repr__(self):
         return self.__class__.__name__ + '(' + os.linesep \
@@ -79,3 +79,6 @@ class SparseTensor():
     def to(self, device):
         self.F = self.F.to(device)
         return self
+
+    def getKey(self):
+        return self.coords_key.getKey()

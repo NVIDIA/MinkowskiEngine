@@ -173,7 +173,6 @@ CoordsManager<D, Itype>::createOriginCoordsHashMap(uint64_t coords_key,
                     << __LINE__);
   CoordsHashMap<D, Itype> &in_coords = coords_hashmaps[coords_key];
   CoordsHashMap<D, Itype> out_coord_map;
-  Coord<D, Itype> coord;
   int n_out = 0;
   // When batch size is not given (0, negative), go over all values
   if (batch_size < 1) {

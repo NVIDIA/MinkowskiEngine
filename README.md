@@ -16,7 +16,7 @@ pip install torch
 git clone https://github.com/chrischoy/MinkowskiEngine.git
 cd MinkowskiEngine
 # within a python3 environment
-make # -j8 for parallel build
+make -j4 # higher number if cpu count > 4
 ```
 
 

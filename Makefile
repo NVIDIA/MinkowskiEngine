@@ -2,35 +2,35 @@
 # Uncomment for debugging
 # DEBUG := 1
 # Pretty build
-# Q ?= @
+Q ?= @
 
 CXX := g++
 
 # CUDA ROOT DIR that contains bin/ lib64/ and include/
 CUDA_DIR := /usr/local/cuda
+PYTHON_DIR := /home/chrischoy/anaconda3/envs/py3-mink-dev
 
 INCLUDE_DIRS := ./ $(CUDA_DIR)/include
 LIBRARY_DIRS := $(CUDA_DIR)/lib64
+PYTHON_PACKAGE_DIR := $(PYTHON_DIR)/lib/python3.7/site-packages
 
-PYTHON_HEADER_PATH := /home/chrischoy/anaconda3/envs/py3-mink-dev/include/python3.7m
-PYTHON_LIB_PATH := /home/chrischoy/anaconda3/envs/py3-mink-dev/lib
-PYTHON_PACKAGE_PATH := /home/chrischoy/anaconda3/envs/py3-mink-dev/lib/python3.7/site-packages
+INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/
+INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/TH
+INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/THC
+INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/torch/csrc/api/include
+INCLUDE_DIRS += $(PYTHON_DIR)/include/python3.7m
 
-INCLUDE_DIRS += $(PYTHON_PACKAGE_PATH)/torch/lib/include/
-INCLUDE_DIRS += $(PYTHON_PACKAGE_PATH)/torch/lib/include/TH
-INCLUDE_DIRS += $(PYTHON_PACKAGE_PATH)/torch/lib/include/THC
-INCLUDE_DIRS += $(PYTHON_PACKAGE_PATH)/torch/lib/include/torch/csrc/api/include
-INCLUDE_DIRS += $(PYTHON_HEADER_PATH)
+LIBRARY_DIRS += $(PYTHON_DIR)/lib
+LIBRARY_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/
+LIBRARY_DIRS += $(PYTHON_PACKAGE_DIR)/torch/
 
-LIBRARY_DIRS += $(PYTHON_LIB_PATH)
-LIBRARY_DIRS += $(PYTHON_PACKAGE_PATH)/torch/lib/
-LIBRARY_DIRS += $(PYTHON_PACKAGE_PATH)/torch/
+EXTENSION_NAME := minkowski
 
 # BLAS choice:
-# atlas for ATLAS
+# atlas for ATLAS (default)
 # mkl for MKL
-# open for OpenBlas (default)
-BLAS := open
+# open for OpenBlas
+BLAS := atlas
 
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
@@ -40,12 +40,12 @@ BLAS := open
 
 ###############################################################################
 SRC_DIR := ./src
-OBJ_DIR := ./MinkowskiEngineObjs
+OBJ_DIR := ./objs
 CPP_SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 CU_SRCS := $(wildcard $(SRC_DIR)/*.cu)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRCS))
 CU_OBJS := $(patsubst $(SRC_DIR)/%.cu,$(OBJ_DIR)/cuda/%.o,$(CU_SRCS))
-STATIC_LIB := $(OBJ_DIR)/libminkowski.so
+STATIC_LIB := $(OBJ_DIR)/lib$(EXTENSION_NAME).a
 
 # CUDA architecture setting: going with all of them.
 # For CUDA < 6.0, comment the *_50 through *_61 lines for compatibility.
@@ -62,7 +62,7 @@ CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
 LIBRARIES += stdc++ cudart cublas c10 caffe2 torch torch_python caffe2_gpu
 
 # BLAS configuration (default = open)
-BLAS ?= open
+BLAS ?= atlas
 ifeq ($(BLAS), mkl)
 	# MKL
 	LIBRARIES += mkl_rt
@@ -83,12 +83,12 @@ endif
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
 	# https://gcoe-dresden.de/reaching-the-shore-with-a-fog-warning-my-eurohack-day-4-morning-session/
-	NVCCFLAGS += -G -rdc true
+	NVCCFLAGS += -g -G # -rdc true
 else
-	COMMON_FLAGS += -DNDEBUG -O2
+	COMMON_FLAGS += -DNDEBUG -O3
 endif
 
-WARNINGS := -Wall -Wno-sign-compare -Wstrict-prototypes
+WARNINGS := -Wall -Wno-sign-compare -Wcomment
 
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)
@@ -97,13 +97,14 @@ LIBRARY_DIRS += $(BLAS_LIB)
 CXXFLAGS += -MMD -MP
 
 # Complete build flags.
-COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -pthread -B /home/chrischoy/anaconda3/envs/py3-mink-dev/compiler_compat -fPIC $(COMMON_FLAGS) $(WARNINGS) -fwrapv -O3 -D_GLIBCXX_USE_CXX11_ABI=0 -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=minkowski -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++11
-NVCCFLAGS += -std=c++11 -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS) -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=minkowski -D_GLIBCXX_USE_CXX11_ABI=0
-
-LINKFLAGS += -pthread -B /home/chrischoy/anaconda3/envs/py3-mink-dev/compiler_compat -fPIC $(WARNINGS) -Wl,-rpath=/home/chrischoy/anaconda3/envs/py3-mink-dev/lib -Wl,--no-as-needed -Wl,--sysroot=/ -D_GLIBCXX_USE_CXX11_ABI=0
+COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir)) \
+	     -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=$(EXTENSION_NAME) \
+	     -D_GLIBCXX_USE_CXX11_ABI=0
+CXXFLAGS += -pthread -fPIC -fwrapv -std=c++11 $(COMMON_FLAGS) $(WARNINGS)
+NVCCFLAGS += -std=c++11 -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+LINKFLAGS += -pthread -fPIC $(WARNINGS) -Wl,-rpath=$(PYTHON_LIB_DIR) -Wl,--no-as-needed -Wl,--sysroot=/
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
-	   $(foreach library,$(LIBRARIES),-l$(library)) -l:_C.cpython-37m-x86_64-linux-gnu.so
+	   $(foreach library,$(LIBRARIES),-l$(library))
 
 all: $(STATIC_LIB)
 	python setup.py install --force
@@ -114,9 +115,7 @@ $(OBJ_DIR):
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	@ echo CXX $<
-	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
-		-odir $(@D)
-	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@
 
 $(OBJ_DIR)/cuda/%.o: $(SRC_DIR)/%.cu | $(OBJ_DIR)
 	@ echo NVCC $<

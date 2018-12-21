@@ -6,7 +6,7 @@ from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtensio
 # Python interface
 setup(
     name='MinkowskiEngine',
-    version='0.1.0',
+    version='0.2.0',
     install_requires=['torch'],
     packages=['MinkowskiEngine'],
     package_dir={'MinkowskiEngine': './'},
@@ -18,7 +18,7 @@ setup(
                 'pybind/minkowski.cpp',
             ],
             libraries=['minkowski'],
-            library_dirs=['MinkowskiEngineObjs'],
+            library_dirs=['objs'],
             extra_link_args=['-lminkowski'],
             extra_compile_args=['-g'])
     ],

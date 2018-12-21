@@ -70,8 +70,8 @@ void ConvolutionForwardKernelGPU(
       cudaMalloc((void **)&d_in_map, (2 * max_n_active) * sizeof(Itype)));
   d_out_map = d_in_map + max_n_active;
   CUDA_CHECK(cudaMalloc((void **)&d_in_buffer,
-                        in_nchannel * (2 * max_n_active) * sizeof(Dtype)));
-  d_out_buffer = d_in_buffer + max_n_active;
+                        (in_nchannel + out_nchannel) * max_n_active * sizeof(Dtype)));
+  d_out_buffer = d_in_buffer + in_nchannel * max_n_active;
   // Iterate through each spatial kernel and get indices for in_map and
   // out_map
   for (int k = 0; k < kernel_volume; k++) {

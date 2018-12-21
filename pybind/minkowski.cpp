@@ -97,4 +97,9 @@ void instantiate_dim(py::module &m, const std::string &dim) {
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   instantiate_dim<1>(m, std::to_string(1));
   instantiate_dim<2>(m, std::to_string(2));
+  instantiate_dim<3>(m, std::to_string(3));
+  instantiate_dim<4>(m, std::to_string(4));
+  instantiate_dim<5>(m, std::to_string(5));
+  instantiate_dim<6>(m, std::to_string(6));
+  instantiate_dim<7>(m, std::to_string(7));
 }

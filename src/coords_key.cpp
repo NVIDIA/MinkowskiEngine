@@ -58,5 +58,4 @@ template <uint8_t D> std::string PyCoordsKey<D>::toString() const {
          ", pixel_dist: " + ArrToString(pixel_dists_) + " > ";
 }
 
-template class PyCoordsKey<1>;
-template class PyCoordsKey<2>;
+INSTANTIATE_CLASS_DIM(PyCoordsKey);
