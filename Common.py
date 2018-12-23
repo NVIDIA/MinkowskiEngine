@@ -301,5 +301,26 @@ class CoordsManager():
         pixel_dist = convert_to_int_list(pixel_dist, self.D)
         return self.CPPCoordsManager.initializeCoords(coords, pixel_dist)
 
+    def get_coords_key(self, pixel_dists):
+        pixel_dists = convert_to_int_list(pixel_dists, self.D)
+        key = self.CPPCoordsManager.getCoordsKey(pixel_dists)
+        coords_key = CoordsKey(self.D)
+        coords_key.setKey(key)
+        coords_key.setPixelDist(pixel_dists)
+        return coords_key
+
+    def get_mapping_by_pixel_dists(self, in_pixel_dists, out_pixel_dists):
+        in_key = self.get_coords_key(in_pixel_dists)
+        out_key = self.get_coords_key(out_pixel_dists)
+        return self.get_mapping_by_coords_key(in_key, out_key)
+
+    def get_mapping_by_coords_key(self, in_coords_key, out_coords_key):
+        assert isinstance(in_coords_key, CoordsKey) \
+            and isinstance(out_coords_key, CoordsKey)
+        mapping = torch.IntTensor()
+        self.CPPCoordsManager.getCoordsMapping(
+            mapping, in_coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey)
+        return mapping
+
     def __repr__(self):
         return str(self.CPPCoordsManager)

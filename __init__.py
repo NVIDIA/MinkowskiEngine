@@ -23,7 +23,7 @@ from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
     MinkowskiBroadcast, MinkowskiBroadcastAddition, \
     MinkowskiBroadcastMultiplication, OperationType
 
-from MinkowskiNonlinearity import MinkowskiReLU
+from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid
 
 from MinkowskiNormalization import MinkowskiBatchNorm
 

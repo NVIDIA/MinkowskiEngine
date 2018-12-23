@@ -38,22 +38,6 @@ class MinkowskiNetwork(nn.Module, ABC):
         elif nrows != x.F.size(0):
             raise ValueError('Input size does not match the coordinate size')
 
-    def get_permutation(self, pixel_dist_src, pixel_dist_dst):
-        pixel_dist_src = convert_to_int_tensor(pixel_dist_src, self.D)
-        pixel_dist_dst = convert_to_int_tensor(pixel_dist_dst, self.D)
-        assert pixel_dist_src.numel() == pixel_dist_dst.numel()
-
-        # Mapping is surjective, Mapping to smaller space is not supported
-        for i in range(pixel_dist_src.numel()):
-            assert pixel_dist_src[i] >= pixel_dist_dst[i]
-
-        perm = torch.IntTensor()
-        success = MEB.get_permutation(perm, pixel_dist_src, pixel_dist_dst,
-                                      self.D, self.net_metadata.ffi)
-        if success < 0:
-            raise ValueError('get_permutation failed')
-        return perm
-
     def get_index_map(self, coords, pixel_dist):
         """
         Get the current coords (with duplicates) index map.

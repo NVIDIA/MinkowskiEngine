@@ -46,6 +46,65 @@ long ComputeKernelVolume(int region_type, const Arr<D, int> &kernel_size,
   return kernel_volume;
 }
 
+/*
+ * Given pixel_dist_src and pixel_dist_dst, find the respective coord_maps and
+ * return the indices of the coord_map_ind in coord_map_dst
+ */
+template <uint8_t D, typename Itype>
+void CoordsManager<D, Itype>::getCoordsMapping(at::Tensor mapping,
+                                               py::object py_in_coords_key,
+                                               py::object py_out_coords_key) {
+
+  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
+  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+
+  if (!p_in_coords_key->key_set || !p_out_coords_key->key_set)
+    throw std::invalid_argument(Formatter() << "CoordsKey is not initialized.");
+
+  uint64_t in_coords_key = p_in_coords_key->getKey(),
+           out_coords_key = p_out_coords_key->getKey();
+  if (coords_hashmaps.find(in_coords_key) == coords_hashmaps.end() ||
+      coords_hashmaps.find(out_coords_key) == coords_hashmaps.end())
+    throw std::invalid_argument(
+        Formatter() << "CoordsManager::getPermutation: Cannot find the given "
+                       "coords key. in_coords_key: "
+                    << std::to_string(in_coords_key)
+                    << ", out_coords_key: " << std::to_string(out_coords_key));
+
+  auto in_pixel_dists = p_in_coords_key->getPixelDist();
+  auto out_pixel_dists = p_out_coords_key->getPixelDist();
+  auto strides = std::vector<Itype>(D);
+
+  for (int i = 0; i < D; i++) {
+    strides[i] = out_pixel_dists[i] / in_pixel_dists[i];
+    if (in_pixel_dists[i] > out_pixel_dists[i]) {
+      throw std::invalid_argument(Formatter()
+                                  << "Out pixel dist must be greater than the "
+                                     "in pixel dist. in_pixel_dists: "
+                                  << ArrToString<Arr<D, int>>(in_pixel_dists)
+                                  << ", out_pixel_dists: "
+                                  << ArrToString<Arr<D, int>>(out_pixel_dists));
+    }
+  }
+
+  int in_ind, out_ind, nrows = getCoordsSize(py_in_coords_key);
+  mapping.resize_({nrows, 1});
+  mapping.fill_(-1);
+
+  _CoordsHashMap<D, Itype> &in_coords = coords_hashmaps[in_coords_key].map;
+  _CoordsHashMap<D, Itype> &out_coords = coords_hashmaps[out_coords_key].map;
+
+  for (auto pair : in_coords) {
+    Coord<D, Itype> coord = pair.first;
+    in_ind = pair.second;
+    for (int i = 0; i < D; i++) {
+      coord[i] = int(floor(((float)coord[i]) / strides[i])) * strides[i];
+    }
+    out_ind = out_coords[coord];
+    mapping[in_ind] = out_ind;
+  }
+}
+
 template <uint8_t D, typename Itype>
 uint64_t CoordsManager<D, Itype>::getCoordsKey(const Arr<D, int> &pixel_dists) {
   auto pixel_dist_hash = hash_vec<Arr<D, int>>(pixel_dists);
