@@ -60,6 +60,7 @@ class MinkowskiMaxPoolingFunction(Function):
         ipdb.set_trace()
         return out_feat
 
+    @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
@@ -126,6 +127,7 @@ class MinkowskiAvgPoolingFunctionBase(Function):
               ctx.coords_man.CPPCoordsManager, ctx.use_avg)
         return out_feat
 
+    @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
@@ -415,7 +417,7 @@ class MinkowskiGlobalPoolingFunction(Function):
         ctx.out_coords_key = out_coords_key
 
         ctx.in_feat = input_features
-        ctx.out_feat = input_features.new()
+        out_feat = input_features.new()
         ctx.average = average
         ctx.num_nonzero = input_features.new()
         ctx.coords_manager = coords_manager
@@ -423,11 +425,12 @@ class MinkowskiGlobalPoolingFunction(Function):
         fw_fn = MEB.GlobalPoolingForwardGPU if input_features.is_cuda \
             else MEB.GlobalPoolingForwardCPU
         D = in_coords_key.D
-        fw_fn(D, ctx.in_feat, ctx.out_feat, ctx.num_nonzero,
+        fw_fn(D, ctx.in_feat, out_feat, ctx.num_nonzero,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager, batch_size, ctx.average)
-        return ctx.out_feat
+        return out_feat
 
+    @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
