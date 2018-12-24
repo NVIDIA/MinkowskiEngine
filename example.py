@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 import MinkowskiEngine as ME
@@ -50,12 +51,20 @@ if __name__ == '__main__':
 
     # a data loader must return a tuple of coords, features, and labels.
     coords, feat, label = data_loader()
-    input = ME.SparseTensor(feat, coords=coords)
-    # Forward
-    output = net(input)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Loss
-    loss = criterion(output.F, label)
+    net = net.to(device)
 
-    # Gradient
-    loss.backward()
+    for i in range(1000):
+        # Get new data
+        input = ME.SparseTensor(feat, coords=coords).to(device)
+        label = label.to(device)
+
+        # Forward
+        output = net(input)
+
+        # Loss
+        loss = criterion(output.F, label)
+
+        # Gradient
+        loss.backward()

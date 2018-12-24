@@ -2,7 +2,7 @@ import torch
 import unittest
 
 from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
-    MinkowskiSumPoolingFunction, MinkowskiSumPooling, \
+    MinkowskiSumPooling, \
     MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling
@@ -43,12 +43,12 @@ class TestPooling(unittest.TestCase):
         print(output)
 
         # Check backward
-        fn = MinkowskiSumPoolingFunction()
+        fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, input.coords_key,
-                     None, input.C),
+                     pool.dilation, pool.region_type, None, False,
+                     input.coords_key, None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))
@@ -77,8 +77,8 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, input.coords_key,
-                     None, input.C),
+                     pool.dilation, pool.region_type, None, True,
+                     input.coords_key, None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))
@@ -97,8 +97,8 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, input.coords_key,
-                     None, input.C),
+                     pool.dilation, pool.region_type, None, True,
+                     input.coords_key, None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))
@@ -139,7 +139,7 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn, (input.F, input.pixel_dist, unpool.stride,
                      unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, input.coords_key, None, input.C),
+                     None, False, input.coords_key, None, input.C),
                 atol=1e-3,
                 rtol=1e-2,
                 eps=1e-4))

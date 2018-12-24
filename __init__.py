@@ -15,7 +15,7 @@ from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolut
     MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose
 
 from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
-    MinkowskiSumPoolingFunction, MinkowskiSumPooling, \
+    MinkowskiSumPooling, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling
 

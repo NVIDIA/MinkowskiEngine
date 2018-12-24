@@ -56,7 +56,10 @@ class TestBroadcast(unittest.TestCase):
         input_glob = pool(input)
         input_glob.F.requires_grad_()
         broadcast = MinkowskiBroadcastAddition(D)
+        broadcast_mul = MinkowskiBroadcastMultiplication(D)
         output = broadcast(input, input_glob)
+        print(output)
+        output = broadcast_mul(input, input_glob)
         print(output)
 
         # Check backward

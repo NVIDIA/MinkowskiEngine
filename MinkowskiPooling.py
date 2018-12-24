@@ -75,7 +75,7 @@ class MinkowskiMaxPoolingFunction(Function):
         return grad_in_feat, None, None, None, None, None, None, None, None, None
 
 
-class MinkowskiAvgPoolingFunctionBase(Function):
+class MinkowskiAvgPoolingFunction(Function):
     '''
     Due to ctx.num_nonzero = in_feat.new()....,
     Should the function be called multiple times, this function must be first
@@ -93,6 +93,7 @@ class MinkowskiAvgPoolingFunctionBase(Function):
                 dilation=1,
                 region_type=0,
                 region_offset=None,
+                average=True,
                 in_coords_key=None,
                 out_coords_key=None,
                 coords_manager=None):
@@ -111,7 +112,7 @@ class MinkowskiAvgPoolingFunctionBase(Function):
         ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
-        ctx.use_avg = True
+        ctx.use_avg = average
 
         D = in_coords_key.D
         out_feat = input_features.new()
@@ -139,71 +140,7 @@ class MinkowskiAvgPoolingFunctionBase(Function):
               convert_to_int_list(ctx.dilation, D), ctx.region_type,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_man.CPPCoordsManager, ctx.use_avg)
-        return grad_in_feat, None, None, None, None, None, None, None, None, None
-
-
-class MinkowskiAvgPoolingFunction(MinkowskiAvgPoolingFunctionBase):
-    '''
-    Due to ctx.num_nonzero = in_feat.new()....,
-    Should the function be called multiple times, this function must be first
-    instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, ctx.out_feat, ctx.num_nonzero, which are initialized inside
-    the ffi function.
-    '''
-    pass
-
-
-class MinkowskiSumPoolingFunction(MinkowskiAvgPoolingFunctionBase):
-    '''
-    Due to ctx.num_nonzero = in_feat.new()....,
-    Should the function be called multiple times, this function must be first
-    instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, ctx.out_feat, ctx.num_nonzero, which are initialized inside
-    the ffi function.
-    '''
-
-    @staticmethod
-    def forward(ctx,
-                input_features,
-                pixel_dist=1,
-                stride=1,
-                kernel_size=-1,
-                dilation=1,
-                region_type=0,
-                region_offset=None,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
-        assert isinstance(region_type, RegionType)
-        if out_coords_key is None:
-            out_coords_key = CoordsKey(in_coords_key.D)
-        assert in_coords_key.D == out_coords_key.D
-        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
-            pixel_dist, stride, kernel_size, dilation, region_type,
-            in_coords_key.D)
-
-        if region_offset is None:
-            region_offset = torch.IntTensor()
-
-        ctx.in_feat = input_features
-        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
-                       region_type, in_coords_key, out_coords_key,
-                       coords_manager)
-        ctx.use_avg = True
-
-        D = in_coords_key.D
-        out_feat = input_features.new()
-        ctx.num_nonzero = input_features.new()
-
-        fw_fn = MEB.AvgPoolingForwardGPU if input_features.is_cuda else MEB.AvgPoolingForwardCPU
-        fw_fn(D, ctx.in_feat, out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.pixel_dist, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), region_type, region_offset,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager, ctx.use_avg)
-        return out_feat
+        return grad_in_feat, None, None, None, None, None, None, None, None, None, None
 
 
 class MinkowskiPoolingBase(MinkowskiModuleBase):
@@ -216,6 +153,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
                  region_offset=None,
                  axis_types=None,
                  is_transpose=False,
+                 average=True,
                  dimension=-1):
         super(MinkowskiPoolingBase, self).__init__()
         assert isinstance(region_type, RegionType)
@@ -230,6 +168,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         self.up_stride = stride \
             if is_transpose else torch.Tensor([1, ] * dimension)
 
+        self.average = average
         self.kernel_size = kernel_size
         self.stride = stride
         self.dilation = dilation
@@ -250,10 +189,10 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
 
         out_coords_key = CoordsKey(input.coords_key.D)
 
-        output = self.pooling.apply(input.F, input.pixel_dist, self.stride,
-                                    self.kernel_size, self.dilation,
-                                    self.region_type_, self.region_offset_,
-                                    input.coords_key, out_coords_key, input.C)
+        output = self.pooling.apply(
+            input.F, input.pixel_dist, self.stride, self.kernel_size,
+            self.dilation, self.region_type_, self.region_offset_, self.average,
+            input.coords_key, out_coords_key, input.C)
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.C)
 
@@ -274,9 +213,9 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
                  axis_types=None,
                  dimension=None):
         is_transpose = False
-        super(MinkowskiAvgPooling,
-              self).__init__(kernel_size, stride, dilation, region_type,
-                             region_offset, axis_types, is_transpose, dimension)
+        super(MinkowskiAvgPooling, self).__init__(
+            kernel_size, stride, dilation, region_type, region_offset,
+            axis_types, is_transpose, True, dimension)
         self.pooling = MinkowskiAvgPoolingFunction()
 
 
@@ -291,10 +230,10 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
                  axis_types=None,
                  dimension=None):
         is_transpose = False
-        super(MinkowskiSumPooling,
-              self).__init__(kernel_size, stride, dilation, region_type,
-                             region_offset, axis_types, is_transpose, dimension)
-        self.pooling = MinkowskiSumPoolingFunction()
+        super(MinkowskiSumPooling, self).__init__(
+            kernel_size, stride, dilation, region_type, region_offset,
+            axis_types, is_transpose, False, dimension)
+        self.pooling = MinkowskiAvgPoolingFunction()
 
 
 class MinkowskiMaxPooling(MinkowskiPoolingBase):
@@ -332,6 +271,7 @@ class MinkowskiPoolingTransposeFunction(Function):
                 dilation=1,
                 region_type=-1,
                 region_offset=None,
+                average=False,
                 in_coords_key=None,
                 out_coords_key=None,
                 coords_manager=None):
@@ -377,7 +317,7 @@ class MinkowskiPoolingTransposeFunction(Function):
               convert_to_int_list(ctx.dilation, D), ctx.region_type,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_man.CPPCoordsManager)
-        return grad_in_feat, None, None, None, None, None, None, None, None, None
+        return grad_in_feat, None, None, None, None, None, None, None, None, None, None
 
 
 class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
@@ -395,9 +335,9 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
                  axis_types=None,
                  dimension=None):
         is_transpose = True
-        super(MinkowskiPoolingTranspose,
-              self).__init__(kernel_size, stride, dilation, region_type,
-                             region_offset, axis_types, is_transpose, dimension)
+        super(MinkowskiPoolingTranspose, self).__init__(
+            kernel_size, stride, dilation, region_type, region_offset,
+            axis_types, is_transpose, False, dimension)
         self.pooling = MinkowskiPoolingTransposeFunction()
 
 
