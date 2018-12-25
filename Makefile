@@ -2,27 +2,25 @@
 # Uncomment for debugging
 # DEBUG := 1
 # Pretty build
-Q ?= @
+# Q ?= @
 
 CXX := g++
 
+# PYTHON Header path
+PYTHON_HEADER_DIR := $(shell python -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())')
+PYTORCH_INCLUDES := $(shell python -c 'from torch.utils.cpp_extension import include_paths; [print(p) for p in include_paths()]')
+PYTORCH_LIBRARIES := $(shell python -c 'from torch.utils.cpp_extension import library_paths; [print(p) for p in library_paths()]')
+
 # CUDA ROOT DIR that contains bin/ lib64/ and include/
-CUDA_DIR := /usr/local/cuda
-PYTHON_DIR := /home/chrischoy/anaconda3/envs/py3-mink-dev
+# CUDA_DIR := /usr/local/cuda
+CUDA_DIR := $(shell python -c 'from torch.utils.cpp_extension import _find_cuda_home; print(_find_cuda_home())')
 
 INCLUDE_DIRS := ./ $(CUDA_DIR)/include
 LIBRARY_DIRS := $(CUDA_DIR)/lib64
-PYTHON_PACKAGE_DIR := $(PYTHON_DIR)/lib/python3.7/site-packages
 
-INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/
-INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/TH
-INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/THC
-INCLUDE_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/include/torch/csrc/api/include
-INCLUDE_DIRS += $(PYTHON_DIR)/include/python3.7m
-
-LIBRARY_DIRS += $(PYTHON_DIR)/lib
-LIBRARY_DIRS += $(PYTHON_PACKAGE_DIR)/torch/lib/
-LIBRARY_DIRS += $(PYTHON_PACKAGE_DIR)/torch/
+INCLUDE_DIRS += $(PYTHON_HEADER_DIR)
+INCLUDE_DIRS += $(PYTORCH_INCLUDES)
+LIBRARY_DIRS += $(PYTORCH_LIBRARIES)
 
 EXTENSION_NAME := minkowski
 
@@ -77,6 +75,8 @@ else
 	# ATLAS
 	# Linux simply has cblas and atlas
 	LIBRARIES += cblas atlas
+	ATLAS_PATH := $(shell python -c "import numpy.distutils.system_info as si; ai = si.atlas_info(); [print(p) for p in ai.get_lib_dirs()]")
+	LIBRARY_DIRS += $(ATLAS_PATH)
 endif
 
 # Debugging
