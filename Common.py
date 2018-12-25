@@ -309,6 +309,9 @@ class CoordsManager():
         coords_key.setPixelDist(pixel_dists)
         return coords_key
 
+    def get_coords_size_by_coords_key(self, coords_key):
+        return self.CPPCoordsManager.getCoordsSize(coords_key.CPPCoordsKey)
+
     def get_mapping_by_pixel_dists(self, in_pixel_dists, out_pixel_dists):
         in_key = self.get_coords_key(in_pixel_dists)
         out_key = self.get_coords_key(out_pixel_dists)
@@ -321,6 +324,30 @@ class CoordsManager():
         self.CPPCoordsManager.getCoordsMapping(
             mapping, in_coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey)
         return mapping
+
+    def permute_label(self,
+                      label,
+                      max_label,
+                      target_pixel_dist,
+                      label_pixel_dist=1):
+        """
+        """
+        if target_pixel_dist == label_pixel_dist:
+            return label
+
+        label_coords_key = self.get_coords_key(label_pixel_dist)
+        target_coords_key = self.get_coords_key(target_pixel_dist)
+
+        permutation = self.get_mapping_by_coords_key(label_coords_key,
+                                                     target_coords_key)
+        nrows = self.get_coords_size_by_coords_key(target_coords_key)
+
+        label = label.contiguous().numpy()
+        permutation = permutation.numpy()
+
+        counter = np.zeros((nrows, max_label), dtype='int32')
+        np.add.at(counter, (permutation, label), 1)
+        return torch.from_numpy(np.argmax(counter, 1))
 
     def __repr__(self):
         return str(self.CPPCoordsManager)
