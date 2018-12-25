@@ -4,25 +4,26 @@ from torch.nn import Module
 from SparseTensor import SparseTensor
 
 
-class MinkowskiReLU(Module):
+class MinkowskiModuleBase(Module):
+    MODULE = None
 
-    def __init__(self, inplace=False):
-        super(MinkowskiReLU, self).__init__()
-        self.relu = torch.nn.ReLU(inplace)
+    def __init__(self, *args, **kwargs):
+        super(MinkowskiModuleBase, self).__init__()
+        self.module = self.MODULE(*args, **kwargs)
 
     def forward(self, input):
-        output = self.relu(input.F)
+        output = self.module(input.F)
         return SparseTensor(
             output, coords_key=input.coords_key, coords_manager=input.C)
 
 
-class MinkowskiSigmoid(Module):
+class MinkowskiReLU(MinkowskiModuleBase):
+    MODULE = torch.nn.ReLU
 
-    def __init__(self):
-        super(MinkowskiSigmoid, self).__init__()
-        self.sigmoid = torch.nn.Sigmoid()
 
-    def forward(self, input):
-        outf = self.sigmoid(input.F)
-        return SparseTensor(
-            outf, coords_key=input.coords_key, coords_manager=input.C)
+class MinkowskiSigmoid(MinkowskiModuleBase):
+    MODULE = torch.nn.Sigmoid
+
+
+class MinkowskiSoftmax(MinkowskiModuleBase):
+    MODULE = torch.nn.Softmax
