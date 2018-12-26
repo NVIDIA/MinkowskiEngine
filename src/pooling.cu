@@ -315,25 +315,26 @@ void NonzeroAvgPoolingForwardKernelGPU(
     }
   }
 
-  // No longer required: Unpooling has more out_nrows
-  // if (in_nrows < out_nrows)
-  //   throw std::invalid_argument(
-  //       Formatter() << "Incorrect in_map for
-  //       NonzeroAvgPoolingForwardGPU."
-  //                   << ", in_nrows: " << in_nrows
-  //                   << ", out_nrows: " << out_nrows);
+  if (use_avg) {
+    CUDA_CHECK(
+        cudaMalloc((void **)&d_ones,
+                   (in_nrows + nnz + nchannel * out_nrows) * sizeof(Dtype)));
+    d_csr_val = d_ones + in_nrows;
+    d_tmp_out_feat = d_csr_val + nnz;
 
-  CUDA_CHECK(
-      cudaMalloc((void **)&d_ones,
-                 (in_nrows + nnz + nchannel * out_nrows) * sizeof(Dtype)));
-  d_csr_val = d_ones + in_nrows;
-  d_tmp_out_feat = d_csr_val + nnz;
+    fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
+        in_nrows, d_ones, (Dtype)1.);
+  } else {
+    CUDA_CHECK(
+        cudaMalloc((void **)&d_ones,
+                   (nnz + nchannel * out_nrows) * sizeof(Dtype)));
+    d_csr_val = d_ones;
+    d_tmp_out_feat = d_csr_val + nnz;
+  }
   // CUDA_CHECK(cudaMalloc((void **)&d_ones, in_nrows * sizeof(Dtype)));
   // CUDA_CHECK(cudaMalloc((void **)&d_csr_val, nnz * sizeof(Dtype)));
   // CUDA_CHECK(cudaMalloc((void **)&d_tmp_out_feat,
   //                       nchannel * out_nrows * sizeof(Dtype)));
-  fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
-      in_nrows, d_ones, (Dtype)1.);
   fill<Dtype><<<GET_BLOCKS(nnz), CUDA_NUM_THREADS, 0, stream>>>(nnz, d_csr_val,
                                                                 (Dtype)1.);
 
@@ -347,19 +348,6 @@ void NonzeroAvgPoolingForwardKernelGPU(
   // For CRS, sort row and col inds by row major.
   CUSPARSE_CHECK(cusparseXcoo2csr(cushandle, d_out_map, nnz, out_nrows,
                                   d_csr_row, CUSPARSE_INDEX_BASE_ZERO));
-
-  CUSPARSE_CHECK(
-      cusparse_csrmv<Dtype>(cushandle,
-                            CUSPARSE_OPERATION_NON_TRANSPOSE, // op(A)
-                            out_nrows,                        // M
-                            in_nrows,                         // K
-                            nnz, &alpha, descr,
-                            d_csr_val, // val
-                            d_csr_row, // row
-                            d_in_map,  // col
-                            d_ones,    // B (in_nrows > out_nrows)
-                            &beta,
-                            d_num_nonzero)); // C
 
   CUSPARSE_CHECK(
       cusparse_csrmm<Dtype>(cushandle,
@@ -380,6 +368,19 @@ void NonzeroAvgPoolingForwardKernelGPU(
                             ));
 
   if (use_avg) {
+    CUSPARSE_CHECK(
+        cusparse_csrmv<Dtype>(cushandle,
+                              CUSPARSE_OPERATION_NON_TRANSPOSE, // op(A)
+                              out_nrows,                        // M
+                              in_nrows,                         // K
+                              nnz, &alpha, descr,
+                              d_csr_val, // val
+                              d_csr_row, // row
+                              d_in_map,  // col
+                              d_ones,    // B (in_nrows > out_nrows)
+                              &beta,
+                              d_num_nonzero)); // C
+
     col2row_major_with_div<Dtype>
         <<<GET_BLOCKS(out_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
             out_nrows * nchannel, out_nrows, nchannel, d_num_nonzero,

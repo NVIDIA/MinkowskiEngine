@@ -25,11 +25,16 @@ void AvgPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, in_feat.size(1)});
   out_feat.zero_();
-  num_nonzero.resize_({out_nrows});
-  num_nonzero.zero_();
+
+  Dtype *num_nonzero_data = NULL;
+  if (use_avg) {
+    num_nonzero.resize_({out_nrows});
+    num_nonzero.zero_();
+    num_nonzero_data = num_nonzero.data<Dtype>();
+  }
 
   NonzeroAvgPoolingForwardKernelCPU<Dtype, Itype>(
-      in_feat.data<Dtype>(), out_feat.data<Dtype>(), num_nonzero.data<Dtype>(),
+      in_feat.data<Dtype>(), out_feat.data<Dtype>(), num_nonzero_data,
       in_feat.size(1), std::get<0>(in_out), std::get<1>(in_out), out_nrows,
       use_avg);
 }
@@ -76,15 +81,20 @@ void AvgPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, in_feat.size(1)});
   out_feat.zero_();
-  num_nonzero.resize_({out_nrows});
-  num_nonzero.zero_();
+
+  Dtype *num_nonzero_data = NULL;
+  if (use_avg) {
+    num_nonzero.resize_({out_nrows});
+    num_nonzero.zero_();
+    num_nonzero_data = num_nonzero.data<Dtype>();
+  }
 
   cusparseHandle_t handle =
       THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
 
   NonzeroAvgPoolingForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), out_feat.data<Dtype>(), out_nrows,
-      num_nonzero.data<Dtype>(), in_feat.size(1), std::get<0>(in_out),
+      num_nonzero_data, in_feat.size(1), std::get<0>(in_out),
       std::get<1>(in_out), use_avg, handle, at::cuda::getCurrentCUDAStream());
 }
 

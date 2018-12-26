@@ -53,6 +53,13 @@ class TestPooling(unittest.TestCase):
                 rtol=1e-2,
                 eps=1e-4))
 
+        device = torch.device('cuda')
+        with torch.cuda.device(0):
+            input = input.to(device)
+            pool = pool.to(device)
+            output = pool(input)
+            print(output)
+
     def test_avgpooling_gpu(self):
         if not torch.cuda.is_available():
             return
