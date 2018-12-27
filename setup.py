@@ -1,5 +1,3 @@
-from os import system
-
 from setuptools import setup
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
 
@@ -23,7 +21,8 @@ setup(
             libraries=['minkowski'],
             library_dirs=['objs', *ai.get_lib_dirs()],
             extra_link_args=['-lminkowski -lcblas -latlas'],
-            extra_compile_args=['-g'])
+            # extra_compile_args=['-g']
+        )
     ],
     cmdclass={'build_ext': BuildExtension},
     author='Christopher B. Choy',
