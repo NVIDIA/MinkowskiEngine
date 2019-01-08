@@ -1,6 +1,6 @@
 # Minkowski Engine
 
-The Minkowski Engine is an auto-differentiation library for sparse tensors. We use Pytorch as the wrapper for the library, but it can be extended to other neural network libraries such as tensorflow. It mainly supports convolution on sparse tensors, pooling, unpooling, and broadcasting operations for sparse tensors.
+The MinkowskiEngine is an auto-differentiation library for sparse tensors. It mainly supports convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information please visit [the documentation page (under construction)](http://minkowskiengine.github.io)
 
 
 # Installation
@@ -8,14 +8,12 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. We u
 You must install `pytorch`. Please read before you execute the following lines.
 
 ```
-sudo apt install libsparsehash-dev
-sudo apt install libblas-dev libopenblas-dev
+sudo apt install libsparsehash-dev libblas-dev libopenblas-dev libatlas-base-dev
 # within a python3 environment
 pip install torch
-# Must install pytorch first
 git clone https://github.com/chrischoy/MinkowskiEngine.git
 cd MinkowskiEngine
-# within a python3 environment
+# within the python3 environment
 make -j4 # higher number if cpu count > 4
 ```
 
@@ -99,7 +97,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 After installing the package, run `python example.py` in the package root directory.
 
 
-## Complex Convolution Kernels
+## Custom Convolution Kernels
 
 `SparseConvolution` class takes `region_type` and `region_offset` as arguments.
 The `region_type` must be the Enum `from Common import RegionType`.
