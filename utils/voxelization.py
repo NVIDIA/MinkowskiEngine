@@ -18,7 +18,7 @@ def hash_vec(arr):
     return hashed_arr
 
 
-def SparseVoxelize(coords, feats, labels=None, ignore_label=255):
+def SparseVoxelize(coords, feats, labels=None, ignore_label=255, return_index=False):
     """
     Given coordinates, and features (optionally labels), generate voxelized coords, features (and labels when given).
     """
@@ -30,13 +30,17 @@ def SparseVoxelize(coords, feats, labels=None, ignore_label=255):
         assert coords.shape[0] == len(labels)
 
     # Quantize
-    coords = np.floor(coords).astype(np.uint64)
-
-    key = hash_vec(coords)  # floor happens by astype(np.uint64)
-    inds, labels = MEB.SparseVoxelization(
-        key, labels.astype(np.int32), ignore_label, use_label)
-
+    key = hash_vec(coords)
     if use_label:
-        return coords[inds], feats[inds]
+        inds, labels = MEB.SparseVoxelization(
+            key, labels.astype(np.int32), ignore_label, use_label)
+        if return_index:
+            return inds, labels
+        else:
+            return coords[inds], feats[inds], labels
     else:
-        return coords[inds], feats[inds], labels
+        _, inds = np.unique(key, return_index=True)
+        if return_index:
+            return inds
+        else:
+            return coords[inds], feats[inds]

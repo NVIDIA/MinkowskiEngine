@@ -9,7 +9,7 @@ setup(
     name='MinkowskiEngine',
     version='0.2.0',
     install_requires=['torch'],
-    packages=['MinkowskiEngine'],
+    packages=['MinkowskiEngine', 'MinkowskiEngine.utils'],
     package_dir={'MinkowskiEngine': './'},
     ext_modules=[
         CUDAExtension(

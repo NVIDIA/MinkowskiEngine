@@ -14,7 +14,7 @@ class TestGPUVoxelization(unittest.TestCase):
         N = 16575
         ignore_label = 255
 
-        coords = np.random.rand(N, 3) * 10
+        coords = np.random.rand(N, 3) * 100
         feats = np.random.rand(N, 4)
         labels = np.floor(np.random.rand(N) * 3)
 
