@@ -32,3 +32,5 @@ from MinkowskiNetwork import MinkowskiNetwork
 import MinkowskiOps
 
 from MinkowskiOps import MinkowskiLinear, cat
+
+import utils

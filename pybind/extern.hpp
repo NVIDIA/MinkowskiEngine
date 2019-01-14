@@ -222,3 +222,16 @@ void DimSwitchBroadcastBackwardGPU(
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 #endif
+
+/*************************************
+ * Voxelization
+ *************************************/
+#ifndef CPU_ONLY
+#include <pybind11/numpy.h>
+std::vector<py::array_t<int>>
+SparseVoxelization(py::array_t<uint64_t, py::array::c_style> keys,
+                   py::array_t<int, py::array::c_style> labels,
+                   int ignore_label, bool has_label);
+
+void cuda_thread_exit(void);
+#endif

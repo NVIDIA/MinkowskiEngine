@@ -95,7 +95,13 @@ void instantiate_dim(py::module &m, const std::string &dim) {
                                    std::string("int32"));
 }
 
+void bind_native(py::module &m) {
+  m.def("SparseVoxelization", &SparseVoxelization);
+  m.def("CUDAThreadExit", &cuda_thread_exit);
+}
+
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  bind_native(m);
   instantiate_dim<1>(m, std::to_string(1));
   instantiate_dim<2>(m, std::to_string(2));
   instantiate_dim<3>(m, std::to_string(3));
