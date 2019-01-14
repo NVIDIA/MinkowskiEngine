@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 import MinkowskiEngine as ME
+import MinkowskiEngine.MinkowskiFunctional as F
 
 from tests.common import data_loader
 
@@ -28,16 +29,15 @@ class ExampleNetwork(ME.MinkowskiNetwork):
         self.bn2 = ME.MinkowskiBatchNorm(128)
         self.pooling = ME.MinkowskiGlobalPooling(dimension=D)
         self.linear = ME.MinkowskiLinear(128, out_feat)
-        self.relu = ME.MinkowskiReLU(inplace=True)
 
     def forward(self, x):
         out = self.conv1(x)
         out = self.bn1(out)
-        out = self.relu(out)
+        out = F.relu(out)
 
         out = self.conv2(out)
         out = self.bn2(out)
-        out = self.relu(out)
+        out = F.relu(out)
 
         out = self.pooling(out)
         return self.linear(out)

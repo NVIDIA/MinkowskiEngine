@@ -33,4 +33,6 @@ import MinkowskiOps
 
 from MinkowskiOps import MinkowskiLinear, cat
 
+import MinkowskiFunctional
+
 import utils
