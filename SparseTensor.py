@@ -81,4 +81,4 @@ class SparseTensor():
         return self
 
     def getKey(self):
-        return self.coords_key.getKey()
+        return self.coords_key

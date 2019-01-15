@@ -309,6 +309,11 @@ class CoordsManager():
         coords_key.setPixelDist(pixel_dists)
         return coords_key
 
+    def get_coords(self, coords_key):
+        coords = torch.IntTensor()
+        self.CPPCoordsManager.getCoords(coords, coords_key.CPPCoordsKey)
+        return coords
+
     def get_coords_size_by_coords_key(self, coords_key):
         return self.CPPCoordsManager.getCoordsSize(coords_key.CPPCoordsKey)
 

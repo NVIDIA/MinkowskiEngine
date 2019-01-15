@@ -195,6 +195,7 @@ public:
 
   void getCoordsMapping(at::Tensor mapping, py::object py_in_coords_key,
                         py::object py_out_coords_key);
+  void getCoords(at::Tensor coords, py::object py_coords_key);
 
   // New coords map initialzation entry
   uint64_t initializeCoords(at::Tensor coords, const Arr<D, int> &pixel_dists);

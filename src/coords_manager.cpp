@@ -157,15 +157,36 @@ int CoordsManager<D, Itype>::getCoordsSize(py::object py_coords_key) {
 }
 
 template <uint8_t D, typename Itype>
+void CoordsManager<D, Itype>::getCoords(at::Tensor coords,
+                                        py::object py_coords_key) {
+  PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
+  uint64_t coords_key = p_coords_key->getKey();
+  if (!existsCoordsKey(coords_key))
+    throw std::invalid_argument(
+        Formatter() << "The coord map doesn't exist for the given coords_key "
+                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
+                    << __LINE__);
+  int nrows = getCoordsSize(coords_key);
+  coords.resize_({nrows, D + 1});
+  Itype *p_coords = coords.data<Itype>();
+  int ncols = D + 1;
+  for (const auto &i : coords_hashmaps[coords_key].map) {
+    Coord<D, Itype> coord(i.first);
+    int n = i.second;
+    std::copy(coord.data(), coord.data() + ncols, &p_coords[n * ncols]);
+  }
+}
+
+template <uint8_t D, typename Itype>
 CoordsHashMap<D, Itype>
 CoordsManager<D, Itype>::createCoordsHashMap(at::Tensor coords) {
   int nrows = coords.size(0), ncols = coords.size(1);
   CoordsHashMap<D, Itype> coords_hashmap;
   coords_hashmap.map.resize(nrows);
   Coord<D, Itype> coord;
-  Itype *loc = coords.data<Itype>();
+  Itype *p_coords = coords.data<Itype>();
   for (int i = 0; i < nrows; i++) {
-    std::copy(&loc[i * ncols], &loc[(i + 1) * ncols], coord.data());
+    std::copy(&p_coords[i * ncols], &p_coords[(i + 1) * ncols], coord.data());
     if (coords_hashmap.map.find(coord) == coords_hashmap.map.end()) {
       coords_hashmap.map[std::move(coord)] = i;
     } else {
@@ -235,12 +256,19 @@ CoordsManager<D, Itype>::createOriginCoordsHashMap(uint64_t coords_key,
   int n_out = 0;
   // When batch size is not given (0, negative), go over all values
   if (batch_size < 1) {
+    // Order all batch indices first
+    std::map<Itype, Itype> batch_indices;
     for (auto in_pair : in_coords.map) {
       Coord<D, Itype> coord(in_pair.first);
-      for (int j = 0; j < D; j++)
-        coord[j] = 0;
-      if (out_coord_map.map.find(coord) == out_coord_map.map.end())
-        out_coord_map.map[coord] = n_out++;
+      batch_indices[coord[D]] = 0; // Insert a new batch index
+    }
+    // Once we collected all batch indices, insert it into the map
+    Coord<D, Itype> coord;
+    for (int j = 0; j < D; j++)
+      coord[j] = 0;
+    for (const auto &i : batch_indices) {
+      coord[D] = i.first;
+      out_coord_map.map[coord] = n_out++;
     }
   } else {
     for (int b = 0; b < batch_size; b++) {
