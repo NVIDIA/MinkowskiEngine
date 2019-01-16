@@ -35,4 +35,4 @@ from MinkowskiOps import MinkowskiLinear, cat
 
 import MinkowskiFunctional
 
-import utils
+from .utils import *

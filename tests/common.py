@@ -20,5 +20,5 @@ def data_loader(in_feat_channel=3, max_label=5, is_classification=True):
     coords = torch.from_numpy(np.array(coords)).int()
     N = len(coords)
     feats = torch.randn(N, in_feat_channel)
-    label = (torch.rand(1 if is_classification else N) * max_label).long()
+    label = (torch.rand(2 if is_classification else N) * max_label).long()
     return coords, feats, label

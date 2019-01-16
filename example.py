@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     net = net.to(device)
 
-    for i in range(1000):
+    for i in range(10):
         # Get new data
         input = ME.SparseTensor(feat, coords=coords).to(device)
         label = label.to(device)
@@ -68,3 +68,6 @@ if __name__ == '__main__':
 
         # Gradient
         loss.backward()
+
+    torch.save(net.state_dict(), 'test.pth')
+    net.load_state_dict(torch.load('test.pth'))

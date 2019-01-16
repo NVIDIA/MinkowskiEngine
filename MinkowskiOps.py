@@ -18,7 +18,7 @@ class MinkowskiLinear(Module):
 def cat(a, b):
     assert isinstance(a, SparseTensor) and isinstance(b, SparseTensor)
     assert a.C == b.C
-    assert a.getKey() == b.getKey()
+    assert a.getKey().getKey() == b.getKey().getKey()
     return SparseTensor(
         torch.cat((a.F, b.F), dim=1),
         coords_key=a.coords_key,
