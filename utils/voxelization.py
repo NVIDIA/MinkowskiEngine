@@ -8,6 +8,7 @@ def hash_vec(arr):
     Given a numpy array of N X D, generate hash values using the same hash function used for ME
     """
     assert arr.ndim == 2
+    arr -= np.min(arr, 0)
     # Floor first for negative coordinates
     arr = np.floor(arr).astype(np.uint64)
     hashed_arr = np.uint64(14695981039346656037) * \
