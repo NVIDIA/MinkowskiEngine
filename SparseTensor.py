@@ -27,6 +27,8 @@ class SparseTensor():
                 D = coords_manager.D
             coords_key = CoordsKey(D)
             coords_key.setPixelDist(convert_to_int_list(1, D))
+        else:
+            assert isinstance(coords_key, CoordsKey)
 
         if coords is not None:
             assert isinstance(coords, torch.IntTensor), \
@@ -37,6 +39,8 @@ class SparseTensor():
             D = coords.size(1) - 1
             coords_manager = CoordsManager(D)
             coords_manager.initialize(coords, coords_key)
+        else:
+            assert isinstance(coords_manager, CoordsManager)
 
         self.F = feats
         self.coords_key = coords_key

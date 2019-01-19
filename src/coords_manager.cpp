@@ -188,10 +188,12 @@ CoordsManager<D, Itype>::createCoordsHashMap(at::Tensor coords) {
   for (int i = 0; i < nrows; i++) {
     std::copy(&p_coords[i * ncols], &p_coords[(i + 1) * ncols], coord.data());
     if (coords_hashmap.map.find(coord) == coords_hashmap.map.end()) {
+      // To allow feed forward with matching features, use i instead of an
+      // increment counter
       coords_hashmap.map[std::move(coord)] = i;
     } else {
       std::cerr << "Duplicate key found. Use initialize_coords_with_duplicates "
-                << "or remove duplicates";
+                << "or remove duplicates" << std::endl;
     }
   }
   return coords_hashmap;

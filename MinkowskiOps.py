@@ -15,11 +15,23 @@ class MinkowskiLinear(Module):
             output, coords_key=input.coords_key, coords_manager=input.C)
 
 
-def cat(a, b):
-    assert isinstance(a, SparseTensor) and isinstance(b, SparseTensor)
-    assert a.C == b.C
-    assert a.getKey().getKey() == b.getKey().getKey()
+def cat(sparse_tensors):
+    """
+    Given a tuple of sparse tensors, concatenate them.
+
+    Ex) cat((a, b, c))
+    """
+    for s in sparse_tensors:
+        assert isinstance(s, SparseTensor)
+    coords_man = sparse_tensors[0].C
+    coords_key = sparse_tensors[0].getKey().getKey()
+    for s in sparse_tensors:
+        assert coords_man == s.C
+        assert coords_key == s.getKey().getKey()
+    tens = []
+    for s in sparse_tensors:
+        tens.append(s.F)
     return SparseTensor(
-        torch.cat((a.F, b.F), dim=1),
-        coords_key=a.coords_key,
-        coords_manager=a.C)
+        torch.cat(tens, dim=1),
+        coords_key=sparse_tensors[0].getKey(),
+        coords_manager=coords_man)
