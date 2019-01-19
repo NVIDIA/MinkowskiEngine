@@ -107,6 +107,7 @@ LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 	   $(foreach library,$(LIBRARIES),-l$(library))
 
 all: $(STATIC_LIB)
+	$(RM) -rf build dist
 	python setup.py install --force
 
 $(OBJ_DIR):
@@ -125,7 +126,6 @@ $(OBJ_DIR)/cuda/%.o: $(SRC_DIR)/%.cu | $(OBJ_DIR)
 
 $(STATIC_LIB): $(OBJS) $(CU_OBJS) | $(OBJ_DIR)
 	$(RM) -f $(STATIC_LIB)
-	$(RM) -rf build dist
 	@ echo LD -o $@
 	ar rc $(STATIC_LIB) $(OBJS) $(CU_OBJS)
 	# $(Q)$(CXX) -o $@ $(OBJS) $(CU_OBJS) $(LINKFLAGS) $(LDFLAGS)
