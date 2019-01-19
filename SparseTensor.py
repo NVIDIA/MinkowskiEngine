@@ -6,12 +6,17 @@ from Common import convert_to_int_list, CoordsKey, CoordsManager
 
 class SparseTensor():
 
-    def __init__(self, feats, coords=None, coords_key=None,
-                 coords_manager=None):
+    def __init__(self,
+                 feats,
+                 coords=None,
+                 coords_key=None,
+                 coords_manager=None,
+                 pixel_dist=1):
         """
         Either coords or coords_key must be provided.
         pixel_distance defines the minimum space between coordinates
         coords_manager: of type CoordsManager.
+        pixel_dist: distance between pixels
         """
         assert isinstance(feats, torch.Tensor), "Features must be torch.Tensor"
 
@@ -26,7 +31,7 @@ class SparseTensor():
             else:
                 D = coords_manager.D
             coords_key = CoordsKey(D)
-            coords_key.setPixelDist(convert_to_int_list(1, D))
+            coords_key.setPixelDist(convert_to_int_list(pixel_dist, D))
         else:
             assert isinstance(coords_key, CoordsKey)
 

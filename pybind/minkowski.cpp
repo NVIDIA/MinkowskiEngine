@@ -56,6 +56,11 @@ void instantiate_func(py::module &m, const std::string &dtypestr,
   m.def("BroadcastBackwardCPU", &DimSwitchBroadcastBackwardCPU<Dtype, Itype>);
   m.def("BroadcastForwardGPU", &DimSwitchBroadcastForwardGPU<Dtype, Itype>);
   m.def("BroadcastBackwardGPU", &DimSwitchBroadcastBackwardGPU<Dtype, Itype>);
+
+  m.def("PruningForwardCPU", &DimSwitchPruningForwardCPU<Dtype, Itype>);
+  m.def("PruningBackwardCPU", &DimSwitchPruningBackwardCPU<Dtype, Itype>);
+  m.def("PruningForwardGPU", &DimSwitchPruningForwardGPU<Dtype, Itype>);
+  m.def("PruningBackwardGPU", &DimSwitchPruningBackwardGPU<Dtype, Itype>);
 }
 
 template <uint8_t D, typename Itype>

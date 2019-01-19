@@ -224,6 +224,39 @@ void DimSwitchBroadcastBackwardGPU(
 #endif
 
 /*************************************
+ * Pruning
+ *************************************/
+template <typename Dtype, typename Itype>
+void DimSwitchPruningForwardCPU(int D, at::Tensor in_feat, at::Tensor out_feat,
+                                at::Tensor use_feat,
+                                py::object py_in_coords_key,
+                                py::object py_out_coords_key,
+                                py::object py_coords_manager);
+
+template <typename Dtype, typename Itype>
+void DimSwitchPruningBackwardCPU(int D, at::Tensor grad_in_feat,
+                                 at::Tensor grad_out_feat,
+                                 py::object py_in_coords_key,
+                                 py::object py_out_coords_key,
+                                 py::object py_coords_manager);
+
+#ifndef CPU_ONLY
+template <typename Dtype, typename Itype>
+void DimSwitchPruningForwardGPU(int D, at::Tensor in_feat, at::Tensor out_feat,
+                                at::Tensor use_feat,
+                                py::object py_in_coords_key,
+                                py::object py_out_coords_key,
+                                py::object py_coords_manager);
+
+template <typename Dtype, typename Itype>
+void DimSwitchPruningBackwardGPU(int D, at::Tensor grad_in_feat,
+                                 at::Tensor grad_out_feat,
+                                 py::object py_in_coords_key,
+                                 py::object py_out_coords_key,
+                                 py::object py_coords_manager);
+#endif
+
+/*************************************
  * Voxelization
  *************************************/
 #ifndef CPU_ONLY

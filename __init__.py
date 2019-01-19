@@ -27,6 +27,8 @@ from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoft
 
 from MinkowskiNormalization import MinkowskiBatchNorm
 
+from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
+
 from MinkowskiNetwork import MinkowskiNetwork
 
 import MinkowskiOps

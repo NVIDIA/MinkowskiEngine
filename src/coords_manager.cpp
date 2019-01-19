@@ -1,50 +1,12 @@
 #include "common.hpp"
+#include "coords_hashmaps.hpp"
+#include "coords_kernelmaps.hpp"
 #include "kernel_region.hpp"
 #include "utils.hpp"
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
-
-template <uint8_t D>
-std::vector<int> computeOutPixelDist(const Arr<D, int> &pixel_dists,
-                                     const Arr<D, int> &strides,
-                                     bool is_transpose) {
-  std::vector<int> out_pixel_dists;
-  for (int i = 0; i < D; i++) {
-    if (is_transpose) {
-      if (pixel_dists[i] % strides[i] > 0)
-        throw std::invalid_argument(
-            Formatter() << "The output pixel dist is not divisible by "
-                           "up_strides. pixel dists: "
-                        << ArrToString(pixel_dists)
-                        << ", up_strides: " << ArrToString(strides));
-      out_pixel_dists.push_back(pixel_dists[i] / strides[i]);
-    } else
-      out_pixel_dists.push_back(pixel_dists[i] * strides[i]);
-  }
-  return out_pixel_dists;
-}
-
-template <uint8_t D>
-long ComputeKernelVolume(int region_type, const Arr<D, int> &kernel_size,
-                         int n_offset) {
-  int kernel_volume;
-  if (region_type == 0) { // Hypercube
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume *= k;
-  } else if (region_type == 1) { // Hypercross
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume += k - 1;
-  } else if (region_type == 2) {
-    kernel_volume = n_offset;
-  } else {
-    throw std::invalid_argument("Invalid region type");
-  }
-  return kernel_volume;
-}
 
 /*
  * Given pixel_dist_src and pixel_dist_dst, find the respective coord_maps and
@@ -94,7 +56,7 @@ void CoordsManager<D, Itype>::getCoordsMapping(at::Tensor mapping,
   _CoordsHashMap<D, Itype> &in_coords = coords_hashmaps[in_coords_key].map;
   _CoordsHashMap<D, Itype> &out_coords = coords_hashmaps[out_coords_key].map;
 
-  for (auto pair : in_coords) {
+  for (const auto &pair : in_coords) {
     Coord<D, Itype> coord = pair.first;
     in_ind = pair.second;
     for (int i = 0; i < D; i++) {
@@ -177,122 +139,9 @@ void CoordsManager<D, Itype>::getCoords(at::Tensor coords,
   }
 }
 
-template <uint8_t D, typename Itype>
-CoordsHashMap<D, Itype>
-CoordsManager<D, Itype>::createCoordsHashMap(at::Tensor coords) {
-  int nrows = coords.size(0), ncols = coords.size(1);
-  CoordsHashMap<D, Itype> coords_hashmap;
-  coords_hashmap.map.resize(nrows);
-  Coord<D, Itype> coord;
-  Itype *p_coords = coords.data<Itype>();
-  for (int i = 0; i < nrows; i++) {
-    std::copy(&p_coords[i * ncols], &p_coords[(i + 1) * ncols], coord.data());
-    if (coords_hashmap.map.find(coord) == coords_hashmap.map.end()) {
-      // To allow feed forward with matching features, use i instead of an
-      // increment counter
-      coords_hashmap.map[std::move(coord)] = i;
-    } else {
-      std::cerr << "Duplicate key found. Use initialize_coords_with_duplicates "
-                << "or remove duplicates" << std::endl;
-    }
-  }
-  return coords_hashmap;
-}
-
-/**
-  Given the input coordinate to index map, kernel size, stride, and dilation,
-  compute the output coordinates and corresponding index.
-
-  is_transpose is not used as we assume that the unpooled coords should
-  correspond to one of the existing coord maps.
-*/
-template <uint8_t D, typename Itype>
-CoordsHashMap<D, Itype>
-CoordsManager<D, Itype>::createOutCoordsHashMap(uint64_t coords_key,
-                                                const Arr<D, int> &pixel_dists,
-                                                const Arr<D, int> &strides) {
-  if (!existsCoordsKey(coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coord map doesn't exist for the given coords_key. "
-                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
-                    << __LINE__);
-
-  CoordsHashMap<D, Itype> *p_in_coords = &coords_hashmaps[coords_key];
-  bool gt_one = true;
-  for (auto s : strides)
-    if (s != 1)
-      gt_one = false;
-  if (gt_one)
-    return *p_in_coords;
-
-  CoordsHashMap<D, Itype> out_coords;
-  Arr<D, Itype> new_pixel_dists;
-  int n_out = 0;
-  for (int i = 0; i < D; i++)
-    new_pixel_dists[i] = pixel_dists[i] * strides[i];
-  for (auto in_pair : p_in_coords->map) {
-    Coord<D, Itype> coord(in_pair.first);
-    for (int j = 0; j < D; j++)
-      coord[j] = int(floor(((float)coord[j]) / new_pixel_dists[j])) *
-                 new_pixel_dists[j];
-    if (out_coords.map.find(coord) == out_coords.map.end())
-      out_coords.map[coord] = n_out++;
-  }
-  return out_coords;
-}
-
-/*
- * Coord map with the origin only
- */
-template <uint8_t D, typename Itype>
-CoordsHashMap<D, Itype>
-CoordsManager<D, Itype>::createOriginCoordsHashMap(uint64_t coords_key,
-                                                   int batch_size) {
-  if (!existsCoordsKey(coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coord map doesn't exist for the given coords_key. "
-                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
-                    << __LINE__);
-  CoordsHashMap<D, Itype> &in_coords = coords_hashmaps[coords_key];
-  CoordsHashMap<D, Itype> out_coord_map;
-  int n_out = 0;
-  // When batch size is not given (0, negative), go over all values
-  if (batch_size < 1) {
-    // Order all batch indices first
-    std::map<Itype, Itype> batch_indices;
-    for (auto in_pair : in_coords.map) {
-      Coord<D, Itype> coord(in_pair.first);
-      batch_indices[coord[D]] = 0; // Insert a new batch index
-    }
-    // Once we collected all batch indices, insert it into the map
-    Coord<D, Itype> coord;
-    for (int j = 0; j < D; j++)
-      coord[j] = 0;
-    for (const auto &i : batch_indices) {
-      coord[D] = i.first;
-      out_coord_map.map[coord] = n_out++;
-    }
-  } else {
-    for (int b = 0; b < batch_size; b++) {
-      Coord<D, Itype> coord;
-      for (int j = 0; j < D; j++)
-        coord[j] = 0;
-      coord[D] = b;
-      out_coord_map.map[coord] = b;
-    }
-  }
-  return out_coord_map;
-}
-
-template <uint8_t D, typename Itype>
-uint64_t CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
-                                                   py::object py_coords_key) {
-  PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
-  uint64_t in_coords_key = initializeCoords(coords, p_coords_key->pixel_dists_);
-  p_coords_key->setKey(in_coords_key);
-  return in_coords_key;
-}
-
+/*******************************
+ * Initialization
+ *******************************/
 template <uint8_t D, typename Itype>
 uint64_t
 CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
@@ -307,6 +156,17 @@ CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
   return pixel_dist_hash;
 }
 
+template <uint8_t D, typename Itype>
+uint64_t CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
+                                                   py::object py_coords_key) {
+  PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
+  uint64_t in_coords_key = initializeCoords(coords, p_coords_key->pixel_dists_);
+  p_coords_key->setKey(in_coords_key);
+  return in_coords_key;
+}
+
+/********************************
+ */
 template <uint8_t D, typename Itype>
 uint64_t CoordsManager<D, Itype>::createOutCoords(
     uint64_t coords_key, const Arr<D, int> &pixel_dists,
@@ -330,6 +190,26 @@ uint64_t CoordsManager<D, Itype>::createOutCoords(
 }
 
 template <uint8_t D, typename Itype>
+uint64_t
+CoordsManager<D, Itype>::createPruneCoords(at::Tensor use_feat,
+                                           py::object py_in_coords_key,
+                                           py::object py_out_coords_key) {
+  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
+  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  // set the coords key
+  uint64_t out_coords_key = random();
+  while (coords_hashmaps.find(out_coords_key) != coords_hashmaps.end())
+    out_coords_key = random();
+  // Set the pycoordskey
+  p_out_coords_key->setPixelDist(p_in_coords_key->pixel_dists_);
+  p_out_coords_key->setKey(out_coords_key);
+  // Create coords hashmap
+  coords_hashmaps[out_coords_key] =
+      createPrunedCoordsHashMap(p_in_coords_key->getKey(), use_feat);
+  return out_coords_key;
+}
+
+template <uint8_t D, typename Itype>
 uint64_t CoordsManager<D, Itype>::createOriginCoords(uint64_t coords_key,
                                                      int batch_size) {
   if (!existsCoordsKey(coords_key))
@@ -347,122 +227,6 @@ uint64_t CoordsManager<D, Itype>::createOriginCoords(uint64_t coords_key,
   coords_hashmaps[out_coords_key] =
       createOriginCoordsHashMap(coords_key, batch_size);
   return out_coords_key;
-}
-
-/**
-  Given the index map, kernel size, stride, and dilation, compute the input
-  index to output index. Returns {in_map, out_map}
-*/
-template <uint8_t D, typename Itype>
-std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-CoordsManager<D, Itype>::createInOutPerKernel(
-    const uint64_t in_coords_key, const uint64_t out_coords_key,
-    const Arr<D, int> &in_pixel_dists, const Arr<D, int> &kernel_size,
-    const Arr<D, int> &dilations, int region_type, at::Tensor offsets) {
-  if (!existsCoordsKey(in_coords_key) || !existsCoordsKey(out_coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coords map doesn't exist for the given coords_key. "
-                    << "in_coords_key: " << in_coords_key
-                    << ", out_coords_key: " << out_coords_key << " at "
-                    << __FILE__ << ":" << __LINE__);
-
-  int kernel_volume, kernel_ind = 0;
-  _CoordsHashMap<D, Itype> &in_coords_hashmap =
-      coords_hashmaps[in_coords_key].map;
-  _CoordsHashMap<D, Itype> &out_coords_hashmap =
-      coords_hashmaps[out_coords_key].map;
-  kernel_volume =
-      ComputeKernelVolume<D>(region_type, kernel_size, offsets.size(0));
-  InOutMapPerKernel<Itype> in_map(kernel_volume), out_map(kernel_volume);
-  for (auto const out_coord_iter : out_coords_hashmap) {
-    auto out_coord = out_coord_iter.first;
-    auto kernel_region = KernelRegion<D, Itype>(
-        out_coord, in_pixel_dists, kernel_size, dilations, region_type,
-        offsets.data<Itype>(), offsets.size(0));
-    kernel_ind = 0;
-    for (auto point : kernel_region) {
-      auto in_coord_iter = in_coords_hashmap.find(point);
-      if (in_coord_iter != in_coords_hashmap.end()) {
-        in_map[kernel_ind].push_back(in_coord_iter->second);
-        out_map[kernel_ind].push_back(out_coord_iter.second);
-      }
-      kernel_ind++;
-    }
-  }
-  return std::make_tuple(in_map, out_map);
-}
-
-template <uint8_t D, typename Itype>
-std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-CoordsManager<D, Itype>::createInOutPerKernelTranspose(
-    const uint64_t in_coords_key, const uint64_t out_coords_key,
-    const Arr<D, int> &out_pixel_dists, const Arr<D, int> &kernel_size,
-    const Arr<D, int> &dilations, int region_type, at::Tensor offsets) {
-  if (!existsCoordsKey(in_coords_key) || !existsCoordsKey(out_coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coords map doesn't exist for the given coords_key. "
-                    << "in_coords_key: " << in_coords_key
-                    << ", out_coords_key: " << out_coords_key << " at "
-                    << __FILE__ << ":" << __LINE__);
-
-  int kernel_volume, kernel_ind = 0;
-  _CoordsHashMap<D, Itype> &in_coords_hashmap =
-      coords_hashmaps[in_coords_key].map;
-  _CoordsHashMap<D, Itype> &out_coords_hashmap =
-      coords_hashmaps[out_coords_key].map;
-  kernel_volume =
-      ComputeKernelVolume<D>(region_type, kernel_size, offsets.size(0));
-  InOutMapPerKernel<Itype> in_map(kernel_volume), out_map(kernel_volume);
-  for (auto const in_coord_iter : in_coords_hashmap) {
-    auto in_coord = in_coord_iter.first;
-    auto kernel_region = KernelRegion<D, Itype>(
-        in_coord, out_pixel_dists, kernel_size, dilations, region_type,
-        offsets.data<Itype>(), offsets.size(0));
-    kernel_ind = 0;
-    for (auto point : kernel_region) {
-      auto out_coord_iter = out_coords_hashmap.find(point);
-      if (out_coord_iter != out_coords_hashmap.end()) {
-        in_map[kernel_ind].push_back(in_coord_iter.second);
-        out_map[kernel_ind].push_back(out_coord_iter->second);
-      }
-      kernel_ind++;
-    }
-  }
-  return std::make_tuple(in_map, out_map);
-}
-
-template <uint8_t D, typename Itype>
-std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-CoordsManager<D, Itype>::createGlobalReductionInOutMap(
-    const uint64_t in_coords_key, const uint64_t out_coords_key) {
-  _CoordsHashMap<D, Itype> &in_coords_hashmap =
-      coords_hashmaps[in_coords_key].map;
-  _CoordsHashMap<D, Itype> &out_coords_hashmap =
-      coords_hashmaps[out_coords_key].map;
-  InOutMapPerKernel<Itype> in_map(1), out_map(1);
-  std::map<Itype, Itype> in_out_map;
-  // The out_coord_map.size() == 1
-  for (auto const in_coord_iter : in_coords_hashmap) {
-    Coord<D, Itype> coord(in_coord_iter.first);
-    for (int j = 0; j < D; j++)
-      coord[j] = 0;
-    auto out_coord_iter = out_coords_hashmap.find(coord);
-    if (out_coord_iter != out_coords_hashmap.end()) {
-      in_out_map[in_coord_iter.second] = out_coord_iter->second;
-    } else {
-      throw std::invalid_argument(Formatter()
-                                  << "Coord not found in out coord map"
-                                  << ArrToString<Coord<D, Itype>>(coord));
-    }
-  }
-
-  // Extract key value as in out (ascending) ordered by the in map
-  for (auto const &pair : in_out_map) {
-    in_map[0].push_back(pair.first);
-    out_map[0].push_back(pair.second);
-  }
-
-  return std::make_tuple(in_map, out_map);
 }
 
 template <uint8_t D, typename Itype>
@@ -667,6 +431,39 @@ CoordsManager<D, Itype>::setupAndReturnOriginInOutPerKernel(
     in_maps[map_key] = std::get<0>(in_out);
     out_maps[map_key] = std::get<1>(in_out);
   }
+  return std::make_tuple(std::ref(in_maps[map_key]),
+                         std::ref(out_maps[map_key]));
+}
+
+template <uint8_t D, typename Itype>
+std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+CoordsManager<D, Itype>::setupAndReturnPruningInOutPerKernel(
+    at::Tensor use_feat, py::object py_in_coords_key,
+    py::object py_out_coords_key) {
+  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
+  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
+
+  // Create output coordinates if it doesn't exist
+  if (!p_out_coords_key->key_set)
+    // The following function setup py_out_coords_key
+    out_coords_key =
+        createPruneCoords(use_feat, py_in_coords_key, py_out_coords_key);
+  else
+    out_coords_key = p_out_coords_key->getKey();
+
+  // Use the map key for origin hash map (stride, dilation, kernel are all NULL)
+  InOutMapKey map_key =
+      getOriginMapHashKey(py_in_coords_key, py_out_coords_key);
+
+  // For non transpose case
+  // make a kernel mapping. The kernel will be saved with the map_key.
+  if (in_maps.find(map_key) == in_maps.end()) {
+    auto in_out = createPruningInOutMap(in_coords_key, out_coords_key);
+    in_maps[map_key] = std::get<0>(in_out);
+    out_maps[map_key] = std::get<1>(in_out);
+  }
+
   return std::make_tuple(std::ref(in_maps[map_key]),
                          std::ref(out_maps[map_key]));
 }

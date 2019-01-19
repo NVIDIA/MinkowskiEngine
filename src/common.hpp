@@ -25,8 +25,6 @@
 #include "gpu.cuh"
 #endif
 
-namespace py = pybind11;
-
 // Instantiate a class with float and double specifications.
 #define INSTANTIATE_CLASS(classname)                                           \
   char gInstantiationGuard##classname;                                         \
@@ -122,6 +120,10 @@ struct InOutMapKeyHash {
 template <typename Itype>
 using InOutMapPerKernel = std::vector<std::vector<Itype>>;
 
+template <typename Itype>
+using InOutKernelMapPair =
+    std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>;
+
 // For Used for fast index of coordinate retrieval
 template <uint8_t D, typename Itype> struct CoordHash {
   uint64_t operator()(Coord<D, Itype> const &p) const {
@@ -134,6 +136,46 @@ template <uint8_t D, typename Itype> struct ArrHash {
     return hash_vec<Arr<D, Itype>>(p);
   }
 };
+
+template <uint8_t D>
+std::vector<int> computeOutPixelDist(const Arr<D, int> &pixel_dists,
+                                     const Arr<D, int> &strides,
+                                     bool is_transpose) {
+  std::vector<int> out_pixel_dists;
+  for (int i = 0; i < D; i++) {
+    if (is_transpose) {
+      if (pixel_dists[i] % strides[i] > 0)
+        throw std::invalid_argument(
+            Formatter() << "The output pixel dist is not divisible by "
+                           "up_strides. pixel dists: "
+                        << ArrToString(pixel_dists)
+                        << ", up_strides: " << ArrToString(strides));
+      out_pixel_dists.push_back(pixel_dists[i] / strides[i]);
+    } else
+      out_pixel_dists.push_back(pixel_dists[i] * strides[i]);
+  }
+  return out_pixel_dists;
+}
+
+template <uint8_t D>
+long ComputeKernelVolume(int region_type, const Arr<D, int> &kernel_size,
+                         int n_offset) {
+  int kernel_volume;
+  if (region_type == 0) { // Hypercube
+    kernel_volume = 1;
+    for (auto k : kernel_size)
+      kernel_volume *= k;
+  } else if (region_type == 1) { // Hypercross
+    kernel_volume = 1;
+    for (auto k : kernel_size)
+      kernel_volume += k - 1;
+  } else if (region_type == 2) {
+    kernel_volume = n_offset;
+  } else {
+    throw std::invalid_argument("Invalid region type");
+  }
+  return kernel_volume;
+}
 
 // Location to index of the feature
 template <uint8_t D, typename Itype>
@@ -200,18 +242,24 @@ public:
   // New coords map initialzation entry
   uint64_t initializeCoords(at::Tensor coords, const Arr<D, int> &pixel_dists);
   uint64_t initializeCoords(at::Tensor coords, py::object py_coords_key);
+  // New coords map given an input
   uint64_t createOutCoords(uint64_t coords_key, const Arr<D, int> &pixel_dists,
                            const Arr<D, int> &strides, bool is_transpose);
   uint64_t createOriginCoords(uint64_t coords_key, int batch_size);
+  uint64_t createPruneCoords(at::Tensor use_feat, py::object py_in_coords_key,
+                             py::object py_out_coords_key);
 
-  // Create Hashmaps
+  // Helper functions for hashmap creation
   CoordsHashMap<D, Itype> createCoordsHashMap(at::Tensor coords);
   CoordsHashMap<D, Itype> createOutCoordsHashMap(uint64_t coords_key,
                                                  const Arr<D, int> &pixel_dists,
                                                  const Arr<D, int> &strides);
   CoordsHashMap<D, Itype> createOriginCoordsHashMap(uint64_t coords_key,
                                                     int batch_size);
+  CoordsHashMap<D, Itype> createPrunedCoordsHashMap(uint64_t coords_key,
+                                                    at::Tensor use_feat);
 
+  // Mappings
   InOutMapKey getMapHashKey(Arr<D, int> pixel_dists, Arr<D, int> strides,
                             Arr<D, int> kernel_sizes, Arr<D, int> dilations,
                             int region_type, py::object py_in_coords_key,
@@ -245,8 +293,11 @@ public:
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createGlobalReductionInOutMap(const uint64_t in_coords_key,
                                 const uint64_t out_coords_key);
+  std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
+  createPruningInOutMap(const uint64_t in_coords_key,
+                        const uint64_t out_coords_key);
 
-  // Functions for setting up coords and returning maps
+  // Wrapper functions for setting up coords and returning maps
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
   setupAndReturnInOutPerKernel(std::vector<int> pixel_dists,
                                std::vector<int> strides,
@@ -264,6 +315,10 @@ public:
   setupAndReturnOriginInOutPerKernel(int batch_size,
                                      py::object py_in_coords_key,
                                      py::object py_out_coords_key);
+  std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+  setupAndReturnPruningInOutPerKernel(at::Tensor use_feat,
+                                      py::object py_in_coords_key,
+                                      py::object py_out_coords_key);
 
   std::string toString() const;
   void clear() {
