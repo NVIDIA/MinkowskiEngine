@@ -2,7 +2,7 @@
 #define COORDS_HASHMAPS
 
 #include "common.hpp"
-#include "kernel_region.hpp"
+#include "region_iter.hpp"
 #include "utils.hpp"
 
 #include <pybind11/pybind11.h>

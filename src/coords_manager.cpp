@@ -1,12 +1,18 @@
 #include "common.hpp"
 #include "coords_hashmaps.hpp"
 #include "coords_kernelmaps.hpp"
-#include "kernel_region.hpp"
+#include "region_iter.hpp"
 #include "utils.hpp"
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
+
+template <uint8_t D, typename Itype>
+CoordsManager<D, Itype>::CoordsManager() {
+    nthreads = std::thread::hardware_concurrency();
+    pool.reset(new ThreadPool<D, Itype>(nthreads));
+}
 
 /*
  * Given pixel_dist_src and pixel_dist_dst, find the respective coord_maps and
@@ -16,7 +22,6 @@ template <uint8_t D, typename Itype>
 void CoordsManager<D, Itype>::getCoordsMapping(at::Tensor mapping,
                                                py::object py_in_coords_key,
                                                py::object py_out_coords_key) {
-
   PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
   PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
 
@@ -370,9 +375,9 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
     // For non transpose case
     // make a kernel mapping. The kernel will be saved with the map_key.
     if (in_maps.find(map_key) == in_maps.end()) {
-      auto in_out =
-          createInOutPerKernel(in_coords_key, out_coords_key, pixel_dists,
-                               kernel_sizes, dilations, region_type, offsets);
+      auto in_out = createInOutPerKernelInThreads(
+          in_coords_key, out_coords_key, pixel_dists, kernel_sizes, dilations,
+          region_type, offsets);
       in_maps[map_key] = std::get<0>(in_out);
       out_maps[map_key] = std::get<1>(in_out);
     }
@@ -491,6 +496,8 @@ std::string CoordsManager<D, Itype>::toString() const {
     tmp += ", Size: ";
     tmp += std::to_string(size);
   }
+  tmp += "\n  Number of threads: ";
+  tmp += std::to_string(nthreads);
   tmp += " >";
   return tmp;
 }

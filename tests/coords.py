@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from Common import CoordsKey, CoordsManager
+from MinkowskiCoords import CoordsKey, CoordsManager
 
 
 class Test(unittest.TestCase):
@@ -10,7 +10,7 @@ class Test(unittest.TestCase):
     def test_coords_key(self):
         key = CoordsKey(D=1)
         key.setKey(1)
-        self.assertTrue(key.getKey().getKey() == 1)
+        self.assertTrue(key.getKey() == 1)
         key.setPixelDist([1])
         print(key)
 

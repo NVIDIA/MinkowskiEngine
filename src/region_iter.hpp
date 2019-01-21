@@ -3,32 +3,20 @@
 
 #include "common.hpp"
 
-template <uint8_t D, typename Itype> class KernelRegionIterator;
-template <uint8_t D, typename Itype> class KernelRegion {
+template <uint8_t D, typename Itype> class RegionIterator;
+template <uint8_t D, typename Itype> class Region {
 public:
-  KernelRegion(Coord<D, Itype> &center, Arr<D, Itype> pixel_dists,
-               Arr<D, Itype> kernel_size, Arr<D, Itype> dilations,
-               int region_type, const Itype *p_offset, int n_offset)
-      : region_type(region_type), pixel_dists(pixel_dists),
-        kernel_size(kernel_size), dilations(dilations), p_offset(p_offset),
-        n_offset(n_offset), center(center) {
-    for (int i = 0; i < D; i++) {
-      lb[i] =
-          center[i] - int(kernel_size[i] / 2) * dilations[i] * pixel_dists[i];
-      ub[i] =
-          center[i] + int(kernel_size[i] / 2) * dilations[i] * pixel_dists[i];
-    }
-    lb[D] = ub[D] = center[D]; // set the batch index
-  }
+  Region(const Coord<D, Itype> &center_, const Arr<D, int> &pixel_dists,
+         const Arr<D, int> &kernel_size, const Arr<D, int> &dilations,
+         int region_type, const Itype *p_offset, int n_offset);
 
-  KernelRegionIterator<D, Itype> begin() {
-    return KernelRegionIterator<D, Itype>(*this, pixel_dists, kernel_size,
-                                          dilations, region_type);
-  }
-  KernelRegionIterator<D, Itype> end() {
-    return KernelRegionIterator<D, Itype>(*this, pixel_dists, kernel_size,
-                                          dilations, region_type);
-  }
+  Region(const Coord<D, Itype> &lower_bound_, const Arr<D, int> &pixel_dists,
+         const Arr<D, int> &kernel_size, const Arr<D, int> &dilations,
+         int region_type, const Itype *p_offset, int n_offset,
+         bool use_lower_bound);
+
+  RegionIterator<D, Itype> begin() { return RegionIterator<D, Itype>(*this); }
+  RegionIterator<D, Itype> end() { return RegionIterator<D, Itype>(*this); }
 
   int region_type;
   Arr<D, Itype> pixel_dists, kernel_size, dilations;
@@ -36,25 +24,21 @@ public:
   Coord<D, Itype> center;
   Coord<D, Itype> lb;
   Coord<D, Itype> ub;
+  bool use_lower_bound;
 };
 
-template <uint8_t D, typename Itype> class KernelRegionIterator {
+template <uint8_t D, typename Itype> class RegionIterator {
 private:
-  Arr<D, Itype> pixel_dists, kernel_size, dilations;
-  int region_type, curr_axis, offset_ind;
-  KernelRegion<D, Itype> &region;
+  int curr_axis, offset_ind;
+  const Region<D, Itype> &region;
   Coord<D, Itype> point;
 
 public:
   bool done;
-  KernelRegionIterator(KernelRegion<D, Itype> &region,
-                       Arr<D, Itype> pixel_dists, Arr<D, Itype> kernel_size,
-                       Arr<D, Itype> dilations, int region_type)
-      : pixel_dists(pixel_dists), kernel_size(kernel_size),
-        dilations(dilations), region_type(region_type), curr_axis(0),
-        offset_ind(0), region(region), done(false) {
+  RegionIterator(const Region<D, Itype> &region)
+      : curr_axis(0), offset_ind(0), region(region), done(false) {
     // First point
-    switch (region_type) {
+    switch (region.region_type) {
     case 0:
       point = region.lb;
       break;
@@ -71,12 +55,13 @@ public:
       break;
     }
   }
-  KernelRegionIterator<D, Itype> &operator++() {
-    switch (region_type) {
+  RegionIterator<D, Itype> &operator++() {
+    switch (region.region_type) {
     case 0:
       // Iterate only from 0 to D-1, point[D] reserved for batch index
       for (int d = 0; d < D;) {
-        point[d] += dilations[d] * pixel_dists[d]; // point is initialized as lb
+        point[d] += region.dilations[d] *
+                    region.pixel_dists[d]; // point is initialized as lb
         if (point[d] <= region.ub[d])
           break;
         point[d] = region.lb[d];
@@ -91,7 +76,8 @@ public:
       while (curr_axis < D) {
         // Go through [4, 5, 1, 2] when kernel_size = 5, and ceter = 3.
         // Center passed at the initialization
-        point[curr_axis] += dilations[curr_axis] * pixel_dists[curr_axis];
+        point[curr_axis] +=
+            region.dilations[curr_axis] * region.pixel_dists[curr_axis];
         // skip if the current point is crossing the center
         if (point[curr_axis] == region.center[curr_axis]) {
           curr_axis++;
@@ -125,8 +111,8 @@ public:
 
 // Only to be used for checking the end point of range based for loops.
 template <uint8_t D, typename Itype>
-inline bool operator!=(const KernelRegionIterator<D, Itype> &lhs,
-                       const KernelRegionIterator<D, Itype> &rhs) {
+inline bool operator!=(const RegionIterator<D, Itype> &lhs,
+                       const RegionIterator<D, Itype> &rhs) {
   return !lhs.done;
 }
 #endif
