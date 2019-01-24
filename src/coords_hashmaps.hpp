@@ -19,11 +19,17 @@ CoordsManager<D, Itype>::createCoordsHashMap(at::Tensor coords) {
   Itype *p_coords = coords.data<Itype>();
   for (int i = 0; i < nrows; i++) {
     std::copy(&p_coords[i * ncols], &p_coords[(i + 1) * ncols], coord.data());
-    if (coords_hashmap.map.find(coord) == coords_hashmap.map.end()) {
+    auto exists_iter = coords_hashmap.map.find(coord);
+    if (exists_iter == coords_hashmap.map.end()) {
       coords_hashmap.map[std::move(coord)] = i;
     } else {
-      std::cerr << "Duplicate key found. Use initialize_coords_with_duplicates "
-                << "or remove duplicates";
+      throw std::invalid_argument(
+          Formatter() << "A duplicate key found. Existing coord: "
+                      << ArrToString<Coord<D, Itype>>(exists_iter->first)
+                      << ", new coord: : "
+                      << ArrToString<Coord<D, Itype>>(coord)
+                      << ". If the duplication was intentional, use "
+                         "initialize_coords_with_duplicates.");
     }
   }
   return coords_hashmap;
