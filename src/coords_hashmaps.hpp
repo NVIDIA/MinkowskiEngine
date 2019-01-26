@@ -21,7 +21,7 @@ CoordsManager<D, Itype>::createCoordsHashMap(at::Tensor coords) {
     std::copy(&p_coords[i * ncols], &p_coords[(i + 1) * ncols], coord.data());
     auto exists_iter = coords_hashmap.map.find(coord);
     if (exists_iter == coords_hashmap.map.end()) {
-      coords_hashmap.map[std::move(coord)] = i;
+      coords_hashmap.map[coord] = i;
     } else {
       throw std::invalid_argument(
           Formatter() << "A duplicate key found. Existing coord: "

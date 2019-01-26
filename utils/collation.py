@@ -1,5 +1,5 @@
 import torch
-import numpy as np
+import logging
 
 
 def sparse_collate(coords, feats, labels=None):
@@ -16,14 +16,14 @@ def sparse_collate(coords, feats, labels=None):
                        torch.ones(num_points, 1).int() * batch_id), 1))
         feats_batch.append(torch.from_numpy(feats[batch_id]))
         if use_label:
-          labels_batch.append(torch.from_numpy(labels[batch_id]))
+            labels_batch.append(torch.from_numpy(labels[batch_id]))
         batch_id += 1
 
     # Concatenate all lists
     coords_batch = torch.cat(coords_batch, 0).int()
     feats_batch = torch.cat(feats_batch, 0).float()
     if use_label:
-        labels_batch = torch.cat(labels_batch, 0).int()
+        labels_batch = torch.cat(labels_batch, 0)
         return coords_batch, feats_batch, labels_batch
     else:
         return coords_batch, feats_batch
@@ -31,9 +31,10 @@ def sparse_collate(coords, feats, labels=None):
 
 class SparseCollation:
     """Generates collate function for coords, feats, labels.
-      Args:
-        limit_numpoints: If 0 or False, does not alter batch size. If positive integer, limits batch
-                         size so that the number of input coordinates is below limit_numpoints.
+    Args:
+      limit_numpoints: If 0 or False, does not alter batch size. If positive
+                       integer, limits batch size so that the number of input
+                       coordinates is below limit_numpoints.
     """
 
     def __init__(self, limit_numpoints):
@@ -48,13 +49,14 @@ class SparseCollation:
         for batch_id, _ in enumerate(coords):
             num_points = coords[batch_id].shape[0]
             batch_num_points += num_points
-            if self.limit_numpoints and batch_num_points > self.limit_numpoints:
+            if self.limit_numpoints > 0 and batch_num_points > self.limit_numpoints:
                 num_full_points = sum(len(c) for c in coords)
                 num_full_batch_size = len(coords)
                 logging.warning(
-                    f'\t\tCannot fit {num_full_points} points into {self.limit_numpoints} points '
-                    f'limit. Truncating batch size at {batch_id} out of {num_full_batch_size} with {batch_num_points - num_points}.'
-                )
+                    f'\tCannot fit {num_full_points} points into'
+                    ' {self.limit_numpoints} points limit. Truncating batch '
+                    f'size at {batch_id} out of {num_full_batch_size} with '
+                    f'{batch_num_points - num_points}.')
                 break
             coords_batch.append(
                 torch.cat((torch.from_numpy(coords[batch_id]).int(),
@@ -67,5 +69,5 @@ class SparseCollation:
         # Concatenate all lists
         coords_batch = torch.cat(coords_batch, 0).int()
         feats_batch = torch.cat(feats_batch, 0).float()
-        labels_batch = torch.cat(labels_batch, 0).int()
+        labels_batch = torch.cat(labels_batch, 0)  # arbitrary format
         return coords_batch, feats_batch, labels_batch
