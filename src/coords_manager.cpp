@@ -148,24 +148,34 @@ void CoordsManager<D, Itype>::getCoords(at::Tensor coords,
  * Initialization
  *******************************/
 template <uint8_t D, typename Itype>
-uint64_t
-CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
-                                          const Arr<D, int> &pixel_dists) {
-  uint64_t pixel_dist_hash = hash_vec<Arr<D, int>>(pixel_dists);
-  if (coords_hashmaps.find(pixel_dist_hash) != coords_hashmaps.end())
-    throw std::invalid_argument(
-        Formatter() << "The coord map already exists for the given pixel dist "
-                    << "pixel_dist: " << ArrToString(pixel_dists) << " at "
-                    << __FILE__ << ":" << __LINE__);
-  coords_hashmaps[pixel_dist_hash] = createCoordsHashMap(coords);
-  return pixel_dist_hash;
+uint64_t CoordsManager<D, Itype>::initializeCoords(
+    at::Tensor coords, const Arr<D, int> &pixel_dists, bool enforce_creation) {
+  uint64_t key = hash_vec<Arr<D, int>>(pixel_dists);
+  bool key_exists = coords_hashmaps.find(key) != coords_hashmaps.end();
+  if (key_exists) {
+    if (!enforce_creation)
+      throw std::invalid_argument(
+          Formatter()
+          << "The coord map already exists for the given pixel dist "
+          << "pixel_dist: " << ArrToString(pixel_dists) << " at " << __FILE__
+          << ":" << __LINE__);
+    else {
+      key = random();
+      while (coords_hashmaps.find(key) != coords_hashmaps.end())
+        key = random();
+    }
+  } // If key doesn't exist, use the current key regardless of enforce creation
+  coords_hashmaps[key] = createCoordsHashMap(coords);
+  return key;
 }
 
 template <uint8_t D, typename Itype>
 uint64_t CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
-                                                   py::object py_coords_key) {
+                                                   py::object py_coords_key,
+                                                   bool enforce_creation) {
   PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
-  uint64_t in_coords_key = initializeCoords(coords, p_coords_key->pixel_dists_);
+  uint64_t in_coords_key =
+      initializeCoords(coords, p_coords_key->pixel_dists_, enforce_creation);
   p_coords_key->setKey(in_coords_key);
   return in_coords_key;
 }

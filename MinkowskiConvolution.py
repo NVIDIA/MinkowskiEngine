@@ -6,8 +6,9 @@ from torch.nn import Parameter
 
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import RegionType, MinkowskiModuleBase, CoordsKey, get_kernel_volume, \
+from Common import RegionType, MinkowskiModuleBase, get_kernel_volume, \
     prep_args, save_ctx, convert_to_int_list, convert_to_int_tensor, convert_region_type
+from MinkowskiCoords import CoordsKey
 
 
 class MinkowskiConvolutionFunction(Function):
@@ -160,12 +161,15 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                  has_bias=False,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  is_transpose=False,
                  dimension=-1):
         super(MinkowskiConvolutionBase, self).__init__()
         assert isinstance(region_type, RegionType)
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
+        if out_coords_key is not None:
+            assert isinstance(out_coords_key, CoordsKey)
 
         stride = convert_to_int_tensor(stride, dimension)
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
@@ -184,6 +188,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         self.dilation = dilation
         self.region_type = region_type
         self.region_offset = region_offset
+        self.out_coords_key = out_coords_key
         self.axis_types = axis_types
         self.dimension = dimension
         self.use_mm = False  # use matrix multiplication when kernel is 1
@@ -210,7 +215,10 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
             self.up_stride, self.dilation, self.region_offset, self.axis_types,
             self.dimension)
 
-        out_coords_key = CoordsKey(input.coords_key.D)
+        if self.out_coords_key is None:
+            out_coords_key = CoordsKey(input.coords_key.D)
+        else:
+            out_coords_key = self.out_coords_key
         # If the kernel_size == 1, the convolution is simply a matrix
         # multiplication
         if self.use_mm:
@@ -258,6 +266,7 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
                  has_bias=False,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  dimension=None):
         """
@@ -273,6 +282,7 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             has_bias,
             region_type,
             region_offset,
+            out_coords_key,
             axis_types,
             is_transpose=False,
             dimension=dimension)
@@ -291,6 +301,7 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
                  has_bias=False,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  dimension=None):
         """
@@ -307,35 +318,9 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             has_bias,
             region_type,
             region_offset,
+            out_coords_key,
             axis_types,
             is_transpose=True,
             dimension=dimension)
         self.reset_parameters(True)
         self.conv = MinkowskiConvolutionTransposeFunction()
-
-    def forward(self, input):
-        assert isinstance(input, SparseTensor)
-        assert input.D == self.dimension
-
-        # Create a region_offset
-        self.region_type_, self.region_offset_, _ = convert_region_type(
-            self.region_type, input.pixel_dist, self.kernel_size,
-            self.up_stride, self.dilation, self.region_offset, self.axis_types,
-            self.dimension)
-
-        out_coords_key = CoordsKey(input.coords_key.D)
-        # If the kernel_size == 1, the convolution is simply a matrix
-        # multiplication
-        if self.use_mm:
-            outfeat = input.F.mm(self.kernel)
-            out_coords_key = input.coords_key
-        else:
-            outfeat = self.conv.apply(
-                input.F, self.kernel, input.pixel_dist, self.stride,
-                self.kernel_size, self.dilation, self.region_type_,
-                self.region_offset_, input.coords_key, out_coords_key, input.C)
-        if self.has_bias:
-            outfeat += self.bias
-
-        return SparseTensor(
-            outfeat, coords_key=out_coords_key, coords_manager=input.C)

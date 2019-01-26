@@ -3,8 +3,9 @@ from torch.autograd import Function
 
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import RegionType, MinkowskiModuleBase, CoordsKey, convert_to_int_list, \
+from Common import RegionType, MinkowskiModuleBase, convert_to_int_list, \
     convert_to_int_tensor, convert_region_type, prep_args, save_ctx
+from MinkowskiCoords import CoordsKey
 
 
 class MinkowskiMaxPoolingFunction(Function):
@@ -12,7 +13,7 @@ class MinkowskiMaxPoolingFunction(Function):
     Due to ctx.mask_index = in_feat.new()....,
     Should the function be called multiple times, this function must be first
     instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, ctx.out_feat, ctx.mask_index, which are initialized inside
+    PyTorch cannot free, out_feat, ctx.mask_index, which are initialized inside
     the ffi function.
     '''
 
@@ -56,8 +57,6 @@ class MinkowskiMaxPoolingFunction(Function):
               convert_to_int_list(ctx.dilation, D), region_type, region_offset,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_man.CPPCoordsManager)
-        import ipdb
-        ipdb.set_trace()
         return out_feat
 
     @staticmethod
@@ -80,7 +79,7 @@ class MinkowskiAvgPoolingFunction(Function):
     Due to ctx.num_nonzero = in_feat.new()....,
     Should the function be called multiple times, this function must be first
     instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, ctx.out_feat, ctx.num_nonzero, which are initialized inside
+    PyTorch cannot free, out_feat, ctx.num_nonzero, which are initialized inside
     the ffi function.
     '''
 
@@ -151,12 +150,15 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  is_transpose=False,
                  average=True,
                  dimension=-1):
         super(MinkowskiPoolingBase, self).__init__()
         assert isinstance(region_type, RegionType)
+        if out_coords_key is not None:
+            assert isinstance(out_coords_key, CoordsKey)
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
         stride = convert_to_int_tensor(stride, dimension)
@@ -174,6 +176,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         self.dilation = dilation
         self.region_type = region_type
         self.region_offset = region_offset
+        self.out_coords_key = out_coords_key
         self.axis_types = axis_types
         self.dimension = dimension
 
@@ -187,7 +190,10 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
             self.up_stride, self.dilation, self.region_offset, self.axis_types,
             self.dimension)
 
-        out_coords_key = CoordsKey(input.coords_key.D)
+        if self.out_coords_key is None:
+            out_coords_key = CoordsKey(input.coords_key.D)
+        else:
+            out_coords_key = self.out_coords_key
 
         output = self.pooling.apply(
             input.F, input.pixel_dist, self.stride, self.kernel_size,
@@ -210,12 +216,13 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  dimension=None):
         is_transpose = False
         super(MinkowskiAvgPooling, self).__init__(
             kernel_size, stride, dilation, region_type, region_offset,
-            axis_types, is_transpose, True, dimension)
+            out_coords_key, axis_types, is_transpose, True, dimension)
         self.pooling = MinkowskiAvgPoolingFunction()
 
 
@@ -227,12 +234,13 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  dimension=None):
         is_transpose = False
         super(MinkowskiSumPooling, self).__init__(
             kernel_size, stride, dilation, region_type, region_offset,
-            axis_types, is_transpose, False, dimension)
+            out_coords_key, axis_types, is_transpose, False, dimension)
         self.pooling = MinkowskiAvgPoolingFunction()
 
 
@@ -244,12 +252,13 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  dimension=None):
         is_transpose = False
-        super(MinkowskiMaxPooling,
-              self).__init__(kernel_size, stride, dilation, region_type,
-                             region_offset, axis_types, is_transpose, dimension)
+        super(MinkowskiMaxPooling, self).__init__(
+            kernel_size, stride, dilation, region_type, region_offset,
+            out_coords_key, axis_types, is_transpose, dimension)
         self.pooling = MinkowskiMaxPoolingFunction()
 
 
@@ -258,7 +267,7 @@ class MinkowskiPoolingTransposeFunction(Function):
     Due to ctx.num_nonzero = in_feat.new()....,
     Should the function be called multiple times, this function must be first
     instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, ctx.out_feat, ctx.num_nonzero, which are initialized inside
+    PyTorch cannot free, out_feat, ctx.num_nonzero, which are initialized inside
     the ffi function.
     '''
 
@@ -287,7 +296,7 @@ class MinkowskiPoolingTransposeFunction(Function):
             region_offset = torch.IntTensor()
 
         ctx.in_feat = input_features
-        ctx.out_feat = input_features.new()
+        out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
         ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
                        region_type, in_coords_key, out_coords_key,
@@ -295,14 +304,14 @@ class MinkowskiPoolingTransposeFunction(Function):
         D = in_coords_key.D
         fw_fn = MEB.PoolingTransposeForwardGPU if input_features.is_cuda \
             else MEB.PoolingTransposeForwardCPU
-        fw_fn(in_coords_key.D, ctx.in_feat, ctx.out_feat, ctx.num_nonzero,
+        fw_fn(in_coords_key.D, ctx.in_feat, out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), region_type, region_offset,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_man.CPPCoordsManager)
-        return ctx.out_feat
+        return out_feat
 
     @staticmethod
     def backward(ctx, grad_out_feat):
@@ -332,13 +341,37 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
                  dilation=1,
                  region_type=RegionType.HYPERCUBE,
                  region_offset=None,
+                 out_coords_key=None,
                  axis_types=None,
                  dimension=None):
         is_transpose = True
         super(MinkowskiPoolingTranspose, self).__init__(
             kernel_size, stride, dilation, region_type, region_offset,
-            axis_types, is_transpose, False, dimension)
+            out_coords_key, axis_types, is_transpose, False, dimension)
         self.pooling = MinkowskiPoolingTransposeFunction()
+
+    def forward(self, input):
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+
+        # Create a region_offset
+        self.region_type_, self.region_offset_, _ = convert_region_type(
+            self.region_type, input.pixel_dist, self.kernel_size,
+            self.up_stride, self.dilation, self.region_offset, self.axis_types,
+            self.dimension)
+
+        if self.out_coords_key is None:
+            out_coords_key = CoordsKey(input.coords_key.D)
+        else:
+            out_coords_key = self.out_coords_key
+
+        output = self.pooling.apply(
+            input.F, input.pixel_dist, self.stride, self.kernel_size,
+            self.dilation, self.region_type_, self.region_offset_, self.average,
+            input.coords_key, out_coords_key, input.C)
+
+        return SparseTensor(
+            output, coords_key=out_coords_key, coords_manager=input.C)
 
 
 class MinkowskiGlobalPoolingFunction(Function):
@@ -409,6 +442,7 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         out_coords_key = CoordsKey(input.coords_key.D)
         output = self.pooling.apply(input.F, self.batch_size, self.average,
                                     input.coords_key, out_coords_key, input.C)
+
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.C)
 

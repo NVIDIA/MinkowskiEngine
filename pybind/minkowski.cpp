@@ -75,9 +75,9 @@ void instantiate_dim_itype(py::module &m, const std::string &dim,
       .def("getCoordsSize", (int (CoordsManager<D, Itype>::*)(py::object)) &
                                 CoordsManager<D, Itype>::getCoordsSize)
       .def("getCoords", &CoordsManager<D, Itype>::getCoords)
-      .def("initializeCoords",
-           (uint64_t(CoordsManager<D, Itype>::*)(at::Tensor, py::object)) &
-               CoordsManager<D, Itype>::initializeCoords)
+      .def("initializeCoords", (uint64_t(CoordsManager<D, Itype>::*)(
+                                   at::Tensor, py::object, bool)) &
+                                   CoordsManager<D, Itype>::initializeCoords)
       .def("getCoordsMapping", &CoordsManager<D, Itype>::getCoordsMapping)
       .def("__repr__",
            [](const CoordsManager<D, Itype> &a) { return a.toString(); });

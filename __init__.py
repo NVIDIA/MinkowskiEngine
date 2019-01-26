@@ -9,7 +9,9 @@ import torch
 from SparseTensor import SparseTensor
 
 from Common import RegionType, convert_to_int_tensor, convert_region_type, \
-        MinkowskiModuleBase, CoordsKey, CoordsManager
+        MinkowskiModuleBase
+
+from MinkowskiCoords import CoordsKey, CoordsManager
 
 from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
     MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose

@@ -127,8 +127,10 @@ public:
   void getCoords(at::Tensor coords, py::object py_coords_key);
 
   // New coords map initialzation entry
-  uint64_t initializeCoords(at::Tensor coords, const Arr<D, int> &pixel_dists);
-  uint64_t initializeCoords(at::Tensor coords, py::object py_coords_key);
+  uint64_t initializeCoords(at::Tensor coords, const Arr<D, int> &pixel_dists,
+                            bool enforce_creation);
+  uint64_t initializeCoords(at::Tensor coords, py::object py_coords_key,
+                            bool enforce_creation);
   // New coords map given an input
   uint64_t createOutCoords(uint64_t coords_key, const Arr<D, int> &pixel_dists,
                            const Arr<D, int> &strides, bool is_transpose);

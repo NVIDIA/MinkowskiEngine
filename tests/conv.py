@@ -131,7 +131,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             out_channels,
             in_channels,
             kernel_size=3,
-            upsample_stride=2,
+            stride=2,
             has_bias=True,
             dimension=D).to(device)
         input = conv(input)
@@ -167,7 +167,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             out_channels,
             in_channels,
             kernel_size=3,
-            upsample_stride=2,
+            stride=2,
             has_bias=True,
             dimension=D)
         input = conv(input)

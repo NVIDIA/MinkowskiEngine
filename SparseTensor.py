@@ -1,7 +1,8 @@
 import os
 import torch
 
-from Common import convert_to_int_list, CoordsKey, CoordsManager
+from Common import convert_to_int_list
+from MinkowskiCoords import CoordsKey, CoordsManager
 
 
 class SparseTensor():
@@ -54,6 +55,14 @@ class SparseTensor():
     @property
     def pixel_dist(self):
         return self.coords_key.getPixelDist()
+
+    @pixel_dist.setter
+    def pixel_dist(self, p):
+      """
+      The function is not recommended to be used directly.
+      """
+      p = convert_to_int_list(p, self.D)
+      self.coords_key.setPixelDist(p)
 
     @property
     def C(self):

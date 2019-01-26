@@ -2,7 +2,7 @@ import torch
 from torch.nn import Module
 from torch.autograd import Function
 
-from Common import CoordsKey
+from MinkowskiCoords import CoordsKey
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
 
