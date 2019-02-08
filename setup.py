@@ -18,9 +18,8 @@ setup(
             sources=[
                 'pybind/minkowski.cpp',
             ],
-            libraries=['minkowski'],
+            libraries=['minkowski', 'cblas', 'atlas'],
             library_dirs=['objs', *ai.get_lib_dirs()],
-            extra_link_args=['-lminkowski -lcblas -latlas'],
             # extra_compile_args=['-g']
         )
     ],
