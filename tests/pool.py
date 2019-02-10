@@ -151,6 +151,49 @@ class TestPooling(unittest.TestCase):
                 rtol=1e-2,
                 eps=1e-4))
 
+    def test_unpooling_gpu(self):
+        if not torch.cuda.is_available():
+            return
+
+        in_channels, out_channels, D = 2, 3, 2
+        coords, feats, labels = data_loader(in_channels)
+        input = SparseTensor(feats, coords=coords)
+        conv = MinkowskiConvolution(
+            in_channels, out_channels, kernel_size=3, stride=2, dimension=D)
+        unpool = MinkowskiPoolingTranspose(kernel_size=3, stride=2, dimension=D)
+        input = conv(input)
+        output = unpool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiPoolingTransposeFunction()
+
+        self.assertTrue(
+            gradcheck(
+                fn, (input.F, input.pixel_dist, unpool.stride,
+                     unpool.kernel_size, unpool.dilation, unpool.region_type,
+                     None, False, input.coords_key, None, input.C),
+                atol=1e-3,
+                rtol=1e-2,
+                eps=1e-4))
+
+        device = torch.device('cuda')
+        with torch.cuda.device(0):
+            input = input.to(device)
+            output = unpool(input)
+            print(output)
+
+        # Check backward
+        fn = MinkowskiAvgPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn, (input.F, input.pixel_dist, unpool.stride,
+                     unpool.kernel_size, unpool.dilation, unpool.region_type,
+                     None, True, input.coords_key, None, input.C),
+                atol=1e-3,
+                rtol=1e-2,
+                eps=1e-4))
+
 
 if __name__ == '__main__':
     unittest.main()

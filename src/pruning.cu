@@ -39,8 +39,7 @@ void PruningForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
 
 template <typename Dtype, typename Itype>
 void PruningBackwardKernelGPU(Dtype *d_grad_in_feat,
-                              const Dtype *d_grad_out_feat, int num_in_rows,
-                              int nchannel,
+                              const Dtype *d_grad_out_feat, int nchannel,
                               const std::vector<std::vector<Itype>> &in_maps,
                               const std::vector<std::vector<Itype>> &out_maps,
                               cudaStream_t stream) {
@@ -56,22 +55,19 @@ void PruningBackwardKernelGPU(Dtype *d_grad_in_feat,
                         cudaMemcpyHostToDevice));
 
   copy_in_out_map<Dtype, Itype>
-      <<<GET_BLOCKS(num_in_rows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-          num_in_rows * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
-          d_out_map, d_in_map);
+      <<<GET_BLOCKS(nnz * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
+          nnz * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel, d_out_map,
+          d_in_map);
 
   cudaFree(d_in_map);
 }
 
-template void PruningForwardKernelGPU<float, int32_t>(const float *d_in_feat, float *d_out_feat,
-                             int nchannel,
-                             const std::vector<std::vector<int32_t>> &in_maps,
-                             const std::vector<std::vector<int32_t>> &out_maps,
-                             cudaStream_t stream);
+template void PruningForwardKernelGPU<float, int32_t>(
+    const float *d_in_feat, float *d_out_feat, int nchannel,
+    const std::vector<std::vector<int32_t>> &in_maps,
+    const std::vector<std::vector<int32_t>> &out_maps, cudaStream_t stream);
 
-template void PruningBackwardKernelGPU<float, int32_t>(float *d_grad_in_feat,
-                              const float *d_grad_out_feat, int num_in_rows,
-                              int nchannel,
-                              const std::vector<std::vector<int32_t>> &in_maps,
-                              const std::vector<std::vector<int32_t>> &out_maps,
-                              cudaStream_t stream);
+template void PruningBackwardKernelGPU<float, int32_t>(
+    float *d_grad_in_feat, const float *d_grad_out_feat, int nchannel,
+    const std::vector<std::vector<int32_t>> &in_maps,
+    const std::vector<std::vector<int32_t>> &out_maps, cudaStream_t stream);

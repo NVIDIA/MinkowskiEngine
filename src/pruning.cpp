@@ -100,9 +100,9 @@ void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
   grad_in_feat.zero_();
 
   PruningBackwardKernelGPU<Dtype, Itype>(
-      grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), in_nrows,
-      nchannel, p_coords_manager->in_maps[map_key],
-      p_coords_manager->out_maps[map_key], at::cuda::getCurrentCUDAStream());
+      grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
+      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
+      at::cuda::getCurrentCUDAStream());
 }
 #endif
 

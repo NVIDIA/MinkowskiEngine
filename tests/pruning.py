@@ -9,7 +9,7 @@ from tests.common import data_loader
 
 class TestPooling(unittest.TestCase):
 
-    def test_sumpooling(self):
+    def test_pruning(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
         feats.requires_grad_()
@@ -34,6 +34,14 @@ class TestPooling(unittest.TestCase):
             input = input.to(device)
             output = pruning(input, use_feat)
             print(output)
+
+        self.assertTrue(
+            gradcheck(
+                fn, (input.F, use_feat, input.coords_key, output.coords_key,
+                     input.C),
+                atol=1e-3,
+                rtol=1e-2,
+                eps=1e-4))
 
 
 if __name__ == '__main__':
