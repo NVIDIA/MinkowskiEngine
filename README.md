@@ -5,7 +5,23 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It ma
 
 # Installation
 
+You can install the MinkowskiEngine without sudo using anaconda.
+
+## Anaconda
+
 You must install `pytorch`. Please read before you execute the following lines.
+
+```
+# Within your conda virtual env. See https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+conda install numpy
+conda install pytorch -c pytorch
+conda install google-sparsehash -c bioconda
+git clone https://github.com/chrischoy/MinkowskiEngine.git
+cd MinkowskiEngine
+make -j4 # higher number if cpu count > 4
+```
+
+## Python virtual env
 
 ```
 sudo apt install libsparsehash-dev libblas-dev libopenblas-dev libatlas-base-dev
