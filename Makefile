@@ -18,7 +18,9 @@ CUDA_DIR := $(shell python -c 'from torch.utils.cpp_extension import _find_cuda_
 INCLUDE_DIRS := ./ $(CUDA_DIR)/include
 LIBRARY_DIRS := $(CUDA_DIR)/lib64
 
+# HEADER DIR is in pythonX.Xm folder
 INCLUDE_DIRS += $(PYTHON_HEADER_DIR)
+INCLUDE_DIRS += $(PYTHON_HEADER_DIR)/..
 INCLUDE_DIRS += $(PYTORCH_INCLUDES)
 LIBRARY_DIRS += $(PYTORCH_LIBRARIES)
 
@@ -59,8 +61,8 @@ CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
 # We will also explicitly add stdc++ to the link target.
 LIBRARIES += stdc++ cudart cublas c10 caffe2 torch torch_python caffe2_gpu
 
-# BLAS configuration (default = open)
-BLAS ?= atlas
+# BLAS configuration
+BLAS ?= open
 ifeq ($(BLAS), mkl)
 	# MKL
 	LIBRARIES += mkl_rt

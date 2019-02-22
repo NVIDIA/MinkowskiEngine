@@ -9,13 +9,13 @@ You can install the MinkowskiEngine without sudo using anaconda. Using anaconda 
 
 ## Anaconda
 
-You must install `pytorch`. Please read before you execute the following lines.
+In this example, we assumed that you are using CUDA 10.0. If not, change the anaconda pytorch installation to use `cudatollkit=9.0` or any other version that you are using. Make sure that your `nvcc --version` matches your pytorch cuda version.
 
 ```
 # Within your conda virtual env. See https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
-conda install pytorch -c pytorch
-conda install atlas -c anaconda
-conda install google-sparsehash -c bioconda
+conda install -c anaconda openblas  # blas header included
+conda install -c bioconda google-sparsehash
+conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Change the cudatoolkit version to `nvcc --version`
 git clone https://github.com/chrischoy/MinkowskiEngine.git
 cd MinkowskiEngine
 make -j4 # higher number if cpu count > 4
@@ -24,7 +24,7 @@ make -j4 # higher number if cpu count > 4
 ## Python virtual env
 
 ```
-sudo apt install libsparsehash-dev libblas-dev libopenblas-dev libatlas-base-dev
+sudo apt install libsparsehash-dev libopenblas-dev
 # within a python3 environment
 pip install torch
 git clone https://github.com/chrischoy/MinkowskiEngine.git
@@ -139,16 +139,6 @@ See `tests/test_conv_types.py` for more details.
   - D-dimensional integer array + 1 dimension at the end for batch index
 - Pixel Distance
   - Distance between adjacent pixels. e.g., two stride-2 convolution layers will create features of pixel distance 4.
-
-
-# Design Choices
-
-- Each strided convolution (convolution with stride > 1) creates a new coordinate map. Since the map is defined only after strided convolution, I used pixel distance as the key for querying a coordinate map.
-   - If the pixel distances for input and output are the sames, use the same mapping for the input and output.
-- To define a sparse convolution, you need input and output coordinates, and input and output features that correspond to the coordinates. Given the input and output coordinates, a sparse convolution requires mapping from input to output for each kernel. A convolution can be uniquely defined given a tuple (pixeldistance, stride, kernelsize, dilation).
-- SCE uses cuBLAS, or cBLAS for all computation which speeds all computation.
-- All mappings and coordinates are stored in the Metadata object. The object is shared throughout a network.
-- Support arbitrary input sizes after initialization.
 
 
 # Notes

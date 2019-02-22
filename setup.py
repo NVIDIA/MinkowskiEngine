@@ -1,8 +1,8 @@
 from setuptools import setup
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
 
-import numpy.distutils.system_info as si
-ai = si.atlas_info()
+from distutils.sysconfig import get_python_inc
+
 
 # Python interface
 setup(
@@ -14,12 +14,12 @@ setup(
     ext_modules=[
         CUDAExtension(
             name='MinkowskiEngineBackend',
-            include_dirs=['./'],
+            include_dirs=['./', get_python_inc() + "/.."],  # For sparse hash from conda
             sources=[
                 'pybind/minkowski.cpp',
             ],
-            libraries=['minkowski', 'cblas', 'atlas'],
-            library_dirs=['objs', *ai.get_lib_dirs()],
+            libraries=['minkowski', 'openblas'],
+            library_dirs=['objs'],
             # extra_compile_args=['-g']
         )
     ],
