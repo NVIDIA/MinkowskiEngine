@@ -135,7 +135,7 @@ class MinkowskiInstanceNormFunction(Function):
         return norm_din, None, None, None, None
 
 
-class MinkowskiSlowInstanceNorm(Module):
+class MinkowskiInstanceNorm(Module):
 
     def __init__(self, num_features, batch_size=0, dimension=-1):
         Module.__init__(self)
@@ -182,7 +182,7 @@ class MinkowskiSlowInstanceNorm(Module):
             coords_manager=x.C)
 
 
-class MinkowskiInstanceNorm(Module):
+class MinkowskiFastInstanceNorm(Module):
 
     def __init__(self, num_features, batch_size=0, dimension=-1):
         Module.__init__(self)
