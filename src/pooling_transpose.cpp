@@ -163,6 +163,13 @@ template void DimSwitchPoolingTransposeForwardCPU<float, int32_t>(
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
+template void DimSwitchPoolingTransposeForwardCPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    at::Tensor offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchPoolingTransposeBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
@@ -178,6 +185,14 @@ void DimSwitchPoolingTransposeBackwardCPU(
 }
 
 template void DimSwitchPoolingTransposeBackwardCPU<float, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchPoolingTransposeBackwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
     std::vector<int> pixel_dists, std::vector<int> strides,
@@ -206,6 +221,13 @@ template void DimSwitchPoolingTransposeForwardGPU<float, int32_t>(
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
+template void DimSwitchPoolingTransposeForwardGPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    at::Tensor offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchPoolingTransposeBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
@@ -221,6 +243,14 @@ void DimSwitchPoolingTransposeBackwardGPU(
 }
 
 template void DimSwitchPoolingTransposeBackwardGPU<float, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchPoolingTransposeBackwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
     std::vector<int> pixel_dists, std::vector<int> strides,

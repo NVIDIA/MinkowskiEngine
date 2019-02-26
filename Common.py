@@ -71,6 +71,15 @@ def save_ctx(ctx, pixel_dist, stride, kernel_size, dilation, region_type,
     return ctx
 
 
+def get_postfix(tensor):
+  postfix = 'GPU' if tensor.is_cuda else 'CPU'
+  if isinstance(tensor, torch.DoubleTensor) or isinstance(tensor, torch.cuda.DoubleTensor):
+    postfix += 'd'
+  else:
+    postfix += 'f'
+  return postfix
+
+
 class RegionType(Enum):
     """
     Define the kernel region type

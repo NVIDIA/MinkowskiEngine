@@ -71,3 +71,13 @@ template void PruningBackwardKernelGPU<float, int32_t>(
     float *d_grad_in_feat, const float *d_grad_out_feat, int nchannel,
     const std::vector<std::vector<int32_t>> &in_maps,
     const std::vector<std::vector<int32_t>> &out_maps, cudaStream_t stream);
+
+template void PruningForwardKernelGPU<double, int32_t>(
+    const double *d_in_feat, double *d_out_feat, int nchannel,
+    const std::vector<std::vector<int32_t>> &in_maps,
+    const std::vector<std::vector<int32_t>> &out_maps, cudaStream_t stream);
+
+template void PruningBackwardKernelGPU<double, int32_t>(
+    double *d_grad_in_feat, const double *d_grad_out_feat, int nchannel,
+    const std::vector<std::vector<int32_t>> &in_maps,
+    const std::vector<std::vector<int32_t>> &out_maps, cudaStream_t stream);

@@ -146,6 +146,13 @@ template void DimSwitchConvolutionForwardCPU<float, int32_t>(
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
+template void DimSwitchConvolutionForwardCPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    at::Tensor offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
@@ -161,6 +168,14 @@ void DimSwitchConvolutionBackwardCPU(
 }
 
 template void DimSwitchConvolutionBackwardCPU<float, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchConvolutionBackwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
     std::vector<int> pixel_dists, std::vector<int> strides,
@@ -189,6 +204,13 @@ template void DimSwitchConvolutionForwardGPU<float, int32_t>(
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
+template void DimSwitchConvolutionForwardGPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    at::Tensor offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
@@ -204,6 +226,14 @@ void DimSwitchConvolutionBackwardGPU(
 }
 
 template void DimSwitchConvolutionBackwardGPU<float, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchConvolutionBackwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
     std::vector<int> pixel_dists, std::vector<int> strides,

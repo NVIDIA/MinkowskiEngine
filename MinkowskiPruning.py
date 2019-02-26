@@ -5,6 +5,7 @@ from torch.autograd import Function
 from MinkowskiCoords import CoordsKey
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
+from Common import get_postfix
 
 
 class MinkowskiPruningFunction(Function):
@@ -20,7 +21,7 @@ class MinkowskiPruningFunction(Function):
 
         out_feat = in_feat.new()
 
-        fw_fn = MEB.PruningForwardGPU if in_feat.is_cuda else MEB.PruningForwardCPU
+        fw_fn = getattr(MEB, 'PruningForward' + get_postfix(in_feat))
         fw_fn(ctx.in_coords_key.D, in_feat, out_feat, use_feat,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)
@@ -29,7 +30,7 @@ class MinkowskiPruningFunction(Function):
     @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
-        bw_fn = MEB.PruningBackwardGPU if grad_out_feat.is_cuda else MEB.PruningBackwardCPU
+        bw_fn = getattr(MEB, 'PruningBackward' + get_postfix(grad_out_feat))
         bw_fn(ctx.in_coords_key.D, grad_in_feat, grad_out_feat,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)

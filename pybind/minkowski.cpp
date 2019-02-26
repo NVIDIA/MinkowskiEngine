@@ -13,54 +13,68 @@ namespace py = pybind11;
 template <typename Dtype, typename Itype>
 void instantiate_func(py::module &m, const std::string &dtypestr,
                       const std::string &itypestr) {
-  m.def("ConvolutionForwardCPU", &DimSwitchConvolutionForwardCPU<Dtype, Itype>);
-  m.def("ConvolutionBackwardCPU",
+  m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
+        &DimSwitchConvolutionForwardCPU<Dtype, Itype>);
+  m.def((std::string("ConvolutionBackwardCPU") + dtypestr).c_str(),
         &DimSwitchConvolutionBackwardCPU<Dtype, Itype>);
-  m.def("ConvolutionForwardGPU", &DimSwitchConvolutionForwardGPU<Dtype, Itype>);
-  m.def("ConvolutionBackwardGPU",
+  m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
+        &DimSwitchConvolutionForwardGPU<Dtype, Itype>);
+  m.def((std::string("ConvolutionBackwardGPU") + dtypestr).c_str(),
         &DimSwitchConvolutionBackwardGPU<Dtype, Itype>);
 
-  m.def("ConvolutionTransposeForwardCPU",
+  m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
         &DimSwitchConvolutionTransposeForwardCPU<Dtype, Itype>);
-  m.def("ConvolutionTransposeBackwardCPU",
+  m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
         &DimSwitchConvolutionTransposeBackwardCPU<Dtype, Itype>);
-  m.def("ConvolutionTransposeForwardGPU",
+  m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
         &DimSwitchConvolutionTransposeForwardGPU<Dtype, Itype>);
-  m.def("ConvolutionTransposeBackwardGPU",
+  m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
         &DimSwitchConvolutionTransposeBackwardGPU<Dtype, Itype>);
 
-  m.def("AvgPoolingForwardCPU", &DimSwitchAvgPoolingForwardCPU<Dtype, Itype>);
-  m.def("AvgPoolingBackwardCPU", &DimSwitchAvgPoolingBackwardCPU<Dtype, Itype>);
-  m.def("AvgPoolingForwardGPU", &DimSwitchAvgPoolingForwardGPU<Dtype, Itype>);
-  m.def("AvgPoolingBackwardGPU", &DimSwitchAvgPoolingBackwardGPU<Dtype, Itype>);
+  m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
+        &DimSwitchAvgPoolingForwardCPU<Dtype, Itype>);
+  m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
+        &DimSwitchAvgPoolingBackwardCPU<Dtype, Itype>);
+  m.def((std::string("AvgPoolingForwardGPU") + dtypestr).c_str(),
+        &DimSwitchAvgPoolingForwardGPU<Dtype, Itype>);
+  m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
+        &DimSwitchAvgPoolingBackwardGPU<Dtype, Itype>);
 
-  m.def("PoolingTransposeForwardCPU",
+  m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
         &DimSwitchPoolingTransposeForwardCPU<Dtype, Itype>);
-  m.def("PoolingTransposeBackwardCPU",
+  m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),
         &DimSwitchPoolingTransposeBackwardCPU<Dtype, Itype>);
-  m.def("PoolingTransposeForwardGPU",
+  m.def((std::string("PoolingTransposeForwardGPU") + dtypestr).c_str(),
         &DimSwitchPoolingTransposeForwardGPU<Dtype, Itype>);
-  m.def("PoolingTransposeBackwardGPU",
+  m.def((std::string("PoolingTransposeBackwardGPU") + dtypestr).c_str(),
         &DimSwitchPoolingTransposeBackwardGPU<Dtype, Itype>);
 
-  m.def("GlobalPoolingForwardCPU",
+  m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
         &DimSwitchGlobalPoolingForwardCPU<Dtype, Itype>);
-  m.def("GlobalPoolingBackwardCPU",
+  m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
         &DimSwitchGlobalPoolingBackwardCPU<Dtype, Itype>);
-  m.def("GlobalPoolingForwardGPU",
+  m.def((std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
         &DimSwitchGlobalPoolingForwardGPU<Dtype, Itype>);
-  m.def("GlobalPoolingBackwardGPU",
+  m.def((std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
         &DimSwitchGlobalPoolingBackwardGPU<Dtype, Itype>);
 
-  m.def("BroadcastForwardCPU", &DimSwitchBroadcastForwardCPU<Dtype, Itype>);
-  m.def("BroadcastBackwardCPU", &DimSwitchBroadcastBackwardCPU<Dtype, Itype>);
-  m.def("BroadcastForwardGPU", &DimSwitchBroadcastForwardGPU<Dtype, Itype>);
-  m.def("BroadcastBackwardGPU", &DimSwitchBroadcastBackwardGPU<Dtype, Itype>);
+  m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
+        &DimSwitchBroadcastForwardCPU<Dtype, Itype>);
+  m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
+        &DimSwitchBroadcastBackwardCPU<Dtype, Itype>);
+  m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
+        &DimSwitchBroadcastForwardGPU<Dtype, Itype>);
+  m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
+        &DimSwitchBroadcastBackwardGPU<Dtype, Itype>);
 
-  m.def("PruningForwardCPU", &DimSwitchPruningForwardCPU<Dtype, Itype>);
-  m.def("PruningBackwardCPU", &DimSwitchPruningBackwardCPU<Dtype, Itype>);
-  m.def("PruningForwardGPU", &DimSwitchPruningForwardGPU<Dtype, Itype>);
-  m.def("PruningBackwardGPU", &DimSwitchPruningBackwardGPU<Dtype, Itype>);
+  m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
+        &DimSwitchPruningForwardCPU<Dtype, Itype>);
+  m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
+        &DimSwitchPruningBackwardCPU<Dtype, Itype>);
+  m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
+        &DimSwitchPruningForwardGPU<Dtype, Itype>);
+  m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
+        &DimSwitchPruningBackwardGPU<Dtype, Itype>);
 }
 
 template <uint8_t D, typename Itype>
@@ -97,7 +111,9 @@ void instantiate_dim(py::module &m, const std::string &dim) {
 
   // Instantiate Itypes
   instantiate_dim_itype<D, int32_t>(m, dim, std::string("int32"));
-  instantiate_func<float, int32_t>(m, std::string("float"),
+  instantiate_func<float, int32_t>(m, std::string("f"),
+                                   std::string("int32"));
+  instantiate_func<double, int32_t>(m, std::string("d"),
                                    std::string("int32"));
 }
 

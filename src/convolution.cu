@@ -69,8 +69,9 @@ void ConvolutionForwardKernelGPU(
   CUDA_CHECK(
       cudaMalloc((void **)&d_in_map, (2 * max_n_active) * sizeof(Itype)));
   d_out_map = d_in_map + max_n_active;
-  CUDA_CHECK(cudaMalloc((void **)&d_in_buffer,
-                        (in_nchannel + out_nchannel) * max_n_active * sizeof(Dtype)));
+  CUDA_CHECK(
+      cudaMalloc((void **)&d_in_buffer,
+                 (in_nchannel + out_nchannel) * max_n_active * sizeof(Dtype)));
   d_out_buffer = d_in_buffer + in_nchannel * max_n_active;
   // Iterate through each spatial kernel and get indices for in_map and
   // out_map
@@ -127,6 +128,13 @@ void ConvolutionForwardKernelGPU(
 template void ConvolutionForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nchannel, float *d_out_feat,
     int out_nchannel, const float *d_kernel,
+    const std::vector<std::vector<int32_t>> &in_map,
+    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
+    cublasHandle_t cuhandle, cudaStream_t stream);
+
+template void ConvolutionForwardKernelGPU<double, int32_t>(
+    const double *d_in_feat, int in_nchannel, double *d_out_feat,
+    int out_nchannel, const double *d_kernel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
@@ -237,4 +245,10 @@ template void ConvolutionBackwardKernelGPU<float, int32_t>(
     const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
 
+template void ConvolutionBackwardKernelGPU<double, int32_t>(
+    const double *d_in_feat, double *d_grad_in_feat, int in_nchannel,
+    const double *d_grad_out_feat, int out_nchannel, const double *d_kernel,
+    double *p_grad_kernel, const std::vector<std::vector<int32_t>> &in_map,
+    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
+    cublasHandle_t cuhandle, cudaStream_t stream);
 #endif

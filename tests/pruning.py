@@ -12,6 +12,7 @@ class TestPooling(unittest.TestCase):
     def test_pruning(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         use_feat = torch.rand(feats.size(0)) < 0.5
@@ -24,10 +25,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn, (input.F, use_feat, input.coords_key, output.coords_key,
-                     input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     input.C)))
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
@@ -38,10 +36,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn, (input.F, use_feat, input.coords_key, output.coords_key,
-                     input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     input.C)))
 
 
 if __name__ == '__main__':

@@ -121,6 +121,11 @@ template void DimSwitchPruningForwardCPU<float, int32_t>(
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
+template void DimSwitchPruningForwardCPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchPruningBackwardCPU(int D, at::Tensor grad_in_feat,
                                  at::Tensor grad_out_feat,
@@ -133,6 +138,11 @@ void DimSwitchPruningBackwardCPU(int D, at::Tensor grad_in_feat,
 }
 
 template void DimSwitchPruningBackwardCPU<float, int32_t>(
+    int D, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchPruningBackwardCPU<double, int32_t>(
     int D, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -153,6 +163,11 @@ template void DimSwitchPruningForwardGPU<float, int32_t>(
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
+template void DimSwitchPruningForwardGPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchPruningBackwardGPU(int D, at::Tensor grad_in_feat,
                                  at::Tensor grad_out_feat,
@@ -165,6 +180,11 @@ void DimSwitchPruningBackwardGPU(int D, at::Tensor grad_in_feat,
 }
 
 template void DimSwitchPruningBackwardGPU<float, int32_t>(
+    int D, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchPruningBackwardGPU<double, int32_t>(
     int D, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);

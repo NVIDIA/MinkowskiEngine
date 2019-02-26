@@ -16,6 +16,7 @@ class TestConvolution(unittest.TestCase):
             return
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         # Initialize context
@@ -26,6 +27,7 @@ class TestConvolution(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D)
+        conv = conv.double()
         output = conv(input)
         print(output)
 
@@ -43,17 +45,14 @@ class TestConvolution(unittest.TestCase):
         output.F.backward(grad)
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
-                     conv.kernel_size, conv.dilation, conv.region_type, None,
-                     input.coords_key, None, input.coords_man),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+            gradcheck(fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
+                           conv.kernel_size, conv.dilation, conv.region_type,
+                           None, input.coords_key, None, input.coords_man)))
 
     def test(self):
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         # Initialize context
@@ -64,6 +63,7 @@ class TestConvolution(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D)
+        conv = conv.double()
         output = conv(input)
         print(output)
 
@@ -71,13 +71,9 @@ class TestConvolution(unittest.TestCase):
         fn = MinkowskiConvolutionFunction()
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
-                     conv.kernel_size, conv.dilation, conv.region_type, None,
-                     input.coords_key, None, input.coords_man),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+            gradcheck(fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
+                           conv.kernel_size, conv.dilation, conv.region_type,
+                           None, input.coords_key, None, input.coords_man)))
 
     # def test_hybrid(self):
     #     in_channels, out_channels, D = 2, 3, 2
@@ -117,6 +113,7 @@ class TestConvolutionTranspose(unittest.TestCase):
         device = torch.device('cuda')
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords).to(device)
         # Initialize context
@@ -127,6 +124,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D).to(device)
+        conv = conv.double()
         conv_tr = MinkowskiConvolutionTranspose(
             out_channels,
             in_channels,
@@ -134,6 +132,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D).to(device)
+        conv_tr = conv_tr.double()
         input = conv(input)
         output = conv_tr(input)
         print(output)
@@ -145,14 +144,12 @@ class TestConvolutionTranspose(unittest.TestCase):
             gradcheck(
                 fn, (input.F, conv_tr.kernel, input.pixel_dist, conv_tr.stride,
                      conv_tr.kernel_size, conv_tr.dilation, conv_tr.region_type,
-                     None, input.coords_key, None, input.coords_man),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     None, input.coords_key, None, input.coords_man)))
 
     def test(self):
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         # Initialize context
@@ -163,6 +160,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D)
+        conv = conv.double()
         conv_tr = MinkowskiConvolutionTranspose(
             out_channels,
             in_channels,
@@ -170,6 +168,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D)
+        conv_tr = conv_tr.double()
         input = conv(input)
         output = conv_tr(input)
         print(output)
@@ -181,10 +180,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             gradcheck(
                 fn, (input.F, conv_tr.kernel, input.pixel_dist, conv_tr.stride,
                      conv_tr.kernel_size, conv_tr.dilation, conv_tr.region_type,
-                     None, input.coords_key, None, input.coords_man),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     None, input.coords_key, None, input.coords_man)))
 
 
 if __name__ == '__main__':

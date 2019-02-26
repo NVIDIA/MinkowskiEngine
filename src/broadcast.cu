@@ -57,7 +57,7 @@ void BroadcastForwardKernelGPU(
     const std::vector<std::vector<Itype>> &sorted_in_maps,
     const std::vector<std::vector<Itype>> &sorted_out_maps,
     cusparseHandle_t cushandle, cudaStream_t stream) {
-  Itype * d_sorted_out_map;
+  Itype *d_sorted_out_map;
 
   if (sorted_in_maps.size() != 1)
     throw std::invalid_argument("InOut map must have one kernel for Broadcast");
@@ -75,21 +75,22 @@ void BroadcastForwardKernelGPU(
                         sizeof(Dtype) * nchannel * in_nrows,
                         cudaMemcpyDeviceToDevice));
   CUDA_CHECK(cudaMemcpy(d_sorted_out_map, sorted_out_maps[0].data(),
-             sizeof(Itype) * sorted_out_maps[0].size(), cudaMemcpyHostToDevice));
+                        sizeof(Itype) * sorted_out_maps[0].size(),
+                        cudaMemcpyHostToDevice));
 
   // To speed up, put switch outside for loops
   switch (op) {
   case 0: // +
     channelwise_addition<Dtype, Itype>
         <<<GET_BLOCKS(in_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-            nchannel * in_nrows, nchannel, d_in_feat_global,
-            d_sorted_out_map, d_out_feat);
+            nchannel * in_nrows, nchannel, d_in_feat_global, d_sorted_out_map,
+            d_out_feat);
     break;
   case 1: // *
     channelwise_multiplication<Dtype, Itype>
         <<<GET_BLOCKS(in_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-            nchannel * in_nrows, nchannel, d_in_feat_global,
-            d_sorted_out_map, d_out_feat);
+            nchannel * in_nrows, nchannel, d_in_feat_global, d_sorted_out_map,
+            d_out_feat);
     break;
   default:
     throw std::invalid_argument(Formatter() << "Operation not supported: "
@@ -102,6 +103,13 @@ void BroadcastForwardKernelGPU(
 template void BroadcastForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, const float *d_in_feat_global,
     int in_nrows_global, float *d_out_feat, int nchannel, int op,
+    const std::vector<std::vector<int32_t>> &sorted_in_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map,
+    cusparseHandle_t cuhandle, cudaStream_t stream);
+
+template void BroadcastForwardKernelGPU<double, int32_t>(
+    const double *d_in_feat, int in_nrows, const double *d_in_feat_global,
+    int in_nrows_global, double *d_out_feat, int nchannel, int op,
     const std::vector<std::vector<int32_t>> &sorted_in_map,
     const std::vector<std::vector<int32_t>> &sorted_out_map,
     cusparseHandle_t cuhandle, cudaStream_t stream);
@@ -153,11 +161,13 @@ void BroadcastBackwardKernelGPU(
   // COO cols
   // THRUST_CHECK(d_sorted_in_map = sorted_in_map[0]);    // COO cols
   CUDA_CHECK(cudaMemcpy(d_sorted_in_map, sorted_in_maps[0].data(),
-             sizeof(Itype) * sorted_in_maps[0].size(), cudaMemcpyHostToDevice));
+                        sizeof(Itype) * sorted_in_maps[0].size(),
+                        cudaMemcpyHostToDevice));
   // COO rows
   // THRUST_CHECK(d_sorted_out_map = sorted_out_map[0]);  // COO rows
   CUDA_CHECK(cudaMemcpy(d_sorted_out_map, sorted_out_maps[0].data(),
-             sizeof(Itype) * sorted_out_maps[0].size(), cudaMemcpyHostToDevice));
+                        sizeof(Itype) * sorted_out_maps[0].size(),
+                        cudaMemcpyHostToDevice));
 
   // thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
   fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
@@ -276,4 +286,11 @@ template void BroadcastBackwardKernelGPU<float, int32_t>(
     const std::vector<std::vector<int32_t>> &sorted_out_map,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
+template void BroadcastBackwardKernelGPU<double, int32_t>(
+    const double *d_in_feat, double *d_grad_in_feat, int in_nrows,
+    const double *d_in_feat_global, double *d_grad_in_feat_global,
+    int in_nrows_global, const double *d_grad_out_feat, int nchannel, int op,
+    const std::vector<std::vector<int32_t>> &sorted_in_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map,
+    cusparseHandle_t cushandle, cudaStream_t stream);
 #endif

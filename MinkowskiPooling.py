@@ -4,7 +4,7 @@ from torch.autograd import Function
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
 from Common import RegionType, MinkowskiModuleBase, convert_to_int_list, \
-    convert_to_int_tensor, convert_region_type, prep_args, save_ctx
+    convert_to_int_tensor, convert_region_type, prep_args, save_ctx, get_postfix
 from MinkowskiCoords import CoordsKey
 
 
@@ -49,7 +49,7 @@ class MinkowskiMaxPoolingFunction(Function):
         D = in_coords_key.D
         out_feat = input_features.new()
 
-        fw_fn = MEB.MaxPoolingForwardGPU if input_features.is_cuda else MEB.MaxPoolingForwardCPU
+        fw_fn = getattr(MEB, 'MaxPoolingForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, ctx.mask_index,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -63,7 +63,7 @@ class MinkowskiMaxPoolingFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = MEB.MaxPoolingBackwardGPU if grad_out_feat.is_cuda else MEB.MaxPoolingBackwardCPU
+        bw_fn = getattr(MEB, 'MaxPoolingBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.mask_index,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -117,7 +117,7 @@ class MinkowskiAvgPoolingFunction(Function):
         out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
 
-        fw_fn = MEB.AvgPoolingForwardGPU if input_features.is_cuda else MEB.AvgPoolingForwardCPU
+        fw_fn = getattr(MEB, 'AvgPoolingForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -131,7 +131,7 @@ class MinkowskiAvgPoolingFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = MEB.AvgPoolingBackwardGPU if grad_out_feat.is_cuda else MEB.AvgPoolingBackwardCPU
+        bw_fn = getattr(MEB, 'AvgPoolingBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -302,8 +302,7 @@ class MinkowskiPoolingTransposeFunction(Function):
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
         D = in_coords_key.D
-        fw_fn = MEB.PoolingTransposeForwardGPU if input_features.is_cuda \
-            else MEB.PoolingTransposeForwardCPU
+        fw_fn = getattr(MEB, 'PoolingTransposeForward' + get_postfix(input_features))
         fw_fn(in_coords_key.D, ctx.in_feat, out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -317,8 +316,7 @@ class MinkowskiPoolingTransposeFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = MEB.PoolingTransposeBackwardGPU if grad_out_feat.is_cuda \
-            else MEB.PoolingTransposeBackwardCPU
+        bw_fn = getattr(MEB, 'PoolingTransposeBackward' + get_postfix(grad_out_feat))
         bw_fn(ctx.in_coords_key.D, ctx.in_feat, grad_in_feat, grad_out_feat,
               ctx.num_nonzero, convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -395,9 +393,8 @@ class MinkowskiGlobalPoolingFunction(Function):
         ctx.num_nonzero = input_features.new()
         ctx.coords_manager = coords_manager
 
-        fw_fn = MEB.GlobalPoolingForwardGPU if input_features.is_cuda \
-            else MEB.GlobalPoolingForwardCPU
         D = in_coords_key.D
+        fw_fn = getattr(MEB, 'GlobalPoolingForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, ctx.num_nonzero,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager, batch_size, ctx.average)
@@ -407,8 +404,7 @@ class MinkowskiGlobalPoolingFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = MEB.GlobalPoolingBackwardGPU if grad_out_feat.is_cuda \
-            else MEB.GlobalPoolingBackwardCPU
+        bw_fn = getattr(MEB, 'GlobalPoolingBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager, ctx.average)

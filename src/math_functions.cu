@@ -153,6 +153,10 @@ template void col2row_major<float>(const int nrows, const int ncols,
                                    const float *colA, float *rowA,
                                    cudaStream_t stream);
 
+template void col2row_major<double>(const int nrows, const int ncols,
+                                    const double *colA, double *rowA,
+                                    cudaStream_t stream);
+
 template <typename Dtype>
 __global__ void row2col_major_kernel(const int n, const int nrows,
                                      const int ncols, const Dtype *rowA,
@@ -176,6 +180,10 @@ void row2col_major(const int nrows, const int ncols, const Dtype *colA,
 template void row2col_major<float>(const int nrows, const int ncols,
                                    const float *colA, float *rowA,
                                    cudaStream_t stream);
+
+template void row2col_major<double>(const int nrows, const int ncols,
+                                    const double *colA, double *rowA,
+                                    cudaStream_t stream);
 
 // Sort the row, col pairs row-major order.
 void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,

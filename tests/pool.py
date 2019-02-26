@@ -36,6 +36,7 @@ class TestPooling(unittest.TestCase):
     def test_sumpooling(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         pool = MinkowskiSumPooling(kernel_size=3, stride=2, dimension=D)
@@ -48,10 +49,7 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
                      pool.dilation, pool.region_type, None, False,
-                     input.coords_key, None, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     input.coords_key, None, input.C)))
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
@@ -66,6 +64,7 @@ class TestPooling(unittest.TestCase):
 
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         pool = MinkowskiAvgPooling(kernel_size=3, stride=2, dimension=D)
@@ -85,14 +84,12 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
                      pool.dilation, pool.region_type, None, True,
-                     input.coords_key, None, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     input.coords_key, None, input.C)))
 
     def test_avgpooling(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         pool = MinkowskiAvgPooling(kernel_size=3, stride=2, dimension=D)
@@ -105,14 +102,12 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
                      pool.dilation, pool.region_type, None, True,
-                     input.coords_key, None, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     input.coords_key, None, input.C)))
 
     def test_global_avgpool(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         pool = MinkowskiGlobalPooling(dimension=D)
@@ -123,17 +118,16 @@ class TestPooling(unittest.TestCase):
         fn = MinkowskiGlobalPoolingFunction()
         self.assertTrue(
             gradcheck(
-                fn, (input.F, 0, True, input.coords_key, None, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                fn, (input.F, 0, True, input.coords_key, None, input.C)))
 
     def test_unpool(self):
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         input = SparseTensor(feats, coords=coords)
         conv = MinkowskiConvolution(
             in_channels, out_channels, kernel_size=3, stride=2, dimension=D)
+        conv = conv.double()
         unpool = MinkowskiPoolingTranspose(kernel_size=3, stride=2, dimension=D)
         input = conv(input)
         output = unpool(input)
@@ -146,10 +140,7 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn, (input.F, input.pixel_dist, unpool.stride,
                      unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, False, input.coords_key, None, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     None, False, input.coords_key, None, input.C)))
 
     def test_unpooling_gpu(self):
         if not torch.cuda.is_available():
@@ -157,9 +148,11 @@ class TestPooling(unittest.TestCase):
 
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
         input = SparseTensor(feats, coords=coords)
         conv = MinkowskiConvolution(
             in_channels, out_channels, kernel_size=3, stride=2, dimension=D)
+        conv = conv.double()
         unpool = MinkowskiPoolingTranspose(kernel_size=3, stride=2, dimension=D)
         input = conv(input)
         output = unpool(input)
@@ -172,10 +165,7 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn, (input.F, input.pixel_dist, unpool.stride,
                      unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, False, input.coords_key, None, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     None, False, input.coords_key, None, input.C)))
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
@@ -189,10 +179,7 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn, (input.F, input.pixel_dist, unpool.stride,
                      unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, True, input.coords_key, None, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+                     None, True, input.coords_key, None, input.C)))
 
 
 if __name__ == '__main__':

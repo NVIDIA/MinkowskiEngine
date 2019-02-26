@@ -7,7 +7,8 @@ from torch.nn import Parameter
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
 from Common import RegionType, MinkowskiModuleBase, get_kernel_volume, \
-    prep_args, save_ctx, convert_to_int_list, convert_to_int_tensor, convert_region_type
+    prep_args, save_ctx, convert_to_int_list, convert_to_int_tensor, \
+    convert_region_type, get_postfix
 from MinkowskiCoords import CoordsKey
 
 
@@ -52,8 +53,7 @@ class MinkowskiConvolutionFunction(Function):
         D = in_coords_key.D
         out_feat = input_features.new()
 
-        fw_fn = MEB.ConvolutionForwardGPU \
-            if input_features.is_cuda else MEB.ConvolutionForwardCPU
+        fw_fn = getattr(MEB, 'ConvolutionForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, kernel,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -69,8 +69,7 @@ class MinkowskiConvolutionFunction(Function):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = MEB.ConvolutionBackwardGPU \
-            if grad_out_feat.is_cuda else MEB.ConvolutionBackwardCPU
+        bw_fn = getattr(MEB, 'ConvolutionBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
               grad_kernel, convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -122,8 +121,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
         D = in_coords_key.D
         out_feat = input_features.new()
 
-        fw_fn = MEB.ConvolutionTransposeForwardGPU \
-            if input_features.is_cuda else MEB.ConvolutionTransposeForwardCPU
+        fw_fn = getattr(MEB, 'ConvolutionTransposeForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, kernel,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -138,8 +136,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = MEB.ConvolutionTransposeBackwardGPU \
-            if grad_out_feat.is_cuda else MEB.ConvolutionTransposeBackwardCPU
+        bw_fn = getattr(MEB, 'ConvolutionTransposeBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
               grad_kernel, convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),

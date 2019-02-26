@@ -5,6 +5,7 @@ from torch.autograd import Function
 
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
+from Common import get_postfix
 
 
 class OperationType(Enum):
@@ -36,7 +37,7 @@ class MinkowskiBroadcastFunction(Function):
 
         out_feat = input_features.new()
 
-        fw_fn = MEB.BroadcastForwardGPU if input_features.is_cuda else MEB.BroadcastForwardCPU
+        fw_fn = getattr(MEB, 'BroadcastForward' + get_postfix(input_features))
         fw_fn(ctx.in_coords_key.D, ctx.in_feat, ctx.in_feat_glob, out_feat,
               ctx.op, ctx.in_coords_key.CPPCoordsKey,
               ctx.glob_coords_key.CPPCoordsKey,
@@ -47,7 +48,7 @@ class MinkowskiBroadcastFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         grad_in_feat_glob = grad_out_feat.new()
-        bw_fn = MEB.BroadcastBackwardGPU if grad_out_feat.is_cuda else MEB.BroadcastBackwardCPU
+        bw_fn = getattr(MEB, 'BroadcastBackward' + get_postfix(grad_out_feat))
         bw_fn(ctx.in_coords_key.D, ctx.in_feat, grad_in_feat, ctx.in_feat_glob,
               grad_in_feat_glob, grad_out_feat, ctx.op,
               ctx.in_coords_key.CPPCoordsKey, ctx.glob_coords_key.CPPCoordsKey,

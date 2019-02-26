@@ -15,6 +15,8 @@ class TestBroadcast(unittest.TestCase):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
         coords, feats_glob, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats_glob = feats_glob.double()
         input = SparseTensor(feats, coords=coords)
         pool = MinkowskiGlobalPooling(dimension=D)
         input_glob = pool(input)
@@ -32,25 +34,19 @@ class TestBroadcast(unittest.TestCase):
         output = broadcast(input, input_glob)
         print(output)
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input_glob.F, OperationType.ADDITION,
-                     input.coords_key, input_glob.coords_key, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+            gradcheck(fn, (input.F, input_glob.F, OperationType.ADDITION,
+                           input.coords_key, input_glob.coords_key, input.C)))
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input_glob.F, OperationType.MULTIPLICATION,
-                     input.coords_key, input_glob.coords_key, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+            gradcheck(fn, (input.F, input_glob.F, OperationType.MULTIPLICATION,
+                           input.coords_key, input_glob.coords_key, input.C)))
 
     def test_broadcast(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
         coords, feats_glob, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats_glob = feats_glob.double()
         input = SparseTensor(feats, coords=coords)
         pool = MinkowskiGlobalPooling(dimension=D)
         input_glob = pool(input)
@@ -66,20 +62,12 @@ class TestBroadcast(unittest.TestCase):
         fn = MinkowskiBroadcastFunction()
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input_glob.F, OperationType.ADDITION,
-                     input.coords_key, input_glob.coords_key, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+            gradcheck(fn, (input.F, input_glob.F, OperationType.ADDITION,
+                           input.coords_key, input_glob.coords_key, input.C)))
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input_glob.F, OperationType.MULTIPLICATION,
-                     input.coords_key, input_glob.coords_key, input.C),
-                atol=1e-3,
-                rtol=1e-2,
-                eps=1e-4))
+            gradcheck(fn, (input.F, input_glob.F, OperationType.MULTIPLICATION,
+                           input.coords_key, input_glob.coords_key, input.C)))
 
 
 if __name__ == '__main__':

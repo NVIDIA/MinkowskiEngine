@@ -154,6 +154,11 @@ template void DimSwitchBroadcastForwardCPU<float, int32_t>(
     int op, py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
+template void DimSwitchBroadcastForwardCPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat,
+    int op, py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchBroadcastBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
@@ -166,6 +171,12 @@ void DimSwitchBroadcastBackwardCPU(
 }
 
 template void DimSwitchBroadcastBackwardCPU<float, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
+    at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchBroadcastBackwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
@@ -188,6 +199,11 @@ template void DimSwitchBroadcastForwardGPU<float, int32_t>(
     int op, py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
+template void DimSwitchBroadcastForwardGPU<double, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat,
+    int op, py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
 template <typename Dtype, typename Itype>
 void DimSwitchBroadcastBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
@@ -200,6 +216,12 @@ void DimSwitchBroadcastBackwardGPU(
 }
 
 template void DimSwitchBroadcastBackwardGPU<float, int32_t>(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
+    at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template void DimSwitchBroadcastBackwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
