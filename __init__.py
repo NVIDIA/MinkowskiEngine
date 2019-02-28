@@ -28,7 +28,7 @@ from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
 from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoftmax
 
 from MinkowskiNormalization import MinkowskiBatchNorm, MinkowskiInstanceNorm, \
-    MinkowskiInstanceNormFunction
+    MinkowskiInstanceNormFunction, MinkowskiStableInstanceNorm
 
 from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
 

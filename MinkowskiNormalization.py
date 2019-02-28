@@ -82,8 +82,8 @@ class MinkowskiInstanceNormFunction(Function):
         ctx.batch_size = batch_size
         ctx.in_coords_key, ctx.glob_coords_key = in_coords_key, glob_coords_key
         ctx.coords_manager = coords_manager
-        ctx.inv_std = inv_std
-        ctx.norm_feat = norm_feat
+        # For GPU tensors, must use save_for_backward.
+        ctx.save_for_backward(inv_std, norm_feat)
         return norm_feat
 
     @staticmethod
@@ -92,7 +92,9 @@ class MinkowskiInstanceNormFunction(Function):
         batch_size = ctx.batch_size
         in_coords_key, glob_coords_key = ctx.in_coords_key, ctx.glob_coords_key
         coords_manager = ctx.coords_manager
-        inv_std, norm_feat = ctx.inv_std, ctx.norm_feat
+
+        # To prevent the memory leakage, compute the norm again
+        inv_std, norm_feat = ctx.saved_variables
         D = in_coords_key.D
 
         gpool_forward = getattr(MEB, 'GlobalPoolingForward' + get_postfix(out_grad))
@@ -135,7 +137,7 @@ class MinkowskiInstanceNormFunction(Function):
         return norm_din, None, None, None, None
 
 
-class MinkowskiInstanceNorm(Module):
+class MinkowskiStableInstanceNorm(Module):
 
     def __init__(self, num_features, batch_size=0, dimension=-1):
         Module.__init__(self)
@@ -182,7 +184,7 @@ class MinkowskiInstanceNorm(Module):
             coords_manager=x.C)
 
 
-class MinkowskiFastInstanceNorm(Module):
+class MinkowskiInstanceNorm(Module):
 
     def __init__(self, num_features, batch_size=0, dimension=-1):
         Module.__init__(self)
