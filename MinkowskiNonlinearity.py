@@ -21,8 +21,32 @@ class MinkowskiReLU(MinkowskiModuleBase):
     MODULE = torch.nn.ReLU
 
 
+class MinkowskiPReLU(MinkowskiModuleBase):
+    MODULE = torch.nn.PReLU
+
+
+class MinkowskiSELU(MinkowskiModuleBase):
+    MODULE = torch.nn.SELU
+
+
+class MinkowskiCELU(MinkowskiModuleBase):
+    MODULE = torch.nn.CELU
+
+
+class MinkowskiDropout(MinkowskiModuleBase):
+    MODULE = torch.nn.Dropout
+
+
+class MinkowskiThreshold(MinkowskiModuleBase):
+    MODULE = torch.nn.Threshold
+
+
 class MinkowskiSigmoid(MinkowskiModuleBase):
     MODULE = torch.nn.Sigmoid
+
+
+class MinkowskiTanh(MinkowskiModuleBase):
+    MODULE = torch.nn.Tanh
 
 
 class MinkowskiSoftmax(MinkowskiModuleBase):

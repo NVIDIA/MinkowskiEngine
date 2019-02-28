@@ -4,12 +4,13 @@ import sys
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
 
+# Must be imported first to load all required shared libs
 import torch
 
 from SparseTensor import SparseTensor
 
 from Common import RegionType, convert_to_int_tensor, convert_region_type, \
-        MinkowskiModuleBase
+    MinkowskiModuleBase
 
 from MinkowskiCoords import CoordsKey, CoordsManager
 
@@ -25,7 +26,10 @@ from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
     MinkowskiBroadcast, MinkowskiBroadcastAddition, \
     MinkowskiBroadcastMultiplication, OperationType
 
-from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoftmax
+from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoftmax, \
+    MinkowskiPReLU, MinkowskiSELU, MinkowskiCELU, MinkowskiDropout, MinkowskiThreshold, \
+    MinkowskiTanh
+
 
 from MinkowskiNormalization import MinkowskiBatchNorm, MinkowskiInstanceNorm, \
     MinkowskiInstanceNormFunction, MinkowskiStableInstanceNorm
