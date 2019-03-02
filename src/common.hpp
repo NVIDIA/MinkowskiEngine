@@ -101,6 +101,10 @@ public:
 
 template <uint8_t D, typename Itype> class CoordsManager {
 public:
+  // Static multi threaded pool
+  static int nthreads;
+  static std::unique_ptr<ThreadPool<D, Itype>> pool;
+
   CoordsManager();
   ~CoordsManager() { clear(); }
 
@@ -117,10 +121,6 @@ public:
   int getCoordsSize(uint64_t coords_key);
   int getCoordsSize(py::object py_coords_key);
   uint64_t getCoordsKey(const Arr<D, int> &pixel_dists);
-
-  // Multi threaded kernel init
-  int nthreads;
-  std::unique_ptr<ThreadPool<D, Itype>> pool;
 
   void getCoordsMapping(at::Tensor mapping, py::object py_in_coords_key,
                         py::object py_out_coords_key);
@@ -223,5 +223,11 @@ public:
     out_maps.clear();
   }
 };
+
+template <uint8_t D, typename Itype>
+int CoordsManager<D, Itype>::nthreads;
+
+template <uint8_t D, typename Itype>
+std::unique_ptr<ThreadPool<D, Itype>> CoordsManager<D, Itype>::pool;
 
 #endif

@@ -81,7 +81,7 @@ CoordsManager<D, Itype>::createInOutPerKernelInThreads(
   for (auto const out_coord_iter : out_coords_hashmap) {
     auto out_coord = out_coord_iter.first;
     int out_coord_index = out_coord_iter.second;
-    results.emplace_back(pool->enqueue(
+    results.emplace_back(CoordsManager<D, Itype>::pool->enqueue(
         f, out_coord, std::ref(in_pixel_dists), std::ref(kernel_size),
         std::ref(dilations), region_type, offsets.data<Itype>(),
         offsets.size(0), out_coord_index, std::ref(in_coords_hashmap)));
