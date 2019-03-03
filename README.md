@@ -41,8 +41,11 @@ make -j4 # higher number if cpu count > 4
 
 # Usage
 
-Using the sparse convolution engine is quite straight forward.
-
+To use the Minkowski Engine, you first would need to import the engine.
+Then, you would need to define the network. If the data you have is not
+quantized, you would need to voxelize or quantize the (spatial) data into a
+sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
+function (`ME.SparseVoxelize`).
 
 ## Import
 
@@ -54,6 +57,7 @@ import MinkowskiEngine as ME
 ## Creating a Network
 
 All `MinkowskiNetwork` has `self.net_metadata`. The `net_metadata` contains all the information regarding the coordinates for each feature, and mappings for sparse convolutions.
+
 
 ```python
 class ExampleNetwork(ME.MinkowskiNetwork):
@@ -92,7 +96,6 @@ class ExampleNetwork(ME.MinkowskiNetwork):
         out = self.pooling(out)
         return self.linear(out)
 ```
-
 
 ## Forward and backward using the custom network
 

@@ -18,8 +18,9 @@ template <uint8_t D, typename Itype>
 CoordsManager<D, Itype>::CoordsManager(int nthreads_) {
   if (!CoordsManager<D, Itype>::pool) {
     CoordsManager<D, Itype>::nthreads = nthreads_;
-    std::cout << "Setting the ME of dimension " << D << " number of threads to "
-              << CoordsManager<D, Itype>::nthreads << std::endl;
+    std::cout << "Setting the ME of dimension " << int(D)
+              << " number of threads to " << CoordsManager<D, Itype>::nthreads
+              << std::endl;
     CoordsManager<D, Itype>::pool.reset(
         new CoordsThreadPool<D, Itype>(CoordsManager<D, Itype>::nthreads));
   }
