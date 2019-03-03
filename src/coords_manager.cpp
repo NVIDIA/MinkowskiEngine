@@ -10,11 +10,18 @@ namespace py = pybind11;
 
 template <uint8_t D, typename Itype> CoordsManager<D, Itype>::CoordsManager() {
   if (!CoordsManager<D, Itype>::pool) {
-    CoordsManager<D, Itype>::nthreads = std::thread::hardware_concurrency();
-    std::cout << "Setting the ME thread pool to "
-              << CoordsManager<D, Itype>::nthreads << " threads." << std::endl;
+    CoordsManager(std::thread::hardware_concurrency());
+  }
+}
+
+template <uint8_t D, typename Itype>
+CoordsManager<D, Itype>::CoordsManager(int nthreads_) {
+  if (!CoordsManager<D, Itype>::pool) {
+    CoordsManager<D, Itype>::nthreads = nthreads_;
+    std::cout << "Setting the ME of dimension " << D << " number of threads to "
+              << CoordsManager<D, Itype>::nthreads << std::endl;
     CoordsManager<D, Itype>::pool.reset(
-        new ThreadPool<D, Itype>(CoordsManager<D, Itype>::nthreads));
+        new CoordsThreadPool<D, Itype>(CoordsManager<D, Itype>::nthreads));
   }
 }
 

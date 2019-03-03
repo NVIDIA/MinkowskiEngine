@@ -18,7 +18,7 @@ class Test(unittest.TestCase):
         key = CoordsKey(D=1)
         key.setPixelDist(1)
 
-        cm = CoordsManager(1)
+        cm = CoordsManager(D=1)
         coords = (torch.rand(5, 1) * 100).int()
         cm.initialize(coords, key)
 

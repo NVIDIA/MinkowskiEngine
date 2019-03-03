@@ -26,7 +26,7 @@ operator()(const Coord<D, int> out_coord, const Arr<D, int> &in_pixel_dists,
 
 // the constructor just launches some amount of workers
 template <uint8_t D, typename Itype>
-inline ThreadPool<D, Itype>::ThreadPool(size_t nthreads_)
+inline CoordsThreadPool<D, Itype>::CoordsThreadPool(size_t nthreads_)
     : nthreads(nthreads_), stop(false) {
   for (size_t i = 0; i < nthreads; ++i)
     workers.emplace_back([this] {
@@ -50,7 +50,7 @@ inline ThreadPool<D, Itype>::ThreadPool(size_t nthreads_)
 
 // add new work item to the pool
 template <uint8_t D, typename Itype>
-std::future<Triplets> ThreadPool<D, Itype>::enqueue(
+std::future<Triplets> CoordsThreadPool<D, Itype>::enqueue(
     KernelMapFunctor<D, Itype> &f, const Coord<D, int> out_coord,
     const Arr<D, int> &in_pixel_dists, const Arr<D, int> &kernel_size,
     const Arr<D, int> &dilations, const int region_type,
@@ -71,7 +71,7 @@ std::future<Triplets> ThreadPool<D, Itype>::enqueue(
 
     // don't allow enqueueing after stopping the pool
     if (stop)
-      throw std::runtime_error("enqueue on stopped ThreadPool");
+      throw std::runtime_error("enqueue on stopped CoordsThreadPool");
 
     tasks.emplace([task]() { (*task)(); });
   }
@@ -81,7 +81,7 @@ std::future<Triplets> ThreadPool<D, Itype>::enqueue(
 
 // the destructor joins all threads
 template <uint8_t D, typename Itype>
-inline ThreadPool<D, Itype>::~ThreadPool() {
+inline CoordsThreadPool<D, Itype>::~CoordsThreadPool() {
   {
     std::unique_lock<std::mutex> lock(queue_mutex);
     stop = true;
@@ -92,4 +92,4 @@ inline ThreadPool<D, Itype>::~ThreadPool() {
 }
 
 INSTANTIATE_CLASS_DIM_ITYPE(KernelMapFunctor, int32_t);
-INSTANTIATE_CLASS_DIM_ITYPE(ThreadPool, int32_t);
+INSTANTIATE_CLASS_DIM_ITYPE(CoordsThreadPool, int32_t);

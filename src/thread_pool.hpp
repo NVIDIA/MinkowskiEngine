@@ -25,10 +25,10 @@ public:
              const _CoordsHashMap<D, Itype> &in_coords_hashmap);
 };
 
-template <uint8_t D, typename Itype> class ThreadPool {
+template <uint8_t D, typename Itype> class CoordsThreadPool {
 public:
   size_t nthreads;
-  ThreadPool(size_t);
+  CoordsThreadPool(size_t);
   // template <class F, class... Args>
   // auto enqueue(F &&f, Args &&... args)
   //     -> std::future<typename std::result_of<F(Args...)>::type>;
@@ -40,7 +40,7 @@ public:
           const int out_coord_index,
           const _CoordsHashMap<D, Itype> &in_coords_hashmap);
 
-  ~ThreadPool();
+  ~CoordsThreadPool();
 
 private:
   // need to keep track of threads so we can join them

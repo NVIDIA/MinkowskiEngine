@@ -4,6 +4,11 @@ from Common import convert_to_int_list
 import MinkowskiEngineBackend as MEB
 
 
+def initialize_nthreads(num_threads, D):
+    assert num_threads > 0
+    getattr(MEB, f'PyCoordsManager{D}int32')(num_threads)
+
+
 class CoordsKey():
 
     def __init__(self, D):
@@ -29,9 +34,16 @@ class CoordsKey():
 
 class CoordsManager():
 
-    def __init__(self, D):
+    def __init__(self, num_threads=None, D=-1):
+        if D < 1:
+            raise ValueError(f"Invalid dimension {D}")
         self.D = D
-        self.CPPCoordsManager = getattr(MEB, f'PyCoordsManager{D}int32')()
+        CPPCoordsManager = getattr(MEB, f'PyCoordsManager{D}int32')
+        if num_threads:
+            coords_man = CPPCoordsManager(num_threads)
+        else:
+            coords_man = CPPCoordsManager()
+        self.CPPCoordsManager = coords_man
 
     def initialize(self, coords, coords_key, enforce_creation=False):
         assert isinstance(coords_key, CoordsKey)

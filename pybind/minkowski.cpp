@@ -83,6 +83,7 @@ void instantiate_dim_itype(py::module &m, const std::string &dim,
   std::string coords_name = std::string("PyCoordsManager") + dim + itypestr;
   py::class_<CoordsManager<D, Itype>>(m, coords_name.c_str())
       .def(py::init<>())
+      .def(py::init<int>())
       .def("existsCoordsKey", (bool (CoordsManager<D, Itype>::*)(py::object)) &
                                   CoordsManager<D, Itype>::existsCoordsKey)
       .def("getCoordsKey", &CoordsManager<D, Itype>::getCoordsKey)

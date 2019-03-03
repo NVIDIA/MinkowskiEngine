@@ -103,9 +103,10 @@ template <uint8_t D, typename Itype> class CoordsManager {
 public:
   // Static multi threaded pool
   static int nthreads;
-  static std::unique_ptr<ThreadPool<D, Itype>> pool;
+  static std::unique_ptr<CoordsThreadPool<D, Itype>> pool;
 
   CoordsManager();
+  CoordsManager(int nthreads_);
   ~CoordsManager() { clear(); }
 
   // Coordinate hash key to coordinate hash map
@@ -228,6 +229,6 @@ template <uint8_t D, typename Itype>
 int CoordsManager<D, Itype>::nthreads;
 
 template <uint8_t D, typename Itype>
-std::unique_ptr<ThreadPool<D, Itype>> CoordsManager<D, Itype>::pool;
+std::unique_ptr<CoordsThreadPool<D, Itype>> CoordsManager<D, Itype>::pool;
 
 #endif

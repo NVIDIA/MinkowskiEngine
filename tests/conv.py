@@ -4,7 +4,7 @@ import unittest
 from gradcheck import gradcheck
 
 from MinkowskiEngine import SparseTensor, MinkowskiConvolution, MinkowskiConvolutionFunction, \
-    MinkowskiConvolutionTranspose, MinkowskiConvolutionTransposeFunction
+    MinkowskiConvolutionTranspose, MinkowskiConvolutionTransposeFunction, initialize_nthreads
 
 from tests.common import data_loader
 
@@ -184,4 +184,5 @@ class TestConvolutionTranspose(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    initialize_nthreads(3, D=2)
     unittest.main()

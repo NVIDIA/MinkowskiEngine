@@ -43,7 +43,7 @@ class SparseTensor():
         if coords_manager is None:
             assert coords is not None, "Initial coordinates must be given"
             D = coords.size(1) - 1
-            coords_manager = CoordsManager(D)
+            coords_manager = CoordsManager(D=D)
             coords_manager.initialize(coords, coords_key)
         else:
             assert isinstance(coords_manager, CoordsManager)
