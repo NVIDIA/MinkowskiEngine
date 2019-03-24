@@ -87,6 +87,7 @@ void instantiate_dim_itype(py::module &m, const std::string &dim,
       .def("existsCoordsKey", (bool (CoordsManager<D, Itype>::*)(py::object)) &
                                   CoordsManager<D, Itype>::existsCoordsKey)
       .def("getCoordsKey", &CoordsManager<D, Itype>::getCoordsKey)
+      .def("getKernelMap", &CoordsManager<D, Itype>::getKernelMap)
       .def("getCoordsSize", (int (CoordsManager<D, Itype>::*)(py::object)) &
                                 CoordsManager<D, Itype>::getCoordsSize)
       .def("getCoords", &CoordsManager<D, Itype>::getCoords)

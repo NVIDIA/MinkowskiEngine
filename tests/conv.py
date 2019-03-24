@@ -67,6 +67,9 @@ class TestConvolution(unittest.TestCase):
         output = conv(input)
         print(output)
 
+        kernel_map = input.C.get_kernel_map(1, 2, stride=2, kernel_size=3)
+        print(kernel_map)
+
         # Check backward
         fn = MinkowskiConvolutionFunction()
 

@@ -69,6 +69,29 @@ class CoordsManager():
         self.CPPCoordsManager.getCoords(coords, coords_key.CPPCoordsKey)
         return coords
 
+    def get_kernel_map(self,
+                       in_pixel_dists,
+                       out_pixel_dists,
+                       stride=1,
+                       kernel_size=3,
+                       dilation=1,
+                       region_type=0,
+                       is_transpose=False):
+        in_coords_key = self.get_coords_key(in_pixel_dists)
+        out_coords_key = self.get_coords_key(out_pixel_dists)
+
+        pixel_dists = convert_to_int_list(in_pixel_dists, self.D)
+        strides = convert_to_int_list(stride, self.D)
+        kernel_sizes = convert_to_int_list(kernel_size, self.D)
+        dilations = convert_to_int_list(dilation, self.D)
+
+        kernel_map = torch.IntTensor()
+        self.CPPCoordsManager.getKernelMap(
+            kernel_map, pixel_dists, strides, kernel_sizes, dilations,
+            region_type, in_coords_key.CPPCoordsKey,
+            out_coords_key.CPPCoordsKey, is_transpose)
+        return kernel_map
+
     def get_coords_size_by_coords_key(self, coords_key):
         assert isinstance(coords_key, CoordsKey)
         return self.CPPCoordsManager.getCoordsSize(coords_key.CPPCoordsKey)

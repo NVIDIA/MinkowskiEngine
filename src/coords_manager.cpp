@@ -84,6 +84,45 @@ void CoordsManager<D, Itype>::getCoordsMapping(at::Tensor mapping,
   }
 }
 
+/*
+ * Given pixel_dist_src and pixel_dist_dst, find the respective coord_maps and
+ * return the indices of the coord_map_ind in coord_map_dst
+ */
+template <uint8_t D, typename Itype>
+void CoordsManager<D, Itype>::getKernelMap(at::Tensor kernel_map,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    py::object py_in_coords_key, py::object py_out_coords_key, bool is_transpose) {
+  InOutMapKey map_key =
+      getMapHashKey(pixel_dists, strides, kernel_sizes, dilations, region_type,
+                    py_in_coords_key, py_out_coords_key, is_transpose);
+
+  if (in_maps.find(map_key) == in_maps.end()) {
+    throw std::invalid_argument(Formatter() << "The kernelmap does not exist.");
+  }
+
+  const InOutMapPerKernel<Itype> &in_map = in_maps[map_key];
+  const InOutMapPerKernel<Itype> &out_map = out_maps[map_key];
+
+  int all_volume = 0, kernel_volume = in_map.size();
+  for (int k = 0; k < kernel_volume; k++)
+    all_volume += in_map[k].size();
+
+  kernel_map.resize_({all_volume, 3});
+  Itype *p_kernel_map = kernel_map.data<Itype>();
+
+  int curr_counter = 0;
+  for (int k=0; k < kernel_volume; k++){
+    int curr_volume = in_map[k].size();
+    for (int i=0; i < curr_volume; i++){
+      p_kernel_map[3 * curr_counter + 0] = k;
+      p_kernel_map[3 * curr_counter + 1] = in_map[k][i];
+      p_kernel_map[3 * curr_counter + 2] = out_map[k][i];
+      curr_counter++;
+    }
+  }
+}
+
 template <uint8_t D, typename Itype>
 uint64_t CoordsManager<D, Itype>::getCoordsKey(const Arr<D, int> &pixel_dists) {
   auto pixel_dist_hash = hash_vec<Arr<D, int>>(pixel_dists);

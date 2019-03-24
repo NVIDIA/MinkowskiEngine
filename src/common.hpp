@@ -7,10 +7,10 @@
 
 #include <torch/extension.h>
 
+#include "instantiation.hpp"
+#include "thread_pool.hpp"
 #include "types.hpp"
 #include "utils.hpp"
-#include "thread_pool.hpp"
-#include "instantiation.hpp"
 
 #ifndef CPU_ONLY
 #include <cublas_v2.h>
@@ -126,6 +126,11 @@ public:
   void getCoordsMapping(at::Tensor mapping, py::object py_in_coords_key,
                         py::object py_out_coords_key);
   void getCoords(at::Tensor coords, py::object py_coords_key);
+  void getKernelMap(at::Tensor kernel_map, std::vector<int> pixel_dists,
+                    std::vector<int> strides, std::vector<int> kernel_sizes,
+                    std::vector<int> dilations, int region_type,
+                    py::object py_in_coords_key, py::object py_out_coords_key,
+                    bool is_transpose);
 
   // New coords map initialzation entry
   uint64_t initializeCoords(at::Tensor coords, const Arr<D, int> &pixel_dists,
@@ -225,8 +230,7 @@ public:
   }
 };
 
-template <uint8_t D, typename Itype>
-int CoordsManager<D, Itype>::nthreads;
+template <uint8_t D, typename Itype> int CoordsManager<D, Itype>::nthreads;
 
 template <uint8_t D, typename Itype>
 std::unique_ptr<CoordsThreadPool<D, Itype>> CoordsManager<D, Itype>::pool;
