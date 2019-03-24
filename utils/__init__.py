@@ -1,2 +1,2 @@
-from .voxelization import SparseVoxelize, hash_vec
+from .voxelization import SparseVoxelize
 from .collation import SparseCollation, sparse_collate
