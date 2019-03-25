@@ -1,8 +1,8 @@
 #include "common.hpp"
 
-#include "pooling.hpp"
+#include "pooling_max.hpp"
 #ifndef CPU_ONLY
-#include "pooling.cuh"
+#include "pooling_max.cuh"
 #endif
 
 #include <pybind11/pybind11.h>
@@ -23,14 +23,15 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
       py_in_coords_key, py_out_coords_key, false);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
-  out_feat.resize_({out_nrows, in_feat.size(1)});
+  const int nchannel = in_feat.size(1);
+  out_feat.resize_({out_nrows, nchannel});
   out_feat.zero_();
-  num_nonzero.resize_({out_nrows});
+  num_nonzero.resize_({out_nrows, nchannel});
   num_nonzero.zero_();
 
   MaxPoolingForwardKernelCPU<Dtype, Itype>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), num_nonzero.data<Itype>(),
-      in_feat.size(1), std::get<0>(in_out), std::get<1>(in_out), out_nrows);
+      nchannel, std::get<0>(in_out), std::get<1>(in_out), out_nrows);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -72,14 +73,15 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
       py_in_coords_key, py_out_coords_key, false);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
-  out_feat.resize_({out_nrows, in_feat.size(1)});
+  const int nchannel = in_feat.size(1);
+  out_feat.resize_({out_nrows, nchannel});
   out_feat.zero_();
-  num_nonzero.resize_({out_nrows});
+  num_nonzero.resize_({out_nrows, nchannel});
   num_nonzero.zero_();
 
-  MaxPoolingForwardKernelGPU<Dtype, Itype>(
+  ThrustMaxPoolingForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), out_nrows,
-      num_nonzero.data<Itype>(), in_feat.size(1), std::get<0>(in_out),
+      num_nonzero.data<Itype>(), nchannel, std::get<0>(in_out),
       std::get<1>(in_out), at::cuda::getCurrentCUDAStream());
 }
 
@@ -93,7 +95,7 @@ void MaxPoolingBackwardGPU(
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
-  MaxPoolingBackwardKernelGPU<Dtype, Itype>(
+  ThrustMaxPoolingBackwardKernelGPU<Dtype, Itype>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       grad_out_feat.size(0), num_nonzero.data<Itype>(), in_feat.size(1),
       at::cuda::getCurrentCUDAStream());

@@ -121,6 +121,45 @@ void DimSwitchAvgPoolingBackwardGPU(
 #endif
 
 /*************************************
+ * MaxPooling
+ *************************************/
+template <typename Dtype, typename Itype>
+void DimSwitchMaxPoolingForwardCPU(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    at::Tensor offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
+template <typename Dtype, typename Itype>
+void DimSwitchMaxPoolingBackwardCPU(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+#ifndef CPU_ONLY
+template <typename Dtype, typename Itype>
+void DimSwitchMaxPoolingForwardGPU(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    at::Tensor offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
+template <typename Dtype, typename Itype>
+void DimSwitchMaxPoolingBackwardGPU(
+    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor num_nonzero,
+    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+#endif
+
+/*************************************
  * PoolingTranspose
  *************************************/
 template <typename Dtype, typename Itype>

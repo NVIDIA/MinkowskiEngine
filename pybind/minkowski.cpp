@@ -40,6 +40,15 @@ void instantiate_func(py::module &m, const std::string &dtypestr,
   m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
         &DimSwitchAvgPoolingBackwardGPU<Dtype, Itype>);
 
+  m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
+        &DimSwitchMaxPoolingForwardCPU<Dtype, Itype>);
+  m.def((std::string("MaxPoolingBackwardCPU") + dtypestr).c_str(),
+        &DimSwitchMaxPoolingBackwardCPU<Dtype, Itype>);
+  m.def((std::string("MaxPoolingForwardGPU") + dtypestr).c_str(),
+        &DimSwitchMaxPoolingForwardGPU<Dtype, Itype>);
+  m.def((std::string("MaxPoolingBackwardGPU") + dtypestr).c_str(),
+        &DimSwitchMaxPoolingBackwardGPU<Dtype, Itype>);
+
   m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
         &DimSwitchPoolingTransposeForwardCPU<Dtype, Itype>);
   m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),

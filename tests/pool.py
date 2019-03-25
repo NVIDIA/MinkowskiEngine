@@ -5,7 +5,8 @@ from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
     MinkowskiSumPooling, \
     MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
-    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling
+    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
+    MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
 from gradcheck import gradcheck
 
 from tests.common import data_loader
@@ -13,25 +14,38 @@ from tests.common import data_loader
 
 class TestPooling(unittest.TestCase):
 
-    # def test_maxpooling(self):
-    #     in_channels, D = 2, 2
-    #     coords, feats, labels = data_loader(in_channels)
-    #     feats.requires_grad_()
-    #     input = SparseTensor(feats, coords=coords)
-    #     pool = MinkowskiMaxPooling(kernel_size=3, stride=2, dimension=D)
-    #     output = pool(input)
-    #     print(output)
+    def test_maxpooling(self):
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats.requires_grad_()
+        feats = feats.double()
+        input = SparseTensor(feats, coords=coords)
+        pool = MinkowskiMaxPooling(kernel_size=3, stride=2, dimension=D)
+        output = pool(input)
+        print(output)
 
-    #     # Check backward
-    #     fn = MinkowskiMaxPoolingFunction()
-    #     self.assertTrue(
-    #         gradcheck(
-    #             fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-    #                  pool.dilation, pool.region_type, None, input.coords_key,
-    #                  None, input.C),
-    #             atol=1e-3,
-    #             rtol=1e-2,
-    #             eps=1e-4))
+        # Check backward
+        fn = MinkowskiMaxPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                     pool.dilation, pool.region_type, None, input.coords_key,
+                     None, input.C)))
+
+        if not torch.cuda.is_available():
+          return
+
+        device = torch.device('cuda')
+        input = input.to(device)
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        self.assertTrue(
+            gradcheck(
+                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                     pool.dilation, pool.region_type, None, input.coords_key,
+                     None, input.C)))
 
     def test_sumpooling(self):
         in_channels, D = 2, 2

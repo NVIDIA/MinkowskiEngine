@@ -20,7 +20,8 @@ from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolut
 from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiSumPooling, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
-    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling
+    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
+    MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
 
 from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
     MinkowskiBroadcast, MinkowskiBroadcastAddition, \

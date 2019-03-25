@@ -1,8 +1,8 @@
 #include "common.hpp"
 
-#include "pooling.hpp"
+#include "pooling_avg.hpp"
 #ifndef CPU_ONLY
-#include "pooling.cuh"
+#include "pooling_avg.cuh"
 #endif
 
 #include <pybind11/pybind11.h>

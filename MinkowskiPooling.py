@@ -29,10 +29,10 @@ class MinkowskiMaxPoolingFunction(Function):
                 in_coords_key=None,
                 out_coords_key=None,
                 coords_manager=None):
-        assert in_coords_key.D == out_coords_key.D
         assert isinstance(region_type, RegionType)
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
+        assert in_coords_key.D == out_coords_key.D
         pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
             pixel_dist, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
@@ -50,7 +50,7 @@ class MinkowskiMaxPoolingFunction(Function):
         out_feat = input_features.new()
 
         fw_fn = getattr(MEB, 'MaxPoolingForward' + get_postfix(input_features))
-        fw_fn(D, ctx.in_feat, out_feat, ctx.mask_index,
+        fw_fn(D, input_features, out_feat, ctx.mask_index,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
@@ -255,11 +255,39 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
                  out_coords_key=None,
                  axis_types=None,
                  dimension=None):
-        is_transpose = False
         super(MinkowskiMaxPooling, self).__init__(
-            kernel_size, stride, dilation, region_type, region_offset,
-            out_coords_key, axis_types, is_transpose, dimension)
+            kernel_size,
+            stride,
+            dilation,
+            region_type,
+            region_offset,
+            out_coords_key,
+            axis_types,
+            is_transpose=False,
+            dimension=dimension)
         self.pooling = MinkowskiMaxPoolingFunction()
+
+    def forward(self, input):
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+
+        # Create a region_offset
+        self.region_type_, self.region_offset_, _ = convert_region_type(
+            self.region_type, input.pixel_dist, self.kernel_size,
+            self.up_stride, self.dilation, self.region_offset, self.axis_types,
+            self.dimension)
+
+        if self.out_coords_key is None:
+            out_coords_key = CoordsKey(input.coords_key.D)
+        else:
+            out_coords_key = self.out_coords_key
+
+        output = self.pooling.apply(input.F, input.pixel_dist, self.stride,
+                                    self.kernel_size, self.dilation,
+                                    self.region_type_, self.region_offset_,
+                                    input.coords_key, out_coords_key, input.C)
+        return SparseTensor(
+            output, coords_key=out_coords_key, coords_manager=input.C)
 
 
 class MinkowskiPoolingTransposeFunction(Function):
@@ -302,7 +330,8 @@ class MinkowskiPoolingTransposeFunction(Function):
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
         D = in_coords_key.D
-        fw_fn = getattr(MEB, 'PoolingTransposeForward' + get_postfix(input_features))
+        fw_fn = getattr(MEB,
+                        'PoolingTransposeForward' + get_postfix(input_features))
         fw_fn(in_coords_key.D, ctx.in_feat, out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -316,7 +345,8 @@ class MinkowskiPoolingTransposeFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(MEB, 'PoolingTransposeBackward' + get_postfix(grad_out_feat))
+        bw_fn = getattr(MEB,
+                        'PoolingTransposeBackward' + get_postfix(grad_out_feat))
         bw_fn(ctx.in_coords_key.D, ctx.in_feat, grad_in_feat, grad_out_feat,
               ctx.num_nonzero, convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -394,7 +424,8 @@ class MinkowskiGlobalPoolingFunction(Function):
         ctx.coords_manager = coords_manager
 
         D = in_coords_key.D
-        fw_fn = getattr(MEB, 'GlobalPoolingForward' + get_postfix(input_features))
+        fw_fn = getattr(MEB,
+                        'GlobalPoolingForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, ctx.num_nonzero,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager, batch_size, ctx.average)
@@ -404,7 +435,8 @@ class MinkowskiGlobalPoolingFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(MEB, 'GlobalPoolingBackward' + get_postfix(grad_out_feat))
+        bw_fn = getattr(MEB,
+                        'GlobalPoolingBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager, ctx.average)
