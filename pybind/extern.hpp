@@ -82,6 +82,29 @@ void DimSwitchConvolutionTransposeBackwardGPU(
 #endif
 
 /*************************************
+ * Adaptive Dilation Convolution
+ *************************************/
+template <typename Dtype, typename Itype>
+void DimSwitchConvolutionAdaptiveDilationForwardCPU(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+    at::Tensor dilations, std::vector<int> pixel_dists,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations_key, int region_type, at::Tensor offsets,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+#ifndef CPU_ONLY
+template <typename Dtype, typename Itype>
+void DimSwitchConvolutionAdaptiveDilationForwardGPU(
+    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+    at::Tensor dilations, std::vector<int> pixel_dists,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations_key, int region_type, at::Tensor offsets,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+#endif
+
+/*************************************
  * AvgPooling
  *************************************/
 template <typename Dtype, typename Itype>

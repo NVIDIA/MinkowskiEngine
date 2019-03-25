@@ -121,7 +121,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         D = in_coords_key.D
         out_feat = input_features.new()
 
-        fw_fn = getattr(MEB, 'ConvolutionTransposeForward' + get_postfix(input_features))
+        fw_fn = getattr(
+            MEB, 'ConvolutionTransposeForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, kernel,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -136,7 +137,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(MEB, 'ConvolutionTransposeBackward' + get_postfix(grad_out_feat))
+        bw_fn = getattr(
+            MEB, 'ConvolutionTransposeBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
               grad_kernel, convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
@@ -145,6 +147,83 @@ class MinkowskiConvolutionTransposeFunction(Function):
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_man.CPPCoordsManager)
         return grad_in_feat, grad_kernel, None, None, None, None, None, None, None, None, None
+
+
+class MinkowskiAdaptiveDilationConvolutionFunction(
+        MinkowskiConvolutionFunction):
+
+    @staticmethod
+    def forward(ctx,
+                input_features,
+                kernel,
+                dilations,
+                pixel_dist=1,
+                stride=1,
+                kernel_size=-1,
+                dilation=1,
+                region_type=0,
+                region_offset=None,
+                in_coords_key=None,
+                out_coords_key=None,
+                coords_manager=None):
+        r"""
+        Args:
+            input_features (Tensor):
+            kernel (Tensor):
+            dilations (Tensor): must have the same number of rows as the output, D colums.
+        """
+        # Prep arguments
+        # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
+        assert input_features.shape[1] == kernel.shape[1]
+        assert dilations.shape[
+            1] == in_coords_key.D, 'Dilations must have D channels.'
+        if out_coords_key is None:
+            out_coords_key = CoordsKey(in_coords_key.D)
+        assert in_coords_key.D == out_coords_key.D
+        assert input_features.type() == kernel.type()
+        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
+            pixel_dist, stride, kernel_size, dilation, region_type,
+            in_coords_key.D)
+
+        if region_offset is None:
+            region_offset = torch.IntTensor()
+
+        ctx.in_feat = input_features
+        ctx.kernel = kernel
+        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+                       region_type, in_coords_key, out_coords_key,
+                       coords_manager)
+
+        D = in_coords_key.D
+        out_feat = input_features.new()
+
+        fw_fn = getattr(
+            MEB,
+            'ConvolutionAdaptiveDilationForward' + get_postfix(input_features))
+        fw_fn(D, ctx.in_feat, out_feat, kernel, dilations.int(),
+              convert_to_int_list(ctx.pixel_dist, D),
+              convert_to_int_list(ctx.stride, D),
+              convert_to_int_list(ctx.kernel_size, D),
+              convert_to_int_list(ctx.dilation, D), region_type, region_offset,
+              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
+              ctx.coords_man.CPPCoordsManager)
+        return out_feat
+
+    @staticmethod
+    def backward(ctx, grad_out_feat):
+        assert grad_out_feat.type() == ctx.in_feat.type()
+        grad_in_feat = grad_out_feat.new()
+        grad_kernel = grad_out_feat.new()
+        D = ctx.in_coords_key.D
+        bw_fn = getattr(MEB, 'ConvolutionBackward' + get_postfix(grad_out_feat))
+        bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
+              grad_kernel, convert_to_int_list(ctx.pixel_dist, D),
+              convert_to_int_list(ctx.stride, D),
+              convert_to_int_list(ctx.kernel_size, D),
+              convert_to_int_list(ctx.dilation, D), ctx.region_type,
+              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
+              ctx.coords_man.CPPCoordsManager)
+        return grad_in_feat, grad_kernel, None, None, None, None, None, None, None, None, None, None
 
 
 class MinkowskiConvolutionBase(MinkowskiModuleBase):
@@ -270,7 +349,8 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
         kernel_size: if odd, kernel is centered at the input coordinate.
             If even, top left is aligned at the input coordinate.
         """
-        super(MinkowskiConvolution, self).__init__(
+        MinkowskiConvolutionBase.__init__(
+            self,
             in_channels,
             out_channels,
             kernel_size,
@@ -306,7 +386,8 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             If even, top left is aligned at the input coordinate.
         stride: upsample stride
         """
-        super(MinkowskiConvolutionTranspose, self).__init__(
+        MinkowskiConvolutionBase.__init__(
+            self,
             in_channels,
             out_channels,
             kernel_size,
@@ -321,3 +402,67 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             dimension=dimension)
         self.reset_parameters(True)
         self.conv = MinkowskiConvolutionTransposeFunction()
+
+
+class MinkowskiAdaptiveDilationConvolution(MinkowskiConvolutionBase):
+
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 kernel_size=-1,
+                 stride=1,
+                 dilation=1,
+                 has_bias=False,
+                 region_type=RegionType.HYPERCUBE,
+                 region_offset=None,
+                 out_coords_key=None,
+                 axis_types=None,
+                 dimension=None):
+        """
+        kernel_size: if odd, kernel is centered at the input coordinate.
+            If even, top left is aligned at the input coordinate.
+        """
+        MinkowskiConvolutionBase.__init__(
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            dilation,
+            has_bias,
+            region_type,
+            region_offset,
+            out_coords_key,
+            axis_types,
+            is_transpose=False,
+            dimension=dimension)
+        self.reset_parameters()
+        self.conv = MinkowskiAdaptiveDilationConvolutionFunction()
+
+    def forward(self, input, dilations):
+        assert isinstance(input, SparseTensor)
+        assert isinstance(dilations, SparseTensor)
+        assert input.D == self.dimension
+        assert not self.use_mm
+
+        # Create a region_offset
+        self.region_type_, self.region_offset_, _ = convert_region_type(
+            self.region_type, input.pixel_dist, self.kernel_size,
+            self.up_stride, self.dilation, self.region_offset, self.axis_types,
+            self.dimension)
+
+        if self.out_coords_key is None:
+            out_coords_key = CoordsKey(input.coords_key.D)
+        else:
+            out_coords_key = self.out_coords_key
+
+        outfeat = self.conv.apply(
+            input.F, self.kernel, dilations.F, input.pixel_dist, self.stride,
+            self.kernel_size, self.dilation, self.region_type_,
+            self.region_offset_, input.coords_key, out_coords_key, input.C)
+
+        if self.has_bias:
+            outfeat += self.bias
+
+        return SparseTensor(
+            outfeat, coords_key=out_coords_key, coords_manager=input.C)

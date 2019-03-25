@@ -473,6 +473,68 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
 
 template <uint8_t D, typename Itype>
 std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+CoordsManager<D, Itype>::setupAndReturnInOutPerKernelAdaptiveDilation(
+    at::Tensor dilations, std::vector<int> vec_pixel_dists,
+    std::vector<int> vec_strides, std::vector<int> vec_kernel_sizes,
+    std::vector<int> vec_dilations_key, int region_type, at::Tensor offsets,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    bool is_transpose) {
+  if (vec_pixel_dists.size() != D || vec_strides.size() != D ||
+      vec_kernel_sizes.size() != D || vec_dilations_key.size() != D) {
+    throw std::invalid_argument(
+        Formatter() << "Size mismatch. pixel_dists: " << vec_pixel_dists.size()
+                    << ", strides: " << vec_strides.size()
+                    << ", kernel_sizes: " << vec_kernel_sizes.size()
+                    << ", dilations: " << vec_dilations_key.size());
+  }
+
+  Arr<D, int> pixel_dists;
+  Arr<D, int> strides;
+  Arr<D, int> kernel_sizes;
+  Arr<D, int> dilations_key;
+  std::copy_n(vec_pixel_dists.begin(), D, pixel_dists.begin());
+  std::copy_n(vec_strides.begin(), D, strides.begin());
+  std::copy_n(vec_kernel_sizes.begin(), D, kernel_sizes.begin());
+  std::copy_n(vec_dilations_key.begin(), D, dilations_key.begin());
+
+  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
+  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
+
+  // Create output coordinates if it doesn't exist
+  if (!p_out_coords_key->key_set) {
+    out_coords_key = createOutCoords(p_in_coords_key->getKey(), pixel_dists,
+                                     strides, is_transpose);
+    p_out_coords_key->setKey(out_coords_key);
+  } else
+    out_coords_key = p_out_coords_key->getKey();
+
+  InOutMapKey map_key = getMapHashKey(
+      pixel_dists, strides, kernel_sizes, dilations_key, region_type,
+      py_in_coords_key, py_out_coords_key, is_transpose);
+
+  if (!is_transpose) { // NON TRANSPOSE
+    p_out_coords_key->setPixelDist(pixel_dists);
+    p_out_coords_key->stride(strides);
+    // For non transpose case
+    // make a kernel mapping. The kernel will be saved with the map_key.
+    if (in_maps.find(map_key) == in_maps.end()) {
+      auto in_out = createInOutPerKernelAdaptiveDilationInThreads(
+          dilations, in_coords_key, out_coords_key, pixel_dists, kernel_sizes,
+          region_type, offsets);
+      in_maps[map_key] = std::get<0>(in_out);
+      out_maps[map_key] = std::get<1>(in_out);
+    }
+    return std::make_tuple(std::ref(in_maps[map_key]),
+                           std::ref(out_maps[map_key]));
+
+  } else { // TRANSPOSE
+    throw std::invalid_argument("Not supported");
+  }
+}
+
+template <uint8_t D, typename Itype>
+std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnOriginInOutPerKernel(
     int batch_size, py::object py_in_coords_key, py::object py_out_coords_key) {
   PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();

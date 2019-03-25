@@ -193,6 +193,11 @@ public:
                                 const Arr<D, int> &dilations, int region_type,
                                 at::Tensor offsets);
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
+  createInOutPerKernelAdaptiveDilationInThreads(
+    at::Tensor dilations, const uint64_t in_coords_key,
+    const uint64_t out_coords_key, const Arr<D, int> &in_pixel_dists,
+    const Arr<D, int> &kernel_size, int region_type, at::Tensor offsets);
+  std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createGlobalReductionInOutMap(const uint64_t in_coords_key,
                                 const uint64_t out_coords_key);
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
@@ -221,6 +226,14 @@ public:
   setupAndReturnPruningInOutPerKernel(at::Tensor use_feat,
                                       py::object py_in_coords_key,
                                       py::object py_out_coords_key);
+
+  std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+  setupAndReturnInOutPerKernelAdaptiveDilation(
+      at::Tensor dilations, std::vector<int> vec_pixel_dists,
+      std::vector<int> vec_strides, std::vector<int> vec_kernel_sizes,
+      std::vector<int> vec_dilations_key, int region_type, at::Tensor offsets,
+      py::object py_in_coords_key, py::object py_out_coords_key,
+      bool is_transpose);
 
   std::string toString() const;
   void clear() {

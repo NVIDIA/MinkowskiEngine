@@ -12,11 +12,16 @@ def get_coords(data, batch_index=0):
     return coords
 
 
-def data_loader(in_feat_channel=3, max_label=5, is_classification=True, seed=-1):
+def data_loader(in_feat_channel=3,
+                max_label=5,
+                is_classification=True,
+                seed=-1,
+                batch_size=2):
     data = ["   X   ", "  X X  ", " XXXXX "]
 
     coords = get_coords(data, 0)
-    coords.extend(get_coords(data, 1))
+    if batch_size > 1:
+        coords.extend(get_coords(data, 1))
     if seed >= 0:
         torch.manual_seed(seed)
     coords = torch.from_numpy(np.array(coords)).int()

@@ -94,6 +94,9 @@ class SparseTensor():
             + '  pixel_dist=' + str(self.coords_key.getPixelDist()) + os.linesep \
             + '  coords_man=' + str(self.coords_man) + ')'
 
+    def __len__(self):
+        return len(self.F)
+
     def to(self, device):
         self.F = self.F.to(device)
         return self
