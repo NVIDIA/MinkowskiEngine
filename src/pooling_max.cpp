@@ -9,7 +9,7 @@
 
 template <uint8_t D, typename Dtype, typename Itype>
 void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                          at::Tensor num_nonzero, std::vector<int> pixel_dists,
+                          at::Tensor max_index, std::vector<int> pixel_dists,
                           std::vector<int> strides,
                           std::vector<int> kernel_sizes,
                           std::vector<int> dilations, int region_type,
@@ -26,18 +26,18 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
   const int nchannel = in_feat.size(1);
   out_feat.resize_({out_nrows, nchannel});
   out_feat.zero_();
-  num_nonzero.resize_({out_nrows, nchannel});
-  num_nonzero.zero_();
+  max_index.resize_({out_nrows, nchannel});
+  max_index.zero_();
 
   MaxPoolingForwardKernelCPU<Dtype, Itype>(
-      in_feat.data<Dtype>(), out_feat.data<Dtype>(), num_nonzero.data<Itype>(),
+      in_feat.data<Dtype>(), out_feat.data<Dtype>(), max_index.data<Itype>(),
       nchannel, std::get<0>(in_out), std::get<1>(in_out), out_nrows);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
 void MaxPoolingBackwardCPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> pixel_dists,
+    at::Tensor max_index, std::vector<int> pixel_dists,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
@@ -52,7 +52,7 @@ void MaxPoolingBackwardCPU(
 
   MaxPoolingBackwardKernelCPU<Dtype, Itype>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
-      grad_out_feat.size(0), num_nonzero.data<Itype>(), in_feat.size(1),
+      grad_out_feat.size(0), max_index.data<Itype>(), in_feat.size(1),
       p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
 }
 
@@ -79,7 +79,7 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   num_nonzero.resize_({out_nrows, nchannel});
   num_nonzero.zero_();
 
-  ThrustMaxPoolingForwardKernelGPU<Dtype, Itype>(
+  MaxPoolingForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), out_nrows,
       num_nonzero.data<Itype>(), nchannel, std::get<0>(in_out),
       std::get<1>(in_out), at::cuda::getCurrentCUDAStream());
@@ -95,7 +95,7 @@ void MaxPoolingBackwardGPU(
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
-  ThrustMaxPoolingBackwardKernelGPU<Dtype, Itype>(
+  MaxPoolingBackwardKernelGPU<Dtype, Itype>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       grad_out_feat.size(0), num_nonzero.data<Itype>(), in_feat.size(1),
       at::cuda::getCurrentCUDAStream());

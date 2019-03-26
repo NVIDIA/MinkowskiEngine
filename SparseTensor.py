@@ -97,6 +97,9 @@ class SparseTensor():
     def __len__(self):
         return len(self.F)
 
+    def size(self):
+        return self.F.size()
+
     def to(self, device):
         self.F = self.F.to(device)
         return self

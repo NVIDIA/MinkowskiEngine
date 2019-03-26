@@ -16,21 +16,26 @@ class TestPooling(unittest.TestCase):
 
     def test_maxpooling(self):
         in_channels, D = 2, 2
-        coords, feats, labels = data_loader(in_channels)
+        coords, feats, labels = data_loader(in_channels, batch_size=2)
         feats.requires_grad_()
         feats = feats.double()
         input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiMaxPooling(kernel_size=3, stride=2, dimension=D)
+        pool = MinkowskiMaxPooling(kernel_size=2, stride=2, dimension=D)
         output = pool(input)
+        print(input)
         print(output)
-
+        C = output.C
+        print(C.get_coords(C.get_coords_key(2)))
+        # print(C.get_kernel_map(1, 2, stride=2, kernel_size=2))
         # Check backward
         fn = MinkowskiMaxPoolingFunction()
+
+        # Even numbered kernel_size error!
         self.assertTrue(
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, input.coords_key,
-                     None, input.C)))
+                     pool.dilation, pool.region_type_, pool.region_offset_,
+                     input.coords_key, None, input.C)))
 
         if not torch.cuda.is_available():
           return
@@ -44,8 +49,8 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, input.coords_key,
-                     None, input.C)))
+                     pool.dilation, pool.region_type_, pool.region_offset_,
+                     input.coords_key, None, input.C)))
 
     def test_sumpooling(self):
         in_channels, D = 2, 2

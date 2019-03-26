@@ -41,16 +41,18 @@ class MinkowskiMaxPoolingFunction(Function):
             region_offset = torch.IntTensor()
 
         ctx.in_feat = input_features
-        ctx.mask_index = input_features.new().int()
         ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
 
         D = in_coords_key.D
         out_feat = input_features.new()
+        max_index = input_features.new().int()
+
+        ctx.max_index = max_index
 
         fw_fn = getattr(MEB, 'MaxPoolingForward' + get_postfix(input_features))
-        fw_fn(D, input_features, out_feat, ctx.mask_index,
+        fw_fn(D, input_features, out_feat, max_index,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
@@ -64,7 +66,7 @@ class MinkowskiMaxPoolingFunction(Function):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
         bw_fn = getattr(MEB, 'MaxPoolingBackward' + get_postfix(grad_out_feat))
-        bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.mask_index,
+        bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.max_index,
               convert_to_int_list(ctx.pixel_dist, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),

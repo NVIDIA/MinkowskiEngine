@@ -19,97 +19,56 @@
 
 template <typename Dtype, typename Itype>
 __global__ void set_gradient(const int n, const Dtype *d_grad_out,
-                             Dtype *d_grad_in, const Itype *out_index,
-                             int nchannel) {
-  CUDA_KERNEL_LOOP(index, n) {
-    atomicAdd(&d_grad_in[out_index[index]], d_grad_out[index]);
-  }
+                             Dtype *d_grad_in, const Itype *in_index) {
+  CUDA_KERNEL_LOOP(index, n) { d_grad_in[in_index[index]] = d_grad_out[index]; }
 }
 
 template <typename Dtype, typename Itype>
-__global__ void
-set_gradient_nonzero(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
-                     int nchannel, const Itype *in_map, const Itype *out_map) {
-  CUDA_KERNEL_LOOP(index, n) {
-    int nrow = index / nchannel;
-    int ch = index % nchannel;
-    atomicAdd(&d_grad_in[in_map[nrow] * nchannel + ch],
-              d_grad_out[out_map[nrow] * nchannel + ch]);
-  }
-}
-
-template <typename Dtype, typename Itype>
-__global__ void
-set_gradient_nonzero_avg(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
-                         int nchannel, const Dtype *d_num_nonzero,
-                         const Itype *in_map, const Itype *out_map) {
-  CUDA_KERNEL_LOOP(index, n) {
-    int nrow = index / nchannel;
-    int ch = index % nchannel;
-    int curr_num_nonzero = d_num_nonzero[out_map[nrow]];
-    if (curr_num_nonzero > 0)
-      atomicAdd(&d_grad_in[in_map[nrow] * nchannel + ch],
-                d_grad_out[out_map[nrow] * nchannel + ch] / curr_num_nonzero);
-  }
-}
-
-template <typename Dtype, typename Itype>
-__global__ void max_pool(const int N, const int nnz, const int nchannel,
-                         const Dtype *d_in_feat, Dtype *d_out_feat,
-                         Itype *d_max_index, const Itype *d_out_index,
+__global__ void max_pool(const int N, const int out_nrows, const int nchannel,
+                         const int nnz, const Dtype *d_in_feat,
+                         Dtype *d_out_feat, Itype *d_max_index,
+                         const Itype *d_in_map, const Itype *d_out_map,
                          const Itype *d_in_index_min) {
   // N == nnz * nchannel
   CUDA_KERNEL_LOOP(index, N) {
     int nrow = index / nchannel;
     int ch = index % nchannel;
 
-    Itype out_index = d_out_index[nrow];
+    Itype out_map_row = d_out_map[nrow];
     Itype in_index = d_in_index_min[nrow];
     Itype num_in_feat;
-    if (nrow == nnz)
-      num_in_feat = d_in_index_min[nrow + 1] - in_index;
-    else
+    if (nrow == out_nrows - 1)
       num_in_feat = nnz - in_index;
-    Dtype curr_val, curr_max = d_in_feat[in_index * nchannel + ch];
-    Itype curr_index, max_index = in_index;
+    else
+      num_in_feat = d_in_index_min[nrow + 1] - in_index;
+    Itype curr_index, max_index = d_in_map[in_index] * nchannel + ch;
+    Dtype curr_val, max_val = d_in_feat[in_index * nchannel + ch];
     for (int curr_iter = 0; curr_iter < num_in_feat; curr_iter++) {
       curr_index = (in_index + curr_iter) * nchannel + ch;
       curr_val = d_in_feat[curr_index];
-      if (curr_max < curr_val) {
-        curr_max = curr_val;
-        max_index = curr_index;
+      if (max_val < curr_val) {
+        max_val = curr_val;
+        max_index = d_in_map[in_index + curr_iter] * nchannel + ch;
       }
     }
-    d_out_feat[in_index * nchannel + ch] = curr_max;
-    d_max_index[out_index * nchannel + ch] = max_index;
+    Itype out_ind = out_map_row * nchannel + ch;
+    d_out_feat[out_ind] = max_val;
+    d_max_index[out_ind] = max_index;
   }
 }
 
-template <typename Dtype>
-__global__ void col2row_major(const int n, const int nrows, const int ncols,
-                              const Dtype *colA, Dtype *rowA) {
-  int i, j;
+// Put features in to the out features accoring to the input index.
+// The input index is sorted accorind to the out index so no need to take out
+// index
+template <typename Dtype, typename Itype>
+__global__ void copy_sorted(const int n, const int nrows, const int nchannel,
+                            const Dtype *in_feat, const Itype *in_index,
+                            Dtype *out_feat) {
+  int nrow, ch;
   CUDA_KERNEL_LOOP(index, n) {
-    i = index % nrows;
-    j = index / nrows;
-    rowA[i * ncols + j] = colA[index];
-  }
-}
-
-template <typename Dtype>
-__global__ void col2row_major_with_div(const int n, const int nrows,
-                                       const int ncols,
-                                       const Dtype *num_nonzero,
-                                       const Dtype *colA, Dtype *rowA) {
-  int i, j;
-  CUDA_KERNEL_LOOP(index, n) {
-    i = index % nrows;
-    j = index / nrows;
-    if (num_nonzero[i]) {
-      rowA[i * ncols + j] = colA[index] / num_nonzero[i];
-    } else {
-      rowA[i * ncols + j] = colA[index];
-    }
+    nrow = index / nchannel;
+    ch = index % nchannel;
+    out_feat[index] = in_feat[in_index[nrow] * nchannel + ch];
   }
 }
 
@@ -120,12 +79,12 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 const std::vector<std::vector<Itype>> &out_maps,
                                 cudaStream_t stream) {
   int nnz = 0;
-  Itype *d_in_map, *d_out_map;
 
   // Copy all maps to one vector
   for (auto map : in_maps)
     nnz += map.size();
 
+  Itype *d_in_map, *d_out_map;
   CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * nnz * sizeof(Itype)));
   d_out_map = d_in_map + nnz;
 
@@ -144,28 +103,46 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
 
   // First, sort d_out_map and d_in_map with the d_out_map so that in_feat are
   // placed adjacent according to out_map
-  thrust::sort_by_key(d_out_map, d_out_map + nnz, d_in_map);
+  thrust::sort_by_key(thrust::device, d_out_map, d_out_map + nnz, d_in_map);
+
+  // Copy all in_feats to the temporary memory with d_in_map
+  Dtype *d_sorted_in_feat;
+  CUDA_CHECK(
+      cudaMalloc((void **)&d_sorted_in_feat, nnz * nchannel * sizeof(Dtype)));
+  // thrust::device_vector<Dtype> d_sorted_in_feat(nnz * nchannel);
+  copy_sorted<Dtype, Itype>
+      <<<GET_BLOCKS(nnz * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
+          nnz * nchannel, nnz, nchannel,
+          d_in_feat,         // in_feat
+          d_in_map,          // in index
+          d_sorted_in_feat); // out_feat
 
   // Second, create number of in_feat per out, and starting index
-  thrust::device_vector<Itype> d_index(nnz);
-  thrust::sequence(d_index.begin(), d_index.end());
+  Itype *d_index, *d_in_map_min, *d_reduced_out_map;
+  CUDA_CHECK(cudaMalloc((void **)&d_index, 3 * nnz * sizeof(Itype)));
+  d_in_map_min = d_index + nnz;
+  d_reduced_out_map = d_index + 2 * nnz;
 
-  thrust::device_vector<Itype> d_in_map_min(nnz);
-  thrust::device_vector<Itype> d_reduced_out_map(nnz);
+  // thrust::device_vector<Itype> d_index(nnz);
+  // thrust::device_vector<Itype> d_in_map_min(nnz);
+  // thrust::device_vector<Itype> d_reduced_out_map(nnz);
+
+  thrust::sequence(thrust::device, d_index, d_index + nnz);
 
   thrust::equal_to<Itype> equal_pred;
   thrust::minimum<Itype> min_op;
 
   auto reduction_pair =
-      thrust::reduce_by_key(thrust::device,            // execution policy
-                            d_out_map,                 // key begin
-                            d_out_map + nnz,           // key end
-                            d_index.begin(),           // val begin
-                            d_reduced_out_map.begin(), // key out begin
-                            d_in_map_min.begin(),      // val out begin
-                            equal_pred,                // binary pred
-                            min_op);                   // binary op
-  size_t num_unique_out_map = reduction_pair.first - d_reduced_out_map.begin();
+      thrust::reduce_by_key(thrust::device,    // execution policy
+                            d_out_map,         // key begin
+                            d_out_map + nnz,   // key end
+                            d_index,           // val begin
+                            d_reduced_out_map, // key out begin
+                            d_in_map_min,      // val out begin
+                            equal_pred,        // binary pred
+                            min_op);           // binary op
+
+  size_t num_unique_out_map = reduction_pair.first - d_reduced_out_map;
   if (num_unique_out_map != out_nrows)
     throw std::invalid_argument(
         Formatter() << "Reduction size mismatch. out_nrows: " << out_nrows
@@ -174,10 +151,16 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   // Finally, use the max kernel to map all in_feats with the same out key to
   // out_feats Also, create out max_index for gradient
   max_pool<Dtype, Itype>
-      <<<GET_BLOCKS(nnz * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-          nchannel * nnz, nnz, nchannel, d_in_feat, d_out_feat, d_max_index,
-          thrust::raw_pointer_cast(d_reduced_out_map.data()),
-          thrust::raw_pointer_cast(d_in_map_min.data()));
+      <<<GET_BLOCKS(out_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
+          nchannel * out_nrows, // N
+          out_nrows, nchannel, nnz, d_sorted_in_feat, d_out_feat,
+          d_max_index, // Out indices for backward
+          d_in_map,    // in index
+          d_reduced_out_map, d_in_map_min);
+
+  cudaFree(d_in_map);
+  cudaFree(d_sorted_in_feat);
+  cudaFree(d_index);
 }
 
 template void MaxPoolingForwardKernelGPU<float, int32_t>(
@@ -199,10 +182,8 @@ void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  cudaStream_t stream) {
   int num_kernels = out_nrows * nchannel;
   // Cleanup gradients
-  HANDLE_ERROR(
-      cudaMemset(d_grad_in_feat, 0, in_nrows * nchannel * sizeof(Dtype)));
   set_gradient<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-      num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index, nchannel);
+      num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index);
 }
 
 template void MaxPoolingBackwardKernelGPU<float, int32_t>(
