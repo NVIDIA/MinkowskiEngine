@@ -1,41 +1,63 @@
 # Minkowski Engine
 
-The MinkowskiEngine is an auto-differentiation library for sparse tensors. It mainly supports convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information please visit [the documentation page (under construction)](http://minkowskiengine.github.io)
+The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information please visit [the documentation page (under construction)](http://minkowskiengine.github.io)
 
 # Features
 
-- Multi GPU Training
-- Multi Threaded Kernel Map
-- Dynamic Computation Graph
+- Dynamic computation graph
+- Custom kernel shapes
+- Multi-GPU training
+- Multi-threaded kernel map
+- Multi-threaded compilation
+- Highly-optimized GPU kernels
+
 
 # Installation
 
 You can install the MinkowskiEngine without sudo using anaconda. Using anaconda is highly recommended.
 
+
 ## Anaconda
 
-In this example, we assumed that you are using CUDA 10.0. If not, change the anaconda pytorch installation to use `cudatollkit=9.0` or any other version that you are using. Make sure that your `nvcc --version` matches your pytorch cuda version.
+We recommend `python>=3.6` for installation.
+In this example, we assumed that you are using CUDA 10.0. To find out your CUDA version, run `nvcc --version`. If you are using a different version, please change the anaconda pytorch installation to use `cudatollkit=X.X`.
+
+
+### Preparation
+
+Create a conda virtual environment and install pytorch.
 
 ```
-# Within your conda virtual env. See https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+# Install pytorch. Follow the instruction on https://pytorch.org
+# Create a conda virtual env. See https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+conda create -n py3-mink python=3.6 anaconda
+# Activate your conda with
+source activate py3-mink
 conda install -c anaconda openblas  # blas header included
 conda install -c bioconda google-sparsehash
-conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Change the cudatoolkit version to `nvcc --version`
+conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Use the correct cudatoolkit version
+```
+
+### Compilation and Installation
+
+```
 git clone https://github.com/chrischoy/MinkowskiEngine.git
 cd MinkowskiEngine
-make -j4 # higher number if cpu count > 4
+python setup.py install  # parallel compilation and python pacakge installation
 ```
 
 ## Python virtual env
+
+Like the anaconda installation, make sure that you install pytorch with the the same CUDA version that `nvcc` uses.
 
 ```
 sudo apt install libsparsehash-dev libopenblas-dev
 # within a python3 environment
 pip install torch
+# within the python3 environment
 git clone https://github.com/chrischoy/MinkowskiEngine.git
 cd MinkowskiEngine
-# within the python3 environment
-make -j4 # higher number if cpu count > 4
+python setup.py install  # parallel compilation and python pacakge installation
 ```
 
 
@@ -47,6 +69,7 @@ quantized, you would need to voxelize or quantize the (spatial) data into a
 sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
 function (`ME.SparseVoxelize`).
 
+
 ## Import
 
 ```python
@@ -55,9 +78,6 @@ import MinkowskiEngine as ME
 
 
 ## Creating a Network
-
-All `MinkowskiNetwork` has `self.net_metadata`. The `net_metadata` contains all the information regarding the coordinates for each feature, and mappings for sparse convolutions.
-
 
 ```python
 class ExampleNetwork(ME.MinkowskiNetwork):
@@ -116,27 +136,9 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 ```
 
 
-## Running the Example
+## Running the Examples
 
 After installing the package, run `python example.py` in the package root directory.
-
-
-## Custom Convolution Kernels
-
-`SparseConvolution` class takes `region_type` and `region_offset` as arguments.
-The `region_type` must be the Enum `from Common import RegionType`.
-
-There are 4 types of kernel regions. `RegionType.HYPERCUBE`, `RegionType.HYPERCROSS`, `RegionType.HYBRID`, and `RegionType.CUSTOM`.
-`RegionType.HYPERCUBE` is the basic square shape kernel,
-`RegionType.HYPERCROSS` is the cross shape kernel. If
-`RegionType.CUSTOM`, you must define the torch.IntTensor
-`region_offset` that defines the offset of the region.
-Finally, `RegionType.HYBRID`, you can mix HYPERCUBE and HYPERCROSS
-for each axis arbitrarily.
-
-By default `region_type` is `RegionType.HYPERCUBE`.
-
-See `tests/test_conv_types.py` for more details.
 
 
 # Variables
@@ -154,14 +156,14 @@ See `tests/test_conv_types.py` for more details.
 The strided convolution maps i-th index to `int(i / stride) * stride`. Thus, it is encouraged to use dilation == 1 and kernel_size > stide when stride > 1.
 
 
-## Unpooling
-
-When using unpooling, some outputs might return `nan` when there are no corresponding input features.
-
-
 # Debugging
 
 Uncomment `DEBUG := 1` in `Makefile` and run `gdb python` to debug in `gdb` and run `run example.py`. Set break point by `b filename:linenum` or `b functionname`. E.g., `b sparse.c:40`. If you want to access array values, use `(gdb) p *a@3` or `p (int [3])*a`.
+
+
+# General discussion and questions
+
+Please use `minkowskiengine@googlegroups.com`
 
 
 # Tests

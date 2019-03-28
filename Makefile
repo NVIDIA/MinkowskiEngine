@@ -110,7 +110,7 @@ LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 
 all: $(STATIC_LIB)
 	$(RM) -rf build dist
-	python setup.py install --force
+#	python setup.py install --force
 
 $(OBJ_DIR):
 	@ mkdir -p $@
