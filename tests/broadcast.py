@@ -4,8 +4,8 @@ import unittest
 from MinkowskiEngine import SparseTensor, MinkowskiGlobalPooling, \
     MinkowskiBroadcastFunction, MinkowskiBroadcastAddition, \
     MinkowskiBroadcastMultiplication, OperationType
-from gradcheck import gradcheck
 
+from utils.gradcheck import gradcheck
 from tests.common import data_loader
 
 

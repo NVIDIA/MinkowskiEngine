@@ -477,4 +477,4 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
             output, coords_key=out_coords_key, coords_manager=input.C)
 
     def __repr__(self):
-        return self.__class__.__name__ + "(average={self.average})"
+        return self.__class__.__name__ + "(average=" + str(self.average) + ")"

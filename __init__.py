@@ -47,3 +47,4 @@ from MinkowskiOps import MinkowskiLinear, cat
 import MinkowskiFunctional
 
 from .utils import *
+from .utils import gradcheck

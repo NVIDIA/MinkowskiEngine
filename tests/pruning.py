@@ -2,8 +2,8 @@ import torch
 import unittest
 
 from MinkowskiEngine import SparseTensor, MinkowskiPruning, MinkowskiPruningFunction
-from gradcheck import gradcheck
 
+from utils.gradcheck import gradcheck
 from tests.common import data_loader
 
 

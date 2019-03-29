@@ -1,10 +1,9 @@
 import unittest
 
-import torch
 import numpy as np
 
 import MinkowskiEngineBackend as MEB
-from utils import hash_vec
+from utils import ravel_hash_vec
 from utils.voxelization import SparseVoxelize
 
 
@@ -22,7 +21,7 @@ class TestGPUVoxelization(unittest.TestCase):
         coords[:3] = 0
         labels[:3] = 2
 
-        key = hash_vec(coords)  # floor happens by astype(np.uint64)
+        key = ravel_hash_vec(coords)  # floor happens by astype(np.uint64)
         inds, labels_v = MEB.SparseVoxelization(
             key, labels.astype(np.int32), ignore_label, True)
         coords_v, feats_v = coords[inds], feats[inds]

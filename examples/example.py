@@ -4,13 +4,13 @@ import torch.nn as nn
 import MinkowskiEngine as ME
 import MinkowskiEngine.MinkowskiFunctional as F
 
-from common import data_loader
+from tests.common import data_loader
 
 
-class ExNet(ME.MinkowskiNetwork):
+class ExampleNetwork(ME.MinkowskiNetwork):
 
     def __init__(self, in_feat, out_feat, D):
-        super(ExNet, self).__init__(D)
+        super(ExampleNetwork, self).__init__(D)
         self.conv1 = ME.MinkowskiConvolution(
             in_channels=in_feat,
             out_channels=64,
@@ -46,7 +46,7 @@ class ExNet(ME.MinkowskiNetwork):
 if __name__ == '__main__':
     # loss and network
     criterion = nn.CrossEntropyLoss()
-    net = ExNet(in_feat=3, out_feat=5, D=2)
+    net = ExampleNetwork(in_feat=3, out_feat=5, D=2)
     print(net)
 
     # a data loader must return a tuple of coords, features, and labels.

@@ -1,12 +1,12 @@
 import torch
 import unittest
 
-from gradcheck import gradcheck
 
 from MinkowskiEngine import SparseTensor, MinkowskiConvolution, MinkowskiConvolutionFunction, \
     MinkowskiConvolutionTranspose, MinkowskiConvolutionTransposeFunction, initialize_nthreads
 
 from tests.common import data_loader
+from utils.gradcheck import gradcheck
 
 
 class TestConvolution(unittest.TestCase):

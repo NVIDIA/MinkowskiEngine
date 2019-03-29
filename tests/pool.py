@@ -7,8 +7,8 @@ from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
     MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
-from gradcheck import gradcheck
 
+from utils.gradcheck import gradcheck
 from tests.common import data_loader
 
 
