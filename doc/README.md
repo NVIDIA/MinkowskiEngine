@@ -3,6 +3,7 @@
 ## Install dependencies
 `pip install -U recommonmark sphinx sphinx_rtd_theme`
 
+## Generate curated lists only
 ## Automatically generate module documentations
 `rm -rf source && sphinx-apidoc -o source/ ../`
 

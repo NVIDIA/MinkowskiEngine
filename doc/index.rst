@@ -1,7 +1,7 @@
 Welcome to MinkowskiEngine's documentation!
 ===========================================
 
-The MinkowskiEngine is an auto-differentiation library for sparse tensors. It mainly supports convolution, pooling, unpooling, and broadcasting operations for sparse tensors.
+The MinkowskiEngine is an auto-differentiation library for sparse tensors.
 
 Table of Contents
 =================
@@ -10,6 +10,9 @@ Table of Contents
    :maxdepth: 2
 
    overview
+   quick_start
+   convolution
+   pooling
    source/modules
 
 Indices and tables

@@ -247,6 +247,8 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
 
 
 class MinkowskiMaxPooling(MinkowskiPoolingBase):
+    r"""MaxPooling
+    """
 
     def __init__(self,
                  kernel_size,
@@ -446,10 +448,11 @@ class MinkowskiGlobalPoolingFunction(Function):
 
 
 class MinkowskiGlobalPooling(MinkowskiModuleBase):
+    r"""GlobalPooling
+    """
 
     def __init__(self, batch_size=0, average=True, dimension=-1):
-        """
-        Reduces sparse coords into points at origin, i.e. reduce each point
+        r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.

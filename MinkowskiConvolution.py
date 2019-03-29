@@ -170,7 +170,8 @@ class MinkowskiAdaptiveDilationConvolutionFunction(
         Args:
             input_features (Tensor):
             kernel (Tensor):
-            dilations (Tensor): must have the same number of rows as the output, D colums.
+            dilations (Tensor): must have the same number of rows as the
+            output, D colums.
         """
         # Prep arguments
         # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
@@ -332,6 +333,26 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
 
 
 class MinkowskiConvolution(MinkowskiConvolutionBase):
+    r"""Convolve an sparse tensor with the specified kernel.
+
+
+    .. math::
+
+        \mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}(\mathbf{u}, K,
+        \mathcal{S}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
+        \mathbf{u}} \;\text{for} \; \mathbf{u} \in \mathcal{S}^\text{out}
+
+    where :math:`K` is the kernel size and :math:`\mathcal{N}(\mathbf{u}, K,
+    \mathcal{S}^\text{in})` is the set of offsets that are at most :math:`\left
+    \lceil{\frac{1}{2}(K - 1)} \right \rceil` away from :math:`\mathbf{u}`
+    definied in :math:`\mathcal{S}^\text{in}`.
+
+    .. note::
+        For even :math:`K`, the implementation is different from the above
+        definition. The offsets range from :math:`\mathbf{i} \in [0, K), \;
+        \mathbf{i} \in \mathbb{Z}_+`.
+
+    """
 
     def __init__(self,
                  in_channels,
@@ -345,9 +366,59 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
                  out_coords_key=None,
                  axis_types=None,
                  dimension=None):
-        """
-        kernel_size: if odd, kernel is centered at the input coordinate.
-            If even, top left is aligned at the input coordinate.
+        r"""a high-dimensional convolution layer for sparse tensors.
+
+        Args:
+            :attr:`in_channels` (int): the number of input channels in the
+            input tensor.
+
+            :attr:`out_channels` (int): the number of output channels in the
+            output tensor.
+
+            :attr:`kernel_size` (int, optional): the size of the kernel in the
+            output tensor. If not provided, :attr:`region_offset` should be
+            :attr:`RegionType.CUSTOM` and :attr:`region_offset` should be a 2D
+            matrix with size :math:`N\times D` such that it lists all :math:`N`
+            offsets in D-dimension.
+
+            :attr:`stride` (int, or list, optional): stride size of the
+            convolution layer. If non-identity is used, the output coordinates
+            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            away. When a list is given, the length must be D; each element will
+            be used for stride size for the specific axis.
+
+            :attr:`dilation` (int, or list, optional): dilation size for the
+            convolution kernel. When a list is given, the length must be D and
+            each element is an axis specific dilation. All elements must be > 0.
+
+            :attr:`has_bias` (bool, optional): if True, the convolution layer
+            has a bias.
+
+            :attr:`region_type` (RegionType, optional): defines the kernel
+            shape. Please refer to MinkowskiEngine.Comon for details.
+
+            :attr:`region_offset` (torch.IntTensor, optional): when the
+            :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
+            kernel uses this given torch int tensor to define offsets. It
+            should be a matrix of size :math:`N \times D` where :math:`N` is
+            the number of offsets and :math:`D` is the dimension of the
+            space.abs
+
+            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
+            network uses the specific coordinates for the output coordinates.
+            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+
+            :attr:`axis_types` (list of RegionType, optional): If given, it
+            uses different methods to create a kernel for each axis. e.g., when
+            it is `[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
+            RegionType.HYPERCROSS]`, the kernel would be a rectangular for the
+            first two dimensions and a cross shaped kernel for the thrid
+            dimension.
+
+            :attr:`dimension` (int): the dimension of the space all the inputs
+            and the network is defined. For example images are in 2D space,
+            meshes and 3D shapes are in 3D space and thus dimension is 3.
+
         """
         MinkowskiConvolutionBase.__init__(
             self,
@@ -368,6 +439,10 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
 
 
 class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
+    r"""A generic transposed convolution or deconvolution layer for sparse
+    tensors.
+
+    """
 
     def __init__(self,
                  in_channels,
@@ -381,10 +456,59 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
                  out_coords_key=None,
                  axis_types=None,
                  dimension=None):
-        """
-        kernel_size: if odd, kernel is centered at the input coordinate.
-            If even, top left is aligned at the input coordinate.
-        stride: upsample stride
+        r"""a high-dimensional convolution transpose layer for sparse tensors.
+
+        Args:
+            :attr:`in_channels` (int): the number of input channels in the
+            input tensor.
+
+            :attr:`out_channels` (int): the number of output channels in the
+            output tensor.
+
+            :attr:`kernel_size` (int, optional): the size of the kernel in the
+            output tensor. If not provided, :attr:`region_offset` should be
+            :attr:`RegionType.CUSTOM` and :attr:`region_offset` should be a 2D
+            matrix with size :math:`N\times D` such that it lists all :math:`N`
+            offsets in D-dimension.
+
+            :attr:`stride` (int, or list, optional): stride size that defines
+            upsampling rate. If non-identity is used, the output coordinates
+            will be :attr:`pixel_dist` / :attr:`stride` apart.  When a list is
+            given, the length must be D; each element will be used for stride
+            size for the specific axis.
+
+            :attr:`dilation` (int, or list, optional): dilation size for the
+            convolution kernel. When a list is given, the length must be D and
+            each element is an axis specific dilation. All elements must be > 0.
+
+            :attr:`has_bias` (bool, optional): if True, the convolution layer
+            has a bias.
+
+            :attr:`region_type` (RegionType, optional): defines the kernel
+            shape. Please refer to MinkowskiEngine.Comon for details.
+
+            :attr:`region_offset` (torch.IntTensor, optional): when the
+            :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
+            kernel uses this given torch int tensor to define offsets. It
+            should be a matrix of size :math:`N \times D` where :math:`N` is
+            the number of offsets and :math:`D` is the dimension of the
+            space.abs
+
+            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
+            network uses the specific coordinates for the output coordinates.
+            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+
+            :attr:`axis_types` (list of RegionType, optional): If given, it
+            uses different methods to create a kernel for each axis. e.g., when
+            it is `[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
+            RegionType.HYPERCROSS]`, the kernel would be a rectangular for the
+            first two dimensions and a cross shaped kernel for the thrid
+            dimension.
+
+            :attr:`dimension` (int): the dimension of the space all the inputs
+            and the network is defined. For example images are in 2D space,
+            meshes and 3D shapes are in 3D space and thus dimension is 3.
+
         """
         MinkowskiConvolutionBase.__init__(
             self,

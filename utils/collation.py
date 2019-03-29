@@ -31,10 +31,11 @@ def sparse_collate(coords, feats, labels=None):
 
 class SparseCollation:
     """Generates collate function for coords, feats, labels.
+
     Args:
       limit_numpoints: If 0 or False, does not alter batch size. If positive
-                       integer, limits batch size so that the number of input
-                       coordinates is below limit_numpoints.
+        integer, limits batch size so that the number of input
+        coordinates is below limit_numpoints.
     """
 
     def __init__(self, limit_numpoints):

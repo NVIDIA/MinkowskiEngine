@@ -139,7 +139,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'MinkowskiEngine.tex', 'MinkowskiEngine Documentation',
-     'Christopher B. Choy', 'manual'),
+     'Chris Choy', 'manual'),
 ]
 
 

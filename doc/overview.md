@@ -57,7 +57,7 @@ python setup.py install --force  # parallel compilation and python pacakge insta
 ```
 
 
-## Usage
+## Quick Start
 
 To use the Minkowski Engine, you first would need to import the engine.
 Then, you would need to define the network. If the data you have is not
@@ -128,6 +128,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
 
 ### Running the Examples
+
 
 After installing the package, run `python examples/example.py` in the package root directory.
 
