@@ -320,8 +320,11 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
 
     def __repr__(self):
         s = '(in={}, out={}, region_type={}, '.format(
-            self.in_channels, self.out_channels, self.region_type)
-        if self.region_type in [RegionType.HYBRID, RegionType.CUSTOM]:
+            self.in_channels, self.out_channels,
+            self.kernel_generator.region_type)
+        if self.kernel_generator.region_type in [
+                RegionType.HYBRID, RegionType.CUSTOM
+        ]:
             s += 'kernel_volume={}, '.format(self.kernel_volume)
         else:
             s += 'kernel_size={}, '.format(self.kernel_size.tolist())

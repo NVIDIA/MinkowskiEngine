@@ -27,6 +27,7 @@ class TestConvolution(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D)
+        print(conv)
         conv = conv.double()
         output = conv(input)
         print(output)

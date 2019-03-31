@@ -21,6 +21,7 @@ class TestPooling(unittest.TestCase):
         feats = feats.double()
         input = SparseTensor(feats, coords=coords)
         pool = MinkowskiMaxPooling(kernel_size=2, stride=2, dimension=D)
+        print(pool)
         output = pool(input)
         print(input)
         print(output)
