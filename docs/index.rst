@@ -13,7 +13,10 @@ Table of Contents
    quick_start
    convolution
    pooling
-   source/modules
+   broadcast
+   normalization
+   nonlinearity
+   coords
 
 Indices and tables
 ==================

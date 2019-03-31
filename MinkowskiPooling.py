@@ -219,6 +219,37 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
                  kernel_generator=None,
                  out_coords_key=None,
                  dimension=None):
+        r"""a high-dimensional average pooling layer
+
+        Args:
+            :attr:`kernel_size` (int, optional): the size of the kernel in the
+            output tensor. If not provided, :attr:`region_offset` should be
+            :attr:`RegionType.CUSTOM` and :attr:`region_offset` should be a 2D
+            matrix with size :math:`N\times D` such that it lists all :math:`N`
+            offsets in D-dimension.
+
+            :attr:`stride` (int, or list, optional): stride size of the
+            convolution layer. If non-identity is used, the output coordinates
+            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            away. When a list is given, the length must be D; each element will
+            be used for stride size for the specific axis.
+
+            :attr:`dilation` (int, or list, optional): dilation size for the
+            convolution kernel. When a list is given, the length must be D and
+            each element is an axis specific dilation. All elements must be > 0.
+
+            :attr:`kernel_generator` (KernelGenerator, optional): define custom
+            kernel shape.
+
+            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
+            network uses the specific coordinates for the output coordinates.
+            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+
+            :attr:`dimension` (int): the dimension of the space all the inputs
+            and the network is defined. For example images are in 2D space,
+            meshes and 3D shapes are in 3D space and thus dimension is 3.
+
+        """
         is_transpose = False
         MinkowskiPoolingBase.__init__(
             self,
@@ -242,6 +273,37 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
                  kernel_generator=None,
                  out_coords_key=None,
                  dimension=None):
+        r"""a high-dimensional sum pooling layer
+
+        Args:
+            :attr:`kernel_size` (int, optional): the size of the kernel in the
+            output tensor. If not provided, :attr:`region_offset` should be
+            :attr:`RegionType.CUSTOM` and :attr:`region_offset` should be a 2D
+            matrix with size :math:`N\times D` such that it lists all :math:`N`
+            offsets in D-dimension.
+
+            :attr:`stride` (int, or list, optional): stride size of the
+            convolution layer. If non-identity is used, the output coordinates
+            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            away. When a list is given, the length must be D; each element will
+            be used for stride size for the specific axis.
+
+            :attr:`dilation` (int, or list, optional): dilation size for the
+            convolution kernel. When a list is given, the length must be D and
+            each element is an axis specific dilation. All elements must be > 0.
+
+            :attr:`kernel_generator` (KernelGenerator, optional): define custom
+            kernel shape.
+
+            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
+            network uses the specific coordinates for the output coordinates.
+            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+
+            :attr:`dimension` (int): the dimension of the space all the inputs
+            and the network is defined. For example images are in 2D space,
+            meshes and 3D shapes are in 3D space and thus dimension is 3.
+
+        """
         is_transpose = False
         MinkowskiPoolingBase.__init__(
             self,
@@ -267,6 +329,38 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
                  kernel_generator=None,
                  out_coords_key=None,
                  dimension=None):
+        r"""a high-dimensional max pooling layer for sparse tensors.
+
+        Args:
+            :attr:`kernel_size` (int, optional): the size of the kernel in the
+            output tensor. If not provided, :attr:`region_offset` should be
+            :attr:`RegionType.CUSTOM` and :attr:`region_offset` should be a 2D
+            matrix with size :math:`N\times D` such that it lists all :math:`N`
+            offsets in D-dimension.
+
+            :attr:`stride` (int, or list, optional): stride size of the
+            convolution layer. If non-identity is used, the output coordinates
+            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            away. When a list is given, the length must be D; each element will
+            be used for stride size for the specific axis.
+
+            :attr:`dilation` (int, or list, optional): dilation size for the
+            convolution kernel. When a list is given, the length must be D and
+            each element is an axis specific dilation. All elements must be > 0.
+
+            :attr:`kernel_generator` (KernelGenerator, optional): define custom
+            kernel shape.
+
+            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
+            network uses the specific coordinates for the output coordinates.
+            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+
+            :attr:`dimension` (int): the dimension of the space all the inputs
+            and the network is defined. For example images are in 2D space,
+            meshes and 3D shapes are in 3D space and thus dimension is 3.
+
+        """
+
         MinkowskiPoolingBase.__init__(
             self,
             kernel_size,
@@ -379,6 +473,37 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
                  kernel_generator=None,
                  out_coords_key=None,
                  dimension=None):
+        r"""a high-dimensional unpooling layer for sparse tensors.
+
+        Args:
+            :attr:`kernel_size` (int, optional): the size of the kernel in the
+            output tensor. If not provided, :attr:`region_offset` should be
+            :attr:`RegionType.CUSTOM` and :attr:`region_offset` should be a 2D
+            matrix with size :math:`N\times D` such that it lists all :math:`N`
+            offsets in D-dimension.
+
+            :attr:`stride` (int, or list, optional): stride size of the
+            convolution layer. If non-identity is used, the output coordinates
+            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            away. When a list is given, the length must be D; each element will
+            be used for stride size for the specific axis.
+
+            :attr:`dilation` (int, or list, optional): dilation size for the
+            convolution kernel. When a list is given, the length must be D and
+            each element is an axis specific dilation. All elements must be > 0.
+
+            :attr:`kernel_generator` (KernelGenerator, optional): define custom
+            kernel shape.
+
+            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
+            network uses the specific coordinates for the output coordinates.
+            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+
+            :attr:`dimension` (int): the dimension of the space all the inputs
+            and the network is defined. For example images are in 2D space,
+            meshes and 3D shapes are in 3D space and thus dimension is 3.
+
+        """
         is_transpose = True
         MinkowskiPoolingBase.__init__(
             self,

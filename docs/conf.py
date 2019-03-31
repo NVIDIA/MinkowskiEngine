@@ -25,13 +25,13 @@ autodoc_mock_imports = ['MinkowskiEngine.example']
 # -- Project information -----------------------------------------------------
 
 project = 'MinkowskiEngine'
-copyright = '2019, Christopher B. Choy'
-author = 'Christopher B. Choy'
+copyright = '2019, Chris Choy'
+author = 'Chris Choy'
 
 # The short X.Y version
-version = '0.2.0'
+version = '0.2.1'
 # The full version, including alpha/beta/rc tags
-release = '0.2.0'
+release = '0.2.1'
 github_doc_root = 'https://github.com/chrischoy/MinkowskiEngine'
 
 # -- General configuration ---------------------------------------------------

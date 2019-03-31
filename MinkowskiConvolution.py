@@ -393,6 +393,9 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             :attr:`has_bias` (bool, optional): if True, the convolution layer
             has a bias.
 
+            :attr:`kernel_generator` (KernelGenerator, optional): define custom
+            kernel shape.
+
             :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
             network uses the specific coordinates for the output coordinates.
             It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
@@ -461,6 +464,9 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
 
             :attr:`has_bias` (bool, optional): if True, the convolution layer
             has a bias.
+
+            :attr:`kernel_generator` (KernelGenerator, optional): define custom
+            kernel shape.
 
             :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
             network uses the specific coordinates for the output coordinates.
