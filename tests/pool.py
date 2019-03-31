@@ -32,13 +32,13 @@ class TestPooling(unittest.TestCase):
 
         # Even numbered kernel_size error!
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type_, pool.region_offset_,
-                     input.coords_key, None, input.C)))
+            gradcheck(fn,
+                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                       pool.dilation, pool.region_type_, pool.region_offset_,
+                       input.coords_key, None, input.C)))
 
         if not torch.cuda.is_available():
-          return
+            return
 
         device = torch.device('cuda')
         input = input.to(device)
@@ -47,10 +47,10 @@ class TestPooling(unittest.TestCase):
 
         # Check backward
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type_, pool.region_offset_,
-                     input.coords_key, None, input.C)))
+            gradcheck(fn,
+                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                       pool.dilation, pool.region_type_, pool.region_offset_,
+                       input.coords_key, None, input.C)))
 
     def test_sumpooling(self):
         in_channels, D = 2, 2
@@ -65,10 +65,10 @@ class TestPooling(unittest.TestCase):
         # Check backward
         fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, False,
-                     input.coords_key, None, input.C)))
+            gradcheck(fn,
+                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                       pool.dilation, pool.region_type_, pool.region_offset_,
+                       False, input.coords_key, None, input.C)))
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
@@ -100,10 +100,10 @@ class TestPooling(unittest.TestCase):
         # Check backward
         fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, True,
-                     input.coords_key, None, input.C)))
+            gradcheck(fn,
+                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                       pool.dilation, pool.region_type_, pool.region_offset_,
+                       True, input.coords_key, None, input.C)))
 
     def test_avgpooling(self):
         in_channels, D = 2, 2
@@ -118,10 +118,10 @@ class TestPooling(unittest.TestCase):
         # Check backward
         fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
-                     pool.dilation, pool.region_type, None, True,
-                     input.coords_key, None, input.C)))
+            gradcheck(fn,
+                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                       pool.dilation, pool.region_type_, pool.region_offset_,
+                       True, input.coords_key, None, input.C)))
 
     def test_global_avgpool(self):
         in_channels, D = 2, 2
@@ -136,8 +136,7 @@ class TestPooling(unittest.TestCase):
         # Check backward
         fn = MinkowskiGlobalPoolingFunction()
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, 0, True, input.coords_key, None, input.C)))
+            gradcheck(fn, (input.F, 0, True, input.coords_key, None, input.C)))
 
     def test_unpool(self):
         in_channels, out_channels, D = 2, 3, 2
@@ -157,9 +156,10 @@ class TestPooling(unittest.TestCase):
 
         self.assertTrue(
             gradcheck(
-                fn, (input.F, input.pixel_dist, unpool.stride,
-                     unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, False, input.coords_key, None, input.C)))
+                fn,
+                (input.F, input.pixel_dist, unpool.stride, unpool.kernel_size,
+                 unpool.dilation, unpool.region_type_, unpool.region_offset_,
+                 False, input.coords_key, None, input.C)))
 
     def test_unpooling_gpu(self):
         if not torch.cuda.is_available():
@@ -182,9 +182,10 @@ class TestPooling(unittest.TestCase):
 
         self.assertTrue(
             gradcheck(
-                fn, (input.F, input.pixel_dist, unpool.stride,
-                     unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, False, input.coords_key, None, input.C)))
+                fn,
+                (input.F, input.pixel_dist, unpool.stride, unpool.kernel_size,
+                 unpool.dilation, unpool.region_type_, unpool.region_offset_,
+                 False, input.coords_key, None, input.C)))
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
@@ -196,9 +197,10 @@ class TestPooling(unittest.TestCase):
         fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
             gradcheck(
-                fn, (input.F, input.pixel_dist, unpool.stride,
-                     unpool.kernel_size, unpool.dilation, unpool.region_type,
-                     None, True, input.coords_key, None, input.C)))
+                fn,
+                (input.F, input.pixel_dist, unpool.stride, unpool.kernel_size,
+                 unpool.dilation, unpool.region_type_, unpool.region_offset_,
+                 True, input.coords_key, None, input.C)))
 
 
 if __name__ == '__main__':

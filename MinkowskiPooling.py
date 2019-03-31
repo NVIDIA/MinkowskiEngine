@@ -3,8 +3,9 @@ from torch.autograd import Function
 
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import RegionType, MinkowskiModuleBase, convert_to_int_list, \
-    convert_to_int_tensor, convert_region_type, prep_args, save_ctx, get_postfix
+from Common import KernelGenerator, RegionType, MinkowskiModuleBase, \
+    convert_to_int_list, convert_to_int_tensor, \
+    prep_args, save_ctx, get_postfix
 from MinkowskiCoords import CoordsKey
 
 
@@ -150,15 +151,12 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
                  kernel_size,
                  stride=1,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  is_transpose=False,
                  average=True,
                  dimension=-1):
         super(MinkowskiPoolingBase, self).__init__()
-        assert isinstance(region_type, RegionType)
         if out_coords_key is not None:
             assert isinstance(out_coords_key, CoordsKey)
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
@@ -169,17 +167,20 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         if torch.prod(kernel_size) == 1 and torch.prod(stride) == 1:
             raise ValueError('Trivial input output mapping')
 
-        self.up_stride = stride \
-            if is_transpose else torch.Tensor([1, ] * dimension)
+        if kernel_generator is None:
+            kernel_generator = KernelGenerator(
+                kernel_size=kernel_size,
+                stride=stride,
+                dilation=dilation,
+                is_transpose=is_transpose,
+                dimension=dimension)
 
         self.average = average
         self.kernel_size = kernel_size
         self.stride = stride
         self.dilation = dilation
-        self.region_type = region_type
-        self.region_offset = region_offset
+        self.kernel_generator = kernel_generator
         self.out_coords_key = out_coords_key
-        self.axis_types = axis_types
         self.dimension = dimension
 
     def forward(self, input):
@@ -187,10 +188,8 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         assert input.D == self.dimension
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = convert_region_type(
-            self.region_type, input.pixel_dist, self.kernel_size,
-            self.up_stride, self.dilation, self.region_offset, self.axis_types,
-            self.dimension)
+        self.region_type_, self.region_offset_, _ = \
+            self.kernel_generator.get_kernel(input.pixel_dist)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -201,6 +200,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
             input.F, input.pixel_dist, self.stride, self.kernel_size,
             self.dilation, self.region_type_, self.region_offset_, self.average,
             input.coords_key, out_coords_key, input.C)
+
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.C)
 
@@ -216,15 +216,20 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
                  kernel_size,
                  stride=1,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  dimension=None):
         is_transpose = False
-        super(MinkowskiAvgPooling, self).__init__(
-            kernel_size, stride, dilation, region_type, region_offset,
-            out_coords_key, axis_types, is_transpose, True, dimension)
+        MinkowskiPoolingBase.__init__(
+            self,
+            kernel_size,
+            stride,
+            dilation,
+            kernel_generator,
+            out_coords_key,
+            is_transpose,
+            average=True,
+            dimension=dimension)
         self.pooling = MinkowskiAvgPoolingFunction()
 
 
@@ -234,15 +239,20 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
                  kernel_size,
                  stride=1,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  dimension=None):
         is_transpose = False
-        super(MinkowskiSumPooling, self).__init__(
-            kernel_size, stride, dilation, region_type, region_offset,
-            out_coords_key, axis_types, is_transpose, False, dimension)
+        MinkowskiPoolingBase.__init__(
+            self,
+            kernel_size,
+            stride,
+            dilation,
+            kernel_generator,
+            out_coords_key,
+            is_transpose,
+            average=False,
+            dimension=dimension)
         self.pooling = MinkowskiAvgPoolingFunction()
 
 
@@ -254,19 +264,16 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
                  kernel_size,
                  stride=1,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  dimension=None):
-        super(MinkowskiMaxPooling, self).__init__(
+        MinkowskiPoolingBase.__init__(
+            self,
             kernel_size,
             stride,
             dilation,
-            region_type,
-            region_offset,
+            kernel_generator,
             out_coords_key,
-            axis_types,
             is_transpose=False,
             dimension=dimension)
         self.pooling = MinkowskiMaxPoolingFunction()
@@ -276,10 +283,8 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
         assert input.D == self.dimension
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = convert_region_type(
-            self.region_type, input.pixel_dist, self.kernel_size,
-            self.up_stride, self.dilation, self.region_offset, self.axis_types,
-            self.dimension)
+        self.region_type_, self.region_offset_, _ = \
+            self.kernel_generator.get_kernel(input.pixel_dist)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -371,15 +376,20 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
                  kernel_size,
                  stride,
                  dilation=1,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  dimension=None):
         is_transpose = True
-        super(MinkowskiPoolingTranspose, self).__init__(
-            kernel_size, stride, dilation, region_type, region_offset,
-            out_coords_key, axis_types, is_transpose, False, dimension)
+        MinkowskiPoolingBase.__init__(
+            self,
+            kernel_size,
+            stride,
+            dilation,
+            kernel_generator,
+            out_coords_key,
+            is_transpose,
+            average=False,
+            dimension=dimension)
         self.pooling = MinkowskiPoolingTransposeFunction()
 
     def forward(self, input):
@@ -387,10 +397,8 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
         assert input.D == self.dimension
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = convert_region_type(
-            self.region_type, input.pixel_dist, self.kernel_size,
-            self.up_stride, self.dilation, self.region_offset, self.axis_types,
-            self.dimension)
+        self.region_type_, self.region_offset_, _ = \
+            self.kernel_generator.get_kernel(input.pixel_dist)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)

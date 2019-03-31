@@ -6,9 +6,9 @@ from torch.nn import Parameter
 
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import RegionType, MinkowskiModuleBase, get_kernel_volume, \
+from Common import RegionType, MinkowskiModuleBase, KernelGenerator, \
     prep_args, save_ctx, convert_to_int_list, convert_to_int_tensor, \
-    convert_region_type, get_postfix
+    get_postfix
 from MinkowskiCoords import CoordsKey
 
 
@@ -236,14 +236,11 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                  stride=1,
                  dilation=1,
                  has_bias=False,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  is_transpose=False,
                  dimension=-1):
         super(MinkowskiConvolutionBase, self).__init__()
-        assert isinstance(region_type, RegionType)
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
         if out_coords_key is not None:
             assert isinstance(out_coords_key, CoordsKey)
@@ -252,10 +249,15 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
-        self.up_stride = stride \
-            if is_transpose else torch.Tensor([1, ] * dimension)
-        kernel_volume = get_kernel_volume(region_type, kernel_size,
-                                          region_offset, axis_types, dimension)
+        if kernel_generator is None:
+            kernel_generator = KernelGenerator(
+                kernel_size=kernel_size,
+                stride=stride,
+                dilation=dilation,
+                is_transpose=is_transpose,
+                dimension=dimension)
+
+        kernel_volume = kernel_generator.kernel_volume
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -263,10 +265,8 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         self.kernel_volume = kernel_volume
         self.stride = stride
         self.dilation = dilation
-        self.region_type = region_type
-        self.region_offset = region_offset
+        self.kernel_generator = kernel_generator
         self.out_coords_key = out_coords_key
-        self.axis_types = axis_types
         self.dimension = dimension
         self.use_mm = False  # use matrix multiplication when kernel is 1
 
@@ -287,10 +287,8 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         assert input.D == self.dimension
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = convert_region_type(
-            self.region_type, input.pixel_dist, self.kernel_size,
-            self.up_stride, self.dilation, self.region_offset, self.axis_types,
-            self.dimension)
+        self.region_type_, self.region_offset_, _ = \
+            self.kernel_generator.get_kernel(input.pixel_dist)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -361,10 +359,8 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
                  stride=1,
                  dilation=1,
                  has_bias=False,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  dimension=None):
         r"""a high-dimensional convolution layer for sparse tensors.
 
@@ -394,26 +390,9 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             :attr:`has_bias` (bool, optional): if True, the convolution layer
             has a bias.
 
-            :attr:`region_type` (RegionType, optional): defines the kernel
-            shape. Please refer to MinkowskiEngine.Comon for details.
-
-            :attr:`region_offset` (torch.IntTensor, optional): when the
-            :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
-            kernel uses this given torch int tensor to define offsets. It
-            should be a matrix of size :math:`N \times D` where :math:`N` is
-            the number of offsets and :math:`D` is the dimension of the
-            space.abs
-
             :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
             network uses the specific coordinates for the output coordinates.
             It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
-
-            :attr:`axis_types` (list of RegionType, optional): If given, it
-            uses different methods to create a kernel for each axis. e.g., when
-            it is `[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
-            RegionType.HYPERCROSS]`, the kernel would be a rectangular for the
-            first two dimensions and a cross shaped kernel for the thrid
-            dimension.
 
             :attr:`dimension` (int): the dimension of the space all the inputs
             and the network is defined. For example images are in 2D space,
@@ -428,10 +407,8 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             stride,
             dilation,
             has_bias,
-            region_type,
-            region_offset,
+            kernel_generator,
             out_coords_key,
-            axis_types,
             is_transpose=False,
             dimension=dimension)
         self.reset_parameters()
@@ -451,10 +428,8 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
                  stride=1,
                  dilation=1,
                  has_bias=False,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  dimension=None):
         r"""a high-dimensional convolution transpose layer for sparse tensors.
 
@@ -484,26 +459,9 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             :attr:`has_bias` (bool, optional): if True, the convolution layer
             has a bias.
 
-            :attr:`region_type` (RegionType, optional): defines the kernel
-            shape. Please refer to MinkowskiEngine.Comon for details.
-
-            :attr:`region_offset` (torch.IntTensor, optional): when the
-            :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
-            kernel uses this given torch int tensor to define offsets. It
-            should be a matrix of size :math:`N \times D` where :math:`N` is
-            the number of offsets and :math:`D` is the dimension of the
-            space.abs
-
             :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
             network uses the specific coordinates for the output coordinates.
             It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
-
-            :attr:`axis_types` (list of RegionType, optional): If given, it
-            uses different methods to create a kernel for each axis. e.g., when
-            it is `[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
-            RegionType.HYPERCROSS]`, the kernel would be a rectangular for the
-            first two dimensions and a cross shaped kernel for the thrid
-            dimension.
 
             :attr:`dimension` (int): the dimension of the space all the inputs
             and the network is defined. For example images are in 2D space,
@@ -518,10 +476,8 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             stride,
             dilation,
             has_bias,
-            region_type,
-            region_offset,
+            kernel_generator,
             out_coords_key,
-            axis_types,
             is_transpose=True,
             dimension=dimension)
         self.reset_parameters(True)
@@ -537,10 +493,8 @@ class MinkowskiAdaptiveDilationConvolution(MinkowskiConvolutionBase):
                  stride=1,
                  dilation=1,
                  has_bias=False,
-                 region_type=RegionType.HYPERCUBE,
-                 region_offset=None,
+                 kernel_generator=None,
                  out_coords_key=None,
-                 axis_types=None,
                  dimension=None):
         """
         kernel_size: if odd, kernel is centered at the input coordinate.
@@ -554,10 +508,8 @@ class MinkowskiAdaptiveDilationConvolution(MinkowskiConvolutionBase):
             stride,
             dilation,
             has_bias,
-            region_type,
-            region_offset,
+            kernel_generator,
             out_coords_key,
-            axis_types,
             is_transpose=False,
             dimension=dimension)
         self.reset_parameters()
@@ -570,10 +522,8 @@ class MinkowskiAdaptiveDilationConvolution(MinkowskiConvolutionBase):
         assert not self.use_mm
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = convert_region_type(
-            self.region_type, input.pixel_dist, self.kernel_size,
-            self.up_stride, self.dilation, self.region_offset, self.axis_types,
-            self.dimension)
+        self.region_type_, self.region_offset_, _ = \
+            self.kernel_generator.get_kernel(input.pixel_dist)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)

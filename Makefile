@@ -2,7 +2,7 @@
 # Uncomment for debugging
 # DEBUG := 1
 # Pretty build
-# Q ?= @
+Q ?= @
 
 CXX := g++
 

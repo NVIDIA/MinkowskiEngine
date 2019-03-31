@@ -46,8 +46,9 @@ class TestConvolution(unittest.TestCase):
 
         self.assertTrue(
             gradcheck(fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
-                           conv.kernel_size, conv.dilation, conv.region_type,
-                           None, input.coords_key, None, input.coords_man)))
+                           conv.kernel_size, conv.dilation,
+                           conv.region_type_, conv.region_offset_,
+                           input.coords_key, None, input.coords_man)))
 
     def test(self):
         in_channels, out_channels, D = 2, 3, 2
@@ -67,6 +68,7 @@ class TestConvolution(unittest.TestCase):
         output = conv(input)
         print(output)
 
+        print(conv.region_offset_)
         kernel_map = input.C.get_kernel_map(1, 2, stride=2, kernel_size=3)
         print(kernel_map)
 
@@ -75,8 +77,9 @@ class TestConvolution(unittest.TestCase):
 
         self.assertTrue(
             gradcheck(fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
-                           conv.kernel_size, conv.dilation, conv.region_type,
-                           None, input.coords_key, None, input.coords_man)))
+                           conv.kernel_size, conv.dilation,
+                           conv.region_type_, conv.region_offset_,
+                           input.coords_key, None, input.coords_man)))
 
     # def test_hybrid(self):
     #     in_channels, out_channels, D = 2, 3, 2
@@ -144,10 +147,11 @@ class TestConvolutionTranspose(unittest.TestCase):
         fn = MinkowskiConvolutionTransposeFunction()
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, conv_tr.kernel, input.pixel_dist, conv_tr.stride,
-                     conv_tr.kernel_size, conv_tr.dilation, conv_tr.region_type,
-                     None, input.coords_key, None, input.coords_man)))
+            gradcheck(fn,
+                      (input.F, conv_tr.kernel, input.pixel_dist,
+                       conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
+                       conv_tr.region_type_, conv_tr.region_offset_,
+                       input.coords_key, None, input.coords_man)))
 
     def test(self):
         in_channels, out_channels, D = 2, 3, 2
@@ -167,7 +171,7 @@ class TestConvolutionTranspose(unittest.TestCase):
         conv_tr = MinkowskiConvolutionTranspose(
             out_channels,
             in_channels,
-            kernel_size=3,
+            kernel_size=2,
             stride=2,
             has_bias=True,
             dimension=D)
@@ -180,10 +184,11 @@ class TestConvolutionTranspose(unittest.TestCase):
         fn = MinkowskiConvolutionTransposeFunction()
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, conv_tr.kernel, input.pixel_dist, conv_tr.stride,
-                     conv_tr.kernel_size, conv_tr.dilation, conv_tr.region_type,
-                     None, input.coords_key, None, input.coords_man)))
+            gradcheck(fn,
+                      (input.F, conv_tr.kernel, input.pixel_dist,
+                       conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
+                       conv_tr.region_type_, conv_tr.region_offset_,
+                       input.coords_key, None, input.coords_man)))
 
 
 if __name__ == '__main__':

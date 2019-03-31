@@ -72,12 +72,13 @@ def save_ctx(ctx, pixel_dist, stride, kernel_size, dilation, region_type,
 
 
 def get_postfix(tensor):
-  postfix = 'GPU' if tensor.is_cuda else 'CPU'
-  if isinstance(tensor, torch.DoubleTensor) or isinstance(tensor, torch.cuda.DoubleTensor):
-    postfix += 'd'
-  else:
-    postfix += 'f'
-  return postfix
+    postfix = 'GPU' if tensor.is_cuda else 'CPU'
+    if isinstance(tensor, torch.DoubleTensor) or isinstance(
+            tensor, torch.cuda.DoubleTensor):
+        postfix += 'd'
+    else:
+        postfix += 'f'
+    return postfix
 
 
 class RegionType(Enum):
@@ -267,6 +268,61 @@ def convert_region_type(region_type,
         region_offset = torch.IntTensor()
 
     return region_type, region_offset, kernel_volume
+
+
+class KernelGenerator:
+
+    def __init__(self,
+                 kernel_size=-1,
+                 stride=1,
+                 dilation=1,
+                 is_transpose=False,
+                 region_type=RegionType.HYPERCUBE,
+                 region_offsets=None,
+                 axis_types=None,
+                 dimension=-1):
+        r"""
+            :attr:`region_type` (RegionType, optional): defines the kernel
+            shape. Please refer to MinkowskiEngine.Comon for details.
+
+            :attr:`region_offset` (torch.IntTensor, optional): when the
+            :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
+            kernel uses this given torch int tensor to define offsets. It
+            should be a matrix of size :math:`N \times D` where :math:`N` is
+            the number of offsets and :math:`D` is the dimension of the
+            space.
+
+            :attr:`axis_types` (list of RegionType, optional): If given, it
+            uses different methods to create a kernel for each axis. e.g., when
+            it is `[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
+            RegionType.HYPERCROSS]`, the kernel would be a rectangular for the
+            first two dimensions and a cross shaped kernel for the thrid
+            dimension.
+        """
+        assert dimension > 0
+        assert isinstance(region_type, RegionType)
+
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
+
+        self.up_stride = stride \
+            if is_transpose else torch.Tensor([1, ] * dimension)
+
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.dilation = dilation
+        self.region_type = region_type
+        self.region_offsets = region_offsets
+        self.axis_types = axis_types
+        self.dimension = dimension
+        self.kernel_volume = get_kernel_volume(
+            region_type, kernel_size, region_offsets, axis_types, dimension)
+
+    def get_kernel(self, pixel_dist):
+        return convert_region_type(
+            self.region_type, pixel_dist, self.kernel_size, self.up_stride,
+            self.dilation, self.region_offsets, self.axis_types, self.dimension)
 
 
 class MinkowskiModuleBase(Module):
