@@ -41,14 +41,15 @@ __global__ void max_pool(const int N, const int out_nrows, const int nchannel,
       num_in_feat = nnz - in_index;
     else
       num_in_feat = d_in_index_min[nrow + 1] - in_index;
+    // It is guaranteed to have at least one input per output
     Itype curr_index, max_index = d_in_map[in_index] * nchannel + ch;
-    Dtype curr_val, max_val = d_in_feat[in_index * nchannel + ch];
+    Dtype curr_val, max_val = d_in_feat[max_index];
     for (int curr_iter = 0; curr_iter < num_in_feat; curr_iter++) {
-      curr_index = (in_index + curr_iter) * nchannel + ch;
+      curr_index = d_in_map[in_index + curr_iter] * nchannel + ch;
       curr_val = d_in_feat[curr_index];
       if (max_val < curr_val) {
         max_val = curr_val;
-        max_index = d_in_map[in_index + curr_iter] * nchannel + ch;
+        max_index = curr_index;
       }
     }
     Itype out_ind = out_map_row * nchannel + ch;
@@ -105,18 +106,6 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   // placed adjacent according to out_map
   thrust::sort_by_key(thrust::device, d_out_map, d_out_map + nnz, d_in_map);
 
-  // Copy all in_feats to the temporary memory with d_in_map
-  Dtype *d_sorted_in_feat;
-  CUDA_CHECK(
-      cudaMalloc((void **)&d_sorted_in_feat, nnz * nchannel * sizeof(Dtype)));
-  // thrust::device_vector<Dtype> d_sorted_in_feat(nnz * nchannel);
-  copy_sorted<Dtype, Itype>
-      <<<GET_BLOCKS(nnz * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-          nnz * nchannel, nnz, nchannel,
-          d_in_feat,         // in_feat
-          d_in_map,          // in index
-          d_sorted_in_feat); // out_feat
-
   // Second, create number of in_feat per out, and starting index
   Itype *d_index, *d_in_map_min, *d_reduced_out_map;
   CUDA_CHECK(cudaMalloc((void **)&d_index, 3 * nnz * sizeof(Itype)));
@@ -153,13 +142,12 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   max_pool<Dtype, Itype>
       <<<GET_BLOCKS(out_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
           nchannel * out_nrows, // N
-          out_nrows, nchannel, nnz, d_sorted_in_feat, d_out_feat,
+          out_nrows, nchannel, nnz, d_in_feat, d_out_feat,
           d_max_index, // Out indices for backward
           d_in_map,    // in index
           d_reduced_out_map, d_in_map_min);
 
   cudaFree(d_in_map);
-  cudaFree(d_sorted_in_feat);
   cudaFree(d_index);
 }
 
