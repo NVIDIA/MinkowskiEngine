@@ -16,6 +16,9 @@ class MinkowskiModuleBase(Module):
         return SparseTensor(
             output, coords_key=input.coords_key, coords_manager=input.C)
 
+    def __repr__(self):
+        return self.__class__.__name__ + '()'
+
 
 class MinkowskiReLU(MinkowskiModuleBase):
     MODULE = torch.nn.ReLU

@@ -75,7 +75,8 @@ if __name__ == '__main__':
 
         # Extract features from the sparse tensors to use a pytorch criterion
         out_features = [output.F for output in outputs]
-        losses = parallel.parallel_apply(criterions, tuple(zip(out_features, labels)), devices=devices)
+        losses = parallel.parallel_apply(
+            criterions, tuple(zip(out_features, labels)), devices=devices)
         loss = parallel.gather(losses, target_device, dim=0).mean()
 
         # Gradient

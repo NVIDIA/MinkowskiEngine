@@ -32,6 +32,12 @@ class MinkowskiBatchNorm(Module):
         return SparseTensor(
             output, coords_key=input.coords_key, coords_manager=input.C)
 
+    def __repr__(self):
+        s = '({}, eps={}, momentum={}, affine={}, track_running_stats={})'.format(
+            self.bn.num_features, self.bn.eps, self.bn.momentum, self.bn.affine,
+            self.bn.track_running_stats)
+        return self.__class__.__name__ + s
+
 
 class MinkowskiInstanceNormFunction(Function):
 
@@ -45,8 +51,10 @@ class MinkowskiInstanceNormFunction(Function):
         if glob_coords_key is None:
             glob_coords_key = CoordsKey(in_coords_key.D)
 
-        gpool_forward = getattr(MEB, 'GlobalPoolingForward' + get_postfix(in_feat))
-        broadcast_forward = getattr(MEB, 'BroadcastForward' + get_postfix(in_feat))
+        gpool_forward = getattr(MEB,
+                                'GlobalPoolingForward' + get_postfix(in_feat))
+        broadcast_forward = getattr(MEB,
+                                    'BroadcastForward' + get_postfix(in_feat))
         add = operation_type_to_int(OperationType.ADDITION)
         multiply = operation_type_to_int(OperationType.MULTIPLICATION)
 
@@ -97,8 +105,10 @@ class MinkowskiInstanceNormFunction(Function):
         inv_std, norm_feat = ctx.saved_variables
         D = in_coords_key.D
 
-        gpool_forward = getattr(MEB, 'GlobalPoolingForward' + get_postfix(out_grad))
-        broadcast_forward = getattr(MEB, 'BroadcastForward' + get_postfix(out_grad))
+        gpool_forward = getattr(MEB,
+                                'GlobalPoolingForward' + get_postfix(out_grad))
+        broadcast_forward = getattr(MEB,
+                                    'BroadcastForward' + get_postfix(out_grad))
         add = operation_type_to_int(OperationType.ADDITION)
         multiply = operation_type_to_int(OperationType.MULTIPLICATION)
 

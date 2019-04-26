@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 import MinkowskiEngine as ME
-import MinkowskiEngine.MinkowskiFunctional as F
 
 from tests.common import data_loader
 
@@ -11,36 +10,26 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
     def __init__(self, in_feat, out_feat, D):
         super(ExampleNetwork, self).__init__(D)
-        self.conv1 = ME.MinkowskiConvolution(
-            in_channels=in_feat,
-            out_channels=64,
-            kernel_size=3,
-            stride=2,
-            dilation=1,
-            has_bias=False,
-            dimension=D)
-        self.bn1 = ME.MinkowskiBatchNorm(64)
-        self.conv2 = ME.MinkowskiConvolution(
-            in_channels=64,
-            out_channels=128,
-            kernel_size=3,
-            stride=2,
-            dimension=D)
-        self.bn2 = ME.MinkowskiBatchNorm(128)
-        self.pooling = ME.MinkowskiGlobalPooling(dimension=D)
-        self.linear = ME.MinkowskiLinear(128, out_feat)
+        self.net = nn.Sequential(
+            ME.MinkowskiConvolution(
+                in_channels=in_feat,
+                out_channels=64,
+                kernel_size=3,
+                stride=2,
+                dilation=1,
+                has_bias=False,
+                dimension=D), ME.MinkowskiBatchNorm(64), ME.MinkowskiReLU(),
+            ME.MinkowskiConvolution(
+                in_channels=64,
+                out_channels=128,
+                kernel_size=3,
+                stride=2,
+                dimension=D), ME.MinkowskiBatchNorm(128), ME.MinkowskiReLU(),
+            ME.MinkowskiGlobalPooling(dimension=D),
+            ME.MinkowskiLinear(128, out_feat))
 
     def forward(self, x):
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = F.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = F.relu(out)
-
-        out = self.pooling(out)
-        return self.linear(out)
+        return self.net(x)
 
 
 if __name__ == '__main__':

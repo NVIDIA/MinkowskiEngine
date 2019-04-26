@@ -14,6 +14,11 @@ class MinkowskiLinear(Module):
         return SparseTensor(
             output, coords_key=input.coords_key, coords_manager=input.C)
 
+    def __repr__(self):
+        s = '(in_features={}, out_features={}, bias={})'.format(
+            self.linear.in_features, self.linear.out_features, self.linear.bias is not None)
+        return self.__class__.__name__ + s
+
 
 def cat(sparse_tensors):
     """

@@ -57,4 +57,4 @@ class MinkowskiPruning(Module):
             output, coords_key=out_coords_key, coords_manager=input.C)
 
     def __repr__(self):
-        return self.__class__.__name__
+        return self.__class__.__name__ + '()'
