@@ -1,22 +1,38 @@
 import os
+from subprocess import Popen, PIPE
 from setuptools import setup
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
 
 from distutils.sysconfig import get_python_inc
 
-os.system('make -j%d' % os.cpu_count())
+
+def run_command(cmd):
+    process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
+    while True:
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+    rc = process.poll()
+    return rc
+
+
+run_command('make -j%d' % os.cpu_count())
 
 # Python interface
 setup(
     name='MinkowskiEngine',
     version='0.2.1',
     install_requires=['torch'],
-    packages=['MinkowskiEngine', 'MinkowskiEngine.utils', 'MinkowskiEngine.tests'],
+    packages=[
+        'MinkowskiEngine', 'MinkowskiEngine.utils', 'MinkowskiEngine.tests'
+    ],
     package_dir={'MinkowskiEngine': './'},
     ext_modules=[
         CUDAExtension(
             name='MinkowskiEngineBackend',
-            include_dirs=['./', get_python_inc() + "/.."],  # For sparse hash from conda
+            include_dirs=['./', get_python_inc() + "/.."],
             sources=[
                 'pybind/minkowski.cpp',
             ],

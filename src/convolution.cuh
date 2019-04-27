@@ -32,4 +32,5 @@ void ConvolutionBackwardKernelGPU(
     Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> &in_map,
     const std::vector<std::vector<Itype>> &out_map, int out_nrows,
     cublasHandle_t cuhandle, cudaStream_t stream);
+
 #endif
