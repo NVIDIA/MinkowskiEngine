@@ -47,7 +47,7 @@ class SparseTensor():
         else:
             assert isinstance(coords_manager, CoordsManager)
 
-        self.F = feats
+        self.F = feats.contiguous()
         self.coords_key = coords_key
         self.coords_man = coords_manager
 
