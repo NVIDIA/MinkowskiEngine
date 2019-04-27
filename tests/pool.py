@@ -34,7 +34,7 @@ class TestPooling(unittest.TestCase):
         # Even numbered kernel_size error!
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                      (input.F, input.tensor_stride, pool.stride, pool.kernel_size,
                        pool.dilation, pool.region_type_, pool.region_offset_,
                        input.coords_key, None, input.C)))
 
@@ -49,7 +49,7 @@ class TestPooling(unittest.TestCase):
         # Check backward
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                      (input.F, input.tensor_stride, pool.stride, pool.kernel_size,
                        pool.dilation, pool.region_type_, pool.region_offset_,
                        input.coords_key, None, input.C)))
 
@@ -67,7 +67,7 @@ class TestPooling(unittest.TestCase):
         fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                      (input.F, input.tensor_stride, pool.stride, pool.kernel_size,
                        pool.dilation, pool.region_type_, pool.region_offset_,
                        False, input.coords_key, None, input.C)))
 
@@ -102,7 +102,7 @@ class TestPooling(unittest.TestCase):
         fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                      (input.F, input.tensor_stride, pool.stride, pool.kernel_size,
                        pool.dilation, pool.region_type_, pool.region_offset_,
                        True, input.coords_key, None, input.C)))
 
@@ -120,7 +120,7 @@ class TestPooling(unittest.TestCase):
         fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, input.pixel_dist, pool.stride, pool.kernel_size,
+                      (input.F, input.tensor_stride, pool.stride, pool.kernel_size,
                        pool.dilation, pool.region_type_, pool.region_offset_,
                        True, input.coords_key, None, input.C)))
 
@@ -158,7 +158,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn,
-                (input.F, input.pixel_dist, unpool.stride, unpool.kernel_size,
+                (input.F, input.tensor_stride, unpool.stride, unpool.kernel_size,
                  unpool.dilation, unpool.region_type_, unpool.region_offset_,
                  False, input.coords_key, None, input.C)))
 
@@ -184,7 +184,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn,
-                (input.F, input.pixel_dist, unpool.stride, unpool.kernel_size,
+                (input.F, input.tensor_stride, unpool.stride, unpool.kernel_size,
                  unpool.dilation, unpool.region_type_, unpool.region_offset_,
                  False, input.coords_key, None, input.C)))
 
@@ -199,7 +199,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn,
-                (input.F, input.pixel_dist, unpool.stride, unpool.kernel_size,
+                (input.F, input.tensor_stride, unpool.stride, unpool.kernel_size,
                  unpool.dilation, unpool.region_type_, unpool.region_offset_,
                  True, input.coords_key, None, input.C)))
 

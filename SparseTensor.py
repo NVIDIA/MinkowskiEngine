@@ -12,12 +12,11 @@ class SparseTensor():
                  coords=None,
                  coords_key=None,
                  coords_manager=None,
-                 pixel_dist=1):
+                 tensor_stride=1):
         """
         Either coords or coords_key must be provided.
-        pixel_distance defines the minimum space between coordinates
         coords_manager: of type CoordsManager.
-        pixel_dist: distance between pixels
+        tensor_stride: defines the minimum distance or stride between coordinates
         """
         assert isinstance(feats, torch.Tensor), "Features must be torch.Tensor"
 
@@ -32,7 +31,7 @@ class SparseTensor():
             else:
                 D = coords_manager.D
             coords_key = CoordsKey(D)
-            coords_key.setPixelDist(convert_to_int_list(pixel_dist, D))
+            coords_key.setTensorStride(convert_to_int_list(tensor_stride, D))
         else:
             assert isinstance(coords_key, CoordsKey)
 
@@ -53,16 +52,16 @@ class SparseTensor():
         self.coords_man = coords_manager
 
     @property
-    def pixel_dist(self):
-        return self.coords_key.getPixelDist()
+    def tensor_stride(self):
+        return self.coords_key.getTensorStride()
 
-    @pixel_dist.setter
-    def pixel_dist(self, p):
+    @tensor_stride.setter
+    def tensor_stride(self, p):
       """
       The function is not recommended to be used directly.
       """
       p = convert_to_int_list(p, self.D)
-      self.coords_key.setPixelDist(p)
+      self.coords_key.setTensorStride(p)
 
     @property
     def C(self):
@@ -74,8 +73,8 @@ class SparseTensor():
 
     def stride(self, s):
         ss = convert_to_int_list(s)
-        pixel_dists = self.coords_key.getPixelDist()
-        self.coords_key.setPixelDist([s * p for s, p in zip(ss, pixel_dists)])
+        tensor_strides = self.coords_key.getTensorStride()
+        self.coords_key.setTensorStride([s * p for s, p in zip(ss, tensor_strides)])
 
     def __add__(self, other):
         return SparseTensor(
@@ -91,7 +90,7 @@ class SparseTensor():
         return self.__class__.__name__ + '(' + os.linesep \
             + '  Feats=' + str(self.F) + os.linesep \
             + '  coords_key=' + str(self.coords_key) + os.linesep \
-            + '  pixel_dist=' + str(self.coords_key.getPixelDist()) + os.linesep \
+            + '  tensor_stride=' + str(self.coords_key.getTensorStride()) + os.linesep \
             + '  coords_man=' + str(self.coords_man) + ')'
 
     def __len__(self):

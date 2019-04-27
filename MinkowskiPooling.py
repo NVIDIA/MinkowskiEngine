@@ -21,7 +21,7 @@ class MinkowskiMaxPoolingFunction(Function):
     @staticmethod
     def forward(ctx,
                 input_features,
-                pixel_dist=1,
+                tensor_stride=1,
                 stride=1,
                 kernel_size=-1,
                 dilation=1,
@@ -34,15 +34,15 @@ class MinkowskiMaxPoolingFunction(Function):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
-        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
-            pixel_dist, stride, kernel_size, dilation, region_type,
+        tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
+            tensor_stride, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
 
         if region_offset is None:
             region_offset = torch.IntTensor()
 
         ctx.in_feat = input_features
-        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
 
@@ -54,7 +54,7 @@ class MinkowskiMaxPoolingFunction(Function):
 
         fw_fn = getattr(MEB, 'MaxPoolingForward' + get_postfix(input_features))
         fw_fn(D, input_features, out_feat, max_index,
-              convert_to_int_list(ctx.pixel_dist, D),
+              convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), region_type, region_offset,
@@ -68,7 +68,7 @@ class MinkowskiMaxPoolingFunction(Function):
         D = ctx.in_coords_key.D
         bw_fn = getattr(MEB, 'MaxPoolingBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.max_index,
-              convert_to_int_list(ctx.pixel_dist, D),
+              convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), ctx.region_type,
@@ -89,7 +89,7 @@ class MinkowskiAvgPoolingFunction(Function):
     @staticmethod
     def forward(ctx,
                 input_features,
-                pixel_dist=1,
+                tensor_stride=1,
                 stride=1,
                 kernel_size=-1,
                 dilation=1,
@@ -103,15 +103,15 @@ class MinkowskiAvgPoolingFunction(Function):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
-        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
-            pixel_dist, stride, kernel_size, dilation, region_type,
+        tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
+            tensor_stride, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
 
         if region_offset is None:
             region_offset = torch.IntTensor()
 
         ctx.in_feat = input_features
-        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
         ctx.use_avg = average
@@ -122,7 +122,7 @@ class MinkowskiAvgPoolingFunction(Function):
 
         fw_fn = getattr(MEB, 'AvgPoolingForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.pixel_dist, D),
+              convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), region_type, region_offset,
@@ -136,7 +136,7 @@ class MinkowskiAvgPoolingFunction(Function):
         D = ctx.in_coords_key.D
         bw_fn = getattr(MEB, 'AvgPoolingBackward' + get_postfix(grad_out_feat))
         bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.pixel_dist, D),
+              convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), ctx.region_type,
@@ -189,7 +189,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
+            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -197,7 +197,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
             out_coords_key = self.out_coords_key
 
         output = self.pooling.apply(
-            input.F, input.pixel_dist, self.stride, self.kernel_size,
+            input.F, input.tensor_stride, self.stride, self.kernel_size,
             self.dilation, self.region_type_, self.region_offset_, self.average,
             input.coords_key, out_coords_key, input.C)
 
@@ -230,7 +230,7 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
 
             :attr:`stride` (int, or list, optional): stride size of the
             convolution layer. If non-identity is used, the output coordinates
-            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            will be at least :attr:`stride` :math:`\times` :attr:`tensor_stride`
             away. When a list is given, the length must be D; each element will
             be used for stride size for the specific axis.
 
@@ -284,7 +284,7 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
 
             :attr:`stride` (int, or list, optional): stride size of the
             convolution layer. If non-identity is used, the output coordinates
-            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            will be at least :attr:`stride` :math:`\times` :attr:`tensor_stride`
             away. When a list is given, the length must be D; each element will
             be used for stride size for the specific axis.
 
@@ -340,7 +340,7 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
 
             :attr:`stride` (int, or list, optional): stride size of the
             convolution layer. If non-identity is used, the output coordinates
-            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            will be at least :attr:`stride` :math:`\times` :attr:`tensor_stride`
             away. When a list is given, the length must be D; each element will
             be used for stride size for the specific axis.
 
@@ -378,14 +378,14 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
+            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
         else:
             out_coords_key = self.out_coords_key
 
-        output = self.pooling.apply(input.F, input.pixel_dist, self.stride,
+        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
                                     self.kernel_size, self.dilation,
                                     self.region_type_, self.region_offset_,
                                     input.coords_key, out_coords_key, input.C)
@@ -405,7 +405,7 @@ class MinkowskiPoolingTransposeFunction(Function):
     @staticmethod
     def forward(ctx,
                 input_features,
-                pixel_dist=1,
+                tensor_stride=1,
                 stride=1,
                 kernel_size=-1,
                 dilation=1,
@@ -419,8 +419,8 @@ class MinkowskiPoolingTransposeFunction(Function):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
-        pixel_dist, stride, kernel_size, dilation, region_type = prep_args(
-            pixel_dist, stride, kernel_size, dilation, region_type,
+        tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
+            tensor_stride, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
 
         if region_offset is None:
@@ -429,14 +429,14 @@ class MinkowskiPoolingTransposeFunction(Function):
         ctx.in_feat = input_features
         out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
-        ctx = save_ctx(ctx, pixel_dist, stride, kernel_size, dilation,
+        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
         D = in_coords_key.D
         fw_fn = getattr(MEB,
                         'PoolingTransposeForward' + get_postfix(input_features))
         fw_fn(in_coords_key.D, ctx.in_feat, out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.pixel_dist, D),
+              convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), region_type, region_offset,
@@ -451,7 +451,7 @@ class MinkowskiPoolingTransposeFunction(Function):
         bw_fn = getattr(MEB,
                         'PoolingTransposeBackward' + get_postfix(grad_out_feat))
         bw_fn(ctx.in_coords_key.D, ctx.in_feat, grad_in_feat, grad_out_feat,
-              ctx.num_nonzero, convert_to_int_list(ctx.pixel_dist, D),
+              ctx.num_nonzero, convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), ctx.region_type,
@@ -484,7 +484,7 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
 
             :attr:`stride` (int, or list, optional): stride size of the
             convolution layer. If non-identity is used, the output coordinates
-            will be at least :attr:`stride` :math:`\times` :attr:`pixel_dist`
+            will be at least :attr:`stride` :math:`\times` :attr:`tensor_stride`
             away. When a list is given, the length must be D; each element will
             be used for stride size for the specific axis.
 
@@ -523,7 +523,7 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
+            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -531,7 +531,7 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
             out_coords_key = self.out_coords_key
 
         output = self.pooling.apply(
-            input.F, input.pixel_dist, self.stride, self.kernel_size,
+            input.F, input.tensor_stride, self.stride, self.kernel_size,
             self.dilation, self.region_type_, self.region_offset_, self.average,
             input.coords_key, out_coords_key, input.C)
 

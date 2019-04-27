@@ -17,12 +17,13 @@
 
 template <uint8_t D, typename Itype> class KernelMapFunctor {
 public:
-  Triplets
-  operator()(const Coord<D, int> out_coord, const Arr<D, int> &in_pixel_dists,
-             const Arr<D, int> &kernel_size, const Arr<D, int> &dilations,
-             const int region_type, const Itype *offsets_data,
-             const int offsets_size, const int out_coord_index,
-             const _CoordsHashMap<D, Itype> &in_coords_hashmap);
+  Triplets operator()(const Coord<D, int> out_coord,
+                      const Arr<D, int> &in_tensor_strides,
+                      const Arr<D, int> &kernel_size,
+                      const Arr<D, int> &dilations, const int region_type,
+                      const Itype *offsets_data, const int offsets_size,
+                      const int out_coord_index,
+                      const _CoordsHashMap<D, Itype> &in_coords_hashmap);
 };
 
 template <uint8_t D, typename Itype> class CoordsThreadPool {
@@ -34,7 +35,7 @@ public:
   //     -> std::future<typename std::result_of<F(Args...)>::type>;
   std::future<Triplets>
   enqueue(KernelMapFunctor<D, Itype> &f, const Coord<D, int> out_coord,
-          const Arr<D, int> &in_pixel_dists, const Arr<D, int> &kernel_size,
+          const Arr<D, int> &in_tensor_strides, const Arr<D, int> &kernel_size,
           const Arr<D, int> &dilations, const int region_type,
           const Itype *offsets_data, const int offsets_size,
           const int out_coord_index,

@@ -38,23 +38,23 @@ template <typename T> std::string ArrToString(T arr) {
 template <typename T> void PyPrintArr(T arr) { py::print(ArrToString(arr)); }
 
 template <uint8_t D>
-std::vector<int> computeOutPixelDist(const Arr<D, int> &pixel_dists,
-                                     const Arr<D, int> &strides,
-                                     bool is_transpose) {
-  std::vector<int> out_pixel_dists;
+std::vector<int> computeOutTensorStride(const Arr<D, int> &tensor_strides,
+                                        const Arr<D, int> &strides,
+                                        bool is_transpose) {
+  std::vector<int> out_tensor_strides;
   for (int i = 0; i < D; i++) {
     if (is_transpose) {
-      if (pixel_dists[i] % strides[i] > 0)
+      if (tensor_strides[i] % strides[i] > 0)
         throw std::invalid_argument(
-            Formatter() << "The output pixel dist is not divisible by "
-                           "up_strides. pixel dists: "
-                        << ArrToString(pixel_dists)
+            Formatter() << "The output tensor stride is not divisible by "
+                           "up_strides. tensor stride: "
+                        << ArrToString(tensor_strides)
                         << ", up_strides: " << ArrToString(strides));
-      out_pixel_dists.push_back(pixel_dists[i] / strides[i]);
+      out_tensor_strides.push_back(tensor_strides[i] / strides[i]);
     } else
-      out_pixel_dists.push_back(pixel_dists[i] * strides[i]);
+      out_tensor_strides.push_back(tensor_strides[i] * strides[i]);
   }
-  return out_pixel_dists;
+  return out_tensor_strides;
 }
 
 template <uint8_t D>
@@ -86,16 +86,16 @@ private:
 
 public:
   bool key_set = false;
-  Arr<D, int> pixel_dists_;
+  Arr<D, int> tensor_strides_;
   PyCoordsKey() { reset(); }
   void reset();
   void copy(py::object ohter);
   void setKey(uint64_t key);
   uint64_t getKey();
-  void setPixelDist(const Arr<D, int> &pixel_dists);
+  void setTensorStride(const Arr<D, int> &tensor_strides);
   void stride(const Arr<D, int> &strides);
   void up_stride(const Arr<D, int> &strides);
-  Arr<D, int> getPixelDist() { return pixel_dists_; };
+  Arr<D, int> getTensorStride() { return tensor_strides_; };
   std::string toString() const;
 };
 
@@ -121,24 +121,26 @@ public:
   bool existsCoordsKey(py::object py_coords_key);
   int getCoordsSize(uint64_t coords_key);
   int getCoordsSize(py::object py_coords_key);
-  uint64_t getCoordsKey(const Arr<D, int> &pixel_dists);
+  uint64_t getCoordsKey(const Arr<D, int> &tensor_strides);
 
   void getCoordsMapping(at::Tensor mapping, py::object py_in_coords_key,
                         py::object py_out_coords_key);
   void getCoords(at::Tensor coords, py::object py_coords_key);
-  void getKernelMap(at::Tensor kernel_map, std::vector<int> pixel_dists,
+  void getKernelMap(at::Tensor kernel_map, std::vector<int> tensor_strides,
                     std::vector<int> strides, std::vector<int> kernel_sizes,
                     std::vector<int> dilations, int region_type,
                     py::object py_in_coords_key, py::object py_out_coords_key,
                     bool is_transpose);
 
   // New coords map initialzation entry
-  uint64_t initializeCoords(at::Tensor coords, const Arr<D, int> &pixel_dists,
+  uint64_t initializeCoords(at::Tensor coords,
+                            const Arr<D, int> &tensor_strides,
                             bool enforce_creation);
   uint64_t initializeCoords(at::Tensor coords, py::object py_coords_key,
                             bool enforce_creation);
   // New coords map given an input
-  uint64_t createOutCoords(uint64_t coords_key, const Arr<D, int> &pixel_dists,
+  uint64_t createOutCoords(uint64_t coords_key,
+                           const Arr<D, int> &tensor_strides,
                            const Arr<D, int> &strides, bool is_transpose);
   uint64_t createOriginCoords(uint64_t coords_key, int batch_size);
   uint64_t createPruneCoords(at::Tensor use_feat, py::object py_in_coords_key,
@@ -146,20 +148,20 @@ public:
 
   // Helper functions for hashmap creation
   CoordsHashMap<D, Itype> createCoordsHashMap(at::Tensor coords);
-  CoordsHashMap<D, Itype> createOutCoordsHashMap(uint64_t coords_key,
-                                                 const Arr<D, int> &pixel_dists,
-                                                 const Arr<D, int> &strides);
+  CoordsHashMap<D, Itype>
+  createOutCoordsHashMap(uint64_t coords_key, const Arr<D, int> &tensor_strides,
+                         const Arr<D, int> &strides);
   CoordsHashMap<D, Itype> createOriginCoordsHashMap(uint64_t coords_key,
                                                     int batch_size);
   CoordsHashMap<D, Itype> createPrunedCoordsHashMap(uint64_t coords_key,
                                                     at::Tensor use_feat);
 
   // Mappings
-  InOutMapKey getMapHashKey(Arr<D, int> pixel_dists, Arr<D, int> strides,
+  InOutMapKey getMapHashKey(Arr<D, int> tensor_strides, Arr<D, int> strides,
                             Arr<D, int> kernel_sizes, Arr<D, int> dilations,
                             int region_type, py::object py_in_coords_key,
                             py::object py_out_coords_key, bool is_transpose);
-  InOutMapKey getMapHashKey(std::vector<int> pixel_dists,
+  InOutMapKey getMapHashKey(std::vector<int> tensor_strides,
                             std::vector<int> strides,
                             std::vector<int> kernel_sizes,
                             std::vector<int> dilations, int region_type,
@@ -174,66 +176,60 @@ public:
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createInOutPerKernel(const uint64_t in_coords_key,
                        const uint64_t out_coords_key,
-                       const Arr<D, int> &in_pixel_dists,
+                       const Arr<D, int> &in_tensor_strides,
                        const Arr<D, int> &kernel_size,
                        const Arr<D, int> &dilations, int region_type,
                        at::Tensor offsets);
+
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createInOutPerKernelInThreads(const uint64_t in_coords_key,
                                 const uint64_t out_coords_key,
-                                const Arr<D, int> &in_pixel_dists,
+                                const Arr<D, int> &in_tensor_strides,
                                 const Arr<D, int> &kernel_size,
                                 const Arr<D, int> &dilations, int region_type,
                                 at::Tensor offsets);
+
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createInOutPerKernelTranspose(const uint64_t in_coords_key,
                                 const uint64_t out_coords_key,
-                                const Arr<D, int> &out_pixel_dists,
+                                const Arr<D, int> &out_tensor_strides,
                                 const Arr<D, int> &kernel_size,
                                 const Arr<D, int> &dilations, int region_type,
                                 at::Tensor offsets);
-  std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-  createInOutPerKernelAdaptiveDilationInThreads(
-    at::Tensor dilations, const uint64_t in_coords_key,
-    const uint64_t out_coords_key, const Arr<D, int> &in_pixel_dists,
-    const Arr<D, int> &kernel_size, int region_type, at::Tensor offsets);
+
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createGlobalReductionInOutMap(const uint64_t in_coords_key,
                                 const uint64_t out_coords_key);
+
   std::tuple<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createPruningInOutMap(const uint64_t in_coords_key,
                         const uint64_t out_coords_key);
 
   // Wrapper functions for setting up coords and returning maps
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnInOutPerKernel(std::vector<int> pixel_dists,
+  setupAndReturnInOutPerKernel(std::vector<int> tensor_strides,
                                std::vector<int> strides,
                                std::vector<int> kernel_sizes,
                                std::vector<int> dilations, int region_type,
                                at::Tensor offsets, py::object py_in_coords_key,
                                py::object py_out_coords_key, bool is_transpose);
+
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnInOutPerKernel(Arr<D, int> pixel_dists, Arr<D, int> strides,
+  setupAndReturnInOutPerKernel(Arr<D, int> tensor_strides, Arr<D, int> strides,
                                Arr<D, int> kernel_sizes, Arr<D, int> dilations,
                                int region_type, at::Tensor offsets,
                                py::object py_in_coords_key,
                                py::object py_out_coords_key, bool is_transpose);
+
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
   setupAndReturnOriginInOutPerKernel(int batch_size,
                                      py::object py_in_coords_key,
                                      py::object py_out_coords_key);
+
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
   setupAndReturnPruningInOutPerKernel(at::Tensor use_feat,
                                       py::object py_in_coords_key,
                                       py::object py_out_coords_key);
-
-  std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnInOutPerKernelAdaptiveDilation(
-      at::Tensor dilations, std::vector<int> vec_pixel_dists,
-      std::vector<int> vec_strides, std::vector<int> vec_kernel_sizes,
-      std::vector<int> vec_dilations_key, int region_type, at::Tensor offsets,
-      py::object py_in_coords_key, py::object py_out_coords_key,
-      bool is_transpose);
 
   std::string toString() const;
   void clear() {

@@ -138,8 +138,8 @@ After installing the package, run `python examples/example.py` in the package ro
   - An image is a 2-dimensional object; A 3D-scan is a 3-dimensional object.
 - Coordinates
   - D-dimensional integer array + 1 dimension at the end for batch index
-- Pixel Distance
-  - Distance between adjacent pixels. e.g., two stride-2 convolution layers will create features of pixel distance 4.
+- Tensor Stride
+  - Distance between adjacent voxels. e.g., two stride-2 convolution layers will create features of tensor stride 4.
 
 
 ## Notes

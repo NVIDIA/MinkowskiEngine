@@ -8,14 +8,14 @@
 template <uint8_t D, typename Dtype, typename Itype>
 void ConvolutionTransposeForwardCPU(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
   CoordsManager<D, Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
-      pixel_dists, strides, kernel_sizes, dilations, region_type, offsets,
+      tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true);
 
   if (in_feat.size(1) != kernel.size(1)) {
@@ -36,7 +36,7 @@ void ConvolutionTransposeForwardCPU(
 template <uint8_t D, typename Dtype, typename Itype>
 void ConvolutionTransposeBackwardCPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> pixel_dists,
+    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
@@ -44,10 +44,10 @@ void ConvolutionTransposeBackwardCPU(
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   bool reverse_map = false;
   InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
-      pixel_dists, strides, kernel_sizes, dilations, region_type,
+      tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_out_coords_key, py_in_coords_key, false);
   InOutMapKey map_key = p_coords_manager->getMapHashKey(
-      pixel_dists, strides, kernel_sizes, dilations, region_type,
+      tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, true);
 
   // Check if the reverse map exists first
@@ -80,14 +80,14 @@ void ConvolutionTransposeBackwardCPU(
 template <uint8_t D, typename Dtype, typename Itype>
 void ConvolutionTransposeForwardGPU(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
   CoordsManager<D, Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
-      pixel_dists, strides, kernel_sizes, dilations, region_type, offsets,
+      tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true);
 
   if (in_feat.size(1) != kernel.size(1)) {
@@ -111,7 +111,7 @@ void ConvolutionTransposeForwardGPU(
 template <uint8_t D, typename Dtype, typename Itype>
 void ConvolutionTransposeBackwardGPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> pixel_dists,
+    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
@@ -119,10 +119,10 @@ void ConvolutionTransposeBackwardGPU(
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   bool reverse_map = false;
   InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
-      pixel_dists, strides, kernel_sizes, dilations, region_type,
+      tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_out_coords_key, py_in_coords_key, false);
   InOutMapKey map_key = p_coords_manager->getMapHashKey(
-      pixel_dists, strides, kernel_sizes, dilations, region_type,
+      tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, true);
 
   // Check if the reverse map exists first
@@ -159,26 +159,26 @@ void ConvolutionTransposeBackwardGPU(
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
   SWITCH_DIM_TYPES(ConvolutionTransposeForwardCPU, Dtype, Itype, in_feat,
-                   out_feat, kernel, pixel_dists, strides, kernel_sizes,
+                   out_feat, kernel, tensor_strides, strides, kernel_sizes,
                    dilations, region_type, offsets, py_in_coords_key,
                    py_out_coords_key, py_coords_manager);
 }
 
 template void DimSwitchConvolutionTransposeForwardCPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
 template void DimSwitchConvolutionTransposeForwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -187,20 +187,21 @@ template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager) {
   SWITCH_DIM_TYPES(ConvolutionTransposeBackwardCPU, Dtype, Itype, in_feat,
                    grad_in_feat, grad_out_feat, kernel, grad_kernel,
-                   pixel_dists, strides, kernel_sizes, dilations, region_type,
-                   py_in_coords_key, py_out_coords_key, py_coords_manager);
+                   tensor_strides, strides, kernel_sizes, dilations,
+                   region_type, py_in_coords_key, py_out_coords_key,
+                   py_coords_manager);
 }
 
 template void DimSwitchConvolutionTransposeBackwardCPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -208,7 +209,7 @@ template void DimSwitchConvolutionTransposeBackwardCPU<float, int32_t>(
 template void DimSwitchConvolutionTransposeBackwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -217,26 +218,26 @@ template void DimSwitchConvolutionTransposeBackwardCPU<double, int32_t>(
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
   SWITCH_DIM_TYPES(ConvolutionTransposeForwardGPU, Dtype, Itype, in_feat,
-                   out_feat, kernel, pixel_dists, strides, kernel_sizes,
+                   out_feat, kernel, tensor_strides, strides, kernel_sizes,
                    dilations, region_type, offsets, py_in_coords_key,
                    py_out_coords_key, py_coords_manager);
 }
 
 template void DimSwitchConvolutionTransposeForwardGPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
 template void DimSwitchConvolutionTransposeForwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -245,20 +246,21 @@ template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager) {
   SWITCH_DIM_TYPES(ConvolutionTransposeBackwardGPU, Dtype, Itype, in_feat,
                    grad_in_feat, grad_out_feat, kernel, grad_kernel,
-                   pixel_dists, strides, kernel_sizes, dilations, region_type,
-                   py_in_coords_key, py_out_coords_key, py_coords_manager);
+                   tensor_strides, strides, kernel_sizes, dilations,
+                   region_type, py_in_coords_key, py_out_coords_key,
+                   py_coords_manager);
 }
 
 template void DimSwitchConvolutionTransposeBackwardGPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -266,7 +268,7 @@ template void DimSwitchConvolutionTransposeBackwardGPU<float, int32_t>(
 template void DimSwitchConvolutionTransposeBackwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);

@@ -46,7 +46,7 @@ class TestConvolution(unittest.TestCase):
         output.F.backward(grad)
 
         self.assertTrue(
-            gradcheck(fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
+            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride, conv.stride,
                            conv.kernel_size, conv.dilation,
                            conv.region_type_, conv.region_offset_,
                            input.coords_key, None, input.coords_man)))
@@ -77,7 +77,7 @@ class TestConvolution(unittest.TestCase):
         fn = MinkowskiConvolutionFunction()
 
         self.assertTrue(
-            gradcheck(fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
+            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride, conv.stride,
                            conv.kernel_size, conv.dilation,
                            conv.region_type_, conv.region_offset_,
                            input.coords_key, None, input.coords_man)))
@@ -103,7 +103,7 @@ class TestConvolution(unittest.TestCase):
 
     #     self.assertTrue(
     #         gradcheck(
-    #             fn, (input.F, conv.kernel, input.pixel_dist, conv.stride,
+    #             fn, (input.F, conv.kernel, input.tensor_stride, conv.stride,
     #                  conv.kernel_size, conv.dilation, conv.region_type_,
     #                  conv.region_offset_, None, None, input.m),
     #             atol=1e-3,
@@ -149,7 +149,7 @@ class TestConvolutionTranspose(unittest.TestCase):
 
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, conv_tr.kernel, input.pixel_dist,
+                      (input.F, conv_tr.kernel, input.tensor_stride,
                        conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
                        conv_tr.region_type_, conv_tr.region_offset_,
                        input.coords_key, None, input.coords_man)))
@@ -186,7 +186,7 @@ class TestConvolutionTranspose(unittest.TestCase):
 
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, conv_tr.kernel, input.pixel_dist,
+                      (input.F, conv_tr.kernel, input.tensor_stride,
                        conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
                        conv_tr.region_type_, conv_tr.region_offset_,
                        input.coords_key, None, input.coords_man)))

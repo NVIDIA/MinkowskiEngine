@@ -5,32 +5,32 @@
 namespace py = pybind11;
 
 template <uint8_t D>
-void PyCoordsKey<D>::setPixelDist(const Arr<D, int> &pixel_dists) {
+void PyCoordsKey<D>::setTensorStride(const Arr<D, int> &tensor_strides) {
   for (int i = 0; i < D; i++)
-    pixel_dists_[i] = pixel_dists[i];
+    tensor_strides_[i] = tensor_strides[i];
 }
 
 template <uint8_t D> void PyCoordsKey<D>::stride(const Arr<D, int> &strides) {
   for (int i = 0; i < D; i++)
-    pixel_dists_[i] *= strides[i];
+    tensor_strides_[i] *= strides[i];
 }
 
 template <uint8_t D>
 void PyCoordsKey<D>::up_stride(const Arr<D, int> &strides) {
   for (int i = 0; i < D; i++) {
-    if (pixel_dists_[i] % strides[i] > 0)
+    if (tensor_strides_[i] % strides[i] > 0)
       throw std::invalid_argument(
-          Formatter() << "The output pixel dist is not divisible by "
-                         "up_strides. pixel dists: "
-                      << ArrToString(pixel_dists_)
+          Formatter() << "The output tensor stride is not divisible by "
+                         "up_strides. tensor stride: "
+                      << ArrToString(tensor_strides_)
                       << ", up_strides: " << ArrToString(strides));
-    pixel_dists_[i] /= strides[i];
+    tensor_strides_[i] /= strides[i];
   }
 }
 
 template <uint8_t D> void PyCoordsKey<D>::copy(py::object py_other) {
   PyCoordsKey<D> *p_other = py_other.cast<PyCoordsKey<D> *>();
-  pixel_dists_ = p_other->pixel_dists_;
+  tensor_strides_ = p_other->tensor_strides_;
   setKey(p_other->key_);
 }
 
@@ -38,7 +38,7 @@ template <uint8_t D> void PyCoordsKey<D>::reset() {
   key_ = 0;
   key_set = false;
   for (int i = 0; i < D; i++)
-    pixel_dists_[i] = 0;
+    tensor_strides_[i] = 0;
 }
 
 template <uint8_t D> void PyCoordsKey<D>::setKey(uint64_t key) {
@@ -55,7 +55,7 @@ template <uint8_t D> uint64_t PyCoordsKey<D>::getKey() {
 
 template <uint8_t D> std::string PyCoordsKey<D>::toString() const {
   return "< CoordsKey, key: " + std::to_string(key_) +
-         ", pixel_dist: " + ArrToString(pixel_dists_) + " > ";
+         ", tensor_stride: " + ArrToString(tensor_strides_) + " > ";
 }
 
 INSTANTIATE_CLASS_DIM(PyCoordsKey);

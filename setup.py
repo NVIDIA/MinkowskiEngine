@@ -26,7 +26,7 @@ run_command('make -j%d' % os.cpu_count())
 # Python interface
 setup(
     name='MinkowskiEngine',
-    version='0.2.1',
+    version='0.2.2',
     install_requires=['torch'],
     packages=[
         'MinkowskiEngine', 'MinkowskiEngine.utils', 'MinkowskiEngine.tests'

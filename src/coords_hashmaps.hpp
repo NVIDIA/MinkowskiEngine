@@ -43,10 +43,9 @@ CoordsManager<D, Itype>::createCoordsHashMap(at::Tensor coords) {
   correspond to one of the existing coord maps.
 */
 template <uint8_t D, typename Itype>
-CoordsHashMap<D, Itype>
-CoordsManager<D, Itype>::createOutCoordsHashMap(uint64_t coords_key,
-                                                const Arr<D, int> &pixel_dists,
-                                                const Arr<D, int> &strides) {
+CoordsHashMap<D, Itype> CoordsManager<D, Itype>::createOutCoordsHashMap(
+    uint64_t coords_key, const Arr<D, int> &tensor_strides,
+    const Arr<D, int> &strides) {
   if (!existsCoordsKey(coords_key))
     throw std::invalid_argument(
         Formatter() << "The coord map doesn't exist for the given coords_key. "
@@ -62,15 +61,15 @@ CoordsManager<D, Itype>::createOutCoordsHashMap(uint64_t coords_key,
     return *p_in_coords;
 
   CoordsHashMap<D, Itype> out_coords;
-  Arr<D, Itype> new_pixel_dists;
+  Arr<D, Itype> new_tensor_strides;
   int n_out = 0;
   for (int i = 0; i < D; i++)
-    new_pixel_dists[i] = pixel_dists[i] * strides[i];
+    new_tensor_strides[i] = tensor_strides[i] * strides[i];
   for (const auto &in_pair : p_in_coords->map) {
     Coord<D, Itype> coord(in_pair.first);
     for (int j = 0; j < D; j++)
-      coord[j] = int(floor(((float)coord[j]) / new_pixel_dists[j])) *
-                 new_pixel_dists[j];
+      coord[j] = int(floor(((float)coord[j]) / new_tensor_strides[j])) *
+                 new_tensor_strides[j];
     if (out_coords.map.find(coord) == out_coords.map.end())
       out_coords.map[coord] = n_out++;
   }

@@ -31,11 +31,6 @@ void instantiate_func(py::module &m, const std::string &dtypestr,
   m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
         &DimSwitchConvolutionTransposeBackwardGPU<Dtype, Itype>);
 
-  m.def((std::string("ConvolutionAdaptiveDilationForwardCPU") + dtypestr).c_str(),
-        &DimSwitchConvolutionAdaptiveDilationForwardCPU<Dtype, Itype>);
-  m.def((std::string("ConvolutionAdaptiveDilationForwardGPU") + dtypestr).c_str(),
-        &DimSwitchConvolutionAdaptiveDilationForwardGPU<Dtype, Itype>);
-
   m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
         &DimSwitchAvgPoolingForwardCPU<Dtype, Itype>);
   m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
@@ -121,8 +116,8 @@ void instantiate_dim(py::module &m, const std::string &dim) {
       .def("copy", &PyCoordsKey<D>::copy)
       .def("setKey", &PyCoordsKey<D>::setKey)
       .def("getKey", &PyCoordsKey<D>::getKey)
-      .def("setPixelDist", &PyCoordsKey<D>::setPixelDist)
-      .def("getPixelDist", &PyCoordsKey<D>::getPixelDist)
+      .def("setTensorStride", &PyCoordsKey<D>::setTensorStride)
+      .def("getTensorStride", &PyCoordsKey<D>::getTensorStride)
       .def("__repr__", [](const PyCoordsKey<D> &a) { return a.toString(); });
 
   // Instantiate Itypes

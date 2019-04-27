@@ -43,24 +43,24 @@ def convert_to_int_tensor(arg, dimension):
     return tmp
 
 
-def prep_args(pixel_dist, stride, kernel_size, dilation, region_type, D=-1):
+def prep_args(tensor_stride, stride, kernel_size, dilation, region_type, D=-1):
     assert torch.prod(
         kernel_size > 0
     ), f"kernel_size must be a positive integer, provided {kernel_size}"
     assert D > 0, f"dimension must be a positive integer, {D}"
     assert isinstance(region_type,
                       RegionType), "region offset must be of type RegionType"
-    pixel_dist = convert_to_int_tensor(pixel_dist, D)
+    tensor_stride = convert_to_int_tensor(tensor_stride, D)
     stride = convert_to_int_tensor(stride, D)
     kernel_size = convert_to_int_tensor(kernel_size, D)
     dilation = convert_to_int_tensor(dilation, D)
     region_type = int(region_type)
-    return pixel_dist, stride, kernel_size, dilation, region_type,
+    return tensor_stride, stride, kernel_size, dilation, region_type,
 
 
-def save_ctx(ctx, pixel_dist, stride, kernel_size, dilation, region_type,
+def save_ctx(ctx, tensor_stride, stride, kernel_size, dilation, region_type,
              in_coords_key, out_coords_key, coords_man):
-    ctx.pixel_dist = pixel_dist
+    ctx.tensor_stride = tensor_stride
     ctx.stride = stride
     ctx.kernel_size = kernel_size
     ctx.dilation = dilation
@@ -156,7 +156,7 @@ def get_kernel_volume(region_type, kernel_size, region_offset, axis_types,
 
 
 def convert_region_type(region_type,
-                        pixel_dist,
+                        tensor_stride,
                         kernel_size,
                         up_stride,
                         dilation,
@@ -186,7 +186,7 @@ def convert_region_type(region_type,
             for d in range(dimension):
                 off_center = int(math.floor(
                     (kernel_size[d] - 1) / 2)) if center else 0
-                off = (dilation[d] * (pixel_dist[d] / up_stride[d]) * (
+                off = (dilation[d] * (tensor_stride[d] / up_stride[d]) * (
                     torch.arange(kernel_size[d]).int() - off_center)).tolist()
                 iter_args.append(off)
 
@@ -225,7 +225,7 @@ def convert_region_type(region_type,
                         if curr_offset == off_center:
                             continue
                         offset[d] = (curr_offset - off_center) * \
-                            dilation[d] * (pixel_dist[d] / up_stride[d])
+                            dilation[d] * (tensor_stride[d] / up_stride[d])
                         new_offset.append(offset)
             region_offset.extend(new_offset)
 
@@ -244,7 +244,7 @@ def convert_region_type(region_type,
                     if curr_offset == off_center:
                         continue
                     offset[d] = (curr_offset - off_center) * \
-                        dilation[d] * (pixel_dist[d] / up_stride[d])
+                        dilation[d] * (tensor_stride[d] / up_stride[d])
                     new_offset.append(offset)
             region_offset.extend(new_offset)
 
@@ -317,18 +317,18 @@ class KernelGenerator:
         self.kernel_volume = get_kernel_volume(
             region_type, kernel_size, region_offsets, axis_types, dimension)
 
-    def get_kernel(self, pixel_dist, is_transpose):
-        assert len(pixel_dist) == self.dimension
-        if tuple(pixel_dist) not in self.cache:
+    def get_kernel(self, tensor_stride, is_transpose):
+        assert len(tensor_stride) == self.dimension
+        if tuple(tensor_stride) not in self.cache:
             up_stride = self.stride \
                 if is_transpose else torch.Tensor([1, ] * self.dimension)
 
-            self.cache[tuple(pixel_dist)] = convert_region_type(
-                self.region_type, pixel_dist, self.kernel_size, up_stride,
+            self.cache[tuple(tensor_stride)] = convert_region_type(
+                self.region_type, tensor_stride, self.kernel_size, up_stride,
                 self.dilation, self.region_offsets, self.axis_types,
                 self.dimension)
 
-        return self.cache[tuple(pixel_dist)]
+        return self.cache[tuple(tensor_stride)]
 
 
 class MinkowskiModuleBase(Module):

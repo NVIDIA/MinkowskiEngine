@@ -21,12 +21,12 @@ class CoordsKey():
     def getKey(self):
         return self.CPPCoordsKey.getKey()
 
-    def setPixelDist(self, pixel_dist):
-        pixel_dist = convert_to_int_list(pixel_dist, self.D)
-        self.CPPCoordsKey.setPixelDist(pixel_dist)
+    def setTensorStride(self, tensor_stride):
+        tensor_stride = convert_to_int_list(tensor_stride, self.D)
+        self.CPPCoordsKey.setTensorStride(tensor_stride)
 
-    def getPixelDist(self):
-        return self.CPPCoordsKey.getPixelDist()
+    def getTensorStride(self):
+        return self.CPPCoordsKey.getTensorStride()
 
     def __repr__(self):
         return str(self.CPPCoordsKey)
@@ -55,12 +55,12 @@ class CoordsManager():
         self.CPPCoordsManager.initializeCoords(coords, coords_key.CPPCoordsKey,
                                                True)
 
-    def get_coords_key(self, pixel_dists):
-        pixel_dists = convert_to_int_list(pixel_dists, self.D)
-        key = self.CPPCoordsManager.getCoordsKey(pixel_dists)
+    def get_coords_key(self, tensor_strides):
+        tensor_strides = convert_to_int_list(tensor_strides, self.D)
+        key = self.CPPCoordsManager.getCoordsKey(tensor_strides)
         coords_key = CoordsKey(self.D)
         coords_key.setKey(key)
-        coords_key.setPixelDist(pixel_dists)
+        coords_key.setTensorStride(tensor_strides)
         return coords_key
 
     def get_coords(self, coords_key):
@@ -70,24 +70,24 @@ class CoordsManager():
         return coords
 
     def get_kernel_map(self,
-                       in_pixel_dists,
-                       out_pixel_dists,
+                       in_tensor_strides,
+                       out_tensor_strides,
                        stride=1,
                        kernel_size=3,
                        dilation=1,
                        region_type=0,
                        is_transpose=False):
-        in_coords_key = self.get_coords_key(in_pixel_dists)
-        out_coords_key = self.get_coords_key(out_pixel_dists)
+        in_coords_key = self.get_coords_key(in_tensor_strides)
+        out_coords_key = self.get_coords_key(out_tensor_strides)
 
-        pixel_dists = convert_to_int_list(in_pixel_dists, self.D)
+        tensor_strides = convert_to_int_list(in_tensor_strides, self.D)
         strides = convert_to_int_list(stride, self.D)
         kernel_sizes = convert_to_int_list(kernel_size, self.D)
         dilations = convert_to_int_list(dilation, self.D)
 
         kernel_map = torch.IntTensor()
         self.CPPCoordsManager.getKernelMap(
-            kernel_map, pixel_dists, strides, kernel_sizes, dilations,
+            kernel_map, tensor_strides, strides, kernel_sizes, dilations,
             region_type, in_coords_key.CPPCoordsKey,
             out_coords_key.CPPCoordsKey, is_transpose)
         return kernel_map
@@ -96,9 +96,10 @@ class CoordsManager():
         assert isinstance(coords_key, CoordsKey)
         return self.CPPCoordsManager.getCoordsSize(coords_key.CPPCoordsKey)
 
-    def get_mapping_by_pixel_dists(self, in_pixel_dists, out_pixel_dists):
-        in_key = self.get_coords_key(in_pixel_dists)
-        out_key = self.get_coords_key(out_pixel_dists)
+    def get_mapping_by_tensor_strides(self, in_tensor_strides,
+                                      out_tensor_strides):
+        in_key = self.get_coords_key(in_tensor_strides)
+        out_key = self.get_coords_key(out_tensor_strides)
         return self.get_mapping_by_coords_key(in_key, out_key)
 
     def get_mapping_by_coords_key(self, in_coords_key, out_coords_key):
@@ -112,15 +113,15 @@ class CoordsManager():
     def permute_label(self,
                       label,
                       max_label,
-                      target_pixel_dist,
-                      label_pixel_dist=1):
+                      target_tensor_stride,
+                      label_tensor_stride=1):
         """
         """
-        if target_pixel_dist == label_pixel_dist:
+        if target_tensor_stride == label_tensor_stride:
             return label
 
-        label_coords_key = self.get_coords_key(label_pixel_dist)
-        target_coords_key = self.get_coords_key(target_pixel_dist)
+        label_coords_key = self.get_coords_key(label_tensor_stride)
+        target_coords_key = self.get_coords_key(target_tensor_stride)
 
         permutation = self.get_mapping_by_coords_key(label_coords_key,
                                                      target_coords_key)

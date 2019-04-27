@@ -27,12 +27,12 @@ class Test(unittest.TestCase):
         key = CoordsKey(D=1)
         key.setKey(1)
         self.assertTrue(key.getKey() == 1)
-        key.setPixelDist([1])
+        key.setTensorStride([1])
         print(key)
 
     def test_coords_manager(self):
         key = CoordsKey(D=1)
-        key.setPixelDist(1)
+        key.setTensorStride(1)
 
         cm = CoordsManager(D=1)
         coords = (torch.rand(5, 1) * 100).int()

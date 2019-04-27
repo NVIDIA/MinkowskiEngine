@@ -9,7 +9,7 @@
 
 template <uint8_t D, typename Dtype, typename Itype>
 void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                          at::Tensor max_index, std::vector<int> pixel_dists,
+                          at::Tensor max_index, std::vector<int> tensor_strides,
                           std::vector<int> strides,
                           std::vector<int> kernel_sizes,
                           std::vector<int> dilations, int region_type,
@@ -19,7 +19,7 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
   CoordsManager<D, Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
-      pixel_dists, strides, kernel_sizes, dilations, region_type, offsets,
+      tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
@@ -37,14 +37,14 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
 template <uint8_t D, typename Dtype, typename Itype>
 void MaxPoolingBackwardCPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor max_index, std::vector<int> pixel_dists,
+    at::Tensor max_index, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
   CoordsManager<D, Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   InOutMapKey map_key = p_coords_manager->getMapHashKey(
-      pixel_dists, strides, kernel_sizes, dilations, region_type,
+      tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false);
 
   grad_in_feat.resize_as_(in_feat);
@@ -58,18 +58,16 @@ void MaxPoolingBackwardCPU(
 
 #ifndef CPU_ONLY
 template <uint8_t D, typename Dtype, typename Itype>
-void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
-                          at::Tensor num_nonzero, std::vector<int> pixel_dists,
-                          std::vector<int> strides,
-                          std::vector<int> kernel_sizes,
-                          std::vector<int> dilations, int region_type,
-                          at::Tensor offsets, py::object py_in_coords_key,
-                          py::object py_out_coords_key,
-                          py::object py_coords_manager) {
+void MaxPoolingForwardGPU(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+    std::vector<int> tensor_strides, std::vector<int> strides,
+    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
+    at::Tensor offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager) {
   CoordsManager<D, Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
-      pixel_dists, strides, kernel_sizes, dilations, region_type, offsets,
+      tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
@@ -88,7 +86,7 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
 template <uint8_t D, typename Dtype, typename Itype>
 void MaxPoolingBackwardGPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> pixel_dists,
+    at::Tensor num_nonzero, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
@@ -105,26 +103,26 @@ void MaxPoolingBackwardGPU(
 template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
   SWITCH_DIM_TYPES(MaxPoolingForwardCPU, Dtype, Itype, in_feat, out_feat,
-                   num_nonzero, pixel_dists, strides, kernel_sizes, dilations,
-                   region_type, offsets, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager);
+                   num_nonzero, tensor_strides, strides, kernel_sizes,
+                   dilations, region_type, offsets, py_in_coords_key,
+                   py_out_coords_key, py_coords_manager);
 }
 
 template void DimSwitchMaxPoolingForwardCPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
 template void DimSwitchMaxPoolingForwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -133,12 +131,12 @@ template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager) {
   SWITCH_DIM_TYPES(MaxPoolingBackwardCPU, Dtype, Itype, in_feat, grad_in_feat,
-                   grad_out_feat, num_nonzero, pixel_dists, strides,
+                   grad_out_feat, num_nonzero, tensor_strides, strides,
                    kernel_sizes, dilations, region_type, py_in_coords_key,
                    py_out_coords_key, py_coords_manager);
 }
@@ -146,7 +144,7 @@ void DimSwitchMaxPoolingBackwardCPU(
 template void DimSwitchMaxPoolingBackwardCPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -154,7 +152,7 @@ template void DimSwitchMaxPoolingBackwardCPU<float, int32_t>(
 template void DimSwitchMaxPoolingBackwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -163,26 +161,26 @@ template void DimSwitchMaxPoolingBackwardCPU<double, int32_t>(
 template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
   SWITCH_DIM_TYPES(MaxPoolingForwardGPU, Dtype, Itype, in_feat, out_feat,
-                   num_nonzero, pixel_dists, strides, kernel_sizes, dilations,
-                   region_type, offsets, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager);
+                   num_nonzero, tensor_strides, strides, kernel_sizes,
+                   dilations, region_type, offsets, py_in_coords_key,
+                   py_out_coords_key, py_coords_manager);
 }
 
 template void DimSwitchMaxPoolingForwardGPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
 template void DimSwitchMaxPoolingForwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -191,12 +189,12 @@ template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager) {
   SWITCH_DIM_TYPES(MaxPoolingBackwardGPU, Dtype, Itype, in_feat, grad_in_feat,
-                   grad_out_feat, num_nonzero, pixel_dists, strides,
+                   grad_out_feat, num_nonzero, tensor_strides, strides,
                    kernel_sizes, dilations, region_type, py_in_coords_key,
                    py_out_coords_key, py_coords_manager);
 }
@@ -204,7 +202,7 @@ void DimSwitchMaxPoolingBackwardGPU(
 template void DimSwitchMaxPoolingBackwardGPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -212,7 +210,7 @@ template void DimSwitchMaxPoolingBackwardGPU<float, int32_t>(
 template void DimSwitchMaxPoolingBackwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);

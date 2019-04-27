@@ -4,14 +4,14 @@
 
 template <uint8_t D, typename Itype>
 Triplets KernelMapFunctor<D, Itype>::
-operator()(const Coord<D, int> out_coord, const Arr<D, int> &in_pixel_dists,
+operator()(const Coord<D, int> out_coord, const Arr<D, int> &in_tensor_strides,
            const Arr<D, int> &kernel_size, const Arr<D, int> &dilations,
            const int region_type, const Itype *offsets_data,
            const int offsets_size, const int out_coord_index,
            const _CoordsHashMap<D, Itype> &in_coords_hashmap) {
   Triplets triplet;
   auto kernel_region =
-      Region<D, Itype>(out_coord, in_pixel_dists, kernel_size, dilations,
+      Region<D, Itype>(out_coord, in_tensor_strides, kernel_size, dilations,
                              region_type, offsets_data, offsets_size);
   uint32_t kernel_ind = 0;
   for (auto point : kernel_region) {
@@ -52,7 +52,7 @@ inline CoordsThreadPool<D, Itype>::CoordsThreadPool(size_t nthreads_)
 template <uint8_t D, typename Itype>
 std::future<Triplets> CoordsThreadPool<D, Itype>::enqueue(
     KernelMapFunctor<D, Itype> &f, const Coord<D, int> out_coord,
-    const Arr<D, int> &in_pixel_dists, const Arr<D, int> &kernel_size,
+    const Arr<D, int> &in_tensor_strides, const Arr<D, int> &kernel_size,
     const Arr<D, int> &dilations, const int region_type,
     const Itype *offsets_data, const int offsets_size,
     const int out_coord_index,
@@ -60,7 +60,7 @@ std::future<Triplets> CoordsThreadPool<D, Itype>::enqueue(
 
   auto task = std::make_shared<std::packaged_task<Triplets()>>(std::bind(
       &KernelMapFunctor<D, Itype>::operator(), &f, out_coord,
-      std::ref(in_pixel_dists), std::ref(kernel_size), std::ref(dilations),
+      std::ref(in_tensor_strides), std::ref(kernel_size), std::ref(dilations),
       region_type, offsets_data, offsets_size, out_coord_index,
       std::ref(in_coords_hashmap)));
 

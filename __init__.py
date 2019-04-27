@@ -15,8 +15,7 @@ from Common import RegionType, convert_to_int_tensor, convert_region_type, \
 from MinkowskiCoords import CoordsKey, CoordsManager, initialize_nthreads
 
 from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
-    MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose, \
-    MinkowskiAdaptiveDilationConvolutionFunction, MinkowskiAdaptiveDilationConvolution
+    MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose
 
 from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiSumPooling, \

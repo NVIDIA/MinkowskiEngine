@@ -63,15 +63,15 @@ class GUNet(ME.MinkowskiNetwork):
 
     def __init__(self, in_nchannel, out_nchannel, D):
         super(GUNet, self).__init__(D)
-        # new forced coords at pixel_dist 2
+        # new forced coords at tensor_stride 2
         self.gcoords_key_s2 = ME.CoordsKey(D)
-        self.gcoords_key_s2.setPixelDist(2)
-        # new forced coords at pixel dist 1
+        self.gcoords_key_s2.setTensorStride(2)
+        # new forced coords at tensor stride 1
         self.gcoords_key_s1 = ME.CoordsKey(D)
-        self.gcoords_key_s1.setPixelDist(1)
+        self.gcoords_key_s1.setTensorStride(1)
 
-        self.gcoords_s2 = None  # New forced coordinates for pixel dist 2
-        self.gcoords_s1 = None  # New forced coordinates for pixel dist 1
+        self.gcoords_s2 = None  # New forced coordinates for tensor stride 2
+        self.gcoords_s1 = None  # New forced coordinates for tensor stride 1
 
         self.conv1 = ME.MinkowskiConvolution(
             in_channels=in_nchannel,

@@ -9,7 +9,7 @@
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -18,7 +18,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchConvolutionBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -27,7 +27,7 @@ void DimSwitchConvolutionBackwardCPU(
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -36,7 +36,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchConvolutionBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -48,7 +48,7 @@ void DimSwitchConvolutionBackwardGPU(
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -57,7 +57,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -66,7 +66,7 @@ void DimSwitchConvolutionTransposeBackwardCPU(
 template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -75,31 +75,8 @@ template <typename Dtype, typename Itype>
 void DimSwitchConvolutionTransposeBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-#endif
-
-/*************************************
- * Adaptive Dilation Convolution
- *************************************/
-template <typename Dtype, typename Itype>
-void DimSwitchConvolutionAdaptiveDilationForwardCPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    at::Tensor dilations, std::vector<int> pixel_dists,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations_key, int region_type, at::Tensor offsets,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename Dtype, typename Itype>
-void DimSwitchConvolutionAdaptiveDilationForwardGPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    at::Tensor dilations, std::vector<int> pixel_dists,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations_key, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 #endif
@@ -110,7 +87,7 @@ void DimSwitchConvolutionAdaptiveDilationForwardGPU(
 template <typename Dtype, typename Itype>
 void DimSwitchAvgPoolingForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
@@ -119,7 +96,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchAvgPoolingBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
@@ -128,7 +105,7 @@ void DimSwitchAvgPoolingBackwardCPU(
 template <typename Dtype, typename Itype>
 void DimSwitchAvgPoolingForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
@@ -137,7 +114,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchAvgPoolingBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
@@ -149,7 +126,7 @@ void DimSwitchAvgPoolingBackwardGPU(
 template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -158,7 +135,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -167,7 +144,7 @@ void DimSwitchMaxPoolingBackwardCPU(
 template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -176,7 +153,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchMaxPoolingBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -188,7 +165,7 @@ void DimSwitchMaxPoolingBackwardGPU(
 template <typename Dtype, typename Itype>
 void DimSwitchPoolingTransposeForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -197,7 +174,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchPoolingTransposeBackwardCPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
@@ -206,7 +183,7 @@ void DimSwitchPoolingTransposeBackwardCPU(
 template <typename Dtype, typename Itype>
 void DimSwitchPoolingTransposeForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
@@ -215,7 +192,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchPoolingTransposeBackwardGPU(
     int D, at::Tensor in_feat, at::Tensor grad_in_feat,
     at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> pixel_dists, std::vector<int> strides,
+    std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
