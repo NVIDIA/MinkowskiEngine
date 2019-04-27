@@ -172,9 +172,9 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
-                is_transpose=is_transpose,
                 dimension=dimension)
 
+        self.is_transpose = is_transpose
         self.average = average
         self.kernel_size = kernel_size
         self.stride = stride
@@ -189,7 +189,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist)
+            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -378,7 +378,7 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist)
+            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -523,7 +523,7 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist)
+            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)

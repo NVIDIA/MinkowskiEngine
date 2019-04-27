@@ -306,9 +306,7 @@ class KernelGenerator:
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
         dilation = convert_to_int_tensor(dilation, dimension)
 
-        self.up_stride = stride \
-            if is_transpose else torch.Tensor([1, ] * dimension)
-
+        self.cache = {}
         self.kernel_size = kernel_size
         self.stride = stride
         self.dilation = dilation
@@ -319,10 +317,18 @@ class KernelGenerator:
         self.kernel_volume = get_kernel_volume(
             region_type, kernel_size, region_offsets, axis_types, dimension)
 
-    def get_kernel(self, pixel_dist):
-        return convert_region_type(
-            self.region_type, pixel_dist, self.kernel_size, self.up_stride,
-            self.dilation, self.region_offsets, self.axis_types, self.dimension)
+    def get_kernel(self, pixel_dist, is_transpose):
+        assert len(pixel_dist) == self.dimension
+        if tuple(pixel_dist) not in self.cache:
+            up_stride = self.stride \
+                if is_transpose else torch.Tensor([1, ] * self.dimension)
+
+            self.cache[tuple(pixel_dist)] = convert_region_type(
+                self.region_type, pixel_dist, self.kernel_size, up_stride,
+                self.dilation, self.region_offsets, self.axis_types,
+                self.dimension)
+
+        return self.cache[tuple(pixel_dist)]
 
 
 class MinkowskiModuleBase(Module):

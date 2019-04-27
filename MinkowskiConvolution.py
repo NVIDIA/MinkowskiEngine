@@ -254,11 +254,11 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
-                is_transpose=is_transpose,
                 dimension=dimension)
 
         kernel_volume = kernel_generator.kernel_volume
 
+        self.is_transpose = is_transpose
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -288,7 +288,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist)
+            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
@@ -532,7 +532,7 @@ class MinkowskiAdaptiveDilationConvolution(MinkowskiConvolutionBase):
 
         # Create a region_offset
         self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.pixel_dist)
+            self.kernel_generator.get_kernel(input.pixel_dist, self.is_transpose)
 
         if self.out_coords_key is None:
             out_coords_key = CoordsKey(input.coords_key.D)
