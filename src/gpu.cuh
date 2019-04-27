@@ -10,9 +10,9 @@
 
 #include <thrust/device_vector.h>
 
+#include <exception>
 #include <iostream>
 #include <vector>
-#include <exception>
 
 #include "utils.hpp"
 
@@ -26,8 +26,9 @@
   {                                                                            \
     cudaError_t error = condition;                                             \
     if (error != cudaSuccess) {                                                \
-      throw std::runtime_error(Formatter() << " " << cudaGetErrorString(error) \
-                << " at " << __FILE__ << ":" << __LINE__);                     \
+      throw std::runtime_error(Formatter()                                     \
+                               << " " << cudaGetErrorString(error) << " at "   \
+                               << __FILE__ << ":" << __LINE__);                \
     }                                                                          \
   }
 
@@ -35,8 +36,9 @@
   {                                                                            \
     cublasStatus_t status = condition;                                         \
     if (status != CUBLAS_STATUS_SUCCESS) {                                     \
-      throw std::runtime_error(Formatter() << cublasGetErrorString(status)     \
-                << " at " << __FILE__ << ":" << __LINE__);                     \
+      throw std::runtime_error(Formatter()                                     \
+                               << cublasGetErrorString(status) << " at "       \
+                               << __FILE__ << ":" << __LINE__);                \
     }                                                                          \
   }
 
@@ -44,8 +46,9 @@
   {                                                                            \
     cusparseStatus_t err;                                                      \
     if ((err = (call)) != CUSPARSE_STATUS_SUCCESS) {                           \
-      throw std::runtime_error(Formatter() << cusparseGetErrorString(err)      \
-              << " at " <<  __FILE__ << ":" << __LINE__);                      \
+      throw std::runtime_error(Formatter()                                     \
+                               << cusparseGetErrorString(err) << " at "        \
+                               << __FILE__ << ":" << __LINE__);                \
     }                                                                          \
   }
 
@@ -53,8 +56,9 @@
   {                                                                            \
     curandStatus_t status = condition;                                         \
     if (status != CURAND_STATUS_SUCCESS) {                                     \
-      throw std::runtime_error(Formatter() << curandGetErrorString(status)     \
-                << " at " << __FILE__ << ":" << __LINE__);                     \
+      throw std::runtime_error(Formatter()                                     \
+                               << curandGetErrorString(status) << " at "       \
+                               << __FILE__ << ":" << __LINE__);                \
     }                                                                          \
   }
 
@@ -71,8 +75,9 @@
   try {                                                                        \
     condition;                                                                 \
   } catch (thrust::system_error e) {                                           \
-    throw std::runtime_error(Formatter() << "Thrust error: " << e.what()       \
-              << " at " << __FILE__ << ":" << __LINE__);                       \
+    throw std::runtime_error(Formatter()                                       \
+                             << "Thrust error: " << e.what() << " at "         \
+                             << __FILE__ << ":" << __LINE__);                  \
   }
 
 // CUDA: library error reporting.
@@ -81,21 +86,10 @@ const char *cublasGetErrorString(cublasStatus_t error);
 // CUSparse error reporting.
 const char *cusparseGetErrorString(cusparseStatus_t error);
 
-// CUDA: use 1024 threads per block
-constexpr int CUDA_NUM_THREADS = 128;
+constexpr int CUDA_NUM_THREADS = 256;
 
-constexpr int MAXIMUM_NUM_BLOCKS = 4096;
-
-/**
- * @brief Compute the number of blocks needed to run N threads.
- */
 inline int GET_BLOCKS(const int N) {
-  return std::max(
-      std::min(
-          (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS,
-          MAXIMUM_NUM_BLOCKS),
-      // Use at least 1 block, since CUDA does not allow empty block
-      1);
+  return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 }
 
 template <typename Dtype> void print(const thrust::device_vector<Dtype> &v);
@@ -108,16 +102,15 @@ void HandleError(cudaError_t err, const char *file, int line);
 // AtomicAddition for double with cuda arch <= 600
 #if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
 #else
-__device__ double atomicAdd(double* address, double val)
-{
-    unsigned long long int* address_as_ull = (unsigned long long int*)address;
-    unsigned long long int old = *address_as_ull, assumed;
-    do {
-        assumed = old;
-        old = atomicCAS(address_as_ull, assumed,
-                __double_as_longlong(val + __longlong_as_double(assumed)));
-    } while (assumed != old);
-    return __longlong_as_double(old);
+__device__ double atomicAdd(double *address, double val) {
+  unsigned long long int *address_as_ull = (unsigned long long int *)address;
+  unsigned long long int old = *address_as_ull, assumed;
+  do {
+    assumed = old;
+    old = atomicCAS(address_as_ull, assumed,
+                    __double_as_longlong(val + __longlong_as_double(assumed)));
+  } while (assumed != old);
+  return __longlong_as_double(old);
 }
 #endif
 

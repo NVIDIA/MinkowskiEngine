@@ -1,4 +1,5 @@
 import os
+import time
 from subprocess import Popen, PIPE
 from setuptools import setup
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
@@ -14,6 +15,8 @@ def run_command(cmd):
             break
         if output:
             print(output.strip())
+        time.sleep(0.1)
+
     rc = process.poll()
     return rc
 
