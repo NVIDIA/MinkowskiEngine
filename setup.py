@@ -29,9 +29,9 @@ setup(
     version='0.2.2',
     install_requires=['torch'],
     packages=[
-        'MinkowskiEngine', 'MinkowskiEngine.utils', 'MinkowskiEngine.tests'
+        'MinkowskiEngine', 'MinkowskiEngine.utils'
     ],
-    package_dir={'MinkowskiEngine': './'},
+    package_dir={'MinkowskiEngine': './MinkowskiEngine'},
     ext_modules=[
         CUDAExtension(
             name='MinkowskiEngineBackend',
@@ -48,8 +48,7 @@ setup(
     author='Christopher B. Choy',
     author_email='chrischoy@ai.stanford.edu',
     description='Minkowski Engine, a Sparse Tensor Library for Neural Networks',
-    keywords=
-    'Minkowski Engine Sparse Tensor Library Convolutional Neural Networks',
+    keywords='Minkowski Engine Sparse Tensor Library Convolutional Neural Networks',
     url='https://github.com/chrischoy/MinkowskiEngine',
     zip_safe=False,
 )

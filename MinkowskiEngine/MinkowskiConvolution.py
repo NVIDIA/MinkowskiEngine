@@ -174,8 +174,6 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                 dilation=dilation,
                 dimension=dimension)
         else:
-          assert kernel_size == -1, f"Kernel size should not be provided when" \
-              + f"a KernelGenerator is provided. kernel_size: {kernel_size}"
           kernel_size = kernel_generator.kernel_size
 
         stride = convert_to_int_tensor(stride, dimension)
