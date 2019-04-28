@@ -7,16 +7,32 @@ Table of Contents
 =================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :caption: Intro Documentation
 
    overview
+   sparseconv
    quick_start
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Demo Documentation
+
+   demo/classification
+   demo/segmentation
+   demo/multigpu
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API
+
    convolution
    pooling
    broadcast
    normalization
    nonlinearity
    coords
+
 
 Indices and tables
 ==================

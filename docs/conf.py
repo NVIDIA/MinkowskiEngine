@@ -29,10 +29,10 @@ copyright = '2019, Chris Choy'
 author = 'Chris Choy'
 
 # The short X.Y version
-version = '0.2.1'
+version = '0.2.2'
 # The full version, including alpha/beta/rc tags
-release = '0.2.1'
-github_doc_root = 'https://github.com/chrischoy/MinkowskiEngine'
+release = '0.2.2'
+github_doc_root = 'https://github.com/StanfordVL/MinkowskiEngine'
 
 # -- General configuration ---------------------------------------------------
 
@@ -78,19 +78,24 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+# html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+# html_theme_options = {
+#     'github_user': 'StanfordVL',
+#     'github_repo': 'MinkowskiEngine',
+#     'github_banner': True
+# }
+html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -111,7 +116,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'MinkowskiEnginedoc'
+htmlhelp_basename = 'MinkowskiEngineDoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -160,7 +165,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'MinkowskiEngine', 'MinkowskiEngine Documentation',
-     author, 'MinkowskiEngine', 'One line description of project.',
+     author, 'MinkowskiEngine', 'The generalized sparse convolution library.',
      'Miscellaneous'),
 ]
 

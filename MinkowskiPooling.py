@@ -10,13 +10,6 @@ from MinkowskiCoords import CoordsKey
 
 
 class MinkowskiMaxPoolingFunction(Function):
-    '''
-    Due to ctx.mask_index = in_feat.new()....,
-    Should the function be called multiple times, this function must be first
-    instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, out_feat, ctx.mask_index, which are initialized inside
-    the ffi function.
-    '''
 
     @staticmethod
     def forward(ctx,
@@ -211,15 +204,38 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
 
 
 class MinkowskiAvgPooling(MinkowskiPoolingBase):
+    r"""Average input features within a kernel.
+
+    .. math::
+
+        \mathbf{y}_\mathbf{u} = \frac{1}{|\mathcal{N}^D(\mathbf{u},
+        \mathcal{C}^\text{in})|} \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
+        \mathcal{C}^\text{in})} \mathbf{x}_{\mathbf{u} + \mathbf{i}}
+        \; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}
+
+    For each output :math:`\mathbf{u}` in :math:`\mathcal{C}^\text{out}`,
+    average input features.
+
+    .. note::
+        An average layer first computes the cardinality of the input features,
+        the number of input features for each output, and divide the sum of the
+        input features by the cardinality. For a dense tensor, the cardinality
+        is a constant, the volume of a kernel. However, for a sparse tensor, the
+        cardinality varies depending on the number of input features per output.
+        Thus, the average pooling for a sparse tensor is not equivalent to the
+        conventional average pooling layer for a dense tensor. Please refer to
+        the :attr:`MinkowskiSumPooling` for the equivalent layer.
+
+    """
 
     def __init__(self,
-                 kernel_size,
+                 kernel_size=-1,
                  stride=1,
                  dilation=1,
                  kernel_generator=None,
                  out_coords_key=None,
                  dimension=None):
-        r"""a high-dimensional average pooling layer
+        r"""a high-dimensional sparse average pooling layer.
 
         Args:
             :attr:`kernel_size` (int, optional): the size of the kernel in the
@@ -245,9 +261,9 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             network uses the specific coordinates for the output coordinates.
             It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
 
-            :attr:`dimension` (int): the dimension of the space all the inputs
-            and the network is defined. For example images are in 2D space,
-            meshes and 3D shapes are in 3D space and thus dimension is 3.
+            :attr:`dimension` (int): the dimension of the space where all the
+            inputs and the network is defined. For example, images are in a 2D
+            space, meshes and 3D shapes are in a 3D space.
 
         """
         is_transpose = False
@@ -265,6 +281,29 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
 
 
 class MinkowskiSumPooling(MinkowskiPoolingBase):
+    r"""Sum all input features within a kernel.
+
+    .. math::
+
+        \mathbf{y}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
+        \mathcal{C}^\text{in})} \mathbf{x}_{\mathbf{u} + \mathbf{i}}
+        \; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}
+
+    For each output :math:`\mathbf{u}` in :math:`\mathcal{C}^\text{out}`,
+    average input features.
+
+    .. note::
+        An average layer first computes the cardinality of the input features,
+        the number of input features for each output, and divide the sum of the
+        input features by the cardinality. For a dense tensor, the cardinality
+        is a constant, the volume of a kernel. However, for a sparse tensor, the
+        cardinality varies depending on the number of input features per output.
+        Thus, averaging the input features with the cardinality may not be
+        equivalent to the conventional average pooling for a dense tensor.
+        This layer provides an alternative that does not divide the sum by the
+        cardinality.
+
+    """
 
     def __init__(self,
                  kernel_size,
@@ -319,7 +358,17 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
 
 
 class MinkowskiMaxPooling(MinkowskiPoolingBase):
-    r"""MaxPooling
+    r"""A max pooling layer for a sparse tensor.
+
+    .. math::
+
+        y^c_\mathbf{u} = \max_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
+        \mathcal{C}^\text{in})} x^c_{\mathbf{u} + \mathbf{i}} \; \text{for} \;
+        \mathbf{u} \in \mathcal{C}^\text{out}
+
+    where :math:`y^c_\mathbf{u}` is a feature at channel :math:`c` and a
+    coordinate :math:`\mathbf{u}`.
+
     """
 
     def __init__(self,
@@ -394,13 +443,6 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
 
 
 class MinkowskiPoolingTransposeFunction(Function):
-    '''
-    Due to ctx.num_nonzero = in_feat.new()....,
-    Should the function be called multiple times, this function must be first
-    instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, out_feat, ctx.num_nonzero, which are initialized inside
-    the ffi function.
-    '''
 
     @staticmethod
     def forward(ctx,
@@ -461,7 +503,8 @@ class MinkowskiPoolingTransposeFunction(Function):
 
 
 class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
-    """
+    r"""A pooling transpose layer for a sparse tensor.
+
     Unpool the features and divide it by the number of non zero elements that
     contributed.
     """
@@ -581,7 +624,13 @@ class MinkowskiGlobalPoolingFunction(Function):
 
 
 class MinkowskiGlobalPooling(MinkowskiModuleBase):
-    r"""GlobalPooling
+    r"""Pool all input features to one output.
+
+    .. math::
+
+        \mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \sum_{\mathbf{i} \in
+        \mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}
+
     """
 
     def __init__(self, batch_size=0, average=True, dimension=-1):
@@ -590,8 +639,17 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
-        batch_size: when given a positive integer, use the batch size to
-                    initialize coords.
+        Args:
+            :attr:`batch_size` (int): when given a positive integer, use the argument
+            to initialize the output coords, or the batch size.
+
+            :attr:`average` (bool): when True, return the averaged output. If
+            not, return the sum of all input features.
+
+            :attr:`dimension` (int): the dimension of the space all the inputs
+            and the network is defined. For example images are in 2D space,
+            meshes and 3D shapes are in 3D space and thus dimension is 3.
+
         """
         super(MinkowskiGlobalPooling, self).__init__()
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"

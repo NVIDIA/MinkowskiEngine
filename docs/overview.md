@@ -5,6 +5,7 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It su
 ## Features
 
 - Dynamic computation graph
+- [Generalized sparse convolution](sparseconv.html)
 - Custom kernel shapes
 - Multi-GPU training
 - Multi-threaded kernel map
@@ -23,22 +24,23 @@ We recommend `python>=3.6` for installation.
 In this example, we assumed that you are using CUDA 10.0. To find out your CUDA version, run `nvcc --version`. If you are using a different version, please change the anaconda pytorch installation to use `cudatollkit=X.X`.
 
 
-1. Create a conda virtual environment and install requirements.
+#### 1. Create a conda virtual environment and install requirements.
 
 ```
-conda create -n py3-mink python=3.6 anaconda
-source activate py3-mink
+conda create -n py3-mink python=3.7 anaconda
+conda activate py3-mink
 conda install -c anaconda openblas
 conda install -c bioconda google-sparsehash
 conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Use the correct cudatoolkit version
 ```
 
-2. Compilation and installation
+#### 2. Compilation and installation
 
 ```
-git clone https://github.com/chrischoy/MinkowskiEngine.git
+conda activate py3-mink
+git clone https://github.com/StanfordVL/MinkowskiEngine.git
 cd MinkowskiEngine
-python setup.py install --force  # parallel compilation and python pacakge installation
+python setup.py install --force  # parallel compilation
 ```
 
 
@@ -50,7 +52,7 @@ Like the anaconda installation, make sure that you install pytorch with the the 
 sudo apt install libsparsehash-dev libopenblas-dev
 # within a python3 environment
 pip install torch
-git clone https://github.com/chrischoy/MinkowskiEngine.git
+git clone https://github.com/StanfordVL/MinkowskiEngine.git
 cd MinkowskiEngine
 pip install -r requirements.txt
 python setup.py install --force  # parallel compilation and python pacakge installation

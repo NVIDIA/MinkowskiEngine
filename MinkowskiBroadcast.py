@@ -83,14 +83,65 @@ class MinkowskiBroadcast(Module):
 
 
 class MinkowskiBroadcastAddition(MinkowskiBroadcast):
+    r"""Broadcast the reduced features to all input coordinates.
+
+    .. math::
+
+        \mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} + \mathbf{x}_2
+        \; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}
+
+
+    For all input :math:`\mathbf{x}_\mathbf{u}`, add :math:`\mathbf{x}_2`. The
+    output coordinates will be the same as the input coordinates
+    :math:`\mathcal{C}^\text{in} = \mathcal{C}^\text{out}`.
+
+    .. note::
+        The first argument takes a sparse tensor; the second argument takes
+        features that are reduced to the origin. This can be typically done with
+        the global reduction such as the :attr:`MinkowskiGlobalPooling`.
+
+    """
 
     def __init__(self, dimension=-1):
+        r"""a broadcast addition layer.
+
+        Args:
+            :attr:`dimension` (int): the dimension of the space where all the
+            inputs and the network is defined. For example, images are in a 2D
+            space, meshes and 3D shapes are in a 3D space.
+
+        """
         super(MinkowskiBroadcastAddition, self).__init__(
             OperationType.ADDITION, dimension)
 
 
 class MinkowskiBroadcastMultiplication(MinkowskiBroadcast):
+    r"""Broadcast reduced features to all input coordinates.
 
+    .. math::
+
+        \mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} \times \mathbf{x}_2
+        \; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}
+
+
+    For all input :math:`\mathbf{x}_\mathbf{u}`, multiply :math:`\mathbf{x}_2`
+    element-wise. The output coordinates will be the same as the input
+    coordinates :math:`\mathcal{C}^\text{in} = \mathcal{C}^\text{out}`.
+
+    .. note::
+        The first argument takes a sparse tensor; the second argument takes
+        features that are reduced to the origin. This can be typically done with
+        the global reduction such as the :attr:`MinkowskiGlobalPooling`.
+
+    """
     def __init__(self, dimension=-1):
+        r"""a broadcast multiplication layer.
+
+        Args:
+            :attr:`dimension` (int): the dimension of the space where all the
+            inputs and the network is defined. For example, images are in a 2D
+            space, meshes and 3D shapes are in a 3D space.
+
+        """
         super(MinkowskiBroadcastMultiplication, self).__init__(
             OperationType.MULTIPLICATION, dimension)

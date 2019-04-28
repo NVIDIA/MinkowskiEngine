@@ -167,16 +167,20 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         if out_coords_key is not None:
             assert isinstance(out_coords_key, CoordsKey)
 
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
-
         if kernel_generator is None:
             kernel_generator = KernelGenerator(
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
                 dimension=dimension)
+        else:
+          assert kernel_size == -1, f"Kernel size should not be provided when" \
+              + f"a KernelGenerator is provided. kernel_size: {kernel_size}"
+          kernel_size = kernel_generator.kernel_size
+
+        stride = convert_to_int_tensor(stride, dimension)
+        kernel_size = convert_to_int_tensor(kernel_size, dimension)
+        dilation = convert_to_int_tensor(dilation, dimension)
 
         kernel_volume = kernel_generator.kernel_volume
 
@@ -256,24 +260,25 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
 
 
 class MinkowskiConvolution(MinkowskiConvolutionBase):
-    r"""Convolve an sparse tensor with the specified kernel.
+    r"""The generalized sparse convolution layer.
 
 
     .. math::
 
-        \mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}(\mathbf{u}, K,
-        \mathcal{S}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
-        \mathbf{u}} \;\text{for} \; \mathbf{u} \in \mathcal{S}^\text{out}
+        \mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, K,
+        \mathcal{C}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
+        \mathbf{u}} \;\text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}
 
-    where :math:`K` is the kernel size and :math:`\mathcal{N}(\mathbf{u}, K,
-    \mathcal{S}^\text{in})` is the set of offsets that are at most :math:`\left
+    where :math:`K` is the kernel size and :math:`\mathcal{N}^D(\mathbf{u}, K,
+    \mathcal{C}^\text{in})` is the set of offsets that are at most :math:`\left
     \lceil{\frac{1}{2}(K - 1)} \right \rceil` away from :math:`\mathbf{u}`
     definied in :math:`\mathcal{S}^\text{in}`.
 
     .. note::
-        For even :math:`K`, the implementation is different from the above
-        definition. The offsets range from :math:`\mathbf{i} \in [0, K), \;
-        \mathbf{i} \in \mathbb{Z}_+`.
+        For even :math:`K`, the kernel offset :math:`\mathcal{N}^D`
+        implementation is different from the above definition. The offsets
+        range from :math:`\mathbf{i} \in [0, K)^D, \; \mathbf{i} \in
+        \mathbb{Z}_+^D`.
 
     """
 
@@ -287,7 +292,7 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
                  kernel_generator=None,
                  out_coords_key=None,
                  dimension=None):
-        r"""a high-dimensional convolution layer for sparse tensors.
+        r"""a generalized sparse convolution layer.
 
         Args:
             :attr:`in_channels` (int): the number of input channels in the
@@ -322,9 +327,9 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             network uses the specific coordinates for the output coordinates.
             It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
 
-            :attr:`dimension` (int): the dimension of the space all the inputs
-            and the network is defined. For example images are in 2D space,
-            meshes and 3D shapes are in 3D space and thus dimension is 3.
+            :attr:`dimension` (int): the dimension of the space where all the
+            inputs and the network is defined. For example, images are in a 2D
+            space, meshes and 3D shapes are in a 3D space.
 
         """
         MinkowskiConvolutionBase.__init__(
@@ -344,9 +349,7 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
 
 
 class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
-    r"""A generic transposed convolution or deconvolution layer for sparse
-    tensors.
-
+    r"""A generalized sparse transposed convolution or deconvolution layer.
     """
 
     def __init__(self,
@@ -359,7 +362,7 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
                  kernel_generator=None,
                  out_coords_key=None,
                  dimension=None):
-        r"""a high-dimensional convolution transpose layer for sparse tensors.
+        r"""a generalized sparse transposed convolution layer.
 
         Args:
             :attr:`in_channels` (int): the number of input channels in the
@@ -394,9 +397,9 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             network uses the specific coordinates for the output coordinates.
             It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
 
-            :attr:`dimension` (int): the dimension of the space all the inputs
-            and the network is defined. For example images are in 2D space,
-            meshes and 3D shapes are in 3D space and thus dimension is 3.
+            :attr:`dimension` (int): the dimension of the space where all the
+            inputs and the network is defined. For example, images are in a 2D
+            space, meshes and 3D shapes are in a 3D space.
 
         """
         MinkowskiConvolutionBase.__init__(

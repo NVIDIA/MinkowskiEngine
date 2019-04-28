@@ -12,6 +12,10 @@ from Common import get_postfix
 
 
 class MinkowskiBatchNorm(Module):
+    r"""A batch normalization layer for sparse tensors.
+
+    See the pytorch :attr:`torch.nn.BatchNorm1d` for more details.
+    """
 
     def __init__(self,
                  num_features,
@@ -195,6 +199,9 @@ class MinkowskiStableInstanceNorm(Module):
 
 
 class MinkowskiInstanceNorm(Module):
+    r"""A instance normalization layer for sparse tensors.
+
+    """
 
     def __init__(self, num_features, batch_size=0, dimension=-1):
         Module.__init__(self)
