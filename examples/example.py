@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.optim import SGD
 
 import MinkowskiEngine as ME
 
@@ -43,8 +44,11 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     net = net.to(device)
+    optimizer = SGD(net.parameters(), lr=1e-1)
 
     for i in range(10):
+        optimizer.zero_grad()
+
         # Get new data
         input = ME.SparseTensor(feat, coords=coords).to(device)
         label = label.to(device)
@@ -57,6 +61,7 @@ if __name__ == '__main__':
 
         # Gradient
         loss.backward()
+        optimizer.step()
 
     torch.save(net.state_dict(), 'test.pth')
     net.load_state_dict(torch.load('test.pth'))

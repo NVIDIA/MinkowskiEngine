@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.optim import SGD
 
 import MinkowskiEngine as ME
 import MinkowskiEngine.MinkowskiFunctional as F
@@ -54,14 +55,18 @@ if __name__ == '__main__':
 
     # Copy the network to GPU
     net = ExampleNetwork(in_feat=3, out_feat=5, D=2)
-    net = net.to(target_device)
     print(net)
+
+    net = net.to(target_device)
+    optimizer = SGD(net.parameters(), lr=1e-1)
 
     # Copy the loss layer
     criterion = nn.CrossEntropyLoss()
     criterions = parallel.replicate(criterion, devices)
 
     for i in range(10):
+        optimizer.zero_grad()
+
         # Get new data
         inputs, labels = [], []
         for i in range(num_devices):
@@ -81,6 +86,7 @@ if __name__ == '__main__':
 
         # Gradient
         loss.backward()
+        optimizer.step()
 
     torch.save(net.state_dict(), 'test.pth')
     net.load_state_dict(torch.load('test.pth'))
