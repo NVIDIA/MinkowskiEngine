@@ -46,9 +46,12 @@ __global__ void inplace_convolution(const int n, const Dtype *in_feat,
     const int out_row = index / out_nchannel;
     // Pytorch tensors in C-ordering with in_nchannels x out_nchannels
     Dtype tmp = 0.0;
+    const Dtype *curr_kernel = kernel + out_ch;
+    const Dtype *curr_in_feat = in_feat + in_map[out_row] * in_nchannel;
     for (int in_ch = 0; in_ch < in_nchannel; in_ch++) {
-      tmp += kernel[in_ch * out_nchannel + out_ch] *
-             in_feat[in_map[out_row] * in_nchannel + in_ch];
+      tmp += (*curr_kernel) * (*curr_in_feat);
+      curr_kernel += out_nchannel;
+      curr_in_feat += 1;
     }
     // Done independently, no need for atomicAdd
     out_feat[out_map[out_row] * out_nchannel + out_ch] += tmp;
