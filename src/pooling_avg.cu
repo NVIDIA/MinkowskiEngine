@@ -234,7 +234,7 @@ void NonzeroAvgPoolingBackwardKernelGPU(
   d_out_map = d_in_map + nnz;
 
   // Cleanup gradients
-  HANDLE_ERROR(
+  CUDA_CHECK(
       cudaMemset(d_grad_in_feat, 0, in_nrows * nchannel * sizeof(Dtype)));
 
   Itype *d_in_map_iter = d_in_map, *d_out_map_iter = d_out_map;

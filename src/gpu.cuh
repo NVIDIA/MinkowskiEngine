@@ -68,8 +68,15 @@
        i += blockDim.x * gridDim.x)
 
 // CUDA: check for error after kernel execution and exit loudly if there is one.
-#define HANDLE_ERROR(err) (HandleError(err, __FILE__, __LINE__))
-#define CUDA_POST_KERNEL_CHECK HANDLE_ERROR(cudaPeekAtLastError())
+#define CUDA_POST_KERNEL_CHECK                                                 \
+  {                                                                            \
+    cudaError_t status = cudaPeekAtLastError();                                \
+    if (status != cudaSuccess) {                                               \
+      throw std::runtime_error(Formatter()                                     \
+                               << " " << cudaGetErrorString(status) << " at "  \
+                               << __FILE__ << ":" << __LINE__);                \
+    }                                                                          \
+  }
 
 #define THRUST_CHECK(condition)                                                \
   try {                                                                        \
@@ -88,6 +95,8 @@ const char *cusparseGetErrorString(cusparseStatus_t error);
 
 constexpr int CUDA_NUM_THREADS = 256;
 
+constexpr int SHARED_BLOCK_SIZE = 32;
+
 inline int GET_BLOCKS(const int N) {
   return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 }
@@ -96,8 +105,6 @@ template <typename Dtype> void print(const thrust::device_vector<Dtype> &v);
 template <typename Dtype1, typename Dtype2>
 void print(const thrust::device_vector<Dtype1> &v1,
            const thrust::device_vector<Dtype2> &v2);
-
-void HandleError(cudaError_t err, const char *file, int line);
 
 // AtomicAddition for double with cuda arch <= 600
 #if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600

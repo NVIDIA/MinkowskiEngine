@@ -58,6 +58,73 @@ __global__ void inplace_convolution(const int n, const Dtype *in_feat,
   }
 }
 
+/**
+ * Matrix multiplication (CUDA Kernel) on the device: C = A * B
+ * wA is A's width and wB is B's width
+ */
+template <typename Dtype, typename Itype, int BLOCK_SIZE>
+__global__ void matmul(const Dtype *A, const int wA, const int hA,
+                       const Dtype *B, const int wB, const int hB, Dtype *C,
+                       const Itype *in_map, const Itype *out_map) {
+  // Use in_feat as A and kernel as B
+
+  // Block index
+  int bx = blockIdx.x;
+  int by = blockIdx.y;
+
+  // Thread index
+  int tx = threadIdx.x;
+  int ty = threadIdx.y;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  Dtype Csub = 0;
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int a = 0, b = 0; a < wA; a += BLOCK_SIZE, b += BLOCK_SIZE) {
+    // Declaration of the shared memory array As used to
+    // store the sub-matrix of A
+    __shared__ Dtype As[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Declaration of the shared memory array Bs used to
+    // store the sub-matrix of B
+    __shared__ Dtype Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = ((a + tx) < wA && (BLOCK_SIZE * by + ty) < hA)
+                     ? A[wA * in_map[(BLOCK_SIZE * by + ty)] + a + tx]
+                     : 0;
+    Bs[ty][tx] = ((ty + b) < hB && (BLOCK_SIZE * bx + tx) < wB)
+                     ? B[wB * (ty + b) + BLOCK_SIZE * bx + tx]
+                     : 0;
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Csub += As[ty][k] * Bs[k][tx];
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  if ((BLOCK_SIZE * bx + tx) < wB && (BLOCK_SIZE * by + ty) < hA)
+    C[wB * out_map[(BLOCK_SIZE * by + ty)] + BLOCK_SIZE * bx + tx] += Csub;
+}
+
 template <typename Dtype, typename Itype>
 void ConvolutionForwardKernelGPU(
     const Dtype *d_in_feat, int in_nchannel, Dtype *d_out_feat,
@@ -90,8 +157,6 @@ void ConvolutionForwardKernelGPU(
     if (n_active_in_volume == 0)
       continue;
 
-    num_kernels = out_nchannel * n_active_in_volume;
-
     // Copy (*p_in_maps)[k] to GPU
     CUDA_CHECK(cudaMemcpy(d_in_map, in_maps[k].data(),
                           sizeof(Itype) * n_active_in_volume,
@@ -99,11 +164,21 @@ void ConvolutionForwardKernelGPU(
     CUDA_CHECK(cudaMemcpy(d_out_map, out_maps[k].data(),
                           sizeof(Itype) * n_active_in_volume,
                           cudaMemcpyHostToDevice));
-
-    inplace_convolution<Dtype, Itype>
-        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-            num_kernels, d_in_feat, in_nchannel, d_out_feat, out_nchannel,
-            &d_kernel[k * in_nchannel * out_nchannel], d_in_map, d_out_map);
+    if (n_active_in_volume / SHARED_BLOCK_SIZE < 65536) {
+      dim3 threads(SHARED_BLOCK_SIZE, SHARED_BLOCK_SIZE);
+      dim3 grid((out_nchannel + threads.x - 1) / threads.x,
+                (n_active_in_volume + threads.y - 1) / threads.y);
+      matmul<Dtype, Itype, SHARED_BLOCK_SIZE><<<grid, threads, 0, stream>>>(
+          d_in_feat, in_nchannel, n_active_in_volume,
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
+          d_out_feat, d_in_map, d_out_map);
+    } else {
+      num_kernels = out_nchannel * n_active_in_volume;
+      inplace_convolution<Dtype, Itype>
+          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+              num_kernels, d_in_feat, in_nchannel, d_out_feat, out_nchannel,
+              &d_kernel[k * in_nchannel * out_nchannel], d_in_map, d_out_map);
+    }
   }
 
   cudaFree(d_in_map);

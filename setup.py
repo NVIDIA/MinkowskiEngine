@@ -2,7 +2,7 @@ import codecs
 import os
 import re
 import time
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 from setuptools import setup
 from torch.utils.cpp_extension import CUDAExtension, BuildExtension
 
@@ -27,7 +27,7 @@ def find_version(*file_paths):
 
 
 def run_command(cmd):
-    process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True, encoding='utf8')
+    process = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True, encoding='utf8')
     while True:
         output = process.stdout.readline()
         if output == '' and process.poll() is not None:

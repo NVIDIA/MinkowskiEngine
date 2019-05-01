@@ -214,7 +214,7 @@ void ThrustMaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  cudaStream_t stream) {
   int num_kernels = out_nrows * nchannel;
   // Cleanup gradients
-  HANDLE_ERROR(
+  CUDA_CHECK(
       cudaMemset(d_grad_in_feat, 0, in_nrows * nchannel * sizeof(Dtype)));
   set_gradient<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
       num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index, nchannel);
