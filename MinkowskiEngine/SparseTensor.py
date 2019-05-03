@@ -68,6 +68,16 @@ class SparseTensor():
         return self.coords_man
 
     @property
+    def coords(self):
+        return self.get_coords()
+
+    def get_coords(self):
+        """
+        return the coordinates of the sparse tensors.
+        """
+        return self.coords_man.get_coords(self.coords_key)
+
+    @property
     def D(self):
         return self.coords_key.D
 
@@ -102,6 +112,13 @@ class SparseTensor():
     def to(self, device):
         self.F = self.F.to(device)
         return self
+
+    def cpu(self):
+        self.F = self.F.cpu()
+        return self
+
+    def get_device(self):
+        return self.F.get_device()
 
     def getKey(self):
         return self.coords_key

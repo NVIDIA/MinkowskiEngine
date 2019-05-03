@@ -37,6 +37,7 @@ class TestConvolution(unittest.TestCase):
         conv = conv.to(device)
         output = conv(input)
         print(output)
+        print(output.F, output.coords)
 
         # Check backward
         fn = MinkowskiConvolutionFunction()
