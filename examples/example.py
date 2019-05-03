@@ -40,7 +40,6 @@ if __name__ == '__main__':
     print(net)
 
     # a data loader must return a tuple of coords, features, and labels.
-    coords, feat, label = data_loader()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     net = net.to(device)
@@ -50,6 +49,7 @@ if __name__ == '__main__':
         optimizer.zero_grad()
 
         # Get new data
+        coords, feat, label = data_loader()
         input = ME.SparseTensor(feat, coords=coords).to(device)
         label = label.to(device)
 
@@ -58,10 +58,12 @@ if __name__ == '__main__':
 
         # Loss
         loss = criterion(output.F, label)
+        print('Iteration: ', i, ', Loss: ', loss.item())
 
         # Gradient
         loss.backward()
         optimizer.step()
 
+    # Saving and loading a network
     torch.save(net.state_dict(), 'test.pth')
     net.load_state_dict(torch.load('test.pth'))

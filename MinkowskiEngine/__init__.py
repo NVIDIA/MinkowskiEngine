@@ -1,4 +1,4 @@
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 import os
 import sys
@@ -47,5 +47,5 @@ from MinkowskiOps import MinkowskiLinear, cat
 
 import MinkowskiFunctional
 
-from .utils import *
-from .utils import gradcheck
+import utils
+import modules

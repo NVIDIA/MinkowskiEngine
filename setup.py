@@ -27,7 +27,8 @@ def find_version(*file_paths):
 
 
 def run_command(cmd):
-    process = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True, encoding='utf8')
+    process = Popen(cmd, stdout=PIPE, stderr=STDOUT,
+                    shell=True, encoding='utf8')
     while True:
         output = process.stdout.readline()
         if output == '' and process.poll() is not None:
@@ -48,7 +49,7 @@ setup(
     version=find_version('MinkowskiEngine', '__init__.py'),
     install_requires=['torch'],
     packages=[
-        'MinkowskiEngine', 'MinkowskiEngine.utils'
+        'MinkowskiEngine', 'MinkowskiEngine.utils', 'MinkowskiEngine.modules'
     ],
     package_dir={'MinkowskiEngine': './MinkowskiEngine'},
     ext_modules=[

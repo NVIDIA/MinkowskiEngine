@@ -144,7 +144,6 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
  * |    D^T   | E |
  * +----------+---+
  *
- *
  */
 template <typename Dtype, typename Itype, int BLOCK_SIZE>
 __global__ void matmul2(const Dtype *A, const int wA, const int hA,

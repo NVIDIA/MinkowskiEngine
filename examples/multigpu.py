@@ -83,6 +83,7 @@ if __name__ == '__main__':
         losses = parallel.parallel_apply(
             criterions, tuple(zip(out_features, labels)), devices=devices)
         loss = parallel.gather(losses, target_device, dim=0).mean()
+        print('Iteration: ', i, ', Loss: ', loss.item())
 
         # Gradient
         loss.backward()
