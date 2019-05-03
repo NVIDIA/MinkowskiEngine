@@ -73,6 +73,6 @@ public:
 };
 
 // For threaded kernel map
-using Triplets = std::vector<std::array<uint32_t, 3>>;
+using Triplets = std::vector<std::array<int32_t, 3>>;
 
 #endif

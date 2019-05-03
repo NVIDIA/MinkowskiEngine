@@ -13,11 +13,11 @@ operator()(const Coord<D, int> out_coord, const Arr<D, int> &in_tensor_strides,
   auto kernel_region =
       Region<D, Itype>(out_coord, in_tensor_strides, kernel_size, dilations,
                              region_type, offsets_data, offsets_size);
-  uint32_t kernel_ind = 0;
+  int kernel_ind = 0;
   for (auto point : kernel_region) {
     auto in_coord_iter = in_coords_hashmap.find(point);
     if (in_coord_iter != in_coords_hashmap.end()) {
-      triplet.push_back({kernel_ind, in_coord_iter->second, out_coord_index});
+      triplet.push_back({kernel_ind, (int)in_coord_iter->second, out_coord_index});
     }
     kernel_ind++;
   }
