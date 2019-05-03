@@ -112,10 +112,6 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   d_in_map_min = d_index + nnz;
   d_reduced_out_map = d_index + 2 * nnz;
 
-  // thrust::device_vector<Itype> d_index(nnz);
-  // thrust::device_vector<Itype> d_in_map_min(nnz);
-  // thrust::device_vector<Itype> d_reduced_out_map(nnz);
-
   thrust::sequence(thrust::device, d_index, d_index + nnz);
 
   thrust::equal_to<Itype> equal_pred;

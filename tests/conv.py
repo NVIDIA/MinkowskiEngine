@@ -83,34 +83,6 @@ class TestConvolution(unittest.TestCase):
                            conv.region_type_, conv.region_offset_,
                            input.coords_key, None, input.coords_man)))
 
-    # def test_hybrid(self):
-    #     in_channels, out_channels, D = 2, 3, 2
-    #     coords, feats, labels = data_loader(in_channels)
-    #     feats.requires_grad_()
-    #     input = MinkowskiTensor(feats, coords=coords)
-    #     conv = MinkowskiConvolution(
-    #         in_channels,
-    #         out_channels,
-    #         kernel_size=3,
-    #         stride=2,
-    #         region_type=RegionType.HYBRID,
-    #         axis_types=[RegionType.HYPERCROSS, RegionType.HYPERCROSS],
-    #         dimension=D)
-    #     output = conv(input)
-    #     print(output)
-
-    #     # Check backward
-    #     fn = MinkowskiConvolutionFunction()
-
-    #     self.assertTrue(
-    #         gradcheck(
-    #             fn, (input.F, conv.kernel, input.tensor_stride, conv.stride,
-    #                  conv.kernel_size, conv.dilation, conv.region_type_,
-    #                  conv.region_offset_, None, None, input.m),
-    #             atol=1e-3,
-    #             rtol=1e-2,
-    #             eps=1e-4))
-
 
 class TestConvolutionTranspose(unittest.TestCase):
 

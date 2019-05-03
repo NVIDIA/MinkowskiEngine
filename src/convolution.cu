@@ -69,20 +69,27 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
   // Use in_feat as A and kernel as B
 
   // Block index
-  int bx = blockIdx.x;
-  int by = blockIdx.y;
+  const int bx = blockIdx.x;
+  const int by = blockIdx.y;
 
   // Thread index
-  int tx = threadIdx.x;
-  int ty = threadIdx.y;
+  const int tx = threadIdx.x;
+  const int ty = threadIdx.y;
+
+  // Coordinate. x is for rows, y is for columns.
+  const int x = BLOCK_SIZE * bx + tx;
+  const int y = BLOCK_SIZE * by + ty;
 
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
   Dtype Csub = 0;
 
+  const Itype in_row = y < hA ? in_map[y] : 0;
+  const Itype out_row = y < hA ? out_map[y] : 0;
+
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
-  for (int a = 0, b = 0; a < wA; a += BLOCK_SIZE, b += BLOCK_SIZE) {
+  for (int s = 0; s < wA; s += BLOCK_SIZE) {
     // Declaration of the shared memory array As used to
     // store the sub-matrix of A
     __shared__ Dtype As[BLOCK_SIZE][BLOCK_SIZE];
@@ -94,12 +101,8 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
     // Load the matrices from device memory
     // to shared memory; each thread loads
     // one element of each matrix
-    As[ty][tx] = ((a + tx) < wA && (BLOCK_SIZE * by + ty) < hA)
-                     ? A[wA * in_map[(BLOCK_SIZE * by + ty)] + a + tx]
-                     : 0;
-    Bs[ty][tx] = ((ty + b) < hB && (BLOCK_SIZE * bx + tx) < wB)
-                     ? B[wB * (ty + b) + BLOCK_SIZE * bx + tx]
-                     : 0;
+    As[ty][tx] = ((s + tx) < wA && y < hA) ? A[wA * in_row + s + tx] : 0;
+    Bs[ty][tx] = ((s + ty) < hB && x < wB) ? B[wB * (s + ty) + x] : 0;
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
@@ -108,7 +111,6 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
     // each thread computes one element
     // of the block sub-matrix
 #pragma unroll
-
     for (int k = 0; k < BLOCK_SIZE; ++k) {
       Csub += As[ty][k] * Bs[k][tx];
     }
@@ -121,8 +123,116 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
 
   // Write the block sub-matrix to device memory;
   // each thread writes one element
-  if ((BLOCK_SIZE * bx + tx) < wB && (BLOCK_SIZE * by + ty) < hA)
-    C[wB * out_map[(BLOCK_SIZE * by + ty)] + BLOCK_SIZE * bx + tx] += Csub;
+  if (y < hA && x < wB)
+    C[wB * out_row + x] += Csub;
+  // TODO: atomicAdd(&C[wB * out_row + x], Csub); // For conv transpose, it
+  // might fail due to overlapping outputs
+}
+
+/**
+ * Matrix multiplication (CUDA Kernel) on the device: C = A * B^T, E = D^T * A
+ * wA is A's width and wB is B's width
+ *
+ *                +---+
+ *                |B^T|
+ *            +-------+
+ *            |   |   |
+ *            | A | C |
+ *            |   |   |
+ *            |   |   |
+ * +------------------+
+ * |    D^T   | E |
+ * +----------+---+
+ *
+ *
+ */
+template <typename Dtype, typename Itype, int BLOCK_SIZE>
+__global__ void matmul2(const Dtype *A, const int wA, const int hA,
+                        const Dtype *B, const int wB, const int hB,
+                        const Dtype *D, const int wD, const int hD, Dtype *C,
+                        Dtype *E, const Itype *in_map, const Itype *out_map) {
+  // Use grad_out_feat as A, transposed kernel weight as B, and in_feat as D
+
+  // Block index
+  const int bx = blockIdx.x;
+  const int by = blockIdx.y;
+
+  // Thread index
+  const int tx = threadIdx.x;
+  const int ty = threadIdx.y;
+
+  // Coordinate. x is for rows, y is for columns.
+  const int x = BLOCK_SIZE * bx + tx;
+  const int y = BLOCK_SIZE * by + ty;
+
+  const Itype in_row = y < hA ? in_map[y] : 0;
+  const Itype out_row = y < hA ? out_map[y] : 0;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  Dtype Csub = 0;
+  Dtype Esub = 0;
+
+  // Declaration of the shared memory array As used to
+  // store the sub-matrix of A
+  __shared__ Dtype As[BLOCK_SIZE][BLOCK_SIZE];
+
+  // Declaration of the shared memory array Bs used to
+  // store the sub-matrix of B
+  __shared__ Dtype BTs[BLOCK_SIZE][BLOCK_SIZE];
+
+  // Declaration of the shared memory array Ds used to
+  // store the sub-matrix of D
+  __shared__ Dtype DTs[BLOCK_SIZE][BLOCK_SIZE];
+
+  // For Ds = D^T[...:..., ...:...], use the transposed grid dimension for A
+  DTs[ty][tx] = (x < wD && y < hD) ? D[wD * in_row + x] : 0;
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int s = 0; s < wA; s += BLOCK_SIZE) {
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = ((s + tx) < wA && y < hA) ? A[wA * out_row + s + tx] : 0;
+
+    // Transposed kernel
+    BTs[ty][tx] = ((s + ty) < wB && x < hB) ? B[wB * x + s + ty] : 0;
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Csub += As[ty][k] * BTs[k][tx];
+    }
+
+    // For Esub, reset to 0
+    Esub = 0;
+#pragma unroll
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Esub += DTs[k][ty] * As[k][tx];
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+
+    // For the E matrix which requires accmulation of multiple blocks, use
+    // atomic addition. This can be replaced with a more sophisticaed reduction
+    // algorithm.
+    if ((bx * BLOCK_SIZE + ty) < wD && (s + tx) < wA)
+      atomicAdd(&E[wA * (bx * BLOCK_SIZE + ty) + (s + tx)], Esub);
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  if (y < hA && x < hB)
+    atomicAdd(&C[hB * in_row + x], Csub);
 }
 
 template <typename Dtype, typename Itype>
@@ -164,6 +274,7 @@ void ConvolutionForwardKernelGPU(
     CUDA_CHECK(cudaMemcpy(d_out_map, out_maps[k].data(),
                           sizeof(Itype) * n_active_in_volume,
                           cudaMemcpyHostToDevice));
+
     if (n_active_in_volume / SHARED_BLOCK_SIZE < 65536) {
       dim3 threads(SHARED_BLOCK_SIZE, SHARED_BLOCK_SIZE);
       dim3 grid((out_nchannel + threads.x - 1) / threads.x,
@@ -217,22 +328,16 @@ void ConvolutionBackwardKernelGPU(
       max_n_active = (int)(in_maps[k].size());
 
   CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * max_n_active * sizeof(Itype)));
-  CUDA_CHECK(
-      cudaMalloc((void **)&d_in_buffer,
-                 (in_nchannel + out_nchannel) * max_n_active * sizeof(Dtype)));
   d_out_map = d_in_map + max_n_active;
-  d_out_buffer = d_in_buffer + in_nchannel * max_n_active;
-  // CUDA_CHECK(cudaMalloc((void **)&d_in_map, max_n_active * sizeof(Itype)));
-  // CUDA_CHECK(cudaMalloc((void **)&d_out_map, max_n_active * sizeof(Itype)));
-  // CUDA_CHECK(cudaMalloc((void **)&d_in_buffer,
-  //                       in_nchannel * max_n_active * sizeof(Dtype)));
-  // CUDA_CHECK(cudaMalloc((void **)&d_out_buffer,
-  //                       out_nchannel * max_n_active * sizeof(Dtype)));
 
-  // Copy the in_map, out_map to GPU
-  // First im2col, gather all indices of in2out
-  // Iterate through each spatial kernel and get indices for in_map and
-  // out_map
+  // Use the old kernel when grid-y dim exceeds the limit.
+  if (max_n_active / SHARED_BLOCK_SIZE >= 65536) {
+    CUDA_CHECK(cudaMalloc((void **)&d_in_buffer, (in_nchannel + out_nchannel) *
+                                                     max_n_active *
+                                                     sizeof(Dtype)));
+    d_out_buffer = d_in_buffer + in_nchannel * max_n_active;
+  }
+
   for (int k = 0; k < kernel_volume; k++) {
     n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
@@ -246,55 +351,74 @@ void ConvolutionBackwardKernelGPU(
                           sizeof(Itype) * n_active_in_volume,
                           cudaMemcpyHostToDevice));
 
-    // Copy (*p_in_maps)[k] to GPU
-    num_kernels = out_nchannel * n_active_in_volume;
+    if (n_active_in_volume / SHARED_BLOCK_SIZE < 65536) {
+      dim3 threads(SHARED_BLOCK_SIZE, SHARED_BLOCK_SIZE);
+      dim3 grid((in_nchannel + threads.x - 1) / threads.x,
+                (n_active_in_volume + threads.y - 1) / threads.y);
 
-    // Copy gradients to the buffer
-    copy_mapped_input<Dtype, Itype>
-        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-            num_kernels, out_nchannel, d_grad_out_feat, d_out_buffer,
-            d_out_map);
+      matmul2<Dtype, Itype, SHARED_BLOCK_SIZE><<<grid, threads, 0, stream>>>(
+          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+          in_nchannel,                                    // B
+          d_in_feat, in_nchannel, n_active_in_volume,     // D
+          d_grad_in_feat,                                 // C
+          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+          d_in_map, d_out_map);
 
-    gpu_gemm<Dtype>(cuhandle, CblasNoTrans, CblasTrans,
-                    in_nchannel,                               // M
-                    n_active_in_volume,                        // N
-                    out_nchannel,                              // K
-                    (Dtype)1.,                                 // alpha
-                    &d_kernel[k * in_nchannel * out_nchannel], // A
-                    d_out_buffer,                              // B
-                    (Dtype)0.,                                 // beta
-                    d_in_buffer);                              // C
+    } else {
+      // Copy (*p_in_maps)[k] to GPU
+      num_kernels = out_nchannel * n_active_in_volume;
 
-    // Accumulate gradients back to the input grad feat
-    // Put it back to the correct index
-    num_kernels = in_nchannel * n_active_in_volume;
-    add_mapped_output_tr<Dtype>
-        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-            num_kernels,
-            d_in_buffer,                 // In
-            n_active_in_volume,          // In channel
-            d_grad_in_feat, in_nchannel, // Out
-            d_in_map);                   // Out channel
+      // Copy gradients to the buffer
+      copy_mapped_input<Dtype, Itype>
+          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+              num_kernels, out_nchannel, d_grad_out_feat, d_out_buffer,
+              d_out_map);
 
-    // Compute gradient for kernel
-    // Copy features to the buffer
-    copy_mapped_input<Dtype, Itype>
-        <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-            num_kernels, in_nchannel, d_in_feat, d_in_buffer, d_in_map);
+      gpu_gemm<Dtype>(cuhandle, CblasNoTrans, CblasTrans,
+                      in_nchannel,                               // M
+                      n_active_in_volume,                        // N
+                      out_nchannel,                              // K
+                      (Dtype)1.,                                 // alpha
+                      &d_kernel[k * in_nchannel * out_nchannel], // A
+                      d_out_buffer,                              // B
+                      (Dtype)0.,                                 // beta
+                      d_in_buffer);                              // C
 
-    gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasNoTrans,
-                    in_nchannel,                                   // M
-                    out_nchannel,                                  // N
-                    n_active_in_volume,                            // K
-                    1,                                             // alpha
-                    d_in_buffer,                                   // A
-                    d_out_buffer,                                  // B
-                    1,                                             // beta
-                    &d_grad_kernel[k * in_nchannel * out_nchannel] // C
-    );
+      // Accumulate gradients back to the input grad feat
+      // Put it back to the correct index
+      num_kernels = in_nchannel * n_active_in_volume;
+      add_mapped_output_tr<Dtype>
+          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+              num_kernels,
+              d_in_buffer,                 // In
+              n_active_in_volume,          // In channel
+              d_grad_in_feat, in_nchannel, // Out
+              d_in_map);                   // Out channel
+
+      // Compute gradient for kernel
+      // Copy features to the buffer
+      copy_mapped_input<Dtype, Itype>
+          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+              num_kernels, in_nchannel, d_in_feat, d_in_buffer, d_in_map);
+
+      gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasNoTrans,
+                      in_nchannel,                                   // M
+                      out_nchannel,                                  // N
+                      n_active_in_volume,                            // K
+                      1,                                             // alpha
+                      d_in_buffer,                                   // A
+                      d_out_buffer,                                  // B
+                      1,                                             // beta
+                      &d_grad_kernel[k * in_nchannel * out_nchannel] // C
+      );
+    }
   }
   cudaFree(d_in_map);
-  cudaFree(d_in_buffer);
+
+  // Free the mem allocated when grid-y dim exceeds the limit.
+  if (max_n_active / SHARED_BLOCK_SIZE >= 65536)
+    cudaFree(d_in_buffer);
 }
 
 template void ConvolutionBackwardKernelGPU<float, int32_t>(
