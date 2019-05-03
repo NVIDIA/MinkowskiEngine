@@ -41,7 +41,7 @@ def run_command(cmd):
     return rc
 
 
-run_command('make -j%d' % os.cpu_count())
+run_command('make -j%d' % min(os.cpu_count(), 12))
 
 # Python interface
 setup(

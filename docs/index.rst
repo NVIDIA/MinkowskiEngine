@@ -26,12 +26,19 @@ Table of Contents
    :maxdepth: 2
    :caption: API
 
+   sparse_tensor
    convolution
    pooling
    broadcast
    normalization
    nonlinearity
    coords
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Miscellanea
+
+   issues
 
 
 Indices and tables

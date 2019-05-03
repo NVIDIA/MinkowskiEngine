@@ -13,5 +13,10 @@ A sparse tensor is an N-dimensional extension of a sparse matrix. A sparse matri
 Generalizing the convolution
 ----------------------------
 
-[Generalized Sparse Convolution](https://arxiv.org/abs/1904.08755)
 The convolution is a fundamental operation in many fields. Especially in 2D, the 2D convolution has achieved state-of-the-art performance in many perception tasks. A convolution assumes stationary of the input signal and process 
+
+
+References
+----------
+
+- [4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks](https://arxiv.org/abs/1904.08755)

@@ -38,13 +38,15 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
 Next, we need to create replicas of the network and the final loss layer (if you use one).
 
-
 ```python
 import torch.nn.parallel as parallel
 
 criterion = nn.CrossEntropyLoss()
 criterions = parallel.replicate(criterion, devices)
 ```
+
+Loading Multiple Batches
+------------------------
 
 During training, we need a set of mini batches for each training iteration. We used a function that returns one mini batch, but you do not need to follow this pattern.
 
@@ -57,17 +59,30 @@ for i in range(num_devices):
     labels.append(label.to(devices[i]))
 ```
 
-Finally, we train the network by copying it to all devices or GPUs and feeding each with a mini batch. All outputs features are then fed into the loss layers, and then gathered in one device to get the final scalar loss. The rest of the training such as backward and taking a step in an optimizer is similar to single-GPU training.
+Copying weights to devices
+--------------------------
 
+First, we copy weights to all devices.
+
+```
+replicas = parallel.replicate(net, devices)
+```
+
+Next, we feed all mini-batches to the corresponding replicas of the network on all devices. All outputs features are then fed into the loss layers.
 
 ```python
-# The raw version of the parallel_apply
-replicas = parallel.replicate(net, devices)
 outputs = parallel.parallel_apply(replicas, inputs, devices=devices)
 
 # Extract features from the sparse tensors to use a pytorch criterion
 out_features = [output.F for output in outputs]
 losses = parallel.parallel_apply(
     criterions, tuple(zip(out_features, labels)), devices=devices)
+```
+
+Gathering all losses to the target device.
+
+```
 loss = parallel.gather(losses, target_device, dim=0).mean()
 ```
+
+The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the [complete multi-gpu example](https://github.com/chrischoy/MinkowskiEngine/blob/master/examples/multigpu.py) for more detail.

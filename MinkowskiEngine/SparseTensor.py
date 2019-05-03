@@ -6,6 +6,9 @@ from MinkowskiCoords import CoordsKey, CoordsManager
 
 
 class SparseTensor():
+    r"""A sparse tensor class.
+
+    """
 
     def __init__(self,
                  feats,
@@ -13,7 +16,7 @@ class SparseTensor():
                  coords_key=None,
                  coords_manager=None,
                  tensor_stride=1):
-        """
+        r"""
         Either coords or coords_key must be provided.
         coords_manager: of type CoordsManager.
         tensor_stride: defines the minimum distance or stride between coordinates
@@ -47,7 +50,7 @@ class SparseTensor():
         else:
             assert isinstance(coords_manager, CoordsManager)
 
-        self.F = feats.contiguous()
+        self._F = feats.contiguous()
         self.coords_key = coords_key
         self.coords_man = coords_manager
 
@@ -66,6 +69,10 @@ class SparseTensor():
     @property
     def C(self):
         return self.coords_man
+
+    @property
+    def F(self):
+        return self._F
 
     @property
     def coords(self):
@@ -88,13 +95,13 @@ class SparseTensor():
 
     def __add__(self, other):
         return SparseTensor(
-            self.F + (other.F if isinstance(other, SparseTensor) else other),
+            self._F + (other.F if isinstance(other, SparseTensor) else other),
             coords_key=self.coords_key,
             coords_manager=self.C)
 
-    def __power__(self, other):
+    def __power__(self, power):
         return SparseTensor(
-            self.F**other, coords_key=self.coords_key, coords_manager=self.C)
+            self._F**power, coords_key=self.coords_key, coords_manager=self.C)
 
     def __repr__(self):
         return self.__class__.__name__ + '(' + os.linesep \

@@ -1,5 +1,6 @@
 import os
 import sys
+import MinkowskiEngine as ME
 
 from recommonmark.parser import CommonMarkParser
 
@@ -19,7 +20,7 @@ from recommonmark.parser import CommonMarkParser
 #
 sys.path.insert(0, os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../../'))
-autodoc_mock_imports = ['MinkowskiEngine.example']
+autodoc_mock_imports = ['MinkowskiEngine.examples']
 
 
 # -- Project information -----------------------------------------------------
@@ -29,9 +30,9 @@ copyright = '2019, Chris Choy'
 author = 'Chris Choy'
 
 # The short X.Y version
-version = '0.2.2'
+version = ME.__version__
 # The full version, including alpha/beta/rc tags
-release = '0.2.2'
+release = ME.__version__
 github_doc_root = 'https://github.com/StanfordVL/MinkowskiEngine'
 
 # -- General configuration ---------------------------------------------------

@@ -2,30 +2,32 @@
 
 ## Installation
 
-Replace the cudatoolkit version with the correct CUDA version of your environment. Run `nvcc --version` to check your CUDA version.
+1. Install Anaconda by following the instruction on [anaconda documentation](https://docs.anaconda.com/anaconda/install/).
 
-```
-conda create -n py3-mink python=3.7 anaconda
-conda activate py3-mink
-conda install -c anaconda openblas
-conda install -c bioconda google-sparsehash
-conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Use the correct cudatoolkit version
-```
+2. Create an anaconda virtual environment and install dependencies.
 
-Once you setup the environment, download the repository and install the MinkowskiEngine.
+    ```
+    conda create -n py3-mink python=3.7 anaconda
+    conda activate py3-mink
+    conda install -c anaconda openblas
+    conda install -c bioconda google-sparsehash
+    conda install pytorch torchvision -c pytorch  # Use the correct cudatoolkit version
+    ```
 
-```
-conda activate py3-mink
-git clone https://github.com/StanfordVL/MinkowskiEngine.git
-cd MinkowskiEngine
-python setup.py install --force  # parallel compilation
-```
+3. Once you setup the environment, download the repository and install the MinkowskiEngine.
 
-## Running a Segmentation network
+    ```
+    conda activate py3-mink
+    git clone https://github.com/StanfordVL/MinkowskiEngine.git
+    cd MinkowskiEngine
+    python setup.py install
+    ```
+
+## Running a segmentation network
 
 Go to the top directory of the MinkowskiEngine and run the following.
 
 ```
 cd /path/to/MinkowskiEngine
-python -m tests.segmentation
+python -m examples/indoor_segmentation.py
 ```

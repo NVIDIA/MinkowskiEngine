@@ -19,18 +19,19 @@ You can install the MinkowskiEngine without sudo using anaconda. Using anaconda 
 
 ### Anaconda
 
-We recommend `python>=3.6` for installation.
-In this example, we assumed that you are using CUDA 10.0. To find out your CUDA version, run `nvcc --version`. If you are using a different version, please change the anaconda pytorch installation to use `cudatollkit=X.X`.
+We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://StanfordVL.github.com/MinkowskiEngine/issues.html) first.
 
 
 #### 1. Create a conda virtual environment and install requirements.
 
+First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
+
 ```
-conda create -n py3-mink python=3.6 anaconda
+conda create -n py3-mink python=3.7 anaconda
 conda activate py3-mink
 conda install -c anaconda openblas
 conda install -c bioconda google-sparsehash
-conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Use the correct cudatoolkit version
+conda install pytorch torchvision -c pytorch
 ```
 
 #### 2. Compilation and installation
@@ -39,7 +40,7 @@ conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Use the correct
 conda activate py3-mink
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
 cd MinkowskiEngine
-python setup.py install --force  # parallel compilation
+python setup.py install
 ```
 
 
@@ -54,7 +55,7 @@ pip install torch
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
 cd MinkowskiEngine
 pip install -r requirements.txt
-python setup.py install --force  # parallel compilation and python pacakge installation
+python setup.py install
 ```
 
 
@@ -137,8 +138,10 @@ After installing the package, run `python examples/example.py` in the package ro
 
 - Dimension
   - An image is a 2-dimensional object; A 3D-scan is a 3-dimensional object.
+
 - Coordinates
   - D-dimensional integer array + 1 dimension at the end for batch index
+
 - Tensor Stride
   - Distance between adjacent voxels. e.g., two stride-2 convolution layers will create features of tensor stride 4.
 
