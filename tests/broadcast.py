@@ -34,12 +34,16 @@ class TestBroadcast(unittest.TestCase):
         output = broadcast(input, input_glob)
         print(output)
         self.assertTrue(
-            gradcheck(fn, (input.F, input_glob.F, OperationType.ADDITION,
-                           input.coords_key, input_glob.coords_key, input.C)))
+            gradcheck(
+                fn,
+                (input.F, input_glob.F, OperationType.ADDITION,
+                 input.coords_key, input_glob.coords_key, input.coords_man)))
 
         self.assertTrue(
-            gradcheck(fn, (input.F, input_glob.F, OperationType.MULTIPLICATION,
-                           input.coords_key, input_glob.coords_key, input.C)))
+            gradcheck(
+                fn,
+                (input.F, input_glob.F, OperationType.MULTIPLICATION,
+                 input.coords_key, input_glob.coords_key, input.coords_man)))
 
     def test_broadcast(self):
         in_channels, D = 2, 2
@@ -62,12 +66,16 @@ class TestBroadcast(unittest.TestCase):
         fn = MinkowskiBroadcastFunction()
 
         self.assertTrue(
-            gradcheck(fn, (input.F, input_glob.F, OperationType.ADDITION,
-                           input.coords_key, input_glob.coords_key, input.C)))
+            gradcheck(
+                fn,
+                (input.F, input_glob.F, OperationType.ADDITION,
+                 input.coords_key, input_glob.coords_key, input.coords_man)))
 
         self.assertTrue(
-            gradcheck(fn, (input.F, input_glob.F, OperationType.MULTIPLICATION,
-                           input.coords_key, input_glob.coords_key, input.C)))
+            gradcheck(
+                fn,
+                (input.F, input_glob.F, OperationType.MULTIPLICATION,
+                 input.coords_key, input_glob.coords_key, input.coords_man)))
 
 
 if __name__ == '__main__':

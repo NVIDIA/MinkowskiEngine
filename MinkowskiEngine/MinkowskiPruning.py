@@ -52,9 +52,9 @@ class MinkowskiPruning(Module):
 
         out_coords_key = CoordsKey(input.coords_key.D)
         output = self.pruning.apply(input.F, use_feat, input.coords_key,
-                                    out_coords_key, input.C)
+                                    out_coords_key, input.coords_man)
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.C)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man)
 
     def __repr__(self):
         return self.__class__.__name__ + '()'

@@ -25,7 +25,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn, (input.F, use_feat, input.coords_key, output.coords_key,
-                     input.C)))
+                     input.coords_man)))
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
@@ -36,7 +36,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn, (input.F, use_feat, input.coords_key, output.coords_key,
-                     input.C)))
+                     input.coords_man)))
 
 
 if __name__ == '__main__':

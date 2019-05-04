@@ -15,14 +15,16 @@ class TestNormalization(unittest.TestCase):
         feats = feats.double()
         input = SparseTensor(feats, coords=coords)
         input.F.requires_grad_()
-        norm = MinkowskiInstanceNorm(num_features=in_channels, dimension=D).double()
+        norm = MinkowskiInstanceNorm(
+            num_features=in_channels, dimension=D).double()
 
         out = norm(input)
         print(out)
 
         fn = MinkowskiInstanceNormFunction()
         self.assertTrue(
-            gradcheck(fn, (input.F, 0, input.coords_key, None, input.C)))
+            gradcheck(fn,
+                      (input.F, 0, input.coords_key, None, input.coords_man)))
 
     def test_inst_norm_gpu(self):
         in_channels, D = 2, 2
@@ -40,7 +42,8 @@ class TestNormalization(unittest.TestCase):
 
         fn = MinkowskiInstanceNormFunction()
         self.assertTrue(
-            gradcheck(fn, (input.F, 0, input.coords_key, None, input.C)))
+            gradcheck(fn,
+                      (input.F, 0, input.coords_key, None, input.coords_man)))
 
 
 if __name__ == '__main__':

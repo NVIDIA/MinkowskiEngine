@@ -174,7 +174,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                 dilation=dilation,
                 dimension=dimension)
         else:
-          kernel_size = kernel_generator.kernel_size
+            kernel_size = kernel_generator.kernel_size
 
         stride = convert_to_int_tensor(stride, dimension)
         kernel_size = convert_to_int_tensor(kernel_size, dimension)
@@ -224,15 +224,16 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
             outfeat = input.F.mm(self.kernel)
             out_coords_key = input.coords_key
         else:
-            outfeat = self.conv.apply(
-                input.F, self.kernel, input.tensor_stride, self.stride,
-                self.kernel_size, self.dilation, self.region_type_,
-                self.region_offset_, input.coords_key, out_coords_key, input.C)
+            outfeat = self.conv.apply(input.F, self.kernel, input.tensor_stride,
+                                      self.stride, self.kernel_size,
+                                      self.dilation, self.region_type_,
+                                      self.region_offset_, input.coords_key,
+                                      out_coords_key, input.coords_man)
         if self.has_bias:
             outfeat += self.bias
 
         return SparseTensor(
-            outfeat, coords_key=out_coords_key, coords_manager=input.C)
+            outfeat, coords_key=out_coords_key, coords_manager=input.coords_man)
 
     def reset_parameters(self, is_transpose=False):
         n = (self.out_channels

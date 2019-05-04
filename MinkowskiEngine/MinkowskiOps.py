@@ -12,11 +12,14 @@ class MinkowskiLinear(Module):
     def forward(self, input):
         output = self.linear(input.F)
         return SparseTensor(
-            output, coords_key=input.coords_key, coords_manager=input.C)
+            output,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)
 
     def __repr__(self):
         s = '(in_features={}, out_features={}, bias={})'.format(
-            self.linear.in_features, self.linear.out_features, self.linear.bias is not None)
+            self.linear.in_features, self.linear.out_features,
+            self.linear.bias is not None)
         return self.__class__.__name__ + s
 
 
@@ -28,10 +31,10 @@ def cat(sparse_tensors):
     """
     for s in sparse_tensors:
         assert isinstance(s, SparseTensor)
-    coords_man = sparse_tensors[0].C
+    coords_man = sparse_tensors[0].coords_man
     coords_key = sparse_tensors[0].getKey().getKey()
     for s in sparse_tensors:
-        assert coords_man == s.C
+        assert coords_man == s.coords_man
         assert coords_key == s.getKey().getKey()
     tens = []
     for s in sparse_tensors:

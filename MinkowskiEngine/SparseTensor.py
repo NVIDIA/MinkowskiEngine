@@ -51,6 +51,7 @@ class SparseTensor():
             assert isinstance(coords_manager, CoordsManager)
 
         self._F = feats.contiguous()
+        self._C = coords
         self.coords_key = coords_key
         self.coords_man = coords_manager
 
@@ -66,23 +67,26 @@ class SparseTensor():
       p = convert_to_int_list(p, self.D)
       self.coords_key.setTensorStride(p)
 
+    def _get_coords(self):
+        return self.coords_man.get_coords(self.coords_key)
+
     @property
     def C(self):
-        return self.coords_man
+        return self.coords
+
+    @property
+    def coords(self):
+        if self._C is None:
+            self._C = self._get_coords()
+        return self._C
 
     @property
     def F(self):
         return self._F
 
     @property
-    def coords(self):
-        return self.get_coords()
-
-    def get_coords(self):
-        """
-        return the coordinates of the sparse tensors.
-        """
-        return self.coords_man.get_coords(self.coords_key)
+    def feats(self):
+        return self._F
 
     @property
     def D(self):
@@ -91,17 +95,18 @@ class SparseTensor():
     def stride(self, s):
         ss = convert_to_int_list(s)
         tensor_strides = self.coords_key.getTensorStride()
-        self.coords_key.setTensorStride([s * p for s, p in zip(ss, tensor_strides)])
+        self.coords_key.setTensorStride(
+            [s * p for s, p in zip(ss, tensor_strides)])
 
     def __add__(self, other):
         return SparseTensor(
             self._F + (other.F if isinstance(other, SparseTensor) else other),
             coords_key=self.coords_key,
-            coords_manager=self.C)
+            coords_manager=self.coords_man)
 
     def __power__(self, power):
         return SparseTensor(
-            self._F**power, coords_key=self.coords_key, coords_manager=self.C)
+            self._F**power, coords_key=self.coords_key, coords_manager=self.coords_man)
 
     def __repr__(self):
         return self.__class__.__name__ + '(' + os.linesep \
@@ -111,21 +116,21 @@ class SparseTensor():
             + '  coords_man=' + str(self.coords_man) + ')'
 
     def __len__(self):
-        return len(self.F)
+        return len(self._F)
 
     def size(self):
-        return self.F.size()
+        return self._F.size()
 
     def to(self, device):
-        self.F = self.F.to(device)
+        self._F = self._F.to(device)
         return self
 
     def cpu(self):
-        self.F = self.F.cpu()
+        self._F = self._F.cpu()
         return self
 
     def get_device(self):
-        return self.F.get_device()
+        return self._F.get_device()
 
     def getKey(self):
         return self.coords_key

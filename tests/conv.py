@@ -1,7 +1,6 @@
 import torch
 import unittest
 
-
 from MinkowskiEngine import SparseTensor, MinkowskiConvolution, MinkowskiConvolutionFunction, \
     MinkowskiConvolutionTranspose, MinkowskiConvolutionTransposeFunction, initialize_nthreads
 
@@ -47,8 +46,8 @@ class TestConvolution(unittest.TestCase):
         output.F.backward(grad)
 
         self.assertTrue(
-            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride, conv.stride,
-                           conv.kernel_size, conv.dilation,
+            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride,
+                           conv.stride, conv.kernel_size, conv.dilation,
                            conv.region_type_, conv.region_offset_,
                            input.coords_key, None, input.coords_man)))
 
@@ -71,15 +70,16 @@ class TestConvolution(unittest.TestCase):
         print(output)
 
         print(conv.region_offset_)
-        kernel_map = input.C.get_kernel_map(1, 2, stride=2, kernel_size=3)
+        kernel_map = input.coords_man.get_kernel_map(
+            1, 2, stride=2, kernel_size=3)
         print(kernel_map)
 
         # Check backward
         fn = MinkowskiConvolutionFunction()
 
         self.assertTrue(
-            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride, conv.stride,
-                           conv.kernel_size, conv.dilation,
+            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride,
+                           conv.stride, conv.kernel_size, conv.dilation,
                            conv.region_type_, conv.region_offset_,
                            input.coords_key, None, input.coords_man)))
 

@@ -189,13 +189,14 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         else:
             out_coords_key = self.out_coords_key
 
-        output = self.pooling.apply(
-            input.F, input.tensor_stride, self.stride, self.kernel_size,
-            self.dilation, self.region_type_, self.region_offset_, self.average,
-            input.coords_key, out_coords_key, input.C)
+        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
+                                    self.kernel_size, self.dilation,
+                                    self.region_type_, self.region_offset_,
+                                    self.average, input.coords_key,
+                                    out_coords_key, input.coords_man)
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.C)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man)
 
     def __repr__(self):
         s = '(kernel_size={}, stride={}, dilation={})'.format(
@@ -437,9 +438,10 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
         output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
                                     self.kernel_size, self.dilation,
                                     self.region_type_, self.region_offset_,
-                                    input.coords_key, out_coords_key, input.C)
+                                    input.coords_key, out_coords_key,
+                                    input.coords_man)
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.C)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man)
 
 
 class MinkowskiPoolingTransposeFunction(Function):
@@ -573,13 +575,14 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
         else:
             out_coords_key = self.out_coords_key
 
-        output = self.pooling.apply(
-            input.F, input.tensor_stride, self.stride, self.kernel_size,
-            self.dilation, self.region_type_, self.region_offset_, self.average,
-            input.coords_key, out_coords_key, input.C)
+        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
+                                    self.kernel_size, self.dilation,
+                                    self.region_type_, self.region_offset_,
+                                    self.average, input.coords_key,
+                                    out_coords_key, input.coords_man)
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.C)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man)
 
 
 class MinkowskiGlobalPoolingFunction(Function):
@@ -665,10 +668,11 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
 
         out_coords_key = CoordsKey(input.coords_key.D)
         output = self.pooling.apply(input.F, self.batch_size, self.average,
-                                    input.coords_key, out_coords_key, input.C)
+                                    input.coords_key, out_coords_key,
+                                    input.coords_man)
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.C)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man)
 
     def __repr__(self):
         return self.__class__.__name__ + "(average=" + str(self.average) + ")"

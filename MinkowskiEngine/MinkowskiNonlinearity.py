@@ -14,7 +14,9 @@ class MinkowskiModuleBase(Module):
     def forward(self, input):
         output = self.module(input.F)
         return SparseTensor(
-            output, coords_key=input.coords_key, coords_manager=input.C)
+            output,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)
 
     def __repr__(self):
         return self.__class__.__name__ + '()'

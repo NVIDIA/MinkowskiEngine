@@ -32,7 +32,7 @@ class MinkowskiNetwork(nn.Module, ABC):
         nrows = self.get_nrows(1)
         if nrows < 0:
             if isinstance(x, SparseTensor):
-                self.initialize_coords(x.C)
+                self.initialize_coords(x.coords_man)
             else:
                 raise ValueError('Initialize input coordinates')
         elif nrows != x.F.size(0):
@@ -49,8 +49,9 @@ class MinkowskiNetwork(nn.Module, ABC):
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         index_map = torch.IntTensor()
         tensor_stride = convert_to_int_tensor(tensor_stride, self.D)
-        success = MEB.get_index_map(coords.contiguous(), index_map, tensor_stride,
-                                    self.D, self.net_metadata.ffi)
+        success = MEB.get_index_map(coords.contiguous(), index_map,
+                                    tensor_stride, self.D,
+                                    self.net_metadata.ffi)
         if success < 0:
             raise ValueError('get_index_map failed')
         return index_map

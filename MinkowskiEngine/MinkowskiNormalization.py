@@ -34,7 +34,9 @@ class MinkowskiBatchNorm(Module):
     def forward(self, input):
         output = self.bn(input.F)
         return SparseTensor(
-            output, coords_key=input.coords_key, coords_manager=input.C)
+            output,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)
 
     def __repr__(self):
         s = '({}, eps={}, momentum={}, affine={}, track_running_stats={})'.format(
@@ -179,23 +181,24 @@ class MinkowskiStableInstanceNorm(Module):
 
     def forward(self, x):
         neg_mean_in = self.mean_in(
-            SparseTensor(-x.F, coords_key=x.coords_key, coords_manager=x.C))
+            SparseTensor(
+                -x.F, coords_key=x.coords_key, coords_manager=x.coords_man))
         centered_in = self.glob_sum(x, neg_mean_in)
         temp = SparseTensor(
             centered_in.F**2,
             coords_key=centered_in.coords_key,
-            coords_manager=centered_in.C)
+            coords_manager=centered_in.coords_man)
         var_in = self.glob_mean(temp)
         instd_in = SparseTensor(
             1 / (var_in.F + self.eps).sqrt(),
             coords_key=var_in.coords_key,
-            coords_manager=var_in.C)
+            coords_manager=var_in.coords_man)
 
         x = self.glob_times(self.glob_sum2(x, neg_mean_in), instd_in)
         return SparseTensor(
             x.F * self.weight + self.bias,
             coords_key=x.coords_key,
-            coords_manager=x.C)
+            coords_manager=x.coords_man)
 
 
 class MinkowskiInstanceNorm(Module):
@@ -226,8 +229,10 @@ class MinkowskiInstanceNorm(Module):
         assert input.D == self.dimension
 
         output = self.inst_norm.apply(input.F, self.batch_size,
-                                      input.coords_key, None, input.C)
+                                      input.coords_key, None, input.coords_man)
         output = output * self.weight + self.bias
 
         return SparseTensor(
-            output, coords_key=input.coords_key, coords_manager=input.C)
+            output,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)

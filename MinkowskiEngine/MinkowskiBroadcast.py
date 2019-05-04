@@ -74,9 +74,11 @@ class MinkowskiBroadcast(Module):
 
         output = self.broadcast.apply(input.F, input_glob.F,
                                       self.operation_type, input.coords_key,
-                                      input_glob.coords_key, input.C)
+                                      input_glob.coords_key, input.coords_man)
         return SparseTensor(
-            output, coords_key=input.coords_key, coords_manager=input.C)
+            output,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)
 
     def __repr__(self):
         return self.__class__.__name__
@@ -111,8 +113,8 @@ class MinkowskiBroadcastAddition(MinkowskiBroadcast):
             space, meshes and 3D shapes are in a 3D space.
 
         """
-        super(MinkowskiBroadcastAddition, self).__init__(
-            OperationType.ADDITION, dimension)
+        super(MinkowskiBroadcastAddition,
+              self).__init__(OperationType.ADDITION, dimension)
 
 
 class MinkowskiBroadcastMultiplication(MinkowskiBroadcast):
@@ -134,6 +136,7 @@ class MinkowskiBroadcastMultiplication(MinkowskiBroadcast):
         the global reduction such as the :attr:`MinkowskiGlobalPooling`.
 
     """
+
     def __init__(self, dimension=-1):
         r"""a broadcast multiplication layer.
 
@@ -143,5 +146,5 @@ class MinkowskiBroadcastMultiplication(MinkowskiBroadcast):
             space, meshes and 3D shapes are in a 3D space.
 
         """
-        super(MinkowskiBroadcastMultiplication, self).__init__(
-            OperationType.MULTIPLICATION, dimension)
+        super(MinkowskiBroadcastMultiplication,
+              self).__init__(OperationType.MULTIPLICATION, dimension)
