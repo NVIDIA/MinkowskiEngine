@@ -45,6 +45,7 @@ github_doc_root = 'https://github.com/StanfordVL/MinkowskiEngine'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx_markdown_tables',
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
 ]

@@ -5,8 +5,9 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It su
 ## Features
 
 - Dynamic computation graph
-- [Generalized sparse convolution](sparseconv.html)
 - Custom kernel shapes
+- [Generalized sparse convolution](sparseconv.html)
+- Dilated convolution
 - Multi-GPU training
 - Multi-threaded kernel map
 - Multi-threaded compilation

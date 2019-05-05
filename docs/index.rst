@@ -39,6 +39,7 @@ Table of Contents
    :caption: Miscellanea
 
    issues
+   benchmark
 
 
 Indices and tables

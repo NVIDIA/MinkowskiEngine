@@ -1,7 +1,7 @@
 # Documentation with Sphinx
 
 ## Install dependencies
-`pip install -U recommonmark sphinx sphinx_rtd_theme`
+`pip install -U recommonmark sphinx sphinx_rtd_theme sphinx_markdown_tables`
 
 ## Generate curated lists only
 ## Automatically generate module documentations
