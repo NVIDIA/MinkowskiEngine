@@ -11,14 +11,13 @@ Table of Contents
    :caption: Intro Documentation
 
    overview
-   sparseconv
+   generalized_sparse_conv
    quick_start
 
 .. toctree::
    :maxdepth: 2
    :caption: Demo Documentation
 
-   demo/classification
    demo/segmentation
    demo/multigpu
 

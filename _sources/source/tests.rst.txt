@@ -28,14 +28,6 @@ tests.conv module
     :undoc-members:
     :show-inheritance:
 
-tests.conv\_coords module
--------------------------
-
-.. automodule:: tests.conv_coords
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 tests.coords module
 -------------------
 
