@@ -2,7 +2,7 @@ import torch
 import unittest
 
 from MinkowskiEngine import SparseTensor, MinkowskiInstanceNorm, MinkowskiInstanceNormFunction
-from gradcheck import gradcheck
+from utils.gradcheck import gradcheck
 
 from tests.common import data_loader
 

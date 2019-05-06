@@ -6,7 +6,7 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It su
 
 - Dynamic computation graph
 - Custom kernel shapes
-- [Generalized sparse convolution](sparseconv.html)
+- [Generalized sparse convolution](generalized_sparse_conv.html)
 - Dilated convolution
 - Multi-GPU training
 - Multi-threaded kernel map
@@ -31,7 +31,7 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7 anaconda
 conda activate py3-mink
-conda install -c anaconda openblas
+conda install atlas numpy
 conda install -c bioconda google-sparsehash
 conda install pytorch torchvision -c pytorch
 ```

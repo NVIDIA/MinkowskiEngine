@@ -31,7 +31,7 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7 anaconda
 conda activate py3-mink
-conda install -c anaconda atlas
+conda install atlas numpy
 conda install -c bioconda google-sparsehash
 conda install pytorch torchvision -c pytorch
 ```
