@@ -1,0 +1,10 @@
+*.so
+*.d
+*.o
+*.swo
+*.swp
+*.swn
+*.pyc
+
+build/
+dist/
