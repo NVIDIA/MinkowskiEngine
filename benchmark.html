@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Benchmark &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Common Issues" href="issues.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparseconv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Benchmark</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#experiment-setup">Experiment setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#single-convolution-layer">Single Convolution Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simple-unet">Simple UNet</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MinkowskiEngine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Benchmark</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/benchmark.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="benchmark">
+<h1>Benchmark<a class="headerlink" href="#benchmark" title="Permalink to this headline">¶</a></h1>
+<p>We report the feed forward and backward pass time of a convolution layer, and a small U-network. Note that the kernel map can be reused for other layers with the same tensor-stride, stride, and kernel offsets, thus the time reported in this page can be amortized across all layers used in a large nueral network.</p>
+<p>We use a Titan X for the experiments.</p>
+<div class="section" id="experiment-setup">
+<h2>Experiment setup<a class="headerlink" href="#experiment-setup" title="Permalink to this headline">¶</a></h2>
+<p>For a single-convolution-layer experiment, we use the following setup.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+
+<span class="n">conv</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+    <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">out_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+    <span class="n">kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+    <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+    <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We used ScanNet test set with voxel size 5cm for the experiments. As the SparseConvNet and the MinkowskiEngine use different voxelization algorithms, the number of points processed by each engine differs as well. On average, the SparseConvNet generated 25757.011494252874 points whereas the MinkowskiEngine generated 26097.58012820513 points over 100 ScanNet test rooms.</p>
+</div>
+<div class="section" id="single-convolution-layer">
+<h2>Single Convolution Layer<a class="headerlink" href="#single-convolution-layer" title="Permalink to this headline">¶</a></h2>
+<p>We tested the same single convolution layer with various kernel size as well. We report the average time in second each algorithm takes to process on average 25757.011494252874 points for SparseConvNet and 26097.58012820513 for MinkowskiEngine.</p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>kernel size</th>
+<th>SparseConvNet Forward</th>
+<th>MinkowskiEngine Forward</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>0.1744108172668808</td>
+<td>0.09308705727259318</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.30140187822539233</td>
+<td>0.12090823359978504</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0.5826804980464365</td>
+<td>0.16533616872934195</td>
+</tr>
+</tbody>
+</table><table border="1" class="docutils">
+<thead>
+<tr>
+<th>kernel size</th>
+<th>SparseConvNet Backward</th>
+<th>MinkowskiEngine Backward</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>0.01180471634042674</td>
+<td>0.005582361649244259</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.028674085934956867</td>
+<td>0.014875535781566914</td>
+</tr>
+<tr>
+<td>7</td>
+<td>0.05369750110582373</td>
+<td>0.031167899950956687</td>
+</tr>
+</tbody>
+</table></div>
+<div class="section" id="simple-unet">
+<h2>Simple UNet<a class="headerlink" href="#simple-unet" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">net</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+        <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+        <span class="n">in_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolutionTranspose</span>
+        <span class="n">in_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>For this experiment, we only change the kernel size of the first convolution layer.</p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>kernel size</th>
+<th>SparseConvNet Forward</th>
+<th>MinkowskiEngine Forward</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>0.18058321530791535</td>
+<td>0.12379379379443634</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.31044323828028536</td>
+<td>0.14399278240326124</td>
+</tr>
+</tbody>
+</table><table border="1" class="docutils">
+<thead>
+<tr>
+<th>kernel size</th>
+<th>SparseConvNet Backward</th>
+<th>MinkowskiEngine Backward</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>0.012985669333359292</td>
+<td>0.007436720988689325</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.029474966827480274</td>
+<td>0.016958267260820437</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+
+
+           </div>
+           
+          </div>
+<a href="https://github.com/StanfordVL/MinkowskiEngine">
+    <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+</a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="issues.html" class="btn btn-neutral float-left" title="Common Issues" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Chris Choy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

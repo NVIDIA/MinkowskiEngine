@@ -1,0 +1,419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Minkowski Engine &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Generalized Sparse Convolution" href="sparseconv.html" />
+    <link rel="prev" title="Welcome to MinkowskiEngine’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Minkowski Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#anaconda">Anaconda</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#create-a-conda-virtual-environment-and-install-requirements">1. Create a conda virtual environment and install requirements.</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compilation-and-installation">2. Compilation and installation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#python-virtual-environment">Python virtual environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-network">Creating a Network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#forward-and-backward-using-the-custom-network">Forward and backward using the custom network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-the-examples">Running the Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#variables">Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#notes">Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#general-discussion-and-questions">General discussion and questions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gradchecks-and-tests">Gradchecks and tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sparseconv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MinkowskiEngine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Minkowski Engine</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/overview.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="minkowski-engine">
+<h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
+<p>The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information please visit <a class="reference external" href="http://minkowskiengine.github.io">the documentation page (under construction)</a></p>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Dynamic computation graph</p></li>
+<li><p>Custom kernel shapes</p></li>
+<li><p><a class="reference external" href="sparseconv.html">Generalized sparse convolution</a></p></li>
+<li><p>Dilated convolution</p></li>
+<li><p>Multi-GPU training</p></li>
+<li><p>Multi-threaded kernel map</p></li>
+<li><p>Multi-threaded compilation</p></li>
+<li><p>Highly-optimized GPU kernels</p></li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>You can install the MinkowskiEngine without sudo using anaconda. Using anaconda is highly recommended.</p>
+<div class="section" id="anaconda">
+<h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h3>
+<p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation. If you have compilation issues, please checkout the <a class="reference external" href="https://StanfordVL.github.com/MinkowskiEngine/issues.html">common compilation issues page</a> first.</p>
+<div class="section" id="create-a-conda-virtual-environment-and-install-requirements">
+<h4>1. Create a conda virtual environment and install requirements.<a class="headerlink" href="#create-a-conda-virtual-environment-and-install-requirements" title="Permalink to this headline">¶</a></h4>
+<p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">anaconda</span> <span class="n">openblas</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">google</span><span class="o">-</span><span class="n">sparsehash</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="compilation-and-installation">
+<h4>2. Compilation and installation<a class="headerlink" href="#compilation-and-installation" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
+<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="python-virtual-environment">
+<h3>Python virtual environment<a class="headerlink" href="#python-virtual-environment" title="Permalink to this headline">¶</a></h3>
+<p>Like the anaconda installation, make sure that you install pytorch with the the same CUDA version that <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> uses.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libsparsehash</span><span class="o">-</span><span class="n">dev</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
+<span class="c1"># within a python3 environment</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>To use the Minkowski Engine, you first would need to import the engine.
+Then, you would need to define the network. If the data you have is not
+quantized, you would need to voxelize or quantize the (spatial) data into a
+sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
+function (<code class="docutils literal notranslate"><span class="pre">ME.SparseVoxelize</span></code>).</p>
+<div class="section" id="creating-a-network">
+<h3>Creating a Network<a class="headerlink" href="#creating-a-network" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+
+<span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiNetwork</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_feat</span><span class="p">,</span> <span class="n">out_feat</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExampleNetwork</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="n">in_feat</span><span class="p">,</span>
+            <span class="n">out_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+            <span class="n">out_channels</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pooling</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiGlobalPooling</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiLinear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">out_feat</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pooling</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="forward-and-backward-using-the-custom-network">
+<h3>Forward and backward using the custom network<a class="headerlink" href="#forward-and-backward-using-the-custom-network" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># loss and network</span>
+    <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+    <span class="n">net</span> <span class="o">=</span> <span class="n">ExampleNetwork</span><span class="p">(</span><span class="n">in_feat</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">out_feat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+
+    <span class="c1"># a data loader must return a tuple of coords, features, and labels.</span>
+    <span class="n">coords</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">data_loader</span><span class="p">()</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+    <span class="c1"># Forward</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+    <span class="c1"># Loss</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-the-examples">
+<h3>Running the Examples<a class="headerlink" href="#running-the-examples" title="Permalink to this headline">¶</a></h3>
+<p>After installing the package, run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">examples/example.py</span></code> in the package root directory.</p>
+</div>
+</div>
+<div class="section" id="variables">
+<h2>Variables<a class="headerlink" href="#variables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Dimension</p>
+<ul>
+<li><p>An image is a 2-dimensional object; A 3D-scan is a 3-dimensional object.</p></li>
+</ul>
+</li>
+<li><p>Coordinates</p>
+<ul>
+<li><p>D-dimensional integer array + 1 dimension at the end for batch index</p></li>
+</ul>
+</li>
+<li><p>Tensor Stride</p>
+<ul>
+<li><p>Distance between adjacent voxels. e.g., two stride-2 convolution layers will create features of tensor stride 4.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<p>The strided convolution maps i-th index to <code class="docutils literal notranslate"><span class="pre">int(i</span> <span class="pre">/</span> <span class="pre">stride)</span> <span class="pre">*</span> <span class="pre">stride</span></code>. Thus, it is encouraged to use dilation == 1 and kernel_size &gt; stide when stride &gt; 1.</p>
+</div>
+<div class="section" id="general-discussion-and-questions">
+<h2>General discussion and questions<a class="headerlink" href="#general-discussion-and-questions" title="Permalink to this headline">¶</a></h2>
+<p>Please use <code class="docutils literal notranslate"><span class="pre">minkowskiengine&#64;googlegroups.com</span></code></p>
+</div>
+<div class="section" id="gradchecks-and-tests">
+<h2>Gradchecks and tests<a class="headerlink" href="#gradchecks-and-tests" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">tests</span><span class="o">.</span><span class="n">conv</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+<a href="https://github.com/StanfordVL/MinkowskiEngine">
+    <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+</a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sparseconv.html" class="btn btn-neutral float-right" title="Generalized Sparse Convolution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MinkowskiEngine’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Chris Choy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

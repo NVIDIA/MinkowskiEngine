@@ -1,0 +1,458 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MinkowskiNonlinearities &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Coordinate Management" href="coords.html" />
+    <link rel="prev" title="MinkowskiNormalization" href="normalization.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparseconv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MinkowskiNonlinearities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskirelu">MinkowskiReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskiprelu">MinkowskiPReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskiselu">MinkowskiSELU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">MinkowskiSELU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskicelu">MinkowskiCELU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskidropout">MinkowskiDropout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskithreshold">MinkowskiThreshold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskisigmoid">MinkowskiSigmoid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskitanh">MinkowskiTanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskisoftmax">MinkowskiSoftmax</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MinkowskiEngine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>MinkowskiNonlinearities</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/nonlinearity.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="minkowskinonlinearities">
+<h1>MinkowskiNonlinearities<a class="headerlink" href="#minkowskinonlinearities" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="minkowskirelu">
+<h2>MinkowskiReLU<a class="headerlink" href="#minkowskirelu" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiReLU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiReLU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiReLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiReLU.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiReLU.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiReLU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiReLU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.ReLU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskiprelu">
+<h2>MinkowskiPReLU<a class="headerlink" href="#minkowskiprelu" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPReLU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiPReLU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPReLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPReLU.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPReLU.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiPReLU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPReLU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.PReLU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskiselu">
+<h2>MinkowskiSELU<a class="headerlink" href="#minkowskiselu" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiSELU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSELU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiSELU.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSELU.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiSELU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiSELU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.SELU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id1">
+<h2>MinkowskiSELU<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">MODULE</code></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.SELU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskicelu">
+<h2>MinkowskiCELU<a class="headerlink" href="#minkowskicelu" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiCELU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiCELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCELU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCELU.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCELU.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiCELU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiCELU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.CELU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskidropout">
+<h2>MinkowskiDropout<a class="headerlink" href="#minkowskidropout" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiDropout">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiDropout</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiDropout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiDropout.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiDropout.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiDropout.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiDropout.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.dropout.Dropout</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskithreshold">
+<h2>MinkowskiThreshold<a class="headerlink" href="#minkowskithreshold" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiThreshold">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiThreshold</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiThreshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiThreshold.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiThreshold.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiThreshold.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiThreshold.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Threshold</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskisigmoid">
+<h2>MinkowskiSigmoid<a class="headerlink" href="#minkowskisigmoid" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiSigmoid">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSigmoid</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSigmoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiSigmoid.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSigmoid.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiSigmoid.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiSigmoid.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Sigmoid</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskitanh">
+<h2>MinkowskiTanh<a class="headerlink" href="#minkowskitanh" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiTanh">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiTanh</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTanh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiTanh.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTanh.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiTanh.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiTanh.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Tanh</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskisoftmax">
+<h2>MinkowskiSoftmax<a class="headerlink" href="#minkowskisoftmax" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiSoftmax">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSoftmax</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSoftmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiSoftmax.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSoftmax.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiSoftmax.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiSoftmax.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Softmax</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+<a href="https://github.com/StanfordVL/MinkowskiEngine">
+    <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+</a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coords.html" class="btn btn-neutral float-right" title="Coordinate Management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="normalization.html" class="btn btn-neutral float-left" title="MinkowskiNormalization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Chris Choy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

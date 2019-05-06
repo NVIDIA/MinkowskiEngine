@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MinkowskiEngine &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparseconv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo/classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convolution.html">MinkowskiConvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pooling.html">MinkowskiPooling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MinkowskiEngine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>MinkowskiEngine</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/source/modules.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="minkowskiengine">
+<h1>MinkowskiEngine<a class="headerlink" href="#minkowskiengine" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="MinkowskiEngine.html">MinkowskiEngine package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="MinkowskiEngine.modules.html">MinkowskiEngine.modules package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.modules.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.resnet_block">MinkowskiEngine.modules.resnet_block module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.senet_block">MinkowskiEngine.modules.senet_block module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.modules.html#module-MinkowskiEngine.modules">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="MinkowskiEngine.utils.html">MinkowskiEngine.utils package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">MinkowskiEngine.utils.collation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">MinkowskiEngine.utils.gradcheck module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.voxelization">MinkowskiEngine.utils.voxelization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.Common">MinkowskiEngine.Common module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiBroadcast">MinkowskiEngine.MinkowskiBroadcast module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiConvolution">MinkowskiEngine.MinkowskiConvolution module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCoords">MinkowskiEngine.MinkowskiCoords module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiFunctional">MinkowskiEngine.MinkowskiFunctional module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNetwork">MinkowskiEngine.MinkowskiNetwork module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNonlinearity">MinkowskiEngine.MinkowskiNonlinearity module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNormalization">MinkowskiEngine.MinkowskiNormalization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiOps">MinkowskiEngine.MinkowskiOps module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPooling">MinkowskiEngine.MinkowskiPooling module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPruning">MinkowskiEngine.MinkowskiPruning module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor">MinkowskiEngine.SparseTensor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">setup module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.broadcast">tests.broadcast module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.common">tests.common module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.conv">tests.conv module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-conv-coords-module">tests.conv_coords module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.coords">tests.coords module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-norm-module">tests.norm module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.pool">tests.pool module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.pruning">tests.pruning module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.voxelization">tests.voxelization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+<a href="https://github.com/StanfordVL/MinkowskiEngine">
+    <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+</a>
+
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Chris Choy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+MinkowskiEngine package
+=======================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    MinkowskiEngine.modules
+    MinkowskiEngine.utils
+
+Submodules
+----------
+
+MinkowskiEngine.Common module
+-----------------------------
+
+.. automodule:: MinkowskiEngine.Common
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiBroadcast module
+-----------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiBroadcast
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiConvolution module
+-------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiConvolution
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiCoords module
+--------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiCoords
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiFunctional module
+------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiFunctional
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiNetwork module
+---------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiNetwork
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiNonlinearity module
+--------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiNonlinearity
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiNormalization module
+---------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiNormalization
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiOps module
+-----------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiOps
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiPooling module
+---------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiPooling
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.MinkowskiPruning module
+---------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiPruning
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+MinkowskiEngine.SparseTensor module
+-----------------------------------
+
+.. automodule:: MinkowskiEngine.SparseTensor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: MinkowskiEngine
+    :members:
+    :undoc-members:
+    :show-inheritance:

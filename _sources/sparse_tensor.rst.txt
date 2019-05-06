@@ -1,0 +1,27 @@
+SparseTensor
+============
+
+The :attr:`SparseTensor` class is the basic tensor in MinkowskiEngine.
+
+.. math::
+
+   \mathbf{C} = \begin{bmatrix}
+   x_1 & y_1 & z_1 & t_1 & b_1\\
+    &  &  \vdots&  & \\
+   x_N & y_N & z_N & t_N & b_N
+   \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
+   \mathbf{f}_1^T\\
+   \vdots\\
+   \mathbf{f}_N^T
+   \end{bmatrix}
+
+
+SparseTensor
+------------
+
+.. autoclass:: MinkowskiEngine.SparseTensor.SparseTensor
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+    .. automethod:: __init__

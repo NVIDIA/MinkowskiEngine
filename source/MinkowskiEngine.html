@@ -1,0 +1,1419 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MinkowskiEngine package &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparseconv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo/classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convolution.html">MinkowskiConvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pooling.html">MinkowskiPooling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MinkowskiEngine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>MinkowskiEngine package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/source/MinkowskiEngine.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="minkowskiengine-package">
+<h1>MinkowskiEngine package<a class="headerlink" href="#minkowskiengine-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="MinkowskiEngine.modules.html">MinkowskiEngine.modules package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.modules.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.resnet_block">MinkowskiEngine.modules.resnet_block module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.senet_block">MinkowskiEngine.modules.senet_block module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.modules.html#module-MinkowskiEngine.modules">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MinkowskiEngine.utils.html">MinkowskiEngine.utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">MinkowskiEngine.utils.collation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">MinkowskiEngine.utils.gradcheck module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.voxelization">MinkowskiEngine.utils.voxelization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-MinkowskiEngine.Common">
+<span id="minkowskiengine-common-module"></span><h2>MinkowskiEngine.Common module<a class="headerlink" href="#module-MinkowskiEngine.Common" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.Common.KernelGenerator">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">KernelGenerator</code><span class="sig-paren">(</span><em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>is_transpose=False</em>, <em>region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em>region_offsets=None</em>, <em>axis_types=None</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.KernelGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.Common.KernelGenerator.get_kernel">
+<code class="descname">get_kernel</code><span class="sig-paren">(</span><em>tensor_stride</em>, <em>is_transpose</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.KernelGenerator.get_kernel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.Common.MinkowskiModuleBase">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">MinkowskiModuleBase</code><a class="headerlink" href="#MinkowskiEngine.Common.MinkowskiModuleBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.Common.RegionType">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">RegionType</code><a class="headerlink" href="#MinkowskiEngine.Common.RegionType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Define the kernel region type</p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.Common.RegionType.CUSTOM">
+<code class="descname">CUSTOM</code><em class="property"> = 2</em><a class="headerlink" href="#MinkowskiEngine.Common.RegionType.CUSTOM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.Common.RegionType.HYBRID">
+<code class="descname">HYBRID</code><em class="property"> = 3</em><a class="headerlink" href="#MinkowskiEngine.Common.RegionType.HYBRID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.Common.RegionType.HYPERCROSS">
+<code class="descname">HYPERCROSS</code><em class="property"> = 1</em><a class="headerlink" href="#MinkowskiEngine.Common.RegionType.HYPERCROSS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.Common.RegionType.HYPERCUBE">
+<code class="descname">HYPERCUBE</code><em class="property"> = 0</em><a class="headerlink" href="#MinkowskiEngine.Common.RegionType.HYPERCUBE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.Common.convert_region_type">
+<code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">convert_region_type</code><span class="sig-paren">(</span><em>region_type</em>, <em>tensor_stride</em>, <em>kernel_size</em>, <em>up_stride</em>, <em>dilation</em>, <em>region_offset</em>, <em>axis_types</em>, <em>dimension</em>, <em>center=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_region_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>when center is True, the custom region_offset will be centered at the
+origin. Currently, for HYPERCUBE, HYPERCROSS with odd kernel sizes cannot
+use center=False.</p>
+<p>up_stride: stride for conv_transpose, otherwise set it as 1</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.Common.convert_to_int_list">
+<code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">convert_to_int_list</code><span class="sig-paren">(</span><em>arg</em>, <em>dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_to_int_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.Common.convert_to_int_tensor">
+<code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">convert_to_int_tensor</code><span class="sig-paren">(</span><em>arg</em>, <em>dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_to_int_tensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.Common.get_kernel_volume">
+<code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">get_kernel_volume</code><span class="sig-paren">(</span><em>region_type</em>, <em>kernel_size</em>, <em>region_offset</em>, <em>axis_types</em>, <em>dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.get_kernel_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>when center is True, the custom region_offset will be centered at the
+origin. Currently, for HYPERCUBE, HYPERCROSS with odd kernel sizes cannot
+use center=False.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.Common.get_postfix">
+<code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">get_postfix</code><span class="sig-paren">(</span><em>tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.get_postfix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.Common.prep_args">
+<code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">prep_args</code><span class="sig-paren">(</span><em>tensor_stride</em>, <em>stride</em>, <em>kernel_size</em>, <em>dilation</em>, <em>region_type</em>, <em>D=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.prep_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.Common.save_ctx">
+<code class="descclassname">MinkowskiEngine.Common.</code><code class="descname">save_ctx</code><span class="sig-paren">(</span><em>ctx</em>, <em>tensor_stride</em>, <em>stride</em>, <em>kernel_size</em>, <em>dilation</em>, <em>region_type</em>, <em>in_coords_key</em>, <em>out_coords_key</em>, <em>coords_man</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.save_ctx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiBroadcast">
+<span id="minkowskiengine-minkowskibroadcast-module"></span><h2>MinkowskiEngine.MinkowskiBroadcast module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiBroadcast" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="descname">MinkowskiBroadcast</code><span class="sig-paren">(</span><em>operation_type</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em>, <em>input_glob</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="descname">MinkowskiBroadcastAddition</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast</span></code></a></p>
+<p>Broadcast the reduced features to all input coordinates.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} + \mathbf{x}_2
+\; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}\]</div>
+<p>For all input <span class="math notranslate nohighlight">\(\mathbf{x}_\mathbf{u}\)</span>, add <span class="math notranslate nohighlight">\(\mathbf{x}_2\)</span>. The
+output coordinates will be the same as the input coordinates
+<span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} = \mathcal{C}^\text{out}\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first argument takes a sparse tensor; the second argument takes
+features that are reduced to the origin. This can be typically done with
+the global reduction such as the <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="descname">MinkowskiBroadcastFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.backward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>input_features</em>, <em>input_features_global</em>, <em>operation_type</em>, <em>in_coords_key</em>, <em>glob_coords_key</em>, <em>coords_manager</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="descname">MinkowskiBroadcastMultiplication</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast</span></code></a></p>
+<p>Broadcast reduced features to all input coordinates.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} \times \mathbf{x}_2
+\; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}\]</div>
+<p>For all input <span class="math notranslate nohighlight">\(\mathbf{x}_\mathbf{u}\)</span>, multiply <span class="math notranslate nohighlight">\(\mathbf{x}_2\)</span>
+element-wise. The output coordinates will be the same as the input
+coordinates <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} = \mathcal{C}^\text{out}\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first argument takes a sparse tensor; the second argument takes
+features that are reduced to the origin. This can be typically done with
+the global reduction such as the <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.OperationType">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="descname">OperationType</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.OperationType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.OperationType.ADDITION">
+<code class="descname">ADDITION</code><em class="property"> = 0</em><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.OperationType.ADDITION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.OperationType.MULTIPLICATION">
+<code class="descname">MULTIPLICATION</code><em class="property"> = 1</em><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.OperationType.MULTIPLICATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.operation_type_to_int">
+<code class="descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="descname">operation_type_to_int</code><span class="sig-paren">(</span><em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.operation_type_to_int" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiConvolution">
+<span id="minkowskiengine-minkowskiconvolution-module"></span><h2>MinkowskiEngine.MinkowskiConvolution module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiConvolution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="descname">MinkowskiConvolution</code><span class="sig-paren">(</span><em>in_channels</em>, <em>out_channels</em>, <em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>has_bias=False</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase</span></code></a></p>
+<p>The generalized sparse convolution layer.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, K,
+\mathcal{C}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
+\mathbf{u}} \;\text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}\]</div>
+<p>where <span class="math notranslate nohighlight">\(K\)</span> is the kernel size and <span class="math notranslate nohighlight">\(\mathcal{N}^D(\mathbf{u}, K,
+\mathcal{C}^\text{in})\)</span> is the set of offsets that are at most <span class="math notranslate nohighlight">\(\left
+\lceil{\frac{1}{2}(K - 1)} \right \rceil\)</span> away from <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>
+definied in <span class="math notranslate nohighlight">\(\mathcal{S}^\text{in}\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For even <span class="math notranslate nohighlight">\(K\)</span>, the kernel offset <span class="math notranslate nohighlight">\(\mathcal{N}^D\)</span>
+implementation is different from the above definition. The offsets
+range from <span class="math notranslate nohighlight">\(\mathbf{i} \in [0, K)^D, \; \mathbf{i} \in
+\mathbb{Z}_+^D\)</span>.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="descname">MinkowskiConvolutionBase</code><span class="sig-paren">(</span><em>in_channels</em>, <em>out_channels</em>, <em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>has_bias=False</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>is_transpose=False</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.reset_parameters">
+<code class="descname">reset_parameters</code><span class="sig-paren">(</span><em>is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.reset_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="descname">MinkowskiConvolutionFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.backward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>input_features</em>, <em>kernel</em>, <em>tensor_stride=1</em>, <em>stride=1</em>, <em>kernel_size=-1</em>, <em>dilation=1</em>, <em>region_type=0</em>, <em>region_offset=None</em>, <em>in_coords_key=None</em>, <em>out_coords_key=None</em>, <em>coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>region_type=0 HyperCube</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em>in_channels</em>, <em>out_channels</em>, <em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>has_bias=False</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase</span></code></a></p>
+<p>A generalized sparse transposed convolution or deconvolution layer.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="descname">MinkowskiConvolutionTransposeFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.backward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>input_features</em>, <em>kernel</em>, <em>tensor_stride=1</em>, <em>stride=1</em>, <em>kernel_size=-1</em>, <em>dilation=1</em>, <em>region_type=0</em>, <em>region_offset=None</em>, <em>in_coords_key=None</em>, <em>out_coords_key=None</em>, <em>coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>region_type=0 HyperCube</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiCoords">
+<span id="minkowskiengine-minkowskicoords-module"></span><h2>MinkowskiEngine.MinkowskiCoords module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiCoords" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsKey">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiCoords.</code><code class="descname">CoordsKey</code><span class="sig-paren">(</span><em>D</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsKey.getKey">
+<code class="descname">getKey</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsKey.getKey" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsKey.getTensorStride">
+<code class="descname">getTensorStride</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsKey.getTensorStride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsKey.setKey">
+<code class="descname">setKey</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsKey.setKey" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsKey.setTensorStride">
+<code class="descname">setTensorStride</code><span class="sig-paren">(</span><em>tensor_stride</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsKey.setTensorStride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiCoords.</code><code class="descname">CoordsManager</code><span class="sig-paren">(</span><em>num_threads=None</em>, <em>D=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords">
+<code class="descname">get_coords</code><span class="sig-paren">(</span><em>coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_key">
+<code class="descname">get_coords_key</code><span class="sig-paren">(</span><em>tensor_strides</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_size_by_coords_key">
+<code class="descname">get_coords_size_by_coords_key</code><span class="sig-paren">(</span><em>coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_size_by_coords_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map">
+<code class="descname">get_kernel_map</code><span class="sig-paren">(</span><em>in_tensor_strides</em>, <em>out_tensor_strides</em>, <em>stride=1</em>, <em>kernel_size=3</em>, <em>dilation=1</em>, <em>region_type=0</em>, <em>is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_mapping_by_coords_key">
+<code class="descname">get_mapping_by_coords_key</code><span class="sig-paren">(</span><em>in_coords_key</em>, <em>out_coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_mapping_by_coords_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_mapping_by_tensor_strides">
+<code class="descname">get_mapping_by_tensor_strides</code><span class="sig-paren">(</span><em>in_tensor_strides</em>, <em>out_tensor_strides</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_mapping_by_tensor_strides" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>coords</em>, <em>coords_key</em>, <em>enforce_creation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize_enforce">
+<code class="descname">initialize_enforce</code><span class="sig-paren">(</span><em>coords</em>, <em>coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize_enforce" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.permute_label">
+<code class="descname">permute_label</code><span class="sig-paren">(</span><em>label</em>, <em>max_label</em>, <em>target_tensor_stride</em>, <em>label_tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.permute_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.MinkowskiCoords.initialize_nthreads">
+<code class="descclassname">MinkowskiEngine.MinkowskiCoords.</code><code class="descname">initialize_nthreads</code><span class="sig-paren">(</span><em>num_threads</em>, <em>D</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.initialize_nthreads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiFunctional">
+<span id="minkowskiengine-minkowskifunctional-module"></span><h2>MinkowskiEngine.MinkowskiFunctional module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiFunctional" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="MinkowskiEngine.MinkowskiFunctional.relu">
+<code class="descclassname">MinkowskiEngine.MinkowskiFunctional.</code><code class="descname">relu</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiFunctional.relu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiNetwork">
+<span id="minkowskiengine-minkowskinetwork-module"></span><h2>MinkowskiEngine.MinkowskiNetwork module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiNetwork" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNetwork.</code><code class="descname">MinkowskiNetwork</code><span class="sig-paren">(</span><em>D</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>MinkowskiNetwork: an abstract class for sparse convnets.</p>
+<p>Note: All modules that use the same coordinates must use the same net_metadata</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.get_index_map">
+<code class="descname">get_index_map</code><span class="sig-paren">(</span><em>coords</em>, <em>tensor_stride</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.get_index_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current coords (with duplicates) index map.</p>
+<p>If tensor_stride &gt; 1, use
+coords = torch.cat(((coords[:, :D] / tensor_stride) * tensor_stride,</p>
+<blockquote>
+<div><p>coords[:, D:]), dim=1)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.init">
+<code class="descname">init</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize coordinates if it does not exist</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.permute_feature">
+<code class="descname">permute_feature</code><span class="sig-paren">(</span><em>feat</em>, <em>tensor_stride</em>, <em>dtype=&lt;class 'numpy.float32'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.permute_feature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.permute_label">
+<code class="descname">permute_label</code><span class="sig-paren">(</span><em>label</em>, <em>max_label</em>, <em>tensor_stride</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.permute_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiNonlinearity">
+<span id="minkowskiengine-minkowskinonlinearity-module"></span><h2>MinkowskiEngine.MinkowskiNonlinearity module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiNonlinearity" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiCELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.CELU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiDropout</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.dropout.Dropout</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiModuleBase</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase.MODULE">
+<code class="descname">MODULE</code><em class="property"> = None</em><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiPReLU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.PReLU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiReLU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.ReLU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiSELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.SELU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiSigmoid</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Sigmoid</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiSoftmax</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Softmax</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiTanh</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Tanh</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="descname">MinkowskiThreshold</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold.MODULE">
+<code class="descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.Threshold</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiNormalization">
+<span id="minkowskiengine-minkowskinormalization-module"></span><h2>MinkowskiEngine.MinkowskiNormalization module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiNormalization" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="descname">MinkowskiBatchNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>eps=1e-05</em>, <em>momentum=0.1</em>, <em>affine=True</em>, <em>track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>A batch normalization layer for sparse tensors.</p>
+<p>See the pytorch <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.nn.BatchNorm1d</span></code> for more details.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>batch_size=0</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>A instance normalization layer for sparse tensors.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.reset_parameters">
+<code class="descname">reset_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.reset_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="descname">MinkowskiInstanceNormFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>out_grad</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.backward" title="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>in_feat</em>, <em>batch_size=0</em>, <em>in_coords_key=None</em>, <em>glob_coords_key=None</em>, <em>coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="descname">MinkowskiStableInstanceNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>batch_size=0</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.reset_parameters">
+<code class="descname">reset_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.reset_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiOps">
+<span id="minkowskiengine-minkowskiops-module"></span><h2>MinkowskiEngine.MinkowskiOps module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiOps" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiOps.MinkowskiLinear">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiOps.</code><code class="descname">MinkowskiLinear</code><span class="sig-paren">(</span><em>in_features</em>, <em>out_features</em>, <em>bias=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.MinkowskiLinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiOps.MinkowskiLinear.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.MinkowskiLinear.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.MinkowskiOps.cat">
+<code class="descclassname">MinkowskiEngine.MinkowskiOps.</code><code class="descname">cat</code><span class="sig-paren">(</span><em>sparse_tensors</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.cat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a tuple of sparse tensors, concatenate them.</p>
+<p>Ex) cat((a, b, c))</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiPooling">
+<span id="minkowskiengine-minkowskipooling-module"></span><h2>MinkowskiEngine.MinkowskiPooling module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiPooling" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiAvgPooling</code><span class="sig-paren">(</span><em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
+<p>Average input features within a kernel.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}_\mathbf{u} = \frac{1}{|\mathcal{N}^D(\mathbf{u},
+\mathcal{C}^\text{in})|} \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
+\mathcal{C}^\text{in})} \mathbf{x}_{\mathbf{u} + \mathbf{i}}
+\; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}\]</div>
+<p>For each output <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> in <span class="math notranslate nohighlight">\(\mathcal{C}^\text{out}\)</span>,
+average input features.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>An average layer first computes the cardinality of the input features,
+the number of input features for each output, and divide the sum of the
+input features by the cardinality. For a dense tensor, the cardinality
+is a constant, the volume of a kernel. However, for a sparse tensor, the
+cardinality varies depending on the number of input features per output.
+Thus, the average pooling for a sparse tensor is not equivalent to the
+conventional average pooling layer for a dense tensor. Please refer to
+the <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling" title="MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiSumPooling</span></code></a> for the equivalent layer.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiAvgPoolingFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<p>Due to ctx.num_nonzero = in_feat.new()….,
+Should the function be called multiple times, this function must be first
+instantiated and then reused every time it needs to be called. Otherwise,
+PyTorch cannot free, out_feat, ctx.num_nonzero, which are initialized inside
+the ffi function.</p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.backward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>input_features</em>, <em>tensor_stride=1</em>, <em>stride=1</em>, <em>kernel_size=-1</em>, <em>dilation=1</em>, <em>region_type=0</em>, <em>region_offset=None</em>, <em>average=True</em>, <em>in_coords_key=None</em>, <em>out_coords_key=None</em>, <em>coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em>batch_size=0</em>, <em>average=True</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
+<p>Pool all input features to one output.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \sum_{\mathbf{i} \in
+\mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}\]</div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiGlobalPoolingFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.backward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>input_features</em>, <em>batch_size=0</em>, <em>average=True</em>, <em>in_coords_key=None</em>, <em>out_coords_key=None</em>, <em>coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiMaxPooling</code><span class="sig-paren">(</span><em>kernel_size</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
+<p>A max pooling layer for a sparse tensor.</p>
+<div class="math notranslate nohighlight">
+\[y^c_\mathbf{u} = \max_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
+\mathcal{C}^\text{in})} x^c_{\mathbf{u} + \mathbf{i}} \; \text{for} \;
+\mathbf{u} \in \mathcal{C}^\text{out}\]</div>
+<p>where <span class="math notranslate nohighlight">\(y^c_\mathbf{u}\)</span> is a feature at channel <span class="math notranslate nohighlight">\(c\)</span> and a
+coordinate <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiMaxPoolingFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.backward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>input_features</em>, <em>tensor_stride=1</em>, <em>stride=1</em>, <em>kernel_size=-1</em>, <em>dilation=1</em>, <em>region_type=0</em>, <em>region_offset=None</em>, <em>in_coords_key=None</em>, <em>out_coords_key=None</em>, <em>coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiPoolingBase</code><span class="sig-paren">(</span><em>kernel_size</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>is_transpose=False</em>, <em>average=True</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em>kernel_size</em>, <em>stride</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
+<p>A pooling transpose layer for a sparse tensor.</p>
+<p>Unpool the features and divide it by the number of non zero elements that
+contributed.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiPoolingTransposeFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.backward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>input_features</em>, <em>tensor_stride=1</em>, <em>stride=1</em>, <em>kernel_size=-1</em>, <em>dilation=1</em>, <em>region_type=-1</em>, <em>region_offset=None</em>, <em>average=False</em>, <em>in_coords_key=None</em>, <em>out_coords_key=None</em>, <em>coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTransposeFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="descname">MinkowskiSumPooling</code><span class="sig-paren">(</span><em>kernel_size</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
+<p>Sum all input features within a kernel.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
+\mathcal{C}^\text{in})} \mathbf{x}_{\mathbf{u} + \mathbf{i}}
+\; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}\]</div>
+<p>For each output <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> in <span class="math notranslate nohighlight">\(\mathcal{C}^\text{out}\)</span>,
+average input features.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>An average layer first computes the cardinality of the input features,
+the number of input features for each output, and divide the sum of the
+input features by the cardinality. For a dense tensor, the cardinality
+is a constant, the volume of a kernel. However, for a sparse tensor, the
+cardinality varies depending on the number of input features per output.
+Thus, averaging the input features with the cardinality may not be
+equivalent to the conventional average pooling for a dense tensor.
+This layer provides an alternative that does not divide the sum by the
+cardinality.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiPruning">
+<span id="minkowskiengine-minkowskipruning-module"></span><h2>MinkowskiEngine.MinkowskiPruning module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiPruning" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruning">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPruning.</code><code class="descname">MinkowskiPruning</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruning.forward">
+<code class="descname">forward</code><span class="sig-paren">(</span><em>input</em>, <em>use_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiPruning.</code><code class="descname">MinkowskiPruningFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.backward">
+<em class="property">static </em><code class="descname">backward</code><span class="sig-paren">(</span><em>ctx</em>, <em>grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.backward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward">
+<em class="property">static </em><code class="descname">forward</code><span class="sig-paren">(</span><em>ctx</em>, <em>in_feat</em>, <em>use_feat</em>, <em>in_coords_key</em>, <em>out_coords_key</em>, <em>coords_manager</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.SparseTensor">
+<span id="minkowskiengine-sparsetensor-module"></span><h2>MinkowskiEngine.SparseTensor module<a class="headerlink" href="#module-MinkowskiEngine.SparseTensor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.SparseTensor.</code><code class="descname">SparseTensor</code><span class="sig-paren">(</span><em>feats</em>, <em>coords=None</em>, <em>coords_key=None</em>, <em>coords_manager=None</em>, <em>tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A sparse tensor class.</p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.C">
+<code class="descname">C</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.C" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.D">
+<code class="descname">D</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.F">
+<code class="descname">F</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.F" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.coords">
+<code class="descname">coords</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.cpu">
+<code class="descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.cpu" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.feats">
+<code class="descname">feats</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.getKey">
+<code class="descname">getKey</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.getKey" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.get_device">
+<code class="descname">get_device</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.get_device" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.size">
+<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.stride">
+<code class="descname">stride</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.stride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride">
+<code class="descname">tensor_stride</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.to">
+<code class="descname">to</code><span class="sig-paren">(</span><em>device</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.to" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-MinkowskiEngine" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+<a href="https://github.com/StanfordVL/MinkowskiEngine">
+    <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+</a>
+
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Chris Choy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

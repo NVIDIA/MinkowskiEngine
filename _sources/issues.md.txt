@@ -1,0 +1,81 @@
+# Common Issues
+
+
+## Compilation failure due to Out Of Memory (OOM)
+
+The `setup.py` calls the number of CPUs for multi-threaded parallel compilation. However, when installing the MinkowskiEngine on a cluster, sometimes the compilation might fail due to excessive memory usage. Please provide enough memory to the job for fast compilation. Another option when you have a limited memory is to compile without parallel compilation.
+
+```
+cd /path/to/MinkowskiEngine
+make  # single threaded compilation
+python setup.py install
+```
+
+
+## Compilation issues after upgrade
+
+In a rare case, you might face an compilation issue after you upgrade MinkowskiEngine, pytorch or CUDA. In general, when you get an undefined symbol error such (e.g., `_ZNK13CoordsManagerILh5EiE8toStringB5cxx11Ev`), or `thrust::system::system_error`, try to compile the entire library again.
+
+### Force compiling all object files
+
+```
+cd /path/to/MinkowskiEngine
+make clean
+python setup.py install --force
+```
+
+
+### From a new conda virtual environment
+
+If above method doesn't work, try to create a new conda environment. We found that it sometimes solves the compilation issues.
+
+```
+conda create -n py3-mink-2 python=3.7 anaconda
+conda activate py3-mink-2
+conda install -c anaconda openblas
+conda install -c bioconda google-sparsehash
+conda install pytorch torchvision -c pytorch
+```
+
+Then,
+
+```
+cd /path/to/MinkowskiEngine
+conda activate py3-mink-2
+make clean
+python setup.py install --force
+```
+
+
+## CUDA Version mismatch
+
+
+In some cases when the conda pytorch uses a different CUDA version, you might get an undefined symbol error. Try to reinstall pytorch with the correct CUDA version that you are using to compile MinkowskiEngine.
+
+To find out your CUDA version, run `nvcc --version`.
+
+To install the correct CUDA libraries for anaconda pytorch, install `cudatoolkit=x.x` along with pytorch. For example,
+
+```
+conda install pytorch torchvision cudatoolkit=10.0 -c pytorch
+```
+
+In this example, we assumed that you are using CUDA 10.0, but please make sure that you are installing the correct version. Then, use the following code snippet to create a new conda environment, and install MinkowskiEngine.
+
+```
+conda create -n py3-mink-2 python=3.7 anaconda
+conda activate py3-mink-2
+conda install -c anaconda openblas
+conda install -c bioconda google-sparsehash
+conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Make sure to use the correct cudatoolkit version
+
+cd /path/to/MinkowskiEngine
+conda activate py3-mink-2
+make clean
+python setup.py install --force
+```
+
+
+## Issues not listed
+
+If you have a trouble installing MinkowskiEngine, please feel free to submit an issue on [the MinkowskiEngine github page](https://github.com/StanfordVL/MinkowskiEngine/issues).

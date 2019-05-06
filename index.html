@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Welcome to MinkowskiEngine’s documentation! &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Minkowski Engine" href="overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> MinkowskiEngine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparseconv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">MinkowskiEngine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Welcome to MinkowskiEngine’s documentation!</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="welcome-to-minkowskiengine-s-documentation">
+<h1>Welcome to MinkowskiEngine’s documentation!<a class="headerlink" href="#welcome-to-minkowskiengine-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>The MinkowskiEngine is an auto-differentiation library for sparse tensors.</p>
+</div>
+<div class="section" id="table-of-contents">
+<h1>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Intro Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparseconv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/classification.html">Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="demo/multigpu.html#loading-multiple-batches">Loading Multiple Batches</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo/multigpu.html#copying-weights-to-devices">Copying weights to devices</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#id1">SparseTensor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#id1">MinkowskiConvolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#minkowskiconvolutiontranspose">MinkowskiConvolutionTranspose</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pooling.html#minkowskimaxpooling">MinkowskiMaxPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pooling.html#minkowskiavgpooling">MinkowskiAvgPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pooling.html#minkowskisumpooling">MinkowskiSumPooling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pooling.html#minkowskipoolingtranspose">MinkowskiPoolingTranspose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pooling.html#minkowskiglobalpooling">MinkowskiGlobalPooling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="broadcast.html#minkowskibroadcastaddition">MinkowskiBroadcastAddition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="broadcast.html#minkowskibroadcastmultiplication">MinkowskiBroadcastMultiplication</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="normalization.html#minkowskibatchnorm">MinkowskiBatchNorm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="normalization.html#minkowskiinstancenorm">MinkowskiInstanceNorm</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskirelu">MinkowskiReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskiprelu">MinkowskiPReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskiselu">MinkowskiSELU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#id1">MinkowskiSELU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskicelu">MinkowskiCELU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskidropout">MinkowskiDropout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskithreshold">MinkowskiThreshold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskisigmoid">MinkowskiSigmoid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskitanh">MinkowskiTanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nonlinearity.html#minkowskisoftmax">MinkowskiSoftmax</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coords.html#coordskey">CoordsKey</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coords.html#coordsmanager">CoordsManager</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+           </div>
+           
+          </div>
+<a href="https://github.com/StanfordVL/MinkowskiEngine">
+    <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+</a>
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="overview.html" class="btn btn-neutral float-right" title="Minkowski Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Chris Choy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
