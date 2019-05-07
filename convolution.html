@@ -93,6 +93,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -109,6 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -187,8 +189,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolution">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiConvolution</code><span class="sig-paren">(</span><em>in_channels</em>, <em>out_channels</em>, <em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>has_bias=False</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiConvolution.MinkowskiConvolutionBase</span></code></a></p>
-<p>The generalized sparse convolution layer.</p>
+<dd><p>The generalized sparse convolution layer.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, K,
 \mathcal{C}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
@@ -215,7 +216,7 @@ input tensor.</p>
 output tensor.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
 output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
+<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
 matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
 offsets in D-dimension.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size of the
@@ -228,11 +229,12 @@ convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">has_bias</span></code> (bool, optional): if True, the convolution layer
 has a bias.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (KernelGenerator, optional): define custom
-kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (ME.CoordsKey, optional): when given, the
-network uses the specific coordinates for the output coordinates.
-It must be a type of <a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
+optional): define custom kernel shape.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
+optional): when given, the network uses the specific coordinates
+for the output coordinates.  It must be a type of
+<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
 inputs and the network is defined. For example, images are in a 2D
 space, meshes and 3D shapes are in a 3D space.</p>
@@ -248,8 +250,7 @@ space, meshes and 3D shapes are in a 3D space.</p>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolutionTranspose">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em>in_channels</em>, <em>out_channels</em>, <em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>has_bias=False</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiConvolution.MinkowskiConvolutionBase</span></code></a></p>
-<p>A generalized sparse transposed convolution or deconvolution layer.</p>
+<dd><p>A generalized sparse transposed convolution or deconvolution layer.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiConvolutionTranspose.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>in_channels</em>, <em>out_channels</em>, <em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>has_bias=False</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose.__init__" title="Permalink to this definition">¶</a></dt>
@@ -261,7 +262,7 @@ input tensor.</p>
 output tensor.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
 output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
+<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
 matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
 offsets in D-dimension.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size that defines
@@ -274,11 +275,12 @@ convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">has_bias</span></code> (bool, optional): if True, the convolution layer
 has a bias.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (KernelGenerator, optional): define custom
-kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (ME.CoordsKey, optional): when given, the
-network uses the specific coordinates for the output coordinates.
-It must be a type of <a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
+optional): define custom kernel shape.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
+optional): when given, the network uses the specific coordinates
+for the output coordinates.  It must be a type of
+<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
 inputs and the network is defined. For example, images are in a 2D
 space, meshes and 3D shapes are in a 3D space.</p>

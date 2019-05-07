@@ -91,6 +91,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -103,6 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -811,7 +813,7 @@ registered hooks while the latter silently ignores them.</p>
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="descname">MinkowskiBatchNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>eps=1e-05</em>, <em>momentum=0.1</em>, <em>affine=True</em>, <em>track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
-<p>A batch normalization layer for sparse tensors.</p>
+<p>A batch normalization layer for a sparse tensor.</p>
 <p>See the pytorch <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.nn.BatchNorm1d</span></code> for more details.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm.forward">
@@ -833,7 +835,7 @@ registered hooks while the latter silently ignores them.</p>
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>batch_size=0</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
-<p>A instance normalization layer for sparse tensors.</p>
+<p>A instance normalization layer for a sparse tensor.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.forward">
 <code class="descname">forward</code><span class="sig-paren">(</span><em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.forward" title="Permalink to this definition">¶</a></dt>
@@ -1334,7 +1336,7 @@ dimension.</p>
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.D">
 <code class="descname">D</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.D" title="Permalink to this definition">¶</a></dt>
 <dd><p>The spatial dimension of the sparse tensor. This is equal to the number
-of columns of <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.C" title="MinkowskiEngine.SparseTensor.SparseTensor.C"><code class="xref py py-attr docutils literal notranslate"><span class="pre">C</span></code></a>, or the coordinates minus 1.</p>
+of columns of <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.C" title="MinkowskiEngine.SparseTensor.SparseTensor.C"><code class="xref py py-attr docutils literal notranslate"><span class="pre">C</span></code></a> minus 1.</p>
 </dd></dl>
 
 <dl class="attribute">

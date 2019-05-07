@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Start &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  <title>Miscellaneous Classes &mdash; MinkowskiEngine 0.2.3 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Working with Pytorch Layers" href="demo/interop.html" />
-    <link rel="prev" title="Generalized Sparse Convolution" href="generalized_sparse_conv.html" /> 
+    <link rel="next" title="Common Issues" href="issues.html" />
+    <link rel="prev" title="Coordinate Management" href="coords.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,14 +86,10 @@
             
             
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-a-segmentation-network">Running a segmentation network</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
@@ -102,7 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
@@ -110,7 +106,11 @@
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
-<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Miscellaneous Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#kernel-generator">Kernel Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#regiontype">RegionType</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -161,13 +161,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Quick Start</li>
+      <li>Miscellaneous Classes</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/quick_start.md.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/common.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -181,38 +181,68 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="quick-start">
-<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<ol>
-<li><p>Install Anaconda by following the instruction on <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">anaconda documentation</a>.</p></li>
-<li><p>Create an anaconda virtual environment and install dependencies.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
-<span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">atlas</span> <span class="n">numpy</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">google</span><span class="o">-</span><span class="n">sparsehash</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>  <span class="c1"># Use the correct cudatoolkit version</span>
-</pre></div>
+  <div class="section" id="miscellaneous-classes">
+<h1>Miscellaneous Classes<a class="headerlink" href="#miscellaneous-classes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="kernel-generator">
+<h2>Kernel Generator<a class="headerlink" href="#kernel-generator" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.KernelGenerator">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">KernelGenerator</code><span class="sig-paren">(</span><em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>is_transpose=False</em>, <em>region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em>region_offsets=None</em>, <em>axis_types=None</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="MinkowskiEngine.KernelGenerator.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>is_transpose=False</em>, <em>region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em>region_offsets=None</em>, <em>axis_types=None</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">region_type</span></code> (RegionType, optional): defines the kernel
+shape. Please refer to MinkowskiEngine.Comon for details.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> (torch.IntTensor, optional): when the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">region_type</span></code> is <a class="reference internal" href="#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a>, the convolution
+kernel uses this given torch int tensor to define offsets. It
+should be a matrix of size <span class="math notranslate nohighlight">\(N \times D\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is
+the number of offsets and <span class="math notranslate nohighlight">\(D\)</span> is the dimension of the
+space.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">axis_types</span></code> (list of RegionType, optional): If given, it
+uses different methods to create a kernel for each axis. e.g., when
+it is <cite>[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
+RegionType.HYPERCROSS]</cite>, the kernel would be a rectangular for the
+first two dimensions and a cross shaped kernel for the thrid
+dimension.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.KernelGenerator.get_kernel">
+<code class="descname">get_kernel</code><span class="sig-paren">(</span><em>tensor_stride</em>, <em>is_transpose</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.get_kernel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-</li>
-<li><p>Once you setup the environment, download the repository and install the MinkowskiEngine.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</div>
-<div class="section" id="running-a-segmentation-network">
-<h2>Running a segmentation network<a class="headerlink" href="#running-a-segmentation-network" title="Permalink to this headline">¶</a></h2>
-<p>Go to the top directory of the MinkowskiEngine and run the following.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">examples</span><span class="o">/</span><span class="n">indoor_segmentation</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
+<div class="section" id="regiontype">
+<h2>RegionType<a class="headerlink" href="#regiontype" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.RegionType">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">RegionType</code><a class="headerlink" href="#MinkowskiEngine.RegionType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the kernel region type</p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.RegionType.CUSTOM">
+<code class="descname">CUSTOM</code><em class="property"> = 2</em><a class="headerlink" href="#MinkowskiEngine.RegionType.CUSTOM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.RegionType.HYBRID">
+<code class="descname">HYBRID</code><em class="property"> = 3</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYBRID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.RegionType.HYPERCROSS">
+<code class="descname">HYPERCROSS</code><em class="property"> = 1</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPERCROSS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.RegionType.HYPERCUBE">
+<code class="descname">HYPERCUBE</code><em class="property"> = 0</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPERCUBE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 
@@ -228,10 +258,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="demo/interop.html" class="btn btn-neutral float-right" title="Working with Pytorch Layers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="issues.html" class="btn btn-neutral float-right" title="Common Issues" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="generalized_sparse_conv.html" class="btn btn-neutral float-left" title="Generalized Sparse Convolution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="coords.html" class="btn btn-neutral float-left" title="Coordinate Management" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

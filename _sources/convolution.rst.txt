@@ -9,7 +9,6 @@ MinkowskiConvolution
 .. autoclass:: MinkowskiEngine.MinkowskiConvolution
     :members:
     :undoc-members:
-    :show-inheritance:
 
     .. automethod:: __init__
 
@@ -20,6 +19,5 @@ MinkowskiConvolutionTranspose
 .. autoclass:: MinkowskiEngine.MinkowskiConvolutionTranspose
     :members:
     :undoc-members:
-    :show-inheritance:
 
     .. automethod:: __init__

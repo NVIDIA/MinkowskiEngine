@@ -92,6 +92,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -104,6 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -202,6 +204,8 @@
 
       <ul>
         <li><a href="coords.html#MinkowskiEngine.CoordsManager.__init__">(MinkowskiEngine.CoordsManager method)</a>
+</li>
+        <li><a href="common.html#MinkowskiEngine.KernelGenerator.__init__">(MinkowskiEngine.KernelGenerator method)</a>
 </li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling.__init__">(MinkowskiEngine.MinkowskiAvgPooling method)</a>
 </li>
@@ -321,7 +325,11 @@
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.cpu">cpu() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.cpu">[1]</a>
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.RegionType.CUSTOM">CUSTOM (MinkowskiEngine.Common.RegionType attribute)</a>
+
+      <ul>
+        <li><a href="common.html#MinkowskiEngine.RegionType.CUSTOM">(MinkowskiEngine.RegionType attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -445,7 +453,11 @@
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.get_index_map">get_index_map() (MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork method)</a>
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.KernelGenerator.get_kernel">get_kernel() (MinkowskiEngine.Common.KernelGenerator method)</a>
+
+      <ul>
+        <li><a href="common.html#MinkowskiEngine.KernelGenerator.get_kernel">(MinkowskiEngine.KernelGenerator method)</a>
 </li>
+      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_kernel_map">get_kernel_map() (MinkowskiEngine.CoordsManager method)</a>
 
       <ul>
@@ -493,13 +505,25 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.RegionType.HYBRID">HYBRID (MinkowskiEngine.Common.RegionType attribute)</a>
+
+      <ul>
+        <li><a href="common.html#MinkowskiEngine.RegionType.HYBRID">(MinkowskiEngine.RegionType attribute)</a>
 </li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.RegionType.HYPERCROSS">HYPERCROSS (MinkowskiEngine.Common.RegionType attribute)</a>
+
+      <ul>
+        <li><a href="common.html#MinkowskiEngine.RegionType.HYPERCROSS">(MinkowskiEngine.RegionType attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.RegionType.HYPERCROSS">HYPERCROSS (MinkowskiEngine.Common.RegionType attribute)</a>
-</li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.RegionType.HYPERCUBE">HYPERCUBE (MinkowskiEngine.Common.RegionType attribute)</a>
+
+      <ul>
+        <li><a href="common.html#MinkowskiEngine.RegionType.HYPERCUBE">(MinkowskiEngine.RegionType attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -530,8 +554,12 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.KernelGenerator">KernelGenerator (class in MinkowskiEngine.Common)</a>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator">KernelGenerator (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.KernelGenerator">(class in MinkowskiEngine.Common)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -820,8 +848,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.voxelization.ravel_hash_vec">ravel_hash_vec() (in module MinkowskiEngine.utils.voxelization)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.RegionType">RegionType (class in MinkowskiEngine.Common)</a>
+      <li><a href="common.html#MinkowskiEngine.RegionType">RegionType (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.RegionType">(class in MinkowskiEngine.Common)</a>
 </li>
+      </ul></li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.relu">relu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
   </ul></td>

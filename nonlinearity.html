@@ -93,6 +93,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -117,6 +118,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -194,8 +196,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiReLU">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiReLU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiReLU" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiReLU.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiReLU.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -215,8 +216,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPReLU">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiPReLU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPReLU" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPReLU.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPReLU.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -236,8 +236,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiSELU">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSELU" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiSELU.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSELU.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -257,8 +256,7 @@
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt>
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -278,8 +276,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiCELU">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiCELU</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCELU" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCELU.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCELU.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -299,8 +296,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiDropout">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiDropout</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiDropout" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiDropout.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiDropout.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -320,8 +316,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiThreshold">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiThreshold</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiThreshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiThreshold.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiThreshold.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -341,8 +336,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiSigmoid">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSigmoid</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSigmoid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiSigmoid.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSigmoid.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -362,8 +356,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiTanh">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiTanh</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTanh" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiTanh.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTanh.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
@@ -383,8 +376,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiSoftmax">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSoftmax</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSoftmax" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
-<dl class="method">
+<dd><dl class="method">
 <dt id="MinkowskiEngine.MinkowskiSoftmax.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSoftmax.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>

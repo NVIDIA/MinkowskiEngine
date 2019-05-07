@@ -98,6 +98,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -110,6 +111,7 @@
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -243,9 +245,9 @@ as the dilated convolution and typical hypercubic kernels. Another interesting
 special case is the sparse submanifold convolution when we set
 <span class="math notranslate nohighlight">\(\mathcal{C}^\text{out} = \mathcal{C}^\text{in}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{N}^D
 = \mathcal{V}^D(K)\)</span>. If we set <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} =
-\mathcal{C}^\text{out} = \mathbb{Z}^D\)</span> and <cite>mathcal{N}^D = mathcal{V}^D(K)</cite>,
-the generalized sparse convolution becomes the conventional dense convolution.
-If we define the <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in}\)</span> and
+\mathcal{C}^\text{out} = \mathbb{Z}^D\)</span> and <span class="math notranslate nohighlight">\(\mathcal{N}^D =
+\mathcal{V}^D(K)\)</span>, the generalized sparse convolution becomes the conventional
+dense convolution.  If we define the <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in}\)</span> and
 <span class="math notranslate nohighlight">\(\mathcal{C}^\text{out}\)</span> as multiples of a natural number and
 <span class="math notranslate nohighlight">\(\mathcal{N}^D = \mathcal{V}^D(K)\)</span>, we have a strided dense convolution.</p>
 </div>

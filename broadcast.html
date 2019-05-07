@@ -93,6 +93,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -109,6 +110,7 @@
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -186,8 +188,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBroadcastAddition">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiBroadcastAddition</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastAddition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiBroadcast.MinkowskiBroadcast</span></code></a></p>
-<p>Broadcast the reduced features to all input coordinates.</p>
+<dd><p>Broadcast the reduced features to all input coordinates.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} + \mathbf{x}_2
 \; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}\]</div>
@@ -220,8 +221,7 @@ space, meshes and 3D shapes are in a 3D space.</p>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBroadcastMultiplication">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiBroadcastMultiplication</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiBroadcast.MinkowskiBroadcast</span></code></a></p>
-<p>Broadcast reduced features to all input coordinates.</p>
+<dd><p>Broadcast reduced features to all input coordinates.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} \times \mathbf{x}_2
 \; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}\]</div>

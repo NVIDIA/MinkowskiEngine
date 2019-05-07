@@ -45,7 +45,7 @@ criterion = nn.CrossEntropyLoss()
 criterions = parallel.replicate(criterion, devices)
 ```
 
-Loading Multiple Batches
+Loading multiple batches
 ------------------------
 
 During training, we need a set of mini batches for each training iteration. We used a function that returns one mini batch, but you do not need to follow this pattern.
@@ -54,7 +54,7 @@ During training, we need a set of mini batches for each training iteration. We u
 # Get new data
 inputs, labels = [], []
 for i in range(num_devices):
-    coords, feat, label = data_loader()
+    coords, feat, label = data_loader()  // parallel data loaders can be used
     inputs.append(ME.SparseTensor(feat, coords=coords).to(devices[i]))
     labels.append(label.to(devices[i]))
 ```
@@ -67,6 +67,9 @@ First, we copy weights to all devices.
 ```
 replicas = parallel.replicate(net, devices)
 ```
+
+Applying replicas to all batches
+--------------------------------
 
 Next, we feed all mini-batches to the corresponding replicas of the network on all devices. All outputs features are then fed into the loss layers.
 

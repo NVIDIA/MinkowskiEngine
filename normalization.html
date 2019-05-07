@@ -93,6 +93,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -109,6 +110,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -186,8 +188,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBatchNorm">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiBatchNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>eps=1e-05</em>, <em>momentum=0.1</em>, <em>affine=True</em>, <em>track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBatchNorm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
-<p>A batch normalization layer for sparse tensors.</p>
+<dd><p>A batch normalization layer for a sparse tensor.</p>
 <p>See the pytorch <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.nn.BatchNorm1d</span></code> for more details.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiBatchNorm.__init__">
@@ -203,12 +204,18 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiInstanceNorm">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>batch_size=0</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
-<p>A instance normalization layer for sparse tensors.</p>
+<dd><p>A instance normalization layer for a sparse tensor.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiInstanceNorm.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>num_features</em>, <em>batch_size=0</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dd><p>Args:</p>
+<blockquote>
+<div><p>num_features (int): the dimension of the input feautres.</p>
+<p>batch_size (int, optional): the batch size of the input tensor.
+This speeds up the coordinate initialization when a non-zero value
+is given.</p>
+<p>dimension (int): the spatial dimension of the input tensor.</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="method">

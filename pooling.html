@@ -93,6 +93,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 </ul>
@@ -112,6 +113,7 @@
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -189,8 +191,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiMaxPooling</code><span class="sig-paren">(</span><em>kernel_size</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
-<p>A max pooling layer for a sparse tensor.</p>
+<dd><p>A max pooling layer for a sparse tensor.</p>
 <div class="math notranslate nohighlight">
 \[y^c_\mathbf{u} = \max_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
 \mathcal{C}^\text{in})} x^c_{\mathbf{u} + \mathbf{i}} \; \text{for} \;
@@ -204,7 +205,7 @@ coordinate <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
 output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
+<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
 matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
 offsets in D-dimension.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size of the
@@ -215,11 +216,12 @@ be used for stride size for the specific axis.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dilation</span></code> (int, or list, optional): dilation size for the
 convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (KernelGenerator, optional): define custom
-kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (ME.CoordsKey, optional): when given, the
-network uses the specific coordinates for the output coordinates.
-It must be a type of <a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
+optional): define custom kernel shape.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
+optional): when given, the network uses the specific coordinates
+for the output coordinates.  It must be a type of
+<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space all the inputs
 and the network is defined. For example images are in 2D space,
 meshes and 3D shapes are in 3D space and thus dimension is 3.</p>
@@ -235,8 +237,7 @@ meshes and 3D shapes are in 3D space and thus dimension is 3.</p>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiAvgPooling</code><span class="sig-paren">(</span><em>kernel_size=-1</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
-<p>Average input features within a kernel.</p>
+<dd><p>Average input features within a kernel.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y}_\mathbf{u} = \frac{1}{|\mathcal{N}^D(\mathbf{u},
 \mathcal{C}^\text{in})|} \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
@@ -262,7 +263,7 @@ the <a class="reference internal" href="#MinkowskiEngine.MinkowskiSumPooling" ti
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
 output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
+<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
 matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
 offsets in D-dimension.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size of the
@@ -273,11 +274,12 @@ be used for stride size for the specific axis.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dilation</span></code> (int, or list, optional): dilation size for the
 convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (KernelGenerator, optional): define custom
-kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (ME.CoordsKey, optional): when given, the
-network uses the specific coordinates for the output coordinates.
-It must be a type of <a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
+optional): define custom kernel shape.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
+optional): when given, the network uses the specific coordinates
+for the output coordinates.  It must be a type of
+<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
 inputs and the network is defined. For example, images are in a 2D
 space, meshes and 3D shapes are in a 3D space.</p>
@@ -293,8 +295,7 @@ space, meshes and 3D shapes are in a 3D space.</p>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiSumPooling">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiSumPooling</code><span class="sig-paren">(</span><em>kernel_size</em>, <em>stride=1</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
-<p>Sum all input features within a kernel.</p>
+<dd><p>Sum all input features within a kernel.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
 \mathcal{C}^\text{in})} \mathbf{x}_{\mathbf{u} + \mathbf{i}}
@@ -320,7 +321,7 @@ cardinality.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
 output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
+<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
 matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
 offsets in D-dimension.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size of the
@@ -331,11 +332,12 @@ be used for stride size for the specific axis.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dilation</span></code> (int, or list, optional): dilation size for the
 convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (KernelGenerator, optional): define custom
-kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (ME.CoordsKey, optional): when given, the
-network uses the specific coordinates for the output coordinates.
-It must be a type of <a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
+optional): define custom kernel shape.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
+optional): when given, the network uses the specific coordinates
+for the output coordinates.  It must be a type of
+<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space all the inputs
 and the network is defined. For example images are in 2D space,
 meshes and 3D shapes are in 3D space and thus dimension is 3.</p>
@@ -351,8 +353,7 @@ meshes and 3D shapes are in 3D space and thus dimension is 3.</p>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em>kernel_size</em>, <em>stride</em>, <em>dilation=1</em>, <em>kernel_generator=None</em>, <em>out_coords_key=None</em>, <em>dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
-<p>A pooling transpose layer for a sparse tensor.</p>
+<dd><p>A pooling transpose layer for a sparse tensor.</p>
 <p>Unpool the features and divide it by the number of non zero elements that
 contributed.</p>
 <dl class="method">
@@ -362,7 +363,7 @@ contributed.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
 output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
+<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
 matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
 offsets in D-dimension.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size of the
@@ -373,11 +374,12 @@ be used for stride size for the specific axis.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dilation</span></code> (int, or list, optional): dilation size for the
 convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (KernelGenerator, optional): define custom
-kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (ME.CoordsKey, optional): when given, the
-network uses the specific coordinates for the output coordinates.
-It must be a type of <a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
+optional): define custom kernel shape.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
+optional): when given, the network uses the specific coordinates
+for the output coordinates.  It must be a type of
+<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space all the inputs
 and the network is defined. For example images are in 2D space,
 meshes and 3D shapes are in 3D space and thus dimension is 3.</p>
@@ -393,8 +395,7 @@ meshes and 3D shapes are in 3D space and thus dimension is 3.</p>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling">
 <em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em>batch_size=0</em>, <em>average=True</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.Common.MinkowskiModuleBase" title="MinkowskiEngine.Common.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></a></p>
-<p>Pool all input features to one output.</p>
+<dd><p>Pool all input features to one output.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \sum_{\mathbf{i} \in
 \mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}\]</div>
