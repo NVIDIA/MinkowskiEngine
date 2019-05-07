@@ -255,12 +255,13 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`kernel_generator` (KernelGenerator, optional): define custom
-            kernel shape.
+            :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
+            optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
-            network uses the specific coordinates for the output coordinates.
-            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
+            optional): when given, the network uses the specific coordinates
+            for the output coordinates.  It must be a type of
+            :attr:`MinkowskiEngine.CoordsKey`.
 
             :attr:`dimension` (int): the dimension of the space where all the
             inputs and the network is defined. For example, images are in a 2D
@@ -332,12 +333,13 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`kernel_generator` (KernelGenerator, optional): define custom
-            kernel shape.
+            :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
+            optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
-            network uses the specific coordinates for the output coordinates.
-            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
+            optional): when given, the network uses the specific coordinates
+            for the output coordinates.  It must be a type of
+            :attr:`MinkowskiEngine.CoordsKey`.
 
             :attr:`dimension` (int): the dimension of the space all the inputs
             and the network is defined. For example images are in 2D space,
@@ -398,12 +400,13 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`kernel_generator` (KernelGenerator, optional): define custom
-            kernel shape.
+            :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
+            optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
-            network uses the specific coordinates for the output coordinates.
-            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
+            optional): when given, the network uses the specific coordinates
+            for the output coordinates.  It must be a type of
+            :attr:`MinkowskiEngine.CoordsKey`.
 
             :attr:`dimension` (int): the dimension of the space all the inputs
             and the network is defined. For example images are in 2D space,
@@ -537,12 +540,13 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`kernel_generator` (KernelGenerator, optional): define custom
-            kernel shape.
+            :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
+            optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (ME.CoordsKey, optional): when given, the
-            network uses the specific coordinates for the output coordinates.
-            It must be a type of :attr:`MinkowskiEngine.CoordsKey`.
+            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
+            optional): when given, the network uses the specific coordinates
+            for the output coordinates.  It must be a type of
+            :attr:`MinkowskiEngine.CoordsKey`.
 
             :attr:`dimension` (int): the dimension of the space all the inputs
             and the network is defined. For example images are in 2D space,

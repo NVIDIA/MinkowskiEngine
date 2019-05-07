@@ -57,14 +57,15 @@ class SparseTensor():
             :attr:`coords_key` (:attr:`MinkowskiEngine.CoordsKey`): When the
             coordinates are already cached in the MinkowskiEngine, we could
             reuse the same coordinates by simply providing the coordinate hash
-            key.
+            key. In most case, this process is done automatically. If you
+            provide one, make sure you understand what you are doing.
 
             :attr:`coords_manager` (:attr:`MinkowskiEngine.CoordsManager`): The
             MinkowskiEngine creates a dynamic computation graph using an input
             coordinates. If not provided, the MinkowskiEngine will create a new
             computation graph, so make sure to provide the same
             :attr:`CoordsManager` when you want to use the same computation
-            graph. To used a sparse tensor within the same computation graph
+            graph. To use a sparse tensor within the same computation graph
             that you are using before, feed the :attr:`CoordsManager` of the
             sparse tensor that you want to use by
             :attr:`sparse_tensor.coords_man`. In most cases, this process is

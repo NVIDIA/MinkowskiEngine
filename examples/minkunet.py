@@ -10,16 +10,17 @@ from examples.common import data_loader
 from examples.resnet import ResNetBase
 
 
-class ResUNetBase(ResNetBase):
+class MinkUNetBase(ResNetBase):
     BLOCK = None
-    PLANES = (32, 64, 128, 256, 256, 256, 256, 256)
+    PLANES = None
     DILATIONS = (1, 1, 1, 1, 1, 1, 1, 1)
     LAYERS = (2, 2, 2, 2, 2, 2, 2, 2)
     INIT_DIM = 32
     OUT_TENSOR_STRIDE = 1
 
     # To use the model, must call initialize_coords before forward pass.
-    # Once data is processed, call clear to reset the model before calling initialize_coords
+    # Once data is processed, call clear to reset the model before calling
+    # initialize_coords
     def __init__(self, in_channels, out_channels, D=3):
         ResNetBase.__init__(self, in_channels, out_channels, D)
 
@@ -156,75 +157,75 @@ class ResUNetBase(ResNetBase):
         return self.final(out)
 
 
-class Res16UNet14(ResUNetBase):
+class MinkUNet14(MinkUNetBase):
     BLOCK = BasicBlock
     LAYERS = (1, 1, 1, 1, 1, 1, 1, 1)
 
 
-class Res16UNet18(ResUNetBase):
+class MinkUNet18(MinkUNetBase):
     BLOCK = BasicBlock
     LAYERS = (2, 2, 2, 2, 2, 2, 2, 2)
 
 
-class Res16UNet34(ResUNetBase):
+class MinkUNet34(MinkUNetBase):
     BLOCK = BasicBlock
     LAYERS = (2, 3, 4, 6, 2, 2, 2, 2)
 
 
-class Res16UNet50(ResUNetBase):
+class MinkUNet50(MinkUNetBase):
     BLOCK = Bottleneck
     LAYERS = (2, 3, 4, 6, 2, 2, 2, 2)
 
 
-class Res16UNet101(ResUNetBase):
+class MinkUNet101(MinkUNetBase):
     BLOCK = Bottleneck
     LAYERS = (2, 3, 4, 23, 2, 2, 2, 2)
 
 
-class ResUNet14A(Res16UNet14):
+class MinkUNet14A(MinkUNet14):
     PLANES = (32, 64, 128, 256, 128, 128, 96, 96)
 
 
-class ResUNet14B(Res16UNet14):
+class MinkUNet14B(MinkUNet14):
     PLANES = (32, 64, 128, 256, 128, 128, 128, 128)
 
 
-class ResUNet14C(Res16UNet14):
+class MinkUNet14C(MinkUNet14):
     PLANES = (32, 64, 128, 256, 192, 192, 128, 128)
 
 
-class ResUNet14D(Res16UNet14):
+class MinkUNet14D(MinkUNet14):
     PLANES = (32, 64, 128, 256, 384, 384, 384, 384)
 
 
-class ResUNet18A(Res16UNet18):
+class MinkUNet18A(MinkUNet18):
     PLANES = (32, 64, 128, 256, 128, 128, 96, 96)
 
 
-class ResUNet18B(Res16UNet18):
+class MinkUNet18B(MinkUNet18):
     PLANES = (32, 64, 128, 256, 128, 128, 128, 128)
 
 
-class ResUNet18D(Res16UNet18):
+class MinkUNet18D(MinkUNet18):
     PLANES = (32, 64, 128, 256, 384, 384, 384, 384)
 
 
-class ResUNet34A(Res16UNet34):
+class MinkUNet34A(MinkUNet34):
     PLANES = (32, 64, 128, 256, 256, 128, 64, 64)
 
 
-class ResUNet34B(Res16UNet34):
+class MinkUNet34B(MinkUNet34):
     PLANES = (32, 64, 128, 256, 256, 128, 64, 32)
 
 
-class ResUNet34C(Res16UNet34):
+class MinkUNet34C(MinkUNet34):
     PLANES = (32, 64, 128, 256, 256, 128, 96, 96)
 
 
 if __name__ == '__main__':
     # loss and network
     criterion = nn.CrossEntropyLoss()
-    net = ResUNet14A(in_channels=3, out_channels=5, D=2)
+    net = MinkUNet14A(in_channels=3, out_channels=5, D=2)
     print(net)
 
     # a data loader must return a tuple of coords, features, and labels.

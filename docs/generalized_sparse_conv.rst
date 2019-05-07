@@ -74,9 +74,9 @@ as the dilated convolution and typical hypercubic kernels. Another interesting
 special case is the sparse submanifold convolution when we set
 :math:`\mathcal{C}^\text{out} = \mathcal{C}^\text{in}` and :math:`\mathcal{N}^D
 = \mathcal{V}^D(K)`. If we set :math:`\mathcal{C}^\text{in} =
-\mathcal{C}^\text{out} = \mathbb{Z}^D` and `\mathcal{N}^D = \mathcal{V}^D(K)`,
-the generalized sparse convolution becomes the conventional dense convolution.
-If we define the :math:`\mathcal{C}^\text{in}` and
+\mathcal{C}^\text{out} = \mathbb{Z}^D` and :math:`\mathcal{N}^D =
+\mathcal{V}^D(K)`, the generalized sparse convolution becomes the conventional
+dense convolution.  If we define the :math:`\mathcal{C}^\text{in}` and
 :math:`\mathcal{C}^\text{out}` as multiples of a natural number and
 :math:`\mathcal{N}^D = \mathcal{V}^D(K)`, we have a strided dense convolution.
 

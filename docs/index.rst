@@ -18,6 +18,7 @@ Table of Contents
    :maxdepth: 2
    :caption: Demo Documentation
 
+   demo/interop
    demo/segmentation
    demo/multigpu
 
@@ -32,6 +33,7 @@ Table of Contents
    normalization
    nonlinearity
    coords
+   common
 
 .. toctree::
    :maxdepth: 1

@@ -1,6 +1,6 @@
 # Minkowski Engine
 
-The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information please visit [the documentation page (under construction)](http://minkowskiengine.github.io)
+The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](https://stanfordvl.github.io/MinkowskiEngine/overview.html).
 
 ## Features
 
@@ -21,7 +21,7 @@ You can install the MinkowskiEngine without sudo using anaconda. Using anaconda 
 
 ### Anaconda
 
-We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://StanfordVL.github.com/MinkowskiEngine/issues.html) first.
+We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](issues.html) first.
 
 
 #### 1. Create a conda virtual environment and install requirements.

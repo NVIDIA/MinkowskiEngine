@@ -12,7 +12,7 @@ from Common import get_postfix
 
 
 class MinkowskiBatchNorm(Module):
-    r"""A batch normalization layer for sparse tensors.
+    r"""A batch normalization layer for a sparse tensor.
 
     See the pytorch :attr:`torch.nn.BatchNorm1d` for more details.
     """
@@ -202,11 +202,23 @@ class MinkowskiStableInstanceNorm(Module):
 
 
 class MinkowskiInstanceNorm(Module):
-    r"""A instance normalization layer for sparse tensors.
+    r"""A instance normalization layer for a sparse tensor.
 
     """
 
     def __init__(self, num_features, batch_size=0, dimension=-1):
+        r"""
+        Args:
+
+            num_features (int): the dimension of the input feautres.
+
+            batch_size (int, optional): the batch size of the input tensor.
+            This speeds up the coordinate initialization when a non-zero value
+            is given.
+
+            dimension (int): the spatial dimension of the input tensor.
+
+        """
         Module.__init__(self)
         self.num_features = num_features
         self.weight = nn.Parameter(torch.ones(1, num_features))
