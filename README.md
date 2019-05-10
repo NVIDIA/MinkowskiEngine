@@ -67,7 +67,7 @@ To use the Minkowski Engine, you first would need to import the engine.
 Then, you would need to define the network. If the data you have is not
 quantized, you would need to voxelize or quantize the (spatial) data into a
 sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
-function (`ME.SparseVoxelize`).
+function (`MinkowskiEngine.utils.sparse_quantize`).
 
 
 ### Creating a Network
