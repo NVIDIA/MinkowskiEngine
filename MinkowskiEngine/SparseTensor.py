@@ -1,4 +1,5 @@
 import os
+import warnings
 import torch
 
 from Common import convert_to_int_list
@@ -96,8 +97,20 @@ class SparseTensor():
             assert isinstance(coords_key, CoordsKey)
 
         if coords is not None:
-            assert isinstance(coords, torch.IntTensor), \
-                "Coordinate must be of type torch.IntTensor"
+            assert isinstance(coords, torch.Tensor), \
+                "Coordinate must be of type torch.Tensor"
+
+            if not isinstance(coords, torch.IntTensor):
+                warnings.warn(
+                    'Coords implicitly converted to torch.IntTensor. ' +
+                    'To remove this warning, use `.int()` to convert the ' +
+                    'coords into an torch.IntTensor')
+                coords = coords.int()
+
+            assert feats.shape[0] == coords.shape[0], \
+                "Number of rows in features and coordinates do not match."
+
+            coords = coords.contiguous()
 
         if coords_manager is None:
             assert coords is not None, "Initial coordinates must be given"

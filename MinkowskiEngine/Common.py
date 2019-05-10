@@ -1,5 +1,5 @@
 import math
-import collections
+from collections import Sequence
 import numpy as np
 from enum import Enum
 from itertools import product
@@ -14,7 +14,7 @@ def convert_to_int_list(arg, dimension):
         assert len(arg) == dimension
         return arg
 
-    if isinstance(arg, (collections.Sequence, np.ndarray, torch.Tensor)):
+    if isinstance(arg, (Sequence, np.ndarray, torch.Tensor)):
         tmp = [i for i in arg]
         assert len(tmp) == dimension
     elif np.isscalar(arg):  # Assume that it is a scalar
@@ -30,7 +30,7 @@ def convert_to_int_tensor(arg, dimension):
         assert arg.numel() == dimension
         return arg
 
-    if isinstance(arg, (collections.Sequence, np.ndarray)):
+    if isinstance(arg, (Sequence, np.ndarray)):
         tmp = torch.IntTensor([i for i in arg])
         assert tmp.numel() == dimension
     elif isinstance(arg, str):

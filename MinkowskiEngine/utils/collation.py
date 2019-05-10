@@ -1,27 +1,72 @@
+import numpy as np
 import torch
 import logging
 
 
-def sparse_collate(coords, feats, labels=None):
-    """Create torch matrices for coordinates with batch indices and features
+def sparse_collate(coords, feats, labels=None, is_double=False):
+    r"""Create a sparse tensor with batch indices C in `the documentation
+    <https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html>`_.
+
+    Convert a set of coordinates and features into the batch coordinates and
+    batch features.
+
+    Args:
+        coords (set of `torch.Tensor` or `numpy.ndarray`): a set of coordinates.
+
+        feats (set of `torch.Tensor` or `numpy.ndarray`): a set of features.
+
+        labels (set of `torch.Tensor` or `numpy.ndarray`): a set of labels
+        associated to the inputs.
+
+        is_double (`bool`): return double precision features if True. False by
+        default.
+
     """
     use_label = False if labels is None else True
     coords_batch, feats_batch, labels_batch = [], [], []
 
     batch_id = 0
-    for batch_id, _ in enumerate(coords):
-        num_points = coords[batch_id].shape[0]
+    for coord, feat in zip(coords, feats):
+        if isinstance(coord, np.ndarray):
+            coord = torch.from_numpy(coord)
+        else:
+            assert isinstance(
+                coord, torch.Tensor
+            ), "Coords must be of type numpy.ndarray or torch.Tensor"
+        coord = coord.int()
+
+        if isinstance(feat, np.ndarray):
+            feat = torch.from_numpy(feat)
+        else:
+            assert isinstance(
+                feat, torch.Tensor
+            ), "Features must be of type numpy.ndarray or torch.Tensor"
+        feat = feat.double() if is_double else feat.float()
+
+        # Batched coords
+        num_points = coord.shape[0]
         coords_batch.append(
-            torch.cat((torch.from_numpy(coords[batch_id]).int(),
-                       torch.ones(num_points, 1).int() * batch_id), 1))
-        feats_batch.append(torch.from_numpy(feats[batch_id]))
+            torch.cat((coord, torch.ones(num_points, 1).int() * batch_id), 1))
+
+        # Features
+        feats_batch.append(feat)
+
+        # Labels
         if use_label:
-            labels_batch.append(torch.from_numpy(labels[batch_id]))
+            label = labels[batch_id]
+            if isinstance(label, np.ndarray):
+                label = torch.from_numpy(label)
+            else:
+                assert isinstance(
+                    label, torch.Tensor
+                ), "labels must be of type numpy.ndarray or torch.Tensor"
+            labels_batch.append(label)
+
         batch_id += 1
 
     # Concatenate all lists
     coords_batch = torch.cat(coords_batch, 0).int()
-    feats_batch = torch.cat(feats_batch, 0).float()
+    feats_batch = torch.cat(feats_batch, 0)
     if use_label:
         labels_batch = torch.cat(labels_batch, 0)
         return coords_batch, feats_batch, labels_batch

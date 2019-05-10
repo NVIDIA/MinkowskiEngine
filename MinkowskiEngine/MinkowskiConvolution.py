@@ -402,6 +402,9 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             inputs and the network is defined. For example, images are in a 2D
             space, meshes and 3D shapes are in a 3D space.
 
+        .. note:
+            TODO: support `kernel_size` > `stride`.
+
         """
         MinkowskiConvolutionBase.__init__(
             self,

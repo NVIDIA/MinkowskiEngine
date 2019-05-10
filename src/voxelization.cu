@@ -68,14 +68,14 @@ int sparse_voxelization(uint64_t *keys, int *labels, int **return_key_indices,
     // 1. `thrust::sort_by_key` to sort feat, label by the coord hash
 
     // Returns sorted d_key and d_index sorted by the d_key ordering
-    thrust::sort_by_key(d_key.begin(), d_key.end(),
+    thrust::sort_by_key(thrust::device, d_key.begin(), d_key.end(),
                         thrust::make_zip_iterator(thrust::make_tuple(
                             d_label.begin(), d_index.begin())));
 
     // 2. zip the sorted label and the sorted key and use `thrust::unique` to
     // remove duplicates.
     thrust::device_vector<int>::iterator end =
-        thrust::unique_by_key(thrust::make_zip_iterator(thrust::make_tuple(
+        thrust::unique_by_key(thrust::device, thrust::make_zip_iterator(thrust::make_tuple(
                                   d_key.begin(), d_label.begin())),
                               thrust::make_zip_iterator(thrust::make_tuple(
                                   d_key.end(), d_label.end())),
@@ -94,7 +94,7 @@ int sparse_voxelization(uint64_t *keys, int *labels, int **return_key_indices,
     thrust::equal_to<uint64_t> equal_to;
     ConsolidateLabel<int, int> consolidate_label(ignore_label);
     thrust::device_vector<uint64_t>::iterator final_end =
-        thrust::reduce_by_key(
+        thrust::reduce_by_key(thrust::device,
             d_key.begin(), d_key.begin() + reduced_n, // Key
             thrust::make_zip_iterator(
                 thrust::make_tuple(d_label.begin(), d_index.begin())), // Val
