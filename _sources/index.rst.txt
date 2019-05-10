@@ -34,6 +34,7 @@ Table of Contents
    nonlinearity
    coords
    common
+   utils
 
 .. toctree::
    :maxdepth: 1

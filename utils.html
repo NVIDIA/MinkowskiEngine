@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiBroadcast &mdash; MinkowskiEngine 0.2.3 documentation</title>
+  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.2.3 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="MinkowskiNormalization" href="normalization.html" />
-    <link rel="prev" title="MinkowskiPooling" href="pooling.html" /> 
+    <link rel="next" title="Common Issues" href="issues.html" />
+    <link rel="prev" title="Miscellaneous Classes" href="common.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -102,16 +102,16 @@
 <li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">MinkowskiBroadcast</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#minkowskibroadcastaddition">MinkowskiBroadcastAddition</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#minkowskibroadcastmultiplication">MinkowskiBroadcastMultiplication</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utility Functions and Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-quantize">sparse_quantize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparsecollation">SparseCollation</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -162,13 +162,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>MinkowskiBroadcast</li>
+      <li>Utility Functions and Classes</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/broadcast.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/utils.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -182,69 +182,58 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="minkowskibroadcast">
-<h1>MinkowskiBroadcast<a class="headerlink" href="#minkowskibroadcast" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="minkowskibroadcastaddition">
-<h2>MinkowskiBroadcastAddition<a class="headerlink" href="#minkowskibroadcastaddition" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="MinkowskiEngine.MinkowskiBroadcastAddition">
-<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiBroadcastAddition</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastAddition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Broadcast the reduced features to all input coordinates.</p>
-<div class="math notranslate nohighlight">
-\[\mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} + \mathbf{x}_2
-\; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}\]</div>
-<p>For all input <span class="math notranslate nohighlight">\(\mathbf{x}_\mathbf{u}\)</span>, add <span class="math notranslate nohighlight">\(\mathbf{x}_2\)</span>. The
-output coordinates will be the same as the input coordinates
-<span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} = \mathcal{C}^\text{out}\)</span>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The first argument takes a sparse tensor; the second argument takes
-features that are reduced to the origin. This can be typically done with
-the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
-</div>
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiBroadcastAddition.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastAddition.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>a broadcast addition layer.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
-inputs and the network is defined. For example, images are in a 2D
-space, meshes and 3D shapes are in a 3D space.</p>
+  <div class="section" id="utility-functions-and-classes">
+<h1>Utility Functions and Classes<a class="headerlink" href="#utility-functions-and-classes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sparse-quantize">
+<h2>sparse_quantize<a class="headerlink" href="#sparse-quantize" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="MinkowskiEngine.utils.sparse_quantize">
+<code class="descclassname">MinkowskiEngine.utils.</code><code class="descname">sparse_quantize</code><span class="sig-paren">(</span><em>coords</em>, <em>feats=None</em>, <em>labels=None</em>, <em>ignore_label=255</em>, <em>return_index=False</em>, <em>hash_type='ravel'</em>, <em>quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given coordinates, and features (optionally labels), the function
+generates quantized (voxelized) coordinates.</p>
+<dl>
+<dt>Args:</dt><dd><p>coords (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a matrix of size
+<span class="math notranslate nohighlight">\(N \times D\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points in the
+<span class="math notranslate nohighlight">\(D\)</span> dimensional space.</p>
+<p>feats (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, optional): a matrix of size
+<span class="math notranslate nohighlight">\(N \times D_F\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points and
+<span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of the features.</p>
+<p>labels (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): labels associated to eah coordinates.</p>
+<p>ignore_label (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, optional): the int value of the IGNORE LABEL.</p>
+<p>return_index (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): True if you want the indices of the
+quantized coordinates. False by default.</p>
+<p>hash_type (<code class="xref py py-attr docutils literal notranslate"><span class="pre">str</span></code>, optional): Hash function used for quantization. Either
+<cite>ravel</cite> or <cite>fnv</cite>. <cite>ravel</cite> by default.</p>
+<p>quantization_size (<code class="xref py py-attr docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>, or
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): the length of the each side of the
+hyperrectangle of of the grid cell.</p>
 </dd>
 </dl>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="minkowskibroadcastmultiplication">
-<h2>MinkowskiBroadcastMultiplication<a class="headerlink" href="#minkowskibroadcastmultiplication" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="MinkowskiEngine.MinkowskiBroadcastMultiplication">
-<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiBroadcastMultiplication</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication" title="Permalink to this definition">¶</a></dt>
-<dd><p>Broadcast reduced features to all input coordinates.</p>
-<div class="math notranslate nohighlight">
-\[\mathbf{y}_\mathbf{u} = \mathbf{x}_{1, \mathbf{u}} \times \mathbf{x}_2
-\; \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}\]</div>
-<p>For all input <span class="math notranslate nohighlight">\(\mathbf{x}_\mathbf{u}\)</span>, multiply <span class="math notranslate nohighlight">\(\mathbf{x}_2\)</span>
-element-wise. The output coordinates will be the same as the input
-coordinates <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} = \mathcal{C}^\text{out}\)</span>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The first argument takes a sparse tensor; the second argument takes
-features that are reduced to the origin. This can be typically done with
-the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
+<p>Please check <cite>examples/indoor.py</cite> for the usage.</p>
 </div>
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiBroadcastMultiplication.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>a broadcast multiplication layer.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="sparsecollation">
+<h2>SparseCollation<a class="headerlink" href="#sparsecollation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.utils.SparseCollation">
+<em class="property">class </em><code class="descclassname">MinkowskiEngine.utils.</code><code class="descname">SparseCollation</code><span class="sig-paren">(</span><em>limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates collate function for coords, feats, labels.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
-inputs and the network is defined. For example, images are in a 2D
-space, meshes and 3D shapes are in a 3D space.</p>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>limit_numpoints: If 0 or False, does not alter batch size. If positive</dt><dd><p>integer, limits batch size so that the number of input
+coordinates is below limit_numpoints.</p>
 </dd>
 </dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="MinkowskiEngine.utils.SparseCollation.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
 </dd></dl>
@@ -264,10 +253,10 @@ space, meshes and 3D shapes are in a 3D space.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="normalization.html" class="btn btn-neutral float-right" title="MinkowskiNormalization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="issues.html" class="btn btn-neutral float-right" title="Common Issues" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="pooling.html" class="btn btn-neutral float-left" title="MinkowskiPooling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="common.html" class="btn btn-neutral float-left" title="Miscellaneous Classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

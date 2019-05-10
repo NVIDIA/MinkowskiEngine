@@ -105,6 +105,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utility Functions and Classes</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -199,8 +200,19 @@ coordinates is below limit_numpoints.</p>
 
 <dl class="function">
 <dt id="MinkowskiEngine.utils.collation.sparse_collate">
-<code class="descclassname">MinkowskiEngine.utils.collation.</code><code class="descname">sparse_collate</code><span class="sig-paren">(</span><em>coords</em>, <em>feats</em>, <em>labels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.sparse_collate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create torch matrices for coordinates with batch indices and features</p>
+<code class="descclassname">MinkowskiEngine.utils.collation.</code><code class="descname">sparse_collate</code><span class="sig-paren">(</span><em>coords</em>, <em>feats</em>, <em>labels=None</em>, <em>is_double=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.sparse_collate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sparse tensor with batch indices C in <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html">the documentation</a>.</p>
+<p>Convert a set of coordinates and features into the batch coordinates and
+batch features.</p>
+<dl>
+<dt>Args:</dt><dd><p>coords (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
+<p>feats (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of features.</p>
+<p>labels (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of labels
+associated to the inputs.</p>
+<p>is_double (<cite>bool</cite>): return double precision features if True. False by
+default.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -257,13 +269,6 @@ exact nature of the failure. This is helpful when debugging gradchecks.</p>
 <div class="section" id="module-MinkowskiEngine.utils.voxelization">
 <span id="minkowskiengine-utils-voxelization-module"></span><h2>MinkowskiEngine.utils.voxelization module<a class="headerlink" href="#module-MinkowskiEngine.utils.voxelization" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="MinkowskiEngine.utils.voxelization.SparseVoxelize">
-<code class="descclassname">MinkowskiEngine.utils.voxelization.</code><code class="descname">SparseVoxelize</code><span class="sig-paren">(</span><em>coords</em>, <em>feats=None</em>, <em>labels=None</em>, <em>ignore_label=255</em>, <em>return_index=False</em>, <em>hash_type='ravel'</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.SparseVoxelize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given coordinates, and features (optionally labels), generate voxelized
-coords, features (and labels when given).</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="MinkowskiEngine.utils.voxelization.fnv_hash_vec">
 <code class="descclassname">MinkowskiEngine.utils.voxelization.</code><code class="descname">fnv_hash_vec</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.fnv_hash_vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>FNV64-1A</p>
@@ -277,6 +282,35 @@ function used for ME</p>
 <dd><p>FNV64-1A</p>
 <p>Given a numpy array of N X D, generate hash values using the same hash
 function used for ME</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.utils.voxelization.sparse_quantize">
+<code class="descclassname">MinkowskiEngine.utils.voxelization.</code><code class="descname">sparse_quantize</code><span class="sig-paren">(</span><em>coords</em>, <em>feats=None</em>, <em>labels=None</em>, <em>ignore_label=255</em>, <em>return_index=False</em>, <em>hash_type='ravel'</em>, <em>quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given coordinates, and features (optionally labels), the function
+generates quantized (voxelized) coordinates.</p>
+<dl>
+<dt>Args:</dt><dd><p>coords (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a matrix of size
+<span class="math notranslate nohighlight">\(N \times D\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points in the
+<span class="math notranslate nohighlight">\(D\)</span> dimensional space.</p>
+<p>feats (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, optional): a matrix of size
+<span class="math notranslate nohighlight">\(N \times D_F\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points and
+<span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of the features.</p>
+<p>labels (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): labels associated to eah coordinates.</p>
+<p>ignore_label (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, optional): the int value of the IGNORE LABEL.</p>
+<p>return_index (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): True if you want the indices of the
+quantized coordinates. False by default.</p>
+<p>hash_type (<code class="xref py py-attr docutils literal notranslate"><span class="pre">str</span></code>, optional): Hash function used for quantization. Either
+<cite>ravel</cite> or <cite>fnv</cite>. <cite>ravel</cite> by default.</p>
+<p>quantization_size (<code class="xref py py-attr docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>, or
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): the length of the each side of the
+hyperrectangle of of the grid cell.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please check <cite>examples/indoor.py</cite> for the usage.</p>
+</div>
 </dd></dl>
 
 </div>
