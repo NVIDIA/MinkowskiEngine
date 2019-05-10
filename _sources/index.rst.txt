@@ -33,8 +33,8 @@ Table of Contents
    normalization
    nonlinearity
    coords
-   common
    utils
+   common
 
 .. toctree::
    :maxdepth: 1
