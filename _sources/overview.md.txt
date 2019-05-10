@@ -1,14 +1,12 @@
 # Minkowski Engine
 
-The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](https://stanfordvl.github.io/MinkowskiEngine/overview.html).
-
-![](https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png)
+The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://stanfordvl.github.io/MinkowskiEngine/overview.html).
 
 ## Features
 
 - Dynamic computation graph
 - Custom kernel shapes
-- [Generalized sparse convolution](generalized_sparse_conv.html)
+- [Generalized sparse convolution](https://stanfordvl.github.io/MinkowskiEngine/generalized_sparse_conv.html)
 - Dilated convolution
 - Multi-GPU training
 - Multi-threaded kernel map
@@ -23,7 +21,7 @@ You can install the MinkowskiEngine without sudo using anaconda. Using anaconda 
 
 ### Anaconda
 
-We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](issues.html) first.
+We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) first.
 
 
 #### 1. Create a conda virtual environment and install requirements.
@@ -53,7 +51,7 @@ python setup.py install
 Like the anaconda installation, make sure that you install pytorch with the the same CUDA version that `nvcc` uses.
 
 ```
-sudo apt install libsparsehash-dev libopenblas-dev
+sudo apt install libsparsehash-dev libatlas-base-dev
 # within a python3 environment
 pip install torch
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
@@ -135,32 +133,18 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
 ### Running the Examples
 
-
 After installing the package, run `python examples/example.py` in the package root directory.
+For indoor semantic segmentation. run `python examples/indoor.py` in the package root directory.
+
+![](https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png)
 
 
-## Variables
-
-- Dimension
-  - An image is a 2-dimensional object; A 3D-scan is a 3-dimensional object.
-- Coordinates
-  - D-dimensional integer array + 1 dimension at the end for batch index
-- Tensor Stride
-  - Distance between adjacent voxels. e.g., two stride-2 convolution layers will create features of tensor stride 4.
-
-
-## Notes
-
-The strided convolution maps i-th index to `int(i / stride) * stride`. Thus, it is encouraged to use dilation == 1 and kernel_size > stide when stride > 1.
-
-
-## General discussion and questions
+## Discussion and Documentation
 
 Please use `minkowskiengine@googlegroups.com`
+Please refer to the [MinkowskiEngine documentation page](http://stanfordvl.github.io/MinkowskiEngine/) for more detail.
 
 
-## Gradchecks and tests
+## References
 
-```
-python -m tests.conv
-```
+- [4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR'19](https://arxiv.org/abs/1904.08755), [[pdf]](https://arxiv.org/pdf/1904.08755.pdf)
