@@ -2,6 +2,8 @@
 
 The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](https://stanfordvl.github.io/MinkowskiEngine/overview.html).
 
+![](https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png)
+
 ## Features
 
 - Dynamic computation graph
