@@ -257,7 +257,7 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">loss</span> <span class="o">=</span> <span class="n">parallel</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">target_device</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the <a class="reference external" href="https://github.com/chrischoy/MinkowskiEngine/blob/master/examples/multigpu.py">complete multi-gpu example</a> for more detail.</p>
+<p>The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/multigpu.py">complete multi-gpu example</a> for more detail.</p>
 </div>
 </div>
 

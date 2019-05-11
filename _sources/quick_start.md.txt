@@ -9,7 +9,7 @@
     ```
     conda create -n py3-mink python=3.7 anaconda
     conda activate py3-mink
-    conda install atlas numpy
+    conda install openblas numpy
     conda install -c bioconda google-sparsehash
     conda install pytorch torchvision -c pytorch  # Use the correct cudatoolkit version
     ```

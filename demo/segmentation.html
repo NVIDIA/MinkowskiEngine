@@ -194,7 +194,41 @@ python examples/indoor.py
 <p>When you run the example, you will see a hotel room and semantic segmentation
 of the room. You can interactively rotate the visualization when you run the
 example.</p>
+<p>First, we load the data and voxelize (quantize) the data. The voxelization is
+done by calling <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_quantize" title="MinkowskiEngine.utils.sparse_quantize"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pcd</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">read_point_cloud</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+<span class="n">feats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">colors</span><span class="p">)</span>
+
+<span class="n">quantized_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">coords</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">)</span>
+<span class="n">inds</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span><span class="n">quantized_coords</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once you prepare a voxelized coordinates and features, we should wrap it with
+the <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>. Before we do that, we should create a
+batch by calling <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code>. This function
+takes a set of coordinates and features and concatenate the set. Also it append
+the batch index to the coordinates. Finally, we pseudo-normalize the features
+by subtracting 0.5 from the colors.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a batch, this process is done in a data loader during training in parallel.</span>
+<span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_file</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)]</span>
+<span class="n">coordinates_</span><span class="p">,</span> <span class="n">featrues_</span><span class="p">,</span> <span class="n">pcds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">))</span>
+<span class="n">coordinates</span><span class="p">,</span> <span class="n">features</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span><span class="n">coordinates_</span><span class="p">,</span> <span class="n">featrues_</span><span class="p">)</span>
+
+<span class="c1"># Normalize features and create a sparse tensor</span>
+<span class="n">sinput</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, we feed-forward the sparse tensor into the network and get the predictions.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">soutput</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">pred</span> <span class="o">=</span> <span class="n">soutput</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After doing some post-processing. We can color the labels and visualize the
+input and the prediction side-by-side.</p>
 <img alt="../_images/segmentation.png" src="../_images/segmentation.png" />
+<p>The weights are downloaded automatically once you run the example and the weights are currently the top-ranking algorithm on the <a class="reference external" href="http://kaldir.vc.in.tum.de/scannet_benchmark/">Scannet 3D segmentation benchmark</a>.</p>
+<p>Please refer to the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/indoor.py">complete indoor segmentation example</a> for more detail.</p>
 </div>
 </div>
 
