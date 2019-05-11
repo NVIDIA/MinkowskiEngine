@@ -149,10 +149,13 @@ class SparseTensor():
     @property
     def coords(self):
         r"""
-        The features of the current sparse tensor. The features are :math:`N
-        \times D_F` where :math:`N` is the number of points in the space and
-        :math:`D_F` is the dimension of each feature vector. Please refer to
-        :attr:`coords` to access the associated coordinates.
+        The coordinates of the current sparse tensor. The coordinates are
+        represented as a :math:`N \times (D + 1)` dimensional matrix where
+        :math:`N` is the number of points in the space and :math:`D` is the
+        dimension of the space (e.g. 3 for 3D, 4 for 3D + Time). Additional
+        dimension of the column of the matrix C is for batch indices which is
+        internally treated as an additional spatial dimension to disassociate
+        different instances in a batch.
         """
         if self._C is None:
             self._C = self._get_coords()

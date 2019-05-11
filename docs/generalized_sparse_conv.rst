@@ -4,8 +4,18 @@ Generalized Sparse Convolution
 Sparse Tensor
 -------------
 
-The :attr:`SparseTensor` class is the basic tensor in MinkowskiEngine. We use
-the COOrdinate (COO) format to save a sparse tensor `[1]
+In traditional speech, text, or image data, features are extracted densely.
+Thus, the most common representations of these data are vectors, matrices, and
+tensors. However, for 3-dimensional scans or even higher-dimensional spaces,
+such dense representations are inefficient due to the sparsity. Instead, we can
+only save the non-empty part of the space as its coordinates and the associated
+features. This representation is an N-dimensional extension of a sparse matrix;
+thus it is known as a sparse tensor.
+
+In the Minkowski Engine, we adopt the same sparse tensor for the basic data
+representation and the class is provided in
+:attr:`MinkowskiEngine.SparseTensor`. We use the COOrdinate (COO) format to
+save a sparse tensor `[1]
 <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This
 representation is simply a concatenation of coordinates in a matrix :math:`C`
 and associated features :math:`F`.
@@ -35,12 +45,17 @@ Generalized Sparse Convolution
 The convolution is a fundamental operation in many fields. In image perception,
 the 2D convolution has achieved state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
+In this work, we adopt the sparse convolution `[2]
+<https://arxiv.org/abs/1711.10275>`_ and propose the generalized sparse
+convolution. We use the generalized sparse convolution not only to the 3D
+spatial axes, but also to the temporal axis, which is proven to be more
+effective than recurrent neural networks (RNN) in some applications.
 
-In this section, we generalize the sparse convolution for generic input and
+Specifically, we generalize the sparse convolution for generic input and
 output coordinates, and for arbitrary kernel shapes. The generalized sparse
 convolution encompasses not only all sparse convolutions but also the
 conventional dense convolutions. Let :math:`x^{\text{in}}_\mathbf{u} \in
-\mathbb{R}^{N^\text{in}}` be an :math:`N^\text{in}$`-dimensional input feature
+\mathbb{R}^{N^\text{in}}` be an :math:`N^\text{in}`-dimensional input feature
 vector in a :math:`D`-dimensional space at :math:`\mathbf{u} \in \mathbb{R}^D`
 (a D-dimensional coordinate), and convolution kernel weights be
 :math:`\mathbf{W} \in \mathbb{R}^{K^D \times N^\text{out} \times N^\text{in}}`.
@@ -60,7 +75,7 @@ equation.
 .. math::
    \mathbf{x}^{\text{out}}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, \mathcal{C}^{\text{in}})} W_\mathbf{i} \mathbf{x}^{\text{in}}_{\mathbf{u} + \mathbf{i}} \text{ for } \mathbf{u} \in \mathcal{C}^{\text{out}}
 
-where math:`\mathcal{N}^D` is a set of offsets that define the shape of a
+where :math:`\mathcal{N}^D` is a set of offsets that define the shape of a
 kernel and :math:`\mathcal{N}^D(\mathbf{u}, \mathcal{C}^\text{in})=
 \{\mathbf{i} | \mathbf{u} + \mathbf{i} \in \mathcal{C}^\text{in}, \mathbf{i}
 \in \mathcal{N}^D \}` as the set of offsets from the current center,

@@ -141,8 +141,13 @@ For indoor semantic segmentation. run `python examples/indoor.py` in the package
 
 ## Discussion and Documentation
 
-Please use `minkowskiengine@googlegroups.com`
-Please refer to the [MinkowskiEngine documentation page](http://stanfordvl.github.io/MinkowskiEngine/) for more detail.
+For discussion and questions, please use `minkowskiengine@googlegroups.com`.
+For API and general usage, please refer to the [MinkowskiEngine documentation
+page](http://stanfordvl.github.io/MinkowskiEngine/) for more detail.
+
+For issues not listed on the API and feature requests, feel free to submit
+create an issue on the [github issue
+page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
 
 ## References

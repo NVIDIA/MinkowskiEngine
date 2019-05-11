@@ -49,13 +49,13 @@ a min-batch.
 
 Note that the above :attr:`MinkowskiEngine.MinkowskiGlobalPooling` layer
 averages all features in the input sparse tensor and generate :math:`B \times
-D_F` when :math:`B` is the number of inputs in the mini-batch in the input
-sparse tensor (adaptively changes accordingly) and :math:`D_F` is the feature
-dimension of the input sparse tensor.
+D_F` when :math:`B` is the batch size (adaptively changes accordingly) and
+:math:`D_F` is the feature dimension of the input sparse tensor.
 
 Then, during the training, we could us the `torch.nn.CrossEntropyLoss` layer by
-accessing the features of the sparse tensor `MinkowskiEngine.SparseTensor.F` or
-`MinkowskiEngine.SparseTensor.feats`.
+accessing the features of the sparse tensor
+:attr:`MinkowskiEngine.SparseTensor.F` or
+:attr:`MinkowskiEngine.SparseTensor.feats`.
 
 .. code-block:: python
 
