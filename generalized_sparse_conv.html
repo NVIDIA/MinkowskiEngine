@@ -187,8 +187,17 @@
 <h1>Generalized Sparse Convolution<a class="headerlink" href="#generalized-sparse-convolution" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="sparse-tensor">
 <h2>Sparse Tensor<a class="headerlink" href="#sparse-tensor" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code> class is the basic tensor in MinkowskiEngine. We use
-the COOrdinate (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
+<p>In traditional speech, text, or image data, features are extracted densely.
+Thus, the most common representations of these data are vectors, matrices, and
+tensors. However, for 3-dimensional scans or even higher-dimensional spaces,
+such dense representations are inefficient due to the sparsity. Instead, we can
+only save the non-empty part of the space as its coordinates and the associated
+features. This representation is an N-dimensional extension of a sparse matrix;
+thus it is known as a sparse tensor.</p>
+<p>In the Minkowski Engine, we adopt the same sparse tensor for the basic data
+representation and the class is provided in
+<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>. We use the COOrdinate (COO) format to
+save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
 representation is simply a concatenation of coordinates in a matrix <span class="math notranslate nohighlight">\(C\)</span>
 and associated features <span class="math notranslate nohighlight">\(F\)</span>.</p>
 <div class="math notranslate nohighlight">
@@ -211,12 +220,16 @@ Internally, we handle the batch index as an additional spatial dimension.</p>
 <h2>Generalized Sparse Convolution<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p>The convolution is a fundamental operation in many fields. In image perception,
 the 2D convolution has achieved state-of-the-art performance in many tasks and
-is proven to be the most crucial operation in AI, and computer vision research.</p>
-<p>In this section, we generalize the sparse convolution for generic input and
+is proven to be the most crucial operation in AI, and computer vision research.
+In this work, we adopt the sparse convolution <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a> and propose the generalized sparse
+convolution. We use the generalized sparse convolution not only to the 3D
+spatial axes, but also to the temporal axis, which is proven to be more
+effective than recurrent neural networks (RNN) in some applications.</p>
+<p>Specifically, we generalize the sparse convolution for generic input and
 output coordinates, and for arbitrary kernel shapes. The generalized sparse
 convolution encompasses not only all sparse convolutions but also the
 conventional dense convolutions. Let <span class="math notranslate nohighlight">\(x^{\text{in}}_\mathbf{u} \in
-\mathbb{R}^{N^\text{in}}\)</span> be an <span class="math notranslate nohighlight">\(N^\text{in}$\)</span>-dimensional input feature
+\mathbb{R}^{N^\text{in}}\)</span> be an <span class="math notranslate nohighlight">\(N^\text{in}\)</span>-dimensional input feature
 vector in a <span class="math notranslate nohighlight">\(D\)</span>-dimensional space at <span class="math notranslate nohighlight">\(\mathbf{u} \in \mathbb{R}^D\)</span>
 (a D-dimensional coordinate), and convolution kernel weights be
 <span class="math notranslate nohighlight">\(\mathbf{W} \in \mathbb{R}^{K^D \times N^\text{out} \times N^\text{in}}\)</span>.
@@ -232,7 +245,7 @@ The generalized sparse convolution in the following equation relaxes the above
 equation.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{x}^{\text{out}}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, \mathcal{C}^{\text{in}})} W_\mathbf{i} \mathbf{x}^{\text{in}}_{\mathbf{u} + \mathbf{i}} \text{ for } \mathbf{u} \in \mathcal{C}^{\text{out}}\]</div>
-<p>where math:<cite>mathcal{N}^D</cite> is a set of offsets that define the shape of a
+<p>where <span class="math notranslate nohighlight">\(\mathcal{N}^D\)</span> is a set of offsets that define the shape of a
 kernel and <span class="math notranslate nohighlight">\(\mathcal{N}^D(\mathbf{u}, \mathcal{C}^\text{in})=
 \{\mathbf{i} | \mathbf{u} + \mathbf{i} \in \mathcal{C}^\text{in}, \mathbf{i}
 \in \mathcal{N}^D \}\)</span> as the set of offsets from the current center,
