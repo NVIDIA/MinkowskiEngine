@@ -1349,10 +1349,13 @@ of columns of <a class="reference internal" href="../sparse_tensor.html#Minkowsk
 <dl class="attribute">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.coords">
 <code class="descname">coords</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="Permalink to this definition">¶</a></dt>
-<dd><p>The features of the current sparse tensor. The features are <span class="math notranslate nohighlight">\(N
-\times D_F\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points in the space and
-<span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of each feature vector. Please refer to
-<a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="MinkowskiEngine.SparseTensor.SparseTensor.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> to access the associated coordinates.</p>
+<dd><p>The coordinates of the current sparse tensor. The coordinates are
+represented as a <span class="math notranslate nohighlight">\(N \times (D + 1)\)</span> dimensional matrix where
+<span class="math notranslate nohighlight">\(N\)</span> is the number of points in the space and <span class="math notranslate nohighlight">\(D\)</span> is the
+dimension of the space (e.g. 3 for 3D, 4 for 3D + Time). Additional
+dimension of the column of the matrix C is for batch indices which is
+internally treated as an additional spatial dimension to disassociate
+different instances in a batch.</p>
 </dd></dl>
 
 <dl class="method">

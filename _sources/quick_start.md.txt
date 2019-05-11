@@ -29,5 +29,9 @@ Go to the top directory of the MinkowskiEngine and run the following.
 
 ```
 cd /path/to/MinkowskiEngine
-python -m examples/indoor_segmentation.py
+python examples/indoor.py
 ```
+
+When you run the above example, you will download pretrained-weights of a
+Minkowski network and will see the semantic segmentation results of a hotel
+room.
