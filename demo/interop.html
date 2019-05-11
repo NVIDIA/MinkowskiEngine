@@ -223,12 +223,12 @@ a min-batch.</p>
 </div>
 <p>Note that the above <a class="reference internal" href="../pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiGlobalPooling</span></code></a> layer
 averages all features in the input sparse tensor and generate <span class="math notranslate nohighlight">\(B \times
-D_F\)</span> when <span class="math notranslate nohighlight">\(B\)</span> is the number of inputs in the mini-batch in the input
-sparse tensor (adaptively changes accordingly) and <span class="math notranslate nohighlight">\(D_F\)</span> is the feature
-dimension of the input sparse tensor.</p>
+D_F\)</span> when <span class="math notranslate nohighlight">\(B\)</span> is the batch size (adaptively changes accordingly) and
+<span class="math notranslate nohighlight">\(D_F\)</span> is the feature dimension of the input sparse tensor.</p>
 <p>Then, during the training, we could us the <cite>torch.nn.CrossEntropyLoss</cite> layer by
-accessing the features of the sparse tensor <cite>MinkowskiEngine.SparseTensor.F</cite> or
-<cite>MinkowskiEngine.SparseTensor.feats</cite>.</p>
+accessing the features of the sparse tensor
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.F</span></code> or
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.feats</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
 
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
