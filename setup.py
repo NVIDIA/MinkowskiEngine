@@ -59,7 +59,7 @@ setup(
             sources=[
                 'pybind/minkowski.cpp',
             ],
-            libraries=['minkowski', 'atlas'],
+            libraries=['minkowski', 'openblas'],
             library_dirs=['objs'],
             # extra_compile_args=['-g']
         )

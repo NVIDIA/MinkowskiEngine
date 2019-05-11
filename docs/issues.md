@@ -32,7 +32,7 @@ If above method doesn't work, try to create a new conda environment. We found th
 ```
 conda create -n py3-mink-2 python=3.7 anaconda
 conda activate py3-mink-2
-conda install atlas numpy
+conda install openblas numpy
 conda install -c bioconda google-sparsehash
 conda install pytorch torchvision -c pytorch
 ```
@@ -65,7 +65,7 @@ In this example, we assumed that you are using CUDA 10.0, but please make sure t
 ```
 conda create -n py3-mink-2 python=3.7 anaconda
 conda activate py3-mink-2
-conda install atlas numpy
+conda install openblas numpy
 conda install -c bioconda google-sparsehash
 conda install pytorch torchvision cudatoolkit=10.0 -c pytorch  # Make sure to use the correct cudatoolkit version
 

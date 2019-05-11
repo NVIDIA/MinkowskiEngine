@@ -31,7 +31,7 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7 anaconda
 conda activate py3-mink
-conda install atlas numpy
+conda install openblas numpy
 conda install -c bioconda google-sparsehash
 conda install pytorch torchvision -c pytorch
 ```
@@ -51,7 +51,7 @@ python setup.py install
 Like the anaconda installation, make sure that you install pytorch with the the same CUDA version that `nvcc` uses.
 
 ```
-sudo apt install libsparsehash-dev libatlas-base-dev
+sudo apt install libsparsehash-dev libopenblas-dev
 # within a python3 environment
 pip install torch
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
