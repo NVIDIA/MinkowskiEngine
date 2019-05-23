@@ -25,8 +25,6 @@ import torch
 import numpy as np
 from collections import Sequence
 
-import MinkowskiEngineBackend as MEB
-
 
 def fnv_hash_vec(arr):
     """
@@ -137,12 +135,13 @@ def sparse_quantize(coords,
         key = fnv_hash_vec(discrete_coords)
 
     if use_label:
-        inds, labels = MEB.SparseVoxelization(key, labels.astype(np.int32),
-                                              ignore_label, use_label)
+        _, inds, counts = np.unique(key, return_index=True, return_counts=True)
+        filtered_labels = labels[inds]
+        filtered_labels[counts > 1] = ignore_label
         if return_index:
-            return inds, labels
+            return inds, filtered_labels
         else:
-            return discrete_coords[inds], feats[inds], labels
+            return discrete_coords[inds], feats[inds], filtered_labels
     else:
         _, inds = np.unique(key, return_index=True)
         if return_index:

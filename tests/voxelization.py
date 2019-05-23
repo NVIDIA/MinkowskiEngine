@@ -21,13 +21,10 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-import torch
-
 import unittest
 import numpy as np
 
-import MinkowskiEngineBackend as MEB
-from MinkowskiEngine.utils import ravel_hash_vec, sparse_quantize
+from MinkowskiEngine.utils import sparse_quantize
 
 
 class TestGPUVoxelization(unittest.TestCase):
@@ -46,15 +43,9 @@ class TestGPUVoxelization(unittest.TestCase):
         coords[:3] = 0
         labels[:3] = 2
 
-        key = ravel_hash_vec(coords)  # floor happens by astype(np.uint64)
-
-        inds, labels_v = MEB.SparseVoxelization(
-            key, labels.astype(np.int32), ignore_label, True)
-        coords_v, feats_v = coords[inds], feats[inds]
-        print(coords_v, feats_v)
-
-        outputs = sparse_quantize(coords, feats, labels, ignore_label)
-        print(outputs)
+        quantized_coords, quantized_feats, quantized_labels = sparse_quantize(
+            coords, feats, labels, ignore_label)
+        print(quantized_labels)
 
 
 if __name__ == '__main__':
