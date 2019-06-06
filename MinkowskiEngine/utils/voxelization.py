@@ -54,7 +54,7 @@ def ravel_hash_vec(arr):
     assert arr.ndim == 2
     arr -= arr.min(0)
     arr = arr.astype(np.uint64, copy=False)
-    arr_max = arr.max(0).astype(np.uint64)
+    arr_max = arr.max(0).astype(np.uint64) + 1
 
     keys = np.zeros(arr.shape[0], dtype=np.uint64)
     # Fortran style indexing
