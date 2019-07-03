@@ -257,21 +257,16 @@ void ConvolutionForwardKernelGPU(
     if (max_n_active < (int)(in_maps[k].size()))
       max_n_active = (int)(in_maps[k].size());
 
-  // Create a large chunk of memory
-  // CUDA_CHECK(
-  //     cudaMalloc((void **)&d_in_map, (2 * max_n_active) * sizeof(Itype)));
   d_in_map = d_scr;
   d_out_map = d_in_map + max_n_active;
 
   // Define the shared memory size
   if (in_nchannel % 32 == 0 && out_nchannel % 32 == 0)
     shared_mem_size = 32;
-  // else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0) shared_mem_size =
-  // 24;
+  else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0)
+    shared_mem_size = 24;
   else if (in_nchannel % 16 == 0 && out_nchannel % 16 == 0)
     shared_mem_size = 16;
-  // else if (in_nchannel % 12 == 0 && out_nchannel % 12 == 0) shared_mem_size =
-  // 12;
   else if (in_nchannel % 8 == 0 && out_nchannel % 8 == 0)
     shared_mem_size = 8;
   else
@@ -298,6 +293,12 @@ void ConvolutionForwardKernelGPU(
     switch (shared_mem_size) {
     case 32:
       matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+          d_in_feat, in_nchannel, n_active_in_volume,
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
+          d_out_feat, d_in_map, d_out_map);
+      break;
+    case 24:
+      matmul<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
           d_in_feat, in_nchannel, n_active_in_volume,
           &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
           d_out_feat, d_in_map, d_out_map);
@@ -346,9 +347,8 @@ void ConvolutionBackwardKernelGPU(
     Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> &in_maps,
     const std::vector<std::vector<Itype>> &out_maps, int out_nrows,
     Itype *d_scr, cublasHandle_t cuhandle, cudaStream_t stream) {
-  int kernel_volume, n_active_in_volume, num_kernels, shared_mem_size = -1;
+  int kernel_volume, n_active_in_volume, shared_mem_size = -1;
   Itype *d_in_map, *d_out_map;
-  Dtype *d_in_buffer, *d_out_buffer;
 
   kernel_volume = in_maps.size();
   // Find the max_n_active fot memory allocation
@@ -363,12 +363,10 @@ void ConvolutionBackwardKernelGPU(
   // Define the shared memory size
   if (in_nchannel % 32 == 0 && out_nchannel % 32 == 0)
     shared_mem_size = 32;
-  // else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0) shared_mem_size =
-  // 24;
+  else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0)
+    shared_mem_size = 24;
   else if (in_nchannel % 16 == 0 && out_nchannel % 16 == 0)
     shared_mem_size = 16;
-  // else if (in_nchannel % 12 == 0 && out_nchannel % 12 == 0) shared_mem_size =
-  // 12;
   else if (in_nchannel % 8 == 0 && out_nchannel % 8 == 0)
     shared_mem_size = 8;
   else
@@ -395,6 +393,16 @@ void ConvolutionBackwardKernelGPU(
     switch (shared_mem_size) {
     case 32:
       matmul2<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+          in_nchannel,                                    // B
+          d_in_feat, in_nchannel, n_active_in_volume,     // D
+          d_grad_in_feat,                                 // C
+          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+          d_in_map, d_out_map);
+      break;
+    case 24:
+      matmul2<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
           d_grad_out_feat, out_nchannel, n_active_in_volume, // A
           &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
           in_nchannel,                                    // B

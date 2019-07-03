@@ -125,7 +125,7 @@ void NonzeroAvgPoolingForwardKernelGPU(
   Dtype *d_ones, *d_csr_val, *d_tmp_out_feat;
 
   // Copy all maps to one vector
-  for (auto map : in_maps)
+  for (const auto & map : in_maps)
     nnz += map.size();
 
   CUDA_CHECK(cudaMalloc((void **)&d_in_map,
@@ -247,7 +247,7 @@ void NonzeroAvgPoolingBackwardKernelGPU(
   int nnz = 0;
   Itype *d_in_map, *d_out_map;
   // Copy all maps to one vector
-  for (auto map : in_maps)
+  for (const auto & map : in_maps)
     nnz += map.size();
 
   CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * nnz * sizeof(Itype)));

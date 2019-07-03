@@ -106,7 +106,7 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   int nnz = 0;
 
   // Copy all maps to one vector
-  for (auto map : in_maps)
+  for (const auto & map : in_maps)
     nnz += map.size();
 
   Itype *d_in_map, *d_out_map;
