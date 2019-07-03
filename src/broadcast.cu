@@ -1,22 +1,22 @@
 /* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to do
- * so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
  * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
@@ -79,7 +79,7 @@ void BroadcastForwardKernelGPU(
     const Dtype *d_in_feat, int in_nrows, const Dtype *d_in_feat_global,
     int in_nrows_global, Dtype *d_out_feat, int nchannel, int op,
     const std::vector<std::vector<Itype>> &sorted_in_maps,
-    const std::vector<std::vector<Itype>> &sorted_out_maps,
+    const std::vector<std::vector<Itype>> &sorted_out_maps, Itype *d_scr,
     cusparseHandle_t cushandle, cudaStream_t stream) {
   Itype *d_sorted_out_map;
 
@@ -92,8 +92,9 @@ void BroadcastForwardKernelGPU(
     throw std::invalid_argument("Invalid in_map");
   }
 
-  CUDA_CHECK(cudaMalloc((void **)&d_sorted_out_map,
-                        sorted_out_maps[0].size() * sizeof(Itype)));
+  // CUDA_CHECK(cudaMalloc((void **)&d_sorted_out_map,
+  //                       sorted_out_maps[0].size() * sizeof(Itype)));
+  d_sorted_out_map = d_scr;
   // Copy all in_feat to out_feat
   CUDA_CHECK(cudaMemcpy(d_out_feat, d_in_feat,
                         sizeof(Dtype) * nchannel * in_nrows,
@@ -120,22 +121,21 @@ void BroadcastForwardKernelGPU(
     throw std::invalid_argument(Formatter() << "Operation not supported: "
                                             << std::to_string(op));
   }
-
-  cudaFree(d_sorted_out_map);
+  // cudaFree(d_sorted_out_map);
 }
 
 template void BroadcastForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, const float *d_in_feat_global,
     int in_nrows_global, float *d_out_feat, int nchannel, int op,
     const std::vector<std::vector<int32_t>> &sorted_in_map,
-    const std::vector<std::vector<int32_t>> &sorted_out_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map, int32_t *d_scr,
     cusparseHandle_t cuhandle, cudaStream_t stream);
 
 template void BroadcastForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nrows, const double *d_in_feat_global,
     int in_nrows_global, double *d_out_feat, int nchannel, int op,
     const std::vector<std::vector<int32_t>> &sorted_in_map,
-    const std::vector<std::vector<int32_t>> &sorted_out_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map, int32_t *d_scr,
     cusparseHandle_t cuhandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
@@ -144,7 +144,7 @@ void BroadcastBackwardKernelGPU(
     const Dtype *d_in_feat_global, Dtype *d_grad_in_feat_global,
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
     const std::vector<std::vector<Itype>> &sorted_in_maps,
-    const std::vector<std::vector<Itype>> &sorted_out_maps,
+    const std::vector<std::vector<Itype>> &sorted_out_maps, Itype *d_scr,
     cusparseHandle_t cushandle, cudaStream_t stream) {
   Itype *d_sorted_in_map, *d_sorted_out_map, *d_csr_row;
   Dtype *d_dtype, *d_csr_val, *d_tmp_grad_in_feat_global, *d_tmp_grad_in_feat;
@@ -165,19 +165,18 @@ void BroadcastBackwardKernelGPU(
   // Malloc d_sorted_in_map, d_sorted_out_map, d_csr_row
   // THRUST_CHECK(d_csr_row.resize(in_nrows_global + 1));
   // CSR returns n_row + 1
-  CUDA_CHECK(cudaMalloc((void **)&d_sorted_in_map,
-                        (sorted_in_maps[0].size() + sorted_out_maps[0].size() +
-                         in_nrows_global + 1) *
-                            sizeof(Itype)));
+  // CUDA_CHECK(cudaMalloc((void **)&d_sorted_in_map,
+  //                       (sorted_in_maps[0].size() + sorted_out_maps[0].size()
+  //                       + in_nrows_global + 1) * sizeof(Itype)));
+  d_sorted_in_map = d_scr;
   d_sorted_out_map = d_sorted_in_map + sorted_in_maps[0].size();
   d_csr_row = d_sorted_out_map + sorted_out_maps[0].size();
 
-  // d_tmp_grad_in_feat, d_tmp_grad_in_feat_global
-  // THRUST_CHECK(d_tmp_grad_in_feat.resize(in_nrows * nchannel));
-  // THRUST_CHECK(d_csr_val.resize(nnz));
   CUDA_CHECK(cudaMalloc((void **)&d_dtype,
                         (nnz + (in_nrows + in_nrows_global) * nchannel) *
                             sizeof(Dtype)));
+  // d_dtype =
+  //     (Dtype *)(d_scr) + sorted_in_maps[0].size() + sorted_out_maps[0].size();
   d_tmp_grad_in_feat_global = d_dtype;
   d_tmp_grad_in_feat = d_tmp_grad_in_feat_global + in_nrows_global * nchannel;
   d_csr_val = d_tmp_grad_in_feat + in_nrows * nchannel;
@@ -298,7 +297,7 @@ void BroadcastBackwardKernelGPU(
 
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
 
-  cudaFree(d_sorted_in_map);
+  // cudaFree(d_sorted_in_map);
   cudaFree(d_dtype);
 }
 
@@ -307,7 +306,7 @@ template void BroadcastBackwardKernelGPU<float, int32_t>(
     const float *d_in_feat_global, float *d_grad_in_feat_global,
     int in_nrows_global, const float *d_grad_out_feat, int nchannel, int op,
     const std::vector<std::vector<int32_t>> &sorted_in_map,
-    const std::vector<std::vector<int32_t>> &sorted_out_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map, int32_t *d_scr,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 template void BroadcastBackwardKernelGPU<double, int32_t>(
@@ -315,6 +314,6 @@ template void BroadcastBackwardKernelGPU<double, int32_t>(
     const double *d_in_feat_global, double *d_grad_in_feat_global,
     int in_nrows_global, const double *d_grad_out_feat, int nchannel, int op,
     const std::vector<std::vector<int32_t>> &sorted_in_map,
-    const std::vector<std::vector<int32_t>> &sorted_out_map,
+    const std::vector<std::vector<int32_t>> &sorted_out_map, int32_t *d_scr,
     cusparseHandle_t cushandle, cudaStream_t stream);
 #endif

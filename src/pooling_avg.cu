@@ -1,26 +1,26 @@
-/*  Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy of
- *  this software and associated documentation files (the "Software"), to deal in
- *  the Software without restriction, including without limitation the rights to
- *  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- *  of the Software, and to permit persons to whom the Software is furnished to do
- *  so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
- *  Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
- *  Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
- *  of the code.
+ * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
+ * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
+ * of the code.
  */
 #ifndef GPU_POOLING_AVG
 #define GPU_POOLING_AVG
@@ -115,7 +115,7 @@ void NonzeroAvgPoolingForwardKernelGPU(
     const Dtype *d_in_feat, int in_nrows, Dtype *d_out_feat, int out_nrows,
     Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_maps,
-    const std::vector<std::vector<Itype>> &out_maps, bool use_avg,
+    const std::vector<std::vector<Itype>> &out_maps, bool use_avg, Itype *d_scr,
     cusparseHandle_t cushandle, cudaStream_t stream) {
   int nnz = 0;
   const Dtype alpha = 1;
@@ -125,11 +125,12 @@ void NonzeroAvgPoolingForwardKernelGPU(
   Dtype *d_ones, *d_csr_val, *d_tmp_out_feat;
 
   // Copy all maps to one vector
-  for (const auto & map : in_maps)
+  for (const auto &map : in_maps)
     nnz += map.size();
 
-  CUDA_CHECK(cudaMalloc((void **)&d_in_map,
-                        (2 * nnz + out_nrows + 1) * sizeof(Itype)));
+  // CUDA_CHECK(cudaMalloc((void **)&d_in_map,
+  //                       (2 * nnz + out_nrows + 1) * sizeof(Itype)));
+  d_in_map = d_scr;
   d_out_map = d_in_map + nnz;
   d_csr_row = d_out_map + nnz;
 
@@ -146,13 +147,14 @@ void NonzeroAvgPoolingForwardKernelGPU(
     }
   }
 
+  // d_ones = (Dtype*)(d_scr) + 2 * nnz + out_nrows + 1;
+  CUDA_CHECK(cudaMalloc(
+      (void **)&d_ones,
+      ((use_avg ? in_nrows : 0) + nnz + nchannel * out_nrows) * sizeof(Dtype)));
+
   if (use_avg) {
-    CUDA_CHECK(
-        cudaMalloc((void **)&d_ones,
-                   (in_nrows + nnz + nchannel * out_nrows) * sizeof(Dtype)));
     d_csr_val = d_ones + in_nrows;
     d_tmp_out_feat = d_csr_val + nnz;
-
     fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
         in_nrows, d_ones, (Dtype)1.);
   } else {
@@ -219,7 +221,7 @@ void NonzeroAvgPoolingForwardKernelGPU(
   }
 
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
-  cudaFree(d_in_map);
+  // cudaFree(d_in_map);
   cudaFree(d_ones);
 }
 
@@ -228,29 +230,30 @@ template void NonzeroAvgPoolingForwardKernelGPU<float, int32_t>(
     float *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
-    cusparseHandle_t cushandle, cudaStream_t stream);
+    int32_t *d_scr, cusparseHandle_t cushandle, cudaStream_t stream);
 
 template void NonzeroAvgPoolingForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nrows, double *d_out_feat, int out_nrows,
     double *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
-    cusparseHandle_t cushandle, cudaStream_t stream);
+    int32_t *d_scr, cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingBackwardKernelGPU(
     Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
     int out_nrows, const Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_maps,
-    const std::vector<std::vector<Itype>> &out_maps, bool use_avg,
+    const std::vector<std::vector<Itype>> &out_maps, bool use_avg, Itype *d_scr,
     cudaStream_t stream) {
   int nnz = 0;
   Itype *d_in_map, *d_out_map;
   // Copy all maps to one vector
-  for (const auto & map : in_maps)
+  for (const auto &map : in_maps)
     nnz += map.size();
 
-  CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * nnz * sizeof(Itype)));
+  // CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * nnz * sizeof(Itype)));
+  d_in_map = d_scr;
   d_out_map = d_in_map + nnz;
 
   // Cleanup gradients
@@ -282,7 +285,7 @@ void NonzeroAvgPoolingBackwardKernelGPU(
             d_out_map);
   }
 
-  cudaFree(d_in_map);
+  // cudaFree(d_in_map);
 }
 
 template void NonzeroAvgPoolingBackwardKernelGPU<float, int32_t>(
@@ -290,12 +293,12 @@ template void NonzeroAvgPoolingBackwardKernelGPU<float, int32_t>(
     int out_nrows, const float *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
-    cudaStream_t stream);
+    int32_t *d_scr, cudaStream_t stream);
 
 template void NonzeroAvgPoolingBackwardKernelGPU<double, int32_t>(
     double *d_grad_in_feat, int in_nrows, const double *d_grad_out_feat,
     int out_nrows, const double *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
-    cudaStream_t stream);
+    int32_t *d_scr, cudaStream_t stream);
 #endif

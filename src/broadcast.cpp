@@ -1,22 +1,22 @@
 /* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- * of the Software, and to permit persons to whom the Software is furnished to do
- * so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
  * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
@@ -114,6 +114,9 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   out_feat.resize_as_(in_feat);
   out_feat.zero_();
 
+  Itype *d_scr = p_coords_manager->getScratchGPUMemory(
+      p_coords_manager->out_maps[map_key][0].size());
+
   cusparseHandle_t handle =
       THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
 
@@ -121,7 +124,7 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), out_feat.data<Dtype>(), in_feat.size(1), op,
       p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-      handle, at::cuda::getCurrentCUDAStream());
+      d_scr, handle, at::cuda::getCurrentCUDAStream());
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -150,6 +153,14 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat_glob.resize_as_(in_feat_glob);
   grad_in_feat_glob.zero_();
 
+  // int dtype_mult = dtypeMultiplier<Dtype, Itype>();
+  Itype *d_scr = p_coords_manager->getScratchGPUMemory(
+      2 * p_coords_manager->out_maps[map_key][0].size() + // d_sorted_in_map + d_sorted_out_map
+      in_feat_glob.size(0) + 1 // d_csr_row
+      // in_feat.size(0) * dtype_mult + // d_csr_val
+      // (in_feat.size(0) + in_feat_glob.size(0)) * in_feat.size(1) * dtype_mult // tmp_grad_infeat(_global)
+      );
+
   cusparseHandle_t handle =
       THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
 
@@ -158,7 +169,7 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
       p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-      handle, at::cuda::getCurrentCUDAStream());
+      d_scr, handle, at::cuda::getCurrentCUDAStream());
 }
 #endif
 

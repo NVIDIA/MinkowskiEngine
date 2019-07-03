@@ -209,7 +209,7 @@ template void row2col_major<double>(const int nrows, const int ncols,
                                     const double *colA, double *rowA,
                                     cudaStream_t stream);
 
-// Sort the row, col pairs row-major order.
+// Sort (row, col) pairs row-major order.
 void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,
                   const int nnz, int *d_coo_row, int *d_coo_col) {
   size_t pBufferSizeInBytes = 0;

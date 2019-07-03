@@ -29,9 +29,6 @@ from collections import Sequence
 def fnv_hash_vec(arr):
     """
     FNV64-1A
-
-    Given a numpy array of N X D, generate hash values using the same hash
-    function used for ME
     """
     assert arr.ndim == 2
     # Floor first for negative coordinates
@@ -46,10 +43,7 @@ def fnv_hash_vec(arr):
 
 def ravel_hash_vec(arr):
     """
-    FNV64-1A
-
-    Given a numpy array of N X D, generate hash values using the same hash
-    function used for ME
+    Ravel the coordinates after subtracting the min coordinates.
     """
     assert arr.ndim == 2
     arr -= arr.min(0)
@@ -110,7 +104,8 @@ def sparse_quantize(coords,
     assert hash_type in [
         'ravel', 'fnv'
     ], "Invalid hash_type. Either ravel, or fnv allowed. You put hash_type=" + hash_type
-    assert coords.ndim == 2
+    assert coords.ndim == 2, \
+        "The coordinates must be a 2D matrix. The shape of the input is " + str(coords.shape)
     if use_feat:
         assert feats.ndim == 2
         assert coords.shape[0] == feats.shape[0]
@@ -120,7 +115,9 @@ def sparse_quantize(coords,
     # Quantize the coordinates
     dimension = coords.shape[1]
     if isinstance(quantization_size, (Sequence, np.ndarray, torch.Tensor)):
-        assert len(quantization_size) == dimension, "Quantization size and coordinates size mismatch."
+        assert len(
+            quantization_size
+        ) == dimension, "Quantization size and coordinates size mismatch."
         quantization_size = [i for i in quantization_size]
     elif np.isscalar(quantization_size):  # Assume that it is a scalar
         quantization_size = [int(quantization_size) for i in range(dimension)]
