@@ -55,7 +55,8 @@ class MinkowskiConvolutionFunction(Function):
         """
         # Prep arguments
         # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
-        assert input_features.shape[1] == kernel.shape[1]
+        assert input_features.shape[1] == kernel.shape[1], \
+            "The input shape " + str(list(input_features.shape)) + " does not match the kernel shape " + str(list(kernel.shape))
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
@@ -123,7 +124,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         """
         # Prep arguments
         # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
-        assert input_features.shape[1] == kernel.shape[1]
+        assert input_features.shape[1] == kernel.shape[1], \
+            "The input shape " + str(list(input_features.shape)) + " does not match the kernel shape " + str(list(kernel.shape))
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D

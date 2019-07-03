@@ -94,7 +94,8 @@ if __name__ == '__main__':
         inputs, labels = [], []
         for i in range(num_devices):
             coords, feat, label = data_loader()
-            inputs.append(ME.SparseTensor(feat, coords=coords).to(devices[i]))
+            with torch.cuda.device(devices[i]):
+              inputs.append(ME.SparseTensor(feat, coords=coords).to(devices[i]))
             labels.append(label.to(devices[i]))
 
         # The raw version of the parallel_apply

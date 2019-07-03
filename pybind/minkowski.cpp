@@ -155,6 +155,11 @@ void instantiate_dim(py::module &m, const std::string &dim) {
 void bind_native(py::module &m) {
   m.def("SparseVoxelization", &SparseVoxelization);
   m.def("CUDAThreadExit", &cuda_thread_exit);
+
+  py::class_<GPUMemoryManager<int32_t> >(m, "MemoryManager")
+      .def(py::init<>())
+      .def("size", &GPUMemoryManager<int32_t>::size)
+      .def("resize", &GPUMemoryManager<int32_t>::resize);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

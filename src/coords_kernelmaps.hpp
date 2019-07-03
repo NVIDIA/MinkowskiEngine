@@ -117,8 +117,6 @@ CoordsManager<D, Itype>::createInOutPerKernelInThreads(
       int kernel_id = triplet[0];
       in_map[kernel_id].push_back(triplet[1]);
       out_map[kernel_id].push_back(triplet[2]);
-      // std::cout << kernel_id << ", " << triplet[1] << ", " << triplet[2] <<
-      // std::endl;
     }
   }
 

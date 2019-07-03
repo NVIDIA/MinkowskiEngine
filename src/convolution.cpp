@@ -111,13 +111,17 @@ void ConvolutionForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   out_feat.resize_({out_nrows, kernel.size(2)});
   out_feat.zero_();
 
+  Itype * d_scr = p_coords_manager->getScratchGPUMemory(
+      2 * (p_coords_manager->getMaxMapSize(in_out)));
+
   cublasHandle_t handle =
       THCState_getCurrentBlasHandle(at::globalContext().getTHCState());
 
   ConvolutionForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(1), out_feat.data<Dtype>(),
       out_feat.size(1), kernel.data<Dtype>(), std::get<0>(in_out),
-      std::get<1>(in_out), out_nrows, handle, at::cuda::getCurrentCUDAStream());
+      std::get<1>(in_out), out_nrows, d_scr, handle,
+      at::cuda::getCurrentCUDAStream());
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -138,6 +142,9 @@ void ConvolutionBackwardGPU(
   grad_kernel.resize_as_(kernel);
   grad_kernel.zero_();
 
+  Itype * d_scr = p_coords_manager->getScratchGPUMemory(
+      2 * (p_coords_manager->getMaxMapSize(p_coords_manager->in_maps[map_key])));
+
   cublasHandle_t handle =
       THCState_getCurrentBlasHandle(at::globalContext().getTHCState());
 
@@ -145,7 +152,7 @@ void ConvolutionBackwardGPU(
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
       grad_out_feat.data<Dtype>(), grad_out_feat.size(1), kernel.data<Dtype>(),
       grad_kernel.data<Dtype>(), p_coords_manager->in_maps[map_key],
-      p_coords_manager->out_maps[map_key], grad_out_feat.size(0), handle,
+      p_coords_manager->out_maps[map_key], grad_out_feat.size(0), d_scr, handle,
       at::cuda::getCurrentCUDAStream());
 }
 #endif

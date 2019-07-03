@@ -1,26 +1,26 @@
-/*  Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy of
- *  this software and associated documentation files (the "Software"), to deal in
- *  the Software without restriction, including without limitation the rights to
- *  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- *  of the Software, and to permit persons to whom the Software is furnished to do
- *  so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
- *  Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
- *  Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
- *  of the code.
+ * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
+ * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
+ * of the code.
  */
 #ifndef GPU_CONVOLUTION
 #define GPU_CONVOLUTION
@@ -31,29 +31,7 @@
 // debugging -g #include <torch/extension.h>
 
 #include "convolution.cuh"
-
-// Given a row-major matrix, use the mapping to extract a row major order matrix
-template <typename Dtype, typename Itype>
-__global__ void copy_mapped_input(const int n, const int nchannel,
-                                  const Dtype *in_feat, Dtype *out_feat,
-                                  const Itype *map) {
-  CUDA_KERNEL_LOOP(index, n) {
-    const int row = index / nchannel;
-    const int col = index % nchannel;
-    out_feat[index] = in_feat[map[row] * nchannel + col];
-  }
-}
-
-template <typename Dtype, typename Itype>
-__global__ void add_mapped_output_tr(const int n, const Dtype *in_feat,
-                                     const int in_nchannel, Dtype *out_feat,
-                                     const int out_nchannel, const Itype *map) {
-  CUDA_KERNEL_LOOP(index, n) {
-    const int row = index % in_nchannel;
-    const int col = index / in_nchannel;
-    atomicAdd(&out_feat[map[row] * out_nchannel + col], in_feat[index]);
-  }
-}
+#include "gpu_memory_manager.hpp"
 
 // Given each output, get an input feature for each corresponding kernel weight
 // and add the output in place
@@ -93,12 +71,12 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
   // Use in_feat as A and kernel as B
 
   // Block index
-  const int bx = blockIdx.x;
-  const int by = blockIdx.y;
+  const int bx = blockIdx.y;
+  const int by = blockIdx.x;
 
   // Thread index
-  const int tx = threadIdx.x;
-  const int ty = threadIdx.y;
+  const int tx = threadIdx.y;
+  const int ty = threadIdx.x;
 
   // Coordinate. x is for rows, y is for columns.
   const int x = BLOCK_SIZE * bx + tx;
@@ -177,12 +155,12 @@ __global__ void matmul2(const Dtype *A, const int wA, const int hA,
   // Use grad_out_feat as A, transposed kernel weight as B, and in_feat as D
 
   // Block index
-  const int bx = blockIdx.x;
-  const int by = blockIdx.y;
+  const int bx = blockIdx.y;
+  const int by = blockIdx.x;
 
   // Thread index
-  const int tx = threadIdx.x;
-  const int ty = threadIdx.y;
+  const int tx = threadIdx.y;
+  const int ty = threadIdx.x;
 
   // Coordinate. x is for rows, y is for columns.
   const int x = BLOCK_SIZE * bx + tx;
@@ -264,25 +242,42 @@ void ConvolutionForwardKernelGPU(
     int out_nchannel, const Dtype *d_kernel,
     const std::vector<std::vector<Itype>> &in_maps,
     const std::vector<std::vector<Itype>> &out_maps, int out_nrows,
-    cublasHandle_t cuhandle, cudaStream_t stream) {
+    Itype *d_scr, cublasHandle_t cuhandle, cudaStream_t stream) {
   // For the in out buffer, use the pre allocated GPU memory space as thrust
   // resize gives segfault. Also initializing it with torch allows us to
   // allocate memory faster and efficiently.
-  int kernel_volume, n_active_in_volume, num_kernels;
+  int kernel_volume, n_active_in_volume, num_kernels, shared_mem_size = -1;
   Itype *d_in_map, *d_out_map;
   // Copy the in_map, out_map to GPU
   kernel_volume = in_maps.size();
 
-  // Find the max_n_active fot memory allocation
+  // Find the max_n_active for memory allocation
   int max_n_active = -1;
   for (int k = 0; k < kernel_volume; k++)
     if (max_n_active < (int)(in_maps[k].size()))
       max_n_active = (int)(in_maps[k].size());
 
   // Create a large chunk of memory
-  CUDA_CHECK(
-      cudaMalloc((void **)&d_in_map, (2 * max_n_active) * sizeof(Itype)));
+  // CUDA_CHECK(
+  //     cudaMalloc((void **)&d_in_map, (2 * max_n_active) * sizeof(Itype)));
+  d_in_map = d_scr;
   d_out_map = d_in_map + max_n_active;
+
+  // Define the shared memory size
+  if (in_nchannel % 32 == 0 && out_nchannel % 32 == 0)
+    shared_mem_size = 32;
+  // else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0) shared_mem_size =
+  // 24;
+  else if (in_nchannel % 16 == 0 && out_nchannel % 16 == 0)
+    shared_mem_size = 16;
+  // else if (in_nchannel % 12 == 0 && out_nchannel % 12 == 0) shared_mem_size =
+  // 12;
+  else if (in_nchannel % 8 == 0 && out_nchannel % 8 == 0)
+    shared_mem_size = 8;
+  else
+    shared_mem_size = 4;
+
+  dim3 threads(shared_mem_size, shared_mem_size);
 
   // Iterate through each spatial kernel and get indices for in_map and out_map
   for (int k = 0; k < kernel_volume; k++) {
@@ -298,24 +293,36 @@ void ConvolutionForwardKernelGPU(
                           sizeof(Itype) * n_active_in_volume,
                           cudaMemcpyHostToDevice));
 
-    if (n_active_in_volume / SHARED_BLOCK_SIZE < 65536) {
-      dim3 threads(SHARED_BLOCK_SIZE, SHARED_BLOCK_SIZE);
-      dim3 grid((out_nchannel + threads.x - 1) / threads.x,
-                (n_active_in_volume + threads.y - 1) / threads.y);
-      matmul<Dtype, Itype, SHARED_BLOCK_SIZE><<<grid, threads, 0, stream>>>(
+    dim3 grid((n_active_in_volume + threads.y - 1) / threads.y,
+              (out_nchannel + threads.x - 1) / threads.x);
+    switch (shared_mem_size) {
+    case 32:
+      matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
           d_in_feat, in_nchannel, n_active_in_volume,
           &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
           d_out_feat, d_in_map, d_out_map);
-    } else {
+      break;
+    case 16:
+      matmul<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
+          d_in_feat, in_nchannel, n_active_in_volume,
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
+          d_out_feat, d_in_map, d_out_map);
+      break;
+    case 8:
+      matmul<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
+          d_in_feat, in_nchannel, n_active_in_volume,
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
+          d_out_feat, d_in_map, d_out_map);
+      break;
+    default:
       num_kernels = out_nchannel * n_active_in_volume;
       inplace_convolution<Dtype, Itype>
           <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
               num_kernels, d_in_feat, in_nchannel, d_out_feat, out_nchannel,
               &d_kernel[k * in_nchannel * out_nchannel], d_in_map, d_out_map);
+      break;
     }
   }
-
-  cudaFree(d_in_map);
 }
 
 template void ConvolutionForwardKernelGPU<float, int32_t>(
@@ -323,14 +330,14 @@ template void ConvolutionForwardKernelGPU<float, int32_t>(
     int out_nchannel, const float *d_kernel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    cublasHandle_t cuhandle, cudaStream_t stream);
+    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
 
 template void ConvolutionForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nchannel, double *d_out_feat,
     int out_nchannel, const double *d_kernel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    cublasHandle_t cuhandle, cudaStream_t stream);
+    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void ConvolutionBackwardKernelGPU(
@@ -338,8 +345,8 @@ void ConvolutionBackwardKernelGPU(
     const Dtype *d_grad_out_feat, int out_nchannel, const Dtype *d_kernel,
     Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> &in_maps,
     const std::vector<std::vector<Itype>> &out_maps, int out_nrows,
-    cublasHandle_t cuhandle, cudaStream_t stream) {
-  int kernel_volume, n_active_in_volume, num_kernels;
+    Itype *d_scr, cublasHandle_t cuhandle, cudaStream_t stream) {
+  int kernel_volume, n_active_in_volume, num_kernels, shared_mem_size = -1;
   Itype *d_in_map, *d_out_map;
   Dtype *d_in_buffer, *d_out_buffer;
 
@@ -350,16 +357,24 @@ void ConvolutionBackwardKernelGPU(
     if (max_n_active < (int)(in_maps[k].size()))
       max_n_active = (int)(in_maps[k].size());
 
-  CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * max_n_active * sizeof(Itype)));
+  d_in_map = d_scr;
   d_out_map = d_in_map + max_n_active;
 
-  // Use the old kernel when grid-y dim exceeds the limit.
-  if (max_n_active / SHARED_BLOCK_SIZE >= 65536) {
-    CUDA_CHECK(cudaMalloc((void **)&d_in_buffer, (in_nchannel + out_nchannel) *
-                                                     max_n_active *
-                                                     sizeof(Dtype)));
-    d_out_buffer = d_in_buffer + in_nchannel * max_n_active;
-  }
+  // Define the shared memory size
+  if (in_nchannel % 32 == 0 && out_nchannel % 32 == 0)
+    shared_mem_size = 32;
+  // else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0) shared_mem_size =
+  // 24;
+  else if (in_nchannel % 16 == 0 && out_nchannel % 16 == 0)
+    shared_mem_size = 16;
+  // else if (in_nchannel % 12 == 0 && out_nchannel % 12 == 0) shared_mem_size =
+  // 12;
+  else if (in_nchannel % 8 == 0 && out_nchannel % 8 == 0)
+    shared_mem_size = 8;
+  else
+    shared_mem_size = 4;
+
+  dim3 threads(shared_mem_size, shared_mem_size);
 
   for (int k = 0; k < kernel_volume; k++) {
     n_active_in_volume = in_maps[k].size();
@@ -374,12 +389,12 @@ void ConvolutionBackwardKernelGPU(
                           sizeof(Itype) * n_active_in_volume,
                           cudaMemcpyHostToDevice));
 
-    if (n_active_in_volume / SHARED_BLOCK_SIZE < 65536) {
-      dim3 threads(SHARED_BLOCK_SIZE, SHARED_BLOCK_SIZE);
-      dim3 grid((in_nchannel + threads.x - 1) / threads.x,
-                (n_active_in_volume + threads.y - 1) / threads.y);
+    dim3 grid((n_active_in_volume + threads.y - 1) / threads.y,
+              (in_nchannel + threads.x - 1) / threads.x);
 
-      matmul2<Dtype, Itype, SHARED_BLOCK_SIZE><<<grid, threads, 0, stream>>>(
+    switch (shared_mem_size) {
+    case 32:
+      matmul2<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
           d_grad_out_feat, out_nchannel, n_active_in_volume, // A
           &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
           in_nchannel,                                    // B
@@ -387,61 +402,39 @@ void ConvolutionBackwardKernelGPU(
           d_grad_in_feat,                                 // C
           &d_grad_kernel[k * in_nchannel * out_nchannel], // E
           d_in_map, d_out_map);
-
-    } else {
-      // Copy (*p_in_maps)[k] to GPU
-      num_kernels = out_nchannel * n_active_in_volume;
-
-      // Copy gradients to the buffer
-      copy_mapped_input<Dtype, Itype>
-          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-              num_kernels, out_nchannel, d_grad_out_feat, d_out_buffer,
-              d_out_map);
-
-      gpu_gemm<Dtype>(cuhandle, CblasNoTrans, CblasTrans,
-                      in_nchannel,                               // M
-                      n_active_in_volume,                        // N
-                      out_nchannel,                              // K
-                      (Dtype)1.,                                 // alpha
-                      &d_kernel[k * in_nchannel * out_nchannel], // A
-                      d_out_buffer,                              // B
-                      (Dtype)0.,                                 // beta
-                      d_in_buffer);                              // C
-
-      // Accumulate gradients back to the input grad feat
-      // Put it back to the correct index
-      num_kernels = in_nchannel * n_active_in_volume;
-      add_mapped_output_tr<Dtype>
-          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-              num_kernels,
-              d_in_buffer,                 // In
-              n_active_in_volume,          // In channel
-              d_grad_in_feat, in_nchannel, // Out
-              d_in_map);                   // Out channel
-
-      // Compute gradient for kernel
-      // Copy features to the buffer
-      copy_mapped_input<Dtype, Itype>
-          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-              num_kernels, in_nchannel, d_in_feat, d_in_buffer, d_in_map);
-
-      gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasNoTrans,
-                      in_nchannel,                                   // M
-                      out_nchannel,                                  // N
-                      n_active_in_volume,                            // K
-                      1,                                             // alpha
-                      d_in_buffer,                                   // A
-                      d_out_buffer,                                  // B
-                      1,                                             // beta
-                      &d_grad_kernel[k * in_nchannel * out_nchannel] // C
-      );
+      break;
+    case 16:
+      matmul2<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
+          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+          in_nchannel,                                    // B
+          d_in_feat, in_nchannel, n_active_in_volume,     // D
+          d_grad_in_feat,                                 // C
+          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+          d_in_map, d_out_map);
+      break;
+    case 8:
+      matmul2<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
+          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+          in_nchannel,                                    // B
+          d_in_feat, in_nchannel, n_active_in_volume,     // D
+          d_grad_in_feat,                                 // C
+          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+          d_in_map, d_out_map);
+      break;
+    default:
+      matmul2<Dtype, Itype, 4><<<grid, threads, 0, stream>>>(
+          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+          in_nchannel,                                    // B
+          d_in_feat, in_nchannel, n_active_in_volume,     // D
+          d_grad_in_feat,                                 // C
+          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+          d_in_map, d_out_map);
+      break;
     }
   }
-  cudaFree(d_in_map);
-
-  // Free the mem allocated when grid-y dim exceeds the limit.
-  if (max_n_active / SHARED_BLOCK_SIZE >= 65536)
-    cudaFree(d_in_buffer);
 }
 
 template void ConvolutionBackwardKernelGPU<float, int32_t>(
@@ -449,12 +442,12 @@ template void ConvolutionBackwardKernelGPU<float, int32_t>(
     const float *d_grad_out_feat, int out_nchannel, const float *d_kernel,
     float *p_grad_kernel, const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    cublasHandle_t cuhandle, cudaStream_t stream);
+    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
 
 template void ConvolutionBackwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_grad_in_feat, int in_nchannel,
     const double *d_grad_out_feat, int out_nchannel, const double *d_kernel,
     double *p_grad_kernel, const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    cublasHandle_t cuhandle, cudaStream_t stream);
+    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
 #endif
