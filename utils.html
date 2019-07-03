@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.2.4 documentation</title>
+  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.2.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.4
+                0.2.5
               </div>
             
           
@@ -188,7 +188,7 @@
 <h2>sparse_quantize<a class="headerlink" href="#sparse-quantize" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="MinkowskiEngine.utils.sparse_quantize">
-<code class="descclassname">MinkowskiEngine.utils.</code><code class="descname">sparse_quantize</code><span class="sig-paren">(</span><em>coords</em>, <em>feats=None</em>, <em>labels=None</em>, <em>ignore_label=255</em>, <em>return_index=False</em>, <em>hash_type='ravel'</em>, <em>quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=255</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">hash_type='ravel'</em>, <em class="sig-param">quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given coordinates, and features (optionally labels), the function
 generates quantized (voxelized) coordinates.</p>
 <dl>
@@ -220,7 +220,7 @@ hyperrectangle of of the grid cell.</p>
 <h2>SparseCollation<a class="headerlink" href="#sparsecollation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.utils.SparseCollation">
-<em class="property">class </em><code class="descclassname">MinkowskiEngine.utils.</code><code class="descname">SparseCollation</code><span class="sig-paren">(</span><em>limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">SparseCollation</code><span class="sig-paren">(</span><em class="sig-param">limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates collate function for coords, feats, labels.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><dl class="simple">
@@ -232,7 +232,7 @@ coordinates is below limit_numpoints.</p>
 </dl>
 <dl class="method">
 <dt id="MinkowskiEngine.utils.SparseCollation.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 

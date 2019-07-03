@@ -8,23 +8,23 @@ MinkowskiEngine.modules.resnet\_block module
 --------------------------------------------
 
 .. automodule:: MinkowskiEngine.modules.resnet_block
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 MinkowskiEngine.modules.senet\_block module
 -------------------------------------------
 
 .. automodule:: MinkowskiEngine.modules.senet_block
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
 Module contents
 ---------------
 
 .. automodule:: MinkowskiEngine.modules
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

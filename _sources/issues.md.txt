@@ -1,6 +1,18 @@
 # Common Issues
 
 
+## Compilation failure due to incorrect `CUDA_HOME`
+
+Some applications modify the environment variable `CUDA_HOME` on your `.bashrc` see [#12](https://github.com/StanfordVL/MinkowskiEngine/issues/12).
+This makes the pytorch CPPExtension module to fail leading to problems like `src/common.hpp:40:10: fatal error: cublas_v2.h: No such file or directory`.
+
+If you encounter this issue, try to set your `CUDA_HOME` explicitly.
+
+```
+export CUDA_HOME=/usr/local/cuda; python setup.py install
+```
+
+
 ## Compilation failure due to Out Of Memory (OOM)
 
 The `setup.py` calls the number of CPUs for multi-threaded parallel compilation. However, when installing the MinkowskiEngine on a cluster, sometimes the compilation might fail due to excessive memory usage. Please provide enough memory to the job for fast compilation. Another option when you have a limited memory is to compile without parallel compilation.
@@ -12,9 +24,9 @@ python setup.py install
 ```
 
 
-## Compilation issues after upgrade
+## Compilation issues after an upgrade
 
-In a rare case, you might face an compilation issue after you upgrade MinkowskiEngine, pytorch or CUDA. In general, when you get an undefined symbol error such (e.g., `_ZNK13CoordsManagerILh5EiE8toStringB5cxx11Ev`), or `thrust::system::system_error`, try to compile the entire library again.
+In a rare case, you might face an compilation issue after you upgrade MinkowskiEngine, pytorch or CUDA. In general, when you get an undefined symbol error such (e.g., `_ZNK13CoordsManagerILh5EiE8toStringB5cxx11Ev`), or `thrust::system::system_error`, try to compile the entire library again using one of the following methods.
 
 ### Force compiling all object files
 

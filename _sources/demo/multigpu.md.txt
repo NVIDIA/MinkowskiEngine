@@ -55,7 +55,8 @@ During training, we need a set of mini batches for each training iteration. We u
 inputs, labels = [], []
 for i in range(num_devices):
     coords, feat, label = data_loader()  // parallel data loaders can be used
-    inputs.append(ME.SparseTensor(feat, coords=coords).to(devices[i]))
+    with torch.cuda.device(devices[i]):
+      inputs.append(ME.SparseTensor(feat, coords=coords).to(devices[i]))
     labels.append(label.to(devices[i]))
 ```
 

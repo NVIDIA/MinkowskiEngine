@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Multi-GPU Training &mdash; MinkowskiEngine 0.2.4 documentation</title>
+  <title>Multi-GPU Training &mdash; MinkowskiEngine 0.2.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.4
+                0.2.5
               </div>
             
           
@@ -230,7 +230,8 @@
 <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_devices</span><span class="p">):</span>
     <span class="n">coords</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">data_loader</span><span class="p">()</span>  <span class="o">//</span> <span class="n">parallel</span> <span class="n">data</span> <span class="n">loaders</span> <span class="n">can</span> <span class="n">be</span> <span class="n">used</span>
-    <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+      <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
     <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">devices</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 </pre></div>
 </div>

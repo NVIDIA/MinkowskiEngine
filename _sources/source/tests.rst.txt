@@ -8,71 +8,79 @@ tests.broadcast module
 ----------------------
 
 .. automodule:: tests.broadcast
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tests.common module
 -------------------
 
 .. automodule:: tests.common
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tests.conv module
 -----------------
 
 .. automodule:: tests.conv
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tests.coords module
 -------------------
 
 .. automodule:: tests.coords
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tests.mem\_manager module
+-------------------------
+
+.. automodule:: tests.mem_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tests.norm module
 -----------------
 
 .. automodule:: tests.norm
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tests.pool module
 -----------------
 
 .. automodule:: tests.pool
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tests.pruning module
 --------------------
 
 .. automodule:: tests.pruning
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tests.voxelization module
 -------------------------
 
 .. automodule:: tests.voxelization
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
 Module contents
 ---------------
 
 .. automodule:: tests
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:

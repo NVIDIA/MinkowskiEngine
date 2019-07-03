@@ -14,6 +14,13 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It su
 - Highly-optimized GPU kernels
 
 
+## Requirements
+
+- Ubuntu 14.04 or higher
+- CUDA 10.0 or higher
+- pytorch 1.1 or higher
+
+
 ## Installation
 
 You can install the MinkowskiEngine without sudo using anaconda. Using anaconda is highly recommended.

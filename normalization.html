@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiNormalization &mdash; MinkowskiEngine 0.2.4 documentation</title>
+  <title>MinkowskiNormalization &mdash; MinkowskiEngine 0.2.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.4
+                0.2.5
               </div>
             
           
@@ -188,12 +188,12 @@
 <h2>MinkowskiBatchNorm<a class="headerlink" href="#minkowskibatchnorm" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBatchNorm">
-<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiBatchNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>eps=1e-05</em>, <em>momentum=0.1</em>, <em>affine=True</em>, <em>track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBatchNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiBatchNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">eps=1e-05</em>, <em class="sig-param">momentum=0.1</em>, <em class="sig-param">affine=True</em>, <em class="sig-param">track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBatchNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>A batch normalization layer for a sparse tensor.</p>
 <p>See the pytorch <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.nn.BatchNorm1d</span></code> for more details.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiBatchNorm.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>num_features</em>, <em>eps=1e-05</em>, <em>momentum=0.1</em>, <em>affine=True</em>, <em>track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBatchNorm.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">eps=1e-05</em>, <em class="sig-param">momentum=0.1</em>, <em class="sig-param">affine=True</em>, <em class="sig-param">track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBatchNorm.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -204,11 +204,11 @@
 <h2>MinkowskiInstanceNorm<a class="headerlink" href="#minkowskiinstancenorm" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiInstanceNorm">
-<em class="property">class </em><code class="descclassname">MinkowskiEngine.</code><code class="descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em>num_features</em>, <em>batch_size=0</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>A instance normalization layer for a sparse tensor.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiInstanceNorm.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>num_features</em>, <em>batch_size=0</em>, <em>dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Args:</p>
 <blockquote>
 <div><p>num_features (int): the dimension of the input feautres.</p>
@@ -221,7 +221,7 @@ is given.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiInstanceNorm.reset_parameters">
-<code class="descname">reset_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm.reset_parameters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reset_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm.reset_parameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

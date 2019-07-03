@@ -6,5 +6,5 @@ MinkowskiEngine
 
    MinkowskiEngine
    setup
+   test
    tests
-   visualize_scannet

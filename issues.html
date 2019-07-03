@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Common Issues &mdash; MinkowskiEngine 0.2.4 documentation</title>
+  <title>Common Issues &mdash; MinkowskiEngine 0.2.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.4
+                0.2.5
               </div>
             
           
@@ -112,8 +112,9 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Common Issues</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#compilation-failure-due-to-incorrect-cuda-home">Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#compilation-failure-due-to-out-of-memory-oom">Compilation failure due to Out Of Memory (OOM)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#compilation-issues-after-upgrade">Compilation issues after upgrade</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#compilation-issues-after-an-upgrade">Compilation issues after an upgrade</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#force-compiling-all-object-files">Force compiling all object files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#from-a-new-conda-virtual-environment">From a new conda virtual environment</a></li>
 </ul>
@@ -190,6 +191,15 @@
             
   <div class="section" id="common-issues">
 <h1>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="compilation-failure-due-to-incorrect-cuda-home">
+<h2>Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code><a class="headerlink" href="#compilation-failure-due-to-incorrect-cuda-home" title="Permalink to this headline">¶</a></h2>
+<p>Some applications modify the environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code> on your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> see <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/issues/12">#12</a>.
+This makes the pytorch CPPExtension module to fail leading to problems like <code class="docutils literal notranslate"><span class="pre">src/common.hpp:40:10:</span> <span class="pre">fatal</span> <span class="pre">error:</span> <span class="pre">cublas_v2.h:</span> <span class="pre">No</span> <span class="pre">such</span> <span class="pre">file</span> <span class="pre">or</span> <span class="pre">directory</span></code>.</p>
+<p>If you encounter this issue, try to set your <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code> explicitly.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">CUDA_HOME</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">cuda</span><span class="p">;</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="compilation-failure-due-to-out-of-memory-oom">
 <h2>Compilation failure due to Out Of Memory (OOM)<a class="headerlink" href="#compilation-failure-due-to-out-of-memory-oom" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> calls the number of CPUs for multi-threaded parallel compilation. However, when installing the MinkowskiEngine on a cluster, sometimes the compilation might fail due to excessive memory usage. Please provide enough memory to the job for fast compilation. Another option when you have a limited memory is to compile without parallel compilation.</p>
@@ -199,9 +209,9 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="compilation-issues-after-upgrade">
-<h2>Compilation issues after upgrade<a class="headerlink" href="#compilation-issues-after-upgrade" title="Permalink to this headline">¶</a></h2>
-<p>In a rare case, you might face an compilation issue after you upgrade MinkowskiEngine, pytorch or CUDA. In general, when you get an undefined symbol error such (e.g., <code class="docutils literal notranslate"><span class="pre">_ZNK13CoordsManagerILh5EiE8toStringB5cxx11Ev</span></code>), or <code class="docutils literal notranslate"><span class="pre">thrust::system::system_error</span></code>, try to compile the entire library again.</p>
+<div class="section" id="compilation-issues-after-an-upgrade">
+<h2>Compilation issues after an upgrade<a class="headerlink" href="#compilation-issues-after-an-upgrade" title="Permalink to this headline">¶</a></h2>
+<p>In a rare case, you might face an compilation issue after you upgrade MinkowskiEngine, pytorch or CUDA. In general, when you get an undefined symbol error such (e.g., <code class="docutils literal notranslate"><span class="pre">_ZNK13CoordsManagerILh5EiE8toStringB5cxx11Ev</span></code>), or <code class="docutils literal notranslate"><span class="pre">thrust::system::system_error</span></code>, try to compile the entire library again using one of the following methods.</p>
 <div class="section" id="force-compiling-all-object-files">
 <h3>Force compiling all object files<a class="headerlink" href="#force-compiling-all-object-files" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">MinkowskiEngine</span>

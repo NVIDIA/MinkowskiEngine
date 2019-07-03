@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiEngine.utils package &mdash; MinkowskiEngine 0.2.4 documentation</title>
+  <title>MinkowskiEngine.utils package &mdash; MinkowskiEngine 0.2.5 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2.4
+                0.2.5
               </div>
             
           
@@ -185,7 +185,7 @@
 <span id="minkowskiengine-utils-collation-module"></span><h2>MinkowskiEngine.utils.collation module<a class="headerlink" href="#module-MinkowskiEngine.utils.collation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.utils.collation.SparseCollation">
-<em class="property">class </em><code class="descclassname">MinkowskiEngine.utils.collation.</code><code class="descname">SparseCollation</code><span class="sig-paren">(</span><em>limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.SparseCollation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">SparseCollation</code><span class="sig-paren">(</span><em class="sig-param">limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.SparseCollation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Generates collate function for coords, feats, labels.</p>
 <dl class="simple">
@@ -200,7 +200,7 @@ coordinates is below limit_numpoints.</p>
 
 <dl class="function">
 <dt id="MinkowskiEngine.utils.collation.sparse_collate">
-<code class="descclassname">MinkowskiEngine.utils.collation.</code><code class="descname">sparse_collate</code><span class="sig-paren">(</span><em>coords</em>, <em>feats</em>, <em>labels=None</em>, <em>is_double=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.sparse_collate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">sparse_collate</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">is_double=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.sparse_collate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a sparse tensor with batch indices C in <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html">the documentation</a>.</p>
 <p>Convert a set of coordinates and features into the batch coordinates and
 batch features.</p>
@@ -220,7 +220,7 @@ default.</p>
 <span id="minkowskiengine-utils-gradcheck-module"></span><h2>MinkowskiEngine.utils.gradcheck module<a class="headerlink" href="#module-MinkowskiEngine.utils.gradcheck" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="MinkowskiEngine.utils.gradcheck.gradcheck">
-<code class="descclassname">MinkowskiEngine.utils.gradcheck.</code><code class="descname">gradcheck</code><span class="sig-paren">(</span><em>func</em>, <em>inputs</em>, <em>eps=1e-06</em>, <em>atol=1e-05</em>, <em>rtol=0.001</em>, <em>raise_exception=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.gradcheck.gradcheck" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.gradcheck.</code><code class="sig-name descname">gradcheck</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">inputs</em>, <em class="sig-param">eps=1e-06</em>, <em class="sig-param">atol=1e-05</em>, <em class="sig-param">rtol=0.001</em>, <em class="sig-param">raise_exception=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.gradcheck.gradcheck" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check gradients computed via small finite differences against analytical
 gradients w.r.t. tensors in <code class="xref py py-attr docutils literal notranslate"><span class="pre">inputs</span></code> that are of floating point type
 and with <code class="docutils literal notranslate"><span class="pre">requires_grad=True</span></code>.</p>
@@ -270,7 +270,7 @@ exact nature of the failure. This is helpful when debugging gradchecks.</p>
 <span id="minkowskiengine-utils-voxelization-module"></span><h2>MinkowskiEngine.utils.voxelization module<a class="headerlink" href="#module-MinkowskiEngine.utils.voxelization" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="MinkowskiEngine.utils.voxelization.fnv_hash_vec">
-<code class="descclassname">MinkowskiEngine.utils.voxelization.</code><code class="descname">fnv_hash_vec</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.fnv_hash_vec" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.voxelization.</code><code class="sig-name descname">fnv_hash_vec</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.fnv_hash_vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>FNV64-1A</p>
 <p>Given a numpy array of N X D, generate hash values using the same hash
 function used for ME</p>
@@ -278,7 +278,7 @@ function used for ME</p>
 
 <dl class="function">
 <dt id="MinkowskiEngine.utils.voxelization.ravel_hash_vec">
-<code class="descclassname">MinkowskiEngine.utils.voxelization.</code><code class="descname">ravel_hash_vec</code><span class="sig-paren">(</span><em>arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.ravel_hash_vec" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.voxelization.</code><code class="sig-name descname">ravel_hash_vec</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.ravel_hash_vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>FNV64-1A</p>
 <p>Given a numpy array of N X D, generate hash values using the same hash
 function used for ME</p>
@@ -286,7 +286,7 @@ function used for ME</p>
 
 <dl class="function">
 <dt id="MinkowskiEngine.utils.voxelization.sparse_quantize">
-<code class="descclassname">MinkowskiEngine.utils.voxelization.</code><code class="descname">sparse_quantize</code><span class="sig-paren">(</span><em>coords</em>, <em>feats=None</em>, <em>labels=None</em>, <em>ignore_label=255</em>, <em>return_index=False</em>, <em>hash_type='ravel'</em>, <em>quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.voxelization.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=255</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">hash_type='ravel'</em>, <em class="sig-param">quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.sparse_quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given coordinates, and features (optionally labels), the function
 generates quantized (voxelized) coordinates.</p>
 <dl>

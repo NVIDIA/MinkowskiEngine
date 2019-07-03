@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SparseTensor &mdash; MinkowskiEngine 0.2.4 documentation</title>
+  <title>SparseTensor &mdash; MinkowskiEngine 0.2.5 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.4
+                0.2.5
               </div>
             
           
@@ -187,7 +187,7 @@
 <h2>SparseTensor<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor">
-<em class="property">class </em><code class="descclassname">MinkowskiEngine.SparseTensor.</code><code class="descname">SparseTensor</code><span class="sig-paren">(</span><em>feats</em>, <em>coords=None</em>, <em>coords_key=None</em>, <em>coords_manager=None</em>, <em>tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>A sparse tensor class. Can be accessed via
 <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>.</p>
 <p>The <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. We
@@ -210,9 +210,24 @@ x_i^D)\)</span>, and the associated feature <span class="math notranslate nohigh
 indicates the mini-batch index to disassociate instances within the same
 batch.  Internally, we handle the batch index as an additional spatial
 dimension.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>From the version 0.3, we will use batch indices on the first column to
+be consistent with the standard neural network packages.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C} = \begin{bmatrix}
+b_1    &amp; x_1^1   &amp; x_1^2  &amp; \cdots &amp; x_1^D    \\
+\vdots &amp;    \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+b_N    &amp; x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D
+\end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
+\mathbf{f}_1^T\\
+\vdots\\
+\mathbf{f}_N^T
+\end{bmatrix}\end{split}\]</div>
+</div>
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>feats</em>, <em>coords=None</em>, <em>coords_key=None</em>, <em>coords_manager=None</em>, <em>tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
 <dt>Args:</dt><dd><p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="MinkowskiEngine.SparseTensor.SparseTensor.feats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.FloatTensor</span></code>,
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.DoubleTensor</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.cuda.FloatTensor</span></code>, or
@@ -227,16 +242,12 @@ reuse the same coordinates by simply providing the coordinate hash
 key. In most case, this process is done automatically. If you
 provide one, make sure you understand what you are doing.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords_manager</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsManager" title="MinkowskiEngine.CoordsManager"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsManager</span></code></a>): The
-MinkowskiEngine creates a dynamic computation graph using an input
-coordinates. If not provided, the MinkowskiEngine will create a new
-computation graph, so make sure to provide the same
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">CoordsManager</span></code> when you want to use the same computation
-graph. To use a sparse tensor within the same computation graph
-that you are using before, feed the <code class="xref py py-attr docutils literal notranslate"><span class="pre">CoordsManager</span></code> of the
-sparse tensor that you want to use by
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">sparse_tensor.coords_man</span></code>. In most cases, this process is
-handled automatically. When you use it, make sure you understand
-what you are doing.</p>
+MinkowskiEngine creates a dynamic computation graph and all
+coordinates inside the same computation graph are managed by a
+CoordsManager object. If not provided, the MinkowskiEngine will
+create a new computation graph. In most cases, this process is
+handled automatically and you do not need to use this. When you use
+it, make sure you understand what you are doing.</p>
 <p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>,
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.array</span></code>, or <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor.Tensor</span></code>): The tensor stride
 of the current sparse tensor. By default, it is 1.</p>
@@ -244,28 +255,28 @@ of the current sparse tensor. By default, it is 1.</p>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.C">
-<code class="descname">C</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.C" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">C</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.C" title="Permalink to this definition">¶</a></dt>
 <dd><p>The alias of <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="MinkowskiEngine.SparseTensor.SparseTensor.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.D">
-<code class="descname">D</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.D" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">D</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.D" title="Permalink to this definition">¶</a></dt>
 <dd><p>The spatial dimension of the sparse tensor. This is equal to the number
 of columns of <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.C" title="MinkowskiEngine.SparseTensor.SparseTensor.C"><code class="xref py py-attr docutils literal notranslate"><span class="pre">C</span></code></a> minus 1.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.F">
-<code class="descname">F</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.F" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">F</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.F" title="Permalink to this definition">¶</a></dt>
 <dd><p>The alias of <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="MinkowskiEngine.SparseTensor.SparseTensor.feats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.coords">
-<code class="descname">coords</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">coords</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="Permalink to this definition">¶</a></dt>
 <dd><p>The coordinates of the current sparse tensor. The coordinates are
 represented as a <span class="math notranslate nohighlight">\(N \times (D + 1)\)</span> dimensional matrix where
 <span class="math notranslate nohighlight">\(N\)</span> is the number of points in the space and <span class="math notranslate nohighlight">\(D\)</span> is the
@@ -277,12 +288,12 @@ different instances in a batch.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.cpu">
-<code class="descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.cpu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.cpu" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.feats">
-<code class="descname">feats</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">feats</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="Permalink to this definition">¶</a></dt>
 <dd><p>The features of the current sparse tensor. The features are <span class="math notranslate nohighlight">\(N
 \times D_F\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points in the space and
 <span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of each feature vector. Please refer to
@@ -291,32 +302,32 @@ different instances in a batch.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.getKey">
-<code class="descname">getKey</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.getKey" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getKey</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.getKey" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.get_device">
-<code class="descname">get_device</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.get_device" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_device</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.get_device" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.size">
-<code class="descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.stride">
-<code class="descname">stride</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride">
-<code class="descname">tensor_stride</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="Permalink to this definition">¶</a></dt>
+<em class="property">property </em><code class="sig-name descname">tensor_stride</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.to">
-<code class="descname">to</code><span class="sig-paren">(</span><em>device</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.to" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">to</code><span class="sig-paren">(</span><em class="sig-param">device</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.to" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
