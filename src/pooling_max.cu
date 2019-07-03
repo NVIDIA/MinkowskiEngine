@@ -1,26 +1,26 @@
-/*  Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy of
- *  this software and associated documentation files (the "Software"), to deal in
- *  the Software without restriction, including without limitation the rights to
- *  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- *  of the Software, and to permit persons to whom the Software is furnished to do
- *  so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
- *  Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
- *  Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
- *  of the code.
+ * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
+ * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
+ * of the code.
  */
 #ifndef GPU_POOLING_MAX_KERNEL
 #define GPU_POOLING_MAX_KERNEL
@@ -102,15 +102,16 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 int out_nrows, Itype *d_max_index, int nchannel,
                                 const std::vector<std::vector<Itype>> &in_maps,
                                 const std::vector<std::vector<Itype>> &out_maps,
-                                cudaStream_t stream) {
+                                Itype *d_scr, cudaStream_t stream) {
   int nnz = 0;
 
   // Copy all maps to one vector
-  for (const auto & map : in_maps)
+  for (const auto &map : in_maps)
     nnz += map.size();
 
   Itype *d_in_map, *d_out_map;
-  CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * nnz * sizeof(Itype)));
+  // CUDA_CHECK(cudaMalloc((void **)&d_in_map, 2 * nnz * sizeof(Itype)));
+  d_in_map = d_scr;
   d_out_map = d_in_map + nnz;
 
   Itype *d_in_map_iter = d_in_map, *d_out_map_iter = d_out_map;
@@ -132,7 +133,8 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
 
   // Second, create number of in_feat per out, and starting index
   Itype *d_index, *d_in_map_min, *d_reduced_out_map;
-  CUDA_CHECK(cudaMalloc((void **)&d_index, 3 * nnz * sizeof(Itype)));
+  // CUDA_CHECK(cudaMalloc((void **)&d_index, 3 * nnz * sizeof(Itype)));
+  d_index = d_scr + 2 * nnz;
   d_in_map_min = d_index + nnz;
   d_reduced_out_map = d_index + 2 * nnz;
 
@@ -167,21 +169,23 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
           d_in_map,    // in index
           d_reduced_out_map, d_in_map_min);
 
-  cudaFree(d_in_map);
-  cudaFree(d_index);
+  // cudaFree(d_in_map);
+  // cudaFree(d_index);
 }
 
 template void MaxPoolingForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, float *d_out_feat, int out_nrows,
     int32_t *d_max_index, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, cudaStream_t stream);
+    const std::vector<std::vector<int32_t>> &out_map, int32_t *d_scr,
+    cudaStream_t stream);
 
 template void MaxPoolingForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_out_feat, int out_nrows,
     int32_t *d_max_index, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, cudaStream_t stream);
+    const std::vector<std::vector<int32_t>> &out_map, int32_t *d_scr,
+    cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
