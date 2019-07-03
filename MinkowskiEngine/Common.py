@@ -283,7 +283,9 @@ def convert_region_type(region_type,
             1
         ) == dimension, "region_offset must have the same dimension as the network"
         kernel_volume = int(region_offset.size(0))
-
+        assert isinstance(
+            region_offset.dtype,
+            torch.IntTensor), "region_offset must be a torch.IntTensor."
     else:
         raise NotImplementedError()
 
@@ -310,7 +312,7 @@ class KernelGenerator:
 
             :attr:`region_offset` (torch.IntTensor, optional): when the
             :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
-            kernel uses this given torch int tensor to define offsets. It
+            kernel uses the provided `region_offset` to define offsets. It
             should be a matrix of size :math:`N \times D` where :math:`N` is
             the number of offsets and :math:`D` is the dimension of the
             space.
@@ -318,9 +320,8 @@ class KernelGenerator:
             :attr:`axis_types` (list of RegionType, optional): If given, it
             uses different methods to create a kernel for each axis. e.g., when
             it is `[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
-            RegionType.HYPERCROSS]`, the kernel would be a rectangular for the
-            first two dimensions and a cross shaped kernel for the thrid
-            dimension.
+            RegionType.HYPERCROSS]`, the kernel would be rectangular for the
+            first two dimensions and cross shaped for the thrid dimension.
         """
         assert dimension > 0
         assert isinstance(region_type, RegionType)

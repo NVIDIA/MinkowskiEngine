@@ -62,12 +62,15 @@ class MinkowskiNetwork(nn.Module, ABC):
             raise ValueError('Input size does not match the coordinate size')
 
     def get_index_map(self, coords, tensor_stride):
-        """
+        r"""
         Get the current coords (with duplicates) index map.
 
-        If tensor_stride > 1, use
-        coords = torch.cat(((coords[:, :D] / tensor_stride) * tensor_stride,
-                            coords[:, D:]), dim=1)
+        If `tensor_stride > 1`, use
+
+        .. code-block:: python
+
+           coords = torch.cat(((coords[:, :D] / tensor_stride) * tensor_stride, coords[:, D:]), dim=1)
+
         """
         assert isinstance(coords, torch.IntTensor), "Coord must be IntTensor"
         index_map = torch.IntTensor()

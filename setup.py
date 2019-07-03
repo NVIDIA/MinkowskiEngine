@@ -35,7 +35,7 @@ def run_command(cmd):
             break
         if output:
             print(output.strip())
-        time.sleep(0.1)
+        time.sleep(0.01)
 
     rc = process.poll()
     return rc

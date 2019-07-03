@@ -286,9 +286,9 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             for the output coordinates.  It must be a type of
             :attr:`MinkowskiEngine.CoordsKey`.
 
-            :attr:`dimension` (int): the dimension of the space where all the
-            inputs and the network is defined. For example, images are in a 2D
-            space, meshes and 3D shapes are in a 3D space.
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
 
         """
         is_transpose = False
@@ -364,9 +364,9 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
             for the output coordinates.  It must be a type of
             :attr:`MinkowskiEngine.CoordsKey`.
 
-            :attr:`dimension` (int): the dimension of the space all the inputs
-            and the network is defined. For example images are in 2D space,
-            meshes and 3D shapes are in 3D space and thus dimension is 3.
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
 
         """
         is_transpose = False
@@ -431,9 +431,9 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
             for the output coordinates.  It must be a type of
             :attr:`MinkowskiEngine.CoordsKey`.
 
-            :attr:`dimension` (int): the dimension of the space all the inputs
-            and the network is defined. For example images are in 2D space,
-            meshes and 3D shapes are in 3D space and thus dimension is 3.
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
 
         """
 
@@ -571,9 +571,9 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
             for the output coordinates.  It must be a type of
             :attr:`MinkowskiEngine.CoordsKey`.
 
-            :attr:`dimension` (int): the dimension of the space all the inputs
-            and the network is defined. For example images are in 2D space,
-            meshes and 3D shapes are in 3D space and thus dimension is 3.
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
 
         """
         is_transpose = True
@@ -676,9 +676,9 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
             :attr:`average` (bool): when True, return the averaged output. If
             not, return the sum of all input features.
 
-            :attr:`dimension` (int): the dimension of the space all the inputs
-            and the network is defined. For example images are in 2D space,
-            meshes and 3D shapes are in 3D space and thus dimension is 3.
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
 
         """
         super(MinkowskiGlobalPooling, self).__init__()

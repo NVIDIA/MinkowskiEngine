@@ -345,16 +345,15 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             has a bias.
 
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
-            optional): define custom kernel shape.
+            optional): defines custom kernel shape.
 
             :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specific coordinates
-            for the output coordinates.  It must be a type of
-            :attr:`MinkowskiEngine.CoordsKey`.
+            optional): when given, the network uses the specified coordinates
+            for the output coordinates.
 
-            :attr:`dimension` (int): the dimension of the space where all the
-            inputs and the network is defined. For example, images are in a 2D
-            space, meshes and 3D shapes are in a 3D space.
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
 
         """
         MinkowskiConvolutionBase.__init__(
@@ -416,16 +415,15 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             has a bias.
 
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
-            optional): define custom kernel shape.
+            optional): defines custom kernel shape.
 
             :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specific coordinates
-            for the output coordinates.  It must be a type of
-            :attr:`MinkowskiEngine.CoordsKey`.
+            optional): when given, the network uses the specified coordinates
+            for the output coordinates.
 
-            :attr:`dimension` (int): the dimension of the space where all the
-            inputs and the network is defined. For example, images are in a 2D
-            space, meshes and 3D shapes are in a 3D space.
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
 
         .. note:
             TODO: support `kernel_size` > `stride`.

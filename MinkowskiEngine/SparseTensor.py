@@ -58,6 +58,23 @@ class SparseTensor():
     batch.  Internally, we handle the batch index as an additional spatial
     dimension.
 
+    .. warning::
+
+       From the version 0.3, we will put the batch indices on the first column
+       to be consistent with the standard neural network packages.
+
+       .. math::
+
+          \mathbf{C} = \begin{bmatrix}
+          b_1    & x_1^1   & x_1^2  & \cdots & x_1^D    \\
+          \vdots &    \vdots & \vdots & \ddots & \vdots \\
+          b_N    & x_N^1   & x_N^2  & \cdots & x_N^D
+          \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
+          \mathbf{f}_1^T\\
+          \vdots\\
+          \mathbf{f}_N^T
+          \end{bmatrix}
+
     """
 
     def __init__(self,
@@ -85,16 +102,12 @@ class SparseTensor():
             provide one, make sure you understand what you are doing.
 
             :attr:`coords_manager` (:attr:`MinkowskiEngine.CoordsManager`): The
-            MinkowskiEngine creates a dynamic computation graph using an input
-            coordinates. If not provided, the MinkowskiEngine will create a new
-            computation graph, so make sure to provide the same
-            :attr:`CoordsManager` when you want to use the same computation
-            graph. To use a sparse tensor within the same computation graph
-            that you are using before, feed the :attr:`CoordsManager` of the
-            sparse tensor that you want to use by
-            :attr:`sparse_tensor.coords_man`. In most cases, this process is
-            handled automatically. When you use it, make sure you understand
-            what you are doing.
+            MinkowskiEngine creates a dynamic computation graph and all
+            coordinates inside the same computation graph are managed by a
+            CoordsManager object. If not provided, the MinkowskiEngine will
+            create a new computation graph. In most cases, this process is
+            handled automatically and you do not need to use this. When you use
+            it, make sure you understand what you are doing.
 
             :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
             :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
