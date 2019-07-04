@@ -153,7 +153,7 @@ For API and general usage, please refer to the [MinkowskiEngine documentation
 page](http://stanfordvl.github.io/MinkowskiEngine/) for more detail.
 
 For issues not listed on the API and feature requests, feel free to submit
-create an issue on the [github issue
+an issue on the [github issue
 page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
 
