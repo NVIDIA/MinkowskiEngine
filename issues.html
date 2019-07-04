@@ -199,6 +199,10 @@ This makes the pytorch CPPExtension module to fail leading to problems like <cod
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">CUDA_HOME</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">cuda</span><span class="p">;</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
+<p>Or you can use the path to <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> to automatically set the cuda home.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export CUDA_HOME=$(dirname $(dirname $(which nvcc))); python setup.py install
+</pre></div>
+</div>
 </div>
 <div class="section" id="compilation-failure-due-to-out-of-memory-oom">
 <h2>Compilation failure due to Out Of Memory (OOM)<a class="headerlink" href="#compilation-failure-due-to-out-of-memory-oom" title="Permalink to this headline">¶</a></h2>
