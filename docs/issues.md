@@ -12,6 +12,12 @@ If you encounter this issue, try to set your `CUDA_HOME` explicitly.
 export CUDA_HOME=/usr/local/cuda; python setup.py install
 ```
 
+Or you can use the path to `nvcc` to automatically set the cuda home.
+
+```
+export CUDA_HOME=$(dirname $(dirname $(which nvcc))); python setup.py install
+```
+
 
 ## Compilation failure due to Out Of Memory (OOM)
 
