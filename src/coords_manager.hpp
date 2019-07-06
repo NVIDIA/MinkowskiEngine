@@ -206,13 +206,15 @@ public:
 
 #ifndef CPU_ONLY
   // GPU memory manager
-  GPUMemoryManager<int32_t> gpu_memory_manager;
+  GPUMemoryManager<Itype> gpu_memory_manager;
+  GPUMemoryManager<int8_t> dgpu_memory_manager;
 
   // resize and return data_pointer
   Itype *getScratchGPUMemory(int size) {
-    size *=
-        (sizeof(Itype) > sizeof(int32_t) ? sizeof(Itype) / sizeof(int32_t) : 1);
     return static_cast<Itype *>(gpu_memory_manager.data(size));
+  }
+  int8_t *getDScratchGPUMemory(int size) {
+    return dgpu_memory_manager.data(size);
   }
 #endif
 };

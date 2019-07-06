@@ -1,6 +1,16 @@
 #include "gpu_memory_manager.hpp"
 
 // Explicit template instantiation for tensor dtype specification
+template <> GPUMemoryManager<int8_t>::GPUMemoryManager() {
+  CUDA_CHECK(cudaGetDevice(&device_id));
+  auto options = torch::TensorOptions()
+                     .dtype(torch::kInt8)
+                     .device(torch::kCUDA, device_id)
+                     .requires_grad(false);
+  _data = torch::zeros({initial_size}, options);
+};
+
+
 template <> GPUMemoryManager<int>::GPUMemoryManager() {
   CUDA_CHECK(cudaGetDevice(&device_id));
   auto options = torch::TensorOptions()
@@ -24,7 +34,7 @@ template <> GPUMemoryManager<long>::GPUMemoryManager() {
 template <> GPUMemoryManager<float>::GPUMemoryManager() {
   CUDA_CHECK(cudaGetDevice(&device_id));
   auto options = torch::TensorOptions()
-                     .dtype(torch::kFloat32)
+                     .dtype(torch::kFloat)
                      .device(torch::kCUDA, device_id)
                      .requires_grad(false);
   _data = torch::zeros({initial_size}, options);
@@ -34,12 +44,13 @@ template <> GPUMemoryManager<float>::GPUMemoryManager() {
 template <> GPUMemoryManager<double>::GPUMemoryManager() {
   CUDA_CHECK(cudaGetDevice(&device_id));
   auto options = torch::TensorOptions()
-                     .dtype(torch::kFloat64)
+                     .dtype(torch::kDouble)
                      .device(torch::kCUDA, device_id)
                      .requires_grad(false);
   _data = torch::zeros({initial_size}, options);
 };
 
+template class GPUMemoryManager<int8_t>;
 template class GPUMemoryManager<int>;
 template class GPUMemoryManager<long>;
 template class GPUMemoryManager<float>;

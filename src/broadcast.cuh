@@ -31,6 +31,7 @@
 
 #include "gpu.cuh"
 #include "math_functions.hpp"
+#include "gpu_memory_manager.hpp"
 
 
 template <typename Dtype, typename Itype>
@@ -48,6 +49,6 @@ void BroadcastBackwardKernelGPU(
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
     const std::vector<std::vector<Itype>> &sorted_in_map,
     const std::vector<std::vector<Itype>> &sorted_out_map,
-    Itype *d_scr, cusparseHandle_t cushandle, cudaStream_t stream);
+    Itype *d_scr, Dtype *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream);
 
 #endif

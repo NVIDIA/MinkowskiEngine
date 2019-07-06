@@ -153,13 +153,16 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat_glob.resize_as_(in_feat_glob);
   grad_in_feat_glob.zero_();
 
-  // int dtype_mult = dtypeMultiplier<Dtype, Itype>();
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(
-      2 * p_coords_manager->out_maps[map_key][0].size() + // d_sorted_in_map + d_sorted_out_map
-      in_feat_glob.size(0) + 1 // d_csr_row
-      // in_feat.size(0) * dtype_mult + // d_csr_val
-      // (in_feat.size(0) + in_feat_glob.size(0)) * in_feat.size(1) * dtype_mult // tmp_grad_infeat(_global)
-      );
+      2 * p_coords_manager->out_maps[map_key][0].size() + // in_map + out_map
+      in_feat_glob.size(0) + 1                            // d_csr_row
+  );
+
+  Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
+      (in_feat.size(0) + // d_csr_val
+       (in_feat.size(0) + in_feat_glob.size(0)) * in_feat.size(1)) *
+      sizeof(Dtype) // tmp_grad_infeat(_global)
+  );
 
   cusparseHandle_t handle =
       THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
@@ -169,7 +172,10 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
       p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-      d_scr, handle, at::cuda::getCurrentCUDAStream());
+      d_scr, d_dscr, handle, at::cuda::getCurrentCUDAStream());
+
+  // p_coords_manager->gpu_memory_manager.reset();
+  // p_coords_manager->dgpu_memory_manager.reset();
 }
 #endif
 

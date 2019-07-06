@@ -127,13 +127,20 @@ void PoolingTransposeForwardGPU(
                     //     dtype_mult // dtype csr_val + tmp_out_feat
   );
 
+  Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
+      ((false ? in_feat.size(0) : 0) + // d_ones
+       nnz +                             // d_csr_val
+       in_feat.size(1) * out_nrows       // d_tmp_out_feat
+       ) *
+      sizeof(Dtype));
+
   cusparseHandle_t handle =
       THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
 
   NonzeroAvgPoolingForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), out_feat.data<Dtype>(), out_nrows,
       num_nonzero.data<Dtype>(), in_feat.size(1), std::get<0>(in_out),
-      std::get<1>(in_out), false, d_scr, handle,
+      std::get<1>(in_out), false, d_scr, d_dscr, handle,
       at::cuda::getCurrentCUDAStream());
 }
 

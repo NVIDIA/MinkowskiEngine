@@ -116,7 +116,7 @@ void NonzeroAvgPoolingForwardKernelGPU(
     Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_maps,
     const std::vector<std::vector<Itype>> &out_maps, bool use_avg, Itype *d_scr,
-    cusparseHandle_t cushandle, cudaStream_t stream) {
+    Dtype *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream) {
   int nnz = 0;
   const Dtype alpha = 1;
   const Dtype beta = 0;
@@ -148,9 +148,11 @@ void NonzeroAvgPoolingForwardKernelGPU(
   }
 
   // d_ones = (Dtype*)(d_scr) + 2 * nnz + out_nrows + 1;
-  CUDA_CHECK(cudaMalloc(
-      (void **)&d_ones,
-      ((use_avg ? in_nrows : 0) + nnz + nchannel * out_nrows) * sizeof(Dtype)));
+  // CUDA_CHECK(cudaMalloc(
+  //     (void **)&d_ones,
+  //     ((use_avg ? in_nrows : 0) + nnz + nchannel * out_nrows) *
+  //     sizeof(Dtype)));
+  d_ones = d_dscr;
 
   if (use_avg) {
     d_csr_val = d_ones + in_nrows;
@@ -222,7 +224,7 @@ void NonzeroAvgPoolingForwardKernelGPU(
 
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
   // cudaFree(d_in_map);
-  cudaFree(d_ones);
+  // cudaFree(d_ones);
 }
 
 template void NonzeroAvgPoolingForwardKernelGPU<float, int32_t>(
@@ -230,14 +232,16 @@ template void NonzeroAvgPoolingForwardKernelGPU<float, int32_t>(
     float *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
-    int32_t *d_scr, cusparseHandle_t cushandle, cudaStream_t stream);
+    int32_t *d_scr, float *d_dscr, cusparseHandle_t cushandle,
+    cudaStream_t stream);
 
 template void NonzeroAvgPoolingForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nrows, double *d_out_feat, int out_nrows,
     double *d_num_nonzero, int nchannel,
     const std::vector<std::vector<int32_t>> &in_map,
     const std::vector<std::vector<int32_t>> &out_map, bool use_avg,
-    int32_t *d_scr, cusparseHandle_t cushandle, cudaStream_t stream);
+    int32_t *d_scr, double *d_dscr, cusparseHandle_t cushandle,
+    cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingBackwardKernelGPU(

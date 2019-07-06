@@ -37,7 +37,7 @@ void NonzeroAvgPoolingForwardKernelGPU(
     Dtype *d_num_nonzero, int nchannel,
     const std::vector<std::vector<Itype>> &in_map,
     const std::vector<std::vector<Itype>> &out_map, bool use_avg, Itype *d_scr,
-    cusparseHandle_t cushandle, cudaStream_t stream);
+    Dtype *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingBackwardKernelGPU(

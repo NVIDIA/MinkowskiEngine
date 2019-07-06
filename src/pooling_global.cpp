@@ -98,15 +98,16 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   for (const auto &map : std::get<0>(in_out))
     nnz += map.size();
 
-  Itype *d_scr = p_coords_manager->getScratchGPUMemory(
-      2 * nnz +     // in_out map
-      out_nrows + 1 // csr_row
-      // (nnz + in_feat.size(1) * out_nrows + // dtype csr_val + tmp_out_feat
-      //          use_avg
-      //      ? in_feat.size(0)
-      //      : 0) *
-      //     dtype_mult // in_nrows if use_avg
+  Itype *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz + // in_out map
+                                                       out_nrows + 1 // csr_row
   );
+
+  Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
+      ((use_avg ? in_feat.size(0) : 0) + // d_ones
+       nnz +                             // d_csr_val
+       in_feat.size(1) * out_nrows       // d_tmp_out_feat
+       ) *
+      sizeof(Dtype));
 
   cusparseHandle_t handle =
       THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
@@ -114,7 +115,7 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   NonzeroAvgPoolingForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), out_feat.data<Dtype>(), out_nrows,
       num_nonzero.data<Dtype>(), in_feat.size(1), std::get<0>(in_out),
-      std::get<1>(in_out), use_avg, d_scr, handle,
+      std::get<1>(in_out), use_avg, d_scr, d_dscr, handle,
       at::cuda::getCurrentCUDAStream());
 }
 

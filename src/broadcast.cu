@@ -145,7 +145,7 @@ void BroadcastBackwardKernelGPU(
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
     const std::vector<std::vector<Itype>> &sorted_in_maps,
     const std::vector<std::vector<Itype>> &sorted_out_maps, Itype *d_scr,
-    cusparseHandle_t cushandle, cudaStream_t stream) {
+    Dtype *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream) {
   Itype *d_sorted_in_map, *d_sorted_out_map, *d_csr_row;
   Dtype *d_dtype, *d_csr_val, *d_tmp_grad_in_feat_global, *d_tmp_grad_in_feat;
   cusparseMatDescr_t descr = 0;
@@ -172,11 +172,14 @@ void BroadcastBackwardKernelGPU(
   d_sorted_out_map = d_sorted_in_map + sorted_in_maps[0].size();
   d_csr_row = d_sorted_out_map + sorted_out_maps[0].size();
 
-  CUDA_CHECK(cudaMalloc((void **)&d_dtype,
-                        (nnz + (in_nrows + in_nrows_global) * nchannel) *
-                            sizeof(Dtype)));
+  // GPUMemoryManager<Dtype> dmem((nnz + (in_nrows + in_nrows_global) *
+  // nchannel)); CUDA_CHECK(cudaMalloc((void **)&d_dtype,
+  //                       (nnz + (in_nrows + in_nrows_global) * nchannel) *
+  //                           sizeof(Dtype)));
   // d_dtype =
-  //     (Dtype *)(d_scr) + sorted_in_maps[0].size() + sorted_out_maps[0].size();
+  //     (Dtype *)(d_scr + sorted_in_maps[0].size() + sorted_out_maps[0].size()
+  //     + in_nrows_global + 1);
+  d_dtype = d_dscr;
   d_tmp_grad_in_feat_global = d_dtype;
   d_tmp_grad_in_feat = d_tmp_grad_in_feat_global + in_nrows_global * nchannel;
   d_csr_val = d_tmp_grad_in_feat + in_nrows * nchannel;
@@ -298,7 +301,7 @@ void BroadcastBackwardKernelGPU(
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
 
   // cudaFree(d_sorted_in_map);
-  cudaFree(d_dtype);
+  // cudaFree(d_dtype);
 }
 
 template void BroadcastBackwardKernelGPU<float, int32_t>(
@@ -307,7 +310,7 @@ template void BroadcastBackwardKernelGPU<float, int32_t>(
     int in_nrows_global, const float *d_grad_out_feat, int nchannel, int op,
     const std::vector<std::vector<int32_t>> &sorted_in_map,
     const std::vector<std::vector<int32_t>> &sorted_out_map, int32_t *d_scr,
-    cusparseHandle_t cushandle, cudaStream_t stream);
+    float *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream);
 
 template void BroadcastBackwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_grad_in_feat, int in_nrows,
@@ -315,5 +318,5 @@ template void BroadcastBackwardKernelGPU<double, int32_t>(
     int in_nrows_global, const double *d_grad_out_feat, int nchannel, int op,
     const std::vector<std::vector<int32_t>> &sorted_in_map,
     const std::vector<std::vector<int32_t>> &sorted_out_map, int32_t *d_scr,
-    cusparseHandle_t cushandle, cudaStream_t stream);
+    double *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream);
 #endif
