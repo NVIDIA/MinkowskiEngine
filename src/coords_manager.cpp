@@ -1,26 +1,26 @@
-/*  Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy of
- *  this software and associated documentation files (the "Software"), to deal in
- *  the Software without restriction, including without limitation the rights to
- *  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- *  of the Software, and to permit persons to whom the Software is furnished to do
- *  so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
- *  Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
- *  Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
- *  of the code.
+ * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
+ * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
+ * of the code.
  */
 #include "common.hpp"
 #include "coords_hashmaps.hpp"
@@ -245,7 +245,14 @@ CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
         key = random();
     }
   } // If key doesn't exist, use the current key regardless of enforce creation
-  coords_hashmaps[key] = createCoordsHashMap(coords);
+  auto coords_batch_pair = createCoordsHashMap(coords);
+  coords_hashmaps[key] = coords_batch_pair.first;
+  std::set<Itype> set_batch_indices = coords_batch_pair.second;
+
+  // Initialize batch indices
+  batch_indices.resize(set_batch_indices.size());
+  std::copy(set_batch_indices.begin(), set_batch_indices.end(),
+            batch_indices.begin());
   return key;
 }
 
@@ -305,13 +312,7 @@ CoordsManager<D, Itype>::createPruneCoords(at::Tensor use_feat,
 }
 
 template <uint8_t D, typename Itype>
-uint64_t CoordsManager<D, Itype>::createOriginCoords(uint64_t coords_key,
-                                                     int batch_size) {
-  if (!existsCoordsKey(coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coord map doesn't exist for the given coords_key. "
-                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
-                    << __LINE__);
+uint64_t CoordsManager<D, Itype>::createOriginCoords() {
   Arr<D, int> zero_tensor_strides;
   zero_tensor_strides.fill(0);
   uint64_t out_coords_key = hash_vec<Arr<D, int>>(zero_tensor_strides);
@@ -319,8 +320,7 @@ uint64_t CoordsManager<D, Itype>::createOriginCoords(uint64_t coords_key,
   if (existsCoordsKey(out_coords_key))
     return out_coords_key;
 
-  coords_hashmaps[out_coords_key] =
-      createOriginCoordsHashMap(coords_key, batch_size);
+  coords_hashmaps[out_coords_key] = createOriginCoordsHashMap();
   return out_coords_key;
 }
 
@@ -408,9 +408,9 @@ InOutMapKey CoordsManager<D, Itype>::getOriginMapHashKeyCheck(
 template <uint8_t D, typename Itype>
 std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
+    const std::vector<int> &tensor_strides, const std::vector<int> &strides,
+    const std::vector<int> &kernel_sizes, const std::vector<int> &dilations,
+    int region_type, const at::Tensor &offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, bool is_transpose) {
   if (tensor_strides.size() != D || strides.size() != D ||
       kernel_sizes.size() != D || dilations.size() != D) {
@@ -439,10 +439,10 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
 template <uint8_t D, typename Itype>
 std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
-    Arr<D, int> tensor_strides, Arr<D, int> strides, Arr<D, int> kernel_sizes,
-    Arr<D, int> dilations, int region_type, at::Tensor offsets,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    bool is_transpose) {
+    const Arr<D, int> &tensor_strides, const Arr<D, int> &strides,
+    const Arr<D, int> &kernel_sizes, const Arr<D, int> &dilations,
+    int region_type, const at::Tensor &offsets, py::object py_in_coords_key,
+    py::object py_out_coords_key, bool is_transpose) {
   PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
   PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
   uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
@@ -503,14 +503,14 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
 template <uint8_t D, typename Itype>
 std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnOriginInOutPerKernel(
-    int batch_size, py::object py_in_coords_key, py::object py_out_coords_key) {
+    py::object py_in_coords_key, py::object py_out_coords_key) {
   PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
   PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
   uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
 
   // Create output coordinates if it doesn't exist
   if (!p_out_coords_key->key_set) {
-    out_coords_key = createOriginCoords(p_in_coords_key->getKey(), batch_size);
+    out_coords_key = createOriginCoords();
     p_out_coords_key->setKey(out_coords_key);
     p_out_coords_key->setTensorStride(Arr<D, int>());
   } else
@@ -590,6 +590,39 @@ std::string CoordsManager<D, Itype>::toString() const {
   tmp += std::to_string(CoordsManager<D, Itype>::nthreads);
   tmp += " >";
   return tmp;
+}
+
+/*
+ * Return the batch indices and row indices for each image.
+ */
+template <uint8_t D, typename Itype>
+std::pair<std::vector<Itype>, std::vector<std::vector<Itype>>>
+CoordsManager<D, Itype>::getRowIndicesPerBatch(py::object py_in_coords_key,
+                                               py::object py_out_coords_key) {
+  auto in_out =
+      setupAndReturnOriginInOutPerKernel(py_in_coords_key, py_out_coords_key);
+  // py_out_coords_key will be set after the above call.
+  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  auto out_coords_key = p_out_coords_key->getKey();
+  auto out_coords_iter = coords_hashmaps.find(out_coords_key);
+  if (out_coords_iter == coords_hashmaps.end())
+    throw std::invalid_argument(Formatter()
+                                << "The out_coords_key, " << out_coords_key
+                                << ", does not exist.");
+
+  // list of row indices. The batch index is defined as the returned batch
+  // indices
+  std::vector<std::vector<Itype>> batch2row_inds(batch_indices.size());
+  const auto &in = std::get<0>(in_out), out = std::get<1>(in_out);
+  for (std::size_t k = 0; k < in.size(); k++) {
+    const auto &curr_in = in[k];
+    const auto &curr_out = out[k];
+    for (std::size_t i = 0; i < curr_in.size(); i++)
+      batch2row_inds[curr_out[i]].push_back(curr_in[i]);
+  }
+
+  // copy batch_indices, move batch2row_inds
+  return std::make_pair(batch_indices, std::move(batch2row_inds));
 }
 
 INSTANTIATE_CLASS_DIM_ITYPE(CoordsManager, int32_t);

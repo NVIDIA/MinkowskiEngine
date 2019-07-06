@@ -51,14 +51,6 @@ public:
   CoordsManager(int nthreads_);
   ~CoordsManager() { clear(); }
 
-  // Coordinate hash key to coordinate hash map
-  std::unordered_map<uint64_t, CoordsHashMap<D, Itype>> coords_hashmaps;
-  // In to out index mapping for each kernel, pooling
-  std::unordered_map<InOutMapKey, InOutMapPerKernel<Itype>, InOutMapKeyHash>
-      in_maps;
-  std::unordered_map<InOutMapKey, InOutMapPerKernel<Itype>, InOutMapKeyHash>
-      out_maps;
-
   bool existsCoordsKey(uint64_t coords_key);
   bool existsCoordsKey(py::object py_coords_key);
   int getCoordsSize(uint64_t coords_key);
@@ -84,17 +76,19 @@ public:
   uint64_t createOutCoords(uint64_t coords_key,
                            const Arr<D, int> &tensor_strides,
                            const Arr<D, int> &strides, bool is_transpose);
-  uint64_t createOriginCoords(uint64_t coords_key, int batch_size);
+  uint64_t createOriginCoords();
   uint64_t createPruneCoords(at::Tensor use_feat, py::object py_in_coords_key,
                              py::object py_out_coords_key);
 
-  // Helper functions for hashmap creation
-  CoordsHashMap<D, Itype> createCoordsHashMap(at::Tensor coords);
+  // Helper functions for hashmap creation that returns the hashmap and the
+  // batch indieces
+  std::pair<CoordsHashMap<D, Itype>, std::set<Itype>>
+  createCoordsHashMap(at::Tensor coords);
+
   CoordsHashMap<D, Itype>
   createOutCoordsHashMap(uint64_t coords_key, const Arr<D, int> &tensor_strides,
                          const Arr<D, int> &strides);
-  CoordsHashMap<D, Itype> createOriginCoordsHashMap(uint64_t coords_key,
-                                                    int batch_size);
+  CoordsHashMap<D, Itype> createOriginCoordsHashMap();
   CoordsHashMap<D, Itype> createPrunedCoordsHashMap(uint64_t coords_key,
                                                     at::Tensor use_feat);
 
@@ -149,23 +143,25 @@ public:
 
   // Wrapper functions for setting up coords and returning maps
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnInOutPerKernel(std::vector<int> tensor_strides,
-                               std::vector<int> strides,
-                               std::vector<int> kernel_sizes,
-                               std::vector<int> dilations, int region_type,
-                               at::Tensor offsets, py::object py_in_coords_key,
-                               py::object py_out_coords_key, bool is_transpose);
-
-  std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnInOutPerKernel(Arr<D, int> tensor_strides, Arr<D, int> strides,
-                               Arr<D, int> kernel_sizes, Arr<D, int> dilations,
-                               int region_type, at::Tensor offsets,
+  setupAndReturnInOutPerKernel(const std::vector<int> &tensor_strides,
+                               const std::vector<int> &strides,
+                               const std::vector<int> &kernel_sizes,
+                               const std::vector<int> &dilations,
+                               int region_type, const at::Tensor &offsets,
                                py::object py_in_coords_key,
                                py::object py_out_coords_key, bool is_transpose);
 
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnOriginInOutPerKernel(int batch_size,
-                                     py::object py_in_coords_key,
+  setupAndReturnInOutPerKernel(const Arr<D, int> &tensor_strides,
+                               const Arr<D, int> &strides,
+                               const Arr<D, int> &kernel_sizes,
+                               const Arr<D, int> &dilations, int region_type,
+                               const at::Tensor &offsets,
+                               py::object py_in_coords_key,
+                               py::object py_out_coords_key, bool is_transpose);
+
+  std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+  setupAndReturnOriginInOutPerKernel(py::object py_in_coords_key,
                                      py::object py_out_coords_key);
 
   std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
@@ -192,6 +188,21 @@ public:
     in_maps.clear();
     out_maps.clear();
   }
+
+  std::pair<std::vector<Itype>, std::vector<std::vector<Itype>>>
+  getRowIndicesPerBatch(py::object py_in_coords_key,
+                        py::object py_out_coords_key);
+
+  // Coordinate hash key to coordinate hash map
+  std::unordered_map<uint64_t, CoordsHashMap<D, Itype>> coords_hashmaps;
+  // In to out index mapping for each kernel, pooling
+  std::unordered_map<InOutMapKey, InOutMapPerKernel<Itype>, InOutMapKeyHash>
+      in_maps;
+  std::unordered_map<InOutMapKey, InOutMapPerKernel<Itype>, InOutMapKeyHash>
+      out_maps;
+
+  // Batch indices must be consistent throughout the lifetime of the coordsman
+  std::vector<Itype> batch_indices;
 
 #ifndef CPU_ONLY
   // GPU memory manager

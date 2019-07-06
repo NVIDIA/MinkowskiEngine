@@ -229,7 +229,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg);
+    py::object py_coords_manager, bool use_avg);
 
 template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingBackwardCPU(
@@ -243,7 +243,7 @@ template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg);
+    py::object py_coords_manager, bool use_avg);
 
 template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingBackwardGPU(

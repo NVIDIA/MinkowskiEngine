@@ -617,7 +617,6 @@ class MinkowskiGlobalPoolingFunction(Function):
     @staticmethod
     def forward(ctx,
                 input_features,
-                batch_size=0,
                 average=True,
                 in_coords_key=None,
                 out_coords_key=None,
@@ -638,7 +637,7 @@ class MinkowskiGlobalPoolingFunction(Function):
                         'GlobalPoolingForward' + get_postfix(input_features))
         fw_fn(D, ctx.in_feat, out_feat, ctx.num_nonzero,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager, batch_size, ctx.average)
+              ctx.coords_manager.CPPCoordsManager, ctx.average)
         return out_feat
 
     @staticmethod
@@ -663,16 +662,13 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
 
     """
 
-    def __init__(self, batch_size=0, average=True, dimension=-1):
+    def __init__(self, average=True, dimension=-1):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
         Args:
-            :attr:`batch_size` (int): when given a positive integer, use the argument
-            to initialize the output coords, or the batch size.
-
             :attr:`average` (bool): when True, return the averaged output. If
             not, return the sum of all input features.
 
@@ -684,7 +680,6 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         super(MinkowskiGlobalPooling, self).__init__()
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
-        self.batch_size = batch_size
         self.average = average
         self.dimension = dimension
         self.pooling = MinkowskiGlobalPoolingFunction()
@@ -694,7 +689,7 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         assert input.D == self.dimension
 
         out_coords_key = CoordsKey(input.coords_key.D)
-        output = self.pooling.apply(input.F, self.batch_size, self.average,
+        output = self.pooling.apply(input.F, self.average,
                                     input.coords_key, out_coords_key,
                                     input.coords_man)
 

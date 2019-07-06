@@ -25,7 +25,7 @@ import unittest
 
 import torch
 
-from MinkowskiCoords import CoordsKey, CoordsManager
+from MinkowskiEngine import CoordsKey, CoordsManager
 
 
 class Test(unittest.TestCase):
@@ -58,9 +58,10 @@ class Test(unittest.TestCase):
         key.setTensorStride(1)
 
         cm = CoordsManager(D=1)
-        coords = (torch.rand(5, 1) * 100).int()
+        coords = (torch.rand(5, 2) * 100).int()
         cm.initialize(coords, key)
 
+        print(cm.get_row_indices_per_batch(key))
         print(key)
         print(cm)
 

@@ -36,12 +36,12 @@ void GlobalPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                              at::Tensor num_nonzero,
                              py::object py_in_coords_key,
                              py::object py_out_coords_key,
-                             py::object py_coords_manager, int batch_size,
+                             py::object py_coords_manager,
                              bool use_avg) {
   CoordsManager<D, Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
-      batch_size, py_in_coords_key, py_out_coords_key);
+      py_in_coords_key, py_out_coords_key);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, in_feat.size(1)});
@@ -82,12 +82,12 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                              at::Tensor num_nonzero,
                              py::object py_in_coords_key,
                              py::object py_out_coords_key,
-                             py::object py_coords_manager, int batch_size,
+                             py::object py_coords_manager,
                              bool use_avg) {
   CoordsManager<D, Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<D, Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
-      batch_size, py_in_coords_key, py_out_coords_key);
+      py_in_coords_key, py_out_coords_key);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, in_feat.size(1)});
@@ -130,21 +130,21 @@ template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingForwardCPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg) {
+    py::object py_coords_manager, bool use_avg) {
   SWITCH_DIM_TYPES(GlobalPoolingForwardCPU, Dtype, Itype, in_feat, out_feat,
                    num_nonzero, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager, batch_size, use_avg);
+                   py_coords_manager, use_avg);
 }
 
 template void DimSwitchGlobalPoolingForwardCPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg);
+    py::object py_coords_manager, bool use_avg);
 
 template void DimSwitchGlobalPoolingForwardCPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg);
+    py::object py_coords_manager, bool use_avg);
 
 template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingBackwardCPU(
@@ -174,21 +174,21 @@ template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingForwardGPU(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg) {
+    py::object py_coords_manager, bool use_avg) {
   SWITCH_DIM_TYPES(GlobalPoolingForwardGPU, Dtype, Itype, in_feat, out_feat,
                    num_nonzero, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager, batch_size, use_avg);
+                   py_coords_manager, use_avg);
 }
 
 template void DimSwitchGlobalPoolingForwardGPU<float, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg);
+    py::object py_coords_manager, bool use_avg);
 
 template void DimSwitchGlobalPoolingForwardGPU<double, int32_t>(
     int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, int batch_size, bool use_avg);
+    py::object py_coords_manager, bool use_avg);
 
 template <typename Dtype, typename Itype>
 void DimSwitchGlobalPoolingBackwardGPU(

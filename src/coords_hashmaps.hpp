@@ -1,26 +1,26 @@
-/*  Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
  *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy of
- *  this software and associated documentation files (the "Software"), to deal in
- *  the Software without restriction, including without limitation the rights to
- *  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- *  of the Software, and to permit persons to whom the Software is furnished to do
- *  so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *  The above copyright notice and this permission notice shall be included in all
- *  copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
- *  Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
- *  Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
- *  of the code.
+ * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
+ * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
+ * of the code.
  */
 #ifndef COORDS_HASHMAPS
 #define COORDS_HASHMAPS
@@ -34,29 +34,50 @@
 namespace py = pybind11;
 
 template <uint8_t D, typename Itype>
-CoordsHashMap<D, Itype>
+std::pair<CoordsHashMap<D, Itype>, std::set<Itype>>
 CoordsManager<D, Itype>::createCoordsHashMap(at::Tensor coords) {
+  // Find all unique batch indices
+  std::set<Itype> set_batch_indices;
   int nrows = coords.size(0), ncols = coords.size(1);
+  if (ncols != D + 1 && ncols != D)
+    throw std::invalid_argument(
+        Formatter() << "Dimension mismatch. The CoordsManager<" << D << "> "
+                    << "cannot take size (" << nrows << ", " << ncols << ") "
+                    << "tensor for coordinates.");
+
   CoordsHashMap<D, Itype> coords_hashmap;
   coords_hashmap.map.resize(nrows);
   Coord<D, Itype> coord;
+  coord.fill(0);  // if NxD array is given, fill the batch index to 0.
   Itype *p_coords = coords.data<Itype>();
   for (int i = 0; i < nrows; i++) {
-    std::copy(&p_coords[i * ncols], &p_coords[(i + 1) * ncols], coord.data());
-    auto exists_iter = coords_hashmap.map.find(coord);
-    if (exists_iter == coords_hashmap.map.end()) {
-      coords_hashmap.map[coord] = i;
-    } else {
-      throw std::invalid_argument(
-          Formatter() << "A duplicate key found. Existing coord: "
-                      << ArrToString<Coord<D, Itype>>(exists_iter->first)
-                      << ", new coord: : "
-                      << ArrToString<Coord<D, Itype>>(coord)
-                      << ". If the duplication was intentional, use "
-                         "initialize_coords_with_duplicates.");
-    }
+      // TODO: BATCH_FIRST, ncols == D
+      std::copy(p_coords, p_coords + ncols, coord.data());
+      auto exists_iter = coords_hashmap.map.find(coord);
+
+      // Track all batch indices
+#ifdef BATCH_FIRST
+      set_batch_indices.insert(p_coords[0]);
+#else
+      set_batch_indices.insert(p_coords[ncols - 1]);
+#endif
+
+      if (exists_iter == coords_hashmap.map.end()) {
+        coords_hashmap.map[coord] = i;
+      } else {
+        throw std::invalid_argument(
+            Formatter() << "A duplicate key found. Existing coord: "
+                        << ArrToString<Coord<D, Itype>>(exists_iter->first)
+                        << ", new coord: : "
+                        << ArrToString<Coord<D, Itype>>(coord)
+                        << ". If the duplication was intentional, use "
+                           "initialize_coords_with_duplicates.");
+      }
+      p_coords += ncols;
   }
-  return coords_hashmap;
+
+  // make the values into rvalues
+  return std::make_pair(std::move(coords_hashmap), std::move(set_batch_indices));
 }
 
 /**
@@ -97,50 +118,26 @@ CoordsHashMap<D, Itype> CoordsManager<D, Itype>::createOutCoordsHashMap(
     if (out_coords.map.find(coord) == out_coords.map.end())
       out_coords.map[coord] = n_out++;
   }
-  return out_coords;
+  return std::move(out_coords);
 }
 
 /*
  * Coord map with the origin only
  */
 template <uint8_t D, typename Itype>
-CoordsHashMap<D, Itype>
-CoordsManager<D, Itype>::createOriginCoordsHashMap(uint64_t coords_key,
-                                                   int batch_size) {
-  if (!existsCoordsKey(coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coord map doesn't exist for the given coords_key. "
-                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
-                    << __LINE__);
-  CoordsHashMap<D, Itype> &in_coords = coords_hashmaps[coords_key];
+CoordsHashMap<D, Itype> CoordsManager<D, Itype>::createOriginCoordsHashMap() {
   CoordsHashMap<D, Itype> out_coord_map;
-  int n_out = 0;
-  // When batch size is not given (0, negative), go over all values
-  if (batch_size < 1) {
-    // Order all batch indices first
-    std::map<Itype, Itype> batch_indices;
-    for (auto in_pair : in_coords.map) {
-      Coord<D, Itype> coord(in_pair.first);
-      batch_indices[coord[D]] = 0; // Insert a new batch index
-    }
-    // Once we collected all batch indices, insert it into the map
-    Coord<D, Itype> coord;
-    for (int j = 0; j < D; j++)
-      coord[j] = 0;
-    for (const auto &i : batch_indices) {
-      coord[D] = i.first;
-      out_coord_map.map[coord] = n_out++;
-    }
-  } else {
-    for (int b = 0; b < batch_size; b++) {
-      Coord<D, Itype> coord;
-      for (int j = 0; j < D; j++)
-        coord[j] = 0;
-      coord[D] = b;
-      out_coord_map.map[coord] = b;
-    }
+  Coord<D, Itype> coord;
+  coord.fill(0);
+  for (std::size_t i = 0; i < batch_indices.size(); ++i) {
+#ifdef BATCH_FIRST
+    coord[0] = batch_indices[i];
+#else
+    coord[D] = batch_indices[i];
+#endif
+    out_coord_map.map[coord] = i;
   }
-  return out_coord_map;
+  return std::move(out_coord_map);
 }
 
 /*
@@ -177,7 +174,7 @@ CoordsManager<D, Itype>::createPrunedCoordsHashMap(uint64_t coords_key,
         out_coords.map[coord] = n_out++;
     }
   }
-  return out_coords;
+  return std::move(out_coords);
 }
 
 #endif

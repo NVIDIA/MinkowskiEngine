@@ -92,6 +92,12 @@ class CoordsManager():
         self.CPPCoordsManager.getCoords(coords, coords_key.CPPCoordsKey)
         return coords
 
+    def get_row_indices_per_batch(self, coords_key):
+        assert isinstance(coords_key, CoordsKey)
+        out_key = CoordsKey(self.D)
+        return self.CPPCoordsManager.getRowIndicesPerBatch(
+            coords_key.CPPCoordsKey, out_key.CPPCoordsKey)
+
     def get_kernel_map(self,
                        in_tensor_strides,
                        out_tensor_strides,

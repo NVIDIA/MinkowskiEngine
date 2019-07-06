@@ -1,6 +1,7 @@
 #include "gpu_memory_manager.hpp"
 
-template <typename Type> GPUMemoryManager<Type>::GPUMemoryManager() {
+// Explicit template instantiation for tensor dtype specification
+template <> GPUMemoryManager<int>::GPUMemoryManager() {
   CUDA_CHECK(cudaGetDevice(&device_id));
   auto options = torch::TensorOptions()
                      .dtype(torch::kInt32)
@@ -39,4 +40,7 @@ template <> GPUMemoryManager<double>::GPUMemoryManager() {
   _data = torch::zeros({initial_size}, options);
 };
 
-template class GPUMemoryManager<int32_t>;
+template class GPUMemoryManager<int>;
+template class GPUMemoryManager<long>;
+template class GPUMemoryManager<float>;
+template class GPUMemoryManager<double>;

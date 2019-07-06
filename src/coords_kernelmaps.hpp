@@ -172,22 +172,26 @@ CoordsManager<D, Itype>::createGlobalReductionInOutMap(
       coords_hashmaps[out_coords_key].map;
   InOutMapPerKernel<Itype> in_map(1), out_map(1);
   std::map<Itype, Itype> in_out_map;
-  // The out_coord_map.size() == 1
-  for (auto const in_coord_iter : in_coords_hashmap) {
-    Coord<D, Itype> coord(in_coord_iter.first);
-    for (int j = 0; j < D; j++)
-      coord[j] = 0;
+  Coord<D, Itype> coord;
+  coord.fill(0);
+  for (auto const &in_coord_iter : in_coords_hashmap) {
+#ifdef BATCH_FIRST
+    coord[0] = in_coord_iter.first[0];
+#else
+    coord[D] = in_coord_iter.first[D];
+#endif
     auto out_coord_iter = out_coords_hashmap.find(coord);
     if (out_coord_iter != out_coords_hashmap.end()) {
+      // Order by the input coord row index
       in_out_map[in_coord_iter.second] = out_coord_iter->second;
     } else {
       throw std::invalid_argument(Formatter()
-                                  << "Coord not found in out coord map"
+                                  << "A key not found in the out coord map"
                                   << ArrToString<Coord<D, Itype>>(coord));
     }
   }
 
-  // Extract key value as in out (ascending) ordered by the in map
+  // Extract key value as in_out (ascending) ordered by the in map
   for (auto const &pair : in_out_map) {
     in_map[0].push_back(pair.first);
     out_map[0].push_back(pair.second);

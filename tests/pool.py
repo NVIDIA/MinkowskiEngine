@@ -167,7 +167,7 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn,
-                (input.F, 0, True, input.coords_key, None, input.coords_man)))
+                (input.F, True, input.coords_key, None, input.coords_man)))
 
     def test_unpool(self):
         in_channels, out_channels, D = 2, 3, 2

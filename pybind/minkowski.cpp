@@ -124,6 +124,7 @@ void instantiate_dim_itype(py::module &m, const std::string &dim,
       .def("getCoordsSize", (int (CoordsManager<D, Itype>::*)(py::object)) &
                                 CoordsManager<D, Itype>::getCoordsSize)
       .def("getCoords", &CoordsManager<D, Itype>::getCoords)
+      .def("getRowIndicesPerBatch", &CoordsManager<D, Itype>::getRowIndicesPerBatch)
       .def("initializeCoords", (uint64_t(CoordsManager<D, Itype>::*)(
                                    at::Tensor, py::object, bool)) &
                                    CoordsManager<D, Itype>::initializeCoords)

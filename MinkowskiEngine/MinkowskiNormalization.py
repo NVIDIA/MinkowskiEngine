@@ -73,7 +73,6 @@ class MinkowskiInstanceNormFunction(Function):
     @staticmethod
     def forward(ctx,
                 in_feat,
-                batch_size=0,
                 in_coords_key=None,
                 glob_coords_key=None,
                 coords_manager=None):
@@ -96,7 +95,7 @@ class MinkowskiInstanceNormFunction(Function):
         cpp_coords_manager = coords_manager.CPPCoordsManager
 
         gpool_forward(D, in_feat, mean, num_nonzero, cpp_in_coords_key,
-                      cpp_glob_coords_key, cpp_coords_manager, batch_size, True)
+                      cpp_glob_coords_key, cpp_coords_manager, True)
         # X - \mu
         centered_feat = in_feat.new()
         broadcast_forward(D, in_feat, -mean, centered_feat, add,
@@ -107,7 +106,7 @@ class MinkowskiInstanceNormFunction(Function):
         variance = in_feat.new()
         gpool_forward(D, centered_feat**2, variance, num_nonzero,
                       cpp_in_coords_key, cpp_glob_coords_key,
-                      cpp_coords_manager, batch_size, True)
+                      cpp_coords_manager, True)
 
         # norm_feat = (X - \mu) / \sigma
         inv_std = 1 / (variance + 1e-8).sqrt()
@@ -116,7 +115,6 @@ class MinkowskiInstanceNormFunction(Function):
                           cpp_in_coords_key, cpp_glob_coords_key,
                           cpp_coords_manager)
 
-        ctx.batch_size = batch_size
         ctx.in_coords_key, ctx.glob_coords_key = in_coords_key, glob_coords_key
         ctx.coords_manager = coords_manager
         # For GPU tensors, must use save_for_backward.
@@ -126,7 +124,6 @@ class MinkowskiInstanceNormFunction(Function):
     @staticmethod
     def backward(ctx, out_grad):
         # https://kevinzakka.github.io/2016/09/14/batch_normalization/
-        batch_size = ctx.batch_size
         in_coords_key, glob_coords_key = ctx.in_coords_key, ctx.glob_coords_key
         coords_manager = ctx.coords_manager
 
@@ -149,13 +146,13 @@ class MinkowskiInstanceNormFunction(Function):
         num_nonzero = out_grad.new()
         mean_dout = out_grad.new()
         gpool_forward(D, out_grad, mean_dout, num_nonzero, cpp_in_coords_key,
-                      cpp_glob_coords_key, cpp_coords_manager, batch_size, True)
+                      cpp_glob_coords_key, cpp_coords_manager, True)
 
         # 1/N \sum (dout * out)
         mean_dout_feat = out_grad.new()
         gpool_forward(D, out_grad * norm_feat, mean_dout_feat, num_nonzero,
                       cpp_in_coords_key, cpp_glob_coords_key,
-                      cpp_coords_manager, batch_size, True)
+                      cpp_coords_manager, True)
 
         # out * 1/N \sum (dout * out)
         feat_mean_dout_feat = out_grad.new()
@@ -178,10 +175,9 @@ class MinkowskiInstanceNormFunction(Function):
 
 class MinkowskiStableInstanceNorm(Module):
 
-    def __init__(self, num_features, batch_size=0, dimension=-1):
+    def __init__(self, num_features, dimension=-1):
         Module.__init__(self)
         self.num_features = num_features
-        self.batch_size = batch_size
         self.eps = 1e-6
         self.weight = nn.Parameter(torch.ones(1, num_features))
         self.bias = nn.Parameter(torch.zeros(1, num_features))
@@ -229,15 +225,11 @@ class MinkowskiInstanceNorm(Module):
 
     """
 
-    def __init__(self, num_features, batch_size=0, dimension=-1):
+    def __init__(self, num_features, dimension=-1):
         r"""
         Args:
 
             num_features (int): the dimension of the input feautres.
-
-            batch_size (int, optional): the batch size of the input tensor.
-            This speeds up the coordinate initialization when a non-zero value
-            is given.
 
             dimension (int): the spatial dimension of the input tensor.
 
@@ -246,7 +238,6 @@ class MinkowskiInstanceNorm(Module):
         self.num_features = num_features
         self.weight = nn.Parameter(torch.ones(1, num_features))
         self.bias = nn.Parameter(torch.zeros(1, num_features))
-        self.batch_size = batch_size
         self.dimension = dimension
         self.reset_parameters()
         self.inst_norm = MinkowskiInstanceNormFunction()
@@ -263,8 +254,8 @@ class MinkowskiInstanceNorm(Module):
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
-        output = self.inst_norm.apply(input.F, self.batch_size,
-                                      input.coords_key, None, input.coords_man)
+        output = self.inst_norm.apply(input.F, input.coords_key, None,
+                                      input.coords_man)
         output = output * self.weight + self.bias
 
         return SparseTensor(
