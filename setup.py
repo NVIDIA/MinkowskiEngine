@@ -62,6 +62,8 @@ setup(
             libraries=['minkowski', 'openblas'],
             library_dirs=['objs'],
             # extra_compile_args=['-g']
+            # Uncomment the following for CPU_ONLY build
+            # extra_compile_args=['-DCPU_ONLY']
         )
     ],
     cmdclass={'build_ext': BuildExtension},
@@ -69,6 +71,6 @@ setup(
     author_email='chrischoy@ai.stanford.edu',
     description='Minkowski Engine, a Sparse Tensor Library for Neural Networks',
     keywords='Minkowski Engine Sparse Tensor Library Convolutional Neural Networks',
-    url='https://github.com/chrischoy/MinkowskiEngine',
+    url='https://github.com/StanfordVL/MinkowskiEngine',
     zip_safe=False,
 )
