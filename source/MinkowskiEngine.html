@@ -590,6 +590,16 @@ output.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_per_batch">
+<code class="sig-name descname">get_row_indices_per_batch</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_per_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a list of unique batch indices, and a list of lists of row indices per batch.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+<span class="n">batch_indices</span><span class="p">,</span> <span class="n">list_of_row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_per_batch</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize">
 <code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em>, <em class="sig-param">enforce_creation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -833,7 +843,7 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <p>A instance normalization layer for a sparse tensor.</p>
 <dl class="method">
@@ -881,7 +891,7 @@ output.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward">
-<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">in_feat</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">glob_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">in_feat</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">glob_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context ctx as the first argument, followed by any
@@ -894,7 +904,7 @@ during the backward pass.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiStableInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiStableInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.forward">
@@ -1017,7 +1027,7 @@ during the backward pass.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param">batch_size=0</em>, <em class="sig-param">average=True</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
 <p>Pool all input features to one output.</p>
 <div class="math notranslate nohighlight">
@@ -1063,7 +1073,7 @@ output.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward">
-<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">average=True</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">average=True</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context ctx as the first argument, followed by any

@@ -35,3 +35,10 @@ python examples/indoor.py
 When you run the above example, you will download pretrained-weights of a
 Minkowski network and will see the semantic segmentation results of a hotel
 room.
+
+
+## CPU only compilation
+
+1. Uncomment line 8 of the Makefile to enable the flag, `CPU_ONLY`.
+2. Uncomment line 66 of the `setup.py` to enable the flag, `CPU_ONLY`.
+3. `python setup.py install`

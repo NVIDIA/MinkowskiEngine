@@ -204,17 +204,14 @@
 <h2>MinkowskiInstanceNorm<a class="headerlink" href="#minkowskiinstancenorm" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiInstanceNorm">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>A instance normalization layer for a sparse tensor.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiInstanceNorm.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">batch_size=0</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiInstanceNorm.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Args:</p>
 <blockquote>
 <div><p>num_features (int): the dimension of the input feautres.</p>
-<p>batch_size (int, optional): the batch size of the input tensor.
-This speeds up the coordinate initialization when a non-zero value
-is given.</p>
 <p>dimension (int): the spatial dimension of the input tensor.</p>
 </div></blockquote>
 </dd></dl>

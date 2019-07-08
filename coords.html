@@ -260,6 +260,16 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="MinkowskiEngine.CoordsManager.get_row_indices_per_batch">
+<code class="sig-name descname">get_row_indices_per_batch</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_row_indices_per_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a list of unique batch indices, and a list of lists of row indices per batch.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+<span class="n">batch_indices</span><span class="p">,</span> <span class="n">list_of_row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_per_batch</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.initialize">
 <code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em>, <em class="sig-param">enforce_creation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>

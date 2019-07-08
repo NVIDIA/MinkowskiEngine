@@ -92,6 +92,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-a-segmentation-network">Running a segmentation network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cpu-only-compilation">CPU only compilation</a></li>
 </ul>
 </li>
 </ul>
@@ -217,6 +218,14 @@
 <p>When you run the above example, you will download pretrained-weights of a
 Minkowski network and will see the semantic segmentation results of a hotel
 room.</p>
+</div>
+<div class="section" id="cpu-only-compilation">
+<h2>CPU only compilation<a class="headerlink" href="#cpu-only-compilation" title="Permalink to this headline">¶</a></h2>
+<ol class="simple">
+<li><p>Uncomment line 8 of the Makefile to enable the flag, <code class="docutils literal notranslate"><span class="pre">CPU_ONLY</span></code>.</p></li>
+<li><p>Uncomment line 66 of the <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> to enable the flag, <code class="docutils literal notranslate"><span class="pre">CPU_ONLY</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code></p></li>
+</ol>
 </div>
 </div>
 
