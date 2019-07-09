@@ -43,8 +43,8 @@ ifneq ($(CPU_ONLY), 1)
 	# CUDA_DIR := /usr/local/cuda
 	CUDA_DIR := $(shell python -c 'from torch.utils.cpp_extension import _find_cuda_home; print(_find_cuda_home())')
 	
-	INCLUDE_DIRS := ./ $(CUDA_DIR)/include
-	LIBRARY_DIRS := $(CUDA_DIR)/lib64
+	INCLUDE_DIRS += ./ $(CUDA_DIR)/include
+	LIBRARY_DIRS += $(CUDA_DIR)/lib64
 endif
 
 SRC_DIR := ./src
