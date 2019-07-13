@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>setup module &mdash; MinkowskiEngine 0.2.5a0 documentation</title>
+  <title>PointNet &mdash; MinkowskiEngine 0.2.5a0 documentation</title>
   
 
   
@@ -35,7 +35,9 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SparseTensor" href="../sparse_tensor.html" />
+    <link rel="prev" title="Multi-GPU Training" href="multigpu.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,11 +92,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/pointnet.html">PointNet</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="interop.html">Working with Pytorch Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
 <ul>
@@ -157,13 +159,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>setup module</li>
+      <li>PointNet</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/source/setup.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/demo/pointnet.md.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -177,8 +179,25 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="setup-module">
-<h1>setup module<a class="headerlink" href="#setup-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="pointnet">
+<h1>PointNet<a class="headerlink" href="#pointnet" title="Permalink to this headline">¶</a></h1>
+<p>A PointNet uses a series of multi-layered perceptrons (linear layers) with
+spatial transformers and global pooling layers.</p>
+<p>However, you can think of a PointNet as a specialization of a convolutional
+neural network consisting of a series of convolution layers and global poolings.
+In this network, all convolution layers have kernel size 1, and stride 1. Also,
+the input is a sparse tensor where features are normalized coordinates.</p>
+<p>This generalization allows the network to process an arbitrary number of
+points, but allows you to think of linear layers as a specialization of
+convolution.</p>
+<p>In addition to being able to process arbitrary number of points, it allows you
+to define</p>
+<ol class="simple">
+<li><p>Features as arbitrary generic features such as color.</p></li>
+<li><p>Convolutions with kernel size &gt; 1.</p></li>
+<li><p>Convolutions with stride &gt; 1.</p></li>
+</ol>
+<p>Please refer to the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/pointnet.py">complete pointnet example</a> for more detail.</p>
 </div>
 
 
@@ -190,6 +209,15 @@
 </a>
 
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../sparse_tensor.html" class="btn btn-neutral float-right" title="SparseTensor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="multigpu.html" class="btn btn-neutral float-left" title="Multi-GPU Training" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

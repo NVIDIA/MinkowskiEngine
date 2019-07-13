@@ -21,6 +21,7 @@ Table of Contents
    demo/interop
    demo/segmentation
    demo/multigpu
+   demo/pointnet
 
 .. toctree::
    :maxdepth: 2
