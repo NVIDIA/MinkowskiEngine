@@ -260,6 +260,14 @@ class SparseTensor():
         self._F = self._F.cpu()
         return self
 
+    @property
+    def device(self):
+        return self._F.device
+
+    @property
+    def dtype(self):
+        return self._F.dtype
+
     def get_device(self):
         return self._F.get_device()
 

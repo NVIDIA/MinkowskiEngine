@@ -26,7 +26,8 @@ import unittest
 
 from MinkowskiEngine import SparseTensor, MinkowskiGlobalPooling, \
     MinkowskiBroadcastFunction, MinkowskiBroadcastAddition, \
-    MinkowskiBroadcastMultiplication, OperationType
+    MinkowskiBroadcastMultiplication, MinkowskiBroadcast, \
+    MinkowskiBroadcastConcatenation, OperationType
 
 from utils.gradcheck import gradcheck
 from tests.common import data_loader
@@ -44,8 +45,8 @@ class TestBroadcast(unittest.TestCase):
         pool = MinkowskiGlobalPooling(dimension=D)
         input_glob = pool(input)
         input_glob.F.requires_grad_()
-        broadcast = MinkowskiBroadcastAddition(D)
-        output = broadcast(input, input_glob)
+        broadcast_add = MinkowskiBroadcastAddition(D)
+        output = broadcast_add(input, input_glob)
         print(output)
 
         # Check backward
@@ -54,7 +55,7 @@ class TestBroadcast(unittest.TestCase):
         device = torch.device('cuda')
         input = input.to(device)
         input_glob = input_glob.to(device)
-        output = broadcast(input, input_glob)
+        output = broadcast_add(input, input_glob)
         print(output)
         self.assertTrue(
             gradcheck(
@@ -78,9 +79,15 @@ class TestBroadcast(unittest.TestCase):
         pool = MinkowskiGlobalPooling(dimension=D)
         input_glob = pool(input)
         input_glob.F.requires_grad_()
-        broadcast = MinkowskiBroadcastAddition(D)
+        broadcast = MinkowskiBroadcast(D)
+        broadcast_cat = MinkowskiBroadcastConcatenation(D)
+        broadcast_add = MinkowskiBroadcastAddition(D)
         broadcast_mul = MinkowskiBroadcastMultiplication(D)
         output = broadcast(input, input_glob)
+        print(output)
+        output = broadcast_cat(input, input_glob)
+        print(output)
+        output = broadcast_add(input, input_glob)
         print(output)
         output = broadcast_mul(input, input_glob)
         print(output)

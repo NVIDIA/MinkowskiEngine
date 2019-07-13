@@ -1,6 +1,12 @@
 # Change Log
 
 
+## [0.2.5a0] - 2019-07-12
+
+### Changed
+
+- Added the `MinkowskiBroadcast` and `MinkowskiBroadcastConcatenation` module.
+
 ## [0.2.5] - 2019-07-02
 
 ### Changed

@@ -21,7 +21,7 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-__version__ = "0.2.5"
+__version__ = "0.2.5a0"
 
 import os
 import sys
@@ -49,8 +49,8 @@ from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
 
 from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
-    MinkowskiBroadcast, MinkowskiBroadcastAddition, \
-    MinkowskiBroadcastMultiplication, OperationType
+    MinkowskiBroadcast, MinkowskiBroadcastConcatenation, \
+    MinkowskiBroadcastAddition, MinkowskiBroadcastMultiplication, OperationType
 
 from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoftmax, \
     MinkowskiPReLU, MinkowskiSELU, MinkowskiCELU, MinkowskiDropout, MinkowskiThreshold, \

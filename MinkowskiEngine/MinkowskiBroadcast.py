@@ -23,6 +23,7 @@
 # of the code.
 from enum import Enum
 
+import torch
 from torch.nn import Module
 from torch.autograd import Function
 
@@ -36,9 +37,11 @@ class OperationType(Enum):
     MULTIPLICATION = 1
 
 
+op_to_int = {i: i.value for i in OperationType}
+
+
 def operation_type_to_int(op):
     assert isinstance(op, OperationType)
-    op_to_int = {OperationType.ADDITION: 0, OperationType.MULTIPLICATION: 1}
     return op_to_int[op]
 
 
@@ -79,10 +82,10 @@ class MinkowskiBroadcastFunction(Function):
         return grad_in_feat, grad_in_feat_glob, None, None, None, None
 
 
-class MinkowskiBroadcast(Module):
+class AbstractMinkowskiBroadcast(Module):
 
     def __init__(self, operation_type, dimension=-1):
-        super(MinkowskiBroadcast, self).__init__()
+        super(AbstractMinkowskiBroadcast, self).__init__()
         assert isinstance(operation_type, OperationType)
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
@@ -107,7 +110,7 @@ class MinkowskiBroadcast(Module):
         return self.__class__.__name__
 
 
-class MinkowskiBroadcastAddition(MinkowskiBroadcast):
+class MinkowskiBroadcastAddition(AbstractMinkowskiBroadcast):
     r"""Broadcast the reduced features to all input coordinates.
 
     .. math::
@@ -136,11 +139,11 @@ class MinkowskiBroadcastAddition(MinkowskiBroadcast):
             space, meshes and 3D shapes are in a 3D space.
 
         """
-        super(MinkowskiBroadcastAddition,
-              self).__init__(OperationType.ADDITION, dimension)
+        super(MinkowskiBroadcastAddition, self).__init__(
+            OperationType.ADDITION, dimension)
 
 
-class MinkowskiBroadcastMultiplication(MinkowskiBroadcast):
+class MinkowskiBroadcastMultiplication(AbstractMinkowskiBroadcast):
     r"""Broadcast reduced features to all input coordinates.
 
     .. math::
@@ -169,5 +172,102 @@ class MinkowskiBroadcastMultiplication(MinkowskiBroadcast):
             space, meshes and 3D shapes are in a 3D space.
 
         """
-        super(MinkowskiBroadcastMultiplication,
-              self).__init__(OperationType.MULTIPLICATION, dimension)
+        super(MinkowskiBroadcastMultiplication, self).__init__(
+            OperationType.MULTIPLICATION, dimension)
+
+
+class MinkowskiBroadcast(Module):
+    r"""Broadcast reduced features to all input coordinates.
+
+    .. math::
+
+        \mathbf{y}_\mathbf{u} = \mathbf{x}_2 \; \text{for} \; \mathbf{u} \in
+        \mathcal{C}^\text{in}
+
+
+    For all input :math:`\mathbf{x}_\mathbf{u}`, copy value :math:`\mathbf{x}_2`
+    element-wise. The output coordinates will be the same as the input
+    coordinates :math:`\mathcal{C}^\text{in} = \mathcal{C}^\text{out}`. The
+    first input :math:`\mathbf{x}_1` is only used for defining the output
+    coordinates.
+
+    .. note::
+        The first argument takes a sparse tensor; the second argument takes
+        features that are reduced to the origin. This can be typically done with
+        the global reduction such as the :attr:`MinkowskiGlobalPooling`.
+
+    """
+
+    def __init__(self, dimension=-1):
+        r"""broadcast layer.
+
+        Args:
+            :attr:`dimension` (int): the dimension of the space where all the
+            inputs and the network is defined. For example, images are in a 2D
+            space, meshes and 3D shapes are in a 3D space.
+
+        """
+        super(MinkowskiBroadcast, self).__init__()
+        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
+
+        self.dimension = dimension
+
+    def __repr__(self):
+        return self.__class__.__name__
+
+    def forward(self, input, input_glob):
+        assert isinstance(input, SparseTensor)
+        assert isinstance(input_glob, SparseTensor)
+        assert input.D == self.dimension
+
+        coo = input.coords_man.get_coo_broadcast_coords(input.coords_key)
+        perm_mat = torch.sparse_coo_tensor(
+            coo,
+            torch.ones(len(input), dtype=input.dtype, device=input.device),
+            requires_grad=False)
+
+        broadcasted_input_glob = perm_mat.mm(input_glob.F)
+        return SparseTensor(
+            broadcasted_input_glob,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)
+
+
+class MinkowskiBroadcastConcatenation(MinkowskiBroadcast):
+    r"""Broadcast reduced features to all input coordinates and concatenate to the input.
+
+    .. math::
+
+        \mathbf{y}_\mathbf{u} = [\mathbf{x}_{1,\mathbf{u}}, \mathbf{x}_2] \;
+        \text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}
+
+
+    For all input :math:`\mathbf{x}_\mathbf{u}`, concatenate vector
+    :math:`\mathbf{x}_2`. :math:`[\cdot, \cdot]` is a concatenation operator.
+    The output coordinates will be the same as the input coordinates
+    :math:`\mathcal{C}^\text{in} = \mathcal{C}^\text{out}`.
+
+    .. note::
+        The first argument takes a sparse tensor; the second argument takes
+        features that are reduced to the origin. This can be typically done with
+        the global reduction such as the :attr:`MinkowskiGlobalPooling`.
+
+    """
+
+    def forward(self, input, input_glob):
+        assert isinstance(input, SparseTensor)
+        assert isinstance(input_glob, SparseTensor)
+        assert input.D == self.dimension
+
+        coo = input.coords_man.get_coo_broadcast_coords(input.coords_key)
+        perm_mat = torch.sparse_coo_tensor(
+            coo,
+            torch.ones(len(input), dtype=input.dtype, device=input.device),
+            requires_grad=False)
+
+        broadcasted_input_glob = perm_mat.mm(input_glob.F)
+        broadcast_cat = torch.cat((input.F, broadcasted_input_glob), dim=1)
+        return SparseTensor(
+            broadcast_cat,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)
