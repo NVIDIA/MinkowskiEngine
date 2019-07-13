@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; MinkowskiEngine 0.2.5 documentation</title>
+  <title>Index &mdash; MinkowskiEngine 0.2.5a0 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.2.5
+                0.2.5a0
               </div>
             
           
@@ -212,7 +212,11 @@
 </li>
         <li><a href="normalization.html#MinkowskiEngine.MinkowskiBatchNorm.__init__">(MinkowskiEngine.MinkowskiBatchNorm method)</a>
 </li>
+        <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcast.__init__">(MinkowskiEngine.MinkowskiBroadcast method)</a>
+</li>
         <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastAddition.__init__">(MinkowskiEngine.MinkowskiBroadcastAddition method)</a>
+</li>
+        <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastConcatenation.__init__">(MinkowskiEngine.MinkowskiBroadcastConcatenation method)</a>
 </li>
         <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastMultiplication.__init__">(MinkowskiEngine.MinkowskiBroadcastMultiplication method)</a>
 </li>
@@ -258,6 +262,10 @@
 
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast">AbstractMinkowskiBroadcast (class in MinkowskiEngine.MinkowskiBroadcast)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.OperationType.ADDITION">ADDITION (MinkowskiEngine.MinkowskiBroadcast.OperationType attribute)</a>
 </li>
@@ -341,9 +349,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.D">D() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.D">[1]</a>
 </li>
+      <li><a href="source/tests.html#tests.common.data_loader">data_loader() (in module tests.common)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/tests.html#tests.common.data_loader">data_loader() (in module tests.common)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.device">device() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.device">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.dtype">dtype() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.dtype">[1]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -369,9 +381,13 @@
 </li>
       <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.voxelization.fnv_hash_vec">fnv_hash_vec() (in module MinkowskiEngine.utils.voxelization)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast.forward">forward() (MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast method)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast.forward">forward() (MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast method)</a>
 
       <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation method)</a>
+</li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction static method)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.forward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase method)</a>
@@ -431,6 +447,12 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_coo_broadcast_coords">get_coo_broadcast_coords() (MinkowskiEngine.CoordsManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coo_broadcast_coords">(MinkowskiEngine.MinkowskiCoords.CoordsManager method)</a>
+</li>
+      </ul></li>
       <li><a href="source/tests.html#tests.common.get_coords">get_coords() (in module tests.common)</a>
 
       <ul>
@@ -589,12 +611,22 @@
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm">(class in MinkowskiEngine.MinkowskiNormalization)</a>
 </li>
       </ul></li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast">MinkowskiBroadcast (class in MinkowskiEngine.MinkowskiBroadcast)</a>
+      <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcast">MinkowskiBroadcast (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast">(class in MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
+      </ul></li>
       <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastAddition">MinkowskiBroadcastAddition (class in MinkowskiEngine)</a>
 
       <ul>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition">(class in MinkowskiEngine.MinkowskiBroadcast)</a>
+</li>
+      </ul></li>
+      <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastConcatenation">MinkowskiBroadcastConcatenation (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation">(class in MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
       </ul></li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction">MinkowskiBroadcastFunction (class in MinkowskiEngine.MinkowskiBroadcast)</a>
@@ -689,12 +721,12 @@
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm">(class in MinkowskiEngine.MinkowskiNormalization)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction">MinkowskiInstanceNormFunction (class in MinkowskiEngine.MinkowskiNormalization)</a>
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiLinear">MinkowskiLinear (class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiMaxPooling">MinkowskiMaxPooling (class in MinkowskiEngine)</a>
 
       <ul>

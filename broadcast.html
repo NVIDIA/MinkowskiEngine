@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiBroadcast &mdash; MinkowskiEngine 0.2.5 documentation</title>
+  <title>MinkowskiBroadcast &mdash; MinkowskiEngine 0.2.5a0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.5
+                0.2.5a0
               </div>
             
           
@@ -105,6 +105,8 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinkowskiBroadcast</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskibroadcastaddition">MinkowskiBroadcastAddition</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskibroadcastmultiplication">MinkowskiBroadcastMultiplication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskibroadcastconcatenation">MinkowskiBroadcastConcatenation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">MinkowskiBroadcast</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
@@ -239,6 +241,75 @@ the global reduction such as the <a class="reference internal" href="pooling.htm
 <dt id="MinkowskiEngine.MinkowskiBroadcastMultiplication.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>a broadcast multiplication layer.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
+inputs and the network is defined. For example, images are in a 2D
+space, meshes and 3D shapes are in a 3D space.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskibroadcastconcatenation">
+<h2>MinkowskiBroadcastConcatenation<a class="headerlink" href="#minkowskibroadcastconcatenation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiBroadcastConcatenation">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiBroadcastConcatenation</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastConcatenation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Broadcast reduced features to all input coordinates and concatenate to the input.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}_\mathbf{u} = [\mathbf{x}_{1,\mathbf{u}}, \mathbf{x}_2] \;
+\text{for} \; \mathbf{u} \in \mathcal{C}^\text{in}\]</div>
+<p>For all input <span class="math notranslate nohighlight">\(\mathbf{x}_\mathbf{u}\)</span>, concatenate vector
+<span class="math notranslate nohighlight">\(\mathbf{x}_2\)</span>. <span class="math notranslate nohighlight">\([\cdot, \cdot]\)</span> is a concatenation operator.
+The output coordinates will be the same as the input coordinates
+<span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} = \mathcal{C}^\text{out}\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first argument takes a sparse tensor; the second argument takes
+features that are reduced to the origin. This can be typically done with
+the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
+</div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiBroadcastConcatenation.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastConcatenation.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>broadcast layer.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
+inputs and the network is defined. For example, images are in a 2D
+space, meshes and 3D shapes are in a 3D space.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="id1">
+<h2>MinkowskiBroadcast<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiBroadcast">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiBroadcast</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Broadcast reduced features to all input coordinates.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y}_\mathbf{u} = \mathbf{x}_2 \; \text{for} \; \mathbf{u} \in
+\mathcal{C}^\text{in}\]</div>
+<p>For all input <span class="math notranslate nohighlight">\(\mathbf{x}_\mathbf{u}\)</span>, copy value <span class="math notranslate nohighlight">\(\mathbf{x}_2\)</span>
+element-wise. The output coordinates will be the same as the input
+coordinates <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} = \mathcal{C}^\text{out}\)</span>. The
+first input <span class="math notranslate nohighlight">\(\mathbf{x}_1\)</span> is only used for defining the output
+coordinates.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first argument takes a sparse tensor; the second argument takes
+features that are reduced to the origin. This can be typically done with
+the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
+</div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiBroadcast.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>broadcast layer.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the dimension of the space where all the
 inputs and the network is defined. For example, images are in a 2D
