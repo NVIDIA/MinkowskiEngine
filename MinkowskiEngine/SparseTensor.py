@@ -252,6 +252,10 @@ class SparseTensor():
     def size(self):
         return self._F.size()
 
+    @property
+    def shape(self):
+        return self._F.shape
+
     def to(self, device):
         self._F = self._F.to(device)
         return self
