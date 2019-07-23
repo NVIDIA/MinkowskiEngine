@@ -113,7 +113,8 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Common Issues</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#compilation-failure-due-to-incorrect-cuda-home">Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compilation-failure-due-to-incorrect-cuda-home">1. Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">2. Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#compilation-failure-due-to-out-of-memory-oom">Compilation failure due to Out Of Memory (OOM)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#compilation-issues-after-an-upgrade">Compilation issues after an upgrade</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#force-compiling-all-object-files">Force compiling all object files</a></li>
@@ -193,7 +194,30 @@
   <div class="section" id="common-issues">
 <h1>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="compilation-failure-due-to-incorrect-cuda-home">
-<h2>Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code><a class="headerlink" href="#compilation-failure-due-to-incorrect-cuda-home" title="Permalink to this headline">¶</a></h2>
+<h2>1. Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code><a class="headerlink" href="#compilation-failure-due-to-incorrect-cuda-home" title="Permalink to this headline">¶</a></h2>
+<p>In some cases where your default CUDA directory is linked to an old CUDA version (MinkowskiEngine requires CUDA &gt;= 10.0), you might face some compilation issues that give you <strong>segmentation fault errors</strong> during compilation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NVCC</span> <span class="o">...</span>
+<span class="n">Segmentation</span> <span class="n">fault</span>
+</pre></div>
+</div>
+<p>To confirm, you should check your paths.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ echo $CUDA_HOME
+/usr/local/cuda
+
+$ ls -al $CUDA_HOME
+..... /usr/local/cuda -&gt; /usr/local/cuda-9.0
+
+$ ls /usr/local/
+bin cuda cuda-9.0 cuda-10.0 ...
+</pre></div>
+</div>
+<p>In this case, make sure you set the environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code> to the right path and install the MinkowskiEngine.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">CUDA_HOME</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">cuda</span><span class="o">-</span><span class="mf">10.0</span><span class="p">;</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id1">
+<h2>2. Compilation failure due to incorrect <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>Some applications modify the environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code> on your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> see <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/issues/12">#12</a>.
 This makes the pytorch CPPExtension module to fail leading to problems like <code class="docutils literal notranslate"><span class="pre">src/common.hpp:40:10:</span> <span class="pre">fatal</span> <span class="pre">error:</span> <span class="pre">cublas_v2.h:</span> <span class="pre">No</span> <span class="pre">such</span> <span class="pre">file</span> <span class="pre">or</span> <span class="pre">directory</span></code>.</p>
 <p>If you encounter this issue, try to set your <code class="docutils literal notranslate"><span class="pre">CUDA_HOME</span></code> explicitly.</p>

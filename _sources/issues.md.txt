@@ -1,7 +1,36 @@
 # Common Issues
 
 
-## Compilation failure due to incorrect `CUDA_HOME`
+## 1. Compilation failure due to incorrect `CUDA_HOME`
+
+In some cases where your default CUDA directory is linked to an old CUDA version (MinkowskiEngine requires CUDA >= 10.0), you might face some compilation issues that give you **segmentation fault errors** during compilation.
+
+```
+NVCC ...
+Segmentation fault
+```
+
+To confirm, you should check your paths.
+
+```
+$ echo $CUDA_HOME
+/usr/local/cuda
+
+$ ls -al $CUDA_HOME
+..... /usr/local/cuda -> /usr/local/cuda-9.0
+
+$ ls /usr/local/
+bin cuda cuda-9.0 cuda-10.0 ...
+```
+
+In this case, make sure you set the environment variable `CUDA_HOME` to the right path and install the MinkowskiEngine.
+
+```
+export CUDA_HOME=/usr/local/cuda-10.0; python setup.py install
+```
+
+
+## 2. Compilation failure due to incorrect `CUDA_HOME`
 
 Some applications modify the environment variable `CUDA_HOME` on your `.bashrc` see [#12](https://github.com/StanfordVL/MinkowskiEngine/issues/12).
 This makes the pytorch CPPExtension module to fail leading to problems like `src/common.hpp:40:10: fatal error: cublas_v2.h: No such file or directory`.
