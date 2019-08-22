@@ -189,4 +189,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   instantiate_dim<5>(m, std::to_string(5));
   instantiate_dim<6>(m, std::to_string(6));
   instantiate_dim<7>(m, std::to_string(7));
+  instantiate_dim<8>(m, std::to_string(8));
 }
