@@ -32,7 +32,7 @@ def fnv_hash_vec(arr):
     """
     assert arr.ndim == 2
     # Floor first for negative coordinates
-    arr = arr.astype(np.uint64, copy=False)
+    arr = arr.astype(np.uint64, copy=True)
     hashed_arr = np.uint64(14695981039346656037) * \
         np.ones(arr.shape[0], dtype=np.uint64)
     for j in range(arr.shape[1]):
@@ -47,7 +47,7 @@ def ravel_hash_vec(arr):
     """
     assert arr.ndim == 2
     arr -= arr.min(0)
-    arr = arr.astype(np.uint64, copy=False)
+    arr = arr.astype(np.uint64, copy=True)
     arr_max = arr.max(0).astype(np.uint64) + 1
 
     keys = np.zeros(arr.shape[0], dtype=np.uint64)
