@@ -7,6 +7,8 @@ Use OpenMP for multi-threaded kernel map generation and minor renaming and expli
 
 ### Changed
 
+- Major speed up
+    - Suboptimal kernels were introduced, and optimal kernels removed for faulty cleanup in v0.2.5. CUDA kernels were re-introduced and major speed up was restored.
 - Minor name changes in `CoordsManager`.
 - `CoordsManager` saves all coordinates for future updates.
 - `CoordsManager` functions `createInOutPerKernel` and `createInOutPerKernelTranspose` now support multi-threaded kernel map generation by default using OpenMP.
