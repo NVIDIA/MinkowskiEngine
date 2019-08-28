@@ -31,7 +31,6 @@
 // debugging -g #include <torch/extension.h>
 
 #include "convolution.cuh"
-#include "gpu_memory_manager.hpp"
 
 // Given each output, get an input feature for each corresponding kernel weight
 // and add the output in place
@@ -68,6 +67,78 @@ template <typename Dtype, typename Itype, int BLOCK_SIZE>
 __global__ void matmul(const Dtype *A, const int wA, const int hA,
                        const Dtype *B, const int wB, const int hB, Dtype *C,
                        const Itype *in_map, const Itype *out_map) {
+  // Use in_feat as A and kernel as B
+
+  // Block index
+  const int bx = blockIdx.x;
+  const int by = blockIdx.y;
+
+  // Thread index
+  const int tx = threadIdx.x;
+  const int ty = threadIdx.y;
+
+  // Coordinate. x is for rows, y is for columns.
+  const int x = BLOCK_SIZE * bx + tx;
+  const int y = BLOCK_SIZE * by + ty;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  Dtype Csub = 0;
+
+  const Itype in_row = y < hA ? in_map[y] : 0;
+  const Itype out_row = y < hA ? out_map[y] : 0;
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int s = 0; s < wA; s += BLOCK_SIZE) {
+    // Declaration of the shared memory array As used to
+    // store the sub-matrix of A
+    __shared__ Dtype As[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Declaration of the shared memory array Bs used to
+    // store the sub-matrix of B
+    __shared__ Dtype Bs[BLOCK_SIZE][BLOCK_SIZE];
+
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = ((s + tx) < wA && y < hA) ? A[wA * in_row + s + tx] : 0;
+    Bs[ty][tx] = ((s + ty) < hB && x < wB) ? B[wB * (s + ty) + x] : 0;
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Csub += As[ty][k] * Bs[k][tx];
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  if (y < hA && x < wB)
+    C[wB * out_row + x] += Csub;
+  // TODO: atomicAdd(&C[wB * out_row + x], Csub); // For conv transpose, it
+  // might fail due to overlapping outputs
+}
+
+/**
+ * Matrix multiplication (CUDA Kernel) on the device: C = A * B
+ * wA is A's width and wB is B's width
+ */
+template <typename Dtype, typename Itype, int BLOCK_SIZE>
+__global__ void matmul_nolim(const Dtype *A, const int wA, const int hA,
+                             const Dtype *B, const int wB, const int hB,
+                             Dtype *C, const Itype *in_map,
+                             const Itype *out_map) {
   // Use in_feat as A and kernel as B
 
   // Block index
@@ -152,6 +223,112 @@ __global__ void matmul2(const Dtype *A, const int wA, const int hA,
                         const Dtype *B, const int wB, const int hB,
                         const Dtype *D, const int wD, const int hD, Dtype *C,
                         Dtype *E, const Itype *in_map, const Itype *out_map) {
+  // Use grad_out_feat as A, transposed kernel weight as B, and in_feat as D
+
+  // Block index
+  const int bx = blockIdx.x;
+  const int by = blockIdx.y;
+
+  // Thread index
+  const int tx = threadIdx.x;
+  const int ty = threadIdx.y;
+
+  // Coordinate. x is for rows, y is for columns.
+  const int x = BLOCK_SIZE * bx + tx;
+  const int y = BLOCK_SIZE * by + ty;
+
+  const Itype in_row = y < hA ? in_map[y] : 0;
+  const Itype out_row = y < hA ? out_map[y] : 0;
+
+  // Csub is used to store the element of the block sub-matrix
+  // that is computed by the thread
+  Dtype Csub = 0;
+  Dtype Esub = 0;
+
+  // Declaration of the shared memory array As used to
+  // store the sub-matrix of A
+  __shared__ Dtype As[BLOCK_SIZE][BLOCK_SIZE];
+
+  // Declaration of the shared memory array Bs used to
+  // store the sub-matrix of B
+  __shared__ Dtype BTs[BLOCK_SIZE][BLOCK_SIZE];
+
+  // Declaration of the shared memory array Ds used to
+  // store the sub-matrix of D
+  __shared__ Dtype DTs[BLOCK_SIZE][BLOCK_SIZE];
+
+  // For Ds = D^T[...:..., ...:...], use the transposed grid dimension for A
+  DTs[ty][tx] = (x < wD && y < hD) ? D[wD * in_row + x] : 0;
+
+  // Loop over all the sub-matrices of A and B
+  // required to compute the block sub-matrix
+  for (int s = 0; s < wA; s += BLOCK_SIZE) {
+    // Load the matrices from device memory
+    // to shared memory; each thread loads
+    // one element of each matrix
+    As[ty][tx] = ((s + tx) < wA && y < hA) ? A[wA * out_row + s + tx] : 0;
+
+    // Transposed kernel
+    BTs[ty][tx] = ((s + ty) < wB && x < hB) ? B[wB * x + s + ty] : 0;
+
+    // Synchronize to make sure the matrices are loaded
+    __syncthreads();
+
+    // Multiply the two matrices together;
+    // each thread computes one element
+    // of the block sub-matrix
+#pragma unroll
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Csub += As[ty][k] * BTs[k][tx];
+    }
+
+    // For Esub, reset to 0
+    Esub = 0;
+#pragma unroll
+    for (int k = 0; k < BLOCK_SIZE; ++k) {
+      Esub += DTs[k][ty] * As[k][tx];
+    }
+
+    // Synchronize to make sure that the preceding
+    // computation is done before loading two new
+    // sub-matrices of A and B in the next iteration
+    __syncthreads();
+
+    // For the E matrix which requires accmulation of multiple blocks, use
+    // atomic addition. This can be replaced with a more sophisticaed reduction
+    // algorithm.
+    if ((bx * BLOCK_SIZE + ty) < wD && (s + tx) < wA)
+      atomicAdd(&E[wA * (bx * BLOCK_SIZE + ty) + (s + tx)], Esub);
+  }
+
+  // Write the block sub-matrix to device memory;
+  // each thread writes one element
+  if (y < hA && x < hB)
+    atomicAdd(&C[hB * in_row + x], Csub);
+}
+
+/**
+ * Matrix multiplication (CUDA Kernel) on the device: C = A * B^T, E = D^T * A
+ * wA is A's width and wB is B's width
+ *
+ *                +---+
+ *                |B^T|
+ *            +-------+
+ *            |   |   |
+ *            | A | C |
+ *            |   |   |
+ *            |   |   |
+ * +------------------+
+ * |    D^T   | E |
+ * +----------+---+
+ *
+ */
+template <typename Dtype, typename Itype, int BLOCK_SIZE>
+__global__ void matmul2_nolim(const Dtype *A, const int wA, const int hA,
+                              const Dtype *B, const int wB, const int hB,
+                              const Dtype *D, const int wD, const int hD,
+                              Dtype *C, Dtype *E, const Itype *in_map,
+                              const Itype *out_map) {
   // Use grad_out_feat as A, transposed kernel weight as B, and in_feat as D
 
   // Block index
@@ -261,16 +438,14 @@ void ConvolutionForwardKernelGPU(
   d_out_map = d_in_map + max_n_active;
 
   // Define the shared memory size
-  if (in_nchannel % 32 == 0 && out_nchannel % 32 == 0)
+  if (in_nchannel * out_nchannel >= 512)
     shared_mem_size = 32;
   else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0)
     shared_mem_size = 24;
   else if (in_nchannel % 16 == 0 && out_nchannel % 16 == 0)
     shared_mem_size = 16;
-  else if (in_nchannel % 8 == 0 && out_nchannel % 8 == 0)
-    shared_mem_size = 8;
   else
-    shared_mem_size = 4;
+    shared_mem_size = 8;
 
   dim3 threads(shared_mem_size, shared_mem_size);
 
@@ -288,40 +463,78 @@ void ConvolutionForwardKernelGPU(
                           sizeof(Itype) * n_active_in_volume,
                           cudaMemcpyHostToDevice));
 
-    dim3 grid((n_active_in_volume + threads.y - 1) / threads.y,
-              (out_nchannel + threads.x - 1) / threads.x);
-    switch (shared_mem_size) {
-    case 32:
-      matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
-          d_in_feat, in_nchannel, n_active_in_volume,
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
-          d_out_feat, d_in_map, d_out_map);
-      break;
-    case 24:
-      matmul<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
-          d_in_feat, in_nchannel, n_active_in_volume,
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
-          d_out_feat, d_in_map, d_out_map);
-      break;
-    case 16:
-      matmul<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
-          d_in_feat, in_nchannel, n_active_in_volume,
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
-          d_out_feat, d_in_map, d_out_map);
-      break;
-    case 8:
-      matmul<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
-          d_in_feat, in_nchannel, n_active_in_volume,
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel, in_nchannel,
-          d_out_feat, d_in_map, d_out_map);
-      break;
-    default:
-      num_kernels = out_nchannel * n_active_in_volume;
-      inplace_convolution<Dtype, Itype>
-          <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-              num_kernels, d_in_feat, in_nchannel, d_out_feat, out_nchannel,
-              &d_kernel[k * in_nchannel * out_nchannel], d_in_map, d_out_map);
-      break;
+    if (n_active_in_volume / shared_mem_size < 65536) {
+      dim3 grid((out_nchannel + threads.x - 1) / threads.x,
+                (n_active_in_volume + threads.y - 1) / threads.y);
+      switch (shared_mem_size) {
+      case 32:
+        matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      case 24:
+        matmul<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      case 16:
+        matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      case 8:
+        matmul<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      default:
+        num_kernels = out_nchannel * n_active_in_volume;
+        inplace_convolution<Dtype, Itype>
+            <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+                num_kernels, d_in_feat, in_nchannel, d_out_feat, out_nchannel,
+                &d_kernel[k * in_nchannel * out_nchannel], d_in_map, d_out_map);
+        break;
+      }
+    } else {
+      dim3 grid((n_active_in_volume + threads.y - 1) / threads.y,
+                (out_nchannel + threads.x - 1) / threads.x);
+      switch (shared_mem_size) {
+      case 32:
+        matmul_nolim<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      case 24:
+        matmul_nolim<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      case 16:
+        matmul_nolim<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      case 8:
+        matmul_nolim<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
+            d_in_feat, in_nchannel, n_active_in_volume,
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel, d_out_feat, d_in_map, d_out_map);
+        break;
+      default:
+        num_kernels = out_nchannel * n_active_in_volume;
+        inplace_convolution<Dtype, Itype>
+            <<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
+                num_kernels, d_in_feat, in_nchannel, d_out_feat, out_nchannel,
+                &d_kernel[k * in_nchannel * out_nchannel], d_in_map, d_out_map);
+        break;
+      }
     }
   }
 }
@@ -361,16 +574,14 @@ void ConvolutionBackwardKernelGPU(
   d_out_map = d_in_map + max_n_active;
 
   // Define the shared memory size
-  if (in_nchannel % 32 == 0 && out_nchannel % 32 == 0)
+  if (in_nchannel * out_nchannel >= 512)
     shared_mem_size = 32;
   else if (in_nchannel % 24 == 0 && out_nchannel % 24 == 0)
     shared_mem_size = 24;
   else if (in_nchannel % 16 == 0 && out_nchannel % 16 == 0)
     shared_mem_size = 16;
-  else if (in_nchannel % 8 == 0 && out_nchannel % 8 == 0)
-    shared_mem_size = 8;
   else
-    shared_mem_size = 4;
+    shared_mem_size = 8;
 
   dim3 threads(shared_mem_size, shared_mem_size);
 
@@ -387,60 +598,97 @@ void ConvolutionBackwardKernelGPU(
                           sizeof(Itype) * n_active_in_volume,
                           cudaMemcpyHostToDevice));
 
-    dim3 grid((n_active_in_volume + threads.y - 1) / threads.y,
-              (in_nchannel + threads.x - 1) / threads.x);
+    if (n_active_in_volume / shared_mem_size < 65536) {
+      dim3 grid((in_nchannel + threads.x - 1) / threads.x,
+                (n_active_in_volume + threads.y - 1) / threads.y);
 
-    switch (shared_mem_size) {
-    case 32:
-      matmul2<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
-          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-          in_nchannel,                                    // B
-          d_in_feat, in_nchannel, n_active_in_volume,     // D
-          d_grad_in_feat,                                 // C
-          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-          d_in_map, d_out_map);
-      break;
-    case 24:
-      matmul2<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
-          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-          in_nchannel,                                    // B
-          d_in_feat, in_nchannel, n_active_in_volume,     // D
-          d_grad_in_feat,                                 // C
-          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-          d_in_map, d_out_map);
-      break;
-    case 16:
-      matmul2<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
-          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-          in_nchannel,                                    // B
-          d_in_feat, in_nchannel, n_active_in_volume,     // D
-          d_grad_in_feat,                                 // C
-          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-          d_in_map, d_out_map);
-      break;
-    case 8:
-      matmul2<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
-          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-          in_nchannel,                                    // B
-          d_in_feat, in_nchannel, n_active_in_volume,     // D
-          d_grad_in_feat,                                 // C
-          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-          d_in_map, d_out_map);
-      break;
-    default:
-      matmul2<Dtype, Itype, 4><<<grid, threads, 0, stream>>>(
-          d_grad_out_feat, out_nchannel, n_active_in_volume, // A
-          &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-          in_nchannel,                                    // B
-          d_in_feat, in_nchannel, n_active_in_volume,     // D
-          d_grad_in_feat,                                 // C
-          &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-          d_in_map, d_out_map);
-      break;
+      switch (shared_mem_size) {
+      case 32:
+        matmul2<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      case 24:
+        matmul2<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      case 16:
+        matmul2<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      case 8:
+        matmul2<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      }
+    } else {
+      dim3 grid((n_active_in_volume + threads.y - 1) / threads.y,
+                (in_nchannel + threads.x - 1) / threads.x);
+      switch (shared_mem_size) {
+      case 32:
+        matmul2_nolim<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      case 24:
+        matmul2_nolim<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      case 16:
+        matmul2_nolim<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      case 8:
+        matmul2_nolim<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
+            d_grad_out_feat, out_nchannel, n_active_in_volume, // A
+            &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
+            in_nchannel,                                    // B
+            d_in_feat, in_nchannel, n_active_in_volume,     // D
+            d_grad_in_feat,                                 // C
+            &d_grad_kernel[k * in_nchannel * out_nchannel], // E
+            d_in_map, d_out_map);
+        break;
+      }
     }
   }
 }
