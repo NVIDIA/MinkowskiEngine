@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; MinkowskiEngine 0.2.5a0 documentation</title>
+  <title>Index &mdash; MinkowskiEngine 0.2.6 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.2.5a0
+                0.2.6
               </div>
             
           
@@ -235,9 +235,9 @@
 </li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiMaxPooling.__init__">(MinkowskiEngine.MinkowskiMaxPooling method)</a>
 </li>
-        <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU.__init__">(MinkowskiEngine.MinkowskiPReLU method)</a>
-</li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiPoolingTranspose.__init__">(MinkowskiEngine.MinkowskiPoolingTranspose method)</a>
+</li>
+        <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU.__init__">(MinkowskiEngine.MinkowskiPReLU method)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiReLU.__init__">(MinkowskiEngine.MinkowskiReLU method)</a>
 </li>
@@ -484,22 +484,16 @@
         <li><a href="common.html#MinkowskiEngine.KernelGenerator.get_kernel">(MinkowskiEngine.KernelGenerator method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_kernel_map">get_kernel_map() (MinkowskiEngine.CoordsManager method)</a>
 
       <ul>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map">(MinkowskiEngine.MinkowskiCoords.CoordsManager method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.get_kernel_volume">get_kernel_volume() (in module MinkowskiEngine.Common)</a>
 </li>
-      <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_mapping_by_coords_key">get_mapping_by_coords_key() (MinkowskiEngine.CoordsManager method)</a>
-
-      <ul>
-        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_mapping_by_coords_key">(MinkowskiEngine.MinkowskiCoords.CoordsManager method)</a>
-</li>
-      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_mapping_by_tensor_strides">get_mapping_by_tensor_strides() (MinkowskiEngine.CoordsManager method)</a>
 
       <ul>
@@ -578,8 +572,6 @@
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize_enforce">(MinkowskiEngine.MinkowskiCoords.CoordsManager method)</a>
 </li>
       </ul></li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.initialize_nthreads">initialize_nthreads() (in module MinkowskiEngine.MinkowskiCoords)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -1006,14 +998,16 @@
 </li>
       <li><a href="source/tests.html#tests.norm.TestNormalization.test_inst_norm_gpu">test_inst_norm_gpu() (tests.norm.TestNormalization method)</a>
 </li>
+      <li><a href="source/tests.html#tests.kernel_map.TestKernelMap.test_kernelmap">test_kernelmap() (tests.kernel_map.TestKernelMap method)</a>
+</li>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_maxpooling">test_maxpooling() (tests.pool.TestPooling method)</a>
 </li>
       <li><a href="source/tests.html#tests.pruning.TestPooling.test_pruning">test_pruning() (tests.pruning.TestPooling method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_sumpooling">test_sumpooling() (tests.pool.TestPooling method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_unpool">test_unpool() (tests.pool.TestPooling method)</a>
 </li>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_unpooling_gpu">test_unpooling_gpu() (tests.pool.TestPooling method)</a>
@@ -1025,6 +1019,8 @@
       <li><a href="source/tests.html#tests.conv.TestConvolutionTranspose">TestConvolutionTranspose (class in tests.conv)</a>
 </li>
       <li><a href="source/tests.html#tests.voxelization.TestGPUVoxelization">TestGPUVoxelization (class in tests.voxelization)</a>
+</li>
+      <li><a href="source/tests.html#tests.kernel_map.TestKernelMap">TestKernelMap (class in tests.kernel_map)</a>
 </li>
       <li><a href="source/tests.html#tests.norm.TestNormalization">TestNormalization (class in tests.norm)</a>
 </li>
@@ -1043,6 +1039,8 @@
       <li><a href="source/tests.html#module-tests.conv">tests.conv (module)</a>
 </li>
       <li><a href="source/tests.html#module-tests.coords">tests.coords (module)</a>
+</li>
+      <li><a href="source/tests.html#module-tests.kernel_map">tests.kernel_map (module)</a>
 </li>
       <li><a href="source/tests.html#module-tests.norm">tests.norm (module)</a>
 </li>

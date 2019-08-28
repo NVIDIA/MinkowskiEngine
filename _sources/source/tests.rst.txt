@@ -36,6 +36,14 @@ tests.coords module
    :undoc-members:
    :show-inheritance:
 
+tests.kernel\_map module
+------------------------
+
+.. automodule:: tests.kernel_map
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tests.norm module
 -----------------
 
