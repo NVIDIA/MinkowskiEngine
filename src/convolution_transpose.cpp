@@ -75,8 +75,8 @@ void ConvolutionTransposeBackwardCPU(
       py_in_coords_key, py_out_coords_key, true);
 
   // Check if the reverse map exists first
-  if (p_coords_manager->in_maps.find(rev_map_key) !=
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(rev_map_key) !=
+      p_coords_manager->_in_maps.end())
     reverse_map = true;
 
   grad_in_feat.resize_as_(in_feat);
@@ -89,15 +89,15 @@ void ConvolutionTransposeBackwardCPU(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
-        p_coords_manager->in_maps[map_key],
-        p_coords_manager->out_maps[map_key]);
+        p_coords_manager->_in_maps[map_key],
+        p_coords_manager->_out_maps[map_key]);
   else
     ConvolutionBackwardKernelCPU<Dtype, Itype>(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
-        p_coords_manager->out_maps[rev_map_key],
-        p_coords_manager->in_maps[rev_map_key]);
+        p_coords_manager->_out_maps[rev_map_key],
+        p_coords_manager->_in_maps[rev_map_key]);
 }
 
 #ifndef CPU_ONLY
@@ -154,8 +154,8 @@ void ConvolutionTransposeBackwardGPU(
       py_in_coords_key, py_out_coords_key, true);
 
   // Check if the reverse map exists first
-  if (p_coords_manager->in_maps.find(rev_map_key) !=
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(rev_map_key) !=
+      p_coords_manager->_in_maps.end())
     reverse_map = true;
 
   grad_in_feat.resize_as_(in_feat);
@@ -164,7 +164,7 @@ void ConvolutionTransposeBackwardGPU(
   grad_kernel.zero_();
 
   Itype * d_scr = p_coords_manager->getScratchGPUMemory(
-      2 * (p_coords_manager->getMaxMapSize(p_coords_manager->in_maps[map_key])));
+      2 * (p_coords_manager->getMaxMapSize(p_coords_manager->_in_maps[map_key])));
 
   cublasHandle_t handle =
       THCState_getCurrentBlasHandle(at::globalContext().getTHCState());
@@ -174,15 +174,15 @@ void ConvolutionTransposeBackwardGPU(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
-        p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
+        p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
         grad_out_feat.size(0), d_scr, handle, at::cuda::getCurrentCUDAStream());
   else
     ConvolutionBackwardKernelGPU<Dtype, Itype>(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
-        p_coords_manager->out_maps[rev_map_key],
-        p_coords_manager->in_maps[rev_map_key], grad_out_feat.size(0), d_scr,
+        p_coords_manager->_out_maps[rev_map_key],
+        p_coords_manager->_in_maps[rev_map_key], grad_out_feat.size(0), d_scr,
         handle, at::cuda::getCurrentCUDAStream());
 }
 #endif

@@ -27,11 +27,6 @@ from Common import convert_to_int_list
 import MinkowskiEngineBackend as MEB
 
 
-def initialize_nthreads(num_threads, D):
-    assert num_threads > 0
-    getattr(MEB, f'PyCoordsManager{D}int32')(num_threads)
-
-
 class CoordsKey():
 
     def __init__(self, D):
@@ -57,15 +52,12 @@ class CoordsKey():
 
 class CoordsManager():
 
-    def __init__(self, num_threads=None, D=-1):
+    def __init__(self, D=-1):
         if D < 1:
             raise ValueError(f"Invalid dimension {D}")
         self.D = D
         CPPCoordsManager = getattr(MEB, f'PyCoordsManager{D}int32')
-        if num_threads:
-            coords_man = CPPCoordsManager(num_threads)
-        else:
-            coords_man = CPPCoordsManager()
+        coords_man = CPPCoordsManager()
         self.CPPCoordsManager = coords_man
 
     def initialize(self, coords, coords_key, enforce_creation=False):
@@ -155,14 +147,6 @@ class CoordsManager():
         in_key = self.get_coords_key(in_tensor_strides)
         out_key = self.get_coords_key(out_tensor_strides)
         return self.get_mapping_by_coords_key(in_key, out_key)
-
-    def get_mapping_by_coords_key(self, in_coords_key, out_coords_key):
-        assert isinstance(in_coords_key, CoordsKey) \
-            and isinstance(out_coords_key, CoordsKey)
-        mapping = torch.IntTensor()
-        self.CPPCoordsManager.getCoordsMapping(
-            mapping, in_coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey)
-        return mapping
 
     def permute_label(self,
                       label,

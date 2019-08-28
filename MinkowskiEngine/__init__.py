@@ -21,7 +21,7 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-__version__ = "0.2.5a0"
+__version__ = "0.2.6"
 
 import os
 import sys
@@ -37,7 +37,7 @@ from SparseTensor import SparseTensor
 from Common import RegionType, convert_to_int_tensor, convert_region_type, \
     MinkowskiModuleBase, KernelGenerator
 
-from MinkowskiCoords import CoordsKey, CoordsManager, initialize_nthreads
+from MinkowskiCoords import CoordsKey, CoordsManager
 
 from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
     MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose

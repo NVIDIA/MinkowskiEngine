@@ -71,7 +71,7 @@ void GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   NonzeroAvgPoolingBackwardKernelCPU<Dtype, Itype>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       num_nonzero.data<Dtype>(), in_feat.size(1),
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
+      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
       use_avg);
 }
 
@@ -134,7 +134,7 @@ void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat.zero_();
 
   int nnz = 0;
-  for (const auto &map : p_coords_manager->out_maps[map_key])
+  for (const auto &map : p_coords_manager->_out_maps[map_key])
     nnz += map.size();
 
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz);
@@ -142,7 +142,7 @@ void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   NonzeroAvgPoolingBackwardKernelGPU<Dtype, Itype>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       grad_out_feat.size(0), num_nonzero.data<Dtype>(), in_feat.size(1),
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
+      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
       use_avg, d_scr, at::cuda::getCurrentCUDAStream());
 }
 #endif

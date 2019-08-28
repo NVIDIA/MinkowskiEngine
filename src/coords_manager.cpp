@@ -32,81 +32,7 @@
 
 namespace py = pybind11;
 
-template <uint8_t D, typename Itype> CoordsManager<D, Itype>::CoordsManager() {
-  if (!CoordsManager<D, Itype>::pool) {
-    CoordsManager(std::thread::hardware_concurrency());
-  }
-}
-
-template <uint8_t D, typename Itype>
-CoordsManager<D, Itype>::CoordsManager(int nthreads_) {
-  if (!CoordsManager<D, Itype>::pool) {
-    CoordsManager<D, Itype>::nthreads = nthreads_;
-    std::cout << "Setting the ME of dimension " << int(D)
-              << " number of threads to " << CoordsManager<D, Itype>::nthreads
-              << std::endl;
-    CoordsManager<D, Itype>::pool.reset(
-        new CoordsThreadPool<D, Itype>(CoordsManager<D, Itype>::nthreads));
-  }
-}
-
-/*
- * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps
- * and return the indices of the coord_map_ind in coord_map_dst
- */
-template <uint8_t D, typename Itype>
-void CoordsManager<D, Itype>::getCoordsMapping(at::Tensor mapping,
-                                               py::object py_in_coords_key,
-                                               py::object py_out_coords_key) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
-
-  if (!p_in_coords_key->key_set || !p_out_coords_key->key_set)
-    throw std::invalid_argument(Formatter() << "CoordsKey is not initialized.");
-
-  uint64_t in_coords_key = p_in_coords_key->getKey(),
-           out_coords_key = p_out_coords_key->getKey();
-  if (coords_hashmaps.find(in_coords_key) == coords_hashmaps.end() ||
-      coords_hashmaps.find(out_coords_key) == coords_hashmaps.end())
-    throw std::invalid_argument(
-        Formatter() << "CoordsManager::getPermutation: Cannot find the given "
-                       "coords key. in_coords_key: "
-                    << std::to_string(in_coords_key)
-                    << ", out_coords_key: " << std::to_string(out_coords_key));
-
-  auto in_tensor_strides = p_in_coords_key->getTensorStride();
-  auto out_tensor_strides = p_out_coords_key->getTensorStride();
-  auto strides = std::vector<Itype>(D);
-
-  for (int i = 0; i < D; i++) {
-    strides[i] = out_tensor_strides[i] / in_tensor_strides[i];
-    if (in_tensor_strides[i] > out_tensor_strides[i]) {
-      throw std::invalid_argument(
-          Formatter() << "Out tensor stride must be greater than the "
-                         "in tensor stride. in_tensor_strides: "
-                      << ArrToString<Arr<D, int>>(in_tensor_strides)
-                      << ", out_tensor_strides: "
-                      << ArrToString<Arr<D, int>>(out_tensor_strides));
-    }
-  }
-
-  int in_ind, out_ind, nrows = getCoordsSize(py_in_coords_key);
-  mapping.resize_({nrows, 1});
-  mapping.fill_(-1);
-
-  _CoordsHashMap<D, Itype> &in_coords = coords_hashmaps[in_coords_key].map;
-  _CoordsHashMap<D, Itype> &out_coords = coords_hashmaps[out_coords_key].map;
-
-  for (const auto &pair : in_coords) {
-    Coord<D, Itype> coord = pair.first;
-    in_ind = pair.second;
-    for (int i = 0; i < D; i++) {
-      coord[i] = int(floor(((float)coord[i]) / strides[i])) * strides[i];
-    }
-    out_ind = out_coords[coord];
-    mapping[in_ind] = out_ind;
-  }
-}
+template <uint8_t D, typename Itype> CoordsManager<D, Itype>::CoordsManager() {}
 
 /*
  * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps
@@ -122,12 +48,12 @@ void CoordsManager<D, Itype>::getKernelMap(
                                       dilations, region_type, py_in_coords_key,
                                       py_out_coords_key, is_transpose);
 
-  if (in_maps.find(map_key) == in_maps.end()) {
+  if (_in_maps.find(map_key) == _in_maps.end()) {
     throw std::invalid_argument(Formatter() << "The kernelmap does not exist.");
   }
 
-  const InOutMapPerKernel<Itype> &in_map = in_maps[map_key];
-  const InOutMapPerKernel<Itype> &out_map = out_maps[map_key];
+  const InOutMapPerKernel<Itype> &in_map = _in_maps[map_key];
+  const InOutMapPerKernel<Itype> &out_map = _out_maps[map_key];
 
   int all_volume = 0, kernel_volume = in_map.size();
   for (int k = 0; k < kernel_volume; k++)
@@ -136,14 +62,13 @@ void CoordsManager<D, Itype>::getKernelMap(
   kernel_map.resize_({all_volume, 3});
   Itype *p_kernel_map = kernel_map.data<Itype>();
 
-  int curr_counter = 0;
   for (int k = 0; k < kernel_volume; k++) {
     int curr_volume = in_map[k].size();
     for (int i = 0; i < curr_volume; i++) {
-      p_kernel_map[3 * curr_counter + 0] = k;
-      p_kernel_map[3 * curr_counter + 1] = in_map[k][i];
-      p_kernel_map[3 * curr_counter + 2] = out_map[k][i];
-      curr_counter++;
+      p_kernel_map[0] = k;
+      p_kernel_map[1] = in_map[k][i];
+      p_kernel_map[2] = out_map[k][i];
+      p_kernel_map += 3;
     }
   }
 }
@@ -156,7 +81,7 @@ CoordsManager<D, Itype>::getCoordsKey(const Arr<D, int> &tensor_strides) {
 
   // Following lines are from INITIALIZE_IN_COORDS
   /* Prioritize the p_coords_key */
-  if (coords_hashmaps.find(tensor_stride_hash) != coords_hashmaps.end()) {
+  if (_coords_hashmaps.find(tensor_stride_hash) != _coords_hashmaps.end()) {
     r_coords_key = tensor_stride_hash;
   } else {
     throw std::invalid_argument(
@@ -174,7 +99,7 @@ bool CoordsManager<D, Itype>::existsCoordsKey(uint64_t coords_key) {
   bool exist = false;
   // Following lines are from INITIALIZE_IN_COORDS
   /* Prioritize the p_coords_key */
-  if (coords_hashmaps.find(coords_key) != coords_hashmaps.end())
+  if (_coords_hashmaps.find(coords_key) != _coords_hashmaps.end())
     exist = true;
   return exist;
 }
@@ -192,7 +117,7 @@ int CoordsManager<D, Itype>::getCoordsSize(uint64_t coords_key) {
         Formatter() << "The coord map doesn't exist for the given coords_key "
                     << "coords_key: " << coords_key << " at " << __FILE__ << ":"
                     << __LINE__);
-  return coords_hashmaps[coords_key].size();
+  return _coords_hashmaps[coords_key].size();
 }
 
 template <uint8_t D, typename Itype>
@@ -212,14 +137,19 @@ void CoordsManager<D, Itype>::getCoords(at::Tensor coords,
                     << "coords_key: " << coords_key << " at " << __FILE__ << ":"
                     << __LINE__);
   int nrows = getCoordsSize(coords_key);
+  // initialize
   coords.resize_({nrows, D + 1});
+  // copy to the out coords
   Itype *p_coords = coords.data<Itype>();
-  int ncols = D + 1;
-  for (const auto &i : coords_hashmaps[coords_key].map) {
-    Coord<D, Itype> coord(i.first);
-    int n = i.second;
-    std::copy(coord.data(), coord.data() + ncols, &p_coords[n * ncols]);
-  }
+  auto &curr_coords_pair = _coords_pairs[coords_key];
+  if (curr_coords_pair.first != D + 1)
+    throw std::invalid_argument(Formatter()
+                                << "The coordinate dimensions mismatch "
+                                << "coordinates: " << curr_coords_pair.first
+                                << ", CoordsManager dimension + 1: " << D + 1
+                                << " at " << __FILE__ << ":" << __LINE__);
+  auto &curr_coords = curr_coords_pair.second;
+  std::copy(curr_coords.begin(), curr_coords.end(), p_coords);
 }
 
 /*******************************
@@ -231,7 +161,7 @@ CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
                                           const Arr<D, int> &tensor_strides,
                                           bool enforce_creation) {
   uint64_t key = hash_vec<Arr<D, int>>(tensor_strides);
-  bool key_exists = coords_hashmaps.find(key) != coords_hashmaps.end();
+  bool key_exists = _coords_hashmaps.find(key) != _coords_hashmaps.end();
   if (key_exists) {
     if (!enforce_creation)
       throw std::invalid_argument(
@@ -241,18 +171,22 @@ CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
           << __FILE__ << ":" << __LINE__);
     else {
       key = random();
-      while (coords_hashmaps.find(key) != coords_hashmaps.end())
+      while (_coords_hashmaps.find(key) != _coords_hashmaps.end())
         key = random();
     }
   } // If key doesn't exist, use the current key regardless of enforce creation
-  auto coords_batch_pair = createCoordsHashMap(coords);
-  coords_hashmaps[key] = coords_batch_pair.first;
-  std::set<Itype> set_batch_indices = coords_batch_pair.second;
+  auto coords_batch_vector = createCoordsHashMap(coords);
+
+  // Save the returned results
+  _coords_hashmaps[key] = std::move(std::get<0>(coords_batch_vector));
+  auto &set_batch_indices = std::get<1>(coords_batch_vector);
+  _coords_pairs[key] =
+      std::make_pair(D + 1, std::move(std::get<2>(coords_batch_vector)));
 
   // Initialize batch indices
-  batch_indices.resize(set_batch_indices.size());
+  _batch_indices.resize(set_batch_indices.size());
   std::copy(set_batch_indices.begin(), set_batch_indices.end(),
-            batch_indices.begin());
+            _batch_indices.begin());
   return key;
 }
 
@@ -267,8 +201,7 @@ uint64_t CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
   return in_coords_key;
 }
 
-/********************************
- */
+/*********************************/
 template <uint8_t D, typename Itype>
 uint64_t CoordsManager<D, Itype>::createOutCoords(
     uint64_t coords_key, const Arr<D, int> &tensor_strides,
@@ -286,8 +219,19 @@ uint64_t CoordsManager<D, Itype>::createOutCoords(
   if (existsCoordsKey(out_coords_key))
     return out_coords_key;
 
-  coords_hashmaps[out_coords_key] =
-      createOutCoordsHashMap(coords_key, tensor_strides, strides);
+  // Only computes when the strides are non identity
+  bool is_identity = true;
+  for (auto s : strides)
+    if (s != 1)
+      is_identity = false;
+
+  if (!is_identity) {
+    auto out_pair =
+        createOutCoordsHashCoordsPair(coords_key, tensor_strides, strides);
+    _coords_hashmaps[out_coords_key] = std::move(out_pair.first);
+    _coords_pairs[out_coords_key] =
+        std::make_pair(D + 1, std::move(out_pair.second));
+  }
   return out_coords_key;
 }
 
@@ -300,14 +244,19 @@ CoordsManager<D, Itype>::createPruneCoords(at::Tensor use_feat,
   PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
   // set the coords key
   uint64_t out_coords_key = random();
-  while (coords_hashmaps.find(out_coords_key) != coords_hashmaps.end())
+  while (_coords_hashmaps.find(out_coords_key) != _coords_hashmaps.end())
     out_coords_key = random();
   // Set the pycoordskey
   p_out_coords_key->setTensorStride(p_in_coords_key->tensor_strides_);
   p_out_coords_key->setKey(out_coords_key);
+
   // Create coords hashmap
-  coords_hashmaps[out_coords_key] =
+  auto coords_pair =
       createPrunedCoordsHashMap(p_in_coords_key->getKey(), use_feat);
+  _coords_hashmaps[out_coords_key] = std::move(coords_pair.first);
+  _coords_pairs[out_coords_key] =
+      std::make_pair(D + 1, std::move(coords_pair.second));
+
   return out_coords_key;
 }
 
@@ -320,7 +269,11 @@ uint64_t CoordsManager<D, Itype>::createOriginCoords() {
   if (existsCoordsKey(out_coords_key))
     return out_coords_key;
 
-  coords_hashmaps[out_coords_key] = createOriginCoordsHashMap();
+  auto coords_pair = createOriginCoordsHashMap();
+  _coords_hashmaps[out_coords_key] = std::move(coords_pair.first);
+  _coords_pairs[out_coords_key] =
+      std::make_pair(D + 1, std::move(coords_pair.second));
+
   return out_coords_key;
 }
 
@@ -406,7 +359,7 @@ InOutMapKey CoordsManager<D, Itype>::getOriginMapHashKeyCheck(
 }
 
 template <uint8_t D, typename Itype>
-std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
     const std::vector<int> &tensor_strides, const std::vector<int> &strides,
     const std::vector<int> &kernel_sizes, const std::vector<int> &dilations,
@@ -437,7 +390,7 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
  * Setup output coords, set the py_out_coords_key, create in_out_kernel_map
  */
 template <uint8_t D, typename Itype>
-std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
     const Arr<D, int> &tensor_strides, const Arr<D, int> &strides,
     const Arr<D, int> &kernel_sizes, const Arr<D, int> &dilations,
@@ -464,15 +417,15 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
     p_out_coords_key->stride(strides);
     // For non transpose case
     // make a kernel mapping. The kernel will be saved with the map_key.
-    if (in_maps.find(map_key) == in_maps.end()) {
-      auto in_out = createInOutPerKernelInThreads(
-          in_coords_key, out_coords_key, tensor_strides, kernel_sizes,
-          dilations, region_type, offsets);
-      in_maps[map_key] = std::get<0>(in_out);
-      out_maps[map_key] = std::get<1>(in_out);
+    if (_in_maps.find(map_key) == _in_maps.end()) {
+      auto in_out =
+          createInOutPerKernel(in_coords_key, out_coords_key, tensor_strides,
+                               kernel_sizes, dilations, region_type, offsets);
+      _in_maps[map_key] = std::get<0>(in_out);
+      _out_maps[map_key] = std::get<1>(in_out);
     }
-    return std::make_tuple(std::ref(in_maps[map_key]),
-                           std::ref(out_maps[map_key]));
+    return std::make_pair(std::ref(_in_maps[map_key]),
+                          std::ref(_out_maps[map_key]));
 
   } else { // TRANSPOSE
     p_out_coords_key->setTensorStride(tensor_strides);
@@ -482,26 +435,26 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
         getMapHashKey(tensor_strides, strides, kernel_sizes, dilations,
                       region_type, py_out_coords_key, py_in_coords_key, false);
     // Check if the temporary key exists and return swapped in/out
-    if (in_maps.find(tmp_map_key) != in_maps.end()) {
-      return std::make_tuple(std::ref(out_maps[tmp_map_key]),
-                             std::ref(in_maps[tmp_map_key]));
+    if (_in_maps.find(tmp_map_key) != _in_maps.end()) {
+      return std::make_pair(std::ref(_out_maps[tmp_map_key]),
+                            std::ref(_in_maps[tmp_map_key]));
     } else {
       // create in out kernel if it doesn't exist
       auto out_tensor_strides = p_out_coords_key->getTensorStride();
       auto in_out = createInOutPerKernelTranspose(
           in_coords_key, out_coords_key, out_tensor_strides, kernel_sizes,
           dilations, region_type, offsets);
-      in_maps[map_key] = std::get<0>(in_out);
-      out_maps[map_key] = std::get<1>(in_out);
+      _in_maps[map_key] = std::get<0>(in_out);
+      _out_maps[map_key] = std::get<1>(in_out);
 
-      return std::make_tuple(std::ref(in_maps[map_key]),
-                             std::ref(out_maps[map_key]));
+      return std::make_pair(std::ref(_in_maps[map_key]),
+                            std::ref(_out_maps[map_key]));
     }
   }
 }
 
 template <uint8_t D, typename Itype>
-std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnOriginInOutPerKernel(
     py::object py_in_coords_key, py::object py_out_coords_key) {
   PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
@@ -521,17 +474,17 @@ CoordsManager<D, Itype>::setupAndReturnOriginInOutPerKernel(
       getOriginMapHashKey(py_in_coords_key, py_out_coords_key);
   // For non transpose case
   // make a kernel mapping. The kernel will be saved with the map_key.
-  if (in_maps.find(map_key) == in_maps.end()) {
+  if (_in_maps.find(map_key) == _in_maps.end()) {
     auto in_out = createGlobalReductionInOutMap(in_coords_key, out_coords_key);
-    in_maps[map_key] = std::get<0>(in_out);
-    out_maps[map_key] = std::get<1>(in_out);
+    _in_maps[map_key] = std::get<0>(in_out);
+    _out_maps[map_key] = std::get<1>(in_out);
   }
-  return std::make_tuple(std::ref(in_maps[map_key]),
-                         std::ref(out_maps[map_key]));
+  return std::make_pair(std::ref(_in_maps[map_key]),
+                        std::ref(_out_maps[map_key]));
 }
 
 template <uint8_t D, typename Itype>
-std::tuple<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
+std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
 CoordsManager<D, Itype>::setupAndReturnPruningInOutPerKernel(
     at::Tensor use_feat, py::object py_in_coords_key,
     py::object py_out_coords_key) {
@@ -553,30 +506,30 @@ CoordsManager<D, Itype>::setupAndReturnPruningInOutPerKernel(
 
   // For non transpose case
   // make a kernel mapping. The kernel will be saved with the map_key.
-  if (in_maps.find(map_key) == in_maps.end()) {
+  if (_in_maps.find(map_key) == _in_maps.end()) {
     auto in_out = createPruningInOutMap(in_coords_key, out_coords_key);
-    in_maps[map_key] = std::get<0>(in_out);
-    out_maps[map_key] = std::get<1>(in_out);
+    _in_maps[map_key] = std::get<0>(in_out);
+    _out_maps[map_key] = std::get<1>(in_out);
   }
 
-  return std::make_tuple(std::ref(in_maps[map_key]),
-                         std::ref(out_maps[map_key]));
+  return std::make_pair(std::ref(_in_maps[map_key]),
+                        std::ref(_out_maps[map_key]));
 }
 
 template <uint8_t D, typename Itype>
 std::string CoordsManager<D, Itype>::toString() const {
   std::string tmp;
   tmp += "< CoordsManager, Number of Coords: ";
-  tmp += std::to_string(coords_hashmaps.size());
-  for (auto kv : coords_hashmaps) {
+  tmp += std::to_string(_coords_hashmaps.size());
+  for (auto kv : _coords_hashmaps) {
     tmp += " \n\tCoords Key: ";
     tmp += std::to_string(kv.first);
     tmp += ", Size: ";
     tmp += std::to_string((kv.second).size());
   }
   tmp += "\n  Number of Kernel Maps: ";
-  tmp += std::to_string(in_maps.size());
-  for (auto kv : in_maps) {
+  tmp += std::to_string(_in_maps.size());
+  for (auto kv : _in_maps) {
     tmp += " \n\tKernel Map Key: ";
     tmp += std::to_string(hash_vec<InOutMapKey>(kv.first));
     int size = 0;
@@ -586,8 +539,6 @@ std::string CoordsManager<D, Itype>::toString() const {
     tmp += ", Size: ";
     tmp += std::to_string(size);
   }
-  tmp += "\n  Number of threads: ";
-  tmp += std::to_string(CoordsManager<D, Itype>::nthreads);
   tmp += " >";
   return tmp;
 }
@@ -604,15 +555,15 @@ CoordsManager<D, Itype>::getRowIndicesPerBatch(py::object py_in_coords_key,
   // py_out_coords_key will be set after the above call.
   PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
   auto out_coords_key = p_out_coords_key->getKey();
-  auto out_coords_iter = coords_hashmaps.find(out_coords_key);
-  if (out_coords_iter == coords_hashmaps.end())
+  auto out_coords_iter = _coords_hashmaps.find(out_coords_key);
+  if (out_coords_iter == _coords_hashmaps.end())
     throw std::invalid_argument(Formatter()
                                 << "The out_coords_key, " << out_coords_key
                                 << ", does not exist.");
 
   // list of row indices. The batch index is defined as the returned batch
   // indices
-  std::vector<std::vector<Itype>> batch2row_inds(batch_indices.size());
+  std::vector<std::vector<Itype>> batch2row_inds(_batch_indices.size());
   const auto &in = std::get<0>(in_out), out = std::get<1>(in_out);
   for (std::size_t k = 0; k < in.size(); k++) {
     const auto &curr_in = in[k];
@@ -622,7 +573,7 @@ CoordsManager<D, Itype>::getRowIndicesPerBatch(py::object py_in_coords_key,
   }
 
   // copy batch_indices, move batch2row_inds
-  return std::make_pair(batch_indices, std::move(batch2row_inds));
+  return std::make_pair(_batch_indices, std::move(batch2row_inds));
 }
 
 INSTANTIATE_CLASS_DIM_ITYPE(CoordsManager, int32_t);

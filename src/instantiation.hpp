@@ -39,7 +39,8 @@
   template class CLASSNAME<5>;                                                 \
   template class CLASSNAME<6>;                                                 \
   template class CLASSNAME<7>;                                                 \
-  template class CLASSNAME<8>;
+  template class CLASSNAME<8>;                                                 \
+  template class CLASSNAME<9>;
 
 #define INSTANTIATE_CLASS_DIM_ITYPE(CLASSNAME, ITYPE)                          \
   template class CLASSNAME<1, ITYPE>;                                          \
@@ -49,7 +50,8 @@
   template class CLASSNAME<5, ITYPE>;                                          \
   template class CLASSNAME<6, ITYPE>;                                          \
   template class CLASSNAME<7, ITYPE>;                                          \
-  template class CLASSNAME<8, ITYPE>;
+  template class CLASSNAME<8, ITYPE>;                                          \
+  template class CLASSNAME<9, ITYPE>;
 
 #define SWITCH_DIM_TYPES(func, Dtype, Itype, ...)                              \
   switch (D) {                                                                 \
@@ -76,6 +78,9 @@
     break;                                                                     \
   case 8:                                                                      \
     func<8, Dtype, Itype>(__VA_ARGS__);                                        \
+    break;                                                                     \
+  case 9:                                                                      \
+    func<9, Dtype, Itype>(__VA_ARGS__);                                        \
     break;                                                                     \
   default:                                                                     \
     throw std::invalid_argument(Formatter() << "Not supported D " << D);       \

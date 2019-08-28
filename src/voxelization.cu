@@ -144,8 +144,3 @@ int sparse_voxelization(uint64_t *keys, int *labels, int **return_key_indices,
                              << __FILE__ << ":" << __LINE__);
   }
 }
-
-void cuda_thread_exit(void) {
-  // printf("Exit the current cuda thread\n");
-  CUDA_CHECK(cudaThreadExit());
-}

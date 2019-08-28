@@ -328,6 +328,4 @@ std::vector<py::array_t<int>>
 SparseVoxelization(py::array_t<uint64_t, py::array::c_style> keys,
                    py::array_t<int, py::array::c_style> labels,
                    int ignore_label, bool has_label);
-
-void cuda_thread_exit(void);
 #endif

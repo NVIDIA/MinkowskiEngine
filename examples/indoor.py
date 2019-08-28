@@ -34,10 +34,13 @@ except ImportError:
 import torch
 import MinkowskiEngine as ME
 from examples.minkunet import MinkUNet34C
+from examples.common import Timer
 
 # Check if the weights and file exist and download
 if not os.path.isfile('weights.pth'):
-    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/weights.pth", 'weights.pth')
+    print('Downloading weights and a room ply file...')
+    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/weights.pth",
+                'weights.pth')
     urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", '1.ply')
 
 parser = argparse.ArgumentParser()
@@ -107,6 +110,16 @@ def load_file(file_name, voxel_size):
     return quantized_coords[inds], feats[inds], pcd
 
 
+def generate_input_sparse_tensor(file_name, voxel_size=0.05):
+    # Create a batch, this process is done in a data loader during training in parallel.
+    batch = [load_file(file_name, voxel_size)]
+    coordinates_, featrues_, pcds = list(zip(*batch))
+    coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
+
+    # Normalize features and create a sparse tensor
+    return ME.SparseTensor(features - 0.5, coords=coordinates).to(device)
+
+
 if __name__ == '__main__':
     config = parser.parse_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -115,17 +128,25 @@ if __name__ == '__main__':
     model = MinkUNet34C(3, 20).to(device)
     model_dict = torch.load(config.weights)
     model.load_state_dict(model_dict)
+    model.eval()
 
-    # Create a batch, this process is done in a data loader during training in parallel.
-    batch = [load_file(config.file_name, 0.02)]
-    coordinates_, featrues_, pcds = list(zip(*batch))
-    coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
+    # Measure time
+    for voxel_size in [0.1, 0.05, 0.02]:
+        timer = Timer()
+        sinput = generate_input_sparse_tensor(
+            config.file_name, voxel_size=voxel_size)
 
-    # Normalize features and create a sparse tensor
-    sinput = ME.SparseTensor(features - 0.5, coords=coordinates).to(device)
+        # Feed-forward pass and get the prediction
+        for i in range(4):
+            timer.tic()
+            soutput = model(sinput)
+            timer.toc()
+        print(
+            f'Time to process a room with {voxel_size}m voxel downsampling '
+            f'containing {len(sinput)} voxels: {timer.min_time}'
+        )
 
     # Feed-forward pass and get the prediction
-    soutput = model(sinput)
     _, pred = soutput.F.max(1)
     pred = pred.cpu().numpy()
 
@@ -139,7 +160,7 @@ if __name__ == '__main__':
     pred_pcd.colors = o3d.Vector3dVector(colors / 255)
 
     # Move the original point cloud
-    pcd = pcds[0]
+    pcd = o3d.read_point_cloud(config.file_name)
     pcd.points = o3d.Vector3dVector(np.array(pcd.points) + np.array([0, 5, 0]))
 
     # Visualize the input point cloud and the prediction

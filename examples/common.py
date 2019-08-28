@@ -22,8 +22,41 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import numpy as np
+import time
 
 import torch
+
+
+class Timer(object):
+    """A simple timer."""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.total_time = 0
+        self.calls = 0
+        self.start_time = 0
+        self.diff = 0
+        self.averate_time = 0
+        self.min_time = np.Inf
+
+    def tic(self):
+        # using time.time instead of time.clock because time time.clock
+        # does not normalize for multithreading
+        self.start_time = time.time()
+
+    def toc(self, average=False):
+        self.diff = time.time() - self.start_time
+        self.total_time += self.diff
+        self.calls += 1
+        self.average_time = self.total_time / self.calls
+        if self.diff < self.min_time:
+            self.min_time = self.diff
+        if average:
+            return self.average_time
+        else:
+            return self.diff
 
 
 def get_coords(data, batch_index=0):

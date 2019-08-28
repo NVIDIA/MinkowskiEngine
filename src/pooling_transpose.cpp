@@ -74,8 +74,8 @@ void PoolingTransposeBackwardCPU(
       py_in_coords_key, py_out_coords_key, true);
 
   // Check if the reverse map exists first
-  if (p_coords_manager->in_maps.find(rev_map_key) !=
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(rev_map_key) !=
+      p_coords_manager->_in_maps.end())
     reverse_map = true;
 
   grad_in_feat.resize_as_(in_feat);
@@ -85,14 +85,14 @@ void PoolingTransposeBackwardCPU(
     NonzeroAvgPoolingBackwardKernelCPU<Dtype, Itype>(
         grad_in_feat.data<Dtype>(), in_feat.size(0),
         grad_out_feat.data<Dtype>(), num_nonzero.data<Dtype>(), in_feat.size(1),
-        p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-        false);
+        p_coords_manager->_in_maps[map_key],
+        p_coords_manager->_out_maps[map_key], false);
   else
     NonzeroAvgPoolingBackwardKernelCPU<Dtype, Itype>(
         grad_in_feat.data<Dtype>(), in_feat.size(0),
         grad_out_feat.data<Dtype>(), num_nonzero.data<Dtype>(), in_feat.size(1),
-        p_coords_manager->out_maps[rev_map_key],
-        p_coords_manager->in_maps[rev_map_key], false);
+        p_coords_manager->_out_maps[rev_map_key],
+        p_coords_manager->_in_maps[rev_map_key], false);
 }
 
 #ifndef CPU_ONLY
@@ -129,8 +129,8 @@ void PoolingTransposeForwardGPU(
 
   Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
       ((false ? in_feat.size(0) : 0) + // d_ones
-       nnz +                             // d_csr_val
-       in_feat.size(1) * out_nrows       // d_tmp_out_feat
+       nnz +                           // d_csr_val
+       in_feat.size(1) * out_nrows     // d_tmp_out_feat
        ) *
       sizeof(Dtype));
 
@@ -162,15 +162,15 @@ void PoolingTransposeBackwardGPU(
       py_in_coords_key, py_out_coords_key, true);
 
   // Check if the reverse map exists first
-  if (p_coords_manager->in_maps.find(rev_map_key) !=
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(rev_map_key) !=
+      p_coords_manager->_in_maps.end())
     reverse_map = true;
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
   int nnz = 0;
-  for (const auto &map : p_coords_manager->out_maps[map_key])
+  for (const auto &map : p_coords_manager->_out_maps[map_key])
     nnz += map.size();
 
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz);
@@ -180,15 +180,16 @@ void PoolingTransposeBackwardGPU(
         grad_in_feat.data<Dtype>(), in_feat.size(0),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(0),
         num_nonzero.data<Dtype>(), in_feat.size(1),
-        p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-        false, d_scr, at::cuda::getCurrentCUDAStream());
+        p_coords_manager->_in_maps[map_key],
+        p_coords_manager->_out_maps[map_key], false, d_scr,
+        at::cuda::getCurrentCUDAStream());
   else
     NonzeroAvgPoolingBackwardKernelGPU<Dtype, Itype>(
         grad_in_feat.data<Dtype>(), in_feat.size(0),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(0),
         num_nonzero.data<Dtype>(), in_feat.size(1),
-        p_coords_manager->out_maps[rev_map_key],
-        p_coords_manager->in_maps[rev_map_key], false, d_scr,
+        p_coords_manager->_out_maps[rev_map_key],
+        p_coords_manager->_in_maps[rev_map_key], false, d_scr,
         at::cuda::getCurrentCUDAStream());
 }
 #endif

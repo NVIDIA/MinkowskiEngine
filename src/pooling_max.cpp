@@ -77,7 +77,8 @@ void MaxPoolingBackwardCPU(
   MaxPoolingBackwardKernelCPU<Dtype, Itype>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       grad_out_feat.size(0), max_index.data<Itype>(), in_feat.size(1),
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
+      p_coords_manager->_in_maps[map_key],
+      p_coords_manager->_out_maps[map_key]);
 }
 
 #ifndef CPU_ONLY

@@ -33,7 +33,6 @@
 
 #include "coords_manager.hpp"
 #include "instantiation.hpp"
-#include "thread_pool.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 

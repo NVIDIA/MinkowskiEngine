@@ -241,6 +241,7 @@ class SparseTensor():
 
     def __repr__(self):
         return self.__class__.__name__ + '(' + os.linesep \
+            + '  Coords=' + str(self.C) + os.linesep \
             + '  Feats=' + str(self.F) + os.linesep \
             + '  coords_key=' + str(self.coords_key) + os.linesep \
             + '  tensor_stride=' + str(self.coords_key.getTensorStride()) + os.linesep \

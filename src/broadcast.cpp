@@ -44,8 +44,8 @@ void BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKeyCheck(
       py_in_coords_key, py_out_coords_key);
 
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(map_key) ==
+      p_coords_manager->_in_maps.end())
     throw std::invalid_argument(
         Formatter() << "Input Output map not found: "
                     << std::to_string(hash_vec<InOutMapKey>(map_key)));
@@ -56,7 +56,7 @@ void BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   BroadcastForwardKernelCPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
+      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key]);
 }
 
 template <uint8_t D, typename Dtype, typename Itype>
@@ -73,8 +73,8 @@ void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKeyCheck(
       py_in_coords_key, py_out_coords_key);
 
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(map_key) ==
+      p_coords_manager->_in_maps.end())
     throw std::invalid_argument(
         Formatter() << "Input Output map not found: "
                     << std::to_string(hash_vec<InOutMapKey>(map_key)));
@@ -88,7 +88,7 @@ void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(0),
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
+      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key]);
 }
 
 #ifndef CPU_ONLY
@@ -105,8 +105,8 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKeyCheck(
       py_in_coords_key, py_out_coords_key);
 
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(map_key) ==
+      p_coords_manager->_in_maps.end())
     throw std::invalid_argument(
         Formatter() << "Input Output map not found: "
                     << std::to_string(hash_vec<InOutMapKey>(map_key)));
@@ -115,7 +115,7 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   out_feat.zero_();
 
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(
-      p_coords_manager->out_maps[map_key][0].size());
+      p_coords_manager->_out_maps[map_key][0].size());
 
   cusparseHandle_t handle =
       THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
@@ -123,7 +123,7 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   BroadcastForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
+      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
       d_scr, handle, at::cuda::getCurrentCUDAStream());
 }
 
@@ -142,8 +142,8 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKeyCheck(
       py_in_coords_key, py_out_coords_key);
 
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
+  if (p_coords_manager->_in_maps.find(map_key) ==
+      p_coords_manager->_in_maps.end())
     throw std::invalid_argument(
         Formatter() << "Input Output map not found: "
                     << std::to_string(hash_vec<InOutMapKey>(map_key)));
@@ -154,7 +154,7 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat_glob.zero_();
 
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(
-      2 * p_coords_manager->out_maps[map_key][0].size() + // in_map + out_map
+      2 * p_coords_manager->_out_maps[map_key][0].size() + // in_map + out_map
       in_feat_glob.size(0) + 1                            // d_csr_row
   );
 
@@ -171,7 +171,7 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(0),
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
+      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
       d_scr, d_dscr, handle, at::cuda::getCurrentCUDAStream());
 
   // p_coords_manager->gpu_memory_manager.reset();

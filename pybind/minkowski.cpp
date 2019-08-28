@@ -132,7 +132,6 @@ void instantiate_dim_itype(py::module &m, const std::string &dim,
   std::string coords_name = std::string("PyCoordsManager") + dim + itypestr;
   py::class_<CoordsManager<D, Itype>>(m, coords_name.c_str())
       .def(py::init<>())
-      .def(py::init<int>())
       .def("existsCoordsKey", (bool (CoordsManager<D, Itype>::*)(py::object)) &
                                   CoordsManager<D, Itype>::existsCoordsKey)
       .def("getCoordsKey", &CoordsManager<D, Itype>::getCoordsKey)
@@ -144,7 +143,6 @@ void instantiate_dim_itype(py::module &m, const std::string &dim,
       .def("initializeCoords", (uint64_t(CoordsManager<D, Itype>::*)(
                                    at::Tensor, py::object, bool)) &
                                    CoordsManager<D, Itype>::initializeCoords)
-      .def("getCoordsMapping", &CoordsManager<D, Itype>::getCoordsMapping)
       .def("__repr__",
            [](const CoordsManager<D, Itype> &a) { return a.toString(); });
 }
@@ -172,7 +170,6 @@ void instantiate_dim(py::module &m, const std::string &dim) {
 void bind_native(py::module &m) {
 #ifndef CPU_ONLY
   m.def("SparseVoxelization", &SparseVoxelization);
-  m.def("CUDAThreadExit", &cuda_thread_exit);
   py::class_<GPUMemoryManager<int32_t> >(m, "MemoryManager")
       .def(py::init<>())
       .def("size", &GPUMemoryManager<int32_t>::size)
