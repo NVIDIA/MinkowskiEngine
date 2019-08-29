@@ -190,7 +190,7 @@
 <h2>sparse_quantize<a class="headerlink" href="#sparse-quantize" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="MinkowskiEngine.utils.sparse_quantize">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=255</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">hash_type='ravel'</em>, <em class="sig-param">quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=255</em>, <em class="sig-param">set_ignore_label_when_collision=False</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">hash_type='fnv'</em>, <em class="sig-param">quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given coordinates, and features (optionally labels), the function
 generates quantized (voxelized) coordinates.</p>
 <dl>
@@ -202,6 +202,8 @@ generates quantized (voxelized) coordinates.</p>
 <span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of the features.</p>
 <p>labels (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): labels associated to eah coordinates.</p>
 <p>ignore_label (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, optional): the int value of the IGNORE LABEL.</p>
+<p>set_ignore_label_when_collision (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): use the <cite>ignore_label</cite>
+when at least two points fall into the same cell.</p>
 <p>return_index (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): True if you want the indices of the
 quantized coordinates. False by default.</p>
 <p>hash_type (<code class="xref py py-attr docutils literal notranslate"><span class="pre">str</span></code>, optional): Hash function used for quantization. Either

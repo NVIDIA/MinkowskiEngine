@@ -96,6 +96,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Training Pipeline with Pytorch DataLoader</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#making-a-dataset">Making a Dataset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#making-a-dataloader">Making a DataLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="segmentation.html">Semantic Segmentation</a></li>
@@ -186,14 +187,14 @@
             
   <div class="section" id="training-pipeline-with-pytorch-dataloader">
 <h1>Training Pipeline with Pytorch DataLoader<a class="headerlink" href="#training-pipeline-with-pytorch-dataloader" title="Permalink to this headline">¶</a></h1>
-<p>The Minkowski Engine works seemlessly with the pytorch
+<p>The Minkowski Engine works seamlessly with the PyTorch
 <a class="reference external" href="https://pytorch.org/docs/stable/data.html">torch.utils.data.DataLoader</a>.
-Before you proceed, make sure that you are familiar with the data loadiing
+Before you proceed, make sure that you are familiar with the data loading
 tutorial <a class="reference external" href="https://pytorch.org/docs/stable/data.html">torch.utils.data.DataLoader</a>.</p>
 <div class="section" id="making-a-dataset">
 <h2>Making a Dataset<a class="headerlink" href="#making-a-dataset" title="Permalink to this headline">¶</a></h2>
 <p>The first thing you need to do is loading or generating data. This is the most
-time-consuming part if you use your own dataset. However, it is tedious not
+time-consuming part if you use your own dataset. However, it is tedious, not
 difficult :) The most important part that you need to fill in is
 <cite>__getitem__(self, index)</cite> if you inherit <a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset">torch.utils.data.Dataset</a> or
 <cite>__iter__(self)</cite> if you inherit <a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset">torch.utils.data.IterableDataset</a>.
@@ -244,7 +245,7 @@ to generate a suitable sparse tensor.</p>
     <span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collation_fn</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here, we used our custom <cite>collation_fn</cite>. The collation function has to
+<p>Here, we used our custom <code class="xref py py-attr docutils literal notranslate"><span class="pre">collation_fn</span></code>. The collation function has to
 concatenate all sparse tensors generate from each call that generates a batch
 and assign the correct batch index to the coordinates.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">collation_fn</span><span class="p">(</span><span class="n">data_labels</span><span class="p">):</span>
@@ -268,10 +269,13 @@ and assign the correct batch index to the coordinates.</p>
     <span class="k">return</span> <span class="n">coords_batch</span><span class="p">,</span> <span class="n">feats_batch</span><span class="p">,</span> <span class="n">labels_batch</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="training">
+<h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
 <p>Once you have everything, let’s create a network and train it with the
 generated data. One thing to note is that if you use more than one
-<cite>num_workers</cite> for the data loader, you have to make sure that the
-<cite>ME.SparseTensor</cite> generation part has to be located within the main python
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">num_workers</span></code> for the data loader, you have to make sure that the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">ME.SparseTensor</span></code> generation part has to be located within the main python
 process since all python multi-processes use separate processes and the
 <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/coords.html#coordsmanager">ME.CoordManager</a>, the
 internal C++ structure that maintains the coordinate hash tables and kernel
@@ -322,7 +326,7 @@ Iter: 70, Epoch: 17, Loss: 0.00014614587998948992
 Iter: 80, Epoch: 19, Loss: 0.00013127068668836728
 </pre></div>
 </div>
-<p>The original code can be found at <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/two_dim_training.py">the example/two_dim_training.py</a>.</p>
+<p>The original code can be found at <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/two_dim_training.py">example/two_dim_training.py</a>.</p>
 </div>
 </div>
 

@@ -29,7 +29,7 @@ Go to the top directory of the MinkowskiEngine and run the following.
 
 ```
 cd /path/to/MinkowskiEngine
-python examples/indoor.py
+python -m examples.indoor
 ```
 
 When you run the above example, you will download pretrained-weights of a
