@@ -1,9 +1,9 @@
 Training Pipeline with Pytorch DataLoader
 =========================================
 
-The Minkowski Engine works seemlessly with the pytorch
+The Minkowski Engine works seamlessly with the PyTorch
 `torch.utils.data.DataLoader <https://pytorch.org/docs/stable/data.html>`_.
-Before you proceed, make sure that you are familiar with the data loadiing
+Before you proceed, make sure that you are familiar with the data loading
 tutorial `torch.utils.data.DataLoader
 <https://pytorch.org/docs/stable/data.html>`_.
 
@@ -12,7 +12,7 @@ Making a Dataset
 ----------------
 
 The first thing you need to do is loading or generating data. This is the most
-time-consuming part if you use your own dataset. However, it is tedious not
+time-consuming part if you use your own dataset. However, it is tedious, not
 difficult :) The most important part that you need to fill in is
 `__getitem__(self, index)` if you inherit `torch.utils.data.Dataset
 <https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset>`_ or
@@ -75,7 +75,7 @@ to generate a suitable sparse tensor.
    train_dataloader = torch.utils.data.DataLoader(
        train_dataset, batch_size=config.batch_size, collate_fn=collation_fn)
 
-Here, we used our custom `collation_fn`. The collation function has to
+Here, we used our custom :attr:`collation_fn`. The collation function has to
 concatenate all sparse tensors generate from each call that generates a batch
 and assign the correct batch index to the coordinates.
 
@@ -101,11 +101,13 @@ and assign the correct batch index to the coordinates.
 
        return coords_batch, feats_batch, labels_batch
 
+Training
+--------
 
 Once you have everything, let's create a network and train it with the
 generated data. One thing to note is that if you use more than one
-`num_workers` for the data loader, you have to make sure that the
-`ME.SparseTensor` generation part has to be located within the main python
+:attr:`num_workers` for the data loader, you have to make sure that the
+:attr:`ME.SparseTensor` generation part has to be located within the main python
 process since all python multi-processes use separate processes and the
 `ME.CoordManager
 <https://stanfordvl.github.io/MinkowskiEngine/coords.html#coordsmanager>`_, the
@@ -163,4 +165,5 @@ Finally, once you assemble all the codes, you can train your network.
    Iter: 80, Epoch: 19, Loss: 0.00013127068668836728
 
 
-The original code can be found at `the example/two_dim_training.py <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/two_dim_training.py>`_.
+The original code can be found at `example/two_dim_training.py
+<https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/two_dim_training.py>`_.

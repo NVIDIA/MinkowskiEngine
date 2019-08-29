@@ -7,7 +7,7 @@ install open3d-python`.
 .. code-block:: shell
 
    cd /path/to/MinkowskiEngine
-   python examples/indoor.py
+   python -m examples.indoor
 
 
 Segmentation of a hotel room

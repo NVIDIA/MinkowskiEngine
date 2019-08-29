@@ -140,8 +140,8 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
 ### Running the Examples
 
-After installing the package, run `python examples/example.py` in the package root directory.
-For indoor semantic segmentation. run `python examples/indoor.py` in the package root directory.
+After installing the package, run `python -m examples.example` in the package root directory.
+For indoor semantic segmentation. run `python -m examples.indoor` in the package root directory.
 
 ![](https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png)
 

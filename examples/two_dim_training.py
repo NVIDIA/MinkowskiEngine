@@ -42,12 +42,13 @@ import numpy as np
 
 import torch
 import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
 import MinkowskiEngine as ME
 
 from examples.unet import UNet
 
 
-class RandomLineDataset(torch.utils.data.Dataset):
+class RandomLineDataset(Dataset):
 
     # Warning: read using mutable obects for default input arguments in python.
     def __init__(
@@ -144,8 +145,8 @@ def collation_fn(data_labels):
         N = coords[batch_id].shape[0]
 
         coords_batch.append(
-            torch.cat((torch.from_numpy(
-                coords[batch_id]).int(), torch.ones(N, 1).int() * batch_id), 1))
+            torch.cat((torch.from_numpy(coords[batch_id]).int(),
+                       torch.ones(N, 1).int() * batch_id), 1))
         feats_batch.append(torch.from_numpy(feats[batch_id]))
         labels_batch.append(torch.from_numpy(labels[batch_id]))
 
@@ -160,7 +161,7 @@ def collation_fn(data_labels):
 def main(config):
     train_dataset = RandomLineDataset(noise_type='gaussian', dataset_size=40)
 
-    train_dataloader = torch.utils.data.DataLoader(
+    train_dataloader = DataLoader(
         train_dataset, batch_size=config.batch_size, collate_fn=collation_fn)
 
     net = UNet(1, 1, D=2)
