@@ -53,6 +53,11 @@ class MinkowskiBroadcastFunction(Function):
         assert input_features.shape[1] == input_features_global.shape[1]
         assert input_features.type() == input_features_global.type()
         assert isinstance(operation_type, OperationType)
+        if not input_features.is_contiguous():
+            input_features = input_features.contiguous()
+        if not input_features_global.is_contiguous():
+            input_features_global = input_features_global.contiguous()
+
         ctx.op = operation_type_to_int(operation_type)
 
         ctx.in_feat = input_features
@@ -72,6 +77,9 @@ class MinkowskiBroadcastFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
+        if not grad_out_feat.is_contiguous():
+            grad_out_feat = grad_out_feat.contiguous()
+
         grad_in_feat = grad_out_feat.new()
         grad_in_feat_glob = grad_out_feat.new()
         bw_fn = getattr(MEB, 'BroadcastBackward' + get_postfix(grad_out_feat))

@@ -38,6 +38,11 @@ class MinkowskiPruningFunction(Function):
                 coords_manager):
         assert in_feat.size(0) == use_feat.size(0)
         assert isinstance(use_feat, torch.ByteTensor)
+        if not in_feat.is_contiguous():
+            in_feat = in_feat.contiguous()
+        if not use_feat.is_contiguous():
+            use_feat = use_feat.contiguous()
+
         ctx.in_coords_key = in_coords_key
         ctx.out_coords_key = out_coords_key
         ctx.coords_manager = coords_manager
@@ -52,6 +57,9 @@ class MinkowskiPruningFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
+        if not grad_out_feat.is_contiguous():
+            grad_out_feat = grad_out_feat.contiguous()
+
         grad_in_feat = grad_out_feat.new()
         bw_fn = getattr(MEB, 'PruningBackward' + get_postfix(grad_out_feat))
         bw_fn(ctx.in_coords_key.D, grad_in_feat, grad_out_feat,

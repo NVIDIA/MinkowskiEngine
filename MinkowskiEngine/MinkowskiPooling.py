@@ -50,6 +50,9 @@ class MinkowskiMaxPoolingFunction(Function):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
+        if not input_features.is_contiguous():
+            input_features = input_features.contiguous()
+
         tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
             tensor_stride, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
@@ -80,6 +83,9 @@ class MinkowskiMaxPoolingFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
+        if not grad_out_feat.is_contiguous():
+            grad_out_feat = grad_out_feat.contiguous()
+
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
         bw_fn = getattr(MEB, 'MaxPoolingBackward' + get_postfix(grad_out_feat))
@@ -119,6 +125,9 @@ class MinkowskiAvgPoolingFunction(Function):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
+        if not input_features.is_contiguous():
+            input_features = input_features.contiguous()
+
         tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
             tensor_stride, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
@@ -148,6 +157,9 @@ class MinkowskiAvgPoolingFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
+        if not grad_out_feat.is_contiguous():
+            grad_out_feat = grad_out_feat.contiguous()
+
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
         bw_fn = getattr(MEB, 'AvgPoolingBackward' + get_postfix(grad_out_feat))

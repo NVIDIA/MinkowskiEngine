@@ -61,6 +61,9 @@ class MinkowskiConvolutionFunction(Function):
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
         assert input_features.type() == kernel.type()
+        if not input_features.is_contiguous():
+            input_features = input_features.contiguous()
+
         tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
             tensor_stride, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
@@ -89,7 +92,9 @@ class MinkowskiConvolutionFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
-        assert grad_out_feat.type() == ctx.in_feat.type()
+        if not grad_out_feat.is_contiguous():
+            grad_out_feat = grad_out_feat.contiguous()
+
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
@@ -130,6 +135,9 @@ class MinkowskiConvolutionTransposeFunction(Function):
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
         assert input_features.type() == kernel.type()
+        if not input_features.is_contiguous():
+            input_features = input_features.contiguous()
+
         tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
             tensor_stride, stride, kernel_size, dilation, region_type,
             in_coords_key.D)
@@ -159,6 +167,9 @@ class MinkowskiConvolutionTransposeFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
+        if not grad_out_feat.is_contiguous():
+            grad_out_feat = grad_out_feat.contiguous()
+
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
