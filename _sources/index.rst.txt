@@ -18,8 +18,9 @@ Table of Contents
    :maxdepth: 2
    :caption: Demo Documentation
 
-   demo/interop
+   demo/training
    demo/segmentation
+   demo/interop
    demo/multigpu
    demo/pointnet
 

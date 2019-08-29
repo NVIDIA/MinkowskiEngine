@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Multi-GPU Training" href="multigpu.html" />
-    <link rel="prev" title="Working with Pytorch Layers" href="interop.html" /> 
+    <link rel="next" title="Working with Pytorch Layers" href="interop.html" />
+    <link rel="prev" title="Training Pipeline with Pytorch DataLoader" href="training.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -93,11 +93,12 @@
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="interop.html">Working with Pytorch Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training Pipeline with Pytorch DataLoader</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Semantic Segmentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#segmentation-of-a-hotel-room">Segmentation of a hotel room</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multigpu.html">Multi-GPU Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pointnet.html">PointNet</a></li>
 </ul>
@@ -228,8 +229,11 @@ by subtracting 0.5 from the colors.</p>
 <p>After doing some post-processing. We can color the labels and visualize the
 input and the prediction side-by-side.</p>
 <img alt="../_images/segmentation.png" src="../_images/segmentation.png" />
-<p>The weights are downloaded automatically once you run the example and the weights are currently the top-ranking algorithm on the <a class="reference external" href="http://kaldir.vc.in.tum.de/scannet_benchmark/">Scannet 3D segmentation benchmark</a>.</p>
-<p>Please refer to the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/indoor.py">complete indoor segmentation example</a> for more detail.</p>
+<p>The weights are downloaded automatically once you run the example and the
+weights are currently the top-ranking algorithm on the <a class="reference external" href="http://kaldir.vc.in.tum.de/scannet_benchmark/">Scannet 3D segmentation
+benchmark</a>.</p>
+<p>Please refer to the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/indoor.py">complete indoor segmentation example</a>
+for more detail.</p>
 </div>
 </div>
 
@@ -245,10 +249,10 @@ input and the prediction side-by-side.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="multigpu.html" class="btn btn-neutral float-right" title="Multi-GPU Training" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="interop.html" class="btn btn-neutral float-right" title="Working with Pytorch Layers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="interop.html" class="btn btn-neutral float-left" title="Working with Pytorch Layers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="training.html" class="btn btn-neutral float-left" title="Training Pipeline with Pytorch DataLoader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

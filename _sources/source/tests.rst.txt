@@ -68,6 +68,14 @@ tests.pruning module
    :undoc-members:
    :show-inheritance:
 
+tests.strided\_conv module
+--------------------------
+
+.. automodule:: tests.strided_conv
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tests.voxelization module
 -------------------------
 
