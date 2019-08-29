@@ -32,7 +32,8 @@ def fnv_hash_vec(arr):
     """
     assert arr.ndim == 2
     # Floor first for negative coordinates
-    arr = arr.astype(np.uint64, copy=True)
+    arr = arr.copy()
+    arr = arr.astype(np.uint64, copy=False)
     hashed_arr = np.uint64(14695981039346656037) * \
         np.ones(arr.shape[0], dtype=np.uint64)
     for j in range(arr.shape[1]):
@@ -46,8 +47,9 @@ def ravel_hash_vec(arr):
     Ravel the coordinates after subtracting the min coordinates.
     """
     assert arr.ndim == 2
+    arr = arr.copy()
     arr -= arr.min(0)
-    arr = arr.astype(np.uint64, copy=True)
+    arr = arr.astype(np.uint64, copy=False)
     arr_max = arr.max(0).astype(np.uint64) + 1
 
     keys = np.zeros(arr.shape[0], dtype=np.uint64)
@@ -63,8 +65,9 @@ def sparse_quantize(coords,
                     feats=None,
                     labels=None,
                     ignore_label=255,
+                    set_ignore_label_when_collision=False,
                     return_index=False,
-                    hash_type='ravel',
+                    hash_type='fnv',
                     quantization_size=1):
     r"""Given coordinates, and features (optionally labels), the function
     generates quantized (voxelized) coordinates.
@@ -81,6 +84,9 @@ def sparse_quantize(coords,
         labels (:attr:`numpy.ndarray`, optional): labels associated to eah coordinates.
 
         ignore_label (:attr:`int`, optional): the int value of the IGNORE LABEL.
+
+        set_ignore_label_when_collision (:attr:`bool`, optional): use the `ignore_label`
+        when at least two points fall into the same cell.
 
         return_index (:attr:`bool`, optional): True if you want the indices of the
         quantized coordinates. False by default.
@@ -120,7 +126,7 @@ def sparse_quantize(coords,
         ) == dimension, "Quantization size and coordinates size mismatch."
         quantization_size = [i for i in quantization_size]
     elif np.isscalar(quantization_size):  # Assume that it is a scalar
-        quantization_size = [int(quantization_size) for i in range(dimension)]
+        quantization_size = [quantization_size for i in range(dimension)]
     else:
         raise ValueError('Not supported type for quantization_size.')
     discrete_coords = np.floor(coords / np.array(quantization_size))
@@ -134,7 +140,8 @@ def sparse_quantize(coords,
     if use_label:
         _, inds, counts = np.unique(key, return_index=True, return_counts=True)
         filtered_labels = labels[inds]
-        filtered_labels[counts > 1] = ignore_label
+        if set_ignore_label_when_collision:
+            filtered_labels[counts > 1] = ignore_label
         if return_index:
             return inds, filtered_labels
         else:

@@ -26,7 +26,7 @@ import torch
 import MinkowskiEngine as ME
 import MinkowskiEngine.MinkowskiFunctional as MF
 
-from common import data_loader
+from examples.common import data_loader
 
 
 class UNet(ME.MinkowskiNetwork):
