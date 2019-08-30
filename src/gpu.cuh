@@ -121,6 +121,8 @@ constexpr int CUDA_NUM_THREADS = 256;
 
 constexpr int SHARED_BLOCK_SIZE = 32;
 
+constexpr int MAX_GRID = 65536;
+
 inline int GET_BLOCKS(const int N) {
   return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 }

@@ -43,6 +43,8 @@ if not os.path.isfile('weights.pth'):
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_name', type=str, default='1.ply')
 parser.add_argument('--voxel_size', type=float, default=0.02)
+parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--max_kernel_size', type=int, default=7)
 
 
 def load_file(file_name, voxel_size):
@@ -56,9 +58,11 @@ def load_file(file_name, voxel_size):
     return quantized_coords[inds], feats[inds], pcd
 
 
-def generate_input_sparse_tensor(file_name, voxel_size=0.05):
+def generate_input_sparse_tensor(file_name, voxel_size=0.05, batch_size=1):
     # Create a batch, this process is done in a data loader during training in parallel.
-    batch = [load_file(file_name, voxel_size)]
+    batch = [
+        load_file(file_name, voxel_size),
+    ] * batch_size
     coordinates_, featrues_, pcds = list(zip(*batch))
     coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
 
@@ -72,7 +76,7 @@ if __name__ == '__main__':
 
     # Define a model and load the weights
     all_convs = {}
-    for k in [3, 5, 7]:
+    for k in range(3, config.max_kernel_size + 1, 2):
         for in_ch in [3, 8, 16, 32, 64, 128]:
             for out_ch in [16, 32, 64, 128, 256]:
                 all_convs[(k, in_ch, out_ch)] = ME.MinkowskiConvolution(
@@ -85,7 +89,9 @@ if __name__ == '__main__':
     # Measure time
     print('Forward')
     sinput = generate_input_sparse_tensor(
-        config.file_name, voxel_size=config.voxel_size)
+        config.file_name,
+        voxel_size=config.voxel_size,
+        batch_size=config.batch_size)
     for k, conv in all_convs.items():
         timer = Timer()
         sinput._F = torch.rand(len(sinput), k[1]).to(device)
@@ -95,7 +101,9 @@ if __name__ == '__main__':
             timer.tic()
             soutput = conv(sinput)
             timer.toc()
-        print(f'{timer.min_time:.12f} for {k} strided convolution')
+        print(
+            f'{timer.min_time:.12f} for {k} strided convolution with {len(sinput)} voxel'
+        )
 
     print('Backward')
     for k, conv in all_convs.items():
@@ -109,4 +117,6 @@ if __name__ == '__main__':
             timer.tic()
             loss.backward()
             timer.toc()
-        print(f'{timer.min_time:.12f} for {k} strided convolution')
+        print(
+            f'{timer.min_time:.12f} for {k} strided convolution with {len(sinput)} voxel'
+        )
