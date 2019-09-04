@@ -31,7 +31,7 @@
 
 #include <pybind11/pybind11.h>
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void ConvolutionForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                            at::Tensor kernel, std::vector<int> tensor_strides,
                            std::vector<int> strides,
@@ -40,8 +40,8 @@ void ConvolutionForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                            at::Tensor offsets, py::object py_in_coords_key,
                            py::object py_out_coords_key,
                            py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false);
@@ -61,15 +61,15 @@ void ConvolutionForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
       std::get<1>(in_out));
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void ConvolutionBackwardCPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false);
@@ -87,7 +87,7 @@ void ConvolutionBackwardCPU(
 }
 
 #ifndef CPU_ONLY
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void ConvolutionForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                            at::Tensor kernel, std::vector<int> tensor_strides,
                            std::vector<int> strides,
@@ -96,8 +96,8 @@ void ConvolutionForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                            at::Tensor offsets, py::object py_in_coords_key,
                            py::object py_out_coords_key,
                            py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false);
@@ -124,15 +124,15 @@ void ConvolutionForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
       at::cuda::getCurrentCUDAStream());
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void ConvolutionBackwardGPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false);
@@ -153,123 +153,64 @@ void ConvolutionBackwardGPU(
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
       grad_out_feat.data<Dtype>(), grad_out_feat.size(1), kernel.data<Dtype>(),
       grad_kernel.data<Dtype>(), p_coords_manager->_in_maps[map_key],
-      p_coords_manager->_out_maps[map_key], grad_out_feat.size(0), d_scr, handle,
-      at::cuda::getCurrentCUDAStream());
+      p_coords_manager->_out_maps[map_key], grad_out_feat.size(0), d_scr,
+      handle, at::cuda::getCurrentCUDAStream());
 }
 #endif
 
-template <typename Dtype, typename Itype>
-void DimSwitchConvolutionForwardCPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(ConvolutionForwardCPU, Dtype, Itype, in_feat, out_feat,
-                   kernel, tensor_strides, strides, kernel_sizes, dilations,
-                   region_type, offsets, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager);
-}
-
-template void DimSwitchConvolutionForwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+template void ConvolutionForwardCPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchConvolutionForwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+template void ConvolutionForwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template <typename Dtype, typename Itype>
-void DimSwitchConvolutionBackwardCPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(ConvolutionBackwardCPU, Dtype, Itype, in_feat, grad_in_feat,
-                   grad_out_feat, kernel, grad_kernel, tensor_strides, strides,
-                   kernel_sizes, dilations, region_type, py_in_coords_key,
-                   py_out_coords_key, py_coords_manager);
-}
+template void ConvolutionBackwardCPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchConvolutionBackwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void DimSwitchConvolutionBackwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+template void ConvolutionBackwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template <typename Dtype, typename Itype>
-void DimSwitchConvolutionForwardGPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(ConvolutionForwardGPU, Dtype, Itype, in_feat, out_feat,
-                   kernel, tensor_strides, strides, kernel_sizes, dilations,
-                   region_type, offsets, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager);
-}
+template void ConvolutionBackwardGPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchConvolutionForwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+template void ConvolutionBackwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
+template void ConvolutionForwardGPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchConvolutionForwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
+template void ConvolutionForwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
-
-template <typename Dtype, typename Itype>
-void DimSwitchConvolutionBackwardGPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(ConvolutionBackwardGPU, Dtype, Itype, in_feat, grad_in_feat,
-                   grad_out_feat, kernel, grad_kernel, tensor_strides, strides,
-                   kernel_sizes, dilations, region_type, py_in_coords_key,
-                   py_out_coords_key, py_coords_manager);
-}
-
-template void DimSwitchConvolutionBackwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void DimSwitchConvolutionBackwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor kernel, at::Tensor grad_kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
 #endif

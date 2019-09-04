@@ -31,14 +31,14 @@
 
 #include <pybind11/pybind11.h>
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
                          at::Tensor out_feat, int op,
                          py::object py_in_coords_key,
                          py::object py_out_coords_key,
                          py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   // Both coords must exist
   // Use the global pooling mapping
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKeyCheck(
@@ -56,18 +56,19 @@ void BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   BroadcastForwardKernelCPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key]);
+      p_coords_manager->_in_maps[map_key],
+      p_coords_manager->_out_maps[map_key]);
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                           at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
                           at::Tensor grad_out_feat, int op,
                           py::object py_in_coords_key,
                           py::object py_out_coords_key,
                           py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   // Both coords must exist
   // Use the global pooling mapping
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKeyCheck(
@@ -88,18 +89,19 @@ void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(0),
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key]);
+      p_coords_manager->_in_maps[map_key],
+      p_coords_manager->_out_maps[map_key]);
 }
 
 #ifndef CPU_ONLY
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
                          at::Tensor out_feat, int op,
                          py::object py_in_coords_key,
                          py::object py_out_coords_key,
                          py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   // Both coords must exist
   // Use the global pooling mapping
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKeyCheck(
@@ -127,15 +129,15 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
       d_scr, handle, at::cuda::getCurrentCUDAStream());
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                           at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
                           at::Tensor grad_out_feat, int op,
                           py::object py_in_coords_key,
                           py::object py_out_coords_key,
                           py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
 
   // Both coords must exist
   // Use the global pooling mapping
@@ -155,7 +157,7 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(
       2 * p_coords_manager->_out_maps[map_key][0].size() + // in_map + out_map
-      in_feat_glob.size(0) + 1                            // d_csr_row
+      in_feat_glob.size(0) + 1                             // d_csr_row
   );
 
   Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
@@ -179,91 +181,51 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 }
 #endif
 
-template <typename Dtype, typename Itype>
-void DimSwitchBroadcastForwardCPU(int D, at::Tensor in_feat,
-                                  at::Tensor in_feat_glob, at::Tensor out_feat,
-                                  int op, py::object py_in_coords_key,
-                                  py::object py_out_coords_key,
-                                  py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(BroadcastForwardCPU, Dtype, Itype, in_feat, in_feat_glob,
-                   out_feat, op, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager);
-}
+template void BroadcastForwardCPU<float, int32_t>(at::Tensor in_feat,
+                                                  at::Tensor in_feat_glob,
+                                                  at::Tensor out_feat, int op,
+                                                  py::object py_in_coords_key,
+                                                  py::object py_out_coords_key,
+                                                  py::object py_coords_manager);
 
-template void DimSwitchBroadcastForwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat,
-    int op, py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void DimSwitchBroadcastForwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat,
-    int op, py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template <typename Dtype, typename Itype>
-void DimSwitchBroadcastBackwardCPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
-    at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
+template void BroadcastForwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(BroadcastBackwardCPU, Dtype, Itype, in_feat, grad_in_feat,
-                   in_feat_glob, grad_in_feat_glob, grad_out_feat, op,
-                   py_in_coords_key, py_out_coords_key, py_coords_manager);
-}
+    py::object py_coords_manager);
 
-template void DimSwitchBroadcastBackwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
+template void BroadcastBackwardCPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void DimSwitchBroadcastBackwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
+template void BroadcastBackwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template <typename Dtype, typename Itype>
-void DimSwitchBroadcastForwardGPU(int D, at::Tensor in_feat,
-                                  at::Tensor in_feat_glob, at::Tensor out_feat,
-                                  int op, py::object py_in_coords_key,
-                                  py::object py_out_coords_key,
-                                  py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(BroadcastForwardGPU, Dtype, Itype, in_feat, in_feat_glob,
-                   out_feat, op, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager);
-}
+template void BroadcastForwardGPU<float, int32_t>(at::Tensor in_feat,
+                                                  at::Tensor in_feat_glob,
+                                                  at::Tensor out_feat, int op,
+                                                  py::object py_in_coords_key,
+                                                  py::object py_out_coords_key,
+                                                  py::object py_coords_manager);
 
-template void DimSwitchBroadcastForwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat,
-    int op, py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void DimSwitchBroadcastForwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat,
-    int op, py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template <typename Dtype, typename Itype>
-void DimSwitchBroadcastBackwardGPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
-    at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
+template void BroadcastForwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor in_feat_glob, at::Tensor out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(BroadcastBackwardGPU, Dtype, Itype, in_feat, grad_in_feat,
-                   in_feat_glob, grad_in_feat_glob, grad_out_feat, op,
-                   py_in_coords_key, py_out_coords_key, py_coords_manager);
-}
+    py::object py_coords_manager);
 
-template void DimSwitchBroadcastBackwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
+template void BroadcastBackwardGPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void DimSwitchBroadcastBackwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
+template void BroadcastBackwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);

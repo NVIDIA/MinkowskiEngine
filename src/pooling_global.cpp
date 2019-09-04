@@ -31,14 +31,14 @@
 
 #include <pybind11/pybind11.h>
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void GlobalPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                              at::Tensor num_nonzero,
                              py::object py_in_coords_key,
                              py::object py_out_coords_key,
                              py::object py_coords_manager, bool use_avg) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
       py_in_coords_key, py_out_coords_key);
 
@@ -54,14 +54,14 @@ void GlobalPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
       use_avg);
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                               at::Tensor grad_out_feat, at::Tensor num_nonzero,
                               py::object py_in_coords_key,
                               py::object py_out_coords_key,
                               py::object py_coords_manager, bool use_avg) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
 
@@ -76,14 +76,14 @@ void GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 }
 
 #ifndef CPU_ONLY
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                              at::Tensor num_nonzero,
                              py::object py_in_coords_key,
                              py::object py_out_coords_key,
                              py::object py_coords_manager, bool use_avg) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
       py_in_coords_key, py_out_coords_key);
 
@@ -119,14 +119,14 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
       at::cuda::getCurrentCUDAStream());
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                               at::Tensor grad_out_feat, at::Tensor num_nonzero,
                               py::object py_in_coords_key,
                               py::object py_out_coords_key,
                               py::object py_coords_manager, bool use_avg) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
 
@@ -147,90 +147,44 @@ void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 }
 #endif
 
-template <typename Dtype, typename Itype>
-void DimSwitchGlobalPoolingForwardCPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg) {
-  SWITCH_DIM_TYPES(GlobalPoolingForwardCPU, Dtype, Itype, in_feat, out_feat,
-                   num_nonzero, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager, use_avg);
-}
-
-template void DimSwitchGlobalPoolingForwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void GlobalPoolingForwardCPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void DimSwitchGlobalPoolingForwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void GlobalPoolingForwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template <typename Dtype, typename Itype>
-void DimSwitchGlobalPoolingBackwardCPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg) {
-  SWITCH_DIM_TYPES(GlobalPoolingBackwardCPU, Dtype, Itype, in_feat,
-                   grad_in_feat, grad_out_feat, num_nonzero, py_in_coords_key,
-                   py_out_coords_key, py_coords_manager, use_avg);
-}
+template void GlobalPoolingBackwardCPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
 
-template void DimSwitchGlobalPoolingBackwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg);
-
-template void DimSwitchGlobalPoolingBackwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg);
+template void GlobalPoolingBackwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
 
 #ifndef CPU_ONLY
-template <typename Dtype, typename Itype>
-void DimSwitchGlobalPoolingForwardGPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg) {
-  SWITCH_DIM_TYPES(GlobalPoolingForwardGPU, Dtype, Itype, in_feat, out_feat,
-                   num_nonzero, py_in_coords_key, py_out_coords_key,
-                   py_coords_manager, use_avg);
-}
-
-template void DimSwitchGlobalPoolingForwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void GlobalPoolingForwardGPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void DimSwitchGlobalPoolingForwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void GlobalPoolingForwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template <typename Dtype, typename Itype>
-void DimSwitchGlobalPoolingBackwardGPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg) {
-  SWITCH_DIM_TYPES(GlobalPoolingBackwardGPU, Dtype, Itype, in_feat,
-                   grad_in_feat, grad_out_feat, num_nonzero, py_in_coords_key,
-                   py_out_coords_key, py_coords_manager, use_avg);
-}
+template void GlobalPoolingBackwardGPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
 
-template void DimSwitchGlobalPoolingBackwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg);
-
-template void DimSwitchGlobalPoolingBackwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager, bool use_avg);
+template void GlobalPoolingBackwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
 #endif

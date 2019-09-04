@@ -25,45 +25,74 @@
 #include "region_iter.hpp"
 #include "instantiation.hpp"
 
-template <uint8_t D, typename Itype>
-Region<D, Itype>::Region(const Coord<D, Itype> &center_,
-                         const Arr<D, int> &tensor_strides,
-                         const Arr<D, int> &kernel_size,
-                         const Arr<D, int> &dilations, int region_type,
-                         const Itype *p_offset, int n_offset)
+template <typename Itype>
+Region<Itype>::Region(const Coord<Itype> &center_,
+                      const std::vector<int> &tensor_strides,
+                      const std::vector<int> &kernel_size,
+                      const std::vector<int> &dilations, int region_type,
+                      const Itype *p_offset, int n_offset)
     : region_type(region_type), tensor_strides(tensor_strides),
       kernel_size(kernel_size), dilations(dilations), p_offset(p_offset),
       n_offset(n_offset), use_lower_bound(false) {
+  D = center_.size() - 1;
+
+  center = center_;
+  lb.resize(D + 1);
+  ub.resize(D + 1);
+
+#ifdef BATCH_FIRST
+  lb[0] = ub[0] = center_[0]; // set the batch index
   for (int i = 0; i < D; i++) {
-    center[i] = center_[i];
+    lb[i + 1] =
+        center_[i + 1] - int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
+    ub[i + 1] =
+        center_[i + 1] + int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
+  }
+#else
+  for (int i = 0; i < D; i++) {
     lb[i] =
         center_[i] - int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
     ub[i] =
         center_[i] + int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
   }
-  lb[D] = ub[D] = center[D] = center_[D]; // set the batch index
+  lb[D] = ub[D] = center_[D]; // set the batch index
+#endif
 }
 
-template <uint8_t D, typename Itype>
-Region<D, Itype>::Region(const Coord<D, Itype> &lower_bound_,
-                         const Arr<D, int> &tensor_strides,
-                         const Arr<D, int> &kernel_size,
-                         const Arr<D, int> &dilations, int region_type,
-                         const Itype *p_offset, int n_offset,
-                         bool use_lower_bound)
+template <typename Itype>
+Region<Itype>::Region(const Coord<Itype> &lower_bound_,
+                      const std::vector<int> &tensor_strides,
+                      const std::vector<int> &kernel_size,
+                      const std::vector<int> &dilations, int region_type,
+                      const Itype *p_offset, int n_offset, bool use_lower_bound)
     : region_type(region_type), tensor_strides(tensor_strides),
       kernel_size(kernel_size), dilations(dilations), p_offset(p_offset),
       n_offset(n_offset), use_lower_bound(true) {
+  D = lower_bound_.size();
+
+  center.resize(D + 1);
+  lb.resize(D + 1);
+  ub.resize(D + 1);
+
   if (region_type > 0)
     throw std::invalid_argument(
         Formatter() << "The region type " << region_type
                     << " is not supported with the use_lower_bound argument");
+#ifdef BATCH_FIRST
+  lb[0] = ub[0] = lower_bound_[0]; // set the batch index
+  for (int i = 0; i < D; i++) {
+    lb[i + 1] = lower_bound_[i + 1];
+    ub[i + 1] = lower_bound_[i + 1] +
+            (kernel_size[i] - 1) * dilations[i] * tensor_strides[i];
+  }
+#else
   for (int i = 0; i < D; i++) {
     lb[i] = lower_bound_[i];
     ub[i] = lower_bound_[i] +
             (kernel_size[i] - 1) * dilations[i] * tensor_strides[i];
   }
   lb[D] = ub[D] = lower_bound_[D]; // set the batch index
+#endif
 }
 
-INSTANTIATE_CLASS_DIM_ITYPE(Region, int32_t);
+template class Region<int32_t>;

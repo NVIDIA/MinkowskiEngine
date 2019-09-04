@@ -4,6 +4,7 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It su
 
 ## Features
 
+- Unlimited high-(spatial)-dimensional sparse tensor support
 - Dynamic computation graph
 - Custom kernel shapes
 - [Generalized sparse convolution](https://stanfordvl.github.io/MinkowskiEngine/generalized_sparse_conv.html)
@@ -18,7 +19,7 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It su
 
 - Ubuntu 14.04 or higher
 - CUDA 10.0 or higher
-- pytorch 1.1 or higher
+- pytorch 1.2 or higher
 
 
 ## Installation

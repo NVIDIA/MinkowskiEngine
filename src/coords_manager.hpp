@@ -40,7 +40,7 @@
 #include "gpu_memory_manager.hpp"
 #endif
 
-template <uint8_t D, typename Itype> class CoordsManager {
+template <typename Itype> class CoordsManager {
 public:
   CoordsManager();
   ~CoordsManager() { clear(); }
@@ -49,7 +49,7 @@ public:
   bool existsCoordsKey(py::object py_coords_key);
   int getCoordsSize(uint64_t coords_key);
   int getCoordsSize(py::object py_coords_key);
-  uint64_t getCoordsKey(const Arr<D, int> &tensor_strides);
+  uint64_t getCoordsKey(const std::vector<int> &tensor_strides);
 
   void getCoords(at::Tensor coords, py::object py_coords_key);
   void getKernelMap(at::Tensor kernel_map, std::vector<int> tensor_strides,
@@ -60,37 +60,33 @@ public:
 
   // New coords map initialzation entry
   uint64_t initializeCoords(at::Tensor coords,
-                            const Arr<D, int> &tensor_strides,
+                            const std::vector<int> &tensor_strides,
                             bool enforce_creation);
   uint64_t initializeCoords(at::Tensor coords, py::object py_coords_key,
                             bool enforce_creation);
   // New coords map given an input
   uint64_t createOutCoords(uint64_t coords_key,
-                           const Arr<D, int> &tensor_strides,
-                           const Arr<D, int> &strides, bool is_transpose);
-  uint64_t createOriginCoords();
+                           const std::vector<int> &tensor_strides,
+                           const std::vector<int> &strides, bool is_transpose);
+  uint64_t createOriginCoords(int D);
   uint64_t createPruneCoords(at::Tensor use_feat, py::object py_in_coords_key,
                              py::object py_out_coords_key);
 
   // Helper functions for hashmap creation that returns the hashmap and the
   // batch indieces
-  std::tuple<CoordsHashMap<D, Itype>, std::set<Itype>, std::vector<Itype>>
+  std::tuple<CoordsHashMap<Itype>, std::set<Itype>, std::vector<Itype>>
   createCoordsHashMap(at::Tensor coords);
 
-  std::pair<CoordsHashMap<D, Itype>, std::vector<Itype>>
+  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
   createOutCoordsHashCoordsPair(uint64_t coords_key,
-                                const Arr<D, int> &tensor_strides,
-                                const Arr<D, int> &strides);
-  std::pair<CoordsHashMap<D, Itype>, std::vector<Itype>>
-  createOriginCoordsHashMap();
-  std::pair<CoordsHashMap<D, Itype>, std::vector<Itype>>
+                                const std::vector<int> &tensor_strides,
+                                const std::vector<int> &strides);
+  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
+  createOriginCoordsHashMap(int D);
+  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
   createPrunedCoordsHashMap(uint64_t coords_key, at::Tensor use_feat);
 
   // Mappings
-  InOutMapKey getMapHashKey(Arr<D, int> tensor_strides, Arr<D, int> strides,
-                            Arr<D, int> kernel_sizes, Arr<D, int> dilations,
-                            int region_type, py::object py_in_coords_key,
-                            py::object py_out_coords_key, bool is_transpose);
   InOutMapKey getMapHashKey(std::vector<int> tensor_strides,
                             std::vector<int> strides,
                             std::vector<int> kernel_sizes,
@@ -106,18 +102,18 @@ public:
   std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createInOutPerKernel(const uint64_t in_coords_key,
                        const uint64_t out_coords_key,
-                       const Arr<D, int> &in_tensor_strides,
-                       const Arr<D, int> &kernel_size,
-                       const Arr<D, int> &dilations, int region_type,
+                       const std::vector<int> &in_tensor_strides,
+                       const std::vector<int> &kernel_size,
+                       const std::vector<int> &dilations, int region_type,
                        at::Tensor offsets);
 
   std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createInOutPerKernelTranspose(const uint64_t in_coords_key,
                                 const uint64_t out_coords_key,
-                                const Arr<D, int> &out_tensor_strides,
-                                const Arr<D, int> &kernel_size,
-                                const Arr<D, int> &dilations, int region_type,
-                                at::Tensor offsets);
+                                const std::vector<int> &out_tensor_strides,
+                                const std::vector<int> &kernel_size,
+                                const std::vector<int> &dilations,
+                                int region_type, at::Tensor offsets);
 
   std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
   createGlobalReductionInOutMap(const uint64_t in_coords_key,
@@ -134,15 +130,6 @@ public:
                                const std::vector<int> &kernel_sizes,
                                const std::vector<int> &dilations,
                                int region_type, const at::Tensor &offsets,
-                               py::object py_in_coords_key,
-                               py::object py_out_coords_key, bool is_transpose);
-
-  std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnInOutPerKernel(const Arr<D, int> &tensor_strides,
-                               const Arr<D, int> &strides,
-                               const Arr<D, int> &kernel_sizes,
-                               const Arr<D, int> &dilations, int region_type,
-                               const at::Tensor &offsets,
                                py::object py_in_coords_key,
                                py::object py_out_coords_key, bool is_transpose);
 
@@ -183,8 +170,8 @@ public:
   // Variables
   //
   // Coordinate hash key to coordinate hash map
-  std::unordered_map<uint64_t, CoordsHashMap<D, Itype>> _coords_hashmaps;
-  // Coordinate hash key to <int dimension, coordinates
+  std::unordered_map<uint64_t, CoordsHashMap<Itype>> _coords_hashmaps;
+  // Coordinate hash key to <int dimension + 1, coordinates> pairs
   // dimension is used for raw pointer stride
   std::unordered_map<uint64_t, std::pair<int, std::vector<Itype>>>
       _coords_pairs;

@@ -32,14 +32,35 @@
 
 namespace py = pybind11;
 
-template <uint8_t D, typename Itype> CoordsManager<D, Itype>::CoordsManager() {}
+std::vector<int> computeOutTensorStride(const std::vector<int> &tensor_strides,
+                                        const std::vector<int> &strides,
+                                        bool is_transpose) {
+  std::vector<int> out_tensor_strides;
+  ASSERT(tensor_strides.size() == strides.size(),
+         "The dimension of tensor_stride: ", ArrToString(tensor_strides),
+         " does not match the dimension of strides: ", ArrToString(strides));
+  for (int i = 0; i < strides.size(); i++) {
+    if (is_transpose) {
+      ASSERT(tensor_strides[i] % strides[i] == 0,
+             "The output tensor stride is not divisible by ",
+             "up_strides. tensor stride: ", ArrToString(tensor_strides),
+             ", up_strides: ", ArrToString(strides));
+      out_tensor_strides.push_back(tensor_strides[i] / strides[i]);
+    } else
+      out_tensor_strides.push_back(tensor_strides[i] * strides[i]);
+  }
+  return out_tensor_strides;
+}
+
+// TODO
+template <typename Itype> CoordsManager<Itype>::CoordsManager() {}
 
 /*
  * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps
  * and return the indices of the coord_map_ind in coord_map_dst
  */
-template <uint8_t D, typename Itype>
-void CoordsManager<D, Itype>::getKernelMap(
+template <typename Itype>
+void CoordsManager<Itype>::getKernelMap(
     at::Tensor kernel_map, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
@@ -73,10 +94,10 @@ void CoordsManager<D, Itype>::getKernelMap(
   }
 }
 
-template <uint8_t D, typename Itype>
+template <typename Itype>
 uint64_t
-CoordsManager<D, Itype>::getCoordsKey(const Arr<D, int> &tensor_strides) {
-  auto tensor_stride_hash = hash_vec<Arr<D, int>>(tensor_strides);
+CoordsManager<Itype>::getCoordsKey(const std::vector<int> &tensor_strides) {
+  auto tensor_stride_hash = hash_vec<std::vector<int>>(tensor_strides);
   uint64_t r_coords_key = 0;
 
   // Following lines are from INITIALIZE_IN_COORDS
@@ -94,8 +115,8 @@ CoordsManager<D, Itype>::getCoordsKey(const Arr<D, int> &tensor_strides) {
   return r_coords_key;
 }
 
-template <uint8_t D, typename Itype>
-bool CoordsManager<D, Itype>::existsCoordsKey(uint64_t coords_key) {
+template <typename Itype>
+bool CoordsManager<Itype>::existsCoordsKey(uint64_t coords_key) {
   bool exist = false;
   // Following lines are from INITIALIZE_IN_COORDS
   /* Prioritize the p_coords_key */
@@ -104,50 +125,42 @@ bool CoordsManager<D, Itype>::existsCoordsKey(uint64_t coords_key) {
   return exist;
 }
 
-template <uint8_t D, typename Itype>
-bool CoordsManager<D, Itype>::existsCoordsKey(py::object py_coords_key) {
-  PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
+template <typename Itype>
+bool CoordsManager<Itype>::existsCoordsKey(py::object py_coords_key) {
+  PyCoordsKey *p_coords_key = py_coords_key.cast<PyCoordsKey *>();
   return existsCoordsKey(p_coords_key->getKey());
 }
 
-template <uint8_t D, typename Itype>
-int CoordsManager<D, Itype>::getCoordsSize(uint64_t coords_key) {
-  if (!existsCoordsKey(coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coord map doesn't exist for the given coords_key "
-                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
-                    << __LINE__);
+template <typename Itype>
+int CoordsManager<Itype>::getCoordsSize(uint64_t coords_key) {
+  ASSERT(existsCoordsKey(coords_key),
+         "The coord map doesn't exist for the given coords_key: ",
+         std::to_string(coords_key), ".");
   return _coords_hashmaps[coords_key].size();
 }
 
-template <uint8_t D, typename Itype>
-int CoordsManager<D, Itype>::getCoordsSize(py::object py_coords_key) {
-  PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
+template <typename Itype>
+int CoordsManager<Itype>::getCoordsSize(py::object py_coords_key) {
+  PyCoordsKey *p_coords_key = py_coords_key.cast<PyCoordsKey *>();
   return getCoordsSize(p_coords_key->getKey());
 }
 
-template <uint8_t D, typename Itype>
-void CoordsManager<D, Itype>::getCoords(at::Tensor coords,
-                                        py::object py_coords_key) {
-  PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
+template <typename Itype>
+void CoordsManager<Itype>::getCoords(at::Tensor coords,
+                                     py::object py_coords_key) {
+  PyCoordsKey *p_coords_key = py_coords_key.cast<PyCoordsKey *>();
   uint64_t coords_key = p_coords_key->getKey();
-  if (!existsCoordsKey(coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coord map doesn't exist for the given coords_key "
-                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
-                    << __LINE__);
   int nrows = getCoordsSize(coords_key);
   // initialize
+  int D = p_coords_key->getDimension();
   coords.resize_({nrows, D + 1});
   // copy to the out coords
   Itype *p_coords = coords.data<Itype>();
   auto &curr_coords_pair = _coords_pairs[coords_key];
-  if (curr_coords_pair.first != D + 1)
-    throw std::invalid_argument(Formatter()
-                                << "The coordinate dimensions mismatch "
-                                << "coordinates: " << curr_coords_pair.first
-                                << ", CoordsManager dimension + 1: " << D + 1
-                                << " at " << __FILE__ << ":" << __LINE__);
+  ASSERT(curr_coords_pair.first == D + 1,
+         "The coordinate dimensions mismatch. ",
+         "CoordsManager dimension: ", std::to_string(curr_coords_pair.first),
+         ", PyCoordsKey dimension: ", std::to_string(D));
   auto &curr_coords = curr_coords_pair.second;
   std::copy(curr_coords.begin(), curr_coords.end(), p_coords);
 }
@@ -155,25 +168,28 @@ void CoordsManager<D, Itype>::getCoords(at::Tensor coords,
 /*******************************
  * Initialization
  *******************************/
-template <uint8_t D, typename Itype>
+template <typename Itype>
 uint64_t
-CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
-                                          const Arr<D, int> &tensor_strides,
-                                          bool enforce_creation) {
-  uint64_t key = hash_vec<Arr<D, int>>(tensor_strides);
+CoordsManager<Itype>::initializeCoords(at::Tensor coords,
+                                       const std::vector<int> &tensor_strides,
+                                       bool enforce_creation) {
+  int ncols = coords.size(1);
+  int D = ncols - 1;
+  ASSERT(D == tensor_strides.size(), "The coordinate dimension (ncols - 1) ",
+         std::to_string(D),
+         " must match the size of tensor stride: ", ArrToString(tensor_strides),
+         ".");
+
+  uint64_t key = hash_vec(tensor_strides);
   bool key_exists = _coords_hashmaps.find(key) != _coords_hashmaps.end();
   if (key_exists) {
-    if (!enforce_creation)
-      throw std::invalid_argument(
-          Formatter()
-          << "The coord map already exists for the given tensor stride "
-          << "tensor_stride: " << ArrToString(tensor_strides) << " at "
-          << __FILE__ << ":" << __LINE__);
-    else {
+    ASSERT(enforce_creation,
+           "The coord map already exists for the given tensor stride ",
+           "tensor_stride: ", ArrToString(tensor_strides),
+           ". To enforce creation, put true on the enforce_creation.");
+    key = random();
+    while (_coords_hashmaps.find(key) != _coords_hashmaps.end())
       key = random();
-      while (_coords_hashmaps.find(key) != _coords_hashmaps.end())
-        key = random();
-    }
   } // If key doesn't exist, use the current key regardless of enforce creation
   auto coords_batch_vector = createCoordsHashMap(coords);
 
@@ -190,31 +206,44 @@ CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
   return key;
 }
 
-template <uint8_t D, typename Itype>
-uint64_t CoordsManager<D, Itype>::initializeCoords(at::Tensor coords,
-                                                   py::object py_coords_key,
-                                                   bool enforce_creation) {
-  PyCoordsKey<D> *p_coords_key = py_coords_key.cast<PyCoordsKey<D> *>();
+template <typename Itype>
+uint64_t CoordsManager<Itype>::initializeCoords(at::Tensor coords,
+                                                py::object py_coords_key,
+                                                bool enforce_creation) {
+  PyCoordsKey *p_coords_key = py_coords_key.cast<PyCoordsKey *>();
   uint64_t in_coords_key =
       initializeCoords(coords, p_coords_key->tensor_strides_, enforce_creation);
+  // Assume the dimension is coords.size(1) - 1 (for batch index).
+  int D = coords.size(1) - 1;
+  ASSERT(D > 0, "Input coordinate dimension, ", std::to_string(D + 1),
+         ", is not supported.");
+  std::vector<int> tensor_stride(D);
+  std::fill(tensor_stride.begin(), tensor_stride.end(), 1);
+  p_coords_key->setDimension(coords.size(1) - 1);
+  // Tensor strided initialized in python side.
+  // p_coords_key->setTensorStride(tensor_stride);
   p_coords_key->setKey(in_coords_key);
   return in_coords_key;
 }
 
 /*********************************/
-template <uint8_t D, typename Itype>
-uint64_t CoordsManager<D, Itype>::createOutCoords(
-    uint64_t coords_key, const Arr<D, int> &tensor_strides,
-    const Arr<D, int> &strides, bool is_transpose) {
-  if (!existsCoordsKey(coords_key))
-    throw std::invalid_argument(
-        Formatter() << "The coord map doesn't exist for the given coords_key. "
-                    << "coords_key: " << coords_key << " at " << __FILE__ << ":"
-                    << __LINE__);
+template <typename Itype>
+uint64_t CoordsManager<Itype>::createOutCoords(
+    uint64_t coords_key, const std::vector<int> &tensor_strides,
+    const std::vector<int> &strides, bool is_transpose) {
+  ASSERT(existsCoordsKey(coords_key),
+         "The coord map doesn't exist for the given coords_key: ",
+         std::to_string(coords_key), ".");
 
   auto out_tensor_strides =
-      computeOutTensorStride<D>(tensor_strides, strides, is_transpose);
-  uint64_t out_coords_key = hash_vec<std::vector<int>>(out_tensor_strides);
+      computeOutTensorStride(tensor_strides, strides, is_transpose);
+
+  int D = _coords_pairs[coords_key].first - 1;
+  ASSERT(D == tensor_strides.size(), "The coordinate dimensions mismatch. ",
+         "CoordsManager dimension: ", std::to_string(D),
+         ", tensor_strides dimension: ", std::to_string(tensor_strides.size()));
+  // tensor_strides.size() == strides.size() on computeOutTensorStride
+  uint64_t out_coords_key = hash_vec(out_tensor_strides);
   // If the coordinates already exists, return the key.
   if (existsCoordsKey(out_coords_key))
     return out_coords_key;
@@ -235,20 +264,22 @@ uint64_t CoordsManager<D, Itype>::createOutCoords(
   return out_coords_key;
 }
 
-template <uint8_t D, typename Itype>
-uint64_t
-CoordsManager<D, Itype>::createPruneCoords(at::Tensor use_feat,
-                                           py::object py_in_coords_key,
-                                           py::object py_out_coords_key) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
-  // set the coords key
+template <typename Itype>
+uint64_t CoordsManager<Itype>::createPruneCoords(at::Tensor use_feat,
+                                                 py::object py_in_coords_key,
+                                                 py::object py_out_coords_key) {
+  PyCoordsKey *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
+  // set a random coords key
   uint64_t out_coords_key = random();
   while (_coords_hashmaps.find(out_coords_key) != _coords_hashmaps.end())
     out_coords_key = random();
   // Set the pycoordskey
-  p_out_coords_key->setTensorStride(p_in_coords_key->tensor_strides_);
+  p_out_coords_key->setTensorStride(p_in_coords_key->getTensorStride());
+  p_out_coords_key->setDimension(p_in_coords_key->getDimension());
   p_out_coords_key->setKey(out_coords_key);
+
+  int D = p_in_coords_key->getDimension();
 
   // Create coords hashmap
   auto coords_pair =
@@ -260,16 +291,16 @@ CoordsManager<D, Itype>::createPruneCoords(at::Tensor use_feat,
   return out_coords_key;
 }
 
-template <uint8_t D, typename Itype>
-uint64_t CoordsManager<D, Itype>::createOriginCoords() {
-  Arr<D, int> zero_tensor_strides;
-  zero_tensor_strides.fill(0);
-  uint64_t out_coords_key = hash_vec<Arr<D, int>>(zero_tensor_strides);
+template <typename Itype>
+uint64_t CoordsManager<Itype>::createOriginCoords(int D) {
+  std::vector<int> zero_tensor_strides(D);
+  std::fill(zero_tensor_strides.begin(), zero_tensor_strides.end(), 0);
+  uint64_t out_coords_key = hash_vec(zero_tensor_strides);
   // If the coordinates already exists, return the key.
   if (existsCoordsKey(out_coords_key))
     return out_coords_key;
 
-  auto coords_pair = createOriginCoordsHashMap();
+  auto coords_pair = createOriginCoordsHashMap(D);
   _coords_hashmaps[out_coords_key] = std::move(coords_pair.first);
   _coords_pairs[out_coords_key] =
       std::make_pair(D + 1, std::move(coords_pair.second));
@@ -277,127 +308,89 @@ uint64_t CoordsManager<D, Itype>::createOriginCoords() {
   return out_coords_key;
 }
 
-template <uint8_t D, typename Itype>
-InOutMapKey CoordsManager<D, Itype>::getMapHashKey(
+template <typename Itype>
+InOutMapKey CoordsManager<Itype>::getMapHashKey(
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     bool is_transpose) {
-  if (tensor_strides.size() != D || strides.size() != D ||
-      kernel_sizes.size() != D || dilations.size() != D) {
-    throw std::invalid_argument(
-        Formatter() << "Size mismatch. tensor_strides: "
-                    << ArrToString(tensor_strides)
-                    << ", strides: " << ArrToString(strides)
-                    << ", kernel_sizes: " << ArrToString(kernel_sizes)
-                    << ", dilations: " << ArrToString(dilations));
-  }
-  Arr<D, int> arr_tensor_strides;
-  Arr<D, int> arr_strides;
-  Arr<D, int> arr_kernel_sizes;
-  Arr<D, int> arr_dilations;
-  std::copy_n(tensor_strides.begin(), D, arr_tensor_strides.begin());
-  std::copy_n(strides.begin(), D, arr_strides.begin());
-  std::copy_n(kernel_sizes.begin(), D, arr_kernel_sizes.begin());
-  std::copy_n(dilations.begin(), D, arr_dilations.begin());
-  return getMapHashKey(arr_tensor_strides, arr_strides, arr_kernel_sizes,
-                       arr_dilations, region_type, py_in_coords_key,
-                       py_out_coords_key, is_transpose);
-}
 
-template <uint8_t D, typename Itype>
-InOutMapKey CoordsManager<D, Itype>::getMapHashKey(
-    Arr<D, int> tensor_strides, Arr<D, int> strides, Arr<D, int> kernel_sizes,
-    Arr<D, int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, bool is_transpose) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  int D = tensor_strides.size();
+  ASSERT(D == tensor_strides.size() and D == strides.size() and
+             D == kernel_sizes.size() and D == dilations.size(),
+         "Size mismatch. tensor_strides: ", tensor_strides.size(),
+         ", strides: ", strides.size(), ", kernel_sizes: ", kernel_sizes.size(),
+         ", dilations: ", dilations.size());
+
+  PyCoordsKey *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
   uint64_t out_coords_key = p_out_coords_key->getKey();
   uint64_t in_coords_key = p_in_coords_key->getKey();
-  uint64_t stride_hash = hash_vec<Arr<D, int>>(strides);
-  uint64_t kernel_size_hash = hash_vec<Arr<D, int>>(kernel_sizes);
-  uint64_t dilation_hash = hash_vec<Arr<D, int>>(dilations);
+  uint64_t stride_hash = hash_vec(strides);
+  uint64_t kernel_size_hash = hash_vec(kernel_sizes);
+  uint64_t dilation_hash = hash_vec(dilations);
   InOutMapKey map_key = {
       in_coords_key, out_coords_key,        stride_hash, kernel_size_hash,
       dilation_hash, (uint64_t)region_type, is_transpose};
   return map_key;
 }
 
-template <uint8_t D, typename Itype>
+template <typename Itype>
 InOutMapKey
-CoordsManager<D, Itype>::getOriginMapHashKey(py::object py_in_coords_key,
-                                             py::object py_out_coords_key) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+CoordsManager<Itype>::getOriginMapHashKey(py::object py_in_coords_key,
+                                          py::object py_out_coords_key) {
+  PyCoordsKey *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
+  int D = p_in_coords_key->getDimension();
+
   uint64_t out_coords_key = p_out_coords_key->getKey();
   uint64_t in_coords_key = p_in_coords_key->getKey();
-  uint64_t zero_hash = hash_vec<Arr<D, int>>(Arr<D, int>());
+  std::vector<int> zero_vec(D);
+  std::fill(zero_vec.begin(), zero_vec.end(), 0);
+  uint64_t zero_hash = hash_vec(zero_vec);
   InOutMapKey map_key = {
       in_coords_key, out_coords_key, zero_hash, zero_hash, zero_hash, 0, false};
   return map_key;
 }
 
-template <uint8_t D, typename Itype>
-InOutMapKey CoordsManager<D, Itype>::getOriginMapHashKeyCheck(
-    py::object py_in_coords_key, py::object py_out_coords_key) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
-  if (!p_in_coords_key->key_set or !p_out_coords_key->key_set)
-    throw std::invalid_argument(Formatter()
-                                << "Key is not set. in_coords_key: "
-                                << std::to_string(p_in_coords_key->getKey())
-                                << ", out_coords_key: "
-                                << std::to_string(p_out_coords_key->getKey()));
+template <typename Itype>
+InOutMapKey
+CoordsManager<Itype>::getOriginMapHashKeyCheck(py::object py_in_coords_key,
+                                               py::object py_out_coords_key) {
+  PyCoordsKey *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
+  ASSERT(p_in_coords_key->key_set and p_out_coords_key->key_set,
+         "Key is not set. in_coords_key: ",
+         std::to_string(p_in_coords_key->getKey()),
+         ", out_coords_key: ", std::to_string(p_out_coords_key->getKey()));
   // Use the global pooling mapping
   uint64_t out_coords_key = p_out_coords_key->getKey();
   uint64_t in_coords_key = p_in_coords_key->getKey();
-  uint64_t zero_hash = hash_vec<Arr<D, int>>(Arr<D, int>());
+  std::vector<int> zero_vec(p_in_coords_key->getDimension());
+  std::fill(zero_vec.begin(), zero_vec.end(), 0);
+  uint64_t zero_hash = hash_vec(zero_vec);
   InOutMapKey map_key = {
       in_coords_key, out_coords_key, zero_hash, zero_hash, zero_hash, 0, false};
-
   return map_key;
 }
 
-template <uint8_t D, typename Itype>
+template <typename Itype>
 std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
+CoordsManager<Itype>::setupAndReturnInOutPerKernel(
     const std::vector<int> &tensor_strides, const std::vector<int> &strides,
     const std::vector<int> &kernel_sizes, const std::vector<int> &dilations,
     int region_type, const at::Tensor &offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, bool is_transpose) {
-  if (tensor_strides.size() != D || strides.size() != D ||
-      kernel_sizes.size() != D || dilations.size() != D) {
-    throw std::invalid_argument(
-        Formatter() << "Size mismatch. tensor_strides: "
-                    << tensor_strides.size() << ", strides: " << strides.size()
-                    << ", kernel_sizes: " << kernel_sizes.size()
-                    << ", dilations: " << dilations.size());
-  }
-  Arr<D, int> arr_tensor_strides;
-  Arr<D, int> arr_strides;
-  Arr<D, int> arr_kernel_sizes;
-  Arr<D, int> arr_dilations;
-  std::copy_n(tensor_strides.begin(), D, arr_tensor_strides.begin());
-  std::copy_n(strides.begin(), D, arr_strides.begin());
-  std::copy_n(kernel_sizes.begin(), D, arr_kernel_sizes.begin());
-  std::copy_n(dilations.begin(), D, arr_dilations.begin());
-  return setupAndReturnInOutPerKernel(
-      arr_tensor_strides, arr_strides, arr_kernel_sizes, arr_dilations,
-      region_type, offsets, py_in_coords_key, py_out_coords_key, is_transpose);
-}
 
-/**
- * Setup output coords, set the py_out_coords_key, create in_out_kernel_map
- */
-template <uint8_t D, typename Itype>
-std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
-    const Arr<D, int> &tensor_strides, const Arr<D, int> &strides,
-    const Arr<D, int> &kernel_sizes, const Arr<D, int> &dilations,
-    int region_type, const at::Tensor &offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, bool is_transpose) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  int D = tensor_strides.size();
+  ASSERT(D == tensor_strides.size() and D == strides.size() and
+             D == kernel_sizes.size() and D == dilations.size(),
+         "Size mismatch. tensor_strides: ", tensor_strides.size(),
+         ", strides: ", strides.size(), ", kernel_sizes: ", kernel_sizes.size(),
+         ", dilations: ", dilations.size());
+
+  PyCoordsKey *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
   uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
 
   // Create output coordinates if it doesn't exist
@@ -453,19 +446,22 @@ CoordsManager<D, Itype>::setupAndReturnInOutPerKernel(
   }
 }
 
-template <uint8_t D, typename Itype>
+template <typename Itype>
 std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-CoordsManager<D, Itype>::setupAndReturnOriginInOutPerKernel(
+CoordsManager<Itype>::setupAndReturnOriginInOutPerKernel(
     py::object py_in_coords_key, py::object py_out_coords_key) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  PyCoordsKey *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
   uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
 
+  int D = p_in_coords_key->getDimension();
   // Create output coordinates if it doesn't exist
   if (!p_out_coords_key->key_set) {
-    out_coords_key = createOriginCoords();
+    out_coords_key = createOriginCoords(D);
     p_out_coords_key->setKey(out_coords_key);
-    p_out_coords_key->setTensorStride(Arr<D, int>());
+    std::vector<int> zero_vec(D);
+    std::fill(zero_vec.begin(), zero_vec.end(), 0);
+    p_out_coords_key->setTensorStride(zero_vec);
   } else
     out_coords_key = p_out_coords_key->getKey();
 
@@ -483,13 +479,13 @@ CoordsManager<D, Itype>::setupAndReturnOriginInOutPerKernel(
                         std::ref(_out_maps[map_key]));
 }
 
-template <uint8_t D, typename Itype>
+template <typename Itype>
 std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-CoordsManager<D, Itype>::setupAndReturnPruningInOutPerKernel(
+CoordsManager<Itype>::setupAndReturnPruningInOutPerKernel(
     at::Tensor use_feat, py::object py_in_coords_key,
     py::object py_out_coords_key) {
-  PyCoordsKey<D> *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey<D> *>();
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  PyCoordsKey *p_in_coords_key = py_in_coords_key.cast<PyCoordsKey *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
   uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
 
   // Create output coordinates if it doesn't exist
@@ -516,10 +512,9 @@ CoordsManager<D, Itype>::setupAndReturnPruningInOutPerKernel(
                         std::ref(_out_maps[map_key]));
 }
 
-template <uint8_t D, typename Itype>
-std::string CoordsManager<D, Itype>::toString() const {
+template <typename Itype> std::string CoordsManager<Itype>::toString() const {
   std::string tmp;
-  tmp += "< CoordsManager, Number of Coords: ";
+  tmp += "< CoordsManager, Number of Coordinate Hashmaps: ";
   tmp += std::to_string(_coords_hashmaps.size());
   for (auto kv : _coords_hashmaps) {
     tmp += " \n\tCoords Key: ";
@@ -546,14 +541,14 @@ std::string CoordsManager<D, Itype>::toString() const {
 /*
  * Return the batch indices and row indices for each image.
  */
-template <uint8_t D, typename Itype>
+template <typename Itype>
 std::pair<std::vector<Itype>, std::vector<std::vector<Itype>>>
-CoordsManager<D, Itype>::getRowIndicesPerBatch(py::object py_in_coords_key,
-                                               py::object py_out_coords_key) {
+CoordsManager<Itype>::getRowIndicesPerBatch(py::object py_in_coords_key,
+                                            py::object py_out_coords_key) {
   auto in_out =
       setupAndReturnOriginInOutPerKernel(py_in_coords_key, py_out_coords_key);
   // py_out_coords_key will be set after the above call.
-  PyCoordsKey<D> *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey<D> *>();
+  PyCoordsKey *p_out_coords_key = py_out_coords_key.cast<PyCoordsKey *>();
   auto out_coords_key = p_out_coords_key->getKey();
   auto out_coords_iter = _coords_hashmaps.find(out_coords_key);
   if (out_coords_iter == _coords_hashmaps.end())
@@ -576,4 +571,4 @@ CoordsManager<D, Itype>::getRowIndicesPerBatch(py::object py_in_coords_key,
   return std::make_pair(_batch_indices, std::move(batch2row_inds));
 }
 
-INSTANTIATE_CLASS_DIM_ITYPE(CoordsManager, int32_t);
+template class CoordsManager<int32_t>;

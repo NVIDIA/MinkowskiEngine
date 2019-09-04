@@ -1,3 +1,4 @@
+#ifndef CPU_ONLY
 #include "gpu_memory_manager.hpp"
 
 // Explicit template instantiation for tensor dtype specification
@@ -55,3 +56,4 @@ template class GPUMemoryManager<int>;
 template class GPUMemoryManager<long>;
 template class GPUMemoryManager<float>;
 template class GPUMemoryManager<double>;
+#endif

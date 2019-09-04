@@ -47,7 +47,7 @@ class TestNormalization(unittest.TestCase):
         fn = MinkowskiInstanceNormFunction()
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, 0, input.coords_key, None, input.coords_man)))
+                      (input.F, input.coords_key, None, input.coords_man)))
 
     def test_inst_norm_gpu(self):
         in_channels, D = 2, 2
@@ -66,7 +66,7 @@ class TestNormalization(unittest.TestCase):
         fn = MinkowskiInstanceNormFunction()
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, 0, input.coords_key, None, input.coords_man)))
+                      (input.F, input.coords_key, None, input.coords_man)))
 
 
 if __name__ == '__main__':

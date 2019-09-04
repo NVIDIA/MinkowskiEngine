@@ -31,7 +31,8 @@ class CoordsKey():
 
     def __init__(self, D):
         self.D = D
-        self.CPPCoordsKey = getattr(MEB, f'PyCoordsKey{self.D}')()
+        self.CPPCoordsKey = getattr(MEB, f'PyCoordsKey')()
+        self.CPPCoordsKey.setDimension(D)
 
     def setKey(self, key):
         self.CPPCoordsKey.setKey(key)
@@ -56,7 +57,7 @@ class CoordsManager():
         if D < 1:
             raise ValueError(f"Invalid dimension {D}")
         self.D = D
-        CPPCoordsManager = getattr(MEB, f'PyCoordsManager{D}int32')
+        CPPCoordsManager = getattr(MEB, f'PyCoordsManagerint32')
         coords_man = CPPCoordsManager()
         self.CPPCoordsManager = coords_man
 

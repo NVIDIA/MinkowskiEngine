@@ -41,7 +41,8 @@ class TestPooling(unittest.TestCase):
         use_feat = torch.rand(feats.size(0)) < 0.5
         pruning = MinkowskiPruning(D)
         output = pruning(input, use_feat)
-        print(use_feat, output)
+        print(use_feat)
+        print(output)
 
         # Check backward
         fn = MinkowskiPruningFunction()

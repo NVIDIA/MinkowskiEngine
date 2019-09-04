@@ -37,7 +37,10 @@ class MinkowskiPruningFunction(Function):
     def forward(ctx, in_feat, use_feat, in_coords_key, out_coords_key,
                 coords_manager):
         assert in_feat.size(0) == use_feat.size(0)
-        assert isinstance(use_feat, torch.ByteTensor)
+        assert isinstance(use_feat, torch.ByteTensor) \
+            or isinstance(use_feat, torch.BoolTensor), "use_feat must be a bool/byte tensor."
+        if isinstance(use_feat, torch.BoolTensor):
+            use_feat = use_feat.byte()
         if not in_feat.is_contiguous():
             in_feat = in_feat.contiguous()
         if not use_feat.is_contiguous():
@@ -50,8 +53,8 @@ class MinkowskiPruningFunction(Function):
         out_feat = in_feat.new()
 
         fw_fn = getattr(MEB, 'PruningForward' + get_postfix(in_feat))
-        fw_fn(ctx.in_coords_key.D, in_feat, out_feat, use_feat,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
+        fw_fn(in_feat, out_feat, use_feat, ctx.in_coords_key.CPPCoordsKey,
+              ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)
         return out_feat
 
@@ -62,8 +65,8 @@ class MinkowskiPruningFunction(Function):
 
         grad_in_feat = grad_out_feat.new()
         bw_fn = getattr(MEB, 'PruningBackward' + get_postfix(grad_out_feat))
-        bw_fn(ctx.in_coords_key.D, grad_in_feat, grad_out_feat,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
+        bw_fn(grad_in_feat, grad_out_feat, ctx.in_coords_key.CPPCoordsKey,
+              ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)
         return grad_in_feat, None, None, None, None, None
 

@@ -25,7 +25,9 @@
 #ifndef MATH_FUNCTIONS
 #define MATH_FUNCTIONS
 
+#ifndef CPU_ONLY
 #include "gpu.cuh"
+#endif
 #include "mkl_alternate.hpp"
 
 template <typename Dtype>
@@ -43,6 +45,7 @@ void cpu_mul(const int N, const Dtype *a, const Dtype *b, Dtype *y);
 template <typename Dtype>
 void cpu_div(const int N, const Dtype *a, const Dtype *b, Dtype *y);
 
+#ifndef CPU_ONLY
 template <typename Dtype>
 void gpu_gemm(cublasHandle_t handle, const CBLAS_TRANSPOSE TransA,
               const CBLAS_TRANSPOSE TransB, const int M, const int N,
@@ -84,4 +87,6 @@ cusparse_csrmm(cusparseHandle_t handle, cusparseOperation_t transA,
 
 void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,
                   const int nnz, int *d_coo_row, int *d_coo_col);
+#endif
+
 #endif

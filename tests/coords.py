@@ -44,7 +44,9 @@ class Test(unittest.TestCase):
         C = np.hstack((I, J, K))
         coords_manager = CoordsManager(D=2)
         coords_key = CoordsKey(2)
+        coords_key.setTensorStride(1)
         coords_manager.initialize(torch.from_numpy(C).int(), coords_key)
+        print(coords_manager)
 
     def test_coords_key(self):
         key = CoordsKey(D=1)
@@ -60,7 +62,6 @@ class Test(unittest.TestCase):
         cm = CoordsManager(D=1)
         coords = (torch.rand(5, 2) * 100).int()
         cm.initialize(coords, key)
-
         print(cm.get_row_indices_per_batch(key))
         print(key)
         print(cm)

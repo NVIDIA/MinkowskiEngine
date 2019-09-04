@@ -56,7 +56,8 @@ class MinkowskiConvolutionFunction(Function):
         # Prep arguments
         # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
         assert input_features.shape[1] == kernel.shape[1], \
-            "The input shape " + str(list(input_features.shape)) + " does not match the kernel shape " + str(list(kernel.shape))
+            "The input shape " + str(list(input_features.shape)) + \
+            " does not match the kernel shape " + str(list(kernel.shape))
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
@@ -81,7 +82,7 @@ class MinkowskiConvolutionFunction(Function):
         out_feat = input_features.new()
 
         fw_fn = getattr(MEB, 'ConvolutionForward' + get_postfix(input_features))
-        fw_fn(D, ctx.in_feat, out_feat, kernel,
+        fw_fn(ctx.in_feat, out_feat, kernel,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
@@ -99,8 +100,8 @@ class MinkowskiConvolutionFunction(Function):
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
         bw_fn = getattr(MEB, 'ConvolutionBackward' + get_postfix(grad_out_feat))
-        bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
-              grad_kernel, convert_to_int_list(ctx.tensor_stride, D),
+        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel, grad_kernel,
+              convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), ctx.region_type,
@@ -130,7 +131,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         # Prep arguments
         # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
         assert input_features.shape[1] == kernel.shape[1], \
-            "The input shape " + str(list(input_features.shape)) + " does not match the kernel shape " + str(list(kernel.shape))
+            "The input shape " + str(list(input_features.shape)) + \
+            " does not match the kernel shape " + str(list(kernel.shape))
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
@@ -156,7 +158,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
 
         fw_fn = getattr(
             MEB, 'ConvolutionTransposeForward' + get_postfix(input_features))
-        fw_fn(D, ctx.in_feat, out_feat, kernel,
+        fw_fn(ctx.in_feat, out_feat, kernel,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
@@ -175,8 +177,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         D = ctx.in_coords_key.D
         bw_fn = getattr(
             MEB, 'ConvolutionTransposeBackward' + get_postfix(grad_out_feat))
-        bw_fn(D, ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel,
-              grad_kernel, convert_to_int_list(ctx.tensor_stride, D),
+        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel, grad_kernel,
+              convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), ctx.region_type,

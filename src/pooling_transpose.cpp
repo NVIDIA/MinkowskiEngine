@@ -31,15 +31,15 @@
 
 #include <pybind11/pybind11.h>
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void PoolingTransposeForwardCPU(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true);
@@ -56,15 +56,15 @@ void PoolingTransposeForwardCPU(
       false);
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void PoolingTransposeBackwardCPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   bool reverse_map = false;
   InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
@@ -96,15 +96,15 @@ void PoolingTransposeBackwardCPU(
 }
 
 #ifndef CPU_ONLY
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void PoolingTransposeForwardGPU(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true);
@@ -144,15 +144,15 @@ void PoolingTransposeForwardGPU(
       at::cuda::getCurrentCUDAStream());
 }
 
-template <uint8_t D, typename Dtype, typename Itype>
+template <typename Dtype, typename Itype>
 void PoolingTransposeBackwardGPU(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, std::vector<int> tensor_strides,
     std::vector<int> strides, std::vector<int> kernel_sizes,
     std::vector<int> dilations, int region_type, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<D, Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<D, Itype> *>();
+  CoordsManager<Itype> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<Itype> *>();
   bool reverse_map = false;
   InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
@@ -194,118 +194,61 @@ void PoolingTransposeBackwardGPU(
 }
 #endif
 
-template <typename Dtype, typename Itype>
-void DimSwitchPoolingTransposeForwardCPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(PoolingTransposeForwardCPU, Dtype, Itype, in_feat, out_feat,
-                   num_nonzero, tensor_strides, strides, kernel_sizes,
-                   dilations, region_type, offsets, py_in_coords_key,
-                   py_out_coords_key, py_coords_manager);
-}
-
-template void DimSwitchPoolingTransposeForwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void PoolingTransposeForwardCPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchPoolingTransposeForwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void PoolingTransposeForwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template <typename Dtype, typename Itype>
-void DimSwitchPoolingTransposeBackwardCPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(PoolingTransposeBackwardCPU, Dtype, Itype, in_feat,
-                   grad_in_feat, grad_out_feat, num_nonzero, tensor_strides,
-                   strides, kernel_sizes, dilations, region_type,
-                   py_in_coords_key, py_out_coords_key, py_coords_manager);
-}
+template void PoolingTransposeBackwardCPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchPoolingTransposeBackwardCPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void DimSwitchPoolingTransposeBackwardCPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+template void PoolingTransposeBackwardCPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template <typename Dtype, typename Itype>
-void DimSwitchPoolingTransposeForwardGPU(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(PoolingTransposeForwardGPU, Dtype, Itype, in_feat, out_feat,
-                   num_nonzero, tensor_strides, strides, kernel_sizes,
-                   dilations, region_type, offsets, py_in_coords_key,
-                   py_out_coords_key, py_coords_manager);
-}
 
-template void DimSwitchPoolingTransposeForwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void PoolingTransposeForwardGPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchPoolingTransposeForwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+template void PoolingTransposeForwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template <typename Dtype, typename Itype>
-void DimSwitchPoolingTransposeBackwardGPU(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager) {
-  SWITCH_DIM_TYPES(PoolingTransposeBackwardGPU, Dtype, Itype, in_feat,
-                   grad_in_feat, grad_out_feat, num_nonzero, tensor_strides,
-                   strides, kernel_sizes, dilations, region_type,
-                   py_in_coords_key, py_out_coords_key, py_coords_manager);
-}
+template void PoolingTransposeBackwardGPU<float, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
-template void DimSwitchPoolingTransposeBackwardGPU<float, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void DimSwitchPoolingTransposeBackwardGPU<double, int32_t>(
-    int D, at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+template void PoolingTransposeBackwardGPU<double, int32_t>(
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, std::vector<int> tensor_strides,
+    std::vector<int> strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 #endif

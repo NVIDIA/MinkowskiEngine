@@ -29,7 +29,7 @@
 #include <google/dense_hash_map>
 
 // N-Dimensional coordinate + batch index = N + 1
-template <uint8_t D, typename Itype> using Coord = std::array<Itype, D + 1>;
+template <typename Itype> using Coord = std::vector<Itype>;
 
 // For hashing kernel sizes, strides, and dilations.
 template <uint8_t D, typename Itype> using Arr = std::array<Itype, D>;
@@ -66,9 +66,9 @@ struct InOutMapKeyHash {
 };
 
 // For Used for fast index of coordinate retrieval
-template <uint8_t D, typename Itype> struct CoordHash {
-  uint64_t operator()(Coord<D, Itype> const &p) const {
-    return hash_vec<Coord<D, Itype>>(p);
+template <typename Itype> struct CoordHash {
+  uint64_t operator()(Coord<Itype> const &p) const {
+    return hash_vec<Coord<Itype>>(p);
   }
 };
 
@@ -79,18 +79,17 @@ template <uint8_t D, typename Itype> struct ArrHash {
 };
 
 // Location to index of the feature
-template <uint8_t D, typename Itype>
+template <typename Itype>
 using _CoordsHashMap =
-    google::dense_hash_map<Coord<D, Itype>, uint64_t, CoordHash<D, Itype>,
-                           std::equal_to<Coord<D, Itype>>>;
+    google::dense_hash_map<Coord<Itype>, uint64_t, CoordHash<Itype>,
+                           std::equal_to<Coord<Itype>>>;
 
-template <uint8_t D, typename Itype> class CoordsHashMap {
+template <typename Itype> class CoordsHashMap {
 public:
-  _CoordsHashMap<D, Itype> map;
+  _CoordsHashMap<Itype> map;
   CoordsHashMap() {
-    Coord<D, Itype> empty_key;
-    for (int i = 0; i < D + 1; ++i)
-      empty_key[i] = -std::numeric_limits<Itype>::max();
+    Coord<Itype> empty_key;
+    empty_key.push_back(-std::numeric_limits<Itype>::max() / 2);
     map.set_empty_key(empty_key);
   }
   size_t size() { return map.size(); }

@@ -88,30 +88,28 @@ class MinkowskiInstanceNormFunction(Function):
 
         mean = in_feat.new()
         num_nonzero = in_feat.new()
-        D = in_coords_key.D
 
         cpp_in_coords_key = in_coords_key.CPPCoordsKey
         cpp_glob_coords_key = glob_coords_key.CPPCoordsKey
         cpp_coords_manager = coords_manager.CPPCoordsManager
 
-        gpool_forward(D, in_feat, mean, num_nonzero, cpp_in_coords_key,
+        gpool_forward(in_feat, mean, num_nonzero, cpp_in_coords_key,
                       cpp_glob_coords_key, cpp_coords_manager, True)
         # X - \mu
         centered_feat = in_feat.new()
-        broadcast_forward(D, in_feat, -mean, centered_feat, add,
-                          cpp_in_coords_key, cpp_glob_coords_key,
-                          cpp_coords_manager)
+        broadcast_forward(in_feat, -mean, centered_feat, add, cpp_in_coords_key,
+                          cpp_glob_coords_key, cpp_coords_manager)
 
         # Variance = 1/N \sum (X - \mu) ** 2
         variance = in_feat.new()
-        gpool_forward(D, centered_feat**2, variance, num_nonzero,
+        gpool_forward(centered_feat**2, variance, num_nonzero,
                       cpp_in_coords_key, cpp_glob_coords_key,
                       cpp_coords_manager, True)
 
         # norm_feat = (X - \mu) / \sigma
         inv_std = 1 / (variance + 1e-8).sqrt()
         norm_feat = in_feat.new()
-        broadcast_forward(D, centered_feat, inv_std, norm_feat, multiply,
+        broadcast_forward(centered_feat, inv_std, norm_feat, multiply,
                           cpp_in_coords_key, cpp_glob_coords_key,
                           cpp_coords_manager)
 
@@ -129,7 +127,6 @@ class MinkowskiInstanceNormFunction(Function):
 
         # To prevent the memory leakage, compute the norm again
         inv_std, norm_feat = ctx.saved_variables
-        D = in_coords_key.D
 
         gpool_forward = getattr(MEB,
                                 'GlobalPoolingForward' + get_postfix(out_grad))
@@ -145,28 +142,28 @@ class MinkowskiInstanceNormFunction(Function):
         # 1/N \sum dout
         num_nonzero = out_grad.new()
         mean_dout = out_grad.new()
-        gpool_forward(D, out_grad, mean_dout, num_nonzero, cpp_in_coords_key,
+        gpool_forward(out_grad, mean_dout, num_nonzero, cpp_in_coords_key,
                       cpp_glob_coords_key, cpp_coords_manager, True)
 
         # 1/N \sum (dout * out)
         mean_dout_feat = out_grad.new()
-        gpool_forward(D, out_grad * norm_feat, mean_dout_feat, num_nonzero,
+        gpool_forward(out_grad * norm_feat, mean_dout_feat, num_nonzero,
                       cpp_in_coords_key, cpp_glob_coords_key,
                       cpp_coords_manager, True)
 
         # out * 1/N \sum (dout * out)
         feat_mean_dout_feat = out_grad.new()
-        broadcast_forward(D, norm_feat, mean_dout_feat, feat_mean_dout_feat,
+        broadcast_forward(norm_feat, mean_dout_feat, feat_mean_dout_feat,
                           multiply, cpp_in_coords_key, cpp_glob_coords_key,
                           cpp_coords_manager)
 
         unnorm_din = out_grad.new()
-        broadcast_forward(D, out_grad - feat_mean_dout_feat, -mean_dout,
+        broadcast_forward(out_grad - feat_mean_dout_feat, -mean_dout,
                           unnorm_din, add, cpp_in_coords_key,
                           cpp_glob_coords_key, cpp_coords_manager)
 
         norm_din = out_grad.new()
-        broadcast_forward(D, unnorm_din, inv_std, norm_din, multiply,
+        broadcast_forward(unnorm_din, inv_std, norm_din, multiply,
                           cpp_in_coords_key, cpp_glob_coords_key,
                           cpp_coords_manager)
 
