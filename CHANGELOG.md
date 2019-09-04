@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.2.7] - 2019-09-04
+
+Use `std::vector` for all internal coordinates to support arbitrary spatial dimensions.
+
+### Changed
+
+- Vectorized coordinates to support arbitrary spatial dimensions.
+- Removed all dimension template instantiation.
+- Use assertion macro for cleaner exception handling.
+
 
 ## [0.2.6] - 2019-08-28
 
