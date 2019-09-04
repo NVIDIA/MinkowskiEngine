@@ -1,0 +1,86 @@
+examples package
+================
+
+Submodules
+----------
+
+examples.common module
+----------------------
+
+.. automodule:: examples.common
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.example module
+-----------------------
+
+.. automodule:: examples.example
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.indoor module
+----------------------
+
+.. automodule:: examples.indoor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.minkunet module
+------------------------
+
+.. automodule:: examples.minkunet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.multigpu module
+------------------------
+
+.. automodule:: examples.multigpu
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.pointnet module
+------------------------
+
+.. automodule:: examples.pointnet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.resnet module
+----------------------
+
+.. automodule:: examples.resnet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.two\_dim\_training module
+----------------------------------
+
+.. automodule:: examples.two_dim_training
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.unet module
+--------------------
+
+.. automodule:: examples.unet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: examples
+   :members:
+   :undoc-members:
+   :show-inheritance:

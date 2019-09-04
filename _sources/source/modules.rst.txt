@@ -5,5 +5,6 @@ MinkowskiEngine
    :maxdepth: 4
 
    MinkowskiEngine
+   examples
    setup
    tests
