@@ -278,3 +278,133 @@ class SparseTensor():
 
     def getKey(self):
         return self.coords_key
+
+    def sparse(self, min_coords=None, max_coords=None, contract_coords=True):
+        r"""Convert the :attr:`MinkowskiEngine.SparseTensor` to a torch sparse
+        tensor.
+
+        Args:
+            :attr:`min_coords` (torch.IntTensor, optional): The min
+            coordinates of the output sparse tensor. Must be divisible by the
+            current :attr:`tensor_stride`.
+
+            :attr:`max_coords` (torch.IntTensor, optional): The max coordinates
+            of the output sparse tensor (inclusive). Must be divisible by the
+            current :attr:`tensor_stride`.
+
+            :attr:`contract_coords` (bool, optional): Given True, the output
+            coordinates will be divided by the tensor stride to make features
+            contiguous.
+
+        Returns:
+            :attr:`spare_tensor` (torch.sparse.Tensor): the torch sparse tensor
+            representation of the self in `[Batch Dim, Spatial Dims..., Feature
+            Dim]`. The coordinate of each feature can be accessed via
+            `min_coord + tensor_stride * [the coordinate of the dense tensor]`.
+
+            :attr:`min_coords` (torch.IntTensor): the D-dimensional vector
+            defining the minimum coordinate of the output sparse tensor. If
+            :attr:`contract_coords` is True, the :attr:`min_coords` will also
+            be contracted.
+
+            :attr:`tensor_stride` (torch.IntTensor): the D-dimensional vector
+            defining the stride between tensor elements.
+
+        """
+
+        if min_coords is not None:
+            assert isinstance(min_coords, torch.IntTensor)
+            assert min_coords.numel() == self.D
+        if max_coords is not None:
+            assert isinstance(max_coords, torch.IntTensor)
+            assert min_coords.numel() == self.D
+
+        def torch_sparse_Tensor(coords, feats, size=None):
+            if size is None:
+                if feats.dtype == torch.float64:
+                    return torch.sparse.DoubleTensor(coords, feats)
+                elif feats.dtype == torch.float32:
+                    return torch.sparse.FloatTensor(coords, feats)
+                else:
+                    raise ValueError('Feature type not supported.')
+            else:
+                if feats.dtype == torch.float64:
+                    return torch.sparse.DoubleTensor(coords, feats, size)
+                elif feats.dtype == torch.float32:
+                    return torch.sparse.FloatTensor(coords, feats, size)
+                else:
+                    raise ValueError('Feature type not supported.')
+
+        # Use int tensor for all operations
+        tensor_stride = torch.IntTensor(self.tensor_stride)
+
+        # New coordinates
+        coords = self.C
+        coords, batch_indices = coords[:, :-1], coords[:, -1]
+
+        # TODO, batch first
+        if min_coords is None:
+            min_coords, _ = coords.min(0, keepdim=True)
+        elif min_coords.ndim == 1:
+            min_coords = min_coords.unsqueeze(0)
+
+        assert (min_coords % tensor_stride).sum() == 0, \
+            "The minimum coordinates must be divisible by the tensor stride."
+
+        if max_coords is not None:
+            if max_coords.ndim == 1:
+                max_coords = max_coords.unsqueeze(0)
+            assert (max_coords % tensor_stride).sum() == 0, \
+                "The maximum coordinates must be divisible by the tensor stride."
+
+        coords -= min_coords
+
+        if coords.ndim == 1:
+            coords = coords.unsqueeze(1)
+        if batch_indices.ndim == 1:
+            batch_indices = batch_indices.unsqueeze(1)
+
+        # return the contracted tensor
+        if contract_coords:
+            coords = coords // tensor_stride
+            if max_coords is not None:
+                max_coords = max_coords // tensor_stride
+            min_coords = min_coords // tensor_stride
+
+        new_coords = torch.cat((batch_indices, coords), dim=1).long()
+
+        size = None
+        if max_coords is not None:
+            size = max_coords - min_coords + 1  # inclusive
+            # Squeeze to make the size one-dimensional
+            size = size.squeeze()
+
+            max_batch = batch_indices.max().item()
+            size = torch.Size([max_batch + 1, *size, self.F.size(1)])
+
+        sparse_tensor = torch_sparse_Tensor(new_coords.t().to(self.F.device),
+                                            self.F, size)
+        tensor_stride = torch.IntTensor(self.tensor_stride)
+        return sparse_tensor, min_coords, tensor_stride
+
+    def to_sparse(self, *args, **kwargs):
+        r"""An alias of :attr:`sparse`."""
+        return self.sparse(*args, **kwargs)
+
+    def dense(self, *args, **kwargs):
+        r"""Convert the :attr:`MinkowskiEngine.SparseTensor` to a torch dense
+        tensor.
+
+        Please refer to the :attr:`sparse` for input arguments and outputs.
+
+        """
+        sparse_tensor, min_coord, tensor_stride = self.sparse(*args, **kwargs)
+        return sparse_tensor.to_dense(), min_coord, tensor_stride
+
+    def to_dense(self, *args, **kwargs):
+        r"""An alias of :attr:`dense`.
+        """
+        # Assume batch index is at the last
+        # TODO: v0.3.0 use batch first
+
+        return self.dense(*args, **kwargs)
