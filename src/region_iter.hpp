@@ -61,7 +61,7 @@ private:
 public:
   bool done;
   RegionIterator(const Region<Itype> &region)
-      : curr_axis(0), offset_ind(0), region(region), D(region.D), done(false) {
+      : D(region.D), curr_axis(0), offset_ind(0), region(region), done(false) {
     // First point
     switch (region.region_type) {
     case 0:

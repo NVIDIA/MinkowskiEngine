@@ -160,8 +160,8 @@ void NonzeroAvgPoolingForwardKernelGPU(
     fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
         in_nrows, d_ones, (Dtype)1.);
   } else {
-    CUDA_CHECK(cudaMalloc((void **)&d_ones,
-                          (nnz + nchannel * out_nrows) * sizeof(Dtype)));
+    // CUDA_CHECK(cudaMalloc((void **)&d_ones,
+    //                       (nnz + nchannel * out_nrows) * sizeof(Dtype)));
     d_csr_val = d_ones;
     d_tmp_out_feat = d_csr_val + nnz;
   }

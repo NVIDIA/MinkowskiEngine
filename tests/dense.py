@@ -59,8 +59,12 @@ class TestDense(unittest.TestCase):
         print(min_coord)
         print(tensor_stride)
 
+        print(feats.grad)
+
         loss = dense_output.sum()
         loss.backward()
+
+        print(feats.grad)
 
 
 if __name__ == '__main__':
