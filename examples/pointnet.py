@@ -28,7 +28,7 @@ try:
     import open3d as o3d
 except ImportError:
     raise ImportError(
-        'Please install open3d-python with `pip install open3d-python`.')
+        'Please install open3d with `pip install open3d`.')
 
 import torch
 import torch.nn as nn
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     voxel_size = 2e-3  # High resolution grid works better just like high-res image is better for 2D classification
     pointnet = PointNet(20)
 
-    pcd = o3d.read_point_cloud(bunny_file)
+    pcd = o3d.io.read_point_cloud(bunny_file)
 
     # If you need a high-resolution point cloud, sample points using
     # https://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/
