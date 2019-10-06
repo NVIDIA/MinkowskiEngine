@@ -19,6 +19,7 @@ Table of Contents
    :caption: Demo Documentation
 
    demo/training
+   demo/modelnet40
    demo/segmentation
    demo/interop
    demo/multigpu

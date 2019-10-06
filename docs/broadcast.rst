@@ -24,7 +24,7 @@ MinkowskiBroadcastMultiplication
 
 
 MinkowskiBroadcastConcatenation
-------------------
+-------------------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiBroadcastConcatenation
     :members:
