@@ -36,7 +36,6 @@ class ResNetBase(nn.Module):
     LAYERS = ()
     INIT_DIM = 64
     PLANES = (64, 128, 256, 512)
-    OUT_TENSOR_STRIDE = 32
 
     def __init__(self, in_channels, out_channels, D=3):
         nn.Module.__init__(self)
@@ -50,11 +49,13 @@ class ResNetBase(nn.Module):
 
         self.inplanes = self.INIT_DIM
         self.conv1 = ME.MinkowskiConvolution(
-            in_channels, self.inplanes, kernel_size=5, stride=1, dimension=D)
+            in_channels, self.inplanes, kernel_size=5, stride=2, dimension=D)
 
         self.bn1 = ME.MinkowskiBatchNorm(self.inplanes)
         self.relu = ME.MinkowskiReLU(inplace=True)
+
         self.pool = ME.MinkowskiAvgPooling(kernel_size=2, stride=2, dimension=D)
+
         self.layer1 = self._make_layer(
             self.BLOCK, self.PLANES[0], self.LAYERS[0], stride=2)
         self.layer2 = self._make_layer(
@@ -64,13 +65,11 @@ class ResNetBase(nn.Module):
         self.layer4 = self._make_layer(
             self.BLOCK, self.PLANES[3], self.LAYERS[3], stride=2)
 
-        self.glob_avg = ME.MinkowskiGlobalPooling(dimension=D)
+        self.conv5 = ME.MinkowskiConvolution(
+            self.inplanes, self.inplanes, kernel_size=3, stride=3, dimension=D)
+        self.bn5 = ME.MinkowskiBatchNorm(self.inplanes)
 
-        self.classification_block = nn.Sequential(
-            ME.MinkowskiLinear(self.inplanes, self.inplanes, bias=False),
-            ME.MinkowskiBatchNorm(self.inplanes), ME.MinkowskiReLU(),
-            ME.MinkowskiLinear(self.inplanes, self.inplanes, bias=False),
-            ME.MinkowskiBatchNorm(self.inplanes))
+        self.glob_avg = ME.MinkowskiGlobalPooling(dimension=D)
 
         self.final = ME.MinkowskiLinear(self.inplanes, out_channels, bias=True)
 
@@ -129,11 +128,11 @@ class ResNetBase(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
 
-        res = self.glob_avg(x)
-        x = self.classification_block(res)
-        x += res
+        x = self.conv5(x)
+        x = self.bn5(x)
         x = self.relu(x)
 
+        x = self.glob_avg(x)
         return self.final(x)
 
 
