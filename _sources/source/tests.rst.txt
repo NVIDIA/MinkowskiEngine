@@ -36,10 +36,26 @@ tests.coords module
    :undoc-members:
    :show-inheritance:
 
+tests.dense module
+------------------
+
+.. automodule:: tests.dense
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tests.kernel\_map module
 ------------------------
 
 .. automodule:: tests.kernel_map
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tests.mem\_manager module
+-------------------------
+
+.. automodule:: tests.mem_manager
    :members:
    :undoc-members:
    :show-inheritance:

@@ -20,6 +20,14 @@ MinkowskiEngine.Common module
    :undoc-members:
    :show-inheritance:
 
+MinkowskiEngine.MemoryManager module
+------------------------------------
+
+.. automodule:: MinkowskiEngine.MemoryManager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 MinkowskiEngine.MinkowskiBroadcast module
 -----------------------------------------
 

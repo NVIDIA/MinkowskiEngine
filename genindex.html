@@ -93,6 +93,7 @@
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline with Pytorch DataLoader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/modelnet40.html">Training A ModelNet40 Classification Network</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
@@ -274,6 +275,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.OperationType.ADDITION">ADDITION (MinkowskiEngine.MinkowskiBroadcast.OperationType attribute)</a>
 </li>
+      <li><a href="source/examples.html#examples.modelnet40.ModelNet40Dataset.AUGMENT">AUGMENT (examples.modelnet40.ModelNet40Dataset attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -346,7 +349,13 @@
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.cat">cat() (in module MinkowskiEngine.MinkowskiOps)</a>
 </li>
+      <li><a href="source/examples.html#examples.modelnet40.ModelNet40Dataset.CATEGORIES">CATEGORIES (examples.modelnet40.ModelNet40Dataset attribute)</a>
+</li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.celu">celu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/examples.html#examples.modelnet40.collate_pointcloud_fn">collate_pointcloud_fn() (in module examples.modelnet40)</a>
+</li>
+      <li><a href="source/examples.html#examples.modelnet40.Compose">Compose (class in examples.modelnet40)</a>
 </li>
       <li><a href="source/examples.html#examples.pointnet.PointNet.CONV_CHANNELS">CONV_CHANNELS (examples.pointnet.PointNet attribute)</a>
 
@@ -358,12 +367,12 @@
       </ul></li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.convert_region_type">convert_region_type() (in module MinkowskiEngine.Common)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.convert_to_int_list">convert_to_int_list() (in module MinkowskiEngine.Common)</a>
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.convert_to_int_tensor">convert_to_int_tensor() (in module MinkowskiEngine.Common)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.coords">coords() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.coords">[1]</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordsKey">CoordsKey (class in MinkowskiEngine)</a>
@@ -396,6 +405,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.D">D() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.D">[1]</a>
 </li>
+      <li><a href="source/examples.html#examples.modelnet40.ModelNet40Dataset.DATA_FILES">DATA_FILES (examples.modelnet40.ModelNet40Dataset attribute)</a>
+</li>
       <li><a href="source/examples.html#examples.common.data_loader">data_loader() (in module examples.common)</a>
 
       <ul>
@@ -404,6 +415,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.dense">dense() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.dense">[1]</a>
+</li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.device">device() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.device">[1]</a>
 </li>
       <li><a href="source/examples.html#examples.minkunet.MinkUNetBase.DILATIONS">DILATIONS (examples.minkunet.MinkUNetBase attribute)</a>
@@ -426,9 +439,15 @@
 </li>
       <li><a href="source/examples.html#module-examples.indoor">examples.indoor (module)</a>
 </li>
+      <li><a href="source/examples.html#module-examples.indoor_train">examples.indoor_train (module)</a>
+</li>
+      <li><a href="source/examples.html#module-examples.minkunet">examples.minkunet (module)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/examples.html#module-examples.minkunet">examples.minkunet (module)</a>
+      <li><a href="source/examples.html#module-examples.modelnet40">examples.modelnet40 (module)</a>
+</li>
+      <li><a href="source/examples.html#module-examples.multigpu2">examples.multigpu2 (module)</a>
 </li>
       <li><a href="source/examples.html#module-examples.pointnet">examples.pointnet (module)</a>
 </li>
@@ -646,6 +665,8 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/examples.html#examples.modelnet40.InfSampler">InfSampler (class in examples.modelnet40)</a>
+</li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.init">init() (MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork method)</a>
 </li>
       <li><a href="source/examples.html#examples.minkunet.MinkUNetBase.INIT_DIM">INIT_DIM (examples.minkunet.MinkUNetBase attribute)</a>
@@ -733,6 +754,10 @@
       <li><a href="source/examples.html#examples.indoor.load_file">load_file() (in module examples.indoor)</a>
 
       <ul>
+        <li><a href="source/examples.html#examples.indoor_train.load_file">(in module examples.indoor_train)</a>
+</li>
+        <li><a href="source/examples.html#examples.multigpu2.load_file">(in module examples.multigpu2)</a>
+</li>
         <li><a href="source/tests.html#tests.strided_conv.load_file">(in module tests.strided_conv)</a>
 </li>
       </ul></li>
@@ -744,6 +769,10 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/examples.html#examples.modelnet40.make_data_loader">make_data_loader() (in module examples.modelnet40)</a>
+</li>
+      <li><a href="source/tests.html#tests.mem_manager.TestMemoryManager.memory_manager">memory_manager() (tests.mem_manager.TestMemoryManager method)</a>
+</li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling">MinkowskiAvgPooling (class in MinkowskiEngine)</a>
 
       <ul>
@@ -888,10 +917,10 @@
       </ul></li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork">MinkowskiNetwork (class in MinkowskiEngine.MinkowskiNetwork)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase">MinkowskiPoolingBase (class in MinkowskiEngine.MinkowskiPooling)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase">MinkowskiPoolingBase (class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiPoolingTranspose">MinkowskiPoolingTranspose (class in MinkowskiEngine)</a>
 
       <ul>
@@ -986,6 +1015,8 @@
 </li>
       <li><a href="source/examples.html#examples.minkunet.MinkUNetBase">MinkUNetBase (class in examples.minkunet)</a>
 </li>
+      <li><a href="source/examples.html#examples.modelnet40.ModelNet40Dataset">ModelNet40Dataset (class in examples.modelnet40)</a>
+</li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiCELU.MODULE">MODULE (MinkowskiEngine.MinkowskiCELU attribute)</a>
 
       <ul>
@@ -1056,16 +1087,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.operation_type_to_int">operation_type_to_int() (in module MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.OperationType">OperationType (class in MinkowskiEngine.MinkowskiBroadcast)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/examples.html#examples.minkunet.MinkUNetBase.OUT_TENSOR_STRIDE">OUT_TENSOR_STRIDE (examples.minkunet.MinkUNetBase attribute)</a>
-
-      <ul>
-        <li><a href="source/examples.html#examples.resnet.ResNetBase.OUT_TENSOR_STRIDE">(examples.resnet.ResNetBase attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.OperationType">OperationType (class in MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
-      </ul></li>
+      <li><a href="source/examples.html#examples.minkunet.MinkUNetBase.OUT_TENSOR_STRIDE">OUT_TENSOR_STRIDE (examples.minkunet.MinkUNetBase attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1124,6 +1151,14 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/examples.html#examples.modelnet40.RandomRotation">RandomRotation (class in examples.modelnet40)</a>
+</li>
+      <li><a href="source/examples.html#examples.modelnet40.RandomScale">RandomScale (class in examples.modelnet40)</a>
+</li>
+      <li><a href="source/examples.html#examples.modelnet40.RandomShear">RandomShear (class in examples.modelnet40)</a>
+</li>
+      <li><a href="source/examples.html#examples.modelnet40.RandomTranslation">RandomTranslation (class in examples.modelnet40)</a>
+</li>
       <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.voxelization.ravel_hash_vec">ravel_hash_vec() (in module MinkowskiEngine.utils.voxelization)</a>
 </li>
       <li><a href="common.html#MinkowskiEngine.RegionType">RegionType (class in MinkowskiEngine)</a>
@@ -1134,8 +1169,12 @@
       </ul></li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.relu">relu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
+      <li><a href="source/examples.html#examples.modelnet40.resample_mesh">resample_mesh() (in module examples.modelnet40)</a>
+</li>
       <li><a href="source/examples.html#examples.common.Timer.reset">reset() (examples.common.Timer method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.reset_parameters">reset_parameters() (MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase method)</a>
 
       <ul>
@@ -1146,8 +1185,8 @@
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.reset_parameters">(MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/examples.html#examples.modelnet40.InfSampler.reset_permutation">reset_permutation() (examples.modelnet40.InfSampler method)</a>
+</li>
       <li><a href="source/examples.html#examples.resnet.ResNet101">ResNet101 (class in examples.resnet)</a>
 </li>
       <li><a href="source/examples.html#examples.resnet.ResNet14">ResNet14 (class in examples.resnet)</a>
@@ -1192,9 +1231,11 @@
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.size">size() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.size">[1]</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.softmax">softmax() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.softmax">softmax() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.sparse">sparse() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.sparse">[1]</a>
 </li>
       <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.collation.sparse_collate">sparse_collate() (in module MinkowskiEngine.utils.collation)</a>
 </li>
@@ -1236,10 +1277,16 @@
 </li>
       <li><a href="source/tests.html#tests.coords.Test">Test (class in tests.coords)</a>
 </li>
-      <li><a href="source/tests.html#tests.conv.TestConvolution.test">test() (tests.conv.TestConvolution method)</a>
+      <li><a href="source/test.html#module-test">test (module)</a>
+</li>
+      <li><a href="source/examples.html#examples.modelnet40.test">test() (in module examples.modelnet40)</a>
 
       <ul>
+        <li><a href="source/tests.html#tests.conv.TestConvolution.test">(tests.conv.TestConvolution method)</a>
+</li>
         <li><a href="source/tests.html#tests.conv.TestConvolutionTranspose.test">(tests.conv.TestConvolutionTranspose method)</a>
+</li>
+        <li><a href="source/tests.html#tests.dense.TestDense.test">(tests.dense.TestDense method)</a>
 </li>
         <li><a href="source/tests.html#tests.voxelization.TestGPUVoxelization.test">(tests.voxelization.TestGPUVoxelization method)</a>
 </li>
@@ -1280,19 +1327,23 @@
 </li>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_unpool">test_unpool() (tests.pool.TestPooling method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_unpooling_gpu">test_unpooling_gpu() (tests.pool.TestPooling method)</a>
 </li>
       <li><a href="source/tests.html#tests.broadcast.TestBroadcast">TestBroadcast (class in tests.broadcast)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/tests.html#tests.conv.TestConvolution">TestConvolution (class in tests.conv)</a>
 </li>
       <li><a href="source/tests.html#tests.conv.TestConvolutionTranspose">TestConvolutionTranspose (class in tests.conv)</a>
 </li>
+      <li><a href="source/tests.html#tests.dense.TestDense">TestDense (class in tests.dense)</a>
+</li>
       <li><a href="source/tests.html#tests.voxelization.TestGPUVoxelization">TestGPUVoxelization (class in tests.voxelization)</a>
 </li>
       <li><a href="source/tests.html#tests.kernel_map.TestKernelMap">TestKernelMap (class in tests.kernel_map)</a>
+</li>
+      <li><a href="source/tests.html#tests.mem_manager.TestMemoryManager">TestMemoryManager (class in tests.mem_manager)</a>
 </li>
       <li><a href="source/tests.html#tests.norm.TestNormalization">TestNormalization (class in tests.norm)</a>
 </li>
@@ -1312,7 +1363,11 @@
 </li>
       <li><a href="source/tests.html#module-tests.coords">tests.coords (module)</a>
 </li>
+      <li><a href="source/tests.html#module-tests.dense">tests.dense (module)</a>
+</li>
       <li><a href="source/tests.html#module-tests.kernel_map">tests.kernel_map (module)</a>
+</li>
+      <li><a href="source/tests.html#module-tests.mem_manager">tests.mem_manager (module)</a>
 </li>
       <li><a href="source/tests.html#module-tests.norm">tests.norm (module)</a>
 </li>
@@ -1330,7 +1385,13 @@
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.to">to() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.to">[1]</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.to_dense">to_dense() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.to_dense">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensor.to_sparse">to_sparse() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.to_sparse">[1]</a>
+</li>
       <li><a href="source/examples.html#examples.common.Timer.toc">toc() (examples.common.Timer method)</a>
+</li>
+      <li><a href="source/examples.html#examples.modelnet40.train">train() (in module examples.modelnet40)</a>
 </li>
   </ul></td>
 </tr></table>

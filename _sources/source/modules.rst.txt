@@ -1,5 +1,5 @@
-MinkowskiEngine
-===============
+MinkowskiEngineBoth
+===================
 
 .. toctree::
    :maxdepth: 4
@@ -7,4 +7,5 @@ MinkowskiEngine
    MinkowskiEngine
    examples
    setup
+   test
    tests

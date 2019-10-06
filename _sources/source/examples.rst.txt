@@ -28,6 +28,22 @@ examples.indoor module
    :undoc-members:
    :show-inheritance:
 
+examples.indoor\_train module
+-----------------------------
+
+.. automodule:: examples.indoor_train
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.indoor\_with\_weights\_transposed module
+-------------------------------------------------
+
+.. automodule:: examples.indoor_with_weights_transposed
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 examples.minkunet module
 ------------------------
 
@@ -36,10 +52,26 @@ examples.minkunet module
    :undoc-members:
    :show-inheritance:
 
+examples.modelnet40 module
+--------------------------
+
+.. automodule:: examples.modelnet40
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 examples.multigpu module
 ------------------------
 
 .. automodule:: examples.multigpu
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.multigpu2 module
+-------------------------
+
+.. automodule:: examples.multigpu2
    :members:
    :undoc-members:
    :show-inheritance:
