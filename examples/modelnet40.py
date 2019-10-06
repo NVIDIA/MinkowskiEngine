@@ -22,8 +22,10 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import os
+import sys
 import subprocess
 import argparse
+import logging
 from time import time
 # Must be imported before
 try:
@@ -43,6 +45,13 @@ from scipy.linalg import expm, norm
 import MinkowskiEngine as ME
 from examples.resnet import ResNet50
 
+ch = logging.StreamHandler(sys.stdout)
+logging.getLogger().setLevel(logging.INFO)
+logging.basicConfig(
+    format=os.uname()[1].split('.')[0] + ' %(asctime)s %(message)s',
+    datefmt='%m/%d %H:%M:%S',
+    handlers=[ch])
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--voxel_size', type=float, default=0.05)
 parser.add_argument('--max_iter', type=int, default=120000)
@@ -58,7 +67,7 @@ parser.add_argument('--weights', type=str, default='modelnet.pth')
 parser.add_argument('--load_optimizer', type=str, default='true')
 
 if not os.path.exists('ModelNet40'):
-    print('Downloading fixed ModelNet40...')
+    logging.info('Downloading fixed ModelNet40...')
     subprocess.run(["sh", "./examples/download_modelnet40.sh"])
 
 
@@ -261,7 +270,7 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
         self.root = './ModelNet40'
         self.files = open(os.path.join(self.root,
                                        self.DATA_FILES[phase])).read().split()
-        print(
+        logging.info(
             f"Loading the subset {phase} from {self.root} with {len(self.files)} files"
         )
         self.density = 4000
@@ -296,7 +305,7 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
         feats = np.ones((len(xyz), 1))
 
         if len(xyz) < 1000:
-            print(
+            logging.info(
                 f"Skipping {mesh_file}: does not have sufficient CAD sampling density after resampling: {len(xyz)}."
             )
             return None
@@ -358,10 +367,10 @@ def test(net, test_iter):
         tot_num += len(sout)
 
         if i % config.stat_freq == 0:
-            print(
+            logging.info(
                 f'Iter: {i} / {len(test_iter)}, Accuracy : {num_correct / tot_num:.3e}'
             )
-    print(f'Validation accuracy : {num_correct / tot_num:.3e}')
+    logging.info(f'Validation accuracy : {num_correct / tot_num:.3e}')
 
 
 def train(net, device, config):
@@ -403,7 +412,7 @@ def train(net, device, config):
     net.train()
     train_iter = iter(train_dataloader)
     val_iter = iter(val_dataloader)
-    print(f'LR: {scheduler.get_lr()}')
+    logging.info(f'LR: {scheduler.get_lr()}')
     for i in range(curr_iter, config.max_iter):
 
         s = time()
@@ -420,24 +429,25 @@ def train(net, device, config):
         t = time() - s
 
         if i % config.stat_freq == 0:
-            print(
+            logging.info(
                 f'Iter: {i}, Loss: {loss.item():.3e}, Data Time: {d:.3e}, Tot Time: {t:.3e}'
             )
 
         if i % config.val_freq == 0 and i > 0:
+            torch.save(
+                {
+                    'state_dict': net.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'scheduler': scheduler.state_dict(),
+                    'curr_iter': i,
+                }, config.weights)
+
             # Validation
-            print(f'Validation')
+            logging.info(f'Validation')
             test(net, val_iter)
 
-            torch.save({
-                'state_dict': net.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'scheduler': scheduler.state_dict(),
-                'curr_iter': i,
-            }, config.weights)
-
             scheduler.step()
-            print(f'LR: {scheduler.get_lr()}')
+            logging.info(f'LR: {scheduler.get_lr()}')
 
             net.train()
 
