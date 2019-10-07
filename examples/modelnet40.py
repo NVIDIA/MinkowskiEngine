@@ -231,7 +231,7 @@ class RandomScale:
 class RandomShear:
 
     def __call__(self, coords, feats):
-        T = np.eye(3) + np.random.randn(3, 3)
+        T = np.eye(3) + 0.1 * np.random.randn(3, 3)
         return coords @ T, feats
 
 
@@ -405,7 +405,7 @@ def train(net, device, config):
         checkpoint = torch.load(config.checkpoint_weights)
         net.load_state_dict(checkpoint['state_dict'])
         if config.load_optimizer.lower() == 'true':
-            curr_iter = checkpoint['curr_iter']
+            curr_iter = checkpoint['curr_iter'] + 1
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
 

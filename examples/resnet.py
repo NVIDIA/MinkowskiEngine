@@ -75,9 +75,12 @@ class ResNetBase(nn.Module):
 
     def weight_initialization(self):
         for m in self.modules():
-            if isinstance(m, nn.BatchNorm1d):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
+            if isinstance(m, ME.MinkowskiConvolution):
+                ME.utils.kaiming_normal_(m.kernel, mode='fan_out', nonlinearity='relu')
+
+            if isinstance(m, ME.MinkowskiBatchNorm):
+                nn.init.constant_(m.bn.weight, 1)
+                nn.init.constant_(m.bn.bias, 0)
 
     def _make_layer(self,
                     block,
