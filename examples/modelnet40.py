@@ -45,6 +45,10 @@ from scipy.linalg import expm, norm
 import MinkowskiEngine as ME
 from examples.resnet import ResNet50
 
+assert int(
+    o3d.__version__.split('.')[1]
+) >= 8, f'Requires open3d version >= 0.8, the current version is {o3d.__version__}'
+
 ch = logging.StreamHandler(sys.stdout)
 logging.getLogger().setLevel(logging.INFO)
 logging.basicConfig(
@@ -208,12 +212,21 @@ class Compose(VisionCompose):
 
 class RandomRotation:
 
+    def __init__(self, axis=None, max_theta=180):
+        self.axis = axis
+        self.max_theta = max_theta
+
     def _M(self, axis, theta):
         return expm(np.cross(np.eye(3), axis / norm(axis) * theta))
 
     def __call__(self, coords, feats):
+        if self.axis is not None:
+            axis = self.axis
+        else:
+            axis = np.random.rand(3) - 0.5
         R = self._M(
-            np.random.rand(3) - 0.5, 2 * np.pi * (np.random.rand(1) - 0.5))
+            axis,
+            (np.pi * self.max_theta / 180) * 2 * (np.random.rand(1) - 0.5))
         return coords @ R, feats
 
 
@@ -289,6 +302,7 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
             xyz = self.cache[idx]
         else:
             # Load a mesh, over sample, copy, rotate, voxelization
+            assert os.path.exists(mesh_file)
             pcd = o3d.io.read_triangle_mesh(mesh_file)
             # Normalize to fit the mesh inside a unit cube while preserving aspect ratio
             vertices = np.asarray(pcd.vertices)
@@ -368,9 +382,10 @@ def test(net, test_iter):
 
         if i % config.stat_freq == 0:
             logging.info(
-                f'Iter: {i} / {len(test_iter)}, Accuracy : {num_correct / tot_num:.3e}'
+                f'{test_iter.dataset.phase} set iter: {i} / {len(test_iter)}, Accuracy : {num_correct / tot_num:.3e}'
             )
-    logging.info(f'Validation accuracy : {num_correct / tot_num:.3e}')
+    logging.info(
+        f'{test_iter.dataset.phase} set accuracy : {num_correct / tot_num:.3e}')
 
 
 def train(net, device, config):
@@ -434,16 +449,15 @@ def train(net, device, config):
             )
 
         if i % config.val_freq == 0 and i > 0:
-            torch.save(
-                {
-                    'state_dict': net.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'scheduler': scheduler.state_dict(),
-                    'curr_iter': i,
-                }, config.weights)
+            torch.save({
+                'state_dict': net.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'scheduler': scheduler.state_dict(),
+                'curr_iter': i,
+            }, config.weights)
 
             # Validation
-            logging.info(f'Validation')
+            logging.info('Validation')
             test(net, val_iter)
 
             scheduler.step()
@@ -469,4 +483,6 @@ if __name__ == '__main__':
         num_workers=config.num_workers,
         repeat=False,
         config=config)
+
+    logging.info('Test')
     test(net, iter(test_dataloader))
