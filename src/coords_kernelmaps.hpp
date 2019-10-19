@@ -33,25 +33,6 @@
 
 namespace py = pybind11;
 
-long ComputeKernelVolume(int region_type, const std::vector<int> &kernel_size,
-                         int n_offset) {
-  int kernel_volume;
-  if (region_type == 0) { // Hypercube
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume *= k;
-  } else if (region_type == 1) { // Hypercross
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume += k - 1;
-  } else if (region_type == 2) {
-    kernel_volume = n_offset;
-  } else {
-    throw std::invalid_argument("Invalid region type");
-  }
-  return kernel_volume;
-}
-
 /**
   Given the index map, kernel size, stride, and dilation, compute the input
   index to output index. Returns {in_map, out_map}
@@ -82,7 +63,7 @@ CoordsManager<Itype>::createInOutPerKernel(
   _CoordsHashMap<Itype> &out_coords_hashmap =
       _coords_hashmaps[out_coords_key].map;
   kernel_volume =
-      ComputeKernelVolume(region_type, kernel_size, offsets.size(0));
+      computeKernelVolume(region_type, kernel_size, offsets.size(0));
 
   // Assign array with out_coords_num elements. Then remove the unused parts
   InOutMapPerKernel<Itype> in_map(kernel_volume), out_map(kernel_volume);
@@ -157,7 +138,7 @@ CoordsManager<Itype>::createInOutPerKernelTranspose(
   _CoordsHashMap<Itype> &out_coords_hashmap =
       _coords_hashmaps[out_coords_key].map;
   kernel_volume =
-      ComputeKernelVolume(region_type, kernel_size, offsets.size(0));
+      computeKernelVolume(region_type, kernel_size, offsets.size(0));
   InOutMapPerKernel<Itype> in_map(kernel_volume), out_map(kernel_volume);
   std::vector<int> num_used(kernel_volume);
   num_used.resize(kernel_volume);

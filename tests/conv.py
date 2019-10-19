@@ -150,7 +150,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             gradcheck(fn,
                       (input.F, conv_tr.kernel, input.tensor_stride,
                        conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
-                       conv_tr.region_type_, conv_tr.region_offset_,
+                       conv_tr.region_type_, conv_tr.region_offset_, False,
                        input.coords_key, None, input.coords_man)))
 
     def test(self):
@@ -188,7 +188,7 @@ class TestConvolutionTranspose(unittest.TestCase):
             gradcheck(fn,
                       (input.F, conv_tr.kernel, input.tensor_stride,
                        conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
-                       conv_tr.region_type_, conv_tr.region_offset_,
+                       conv_tr.region_type_, conv_tr.region_offset_, False,
                        input.coords_key, None, input.coords_man)))
 
 

@@ -32,26 +32,6 @@
 
 namespace py = pybind11;
 
-std::vector<int> computeOutTensorStride(const std::vector<int> &tensor_strides,
-                                        const std::vector<int> &strides,
-                                        bool is_transpose) {
-  std::vector<int> out_tensor_strides;
-  ASSERT(tensor_strides.size() == strides.size(),
-         "The dimension of tensor_stride: ", ArrToString(tensor_strides),
-         " does not match the dimension of strides: ", ArrToString(strides));
-  for (int i = 0; i < strides.size(); i++) {
-    if (is_transpose) {
-      ASSERT(tensor_strides[i] % strides[i] == 0,
-             "The output tensor stride is not divisible by ",
-             "up_strides. tensor stride: ", ArrToString(tensor_strides),
-             ", up_strides: ", ArrToString(strides));
-      out_tensor_strides.push_back(tensor_strides[i] / strides[i]);
-    } else
-      out_tensor_strides.push_back(tensor_strides[i] * strides[i]);
-  }
-  return out_tensor_strides;
-}
-
 // TODO
 template <typename Itype> CoordsManager<Itype>::CoordsManager() {}
 
@@ -228,15 +208,16 @@ uint64_t CoordsManager<Itype>::initializeCoords(at::Tensor coords,
 
 /*********************************/
 template <typename Itype>
-uint64_t CoordsManager<Itype>::createOutCoords(
-    uint64_t coords_key, const std::vector<int> &tensor_strides,
-    const std::vector<int> &strides, bool is_transpose) {
+uint64_t
+CoordsManager<Itype>::createOutCoords(uint64_t coords_key,
+                                      const std::vector<int> &tensor_strides,
+                                      const std::vector<int> &strides) {
   ASSERT(existsCoordsKey(coords_key),
          "The coord map doesn't exist for the given coords_key: ",
          std::to_string(coords_key), ".");
 
   auto out_tensor_strides =
-      computeOutTensorStride(tensor_strides, strides, is_transpose);
+      computeOutTensorStride(tensor_strides, strides, false);
 
   int D = _coords_pairs[coords_key].first - 1;
   ASSERT(D == tensor_strides.size(), "The coordinate dimensions mismatch. ",
@@ -261,6 +242,50 @@ uint64_t CoordsManager<Itype>::createOutCoords(
     _coords_pairs[out_coords_key] =
         std::make_pair(D + 1, std::move(out_pair.second));
   }
+  return out_coords_key;
+}
+
+template <typename Itype>
+uint64_t CoordsManager<Itype>::createTransposedOutCoords(
+    uint64_t coords_key, const std::vector<int> &tensor_strides,
+    const std::vector<int> &strides, std::vector<int> kernel_sizes,
+    std::vector<int> dilations, int region_type, at::Tensor offsets,
+    bool generate_new_coords) {
+  ASSERT(existsCoordsKey(coords_key),
+         "The coord map doesn't exist for the given coords_key: ",
+         std::to_string(coords_key), ".");
+
+  // Transposed out tensor stride
+  auto out_tensor_strides =
+      computeOutTensorStride(tensor_strides, strides, true);
+
+  int D = _coords_pairs[coords_key].first - 1;
+  ASSERT(D == tensor_strides.size(), "The coordinate dimensions mismatch. ",
+         "CoordsManager dimension: ", std::to_string(D),
+         ", tensor_strides dimension: ", std::to_string(tensor_strides.size()));
+
+  uint64_t out_coords_key;
+  if (generate_new_coords) {
+    // set a random coords key
+    out_coords_key = random();
+    while (_coords_hashmaps.find(out_coords_key) != _coords_hashmaps.end())
+      out_coords_key = random();
+  } else {
+    // tensor_strides.size() == strides.size() on computeOutTensorStride
+    out_coords_key = hash_vec(out_tensor_strides);
+    // If the coordinates already exists, return the key.
+    if (existsCoordsKey(out_coords_key))
+      return out_coords_key;
+  }
+
+  // Generate new coords regardless of the stride size if gen_new_coords is
+  // set
+  auto out_pair = createTransposedOutCoordsHashCoordsPair(
+      coords_key, tensor_strides, strides, kernel_sizes, dilations, region_type,
+      offsets);
+  _coords_hashmaps[out_coords_key] = std::move(out_pair.first);
+  _coords_pairs[out_coords_key] =
+      std::make_pair(D + 1, std::move(out_pair.second));
   return out_coords_key;
 }
 
@@ -380,7 +405,7 @@ CoordsManager<Itype>::setupAndReturnInOutPerKernel(
     const std::vector<int> &tensor_strides, const std::vector<int> &strides,
     const std::vector<int> &kernel_sizes, const std::vector<int> &dilations,
     int region_type, const at::Tensor &offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, bool is_transpose) {
+    py::object py_out_coords_key, bool is_transpose, bool generate_new_coords) {
 
   int D = tensor_strides.size();
   ASSERT(D == tensor_strides.size() and D == strides.size() and
@@ -394,9 +419,16 @@ CoordsManager<Itype>::setupAndReturnInOutPerKernel(
   uint64_t out_coords_key, in_coords_key = p_in_coords_key->getKey();
 
   // Create output coordinates if it doesn't exist
-  if (!p_out_coords_key->key_set) {
-    out_coords_key = createOutCoords(p_in_coords_key->getKey(), tensor_strides,
-                                     strides, is_transpose);
+  // Or create a new output coordinates if it is transpose and gen new coords
+  if (!p_out_coords_key->key_set || generate_new_coords) {
+    if (!is_transpose) {
+      out_coords_key =
+          createOutCoords(p_in_coords_key->getKey(), tensor_strides, strides);
+    } else {
+      out_coords_key = createTransposedOutCoords(
+          p_in_coords_key->getKey(), tensor_strides, strides, kernel_sizes,
+          dilations, region_type, offsets, generate_new_coords);
+    }
     p_out_coords_key->setKey(out_coords_key);
   } else
     out_coords_key = p_out_coords_key->getKey();

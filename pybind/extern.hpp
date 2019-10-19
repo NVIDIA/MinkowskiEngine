@@ -77,7 +77,8 @@ void ConvolutionTransposeForwardCPU(
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords);
 
 template <typename Dtype, typename Itype>
 void ConvolutionTransposeBackwardCPU(
@@ -94,7 +95,8 @@ void ConvolutionTransposeForwardGPU(
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords);
 
 template <typename Dtype, typename Itype>
 void ConvolutionTransposeBackwardGPU(

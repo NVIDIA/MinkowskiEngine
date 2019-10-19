@@ -37,12 +37,13 @@ void ConvolutionTransposeForwardCPU(
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager) {
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords) {
   CoordsManager<Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
-      py_in_coords_key, py_out_coords_key, true);
+      py_in_coords_key, py_out_coords_key, true, generate_new_coords);
 
   if (in_feat.size(1) != kernel.size(1)) {
     throw std::invalid_argument(
@@ -109,12 +110,13 @@ void ConvolutionTransposeForwardGPU(
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager) {
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords) {
   CoordsManager<Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnInOutPerKernel(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
-      py_in_coords_key, py_out_coords_key, true);
+      py_in_coords_key, py_out_coords_key, true, generate_new_coords);
 
   if (in_feat.size(1) != kernel.size(1)) {
     throw std::invalid_argument(
@@ -196,14 +198,16 @@ template void ConvolutionTransposeForwardCPU<float, int32_t>(
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords);
 
 template void ConvolutionTransposeForwardCPU<double, int32_t>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords);
 
 template void ConvolutionTransposeBackwardCPU<float, int32_t>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
@@ -225,14 +229,16 @@ template void ConvolutionTransposeForwardGPU<float, int32_t>(
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords);
 
 template void ConvolutionTransposeForwardGPU<double, int32_t>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     std::vector<int> tensor_strides, std::vector<int> strides,
     std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
     at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
+    py::object py_out_coords_key, py::object py_coords_manager,
+    bool generate_new_coords);
 
 template void ConvolutionTransposeBackwardGPU<float, int32_t>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,

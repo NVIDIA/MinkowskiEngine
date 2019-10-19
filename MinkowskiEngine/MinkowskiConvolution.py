@@ -61,7 +61,8 @@ class MinkowskiConvolutionFunction(Function):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
-        assert input_features.type() == kernel.type()
+        assert input_features.type() == kernel.type(), \
+            f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
@@ -122,6 +123,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
                 dilation=1,
                 region_type=0,
                 region_offset=None,
+                generate_new_coords=False,
                 in_coords_key=None,
                 out_coords_key=None,
                 coords_manager=None):
@@ -136,7 +138,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
-        assert input_features.type() == kernel.type()
+        assert input_features.type() == kernel.type(), \
+            f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
@@ -164,7 +167,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
               convert_to_int_list(ctx.kernel_size, D),
               convert_to_int_list(ctx.dilation, D), region_type, region_offset,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
+              ctx.coords_man.CPPCoordsManager, generate_new_coords)
         return out_feat
 
     @staticmethod
@@ -184,7 +187,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
               convert_to_int_list(ctx.dilation, D), ctx.region_type,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_man.CPPCoordsManager)
-        return grad_in_feat, grad_kernel, None, None, None, None, None, None, None, None, None
+        return grad_in_feat, grad_kernel, None, None, None, None, None, None, None, None, None, None
 
 
 class MinkowskiConvolutionBase(MinkowskiModuleBase):
@@ -398,6 +401,7 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
                  has_bias=False,
                  kernel_generator=None,
                  out_coords_key=None,
+                 generate_new_coords=False,
                  dimension=None):
         r"""a generalized sparse transposed convolution layer.
 
@@ -434,6 +438,11 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             optional): when given, the network uses the specified coordinates
             for the output coordinates.
 
+            :attr:`generate_new_coords` (bool, optional): Force generation of
+            new coordinates. When True, the output coordinates will be the
+            outer product of the kernel shape and the input coordinates.
+            `False` by defaul.
+
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
@@ -455,4 +464,34 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             is_transpose=True,
             dimension=dimension)
         self.reset_parameters(True)
+        self.generate_new_coords = generate_new_coords
         self.conv = MinkowskiConvolutionTransposeFunction()
+
+    def forward(self, input):
+        assert isinstance(input, SparseTensor)
+        assert input.D == self.dimension
+
+        # Create a region_offset
+        self.region_type_, self.region_offset_, _ = \
+            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
+
+        if self.out_coords_key is None:
+            out_coords_key = CoordsKey(input.coords_key.D)
+        else:
+            out_coords_key = self.out_coords_key
+        # If the kernel_size == 1, the convolution is simply a matrix
+        # multiplication
+        if self.use_mm:
+            outfeat = input.F.mm(self.kernel)
+            out_coords_key = input.coords_key
+        else:
+            outfeat = self.conv.apply(
+                input.F, self.kernel, input.tensor_stride, self.stride,
+                self.kernel_size, self.dilation, self.region_type_,
+                self.region_offset_, self.generate_new_coords, input.coords_key,
+                out_coords_key, input.coords_man)
+        if self.has_bias:
+            outfeat += self.bias
+
+        return SparseTensor(
+            outfeat, coords_key=out_coords_key, coords_manager=input.coords_man)

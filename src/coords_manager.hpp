@@ -67,7 +67,14 @@ public:
   // New coords map given an input
   uint64_t createOutCoords(uint64_t coords_key,
                            const std::vector<int> &tensor_strides,
-                           const std::vector<int> &strides, bool is_transpose);
+                           const std::vector<int> &strides);
+  uint64_t createTransposedOutCoords(uint64_t coords_key,
+                                     const std::vector<int> &tensor_strides,
+                                     const std::vector<int> &strides,
+                                     std::vector<int> kernel_sizes,
+                                     std::vector<int> dilations,
+                                     int region_type, at::Tensor offsets,
+                                     bool generate_new_coords);
   uint64_t createOriginCoords(int D);
   uint64_t createPruneCoords(at::Tensor use_feat, py::object py_in_coords_key,
                              py::object py_out_coords_key);
@@ -81,6 +88,13 @@ public:
   createOutCoordsHashCoordsPair(uint64_t coords_key,
                                 const std::vector<int> &tensor_strides,
                                 const std::vector<int> &strides);
+
+  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
+  createTransposedOutCoordsHashCoordsPair(
+      uint64_t coords_key, const std::vector<int> &tensor_strides,
+      const std::vector<int> &strides, std::vector<int> kernel_sizes,
+      std::vector<int> dilations, int region_type, at::Tensor offsets);
+
   std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
   createOriginCoordsHashMap(int D);
   std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
@@ -131,7 +145,8 @@ public:
                                const std::vector<int> &dilations,
                                int region_type, const at::Tensor &offsets,
                                py::object py_in_coords_key,
-                               py::object py_out_coords_key, bool is_transpose);
+                               py::object py_out_coords_key, bool is_transpose,
+                               bool generate_new_coords = false);
 
   std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
   setupAndReturnOriginInOutPerKernel(py::object py_in_coords_key,

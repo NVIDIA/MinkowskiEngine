@@ -24,13 +24,13 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiPruning, MinkowskiPruningFunction
+from MinkowskiEngine import SparseTensor, MinkowskiConvolutionTranspose, MinkowskiPruning, MinkowskiPruningFunction
 
 from utils.gradcheck import gradcheck
 from tests.common import data_loader
 
 
-class TestPooling(unittest.TestCase):
+class TestPruning(unittest.TestCase):
 
     def test_pruning(self):
         in_channels, D = 2, 2
@@ -47,9 +47,8 @@ class TestPooling(unittest.TestCase):
         # Check backward
         fn = MinkowskiPruningFunction()
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, use_feat, input.coords_key, output.coords_key,
-                     input.coords_man)))
+            gradcheck(fn, (input.F, use_feat, input.coords_key,
+                           output.coords_key, input.coords_man)))
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
@@ -58,9 +57,47 @@ class TestPooling(unittest.TestCase):
             print(output)
 
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, use_feat, input.coords_key, output.coords_key,
-                     input.coords_man)))
+            gradcheck(fn, (input.F, use_feat, input.coords_key,
+                           output.coords_key, input.coords_man)))
+
+    def test_with_convtr(self):
+        channels, D = [2, 3, 4], 2
+        coords, feats, labels = data_loader(channels[0], batch_size=1)
+        feats = feats.double()
+        feats.requires_grad_()
+        # Create a sparse tensor with large tensor strides for upsampling
+        start_tensor_stride = 4
+        input = SparseTensor(feats, coords=coords * start_tensor_stride, tensor_stride=start_tensor_stride)
+        conv_tr1 = MinkowskiConvolutionTranspose(
+            channels[0],
+            channels[1],
+            kernel_size=3,
+            stride=2,
+            generate_new_coords=True,
+            dimension=D).double()
+        conv_tr2 = MinkowskiConvolutionTranspose(
+            channels[1],
+            channels[2],
+            kernel_size=3,
+            stride=2,
+            generate_new_coords=True,
+            dimension=D).double()
+        pruning = MinkowskiPruning(D)
+
+        out1 = conv_tr1(input)
+        use_feat = torch.rand(len(out1)) < 0.5
+        out1 = pruning(out1, use_feat)
+
+        out2 = conv_tr2(out1)
+        use_feat = torch.rand(len(out2)) < 0.5
+        out2 = pruning(out2, use_feat)
+
+        print(out2)
+
+        out2.F.sum().backward()
+
+        # Check gradient flow
+        print(input.F.grad)
 
 
 if __name__ == '__main__':
