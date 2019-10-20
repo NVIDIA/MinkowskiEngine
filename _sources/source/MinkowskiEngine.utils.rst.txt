@@ -20,6 +20,14 @@ MinkowskiEngine.utils.gradcheck module
    :undoc-members:
    :show-inheritance:
 
+MinkowskiEngine.utils.init module
+---------------------------------
+
+.. automodule:: MinkowskiEngine.utils.init
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 MinkowskiEngine.utils.voxelization module
 -----------------------------------------
 

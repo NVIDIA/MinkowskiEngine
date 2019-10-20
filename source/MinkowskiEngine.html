@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiEngine package &mdash; MinkowskiEngine 0.2.7 documentation</title>
+  <title>MinkowskiEngine package &mdash; MinkowskiEngine 0.2.8 documentation</title>
   
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2.7
+                0.2.8
               </div>
             
           
@@ -196,6 +196,7 @@
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">MinkowskiEngine.utils.collation module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">MinkowskiEngine.utils.gradcheck module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.init">MinkowskiEngine.utils.init module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.voxelization">MinkowskiEngine.utils.voxelization module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils">Module contents</a></li>
 </ul>
@@ -294,9 +295,6 @@ use center=False.</p>
 <code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">save_ctx</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">tensor_stride</em>, <em class="sig-param">stride</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">dilation</em>, <em class="sig-param">region_type</em>, <em class="sig-param">in_coords_key</em>, <em class="sig-param">out_coords_key</em>, <em class="sig-param">coords_man</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.save_ctx" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-<div class="section" id="minkowskiengine-memorymanager-module">
-<h2>MinkowskiEngine.MemoryManager module<a class="headerlink" href="#minkowskiengine-memorymanager-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-MinkowskiEngine.MinkowskiBroadcast">
 <span id="minkowskiengine-minkowskibroadcast-module"></span><h2>MinkowskiEngine.MinkowskiBroadcast module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiBroadcast" title="Permalink to this headline">¶</a></h2>
@@ -566,9 +564,23 @@ output.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase</span></code></a></p>
 <p>A generalized sparse transposed convolution or deconvolution layer.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -595,7 +607,7 @@ output.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward">
-<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">kernel</em>, <em class="sig-param">tensor_stride=1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">region_offset=None</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">kernel</em>, <em class="sig-param">tensor_stride=1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">region_offset=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>region_type=0 HyperCube</p>
 </dd></dl>
 
@@ -657,6 +669,11 @@ output.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map">
 <code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param">in_tensor_strides</em>, <em class="sig-param">out_tensor_strides</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map_by_key">
+<code class="sig-name descname">get_kernel_map_by_key</code><span class="sig-paren">(</span><em class="sig-param">in_coords_key</em>, <em class="sig-param">out_coords_key</em>, <em class="sig-param">tensor_strides=1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map_by_key" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

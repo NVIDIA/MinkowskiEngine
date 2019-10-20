@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; MinkowskiEngine 0.2.7 documentation</title>
+  <title>Index &mdash; MinkowskiEngine 0.2.8 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.2.7
+                0.2.8
               </div>
             
           
@@ -240,9 +240,9 @@
 </li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiMaxPooling.__init__">(MinkowskiEngine.MinkowskiMaxPooling method)</a>
 </li>
-        <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU.__init__">(MinkowskiEngine.MinkowskiPReLU method)</a>
-</li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiPoolingTranspose.__init__">(MinkowskiEngine.MinkowskiPoolingTranspose method)</a>
+</li>
+        <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU.__init__">(MinkowskiEngine.MinkowskiPReLU method)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiReLU.__init__">(MinkowskiEngine.MinkowskiReLU method)</a>
 </li>
@@ -439,15 +439,11 @@
 </li>
       <li><a href="source/examples.html#module-examples.indoor">examples.indoor (module)</a>
 </li>
-      <li><a href="source/examples.html#module-examples.indoor_train">examples.indoor_train (module)</a>
-</li>
       <li><a href="source/examples.html#module-examples.minkunet">examples.minkunet (module)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/examples.html#module-examples.modelnet40">examples.modelnet40 (module)</a>
-</li>
-      <li><a href="source/examples.html#module-examples.multigpu2">examples.multigpu2 (module)</a>
 </li>
       <li><a href="source/examples.html#module-examples.pointnet">examples.pointnet (module)</a>
 </li>
@@ -476,6 +472,14 @@
       <li><a href="source/examples.html#examples.minkunet.MinkUNetBase.forward">forward() (examples.minkunet.MinkUNetBase method)</a>
 
       <ul>
+        <li><a href="source/examples.html#examples.pointnet.PointNet.forward">(examples.pointnet.PointNet method)</a>
+</li>
+        <li><a href="source/examples.html#examples.pointnet.PointNetFeature.forward">(examples.pointnet.PointNetFeature method)</a>
+</li>
+        <li><a href="source/examples.html#examples.pointnet.STN3d.forward">(examples.pointnet.STN3d method)</a>
+</li>
+        <li><a href="source/examples.html#examples.resnet.ResNetBase.forward">(examples.resnet.ResNetBase method)</a>
+</li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast.forward">(MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast method)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast method)</a>
@@ -488,7 +492,11 @@
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction static method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.forward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose method)</a>
+</li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction static method)</a>
+</li>
+        <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose.forward">(MinkowskiEngine.MinkowskiConvolutionTranspose method)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.forward">(MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork method)</a>
 </li>
@@ -534,14 +542,6 @@
 </li>
         <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SELayer.forward">(MinkowskiEngine.modules.senet_block.SELayer method)</a>
 </li>
-        <li><a href="source/examples.html#examples.pointnet.PointNet.forward">(examples.pointnet.PointNet method)</a>
-</li>
-        <li><a href="source/examples.html#examples.pointnet.PointNetFeature.forward">(examples.pointnet.PointNetFeature method)</a>
-</li>
-        <li><a href="source/examples.html#examples.pointnet.STN3d.forward">(examples.pointnet.STN3d method)</a>
-</li>
-        <li><a href="source/examples.html#examples.resnet.ResNetBase.forward">(examples.resnet.ResNetBase method)</a>
-</li>
       </ul></li>
   </ul></td>
 </tr></table>
@@ -564,11 +564,11 @@
       <li><a href="source/examples.html#examples.common.get_coords">get_coords() (in module examples.common)</a>
 
       <ul>
+        <li><a href="source/tests.html#tests.common.get_coords">(in module tests.common)</a>
+</li>
         <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_coords">(MinkowskiEngine.CoordsManager method)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords">(MinkowskiEngine.MinkowskiCoords.CoordsManager method)</a>
-</li>
-        <li><a href="source/tests.html#tests.common.get_coords">(in module tests.common)</a>
 </li>
       </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_coords_key">get_coords_key() (MinkowskiEngine.CoordsManager method)</a>
@@ -599,6 +599,12 @@
 
       <ul>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map">(MinkowskiEngine.MinkowskiCoords.CoordsManager method)</a>
+</li>
+      </ul></li>
+      <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_kernel_map_by_key">get_kernel_map_by_key() (MinkowskiEngine.CoordsManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map_by_key">(MinkowskiEngine.MinkowskiCoords.CoordsManager method)</a>
 </li>
       </ul></li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.Common.get_kernel_volume">get_kernel_volume() (in module MinkowskiEngine.Common)</a>
@@ -695,6 +701,8 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.init.kaiming_normal_">kaiming_normal_() (in module MinkowskiEngine.utils.init)</a>
+</li>
       <li><a href="source/examples.html#examples.pointnet.PointNet.KERNEL_SIZES">KERNEL_SIZES (examples.pointnet.PointNet attribute)</a>
 
       <ul>
@@ -754,10 +762,6 @@
       <li><a href="source/examples.html#examples.indoor.load_file">load_file() (in module examples.indoor)</a>
 
       <ul>
-        <li><a href="source/examples.html#examples.indoor_train.load_file">(in module examples.indoor_train)</a>
-</li>
-        <li><a href="source/examples.html#examples.multigpu2.load_file">(in module examples.multigpu2)</a>
-</li>
         <li><a href="source/tests.html#tests.strided_conv.load_file">(in module tests.strided_conv)</a>
 </li>
       </ul></li>
@@ -770,8 +774,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/examples.html#examples.modelnet40.make_data_loader">make_data_loader() (in module examples.modelnet40)</a>
-</li>
-      <li><a href="source/tests.html#tests.mem_manager.TestMemoryManager.memory_manager">memory_manager() (tests.mem_manager.TestMemoryManager method)</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling">MinkowskiAvgPooling (class in MinkowskiEngine)</a>
 
@@ -880,6 +882,8 @@
       <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">MinkowskiEngine.utils.collation (module)</a>
 </li>
       <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">MinkowskiEngine.utils.gradcheck (module)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.init">MinkowskiEngine.utils.init (module)</a>
 </li>
       <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.voxelization">MinkowskiEngine.utils.voxelization (module)</a>
 </li>
@@ -1277,8 +1281,6 @@
 </li>
       <li><a href="source/tests.html#tests.coords.Test">Test (class in tests.coords)</a>
 </li>
-      <li><a href="source/test.html#module-test">test (module)</a>
-</li>
       <li><a href="source/examples.html#examples.modelnet40.test">test() (in module examples.modelnet40)</a>
 
       <ul>
@@ -1321,7 +1323,7 @@
 </li>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_maxpooling">test_maxpooling() (tests.pool.TestPooling method)</a>
 </li>
-      <li><a href="source/tests.html#tests.pruning.TestPooling.test_pruning">test_pruning() (tests.pruning.TestPooling method)</a>
+      <li><a href="source/tests.html#tests.pruning.TestPruning.test_pruning">test_pruning() (tests.pruning.TestPruning method)</a>
 </li>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_sumpooling">test_sumpooling() (tests.pool.TestPooling method)</a>
 </li>
@@ -1329,10 +1331,12 @@
 </li>
       <li><a href="source/tests.html#tests.pool.TestPooling.test_unpooling_gpu">test_unpooling_gpu() (tests.pool.TestPooling method)</a>
 </li>
-      <li><a href="source/tests.html#tests.broadcast.TestBroadcast">TestBroadcast (class in tests.broadcast)</a>
+      <li><a href="source/tests.html#tests.pruning.TestPruning.test_with_convtr">test_with_convtr() (tests.pruning.TestPruning method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/tests.html#tests.broadcast.TestBroadcast">TestBroadcast (class in tests.broadcast)</a>
+</li>
       <li><a href="source/tests.html#tests.conv.TestConvolution">TestConvolution (class in tests.conv)</a>
 </li>
       <li><a href="source/tests.html#tests.conv.TestConvolutionTranspose">TestConvolutionTranspose (class in tests.conv)</a>
@@ -1343,16 +1347,12 @@
 </li>
       <li><a href="source/tests.html#tests.kernel_map.TestKernelMap">TestKernelMap (class in tests.kernel_map)</a>
 </li>
-      <li><a href="source/tests.html#tests.mem_manager.TestMemoryManager">TestMemoryManager (class in tests.mem_manager)</a>
-</li>
       <li><a href="source/tests.html#tests.norm.TestNormalization">TestNormalization (class in tests.norm)</a>
 </li>
       <li><a href="source/tests.html#tests.pool.TestPooling">TestPooling (class in tests.pool)</a>
-
-      <ul>
-        <li><a href="source/tests.html#tests.pruning.TestPooling">(class in tests.pruning)</a>
 </li>
-      </ul></li>
+      <li><a href="source/tests.html#tests.pruning.TestPruning">TestPruning (class in tests.pruning)</a>
+</li>
       <li><a href="source/tests.html#module-tests">tests (module)</a>
 </li>
       <li><a href="source/tests.html#module-tests.broadcast">tests.broadcast (module)</a>
@@ -1366,8 +1366,6 @@
       <li><a href="source/tests.html#module-tests.dense">tests.dense (module)</a>
 </li>
       <li><a href="source/tests.html#module-tests.kernel_map">tests.kernel_map (module)</a>
-</li>
-      <li><a href="source/tests.html#module-tests.mem_manager">tests.mem_manager (module)</a>
 </li>
       <li><a href="source/tests.html#module-tests.norm">tests.norm (module)</a>
 </li>

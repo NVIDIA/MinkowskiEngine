@@ -52,14 +52,6 @@ tests.kernel\_map module
    :undoc-members:
    :show-inheritance:
 
-tests.mem\_manager module
--------------------------
-
-.. automodule:: tests.mem_manager
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tests.norm module
 -----------------
 
