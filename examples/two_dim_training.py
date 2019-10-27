@@ -141,19 +141,12 @@ def collation_fn(data_labels):
     coords, feats, labels = list(zip(*data_labels))
     coords_batch, feats_batch, labels_batch = [], [], []
 
-    for batch_id, _ in enumerate(coords):
-        N = coords[batch_id].shape[0]
-
-        coords_batch.append(
-            torch.cat((torch.from_numpy(coords[batch_id]).int(),
-                       torch.ones(N, 1).int() * batch_id), 1))
-        feats_batch.append(torch.from_numpy(feats[batch_id]))
-        labels_batch.append(torch.from_numpy(labels[batch_id]))
+    # Generate batched coordinates
+    coords_batch = ME.utils.batched_coordinates(coords)
 
     # Concatenate all lists
-    coords_batch = torch.cat(coords_batch, 0).int()
-    feats_batch = torch.cat(feats_batch, 0).float()
-    labels_batch = torch.cat(labels_batch, 0).float()
+    feats_batch = torch.from_numpy(np.concatenate(feats, 0)).float()
+    labels_batch = torch.from_numpy(np.concatenate(labels, 0)).float()
 
     return coords_batch, feats_batch, labels_batch
 

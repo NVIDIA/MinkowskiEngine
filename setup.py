@@ -1,13 +1,11 @@
 import codecs
 import os
 import re
-import time
-from subprocess import Popen, PIPE, STDOUT
+import subprocess
 from setuptools import setup
 from torch.utils.cpp_extension import CUDAExtension, BuildExtension
 
 from distutils.sysconfig import get_python_inc
-
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -26,22 +24,12 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-def run_command(cmd):
-    process = Popen(cmd, stdout=PIPE, stderr=STDOUT,
-                    shell=True, encoding='utf8')
-    while True:
-        output = process.stdout.readline()
-        if output == '' and process.poll() is not None:
-            break
-        if output:
-            print(output.strip())
-        time.sleep(0.01)
-
-    rc = process.poll()
-    return rc
+def run_command(*args):
+    subprocess.call(args)
 
 
-run_command('make -j%d' % min(os.cpu_count(), 12))
+run_command('make', 'clean')
+run_command('make', '-j%d' % min(os.cpu_count(), 12))
 
 # Python interface
 setup(

@@ -71,7 +71,7 @@ parser.add_argument('--weights', type=str, default='modelnet.pth')
 parser.add_argument('--load_optimizer', type=str, default='true')
 
 if not os.path.exists('ModelNet40'):
-    logging.info('Downloading fixed ModelNet40...')
+    logging.info('Downloading the fixed ModelNet40 dataset...')
     subprocess.run(["sh", "./examples/download_modelnet40.sh"])
 
 
@@ -182,17 +182,8 @@ def collate_pointcloud_fn(list_data):
     eff_num_batch = len(coords)
     assert len(labels) == eff_num_batch
 
-    lens = [len(c) for c in coords]
-    curr_ptr = 0
-    num_tot_pts = sum(lens)
-    coords_batch = torch.zeros(num_tot_pts, 4)
+    coords_batch = ME.utils.batched_coordinates(coords)
     feats_batch = torch.from_numpy(np.vstack(feats)).float()
-
-    for batch_id in range(eff_num_batch):
-        coords_batch[curr_ptr:curr_ptr + lens[batch_id], :3] = torch.from_numpy(
-            coords[batch_id])
-        coords_batch[curr_ptr:curr_ptr + lens[batch_id], 3] = batch_id
-        curr_ptr += len(coords[batch_id])
 
     # Concatenate all lists
     return {

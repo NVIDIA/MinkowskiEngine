@@ -24,6 +24,50 @@
 import numpy as np
 import torch
 import logging
+import collections.abc
+
+
+def batched_coordinates(coords):
+    r"""Create a `ME.SparseTensor` coordinates from a sequence of coordinates
+
+    Given a list of either numpy or pytorch tensor coordinates, return the
+    batched coordinates suitable for `ME.SparseTensor`.
+
+    Args:
+        coords (a sequence of `torch.Tensor` or `numpy.ndarray`): a list of coordinates.
+
+    Returns:
+        coords (`torch.IntTensor`): a batched coordinates.
+
+    .. warning::
+
+       From v0.3, the batch index will be prepended before all coordinates.
+
+    """
+    assert isinstance(
+        coords, collections.abc.Sequence), "The coordinates must be a sequence."
+    assert np.array([cs.ndim == 2 for cs in coords]).all(), \
+        "All coordinates must be in a 2D array."
+    D = np.unique(np.array([cs.shape[1] for cs in coords]))
+    assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
+    D = D[0]
+
+    # Create a batched coordinates
+    N = np.array([len(cs) for cs in coords]).sum()
+    bcoords = torch.IntTensor(N, D + 1)  # uninitialized
+
+    # if not BATCH_FIRST:
+    s = 0
+    for b, cs in enumerate(coords):
+        if isinstance(cs, np.ndarray):
+            cs = torch.from_numpy(np.floor(cs))
+        else:
+            cs = cs.floor()
+        cn = len(cs)
+        bcoords[s:s + cn, :D] = cs
+        bcoords[s:s + cn, D] = b
+        s += cn
+    return bcoords
 
 
 def sparse_collate(coords, feats, labels=None, is_double=False):
