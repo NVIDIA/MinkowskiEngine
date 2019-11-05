@@ -100,7 +100,7 @@ else
 	COMMON_FLAGS += -DNDEBUG -O3
 endif
 
-WARNINGS := -Wall -Wno-sign-compare -Wcomment
+WARNINGS := -Wall -Wcomment -Wno-sign-compare -Wno-deprecated-declarations
 
 INCLUDE_DIRS += $(BLAS_INCLUDE)
 LIBRARY_DIRS += $(BLAS_LIB)

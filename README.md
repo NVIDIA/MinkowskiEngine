@@ -1,6 +1,6 @@
 # Minkowski Engine
 
-The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://stanfordvl.github.io/MinkowskiEngine/overview.html).
+The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://stanfordvl.github.io/MinkowskiEngine/overview.html).
 
 ## Features
 
@@ -19,7 +19,7 @@ The MinkowskiEngine is an auto-differentiation library for sparse tensors. It su
 
 - Ubuntu 14.04 or higher
 - CUDA 10.0 or higher
-- pytorch == 1.2
+- pytorch 1.2 or higher
 
 
 ## Installation
@@ -41,7 +41,7 @@ conda create -n py3-mink python=3.7 anaconda
 conda activate py3-mink
 conda install openblas numpy
 conda install -c bioconda google-sparsehash
-conda install pytorch==1.2 torchvision -c pytorch
+conda install pytorch torchvision -c pytorch
 ```
 
 #### 2. Compilation and installation
@@ -61,7 +61,7 @@ Like the anaconda installation, make sure that you install pytorch with the the 
 ```
 sudo apt install libsparsehash-dev libopenblas-dev
 # within a python3 environment
-pip install torch==1.2
+pip install torch
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
 cd MinkowskiEngine
 pip install -r requirements.txt
