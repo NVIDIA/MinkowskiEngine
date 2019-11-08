@@ -29,6 +29,7 @@ from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
     MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
+    MinkowskiGlobalMaxPoolingFunction, MinkowskiGlobalMaxPooling, \
     MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
 
 from utils.gradcheck import gradcheck
@@ -168,6 +169,23 @@ class TestPooling(unittest.TestCase):
             gradcheck(
                 fn,
                 (input.F, True, input.coords_key, None, input.coords_man)))
+    
+    def test_global_maxpool(self):
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords=coords)
+        pool = MinkowskiGlobalMaxPooling(dimension=D)
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiGlobalMaxPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (input.F, input.coords_key, None, input.coords_man)))
 
     def test_unpool(self):
         in_channels, out_channels, D = 2, 3, 2

@@ -252,6 +252,37 @@ void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 #endif
 
 /*************************************
+ * GlobalMaxPooling
+ *************************************/
+template <typename Dtype, typename Itype>
+void GlobalMaxPoolingForwardCPU(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template <typename Dtype, typename Itype>
+void GlobalMaxPoolingBackwardCPU(
+    at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor num_nonzero,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+#ifndef CPU_ONLY
+template <typename Dtype, typename Itype>
+void GlobalMaxPoolingForwardGPU(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+
+template <typename Dtype, typename Itype>
+void GlobalMaxPoolingBackwardGPU(
+    at::Tensor in_feat, at::Tensor grad_in_feat,
+    at::Tensor grad_out_feat, at::Tensor num_nonzero,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
+#endif
+
+/*************************************
  * Broadcast
  *************************************/
 template <typename Dtype, typename Itype>
