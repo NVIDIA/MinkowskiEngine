@@ -24,7 +24,8 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiConvolutionTranspose, MinkowskiPruning, MinkowskiPruningFunction
+from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
+    MinkowskiConvolutionTranspose, MinkowskiPruning, MinkowskiPruningFunction
 
 from utils.gradcheck import gradcheck
 from tests.common import data_loader
@@ -67,7 +68,10 @@ class TestPruning(unittest.TestCase):
         feats.requires_grad_()
         # Create a sparse tensor with large tensor strides for upsampling
         start_tensor_stride = 4
-        input = SparseTensor(feats, coords=coords * start_tensor_stride, tensor_stride=start_tensor_stride)
+        input = SparseTensor(
+            feats,
+            coords=coords * start_tensor_stride,
+            tensor_stride=start_tensor_stride)
         conv_tr1 = MinkowskiConvolutionTranspose(
             channels[0],
             channels[1],
@@ -75,6 +79,8 @@ class TestPruning(unittest.TestCase):
             stride=2,
             generate_new_coords=True,
             dimension=D).double()
+        conv1 = MinkowskiConvolution(
+            channels[1], channels[1], kernel_size=3, dimension=D).double()
         conv_tr2 = MinkowskiConvolutionTranspose(
             channels[1],
             channels[2],
@@ -85,6 +91,7 @@ class TestPruning(unittest.TestCase):
         pruning = MinkowskiPruning(D)
 
         out1 = conv_tr1(input)
+        out1 = conv1(out1)
         use_feat = torch.rand(len(out1)) < 0.5
         out1 = pruning(out1, use_feat)
 

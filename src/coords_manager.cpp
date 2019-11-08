@@ -241,8 +241,11 @@ CoordsManager<Itype>::createOutCoords(uint64_t coords_key,
     _coords_hashmaps[out_coords_key] = std::move(out_pair.first);
     _coords_pairs[out_coords_key] =
         std::make_pair(D + 1, std::move(out_pair.second));
+    return out_coords_key;
+  } else {
+    // Return in coords key if identity stride
+    return coords_key;
   }
-  return out_coords_key;
 }
 
 template <typename Itype>
