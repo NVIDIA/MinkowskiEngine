@@ -29,10 +29,10 @@
 
 template <typename Dtype, typename Itype>
 void GlobalMaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                             at::Tensor max_index,
-                             py::object py_in_coords_key,
-                             py::object py_out_coords_key,
-                             py::object py_coords_manager) {
+                                at::Tensor max_index,
+                                py::object py_in_coords_key,
+                                py::object py_out_coords_key,
+                                py::object py_coords_manager) {
   CoordsManager<Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
@@ -44,7 +44,7 @@ void GlobalMaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
   out_feat.zero_();
   max_index.resize_({out_nrows, nchannel});
   max_index.zero_();
-  
+
   MaxPoolingForwardKernelCPU<Dtype, Itype>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), max_index.data<Itype>(),
       nchannel, std::get<0>(in_out), std::get<1>(in_out), out_nrows);
@@ -52,10 +52,10 @@ void GlobalMaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
 
 template <typename Dtype, typename Itype>
 void GlobalMaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                              at::Tensor grad_out_feat, at::Tensor max_index,
-                              py::object py_in_coords_key,
-                              py::object py_out_coords_key,
-                              py::object py_coords_manager) {
+                                 at::Tensor grad_out_feat, at::Tensor max_index,
+                                 py::object py_in_coords_key,
+                                 py::object py_out_coords_key,
+                                 py::object py_coords_manager) {
   CoordsManager<Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<Itype> *>();
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
@@ -67,16 +67,17 @@ void GlobalMaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   MaxPoolingBackwardKernelCPU<Dtype, Itype>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       grad_out_feat.size(0), max_index.data<Itype>(), in_feat.size(1),
-      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key]);
+      p_coords_manager->_in_maps[map_key],
+      p_coords_manager->_out_maps[map_key]);
 }
 
 #ifndef CPU_ONLY
 template <typename Dtype, typename Itype>
 void GlobalMaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
-                             at::Tensor num_nonzero,
-                             py::object py_in_coords_key,
-                             py::object py_out_coords_key,
-                             py::object py_coords_manager) {
+                                at::Tensor num_nonzero,
+                                py::object py_in_coords_key,
+                                py::object py_out_coords_key,
+                                py::object py_coords_manager) {
   CoordsManager<Itype> *p_coords_manager =
       py_coords_manager.cast<CoordsManager<Itype> *>();
   auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
@@ -104,10 +105,11 @@ void GlobalMaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
 
 template <typename Dtype, typename Itype>
 void GlobalMaxPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                              at::Tensor grad_out_feat, at::Tensor num_nonzero,
-                              py::object py_in_coords_key,
-                              py::object py_out_coords_key,
-                              py::object py_coords_manager) {
+                                 at::Tensor grad_out_feat,
+                                 at::Tensor num_nonzero,
+                                 py::object py_in_coords_key,
+                                 py::object py_out_coords_key,
+                                 py::object py_coords_manager) {
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
@@ -129,16 +131,14 @@ template void GlobalMaxPoolingForwardCPU<double, int32_t>(
     py::object py_coords_manager);
 
 template void GlobalMaxPoolingBackwardCPU<float, int32_t>(
-    at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
 template void GlobalMaxPoolingBackwardCPU<double, int32_t>(
-    at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
 #ifndef CPU_ONLY
 template void GlobalMaxPoolingForwardGPU<float, int32_t>(
@@ -152,14 +152,12 @@ template void GlobalMaxPoolingForwardGPU<double, int32_t>(
     py::object py_coords_manager);
 
 template void GlobalMaxPoolingBackwardGPU<float, int32_t>(
-    at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 
 template void GlobalMaxPoolingBackwardGPU<double, int32_t>(
-    at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    at::Tensor num_nonzero, py::object py_in_coords_key,
+    py::object py_out_coords_key, py::object py_coords_manager);
 #endif

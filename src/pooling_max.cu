@@ -82,8 +82,8 @@ __global__ void max_pool(const int N, const int out_nrows, const int nchannel,
   }
 }
 
-// Put features in to the out features accoring to the input index.
-// The input index is sorted accorind to the out index so no need to take out
+// Put features in to the out features according to the input index.
+// The input index is sorted according to the out index so no need to take out
 // index
 template <typename Dtype, typename Itype>
 __global__ void copy_sorted(const int n, const int nrows, const int nchannel,
@@ -193,7 +193,7 @@ void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  const Itype *d_max_index, int nchannel,
                                  cudaStream_t stream) {
   int num_kernels = out_nrows * nchannel;
-  // Cleanup gradients
+  // Assume that gradients for input feature are all set to zero
   set_gradient<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
       num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index);
 }
