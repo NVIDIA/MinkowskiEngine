@@ -103,6 +103,17 @@ void instantiate_func(py::module &m, const std::string &dtypestr,
         &GlobalPoolingBackwardGPU<Dtype, Itype>);
 #endif
 
+  m.def((std::string("GlobalMaxPoolingForwardCPU") + dtypestr).c_str(),
+        &GlobalMaxPoolingForwardCPU<Dtype, Itype>);
+  m.def((std::string("GlobalMaxPoolingBackwardCPU") + dtypestr).c_str(),
+        &GlobalMaxPoolingBackwardCPU<Dtype, Itype>);
+#ifndef CPU_ONLY
+  m.def((std::string("GlobalMaxPoolingForwardGPU") + dtypestr).c_str(),
+        &GlobalMaxPoolingForwardGPU<Dtype, Itype>);
+  m.def((std::string("GlobalMaxPoolingBackwardGPU") + dtypestr).c_str(),
+        &GlobalMaxPoolingBackwardGPU<Dtype, Itype>);
+#endif
+
   m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
         &BroadcastForwardCPU<Dtype, Itype>);
   m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),

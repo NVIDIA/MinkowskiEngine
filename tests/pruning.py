@@ -88,6 +88,8 @@ class TestPruning(unittest.TestCase):
             stride=2,
             generate_new_coords=True,
             dimension=D).double()
+        conv2 = MinkowskiConvolution(
+            channels[2], channels[2], kernel_size=3, dimension=D).double()
         pruning = MinkowskiPruning(D)
 
         out1 = conv_tr1(input)
@@ -98,6 +100,7 @@ class TestPruning(unittest.TestCase):
         out2 = conv_tr2(out1)
         use_feat = torch.rand(len(out2)) < 0.5
         out2 = pruning(out2, use_feat)
+        out2 = conv2(out2)
 
         print(out2)
 
