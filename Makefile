@@ -56,9 +56,9 @@ CU_OBJS := $(patsubst $(SRC_DIR)/%.cu,$(OBJ_DIR)/cuda/%.o,$(CU_SRCS))
 STATIC_LIB := $(OBJ_DIR)/lib$(EXTENSION_NAME).a
 
 # We will also explicitly add stdc++ to the link target.
-LIBRARIES := stdc++ c10 caffe2 torch torch_python
+LIBRARIES := stdc++ c10 caffe2 torch torch_python _C
 ifneq ($(CPU_ONLY), 1)
-	LIBRARIES += cudart cublas caffe2_gpu
+	LIBRARIES += cudart cublas caffe2_gpu c10_cuda
 	# CUDA architecture setting: going with all of them.
 	# For CUDA < 6.0, comment the *_50 through *_61 lines for compatibility.
 	# For CUDA < 8.0, comment the *_60 and *_61 lines for compatibility.

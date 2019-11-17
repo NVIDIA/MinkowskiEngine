@@ -29,14 +29,14 @@ try:
     import open3d as o3d
 except ImportError:
     raise ImportError(
-        'Please install open3d-python with `pip install open3d-python`.')
+        'Please install open3d with `pip install open3d`.')
 
 import torch
 import MinkowskiEngine as ME
 from examples.common import Timer
 
 # Check if the weights and file exist and download
-if not os.path.isfile('weights.pth'):
+if not os.path.isfile('1.ply'):
     print('Downloading a room ply file...')
     urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", '1.ply')
 
@@ -48,7 +48,7 @@ parser.add_argument('--max_kernel_size', type=int, default=7)
 
 
 def load_file(file_name, voxel_size):
-    pcd = o3d.read_point_cloud(file_name)
+    pcd = o3d.io.read_point_cloud(file_name)
     coords = np.array(pcd.points)
     feats = np.array(pcd.colors)
 

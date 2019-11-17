@@ -119,8 +119,8 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(
       p_coords_manager->_out_maps[map_key][0].size());
 
-  cusparseHandle_t handle =
-      THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
+  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+  cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
 
   BroadcastForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
@@ -166,8 +166,8 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       sizeof(Dtype) // tmp_grad_infeat(_global)
   );
 
-  cusparseHandle_t handle =
-      THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
+  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+  cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
 
   BroadcastBackwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(0),

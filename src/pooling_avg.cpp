@@ -125,8 +125,8 @@ void AvgPoolingForwardGPU(
        ) *
       sizeof(Dtype));
 
-  cusparseHandle_t handle =
-      THCState_getCurrentSparseHandle(at::globalContext().getTHCState());
+  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+  cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
 
   NonzeroAvgPoolingForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(0), out_feat.data<Dtype>(), out_nrows,

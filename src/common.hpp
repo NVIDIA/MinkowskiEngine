@@ -44,7 +44,7 @@
 #include <cusparse_v2.h>
 #include <driver_types.h> // cuda driver types
 
-#include <THC/THCBlas.h>
+#include <ATen/cuda/CUDAContext.h>
 #include <thrust/device_vector.h>
 
 #include "gpu.cuh"

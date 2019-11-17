@@ -114,8 +114,8 @@ void ConvolutionForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   Itype *d_scr = p_coords_manager->getScratchGPUMemory(
       2 * (p_coords_manager->getMaxMapSize(in_out)));
 
-  cublasHandle_t handle =
-      THCState_getCurrentBlasHandle(at::globalContext().getTHCState());
+  cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
+  cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
 
   ConvolutionForwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), in_feat.size(1), out_feat.data<Dtype>(),
@@ -146,8 +146,8 @@ void ConvolutionBackwardGPU(
       2 *
       (p_coords_manager->getMaxMapSize(p_coords_manager->_in_maps[map_key])));
 
-  cublasHandle_t handle =
-      THCState_getCurrentBlasHandle(at::globalContext().getTHCState());
+  cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
+  cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
 
   ConvolutionBackwardKernelGPU<Dtype, Itype>(
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
