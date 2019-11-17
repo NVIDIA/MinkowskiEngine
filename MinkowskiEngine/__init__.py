@@ -54,8 +54,8 @@ from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
     MinkowskiBroadcastAddition, MinkowskiBroadcastMultiplication, OperationType
 
 from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoftmax, \
-    MinkowskiPReLU, MinkowskiSELU, MinkowskiCELU, MinkowskiDropout, MinkowskiThreshold, \
-    MinkowskiTanh
+    MinkowskiPReLU, MinkowskiELU, MinkowskiSELU, MinkowskiCELU, MinkowskiDropout, \
+    MinkowskiThreshold, MinkowskiTanh
 
 
 from MinkowskiNormalization import MinkowskiBatchNorm, MinkowskiInstanceNorm, \

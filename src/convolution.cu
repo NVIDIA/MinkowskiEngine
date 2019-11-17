@@ -98,9 +98,8 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
   // Write the block sub-matrix to device memory;
   // each thread writes one element
   if (y < hA && x < wB)
-    C[wB * out_row + x] += Csub;
-  // TODO: atomicAdd(&C[wB * out_row + x], Csub); // For conv transpose, it
-  // might fail due to overlapping outputs
+    atomicAdd(&C[wB * out_row + x], Csub);
+    // C[wB * out_row + x] += Csub;
 }
 
 /**

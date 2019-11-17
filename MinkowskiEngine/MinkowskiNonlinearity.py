@@ -53,6 +53,10 @@ class MinkowskiPReLU(MinkowskiModuleBase):
     MODULE = torch.nn.PReLU
 
 
+class MinkowskiELU(MinkowskiModuleBase):
+    MODULE = torch.nn.ELU
+
+
 class MinkowskiSELU(MinkowskiModuleBase):
     MODULE = torch.nn.SELU
 

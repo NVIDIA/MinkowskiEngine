@@ -19,7 +19,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 - Ubuntu 14.04 or higher
 - CUDA 10.0 or higher
-- pytorch 1.2 or higher
+- pytorch == v.1.2
 
 
 ## Installation
@@ -41,7 +41,7 @@ conda create -n py3-mink python=3.7 anaconda
 conda activate py3-mink
 conda install openblas numpy
 conda install -c bioconda google-sparsehash
-conda install pytorch torchvision -c pytorch
+conda install pytorch==1.2 torchvision -c pytorch
 ```
 
 #### 2. Compilation and installation
@@ -61,7 +61,7 @@ Like the anaconda installation, make sure that you install pytorch with the the 
 ```
 sudo apt install libsparsehash-dev libopenblas-dev
 # within a python3 environment
-pip install torch
+pip install torch==1.2
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
 cd MinkowskiEngine
 pip install -r requirements.txt

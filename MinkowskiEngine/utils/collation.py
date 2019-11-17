@@ -60,9 +60,9 @@ def batched_coordinates(coords):
     s = 0
     for b, cs in enumerate(coords):
         if isinstance(cs, np.ndarray):
-            cs = torch.from_numpy(np.floor(cs))
+            cs = torch.from_numpy(np.floor(cs).astype(np.int32))
         else:
-            cs = cs.floor()
+            cs = cs.floor().int()
         cn = len(cs)
         bcoords[s:s + cn, :D] = cs
         bcoords[s:s + cn, D] = b
