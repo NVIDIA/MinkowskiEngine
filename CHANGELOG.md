@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.2.9] - 2019-11-17
+
+### Changed
+
+- Update torch cublas, cusparse handles
+
+
+## [0.2.8] - 2019-10-18
+
+### Changed
+
+- ModelNet40 training
+- open3d v0.8 update
+- Dynamic coordinate generation
+
+
 ## [0.2.7] - 2019-09-04
 
 Use `std::vector` for all internal coordinates to support arbitrary spatial dimensions.
