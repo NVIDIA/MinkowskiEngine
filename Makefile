@@ -59,16 +59,14 @@ STATIC_LIB := $(OBJ_DIR)/lib$(EXTENSION_NAME).a
 LIBRARIES := stdc++ c10 caffe2 torch torch_python _C
 ifneq ($(CPU_ONLY), 1)
 	LIBRARIES += cudart cublas caffe2_gpu c10_cuda
-	# CUDA architecture setting: going with all of them.
-	# For CUDA < 6.0, comment the *_50 through *_61 lines for compatibility.
-	# For CUDA < 8.0, comment the *_60 and *_61 lines for compatibility.
-	CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
-			-gencode arch=compute_35,code=sm_35 \
-			-gencode arch=compute_50,code=sm_50 \
-			-gencode arch=compute_52,code=sm_52 \
-			-gencode arch=compute_60,code=sm_60 \
-			-gencode arch=compute_61,code=sm_61 \
-			-gencode arch=compute_61,code=compute_61
+	CUDA_ARCH := -arch=sm_50 \
+			-gencode=arch=compute_50,code=sm_50 \
+			-gencode=arch=compute_52,code=sm_52 \
+			-gencode=arch=compute_60,code=sm_60 \
+			-gencode=arch=compute_61,code=sm_61 \
+			-gencode=arch=compute_70,code=sm_70 \
+			-gencode=arch=compute_75,code=sm_75 \
+			-gencode=arch=compute_75,code=compute_75
 endif
 
 # BLAS configuration
@@ -83,10 +81,12 @@ ifeq ($(BLAS), mkl)
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
+else ifeq ($(BLAS), cblas)
+	# OpenBLAS
+	LIBRARIES += cblas
 else
 	# ATLAS
-	# Linux simply has cblas and atlas
-	LIBRARIES += cblas atlas
+	LIBRARIES += atlas
 	ATLAS_PATH := $(shell python -c "import numpy.distutils.system_info as si; ai = si.atlas_info(); [print(p) for p in ai.get_lib_dirs()]")
 	LIBRARY_DIRS += $(ATLAS_PATH)
 endif

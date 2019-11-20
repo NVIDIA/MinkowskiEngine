@@ -15,7 +15,7 @@ public:
   GPUMemoryManager(int size) : initial_size(size) { GPUMemoryManager(); }
 
   void reset() { _data.resize_({0}); }
-  void resize(int new_size) { _data.resize_({new_size}); }
+  void resize(int new_size) { _data.resize_({new_size}).contiguous(); }
   int64_t size() { return _data.numel(); }
   Type *data() { return _data.data<Type>(); }
   Type *data(int new_size) {

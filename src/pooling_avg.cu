@@ -225,6 +225,8 @@ void NonzeroAvgPoolingForwardKernelGPU(
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
   // cudaFree(d_in_map);
   // cudaFree(d_ones);
+
+  CUDA_CHECK(cudaGetLastError());
 }
 
 template void NonzeroAvgPoolingForwardKernelGPU<float, int32_t>(
@@ -288,8 +290,9 @@ void NonzeroAvgPoolingBackwardKernelGPU(
             nnz * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel, d_in_map,
             d_out_map);
   }
-
   // cudaFree(d_in_map);
+
+  CUDA_CHECK(cudaGetLastError());
 }
 
 template void NonzeroAvgPoolingBackwardKernelGPU<float, int32_t>(

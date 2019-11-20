@@ -1,19 +1,33 @@
 # Change Log
 
+
+## [nightly] - 2019-11-20
+
+- Force scratch memory space to be contiguous
+- CUDA error checks
+- Update Makefile
+    - Architecture and sm updates for CUDA > 10.0
+    - Optional cblas
+
+
 ## [0.2.9] - 2019-11-17
 
 ### Changed
 
-- Update torch cublas, cusparse handles
+- Pytorch 1.3 support
+    - Update torch cublas, cusparse handles.
+- Global max pooling layers.
+- Minor error fix in the coordinate manager
+    - Fix cases to return `in_coords_key` when stride is identity.
 
 
 ## [0.2.8] - 2019-10-18
 
 ### Changed
 
-- ModelNet40 training
-- open3d v0.8 update
-- Dynamic coordinate generation
+- ModelNet40 training.
+- open3d v0.8 update.
+- Dynamic coordinate generation.
 
 
 ## [0.2.7] - 2019-09-04

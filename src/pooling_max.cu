@@ -171,6 +171,7 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
 
   // cudaFree(d_in_map);
   // cudaFree(d_index);
+  CUDA_CHECK(cudaGetLastError());
 }
 
 template void MaxPoolingForwardKernelGPU<float, int32_t>(
@@ -196,6 +197,8 @@ void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
   // Assume that gradients for input feature are all set to zero
   set_gradient<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
       num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index);
+
+  CUDA_CHECK(cudaGetLastError());
 }
 
 template void MaxPoolingBackwardKernelGPU<float, int32_t>(

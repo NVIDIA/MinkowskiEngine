@@ -99,7 +99,7 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
   // each thread writes one element
   if (y < hA && x < wB)
     atomicAdd(&C[wB * out_row + x], Csub);
-    // C[wB * out_row + x] += Csub;
+  // C[wB * out_row + x] += Csub;
 }
 
 /**
@@ -299,6 +299,7 @@ void ConvolutionForwardKernelGPU(
       d_curr_in_map += curr_num_active;
       d_curr_out_map += curr_num_active;
     }
+    CUDA_CHECK(cudaGetLastError());
   }
 }
 
@@ -419,6 +420,7 @@ void ConvolutionBackwardKernelGPU(
       d_curr_in_map += curr_num_active;
       d_curr_out_map += curr_num_active;
     }
+    CUDA_CHECK(cudaGetLastError());
   }
 }
 

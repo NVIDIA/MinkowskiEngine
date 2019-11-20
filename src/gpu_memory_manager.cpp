@@ -8,7 +8,7 @@ template <> GPUMemoryManager<int8_t>::GPUMemoryManager() {
                      .dtype(torch::kInt8)
                      .device(torch::kCUDA, device_id)
                      .requires_grad(false);
-  _data = torch::zeros({initial_size}, options);
+  _data = torch::zeros({initial_size}, options).contiguous();
 };
 
 
@@ -18,7 +18,7 @@ template <> GPUMemoryManager<int>::GPUMemoryManager() {
                      .dtype(torch::kInt32)
                      .device(torch::kCUDA, device_id)
                      .requires_grad(false);
-  _data = torch::zeros({initial_size}, options);
+  _data = torch::zeros({initial_size}, options).contiguous();
 };
 
 // Explicit template instantiation for tensor dtype specification
@@ -28,7 +28,7 @@ template <> GPUMemoryManager<long>::GPUMemoryManager() {
                      .dtype(torch::kInt64)
                      .device(torch::kCUDA, device_id)
                      .requires_grad(false);
-  _data = torch::zeros({initial_size}, options);
+  _data = torch::zeros({initial_size}, options).contiguous();
 };
 
 // Explicit template instantiation for tensor dtype specification
@@ -38,7 +38,7 @@ template <> GPUMemoryManager<float>::GPUMemoryManager() {
                      .dtype(torch::kFloat)
                      .device(torch::kCUDA, device_id)
                      .requires_grad(false);
-  _data = torch::zeros({initial_size}, options);
+  _data = torch::zeros({initial_size}, options).contiguous();
 };
 
 // Explicit template instantiation for tensor dtype specification
@@ -48,7 +48,7 @@ template <> GPUMemoryManager<double>::GPUMemoryManager() {
                      .dtype(torch::kDouble)
                      .device(torch::kCUDA, device_id)
                      .requires_grad(false);
-  _data = torch::zeros({initial_size}, options);
+  _data = torch::zeros({initial_size}, options).contiguous();
 };
 
 template class GPUMemoryManager<int8_t>;

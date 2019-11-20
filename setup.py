@@ -47,7 +47,8 @@ setup(
             sources=[
                 'pybind/minkowski.cpp',
             ],
-            libraries=['minkowski', 'openblas'],
+            libraries=['minkowski',
+                       'openblas'],  # for other blas, replace openblas
             library_dirs=['objs'],
             # extra_compile_args=['-g']
             # Uncomment the following for CPU_ONLY build

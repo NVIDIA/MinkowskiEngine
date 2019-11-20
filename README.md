@@ -37,7 +37,7 @@ We recommend `python>=3.6` for installation. If you have compilation issues, ple
 First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
 
 ```
-conda create -n py3-mink python=3.7 anaconda
+conda create -n py3-mink python=3.7
 conda activate py3-mink
 conda install openblas numpy
 conda install -c bioconda google-sparsehash
