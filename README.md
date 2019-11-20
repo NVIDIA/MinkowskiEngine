@@ -18,7 +18,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 ## Requirements
 
 - Ubuntu 14.04 or higher
-- CUDA 10.0 or higher
+- CUDA 10.1 or higher
 - pytorch 1.3 or higher
 
 
