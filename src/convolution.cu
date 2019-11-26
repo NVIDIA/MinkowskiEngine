@@ -214,6 +214,9 @@ void ConvolutionForwardKernelGPU(
     const std::vector<std::vector<Itype>> &in_maps,
     const std::vector<std::vector<Itype>> &out_maps, int out_nrows,
     Itype *d_scr, cublasHandle_t cuhandle, cudaStream_t stream) {
+
+  CUDA_CHECK_ARGS(cudaDeviceSynchronize(), ". Error triggered from a previous kernel call.");
+
   // For the in out buffer, use the pre allocated GPU memory space as thrust
   // resize gives segfault. Also initializing it with torch allows us to
   // allocate memory faster and efficiently.
@@ -324,6 +327,9 @@ void ConvolutionBackwardKernelGPU(
     Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> &in_maps,
     const std::vector<std::vector<Itype>> &out_maps, int out_nrows,
     Itype *d_scr, cublasHandle_t cuhandle, cudaStream_t stream) {
+
+  CUDA_CHECK_ARGS(cudaDeviceSynchronize(), ". Error triggered from a previous kernel call.");
+
   int kernel_volume, n_active_in_volume, shared_mem_size = -1;
   Itype *d_in_map, *d_out_map;
 

@@ -121,6 +121,8 @@ void BroadcastForwardKernelGPU(
     throw std::invalid_argument(Formatter() << "Operation not supported: "
                                             << std::to_string(op));
   }
+
+  CUDA_CHECK(cudaGetLastError());
   // cudaFree(d_sorted_out_map);
 }
 
@@ -299,6 +301,8 @@ void BroadcastBackwardKernelGPU(
   }
 
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
+
+  CUDA_CHECK(cudaGetLastError());
 
   // cudaFree(d_sorted_in_map);
   // cudaFree(d_dtype);
