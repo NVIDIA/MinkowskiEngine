@@ -145,7 +145,7 @@ def get_kernel_volume(region_type, kernel_size, region_offset, axis_types,
             kernel_size %
             2).prod() == 1, "kernel_size must be odd for region_type HYPERCROSS"
         # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
-        kernel_volume = int(torch.sum(kernel_size - 1) * dimension + 1)
+        kernel_volume = int(torch.sum(kernel_size - 1) + 1)
 
     elif region_type == RegionType.HYBRID:
         assert region_offset is None, \
@@ -224,7 +224,7 @@ def convert_region_type(region_type,
             kernel_size %
             2).prod() == 1, "kernel_size must be odd for region_type HYPERCROSS"
         # 0th: itself, (1, 2) for 0th dim neighbors, (3, 4) for 1th dim ...
-        kernel_volume = int(torch.sum(kernel_size - 1) * dimension + 1)
+        kernel_volume = int(torch.sum(kernel_size - 1) + 1)
 
     elif region_type == RegionType.HYBRID:
         assert region_offset is None, \
