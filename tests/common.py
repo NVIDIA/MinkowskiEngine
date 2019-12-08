@@ -24,15 +24,16 @@
 import numpy as np
 
 import torch
+import MinkowskiEngine as ME
 
 
-def get_coords(data, batch_index=0):
+def get_coords(data):
     coords = []
     for i, row in enumerate(data):
         for j, col in enumerate(row):
             if col != ' ':
-                coords.append([i, j, batch_index])
-    return coords
+                coords.append([i, j])
+    return np.array(coords)
 
 
 def data_loader(in_feat_channel=3,
@@ -40,14 +41,20 @@ def data_loader(in_feat_channel=3,
                 is_classification=True,
                 seed=-1,
                 batch_size=2):
-    data = ["   X   ", "  X X  ", " XXXXX "]
-
-    coords = get_coords(data, 0)
-    if batch_size > 1:
-        coords.extend(get_coords(data, 1))
     if seed >= 0:
         torch.manual_seed(seed)
-    coords = torch.from_numpy(np.array(coords)).int()
+
+    data = [
+        "   X   ",  #
+        "  X X  ",  #
+        " XXXXX "
+    ]
+
+    # Generate coordinates
+    coords = [get_coords(data) for i in range(batch_size)]
+    coords = ME.utils.batched_coordinates(coords)
+
+    # features and labels
     N = len(coords)
     feats = torch.randn(N, in_feat_channel)
     label = (torch.rand(2 if is_classification else N) * max_label).long()

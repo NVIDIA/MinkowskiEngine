@@ -28,12 +28,12 @@
 
 namespace py = pybind11;
 
-PyCoordsKey::PyCoordsKey(int dim) {
+CoordsKey::CoordsKey(int dim) {
   reset();
   setDimension(dim);
 }
 
-void PyCoordsKey::setTensorStride(const std::vector<int> &tensor_strides) {
+void CoordsKey::setTensorStride(const std::vector<int> &tensor_strides) {
   int D = getDimension();
   ASSERT(D < 0 or (D > 0 and D == tensor_strides.size()),
          "The tensor strides dimension mismatch: ", ArrToString(tensor_strides),
@@ -41,7 +41,7 @@ void PyCoordsKey::setTensorStride(const std::vector<int> &tensor_strides) {
   tensor_strides_ = tensor_strides;
 }
 
-void PyCoordsKey::stride(const std::vector<int> &strides) {
+void CoordsKey::stride(const std::vector<int> &strides) {
   ASSERT(getDimension() == strides.size(),
          "The size of strides: ", ArrToString(strides),
          " does not match the dimension of the PyCoordKey coordinate system: ",
@@ -50,7 +50,7 @@ void PyCoordsKey::stride(const std::vector<int> &strides) {
     tensor_strides_[i] *= strides[i];
 }
 
-void PyCoordsKey::up_stride(const std::vector<int> &strides) {
+void CoordsKey::up_stride(const std::vector<int> &strides) {
   ASSERT(getDimension() == strides.size(),
          "The size of strides: ", ArrToString(strides),
          " does not match the dimension of the PyCoordKey coordinate system: ",
@@ -68,8 +68,8 @@ void PyCoordsKey::up_stride(const std::vector<int> &strides) {
   }
 }
 
-void PyCoordsKey::copy(py::object py_other) {
-  PyCoordsKey *p_other = py_other.cast<PyCoordsKey *>();
+void CoordsKey::copy(py::object py_other) {
+  CoordsKey *p_other = py_other.cast<CoordsKey *>();
   setKey(p_other->key_); // Call first to set the key_set.
 
   setDimension(p_other->D_);
@@ -80,35 +80,33 @@ void PyCoordsKey::copy(py::object py_other) {
   tensor_strides_ = p_other->tensor_strides_;
 }
 
-void PyCoordsKey::reset() {
+void CoordsKey::reset() {
   key_ = 0;
   D_ = -1;
   key_set = false;
   tensor_strides_.clear();
 }
 
-void PyCoordsKey::setKey(uint64_t key) {
+void CoordsKey::setKey(uint64_t key) {
   key_ = key;
   key_set = true;
 }
 
-void PyCoordsKey::setDimension(int dim) {
+void CoordsKey::setDimension(int dim) {
   ASSERT(dim > 0, "The dimension should be a positive integer, you put: ",
          std::to_string(dim), ".");
   D_ = dim;
   tensor_strides_.resize(D_);
 }
 
-uint64_t PyCoordsKey::getKey() {
-  ASSERT(key_set, "PyCoordsKey: Key Not set")
+uint64_t CoordsKey::getKey() {
+  ASSERT(key_set, "CoordsKey: Key Not set")
   return key_;
 }
 
-uint64_t PyCoordsKey::getDimension() {
-  return D_;
-}
+uint64_t CoordsKey::getDimension() { return D_; }
 
-std::string PyCoordsKey::toString() const {
+std::string CoordsKey::toString() const {
   return "< CoordsKey, key: " + std::to_string(key_) +
          ", tensor_stride: " + ArrToString(tensor_strides_) +
          " in dimension: " + std::to_string(D_) + "> ";

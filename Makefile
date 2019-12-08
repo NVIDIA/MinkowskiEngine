@@ -56,7 +56,7 @@ CU_OBJS := $(patsubst $(SRC_DIR)/%.cu,$(OBJ_DIR)/cuda/%.o,$(CU_SRCS))
 STATIC_LIB := $(OBJ_DIR)/lib$(EXTENSION_NAME).a
 
 # We will also explicitly add stdc++ to the link target.
-LIBRARIES := stdc++ c10 caffe2 torch torch_python _C
+LIBRARIES := stdc++ c10 caffe2 torch torch_python _C tbb tbbmalloc
 ifneq ($(CPU_ONLY), 1)
 	LIBRARIES += cudart cublas caffe2_gpu c10_cuda
 	CUDA_ARCH := -arch=sm_50 \

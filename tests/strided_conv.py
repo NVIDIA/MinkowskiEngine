@@ -28,8 +28,7 @@ from urllib.request import urlretrieve
 try:
     import open3d as o3d
 except ImportError:
-    raise ImportError(
-        'Please install open3d with `pip install open3d`.')
+    raise ImportError('Please install open3d with `pip install open3d`.')
 
 import torch
 import MinkowskiEngine as ME
@@ -67,7 +66,7 @@ def generate_input_sparse_tensor(file_name, voxel_size=0.05, batch_size=1):
     coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
 
     # Normalize features and create a sparse tensor
-    return ME.SparseTensor(features - 0.5, coords=coordinates).to(device)
+    return features, coordinates
 
 
 if __name__ == '__main__':
@@ -87,11 +86,21 @@ if __name__ == '__main__':
                     dimension=3).to(device)
 
     # Measure time
-    print('Forward')
-    sinput = generate_input_sparse_tensor(
+    print('Initialization time')
+    features, coordinates = generate_input_sparse_tensor(
         config.file_name,
         voxel_size=config.voxel_size,
         batch_size=config.batch_size)
+
+    timer = Timer()
+    for i in range(20):
+        timer.tic()
+        sinput = ME.SparseTensor(features - 0.5, coords=coordinates).to(device)
+        timer.toc()
+
+    print(f'{timer.min_time:.12f} for initialization of {len(sinput)} voxels')
+
+    print('Forward')
     for k, conv in all_convs.items():
         timer = Timer()
         sinput._F = torch.rand(len(sinput), k[1]).to(device)

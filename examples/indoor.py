@@ -117,7 +117,7 @@ def generate_input_sparse_tensor(file_name, voxel_size=0.05):
     coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
 
     # Normalize features and create a sparse tensor
-    return ME.SparseTensor(features - 0.5, coords=coordinates).to(device)
+    return coordinates, features - 0.5
 
 
 if __name__ == '__main__':
@@ -133,12 +133,13 @@ if __name__ == '__main__':
     # Measure time
     for voxel_size in [0.1, 0.05, 0.02]:
         timer = Timer()
-        sinput = generate_input_sparse_tensor(
+        coordinates, features = generate_input_sparse_tensor(
             config.file_name, voxel_size=voxel_size)
 
         # Feed-forward pass and get the prediction
         for i in range(4):
             timer.tic()
+            sinput = ME.SparseTensor(features, coords=coordinates).to(device)
             soutput = model(sinput)
             timer.toc()
         print(

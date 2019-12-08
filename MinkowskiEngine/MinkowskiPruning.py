@@ -37,10 +37,7 @@ class MinkowskiPruningFunction(Function):
     def forward(ctx, in_feat, use_feat, in_coords_key, out_coords_key,
                 coords_manager):
         assert in_feat.size(0) == use_feat.size(0)
-        assert isinstance(use_feat, torch.ByteTensor) \
-            or isinstance(use_feat, torch.BoolTensor), "use_feat must be a bool/byte tensor."
-        if isinstance(use_feat, torch.BoolTensor):
-            use_feat = use_feat.byte()
+        assert isinstance(use_feat, torch.BoolTensor), "use_feat must be a bool tensor."
         if not in_feat.is_contiguous():
             in_feat = in_feat.contiguous()
         if not use_feat.is_contiguous():

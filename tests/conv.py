@@ -94,9 +94,7 @@ class TestConvolution(unittest.TestCase):
         output = conv(input)
         print(output)
 
-        print(conv.region_offset_)
-        kernel_map = input.coords_man.get_kernel_map(
-            1, 2, stride=2, kernel_size=3)
+        kernel_map = input.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
         print(kernel_map)
 
         # Check backward
@@ -129,16 +127,14 @@ class TestConvolutionTranspose(unittest.TestCase):
             kernel_size=3,
             stride=2,
             has_bias=True,
-            dimension=D).to(device)
-        conv = conv.double()
+            dimension=D).double().to(device)
         conv_tr = MinkowskiConvolutionTranspose(
             out_channels,
             in_channels,
             kernel_size=3,
             stride=2,
             has_bias=True,
-            dimension=D).to(device)
-        conv_tr = conv_tr.double()
+            dimension=D).double().to(device)
         input = conv(input)
         output = conv_tr(input)
         print(output)
@@ -160,6 +156,10 @@ class TestConvolutionTranspose(unittest.TestCase):
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
+        print(input.mapping)
+        cm = input.coords_man
+        ikey = cm.get_coords_key(1)
+
         # Initialize context
         conv = MinkowskiConvolution(
             in_channels,
@@ -167,19 +167,21 @@ class TestConvolutionTranspose(unittest.TestCase):
             kernel_size=3,
             stride=2,
             has_bias=True,
-            dimension=D)
-        conv = conv.double()
+            dimension=D).double()
         conv_tr = MinkowskiConvolutionTranspose(
             out_channels,
             in_channels,
             kernel_size=2,
             stride=2,
             has_bias=True,
-            dimension=D)
-        conv_tr = conv_tr.double()
+            dimension=D).double()
+
+        print('Initial input: ', input)
         input = conv(input)
+        print('Conv output: ', input)
+
         output = conv_tr(input)
-        print(output)
+        print('Conv tr output: ', output)
 
         # Check backward
         fn = MinkowskiConvolutionTransposeFunction()

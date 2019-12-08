@@ -71,8 +71,6 @@ def prep_args(tensor_stride, stride, kernel_size, dilation, region_type, D=-1):
         kernel_size > 0
     ), f"kernel_size must be a positive integer, provided {kernel_size}"
     assert D > 0, f"dimension must be a positive integer, {D}"
-    assert isinstance(region_type,
-                      RegionType), "region offset must be of type RegionType"
     tensor_stride = convert_to_int_tensor(tensor_stride, D)
     stride = convert_to_int_tensor(stride, D)
     kernel_size = convert_to_int_tensor(kernel_size, D)

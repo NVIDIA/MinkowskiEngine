@@ -31,16 +31,15 @@
 
 #include <pybind11/pybind11.h>
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void GlobalPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                              at::Tensor num_nonzero,
                              py::object py_in_coords_key,
                              py::object py_out_coords_key,
                              py::object py_coords_manager, bool use_avg) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
-  auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
-      py_in_coords_key, py_out_coords_key);
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  auto in_out =
+      p_coords_manager->getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, in_feat.size(1)});
@@ -48,44 +47,41 @@ void GlobalPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
   num_nonzero.resize_({out_nrows});
   num_nonzero.zero_();
 
-  NonzeroAvgPoolingForwardKernelCPU<Dtype, Itype>(
+  NonzeroAvgPoolingForwardKernelCPU<Dtype, int>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), num_nonzero.data<Dtype>(),
-      in_feat.size(1), std::get<0>(in_out), std::get<1>(in_out), out_nrows,
-      use_avg);
+      in_feat.size(1), get<0>(in_out), get<1>(in_out), out_nrows, use_avg);
 }
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                               at::Tensor grad_out_feat, at::Tensor num_nonzero,
                               py::object py_in_coords_key,
                               py::object py_out_coords_key,
                               py::object py_coords_manager, bool use_avg) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
-  NonzeroAvgPoolingBackwardKernelCPU<Dtype, Itype>(
+  NonzeroAvgPoolingBackwardKernelCPU<Dtype, int>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       num_nonzero.data<Dtype>(), in_feat.size(1),
-      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
+      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
       use_avg);
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                              at::Tensor num_nonzero,
                              py::object py_in_coords_key,
                              py::object py_out_coords_key,
                              py::object py_coords_manager, bool use_avg) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
-  auto in_out = p_coords_manager->setupAndReturnOriginInOutPerKernel(
-      py_in_coords_key, py_out_coords_key);
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  auto in_out =
+      p_coords_manager->getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, in_feat.size(1)});
@@ -93,13 +89,13 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   num_nonzero.resize_({out_nrows});
   num_nonzero.zero_();
 
-  // int dtype_mult = dtypeMultiplier<Dtype, Itype>(), nnz = 0;
+  // int dtype_mult = dtypeMultiplier<Dtype, int>(), nnz = 0;
   int nnz = 0;
-  for (const auto &map : std::get<0>(in_out))
+  for (const auto &map : get<0>(in_out))
     nnz += map.size();
 
-  Itype *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz + // in_out map
-                                                       out_nrows + 1 // csr_row
+  int *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz +     // in_out map
+                                                     out_nrows + 1 // csr_row
   );
 
   Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
@@ -112,21 +108,20 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
   cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
 
-  NonzeroAvgPoolingForwardKernelGPU<Dtype, Itype>(
+  NonzeroAvgPoolingForwardKernelGPU<Dtype, int>(
       in_feat.data<Dtype>(), in_feat.size(0), out_feat.data<Dtype>(), out_nrows,
-      num_nonzero.data<Dtype>(), in_feat.size(1), std::get<0>(in_out),
-      std::get<1>(in_out), use_avg, d_scr, d_dscr, handle,
+      num_nonzero.data<Dtype>(), in_feat.size(1), get<0>(in_out),
+      get<1>(in_out), use_avg, d_scr, d_dscr, handle,
       at::cuda::getCurrentCUDAStream());
 }
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                               at::Tensor grad_out_feat, at::Tensor num_nonzero,
                               py::object py_in_coords_key,
                               py::object py_out_coords_key,
                               py::object py_coords_manager, bool use_avg) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
 
@@ -134,56 +129,56 @@ void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat.zero_();
 
   int nnz = 0;
-  for (const auto &map : p_coords_manager->_out_maps[map_key])
+  for (const auto &map : p_coords_manager->out_maps[map_key])
     nnz += map.size();
 
-  Itype *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz);
+  int *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz);
 
-  NonzeroAvgPoolingBackwardKernelGPU<Dtype, Itype>(
+  NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       grad_out_feat.size(0), num_nonzero.data<Dtype>(), in_feat.size(1),
-      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
+      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
       use_avg, d_scr, at::cuda::getCurrentCUDAStream());
 }
 #endif
 
-template void GlobalPoolingForwardCPU<float, int32_t>(
+template void GlobalPoolingForwardCPU<float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void GlobalPoolingForwardCPU<double, int32_t>(
+template void GlobalPoolingForwardCPU<double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void GlobalPoolingBackwardCPU<float, int32_t>(
+template void GlobalPoolingBackwardCPU<float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
 
-template void GlobalPoolingBackwardCPU<double, int32_t>(
+template void GlobalPoolingBackwardCPU<double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
 
 #ifndef CPU_ONLY
-template void GlobalPoolingForwardGPU<float, int32_t>(
+template void GlobalPoolingForwardGPU<float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void GlobalPoolingForwardGPU<double, int32_t>(
+template void GlobalPoolingForwardGPU<double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void GlobalPoolingBackwardGPU<float, int32_t>(
+template void GlobalPoolingBackwardGPU<float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
 
-template void GlobalPoolingBackwardGPU<double, int32_t>(
+template void GlobalPoolingBackwardGPU<double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);

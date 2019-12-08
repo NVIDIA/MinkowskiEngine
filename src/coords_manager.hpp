@@ -32,132 +32,132 @@
 
 #include <torch/extension.h>
 
-#include "instantiation.hpp"
+#include "concurrent_coordsmap.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 
 #ifndef CPU_ONLY
 #include "gpu_memory_manager.hpp"
-#endif
+#endif // CPU_ONLY
 
-template <typename Itype> class CoordsManager {
+inline long computeKernelVolume(int region_type, const vector<int> &kernel_size,
+                                int n_offset) {
+  int kernel_volume;
+  if (region_type == 0) { // Hypercube
+    kernel_volume = 1;
+    for (auto k : kernel_size)
+      kernel_volume *= k;
+  } else if (region_type == 1) { // Hypercross
+    kernel_volume = 1;
+    for (auto k : kernel_size)
+      kernel_volume += k - 1;
+  } else if (region_type == 2) {
+    kernel_volume = n_offset;
+  } else {
+    throw invalid_argument("Invalid region type");
+  }
+  return kernel_volume;
+}
+
+inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
+                                          const vector<int> &strides,
+                                          bool is_transpose) {
+  vector<int> out_tensor_strides;
+  ASSERT(tensor_strides.size() == strides.size(),
+         "The dimension of tensor_stride: ", ArrToString(tensor_strides),
+         " does not match the dimension of strides: ", ArrToString(strides));
+  for (int i = 0; i < strides.size(); i++) {
+    if (is_transpose) {
+      ASSERT(tensor_strides[i] % strides[i] == 0,
+             "The output tensor stride is not divisible by ",
+             "up_strides. tensor stride: ", ArrToString(tensor_strides),
+             ", up_strides: ", ArrToString(strides));
+      out_tensor_strides.push_back(tensor_strides[i] / strides[i]);
+    } else
+      out_tensor_strides.push_back(tensor_strides[i] * strides[i]);
+  }
+  return out_tensor_strides;
+}
+
+class CoordsManager {
 public:
-  CoordsManager();
+  // Variables
+  //
+  // Coordinate hash key to coordinate hash map
+  unordered_map<uint64_t, ConcurrentCoordsMap> coords_maps;
+  set<int> batch_indices;
+
+  // In to out index mapping for each kernel, pooling
+  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
+  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
+
+  CoordsManager(){};
   ~CoordsManager() { clear(); }
+
+  void printDiagnostics(py::object py_coords_key);
 
   bool existsCoordsKey(uint64_t coords_key);
   bool existsCoordsKey(py::object py_coords_key);
   int getCoordsSize(uint64_t coords_key);
   int getCoordsSize(py::object py_coords_key);
-  uint64_t getCoordsKey(const std::vector<int> &tensor_strides);
+  uint64_t getCoordsKey(const vector<int> &tensor_strides);
 
   void getCoords(at::Tensor coords, py::object py_coords_key);
-  void getKernelMap(at::Tensor kernel_map, std::vector<int> tensor_strides,
-                    std::vector<int> strides, std::vector<int> kernel_sizes,
-                    std::vector<int> dilations, int region_type,
+  void getKernelMap(at::Tensor kernel_map, vector<int> tensor_strides,
+                    vector<int> strides, vector<int> kernel_sizes,
+                    vector<int> dilations, int region_type,
                     py::object py_in_coords_key, py::object py_out_coords_key,
-                    bool is_transpose);
+                    bool is_transpose, bool is_pool);
 
   // New coords map initialzation entry
-  uint64_t initializeCoords(at::Tensor coords,
-                            const std::vector<int> &tensor_strides,
-                            bool enforce_creation);
-  uint64_t initializeCoords(at::Tensor coords, py::object py_coords_key,
-                            bool enforce_creation);
+  uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
+                            const vector<int> &tensor_strides,
+                            bool force_creation, bool force_remap,
+                            bool allow_duplicate);
+
+  uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
+                            py::object py_coords_key, bool force_creation,
+                            bool force_remap, bool allow_duplicate);
+
   // New coords map given an input
-  uint64_t createOutCoords(uint64_t coords_key,
-                           const std::vector<int> &tensor_strides,
-                           const std::vector<int> &strides);
-  uint64_t createTransposedOutCoords(uint64_t coords_key,
-                                     const std::vector<int> &tensor_strides,
-                                     const std::vector<int> &strides,
-                                     std::vector<int> kernel_sizes,
-                                     std::vector<int> dilations,
-                                     int region_type, at::Tensor offsets,
-                                     bool generate_new_coords);
+  uint64_t createStridedCoords(uint64_t coords_key,
+                               const vector<int> &tensor_strides,
+                               const vector<int> &strides, bool force_creation);
+  uint64_t createTransposedStridedRegionCoords(
+      uint64_t coords_key, const vector<int> &tensor_strides,
+      const vector<int> &strides, vector<int> kernel_sizes,
+      vector<int> dilations, int region_type, at::Tensor offsets,
+      bool force_creation);
+  uint64_t createPrunedCoords(at::Tensor use_feat, py::object py_in_coords_key,
+                              py::object py_out_coords_key);
   uint64_t createOriginCoords(int D);
-  uint64_t createPruneCoords(at::Tensor use_feat, py::object py_in_coords_key,
-                             py::object py_out_coords_key);
-
-  // Helper functions for hashmap creation that returns the hashmap and the
-  // batch indieces
-  std::tuple<CoordsHashMap<Itype>, std::set<Itype>, std::vector<Itype>>
-  createCoordsHashMap(at::Tensor coords);
-
-  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
-  createOutCoordsHashCoordsPair(uint64_t coords_key,
-                                const std::vector<int> &tensor_strides,
-                                const std::vector<int> &strides);
-
-  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
-  createTransposedOutCoordsHashCoordsPair(
-      uint64_t coords_key, const std::vector<int> &tensor_strides,
-      const std::vector<int> &strides, std::vector<int> kernel_sizes,
-      std::vector<int> dilations, int region_type, at::Tensor offsets);
-
-  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
-  createOriginCoordsHashMap(int D);
-  std::pair<CoordsHashMap<Itype>, std::vector<Itype>>
-  createPrunedCoordsHashMap(uint64_t coords_key, at::Tensor use_feat);
 
   // Mappings
-  InOutMapKey getMapHashKey(std::vector<int> tensor_strides,
-                            std::vector<int> strides,
-                            std::vector<int> kernel_sizes,
-                            std::vector<int> dilations, int region_type,
-                            py::object py_in_coords_key,
-                            py::object py_out_coords_key, bool is_transpose);
+  InOutMapKey getMapHashKey(vector<int> tensor_strides, vector<int> strides,
+                            vector<int> kernel_sizes, vector<int> dilations,
+                            int region_type, py::object py_in_coords_key,
+                            py::object py_out_coords_key, bool is_transpose,
+                            bool is_pool);
   InOutMapKey getOriginMapHashKey(py::object py_in_coords_key,
                                   py::object py_out_coords_key);
-  InOutMapKey getOriginMapHashKeyCheck(py::object py_in_coords_key,
-                                       py::object py_out_coords_key);
-
-  // Kernel Maps
-  std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-  createInOutPerKernel(const uint64_t in_coords_key,
-                       const uint64_t out_coords_key,
-                       const std::vector<int> &in_tensor_strides,
-                       const std::vector<int> &kernel_size,
-                       const std::vector<int> &dilations, int region_type,
-                       at::Tensor offsets);
-
-  std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-  createInOutPerKernelTranspose(const uint64_t in_coords_key,
-                                const uint64_t out_coords_key,
-                                const std::vector<int> &out_tensor_strides,
-                                const std::vector<int> &kernel_size,
-                                const std::vector<int> &dilations,
-                                int region_type, at::Tensor offsets);
-
-  std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-  createGlobalReductionInOutMap(const uint64_t in_coords_key,
-                                const uint64_t out_coords_key);
-
-  std::pair<InOutMapPerKernel<Itype>, InOutMapPerKernel<Itype>>
-  createPruningInOutMap(const uint64_t in_coords_key,
-                        const uint64_t out_coords_key);
 
   // Wrapper functions for setting up coords and returning maps
-  std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnInOutPerKernel(const std::vector<int> &tensor_strides,
-                               const std::vector<int> &strides,
-                               const std::vector<int> &kernel_sizes,
-                               const std::vector<int> &dilations,
-                               int region_type, const at::Tensor &offsets,
-                               py::object py_in_coords_key,
-                               py::object py_out_coords_key, bool is_transpose,
-                               bool generate_new_coords = false);
+  InOutMapsRefPair<int>
+  getInOutMaps(const vector<int> &tensor_strides, const vector<int> &strides,
+               const vector<int> &kernel_sizes, const vector<int> &dilations,
+               int region_type, const at::Tensor &offsets,
+               py::object py_in_coords_key, py::object py_out_coords_key,
+               bool is_transpose, bool is_pool = false,
+               bool generate_new_coords = false);
 
-  std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnOriginInOutPerKernel(py::object py_in_coords_key,
-                                     py::object py_out_coords_key);
+  InOutMapsRefPair<int> getOriginInOutMaps(py::object py_in_coords_key,
+                                           py::object py_out_coords_key);
 
-  std::pair<InOutMapPerKernel<Itype> &, InOutMapPerKernel<Itype> &>
-  setupAndReturnPruningInOutPerKernel(at::Tensor use_feat,
-                                      py::object py_in_coords_key,
-                                      py::object py_out_coords_key);
+  InOutMapsRefPair<int> getPruningInOutMaps(at::Tensor use_feat,
+                                            py::object py_in_coords_key,
+                                            py::object py_out_coords_key);
 
-  int getMaxMapSize(const InOutMapPerKernel<Itype> &in_maps) {
+  int getMaxMapSize(const InOutMaps<int> &in_maps) {
     int max_n_active = -1;
     for (auto &map : in_maps)
       if (max_n_active < (int)(map.size()))
@@ -165,57 +165,39 @@ public:
     return max_n_active;
   }
 
-  int getMaxMapSize(const std::pair<InOutMapPerKernel<Itype> &,
-                                    InOutMapPerKernel<Itype> &> &in_out) {
-    return getMaxMapSize(std::get<0>(in_out));
+  int getMaxMapSize(const pair<InOutMaps<int> &, InOutMaps<int> &> &in_out) {
+    return getMaxMapSize(in_out.first);
   }
 
-  std::string toString() const;
+  uint64_t getRandomCoordsKey();
+
+  string toString() const;
   void clear() {
-    _coords_hashmaps.clear();
-    _coords_pairs.clear();
-    _in_maps.clear();
-    _out_maps.clear();
+    coords_maps.clear();
+    in_maps.clear();
+    out_maps.clear();
   }
 
-  std::pair<std::vector<Itype>, std::vector<std::vector<Itype>>>
+  pair<vector<int>, vector<vector<int>>>
   getRowIndicesPerBatch(py::object py_in_coords_key,
                         py::object py_out_coords_key);
 
-  // Variables
-  //
-  // Coordinate hash key to coordinate hash map
-  std::unordered_map<uint64_t, CoordsHashMap<Itype>> _coords_hashmaps;
-  // Coordinate hash key to <int dimension + 1, coordinates> pairs
-  // dimension is used for raw pointer stride
-  std::unordered_map<uint64_t, std::pair<int, std::vector<Itype>>>
-      _coords_pairs;
-
-  // In to out index mapping for each kernel, pooling
-  std::unordered_map<InOutMapKey, InOutMapPerKernel<Itype>, InOutMapKeyHash>
-      _in_maps;
-  std::unordered_map<InOutMapKey, InOutMapPerKernel<Itype>, InOutMapKeyHash>
-      _out_maps;
-
-  // Batch indices must be consistent throughout the lifetime of the coordsman
-  std::vector<Itype> _batch_indices;
-
 #ifndef CPU_ONLY
   // GPU memory manager
-  GPUMemoryManager<Itype> _gpu_memory_manager;
+  GPUMemoryManager<int> _gpu_memory_manager;
   GPUMemoryManager<int8_t> _dgpu_memory_manager;
 
   // Coordinates on gpu memory (ncols, pointer) pair
-  std::unordered_map<uint64_t, std::pair<int, Itype *>> _gpu_coords;
+  unordered_map<uint64_t, pair<int, int *>> _gpu_coords;
 
   // resize and return data_pointer
-  Itype *getScratchGPUMemory(int size) {
-    return static_cast<Itype *>(_gpu_memory_manager.data(size));
+  int *getScratchGPUMemory(int size) {
+    return static_cast<int *>(_gpu_memory_manager.data(size));
   }
   int8_t *getDScratchGPUMemory(int size) {
     return _dgpu_memory_manager.data(size);
   }
-#endif
+#endif // CPU_ONLY
 };
 
-#endif
+#endif // COORDS_MAN

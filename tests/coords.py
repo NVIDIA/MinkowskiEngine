@@ -60,10 +60,42 @@ class Test(unittest.TestCase):
         key.setTensorStride(1)
 
         cm = CoordsManager(D=1)
-        coords = (torch.rand(5, 2) * 100).int()
-        cm.initialize(coords, key)
-        print(cm.get_row_indices_per_batch(key))
-        print(key)
+        coords = (torch.rand(20, 2) * 10).int()
+        print(coords)
+        unique_coords = torch.unique(coords, dim=0)
+        print('Num unique: ', unique_coords.shape)
+
+        # Initialize map
+        mapping = cm.initialize(
+            coords, key, force_remap=True, allow_duplicates=False)
+        print(mapping, len(mapping))
+        cm.print_diagnostics(key)
+        print(cm)
+
+        # Create a strided map
+        stride_key = cm.stride(key, [4])
+        print('Stride: ', cm.get_coords(stride_key))
+        cm.print_diagnostics(key)
+        print(cm)
+
+        # Create a transposed stride map
+        transposed_key = cm.transposed_stride(
+            stride_key, [2], [3], [1])
+        print('Transposed Stride: ', cm.get_coords(transposed_key))
+        print(cm)
+
+        # Create a transposed stride map
+        transposed_key = cm.transposed_stride(
+            stride_key, [2], [3], [1], force_creation=True)
+        print('Forced Transposed Stride: ', cm.get_coords(transposed_key))
+        print(cm)
+
+        # Create a reduction map
+        key = cm.reduce()
+        print('Reduction: ', cm.get_coords(key))
+        print(cm)
+
+        print('Reduction mapping: ', cm.get_row_indices_per_batch(stride_key))
         print(cm)
 
 

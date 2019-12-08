@@ -24,4 +24,4 @@ public:
   }
 };
 
-#endif
+#endif // GPU_MEMORY_MANAGER

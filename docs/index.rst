@@ -44,6 +44,7 @@ Table of Contents
    :caption: Miscellanea
 
    issues
+   guides
    benchmark
 
 

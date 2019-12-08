@@ -47,12 +47,16 @@ setup(
             sources=[
                 'pybind/minkowski.cpp',
             ],
-            libraries=['minkowski',
-                       'openblas'],  # for other blas, replace openblas
+            libraries=[
+                'minkowski',
+                'openblas',  # for other blas, replace openblas
+                'tbb',
+                'tbbmalloc'
+            ],
             library_dirs=['objs'],
-            # extra_compile_args=['-g']
-            # Uncomment the following for CPU_ONLY build
-            # extra_compile_args=['-DCPU_ONLY']
+            # extra_compile_args=['-g']  # Uncomment for debugging
+            extra_compile_args=['-Wno-deprecated-declarations'],
+            # extra_compile_args=['-DCPU_ONLY']  # Uncomment the following for CPU_ONLY build
         )
     ],
     cmdclass={'build_ext': BuildExtension},

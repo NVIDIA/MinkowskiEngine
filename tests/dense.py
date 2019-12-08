@@ -52,8 +52,14 @@ class TestDense(unittest.TestCase):
 
         # Convert to a dense tensor
         dense_output, min_coord, tensor_stride = output.dense()
+        print(dense_output.shape)
+        print(dense_output)
+        print(min_coord)
+        print(tensor_stride)
 
-        dense_output, min_coord, tensor_stride = output.dense(min_coords=torch.IntTensor([-2, -2]), max_coords=torch.IntTensor([4, 4]))
+        dense_output, min_coord, tensor_stride = output.dense(
+            min_coords=torch.IntTensor([-2, -2]),
+            max_coords=torch.IntTensor([4, 4]))
 
         print(dense_output)
         print(min_coord)

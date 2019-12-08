@@ -26,6 +26,24 @@
 #define UTILS
 #include <sstream>
 
+template <typename T> std::string ArrToString(T arr) {
+  std::string buf = "[";
+  for (size_t i = 0; i < arr.size(); i++) {
+    buf += (i ? ", " : "") + std::to_string(arr[i]);
+  }
+  buf += "]";
+  return buf;
+}
+
+template <typename T> std::string PtrToString(T *ptr, int size) {
+  std::string buf = "[";
+  for (size_t i = 0; i < size; i++) {
+    buf += (i ? ", " : "") + std::to_string(ptr[i]);
+  }
+  buf += "]";
+  return buf;
+}
+
 class Formatter {
 public:
   Formatter() {}
@@ -66,6 +84,17 @@ private:
       formatter << " assertion (" #condition << ") faild. ";                   \
       formatter.append(__VA_ARGS__);                                           \
       throw std::runtime_error(formatter.str());                               \
+    }                                                                          \
+  }
+
+#define WARNING(condition, ...)                                                \
+  {                                                                            \
+    if (!(condition)) {                                                        \
+      Formatter formatter;                                                     \
+      formatter << __FILE__ << ":" << __LINE__ << ",";                         \
+      formatter << " assertion (" #condition << ") faild. ";                   \
+      formatter.append(__VA_ARGS__);                                           \
+      std::cerr << formatter.str() << std::endl;                               \
     }                                                                          \
   }
 

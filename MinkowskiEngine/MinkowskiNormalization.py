@@ -126,7 +126,7 @@ class MinkowskiInstanceNormFunction(Function):
         coords_manager = ctx.coords_manager
 
         # To prevent the memory leakage, compute the norm again
-        inv_std, norm_feat = ctx.saved_variables
+        inv_std, norm_feat = ctx.saved_tensors
 
         gpool_forward = getattr(MEB,
                                 'GlobalPoolingForward' + get_postfix(out_grad))

@@ -28,42 +28,37 @@
 #include "pruning.cuh"
 #endif
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void PruningForwardCPU(at::Tensor in_feat,  // CPU feat
                        at::Tensor out_feat, // CPU out feat
                        at::Tensor use_feat, // uint8 CPU data
                        py::object py_in_coords_key,
                        py::object py_out_coords_key,
                        py::object py_coords_manager) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
 
   // Get the total number of coords
   at::Tensor sum = use_feat.sum();
   int64_t tot_n = sum.item<int64_t>();
-  if (tot_n < 1)
-    throw std::invalid_argument(Formatter()
-                                << "Invalid total number of features"
-                                << std::to_string(tot_n));
+  ASSERT(tot_n > 0, "Invalid total number of features", to_string(tot_n));
   out_feat.resize_({tot_n, in_feat.size(1)});
   out_feat.zero_();
 
-  auto in_out = p_coords_manager->setupAndReturnPruningInOutPerKernel(
+  auto in_out = p_coords_manager->getPruningInOutMaps(
       use_feat, py_in_coords_key, py_out_coords_key);
 
-  PruningForwardKernelCPU<Dtype, Itype>(
-      in_feat.data<Dtype>(), out_feat.data<Dtype>(), in_feat.size(1),
-      std::get<0>(in_out), std::get<1>(in_out));
+  PruningForwardKernelCPU<Dtype, int>(in_feat.data<Dtype>(),
+                                      out_feat.data<Dtype>(), in_feat.size(1),
+                                      get<0>(in_out), get<1>(in_out));
 }
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void PruningBackwardCPU(at::Tensor grad_in_feat,  // CPU feat
                         at::Tensor grad_out_feat, // CPU out feat
                         py::object py_in_coords_key,
                         py::object py_out_coords_key,
                         py::object py_coords_manager) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
 
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
@@ -72,50 +67,43 @@ void PruningBackwardCPU(at::Tensor grad_in_feat,  // CPU feat
   grad_in_feat.resize_({in_nrows, nchannel});
   grad_in_feat.zero_();
 
-  PruningBackwardKernelCPU<Dtype, Itype>(grad_in_feat.data<Dtype>(),
-                                         grad_out_feat.data<Dtype>(), nchannel,
-                                         p_coords_manager->_in_maps[map_key],
-                                         p_coords_manager->_out_maps[map_key]);
+  PruningBackwardKernelCPU<Dtype, int>(
+      grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
+      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void PruningForwardGPU(at::Tensor in_feat,  // GPU feat
                        at::Tensor out_feat, // GPU out feat
                        at::Tensor use_feat, // uint8 CPU data
                        py::object py_in_coords_key,
                        py::object py_out_coords_key,
                        py::object py_coords_manager) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
 
   // Get the total number of coords
   at::Tensor sum = use_feat.sum();
   int64_t tot_n = sum.item<int64_t>();
-  if (tot_n < 1)
-    throw std::invalid_argument(Formatter()
-                                << "Invalid total number of features"
-                                << std::to_string(tot_n));
+  ASSERT(tot_n > 0, "Invalid total number of features", to_string(tot_n));
   out_feat.resize_({tot_n, in_feat.size(1)});
   out_feat.zero_();
 
-  auto in_out = p_coords_manager->setupAndReturnPruningInOutPerKernel(
+  auto in_out = p_coords_manager->getPruningInOutMaps(
       use_feat, py_in_coords_key, py_out_coords_key);
 
-  PruningForwardKernelGPU<Dtype, Itype>(
+  PruningForwardKernelGPU<Dtype, int>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), in_feat.size(1),
-      std::get<0>(in_out), std::get<1>(in_out),
-      at::cuda::getCurrentCUDAStream());
+      get<0>(in_out), get<1>(in_out), at::cuda::getCurrentCUDAStream());
 }
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
                         at::Tensor grad_out_feat, // GPU out feat
                         py::object py_in_coords_key,
                         py::object py_out_coords_key,
                         py::object py_coords_manager) {
-  CoordsManager<Itype> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<Itype> *>();
+  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
 
   InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
@@ -124,63 +112,59 @@ void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
   grad_in_feat.resize_({in_nrows, nchannel});
   grad_in_feat.zero_();
 
-  PruningBackwardKernelGPU<Dtype, Itype>(
+  PruningBackwardKernelGPU<Dtype, int>(
       grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
-      p_coords_manager->_in_maps[map_key], p_coords_manager->_out_maps[map_key],
+      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
       at::cuda::getCurrentCUDAStream());
 }
 #endif
 
-template void PruningForwardCPU<float, int32_t>(at::Tensor in_feat,
-                                                at::Tensor out_feat,
-                                                at::Tensor use_feat,
-                                                py::object py_in_coords_key,
-                                                py::object py_out_coords_key,
-                                                py::object py_coords_manager);
+template void PruningForwardCPU<float>(at::Tensor in_feat, at::Tensor out_feat,
+                                       at::Tensor use_feat,
+                                       py::object py_in_coords_key,
+                                       py::object py_out_coords_key,
+                                       py::object py_coords_manager);
 
-template void PruningForwardCPU<double, int32_t>(at::Tensor in_feat,
-                                                 at::Tensor out_feat,
-                                                 at::Tensor use_feat,
-                                                 py::object py_in_coords_key,
-                                                 py::object py_out_coords_key,
-                                                 py::object py_coords_manager);
+template void PruningForwardCPU<double>(at::Tensor in_feat, at::Tensor out_feat,
+                                        at::Tensor use_feat,
+                                        py::object py_in_coords_key,
+                                        py::object py_out_coords_key,
+                                        py::object py_coords_manager);
 
-template void PruningBackwardCPU<float, int32_t>(at::Tensor grad_in_feat,
-                                                 at::Tensor grad_out_feat,
-                                                 py::object py_in_coords_key,
-                                                 py::object py_out_coords_key,
-                                                 py::object py_coords_manager);
+template void PruningBackwardCPU<float>(at::Tensor grad_in_feat,
+                                        at::Tensor grad_out_feat,
+                                        py::object py_in_coords_key,
+                                        py::object py_out_coords_key,
+                                        py::object py_coords_manager);
 
-template void PruningBackwardCPU<double, int32_t>(at::Tensor grad_in_feat,
-                                                  at::Tensor grad_out_feat,
-                                                  py::object py_in_coords_key,
-                                                  py::object py_out_coords_key,
-                                                  py::object py_coords_manager);
+template void PruningBackwardCPU<double>(at::Tensor grad_in_feat,
+                                         at::Tensor grad_out_feat,
+                                         py::object py_in_coords_key,
+                                         py::object py_out_coords_key,
+                                         py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template void PruningForwardGPU<float, int32_t>(at::Tensor in_feat,
-                                                at::Tensor out_feat,
-                                                at::Tensor use_feat,
-                                                py::object py_in_coords_key,
-                                                py::object py_out_coords_key,
-                                                py::object py_coords_manager);
+template void PruningForwardGPU<float>(at::Tensor in_feat, at::Tensor out_feat,
+                                       at::Tensor use_feat,
+                                       py::object py_in_coords_key,
+                                       py::object py_out_coords_key,
+                                       py::object py_coords_manager);
 
-template void PruningForwardGPU<double, int32_t>(at::Tensor in_feat,
-                                                 at::Tensor out_feat,
-                                                 at::Tensor use_feat,
-                                                 py::object py_in_coords_key,
-                                                 py::object py_out_coords_key,
-                                                 py::object py_coords_manager);
+template void PruningForwardGPU<double>(at::Tensor in_feat, at::Tensor out_feat,
+                                        at::Tensor use_feat,
+                                        py::object py_in_coords_key,
+                                        py::object py_out_coords_key,
+                                        py::object py_coords_manager);
 
-template void PruningBackwardGPU<float, int32_t>(at::Tensor grad_in_feat,
-                                                 at::Tensor grad_out_feat,
-                                                 py::object py_in_coords_key,
-                                                 py::object py_out_coords_key,
-                                                 py::object py_coords_manager);
+template void PruningBackwardGPU<float>(at::Tensor grad_in_feat,
+                                        at::Tensor grad_out_feat,
+                                        py::object py_in_coords_key,
+                                        py::object py_out_coords_key,
+                                        py::object py_coords_manager);
 
-template void PruningBackwardGPU<double, int32_t>(at::Tensor grad_in_feat,
-                                                  at::Tensor grad_out_feat,
-                                                  py::object py_in_coords_key,
-                                                  py::object py_out_coords_key,
-                                                  py::object py_coords_manager);
+template void PruningBackwardGPU<double>(at::Tensor grad_in_feat,
+                                         at::Tensor grad_out_feat,
+                                         py::object py_in_coords_key,
+                                         py::object py_out_coords_key,
+                                         py::object py_coords_manager);
 #endif

@@ -32,7 +32,6 @@
 #include <torch/extension.h>
 
 #include "coords_manager.hpp"
-#include "instantiation.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 
@@ -51,28 +50,10 @@
 #include "gpu_memory_manager.hpp"
 #endif
 
-template <typename T> std::string ArrToString(T arr) {
-  std::string buf = "[";
-  for (size_t i = 0; i < arr.size(); i++) {
-    buf += (i ? ", " : "") + std::to_string(arr[i]);
-  }
-  buf += "]";
-  return buf;
-}
-
-template <typename Dtype, typename Itype> int dtypeMultiplier() {
-  // if larger, return ceil of sizeof(Dtype) / sizeof(Itype)
-  return sizeof(Dtype) > sizeof(Itype)
-             ? (sizeof(Dtype) + sizeof(Itype) - 1) / sizeof(Itype)
-             : 1;
-}
-
-template <typename T> void PyPrintArr(T arr) { py::print(ArrToString(arr)); }
-
 // Will be exported to python for lazy key initialization.
 // For instance, ConvModule.out_coords_key can be used for other layers before
 // feedforward
-class PyCoordsKey {
+class CoordsKey {
 private:
   uint64_t key_; // Use the key_ for all coordshashmap query. Lazily set
   int D_;   // dimension of the current coordinate system
@@ -82,8 +63,8 @@ public:
   std::vector<int> tensor_strides_;
 
   // Functions
-  PyCoordsKey() { reset(); }
-  PyCoordsKey(int dim);
+  CoordsKey() { reset(); }
+  CoordsKey(int dim);
   void reset();
   void copy(py::object ohter);
   void setKey(uint64_t key);
@@ -97,4 +78,4 @@ public:
   std::string toString() const;
 };
 
-#endif
+#endif // COMMON

@@ -46,4 +46,4 @@ void NonzeroAvgPoolingBackwardKernelGPU(
     const std::vector<std::vector<Itype>> &in_map,
     const std::vector<std::vector<Itype>> &out_map, bool use_avg, Itype *d_scr,
     cudaStream_t stream);
-#endif
+#endif // POOLING_AVG_CUH

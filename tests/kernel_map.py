@@ -37,6 +37,13 @@ class TestKernelMap(unittest.TestCase):
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
+        cm = input.coords_man
+        ikey = cm.get_coords_key(1)
+        print('Input coords: ')
+        cm.print_diagnostics(ikey)
+
+        print('Convolution: ')
+
         # Initialize context
         conv = MinkowskiConvolution(
             in_channels,
@@ -44,11 +51,17 @@ class TestKernelMap(unittest.TestCase):
             kernel_size=3,
             stride=2,
             has_bias=True,
-            dimension=D)
-        conv = conv.double()
+            dimension=D).double()
         output = conv(input)
-        print(input.C, output.C)
-        print(output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3))
+
+        iC = input.C
+        oC = output.C
+        print(iC)
+        print(oC)
+        kernel_map = output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
+        for row in kernel_map:
+          k, i, o = row
+          print(k, iC[i], oC[o])
 
 
 if __name__ == '__main__':

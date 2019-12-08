@@ -1,9 +1,15 @@
 # Change Log
 
+## [0.3.0] - 2019-12-08
 
-## [nightly] - 2019-11-20
+### Changed
 
-- Force scratch memory space to be contiguous
+- Change the hash map from google-sparsehash to Threading Building Blocks (TBB) `concurrent_unordered_map`.
+    - Optional duplicate coords (CoordsMap.initialize, TODO: make mapping more user-friendly)
+    - Explicit coords generation (`CoordsMap.stride`, `CoordsMap.reduce`, `CoordsMap.transposed_stride`)
+    - Speed up for pooling with `kernel_size == stride_size`.
+- Faster `SparseTensor.dense` function.
+- Force scratch memory space to be contiguous.
 - CUDA error checks
 - Update Makefile
     - Architecture and sm updates for CUDA > 10.0

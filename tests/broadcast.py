@@ -46,17 +46,27 @@ class TestBroadcast(unittest.TestCase):
         input_glob = pool(input)
         input_glob.F.requires_grad_()
         broadcast_add = MinkowskiBroadcastAddition(D)
-        output = broadcast_add(input, input_glob)
-        print(output)
+        broadcast_mul = MinkowskiBroadcastMultiplication(D)
+        broadcast_cat = MinkowskiBroadcastConcatenation(D)
+        cpu_add = broadcast_add(input, input_glob)
+        cpu_mul = broadcast_mul(input, input_glob)
+        cpu_cat = broadcast_cat(input, input_glob)
 
         # Check backward
         fn = MinkowskiBroadcastFunction()
 
         device = torch.device('cuda')
+
         input = input.to(device)
         input_glob = input_glob.to(device)
-        output = broadcast_add(input, input_glob)
-        print(output)
+        gpu_add = broadcast_add(input, input_glob)
+        gpu_mul = broadcast_mul(input, input_glob)
+        gpu_cat = broadcast_cat(input, input_glob)
+
+        self.assertTrue(torch.prod(gpu_add.F.cpu() - cpu_add.F < 1e-5).item() == 1)
+        self.assertTrue(torch.prod(gpu_mul.F.cpu() - cpu_mul.F < 1e-5).item() == 1)
+        self.assertTrue(torch.prod(gpu_cat.F.cpu() - cpu_cat.F < 1e-5).item() == 1)
+
         self.assertTrue(
             gradcheck(
                 fn,

@@ -224,10 +224,11 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         else:
             out_coords_key = self.out_coords_key
 
-        output = self.pooling.apply(
-            input.F, input.tensor_stride, self.stride, self.kernel_size,
-            self.dilation, self.region_type_, self.region_offset_, self.average,
-            input.coords_key, out_coords_key, input.coords_man)
+        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
+                                    self.kernel_size, self.dilation,
+                                    self.region_type_, self.region_offset_,
+                                    self.average, input.coords_key,
+                                    out_coords_key, input.coords_man)
 
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.coords_man)
@@ -252,6 +253,7 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
     average input features.
 
     .. note::
+
         An average layer first computes the cardinality of the input features,
         the number of input features for each output, and divide the sum of the
         input features by the cardinality. For a dense tensor, the cardinality
@@ -260,6 +262,17 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
         Thus, the average pooling for a sparse tensor is not equivalent to the
         conventional average pooling layer for a dense tensor. Please refer to
         the :attr:`MinkowskiSumPooling` for the equivalent layer.
+
+    .. note::
+
+       The engine will generate the in-out mapping corresponding to a
+       pooling function faster if the kernel sizes is equal to the stride
+       sizes, e.g. `kernel_size = [2, 1], stride = [2, 1]`.
+
+       If you use a U-network architecture, use the transposed version of
+       the same function for up-sampling. e.g. `pool =
+       MinkowskiSumPooling(kernel_size=2, stride=2, D=D)`, then use the
+       `unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)`.
 
     """
 
@@ -301,6 +314,10 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
 
+        .. warning::
+
+           Custom kernel shapes are not supported when kernel_size == stride.
+
         """
         is_transpose = False
         MinkowskiPoolingBase.__init__(
@@ -329,6 +346,7 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
     average input features.
 
     .. note::
+
         An average layer first computes the cardinality of the input features,
         the number of input features for each output, and divide the sum of the
         input features by the cardinality. For a dense tensor, the cardinality
@@ -338,6 +356,18 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
         equivalent to the conventional average pooling for a dense tensor.
         This layer provides an alternative that does not divide the sum by the
         cardinality.
+
+    .. note::
+
+       The engine will generate the in-out mapping corresponding to a
+       pooling function faster if the kernel sizes is equal to the stride
+       sizes, e.g. `kernel_size = [2, 1], stride = [2, 1]`.
+
+       If you use a U-network architecture, use the transposed version of
+       the same function for up-sampling. e.g. `pool =
+       MinkowskiSumPooling(kernel_size=2, stride=2, D=D)`, then use the
+       `unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)`.
+
 
     """
 
@@ -379,6 +409,10 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
 
+        .. warning::
+
+           Custom kernel shapes are not supported when kernel_size == stride.
+
         """
         is_transpose = False
         MinkowskiPoolingBase.__init__(
@@ -405,6 +439,17 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
 
     where :math:`y^c_\mathbf{u}` is a feature at channel :math:`c` and a
     coordinate :math:`\mathbf{u}`.
+
+    .. note::
+
+       The engine will generate the in-out mapping corresponding to a
+       pooling function faster if the kernel sizes is equal to the stride
+       sizes, e.g. `kernel_size = [2, 1], stride = [2, 1]`.
+
+       If you use a U-network architecture, use the transposed version of
+       the same function for up-sampling. e.g. `pool =
+       MinkowskiSumPooling(kernel_size=2, stride=2, D=D)`, then use the
+       `unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)`.
 
     """
 
@@ -446,6 +491,10 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
 
+        .. warning::
+
+           Custom kernel shapes are not supported when kernel_size == stride.
+
         """
 
         MinkowskiPoolingBase.__init__(
@@ -472,10 +521,11 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
         else:
             out_coords_key = self.out_coords_key
 
-        output = self.pooling.apply(
-            input.F, input.tensor_stride, self.stride, self.kernel_size,
-            self.dilation, self.region_type_, self.region_offset_,
-            input.coords_key, out_coords_key, input.coords_man)
+        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
+                                    self.kernel_size, self.dilation,
+                                    self.region_type_, self.region_offset_,
+                                    input.coords_key, out_coords_key,
+                                    input.coords_man)
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.coords_man)
 
@@ -612,10 +662,11 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
         else:
             out_coords_key = self.out_coords_key
 
-        output = self.pooling.apply(
-            input.F, input.tensor_stride, self.stride, self.kernel_size,
-            self.dilation, self.region_type_, self.region_offset_, self.average,
-            input.coords_key, out_coords_key, input.coords_man)
+        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
+                                    self.kernel_size, self.dilation,
+                                    self.region_type_, self.region_offset_,
+                                    self.average, input.coords_key,
+                                    out_coords_key, input.coords_man)
 
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.coords_man)

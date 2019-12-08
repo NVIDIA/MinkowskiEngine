@@ -34,157 +34,159 @@
 
 namespace py = pybind11;
 
-template <typename Dtype, typename Itype>
-void instantiate_func(py::module &m, const std::string &dtypestr,
-                      const std::string &itypestr) {
+template <typename Dtype>
+void instantiate_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
-        &ConvolutionForwardCPU<Dtype, Itype>);
+        &ConvolutionForwardCPU<Dtype>);
   m.def((std::string("ConvolutionBackwardCPU") + dtypestr).c_str(),
-        &ConvolutionBackwardCPU<Dtype, Itype>);
+        &ConvolutionBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
-        &ConvolutionForwardGPU<Dtype, Itype>);
+        &ConvolutionForwardGPU<Dtype>);
   m.def((std::string("ConvolutionBackwardGPU") + dtypestr).c_str(),
-        &ConvolutionBackwardGPU<Dtype, Itype>);
+        &ConvolutionBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
-        &ConvolutionTransposeForwardCPU<Dtype, Itype>);
+        &ConvolutionTransposeForwardCPU<Dtype>);
   m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
-        &ConvolutionTransposeBackwardCPU<Dtype, Itype>);
+        &ConvolutionTransposeBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
-        &ConvolutionTransposeForwardGPU<Dtype, Itype>);
+        &ConvolutionTransposeForwardGPU<Dtype>);
   m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
-        &ConvolutionTransposeBackwardGPU<Dtype, Itype>);
+        &ConvolutionTransposeBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
-        &AvgPoolingForwardCPU<Dtype, Itype>);
+        &AvgPoolingForwardCPU<Dtype>);
   m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
-        &AvgPoolingBackwardCPU<Dtype, Itype>);
+        &AvgPoolingBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("AvgPoolingForwardGPU") + dtypestr).c_str(),
-        &AvgPoolingForwardGPU<Dtype, Itype>);
+        &AvgPoolingForwardGPU<Dtype>);
   m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
-        &AvgPoolingBackwardGPU<Dtype, Itype>);
+        &AvgPoolingBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
-        &MaxPoolingForwardCPU<Dtype, Itype>);
+        &MaxPoolingForwardCPU<Dtype>);
   m.def((std::string("MaxPoolingBackwardCPU") + dtypestr).c_str(),
-        &MaxPoolingBackwardCPU<Dtype, Itype>);
+        &MaxPoolingBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("MaxPoolingForwardGPU") + dtypestr).c_str(),
-        &MaxPoolingForwardGPU<Dtype, Itype>);
+        &MaxPoolingForwardGPU<Dtype>);
   m.def((std::string("MaxPoolingBackwardGPU") + dtypestr).c_str(),
-        &MaxPoolingBackwardGPU<Dtype, Itype>);
+        &MaxPoolingBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
-        &PoolingTransposeForwardCPU<Dtype, Itype>);
+        &PoolingTransposeForwardCPU<Dtype>);
   m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),
-        &PoolingTransposeBackwardCPU<Dtype, Itype>);
+        &PoolingTransposeBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("PoolingTransposeForwardGPU") + dtypestr).c_str(),
-        &PoolingTransposeForwardGPU<Dtype, Itype>);
+        &PoolingTransposeForwardGPU<Dtype>);
   m.def((std::string("PoolingTransposeBackwardGPU") + dtypestr).c_str(),
-        &PoolingTransposeBackwardGPU<Dtype, Itype>);
+        &PoolingTransposeBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
-        &GlobalPoolingForwardCPU<Dtype, Itype>);
+        &GlobalPoolingForwardCPU<Dtype>);
   m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
-        &GlobalPoolingBackwardCPU<Dtype, Itype>);
+        &GlobalPoolingBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
-        &GlobalPoolingForwardGPU<Dtype, Itype>);
+        &GlobalPoolingForwardGPU<Dtype>);
   m.def((std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
-        &GlobalPoolingBackwardGPU<Dtype, Itype>);
+        &GlobalPoolingBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("GlobalMaxPoolingForwardCPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingForwardCPU<Dtype, Itype>);
+        &GlobalMaxPoolingForwardCPU<Dtype>);
   m.def((std::string("GlobalMaxPoolingBackwardCPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingBackwardCPU<Dtype, Itype>);
+        &GlobalMaxPoolingBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("GlobalMaxPoolingForwardGPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingForwardGPU<Dtype, Itype>);
+        &GlobalMaxPoolingForwardGPU<Dtype>);
   m.def((std::string("GlobalMaxPoolingBackwardGPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingBackwardGPU<Dtype, Itype>);
+        &GlobalMaxPoolingBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
-        &BroadcastForwardCPU<Dtype, Itype>);
+        &BroadcastForwardCPU<Dtype>);
   m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
-        &BroadcastBackwardCPU<Dtype, Itype>);
+        &BroadcastBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
-        &BroadcastForwardGPU<Dtype, Itype>);
+        &BroadcastForwardGPU<Dtype>);
   m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
-        &BroadcastBackwardGPU<Dtype, Itype>);
+        &BroadcastBackwardGPU<Dtype>);
 #endif
 
   m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
-        &PruningForwardCPU<Dtype, Itype>);
+        &PruningForwardCPU<Dtype>);
   m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
-        &PruningBackwardCPU<Dtype, Itype>);
+        &PruningBackwardCPU<Dtype>);
 #ifndef CPU_ONLY
   m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
-        &PruningForwardGPU<Dtype, Itype>);
+        &PruningForwardGPU<Dtype>);
   m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
-        &PruningBackwardGPU<Dtype, Itype>);
+        &PruningBackwardGPU<Dtype>);
 #endif
 }
 
-template <typename Itype>
-void instantiate_itype(py::module &m, const std::string &itypestr) {
-  std::string coords_name = std::string("PyCoordsManager") + itypestr;
-  py::class_<CoordsManager<Itype>>(m, coords_name.c_str())
+void instantiate_coordsman(py::module &m) {
+  std::string coords_name = std::string("CoordsManager");
+  py::class_<CoordsManager>(m, coords_name.c_str())
       .def(py::init<>())
-      .def("existsCoordsKey", (bool (CoordsManager<Itype>::*)(py::object)) &
-                                  CoordsManager<Itype>::existsCoordsKey)
-      .def("getCoordsKey", &CoordsManager<Itype>::getCoordsKey)
-      .def("getKernelMap", &CoordsManager<Itype>::getKernelMap)
-      .def("getCoordsSize", (int (CoordsManager<Itype>::*)(py::object)) &
-                                CoordsManager<Itype>::getCoordsSize)
-      .def("getCoords", &CoordsManager<Itype>::getCoords)
-      .def("getRowIndicesPerBatch",
-           &CoordsManager<Itype>::getRowIndicesPerBatch)
+      .def("existsCoordsKey", (bool (CoordsManager::*)(py::object)) &
+                                  CoordsManager::existsCoordsKey)
+      .def("getCoordsKey", &CoordsManager::getCoordsKey)
+      .def("getKernelMap", &CoordsManager::getKernelMap)
+      .def("getCoordsSize",
+           (int (CoordsManager::*)(py::object)) & CoordsManager::getCoordsSize)
+      .def("getCoords", &CoordsManager::getCoords)
+      .def("getRowIndicesPerBatch", &CoordsManager::getRowIndicesPerBatch)
       .def("initializeCoords",
-           (uint64_t(CoordsManager<Itype>::*)(at::Tensor, py::object, bool)) &
-               CoordsManager<Itype>::initializeCoords)
-      .def("__repr__",
-           [](const CoordsManager<Itype> &a) { return a.toString(); });
+           (uint64_t(CoordsManager::*)(at::Tensor, at::Tensor, py::object, bool,
+                                       bool, bool)) &
+               CoordsManager::initializeCoords)
+      .def("createStridedCoords", &CoordsManager::createStridedCoords)
+      .def("createTransposedStridedRegionCoords",
+           &CoordsManager::createTransposedStridedRegionCoords)
+      .def("createPrunedCoords", &CoordsManager::createPrunedCoords)
+      .def("createOriginCoords", &CoordsManager::createOriginCoords)
+      .def("printDiagnostics", &CoordsManager::printDiagnostics)
+      .def("__repr__", [](const CoordsManager &a) { return a.toString(); });
 }
 
 void instantiate(py::module &m) {
-  // Instantiate Itypes
-  instantiate_itype<int32_t>(m, std::string("int32"));
-  instantiate_func<float, int32_t>(m, std::string("f"), std::string("int32"));
-  instantiate_func<double, int32_t>(m, std::string("d"), std::string("int32"));
+  instantiate_coordsman(m);
+  instantiate_func<float>(m, std::string("f"));
+  instantiate_func<double>(m, std::string("d"));
 }
 
 void bind_native(py::module &m) {
 #ifndef CPU_ONLY
   m.def("SparseVoxelization", &SparseVoxelization);
-  py::class_<GPUMemoryManager<int32_t>>(m, "MemoryManager")
+  py::class_<GPUMemoryManager<int>>(m, "MemoryManager")
       .def(py::init<>())
-      .def("size", &GPUMemoryManager<int32_t>::size)
-      .def("resize", &GPUMemoryManager<int32_t>::resize);
+      .def("size", &GPUMemoryManager<int>::size)
+      .def("resize", &GPUMemoryManager<int>::resize);
 #endif
 
-  std::string name = std::string("PyCoordsKey");
-  py::class_<PyCoordsKey>(m, name.c_str())
+  std::string name = std::string("CoordsKey");
+  py::class_<CoordsKey>(m, name.c_str())
       .def(py::init<>())
-      .def("copy", &PyCoordsKey::copy)
-      .def("setKey", &PyCoordsKey::setKey)
-      .def("getKey", &PyCoordsKey::getKey)
-      .def("setDimension", &PyCoordsKey::setDimension)
-      .def("getDimension", &PyCoordsKey::getDimension)
-      .def("setTensorStride", &PyCoordsKey::setTensorStride)
-      .def("getTensorStride", &PyCoordsKey::getTensorStride)
-      .def("__repr__", [](const PyCoordsKey &a) { return a.toString(); });
+      .def("copy", &CoordsKey::copy)
+      .def("setKey", &CoordsKey::setKey)
+      .def("getKey", &CoordsKey::getKey)
+      .def("setDimension", &CoordsKey::setDimension)
+      .def("getDimension", &CoordsKey::getDimension)
+      .def("setTensorStride", &CoordsKey::setTensorStride)
+      .def("getTensorStride", &CoordsKey::getTensorStride)
+      .def("__repr__", [](const CoordsKey &a) { return a.toString(); });
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

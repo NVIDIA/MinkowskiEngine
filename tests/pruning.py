@@ -93,11 +93,13 @@ class TestPruning(unittest.TestCase):
         pruning = MinkowskiPruning(D)
 
         out1 = conv_tr1(input)
+        self.assertTrue(torch.prod(torch.abs(out1.F) > 0).item() == 1)
         out1 = conv1(out1)
         use_feat = torch.rand(len(out1)) < 0.5
         out1 = pruning(out1, use_feat)
 
         out2 = conv_tr2(out1)
+        self.assertTrue(torch.prod(torch.abs(out2.F) > 0).item() == 1)
         use_feat = torch.rand(len(out2)) < 0.5
         out2 = pruning(out2, use_feat)
         out2 = conv2(out2)
