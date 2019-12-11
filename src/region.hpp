@@ -87,7 +87,7 @@ public:
     };
   }
 
-  const int size() const { return size_; }
+  int size() const { return size_; }
 
   RegionIterator begin() { return RegionIterator(*this); }
   RegionIterator end() { return RegionIterator(*this); }

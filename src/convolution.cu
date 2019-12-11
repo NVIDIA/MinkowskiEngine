@@ -208,31 +208,18 @@ __global__ void matmul2(const Dtype *A, const int wA, const int hA,
 }
 
 template <typename Dtype, typename Itype>
-void ConvolutionForwardKernelGPU(
-    const Dtype *d_in_feat, int in_nchannel, Dtype *d_out_feat,
-    int out_nchannel, const Dtype *d_kernel,
-    const std::vector<std::vector<Itype>> &in_maps,
-    const std::vector<std::vector<Itype>> &out_maps, int out_nrows,
-    Itype *d_scr, cublasHandle_t cuhandle, cudaStream_t stream) {
+void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
+                                 Dtype *d_out_feat, int out_nchannel,
+                                 const Dtype *d_kernel,
+                                 const pInOutMaps<Itype> &in_maps,
+                                 const pInOutMaps<Itype> &out_maps,
+                                 int out_nrows, cublasHandle_t cuhandle,
+                                 cudaStream_t stream) {
 
-  CUDA_CHECK_ARGS(cudaDeviceSynchronize(), ". Error triggered from a previous kernel call.");
+  CUDA_CHECK_ARGS(cudaDeviceSynchronize(),
+                  ". Error triggered from a previous kernel call.");
 
-  // For the in out buffer, use the pre allocated GPU memory space as thrust
-  // resize gives segfault. Also initializing it with torch allows us to
-  // allocate memory faster and efficiently.
-  int kernel_volume, n_active_in_volume, shared_mem_size = -1;
-  Itype *d_in_map, *d_out_map;
-  // Copy the in_map, out_map to GPU
-  kernel_volume = in_maps.size();
-
-  // Find the max_n_active for memory allocation
-  int max_n_active = -1;
-  for (int k = 0; k < kernel_volume; k++)
-    if (max_n_active < (int)(in_maps[k].size()))
-      max_n_active = (int)(in_maps[k].size());
-
-  d_in_map = d_scr;
-  d_out_map = d_in_map + max_n_active;
+  int n_active_in_volume, shared_mem_size = -1;
 
   // Define the shared memory size
   if ((in_nchannel > 16 && out_nchannel > 16 &&
@@ -250,24 +237,15 @@ void ConvolutionForwardKernelGPU(
   dim3 threads(shared_mem_size, shared_mem_size);
 
   // Iterate through each spatial kernel and get indices for in_map and out_map
-  for (int k = 0; k < kernel_volume; k++) {
+  for (int k = 0; k < in_maps.size(); k++) {
     n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
       continue;
-
-    // Copy (*p_in_maps)[k] to GPU
-    CUDA_CHECK(cudaMemcpy(d_in_map, in_maps[k].data(),
-                          sizeof(Itype) * n_active_in_volume,
-                          cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(d_out_map, out_maps[k].data(),
-                          sizeof(Itype) * n_active_in_volume,
-                          cudaMemcpyHostToDevice));
 
     int num_grid = (n_active_in_volume + shared_mem_size - 1) / shared_mem_size;
     int num_div = (num_grid + MAX_GRID - 1) / MAX_GRID;
     int step = (n_active_in_volume + num_div - 1) / num_div;
 
-    Itype *d_curr_in_map = d_in_map, *d_curr_out_map = d_out_map;
     for (int s = 0; s < num_div; s++) {
       int remainder = n_active_in_volume - step * s;
       int curr_num_active = remainder < step ? remainder : step;
@@ -278,70 +256,59 @@ void ConvolutionForwardKernelGPU(
         matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, d_curr_in_map, d_curr_out_map);
+            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
         break;
       case 24:
         matmul<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, d_curr_in_map, d_curr_out_map);
+            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
         break;
       case 16:
         matmul<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, d_curr_in_map, d_curr_out_map);
+            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
         break;
       case 8:
         matmul<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, d_curr_in_map, d_curr_out_map);
+            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
         break;
       }
-      d_curr_in_map += curr_num_active;
-      d_curr_out_map += curr_num_active;
     }
     CUDA_CHECK(cudaGetLastError());
   }
+  CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template void ConvolutionForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nchannel, float *d_out_feat,
-    int out_nchannel, const float *d_kernel,
-    const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
+    int out_nchannel, const float *d_kernel, const pInOutMaps<int32_t> &in_map,
+    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    cudaStream_t stream);
 
 template void ConvolutionForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nchannel, double *d_out_feat,
-    int out_nchannel, const double *d_kernel,
-    const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
+    int out_nchannel, const double *d_kernel, const pInOutMaps<int32_t> &in_map,
+    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
-void ConvolutionBackwardKernelGPU(
-    const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nchannel,
-    const Dtype *d_grad_out_feat, int out_nchannel, const Dtype *d_kernel,
-    Dtype *d_grad_kernel, const std::vector<std::vector<Itype>> &in_maps,
-    const std::vector<std::vector<Itype>> &out_maps, int out_nrows,
-    Itype *d_scr, cublasHandle_t cuhandle, cudaStream_t stream) {
+void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
+                                  int in_nchannel, const Dtype *d_grad_out_feat,
+                                  int out_nchannel, const Dtype *d_kernel,
+                                  Dtype *d_grad_kernel,
+                                  const pInOutMaps<Itype> &in_maps,
+                                  const pInOutMaps<Itype> &out_maps,
+                                  int out_nrows, cublasHandle_t cuhandle,
+                                  cudaStream_t stream) {
 
-  CUDA_CHECK_ARGS(cudaDeviceSynchronize(), ". Error triggered from a previous kernel call.");
+  CUDA_CHECK_ARGS(cudaDeviceSynchronize(),
+                  ". Error triggered from a previous kernel call.");
 
-  int kernel_volume, n_active_in_volume, shared_mem_size = -1;
-  Itype *d_in_map, *d_out_map;
-
-  kernel_volume = in_maps.size();
-  // Find the max_n_active fot memory allocation
-  int max_n_active = -1;
-  for (int k = 0; k < kernel_volume; k++)
-    if (max_n_active < (int)(in_maps[k].size()))
-      max_n_active = (int)(in_maps[k].size());
-
-  d_in_map = d_scr;
-  d_out_map = d_in_map + max_n_active;
+  int n_active_in_volume, shared_mem_size = -1;
 
   // Define the shared memory size
   if ((in_nchannel > 16 && out_nchannel > 16 &&
@@ -358,24 +325,15 @@ void ConvolutionBackwardKernelGPU(
 
   dim3 threads(shared_mem_size, shared_mem_size);
 
-  for (int k = 0; k < kernel_volume; k++) {
+  for (int k = 0; k < in_maps.size(); k++) {
     n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
       continue;
-
-    // Copy (*p_in_maps)[k] to GPU
-    CUDA_CHECK(cudaMemcpy(d_in_map, in_maps[k].data(),
-                          sizeof(Itype) * n_active_in_volume,
-                          cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(d_out_map, out_maps[k].data(),
-                          sizeof(Itype) * n_active_in_volume,
-                          cudaMemcpyHostToDevice));
 
     int num_grid = (n_active_in_volume + shared_mem_size - 1) / shared_mem_size;
     int num_div = (num_grid + MAX_GRID - 1) / MAX_GRID;
     int step = (n_active_in_volume + num_div - 1) / num_div;
 
-    Itype *d_curr_in_map = d_in_map, *d_curr_out_map = d_out_map;
     for (int s = 0; s < num_div; s++) {
       int remainder = n_active_in_volume - step * s;
       int curr_num_active = remainder < step ? remainder : step;
@@ -390,7 +348,7 @@ void ConvolutionBackwardKernelGPU(
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            d_curr_in_map, d_curr_out_map);
+            in_maps[k].data(), out_maps[k].data());
         break;
       case 24:
         matmul2<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
@@ -400,7 +358,7 @@ void ConvolutionBackwardKernelGPU(
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            d_curr_in_map, d_curr_out_map);
+            in_maps[k].data(), out_maps[k].data());
         break;
       case 16:
         matmul2<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
@@ -410,7 +368,7 @@ void ConvolutionBackwardKernelGPU(
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            d_curr_in_map, d_curr_out_map);
+            in_maps[k].data(), out_maps[k].data());
         break;
       case 8:
         matmul2<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
@@ -420,27 +378,26 @@ void ConvolutionBackwardKernelGPU(
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            d_curr_in_map, d_curr_out_map);
+            in_maps[k].data(), out_maps[k].data());
         break;
       }
-      d_curr_in_map += curr_num_active;
-      d_curr_out_map += curr_num_active;
     }
     CUDA_CHECK(cudaGetLastError());
   }
+  CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template void ConvolutionBackwardKernelGPU<float, int32_t>(
     const float *d_in_feat, float *d_grad_in_feat, int in_nchannel,
     const float *d_grad_out_feat, int out_nchannel, const float *d_kernel,
-    float *p_grad_kernel, const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
+    float *p_grad_kernel, const pInOutMaps<int32_t> &in_map,
+    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    cudaStream_t stream);
 
 template void ConvolutionBackwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_grad_in_feat, int in_nchannel,
     const double *d_grad_out_feat, int out_nchannel, const double *d_kernel,
-    double *p_grad_kernel, const std::vector<std::vector<int32_t>> &in_map,
-    const std::vector<std::vector<int32_t>> &out_map, int out_nrows,
-    int32_t *d_scr, cublasHandle_t cuhandle, cudaStream_t stream);
+    double *p_grad_kernel, const pInOutMaps<int32_t> &in_map,
+    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    cudaStream_t stream);
 #endif

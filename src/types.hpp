@@ -58,6 +58,16 @@ template <typename Itype> struct Coord {
   Itype operator[](const int index) const { return ptr[index]; }
 };
 
+template <typename Itype> struct pVector {
+  Itype *ptr_;
+  int size_;
+
+  pVector(Itype* ptr, int size) : ptr_(ptr), size_(size) {}
+  int size() const { return size_; };
+  Itype *data() { return ptr_; };
+  const Itype *data() const { return ptr_; };
+};
+
 // Key for InOutMap
 // (in_coords_key, out_coords_key, stride hash, kernel size, dilation,
 // is_transpose, is_pool)
@@ -66,11 +76,21 @@ using InOutMapKey = array<uint64_t, 8>;
 // Input index to output index mapping for each spatial kernel
 template <typename Itype> using InOutMaps = vector<vector<Itype>>;
 
+// Input index to output index mapping in ptr, sise pair
+// Used for device pointer and size
+template <typename Itype> using pInOutMaps = vector<pVector<Itype>>;
+
 template <typename Itype>
 using InOutMapsPair = pair<InOutMaps<Itype>, InOutMaps<Itype>>;
 
 template <typename Itype>
+using pInOutMapsPair = pair<pInOutMaps<Itype>, pInOutMaps<Itype>>;
+
+template <typename Itype>
 using InOutMapsRefPair = pair<InOutMaps<Itype> &, InOutMaps<Itype> &>;
+
+template <typename Itype>
+using pInOutMapsRefPair = pair<pInOutMaps<Itype> &, pInOutMaps<Itype> &>;
 
 // FNV64-1a
 // uint64_t for unsigned long, must use CXX -m64

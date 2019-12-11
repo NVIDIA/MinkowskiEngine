@@ -40,6 +40,13 @@
 #include "gpu_memory_manager.hpp"
 #endif // CPU_ONLY
 
+template <typename VType> int getInOutMapsSize(const VType &map) {
+  int n = 0;
+  for (auto cmap = begin(map); cmap != end(map); cmap++)
+    n += cmap->size();
+  return n;
+}
+
 inline long computeKernelVolume(int region_type, const vector<int> &kernel_size,
                                 int n_offset) {
   int kernel_volume;
@@ -133,16 +140,17 @@ public:
   uint64_t createOriginCoords(int D);
 
   // Mappings
-  InOutMapKey getMapHashKey(vector<int> tensor_strides, vector<int> strides,
-                            vector<int> kernel_sizes, vector<int> dilations,
-                            int region_type, py::object py_in_coords_key,
-                            py::object py_out_coords_key, bool is_transpose,
-                            bool is_pool);
-  InOutMapKey getOriginMapHashKey(py::object py_in_coords_key,
-                                  py::object py_out_coords_key);
+  const InOutMapKey getMapHashKey(vector<int> tensor_strides,
+                                  vector<int> strides, vector<int> kernel_sizes,
+                                  vector<int> dilations, int region_type,
+                                  py::object py_in_coords_key,
+                                  py::object py_out_coords_key,
+                                  bool is_transpose, bool is_pool) const;
+  const InOutMapKey getOriginMapHashKey(py::object py_in_coords_key,
+                                        py::object py_out_coords_key) const;
 
   // Wrapper functions for setting up coords and returning maps
-  InOutMapsRefPair<int>
+  const InOutMapsRefPair<int>
   getInOutMaps(const vector<int> &tensor_strides, const vector<int> &strides,
                const vector<int> &kernel_sizes, const vector<int> &dilations,
                int region_type, const at::Tensor &offsets,
@@ -150,12 +158,19 @@ public:
                bool is_transpose, bool is_pool = false,
                bool generate_new_coords = false);
 
-  InOutMapsRefPair<int> getOriginInOutMaps(py::object py_in_coords_key,
-                                           py::object py_out_coords_key);
+  const InOutMapsRefPair<int> getOriginInOutMaps(py::object py_in_coords_key,
+                                                 py::object py_out_coords_key);
 
-  InOutMapsRefPair<int> getPruningInOutMaps(at::Tensor use_feat,
-                                            py::object py_in_coords_key,
-                                            py::object py_out_coords_key);
+  const InOutMapsRefPair<int> getPruningInOutMaps(at::Tensor use_feat,
+                                                  py::object py_in_coords_key,
+                                                  py::object py_out_coords_key);
+
+  int getMapSize(const InOutMaps<int> &in_maps) {
+    int n = 0;
+    for (auto &map : in_maps)
+      n += (int)(map.size());
+    return n;
+  }
 
   int getMaxMapSize(const InOutMaps<int> &in_maps) {
     int max_n_active = -1;
@@ -184,19 +199,36 @@ public:
 
 #ifndef CPU_ONLY
   // GPU memory manager
-  GPUMemoryManager<int> _gpu_memory_manager;
-  GPUMemoryManager<int8_t> _dgpu_memory_manager;
+  GPUMemoryManager gpu_memory_manager;
 
-  // Coordinates on gpu memory (ncols, pointer) pair
-  unordered_map<uint64_t, pair<int, int *>> _gpu_coords;
+  // Keep all in out maps throughout the lifecycle of the coords manager
+  //
+  unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_in_maps;
+  unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_out_maps;
 
-  // resize and return data_pointer
-  int *getScratchGPUMemory(int size) {
-    return static_cast<int *>(_gpu_memory_manager.data(size));
+  const pInOutMaps<int> copyInOutMapToGPU(const InOutMaps<int> &map);
+
+  const pInOutMapsRefPair<int>
+  getInOutMapsGPU(const vector<int> &tensor_strides, const vector<int> &strides,
+                  const vector<int> &kernel_sizes, const vector<int> &dilations,
+                  int region_type, const at::Tensor &offsets,
+                  py::object py_in_coords_key, py::object py_out_coords_key,
+                  bool is_transpose, bool is_pool = false,
+                  bool force_creation = false);
+
+  const pInOutMapsRefPair<int>
+  getOriginInOutMapsGPU(py::object py_in_coords_key,
+                        py::object py_out_coords_key);
+
+  const pInOutMapsRefPair<int>
+  getPruningInOutMapsGPU(at::Tensor use_feat, py::object py_in_coords_key,
+                         py::object py_out_coords_key);
+
+  void *getScratchGPUMemory(int size) { return gpu_memory_manager.data(size); }
+  void *getScratchGPUMemory2(int size) {
+    return gpu_memory_manager.data2(size);
   }
-  int8_t *getDScratchGPUMemory(int size) {
-    return _dgpu_memory_manager.data(size);
-  }
+
 #endif // CPU_ONLY
 };
 

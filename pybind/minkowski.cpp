@@ -170,10 +170,9 @@ void instantiate(py::module &m) {
 void bind_native(py::module &m) {
 #ifndef CPU_ONLY
   m.def("SparseVoxelization", &SparseVoxelization);
-  py::class_<GPUMemoryManager<int>>(m, "MemoryManager")
+  py::class_<GPUMemoryManager>(m, "MemoryManager")
       .def(py::init<>())
-      .def("size", &GPUMemoryManager<int>::size)
-      .def("resize", &GPUMemoryManager<int>::resize);
+      .def("resize", &GPUMemoryManager::resize);
 #endif
 
   std::string name = std::string("CoordsKey");

@@ -40,7 +40,7 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                           py::object py_out_coords_key,
                           py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out = p_coords_manager->getInOutMaps(
+  const auto &in_out = p_coords_manager->getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false, true);
 
@@ -53,7 +53,7 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
 
   MaxPoolingForwardKernelCPU<Dtype, int>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), max_index.data<int>(),
-      nchannel, get<0>(in_out), get<1>(in_out), out_nrows);
+      nchannel, in_out.first, in_out.second, out_nrows);
 }
 
 template <typename Dtype>
@@ -65,9 +65,13 @@ void MaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                            py::object py_out_coords_key,
                            py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  InOutMapKey map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false, true);
+
+  ASSERT(p_coords_manager->in_maps.find(map_key) !=
+             p_coords_manager->in_maps.end(),
+         "The in-out map doesn't exist for backward. Did you run forward pass?")
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
@@ -88,7 +92,7 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                           py::object py_out_coords_key,
                           py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out = p_coords_manager->getInOutMaps(
+  const auto &in_out = p_coords_manager->getInOutMapsGPU(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false, true);
 
@@ -100,15 +104,14 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   num_nonzero.zero_();
 
   // Compute the scratch space
-  const auto &maps = get<0>(in_out);
-  int nnz = 0;
-  for (auto &map : maps)
-    nnz += map.size();
-  int *d_scr = p_coords_manager->getScratchGPUMemory(5 * nnz);
+  int nmap = getInOutMapsSize(in_out.first);
+
+  int *d_scr =
+      (int *)p_coords_manager->getScratchGPUMemory(5 * nmap * sizeof(int));
 
   MaxPoolingForwardKernelGPU<Dtype, int>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), out_nrows,
-      num_nonzero.data<int>(), nchannel, get<0>(in_out), get<1>(in_out), d_scr,
+      num_nonzero.data<int>(), nchannel, in_out.first, in_out.second, d_scr,
       at::cuda::getCurrentCUDAStream());
 }
 

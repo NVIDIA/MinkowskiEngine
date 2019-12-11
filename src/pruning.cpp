@@ -39,12 +39,13 @@ void PruningForwardCPU(at::Tensor in_feat,  // CPU feat
 
   // Get the total number of coords
   at::Tensor sum = use_feat.sum();
-  int64_t tot_n = sum.item<int64_t>();
+  const int64_t tot_n = sum.item<int64_t>();
   ASSERT(tot_n > 0, "Invalid total number of features", to_string(tot_n));
+
   out_feat.resize_({tot_n, in_feat.size(1)});
   out_feat.zero_();
 
-  auto in_out = p_coords_manager->getPruningInOutMaps(
+  const auto &in_out = p_coords_manager->getPruningInOutMaps(
       use_feat, py_in_coords_key, py_out_coords_key);
 
   PruningForwardKernelCPU<Dtype, int>(in_feat.data<Dtype>(),
@@ -60,10 +61,16 @@ void PruningBackwardCPU(at::Tensor grad_in_feat,  // CPU feat
                         py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
 
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
-  int in_nrows = p_coords_manager->getCoordsSize(py_in_coords_key);
-  int nchannel = grad_out_feat.size(1);
+
+  ASSERT(p_coords_manager->in_maps.find(map_key) !=
+             p_coords_manager->in_maps.end(),
+         "The in-out map doesn't exist for backward. Did you run forward pass?")
+
+  const int in_nrows = p_coords_manager->getCoordsSize(py_in_coords_key);
+  const int nchannel = grad_out_feat.size(1);
+
   grad_in_feat.resize_({in_nrows, nchannel});
   grad_in_feat.zero_();
 
@@ -84,12 +91,13 @@ void PruningForwardGPU(at::Tensor in_feat,  // GPU feat
 
   // Get the total number of coords
   at::Tensor sum = use_feat.sum();
-  int64_t tot_n = sum.item<int64_t>();
+  const int64_t tot_n = sum.item<int64_t>();
   ASSERT(tot_n > 0, "Invalid total number of features", to_string(tot_n));
+
   out_feat.resize_({tot_n, in_feat.size(1)});
   out_feat.zero_();
 
-  auto in_out = p_coords_manager->getPruningInOutMaps(
+  const auto &in_out = p_coords_manager->getPruningInOutMapsGPU(
       use_feat, py_in_coords_key, py_out_coords_key);
 
   PruningForwardKernelGPU<Dtype, int>(
@@ -105,17 +113,22 @@ void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
                         py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
 
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
-  int in_nrows = p_coords_manager->getCoordsSize(py_in_coords_key);
-  int nchannel = grad_out_feat.size(1);
+
+  ASSERT(p_coords_manager->d_in_maps.find(map_key) !=
+             p_coords_manager->d_in_maps.end(),
+         "The in-out map doesn't exist for backward. Did you run forward pass?")
+
+  const int in_nrows = p_coords_manager->getCoordsSize(py_in_coords_key);
+  const int nchannel = grad_out_feat.size(1);
   grad_in_feat.resize_({in_nrows, nchannel});
   grad_in_feat.zero_();
 
   PruningBackwardKernelGPU<Dtype, int>(
       grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-      at::cuda::getCurrentCUDAStream());
+      p_coords_manager->d_in_maps[map_key],
+      p_coords_manager->d_out_maps[map_key], at::cuda::getCurrentCUDAStream());
 }
 #endif
 

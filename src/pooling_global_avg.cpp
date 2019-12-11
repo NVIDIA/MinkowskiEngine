@@ -38,7 +38,7 @@ void GlobalPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                              py::object py_out_coords_key,
                              py::object py_coords_manager, bool use_avg) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out =
+  const auto &in_out =
       p_coords_manager->getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
@@ -59,8 +59,12 @@ void GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                               py::object py_out_coords_key,
                               py::object py_coords_manager, bool use_avg) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
+
+  ASSERT(p_coords_manager->in_maps.find(map_key) !=
+             p_coords_manager->in_maps.end(),
+         "The in-out map doesn't exist for backward. Did you run forward pass?")
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
@@ -80,8 +84,8 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                              py::object py_out_coords_key,
                              py::object py_coords_manager, bool use_avg) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out =
-      p_coords_manager->getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
+  const auto &in_out = p_coords_manager->getOriginInOutMapsGPU(
+      py_in_coords_key, py_out_coords_key);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, in_feat.size(1)});
@@ -89,18 +93,17 @@ void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   num_nonzero.resize_({out_nrows});
   num_nonzero.zero_();
 
-  // int dtype_mult = dtypeMultiplier<Dtype, int>(), nnz = 0;
-  int nnz = 0;
-  for (const auto &map : get<0>(in_out))
-    nnz += map.size();
+  // int dtype_mult = dtypeMultiplier<Dtype, int>(), nmap = 0;
+  const int nmap = getInOutMapsSize(in_out.first);
 
-  int *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz +     // in_out map
-                                                     out_nrows + 1 // csr_row
+  int *d_scr = (int *)p_coords_manager->getScratchGPUMemory(
+      2 * nmap * sizeof(int) +      // in out maps to sort
+      (out_nrows + 1) * sizeof(int) // csr_row
   );
 
-  Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
+  Dtype *d_dscr = (Dtype *)p_coords_manager->getScratchGPUMemory2(
       ((use_avg ? in_feat.size(0) : 0) + // d_ones
-       nnz +                             // d_csr_val
+       nmap +                            // d_csr_val
        in_feat.size(1) * out_nrows       // d_tmp_out_feat
        ) *
       sizeof(Dtype));
@@ -122,23 +125,22 @@ void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                               py::object py_out_coords_key,
                               py::object py_coords_manager, bool use_avg) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
+
+  ASSERT(p_coords_manager->d_in_maps.find(map_key) !=
+             p_coords_manager->d_in_maps.end(),
+         "The in-out map doesn't exist for backward. Did you run forward pass?")
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
-  int nnz = 0;
-  for (const auto &map : p_coords_manager->out_maps[map_key])
-    nnz += map.size();
-
-  int *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz);
-
   NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
       grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
       grad_out_feat.size(0), num_nonzero.data<Dtype>(), in_feat.size(1),
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-      use_avg, d_scr, at::cuda::getCurrentCUDAStream());
+      p_coords_manager->d_in_maps[map_key],
+      p_coords_manager->d_out_maps[map_key], use_avg,
+      at::cuda::getCurrentCUDAStream());
 }
 #endif
 

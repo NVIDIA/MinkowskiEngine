@@ -39,7 +39,7 @@ void ConvolutionTransposeForwardCPU(
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool generate_new_coords) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out = p_coords_manager->getInOutMaps(
+  const auto &in_out = p_coords_manager->getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true, false, generate_new_coords);
 
@@ -52,7 +52,7 @@ void ConvolutionTransposeForwardCPU(
 
   ConvolutionForwardKernelCPU<Dtype, int>(
       in_feat.data<Dtype>(), in_feat.size(1), out_feat.data<Dtype>(),
-      out_feat.size(1), kernel.data<Dtype>(), get<0>(in_out), get<1>(in_out));
+      out_feat.size(1), kernel.data<Dtype>(), in_out.first, in_out.second);
 }
 
 template <typename Dtype>
@@ -64,10 +64,10 @@ void ConvolutionTransposeBackwardCPU(
     py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
   bool reverse_map = false;
-  InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_out_coords_key, py_in_coords_key, false, false);
-  InOutMapKey map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, true, false);
 
@@ -81,20 +81,31 @@ void ConvolutionTransposeBackwardCPU(
   grad_kernel.resize_as_(kernel);
   grad_kernel.zero_();
 
-  if (!reverse_map)
+  if (!reverse_map) {
+    ASSERT(
+        p_coords_manager->in_maps.find(map_key) !=
+            p_coords_manager->in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
+
     ConvolutionBackwardKernelCPU<Dtype, int>(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
         p_coords_manager->in_maps[map_key],
         p_coords_manager->out_maps[map_key]);
-  else
+  } else {
+    ASSERT(
+        p_coords_manager->in_maps.find(rev_map_key) !=
+            p_coords_manager->in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
+
     ConvolutionBackwardKernelCPU<Dtype, int>(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
         p_coords_manager->out_maps[rev_map_key],
         p_coords_manager->in_maps[rev_map_key]);
+  }
 }
 
 #ifndef CPU_ONLY
@@ -106,7 +117,7 @@ void ConvolutionTransposeForwardGPU(
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool generate_new_coords) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out = p_coords_manager->getInOutMaps(
+  const auto &in_out = p_coords_manager->getInOutMapsGPU(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true, false, generate_new_coords);
 
@@ -117,16 +128,13 @@ void ConvolutionTransposeForwardGPU(
   out_feat.resize_({out_nrows, kernel.size(2)});
   out_feat.zero_();
 
-  int *d_scr = p_coords_manager->getScratchGPUMemory(
-      2 * (p_coords_manager->getMaxMapSize(in_out)));
-
   cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
   cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
 
   ConvolutionForwardKernelGPU<Dtype, int>(
       in_feat.data<Dtype>(), in_feat.size(1), out_feat.data<Dtype>(),
-      out_feat.size(1), kernel.data<Dtype>(), get<0>(in_out), get<1>(in_out),
-      out_nrows, d_scr, handle, at::cuda::getCurrentCUDAStream());
+      out_feat.size(1), kernel.data<Dtype>(), in_out.first, in_out.second,
+      out_nrows, handle, at::cuda::getCurrentCUDAStream());
 }
 
 template <typename Dtype>
@@ -138,10 +146,10 @@ void ConvolutionTransposeBackwardGPU(
     py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
   bool reverse_map = false;
-  InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_out_coords_key, py_in_coords_key, false, false);
-  InOutMapKey map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, true, false);
 
@@ -155,28 +163,36 @@ void ConvolutionTransposeBackwardGPU(
   grad_kernel.resize_as_(kernel);
   grad_kernel.zero_();
 
-  int *d_scr = p_coords_manager->getScratchGPUMemory(
-      2 *
-      (p_coords_manager->getMaxMapSize(p_coords_manager->in_maps[map_key])));
-
   cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
   cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
 
-  if (!reverse_map)
+  if (!reverse_map) {
+    ASSERT(
+        p_coords_manager->d_in_maps.find(map_key) !=
+            p_coords_manager->d_in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
+
     ConvolutionBackwardKernelGPU<Dtype, int>(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
-        p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-        grad_out_feat.size(0), d_scr, handle, at::cuda::getCurrentCUDAStream());
-  else
+        p_coords_manager->d_in_maps[map_key],
+        p_coords_manager->d_out_maps[map_key], grad_out_feat.size(0), handle,
+        at::cuda::getCurrentCUDAStream());
+  } else {
+    ASSERT(
+        p_coords_manager->d_in_maps.find(rev_map_key) !=
+            p_coords_manager->d_in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
+
     ConvolutionBackwardKernelGPU<Dtype, int>(
         in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(1),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(1),
         kernel.data<Dtype>(), grad_kernel.data<Dtype>(),
-        p_coords_manager->out_maps[rev_map_key],
-        p_coords_manager->in_maps[rev_map_key], grad_out_feat.size(0), d_scr,
-        handle, at::cuda::getCurrentCUDAStream());
+        p_coords_manager->d_out_maps[rev_map_key],
+        p_coords_manager->d_in_maps[rev_map_key], grad_out_feat.size(0), handle,
+        at::cuda::getCurrentCUDAStream());
+  }
 }
 #endif
 

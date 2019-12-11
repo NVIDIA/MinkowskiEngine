@@ -41,7 +41,7 @@ void PoolingTransposeForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                                 py::object py_out_coords_key,
                                 py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out = p_coords_manager->getInOutMaps(
+  const auto &in_out = p_coords_manager->getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true, true);
 
@@ -53,7 +53,7 @@ void PoolingTransposeForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
 
   NonzeroAvgPoolingForwardKernelCPU<Dtype, int>(
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), num_nonzero.data<Dtype>(),
-      in_feat.size(1), get<0>(in_out), get<1>(in_out), out_nrows, false);
+      in_feat.size(1), in_out.first, in_out.second, out_nrows, false);
 }
 
 template <typename Dtype>
@@ -65,10 +65,10 @@ void PoolingTransposeBackwardCPU(
     py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
   bool reverse_map = false;
-  InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_out_coords_key, py_in_coords_key, false, true);
-  InOutMapKey map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, true, true);
 
@@ -80,18 +80,29 @@ void PoolingTransposeBackwardCPU(
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
-  if (!reverse_map)
+  if (!reverse_map) {
+    ASSERT(
+        p_coords_manager->in_maps.find(map_key) !=
+            p_coords_manager->in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
+
     NonzeroAvgPoolingBackwardKernelCPU<Dtype, int>(
         grad_in_feat.data<Dtype>(), in_feat.size(0),
         grad_out_feat.data<Dtype>(), num_nonzero.data<Dtype>(), in_feat.size(1),
         p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
         false);
-  else
+  } else {
+    ASSERT(
+        p_coords_manager->in_maps.find(rev_map_key) !=
+            p_coords_manager->in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
+
     NonzeroAvgPoolingBackwardKernelCPU<Dtype, int>(
         grad_in_feat.data<Dtype>(), in_feat.size(0),
         grad_out_feat.data<Dtype>(), num_nonzero.data<Dtype>(), in_feat.size(1),
         p_coords_manager->out_maps[rev_map_key],
         p_coords_manager->in_maps[rev_map_key], false);
+  }
 }
 
 #ifndef CPU_ONLY
@@ -105,7 +116,7 @@ void PoolingTransposeForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                                 py::object py_out_coords_key,
                                 py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  auto in_out = p_coords_manager->getInOutMaps(
+  const auto& in_out = p_coords_manager->getInOutMapsGPU(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true, true);
 
@@ -120,14 +131,11 @@ void PoolingTransposeForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   for (const auto &map : get<0>(in_out))
     nnz += map.size();
 
-  int *d_scr = p_coords_manager->getScratchGPUMemory(
-      2 * nnz +     // in_out map
-      out_nrows + 1 // csr_row
-                    // (nnz + in_feat.size(1) * out_nrows) *
-                    //     dtype_mult // dtype csr_val + tmp_out_feat
+  int *d_scr = (int *)p_coords_manager->getScratchGPUMemory(
+      (out_nrows + 1) * sizeof(int) // csr_row
   );
 
-  Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
+  Dtype *d_dscr = (Dtype *)p_coords_manager->getScratchGPUMemory2(
       ((false ? in_feat.size(0) : 0) + // d_ones
        nnz +                           // d_csr_val
        in_feat.size(1) * out_nrows     // d_tmp_out_feat
@@ -153,10 +161,10 @@ void PoolingTransposeBackwardGPU(
     py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
   bool reverse_map = false;
-  InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_out_coords_key, py_in_coords_key, false, true);
-  InOutMapKey map_key = p_coords_manager->getMapHashKey(
+  const InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, true, true);
 
@@ -168,27 +176,33 @@ void PoolingTransposeBackwardGPU(
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
 
-  int nnz = 0;
-  for (const auto &map : p_coords_manager->out_maps[map_key])
-    nnz += map.size();
+  if (!reverse_map) {
+    ASSERT(
+        p_coords_manager->d_in_maps.find(map_key) !=
+            p_coords_manager->d_in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
 
-  int *d_scr = p_coords_manager->getScratchGPUMemory(2 * nnz);
-
-  if (!reverse_map)
     NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
         grad_in_feat.data<Dtype>(), in_feat.size(0),
         grad_out_feat.data<Dtype>(), grad_out_feat.size(0),
         num_nonzero.data<Dtype>(), in_feat.size(1),
-        p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-        false, d_scr, at::cuda::getCurrentCUDAStream());
-  else
-    NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
-        grad_in_feat.data<Dtype>(), in_feat.size(0),
-        grad_out_feat.data<Dtype>(), grad_out_feat.size(0),
-        num_nonzero.data<Dtype>(), in_feat.size(1),
-        p_coords_manager->out_maps[rev_map_key],
-        p_coords_manager->in_maps[rev_map_key], false, d_scr,
+        p_coords_manager->d_in_maps[map_key],
+        p_coords_manager->d_out_maps[map_key], false,
         at::cuda::getCurrentCUDAStream());
+  } else {
+    ASSERT(
+        p_coords_manager->d_in_maps.find(rev_map_key) !=
+            p_coords_manager->d_in_maps.end(),
+        "The in-out map doesn't exist for backward. Did you run forward pass?");
+
+    NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
+        grad_in_feat.data<Dtype>(), in_feat.size(0),
+        grad_out_feat.data<Dtype>(), grad_out_feat.size(0),
+        num_nonzero.data<Dtype>(), in_feat.size(1),
+        p_coords_manager->d_out_maps[rev_map_key],
+        p_coords_manager->d_in_maps[rev_map_key], false,
+        at::cuda::getCurrentCUDAStream());
+  }
 }
 #endif
 

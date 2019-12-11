@@ -41,9 +41,9 @@ void CoordsManager::getKernelMap(at::Tensor kernel_map,
                                  py::object py_in_coords_key,
                                  py::object py_out_coords_key,
                                  bool is_transpose, bool is_pool) {
-  InOutMapKey map_key = getMapHashKey(tensor_strides, strides, kernel_sizes,
-                                      dilations, region_type, py_in_coords_key,
-                                      py_out_coords_key, is_transpose, is_pool);
+  const InOutMapKey map_key = getMapHashKey(
+      tensor_strides, strides, kernel_sizes, dilations, region_type,
+      py_in_coords_key, py_out_coords_key, is_transpose, is_pool);
 
   ASSERT(in_maps.find(map_key) != in_maps.end(),
          "The kernelmap does not exist.");
@@ -319,10 +319,10 @@ uint64_t CoordsManager::createOriginCoords(int D) {
   return out_coords_key;
 }
 
-InOutMapKey CoordsManager::getMapHashKey(
+const InOutMapKey CoordsManager::getMapHashKey(
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, bool is_transpose, bool is_pool) {
+    py::object py_out_coords_key, bool is_transpose, bool is_pool) const {
 
   int D = tensor_strides.size();
   ASSERT(D == tensor_strides.size() and D == strides.size() and
@@ -338,15 +338,16 @@ InOutMapKey CoordsManager::getMapHashKey(
   uint64_t stride_hash = hash_vec(strides);
   uint64_t kernel_size_hash = hash_vec(kernel_sizes);
   uint64_t dilation_hash = hash_vec(dilations);
-  InOutMapKey map_key = {
+  const InOutMapKey map_key = {
       in_coords_key, out_coords_key,        stride_hash,  kernel_size_hash,
       dilation_hash, (uint64_t)region_type, is_transpose, is_pool};
 
   return map_key;
 }
 
-InOutMapKey CoordsManager::getOriginMapHashKey(py::object py_in_coords_key,
-                                               py::object py_out_coords_key) {
+const InOutMapKey
+CoordsManager::getOriginMapHashKey(py::object py_in_coords_key,
+                                   py::object py_out_coords_key) const {
   CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
   CoordsKey *p_out_coords_key = py_out_coords_key.cast<CoordsKey *>();
   ASSERT(
@@ -361,7 +362,7 @@ InOutMapKey CoordsManager::getOriginMapHashKey(py::object py_in_coords_key,
   vector<int> zero_vec(D);
   fill(zero_vec.begin(), zero_vec.end(), 0);
   uint64_t zero_hash = hash_vec(zero_vec);
-  InOutMapKey map_key = {
+  const InOutMapKey map_key = {
       in_coords_key, out_coords_key, zero_hash, zero_hash, zero_hash, 0, false,
       true};
   return map_key;
@@ -370,7 +371,7 @@ InOutMapKey CoordsManager::getOriginMapHashKey(py::object py_in_coords_key,
 /**
  * Entry function for coords map generation and the associated kernel maps.
  */
-pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
+const pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
     const vector<int> &tensor_strides, const vector<int> &strides,
     const vector<int> &kernel_sizes, const vector<int> &dilations,
     int region_type, const at::Tensor &offsets, py::object py_in_coords_key,
@@ -409,9 +410,9 @@ pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
   }
 
   // 2. Generate kernel map
-  InOutMapKey map_key = getMapHashKey(tensor_strides, strides, kernel_sizes,
-                                      dilations, region_type, py_in_coords_key,
-                                      py_out_coords_key, is_transpose, is_pool);
+  const InOutMapKey map_key = getMapHashKey(
+      tensor_strides, strides, kernel_sizes, dilations, region_type,
+      py_in_coords_key, py_out_coords_key, is_transpose, is_pool);
 
   ConcurrentCoordsMap &in_map = coords_maps[in_coords_key];
   ConcurrentCoordsMap &out_map = coords_maps[out_coords_key];
@@ -455,7 +456,7 @@ pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
     p_out_coords_key->up_stride(strides);
 
     // Create temporary key for the flipped in/out
-    InOutMapKey tmp_map_key = getMapHashKey(
+    const InOutMapKey tmp_map_key = getMapHashKey(
         tensor_strides, strides, kernel_sizes, dilations, region_type,
         py_out_coords_key, py_in_coords_key, false, is_pool);
 
@@ -492,7 +493,7 @@ pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
   }
 }
 
-pair<InOutMaps<int> &, InOutMaps<int> &>
+const pair<InOutMaps<int> &, InOutMaps<int> &>
 CoordsManager::getOriginInOutMaps(py::object py_in_coords_key,
                                   py::object py_out_coords_key) {
   CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
@@ -511,7 +512,7 @@ CoordsManager::getOriginInOutMaps(py::object py_in_coords_key,
     out_coords_key = p_out_coords_key->getKey();
 
   // Map key for origin hash map
-  InOutMapKey map_key =
+  const InOutMapKey map_key =
       getOriginMapHashKey(py_in_coords_key, py_out_coords_key);
 
   // For non transpose case
@@ -525,7 +526,7 @@ CoordsManager::getOriginInOutMaps(py::object py_in_coords_key,
   return make_pair(ref(in_maps[map_key]), ref(out_maps[map_key]));
 }
 
-pair<InOutMaps<int> &, InOutMaps<int> &>
+const pair<InOutMaps<int> &, InOutMaps<int> &>
 CoordsManager::getPruningInOutMaps(at::Tensor use_feat,
                                    py::object py_in_coords_key,
                                    py::object py_out_coords_key) {
@@ -542,7 +543,7 @@ CoordsManager::getPruningInOutMaps(at::Tensor use_feat,
     out_coords_key = p_out_coords_key->getKey();
 
   // Use the map key for origin hash map (stride, dilation, kernel are all NULL)
-  InOutMapKey map_key =
+  const InOutMapKey map_key =
       getOriginMapHashKey(py_in_coords_key, py_out_coords_key);
 
   // For non transpose case

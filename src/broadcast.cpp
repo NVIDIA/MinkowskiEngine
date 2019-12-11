@@ -35,19 +35,11 @@ template <typename Dtype>
 void BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
                          at::Tensor out_feat, int op,
                          py::object py_in_coords_key,
-                         py::object py_out_coords_key,
+                         py::object py_glob_coords_key,
                          py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  // Both coords must exist
-  // Use the global pooling mapping
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
-      py_in_coords_key, py_out_coords_key);
-
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
-    throw std::invalid_argument(
-        Formatter() << "Input Output map not found: "
-                    << std::to_string(hash_vec<InOutMapKey>(map_key)));
+  const auto &in_out = p_coords_manager->getOriginInOutMaps(py_in_coords_key,
+                                                            py_glob_coords_key);
 
   out_feat.resize_as_(in_feat);
   out_feat.zero_();
@@ -55,7 +47,7 @@ void BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   BroadcastForwardKernelCPU<Dtype, int>(
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
+      in_out.first, in_out.second);
 }
 
 template <typename Dtype>
@@ -63,19 +55,15 @@ void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                           at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
                           at::Tensor grad_out_feat, int op,
                           py::object py_in_coords_key,
-                          py::object py_out_coords_key,
+                          py::object py_glob_coords_key,
                           py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
-  // Both coords must exist
-  // Use the global pooling mapping
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
-      py_in_coords_key, py_out_coords_key);
+  const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
+      py_in_coords_key, py_glob_coords_key);
 
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
-    throw std::invalid_argument(
-        Formatter() << "Input Output map not found: "
-                    << std::to_string(hash_vec<InOutMapKey>(map_key)));
+  ASSERT(p_coords_manager->in_maps.find(map_key) !=
+             p_coords_manager->in_maps.end(),
+         "The in-out map doesn't exist for backward. Did you run forward pass?")
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
@@ -94,25 +82,16 @@ template <typename Dtype>
 void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
                          at::Tensor out_feat, int op,
                          py::object py_in_coords_key,
-                         py::object py_out_coords_key,
+                         py::object py_glob_coords_key,
                          py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
   // Both coords must exist
   // Use the global pooling mapping
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
-      py_in_coords_key, py_out_coords_key);
-
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
-    throw std::invalid_argument(
-        Formatter() << "Input Output map not found: "
-                    << std::to_string(hash_vec<InOutMapKey>(map_key)));
+  const auto &in_out = p_coords_manager->getOriginInOutMapsGPU(
+      py_in_coords_key, py_glob_coords_key);
 
   out_feat.resize_as_(in_feat);
   out_feat.zero_();
-
-  int *d_scr = p_coords_manager->getScratchGPUMemory(
-      p_coords_manager->out_maps[map_key][0].size());
 
   cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
   cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
@@ -120,8 +99,7 @@ void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   BroadcastForwardKernelGPU<Dtype, int>(
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-      d_scr, handle, at::cuda::getCurrentCUDAStream());
+      in_out.first, in_out.second, handle, at::cuda::getCurrentCUDAStream());
 }
 
 template <typename Dtype>
@@ -129,35 +107,33 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                           at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
                           at::Tensor grad_out_feat, int op,
                           py::object py_in_coords_key,
-                          py::object py_out_coords_key,
+                          py::object py_glob_coords_key,
                           py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
+      py_in_coords_key, py_glob_coords_key);
 
-  // Both coords must exist
-  // Use the global pooling mapping
-  InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
-      py_in_coords_key, py_out_coords_key);
-
-  if (p_coords_manager->in_maps.find(map_key) ==
-      p_coords_manager->in_maps.end())
-    throw std::invalid_argument(
-        Formatter() << "Input Output map not found: "
-                    << std::to_string(hash_vec<InOutMapKey>(map_key)));
+  ASSERT(p_coords_manager->d_in_maps.find(map_key) !=
+             p_coords_manager->d_in_maps.end(),
+         "The in-out map doesn't exist for backward. Did you run forward pass?")
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
   grad_in_feat_glob.resize_as_(in_feat_glob);
   grad_in_feat_glob.zero_();
 
-  int *d_scr = p_coords_manager->getScratchGPUMemory(
-      2 * p_coords_manager->out_maps[map_key][0].size() + // in_map + out_map
-      in_feat_glob.size(0) + 1                            // d_csr_row
+  const int nnz = getInOutMapsSize(p_coords_manager->d_in_maps[map_key]);
+
+  int *d_scr = (int *)p_coords_manager->getScratchGPUMemory(
+      2 * nnz * sizeof(int) +                  // in, out maps to sort
+      (in_feat_glob.size(0) + 1) * sizeof(int) // d_csr_row
   );
 
-  Dtype *d_dscr = (Dtype *)p_coords_manager->getDScratchGPUMemory(
-      (in_feat.size(0) + // d_csr_val
-       (in_feat.size(0) + in_feat_glob.size(0)) * in_feat.size(1)) *
-      sizeof(Dtype) // tmp_grad_infeat(_global)
+  Dtype *d_dscr = (Dtype *)p_coords_manager->getScratchGPUMemory2(
+      in_feat.size(0) * sizeof(Dtype) +                   // d_csr_val
+      in_feat.size(0) * in_feat.size(1) * sizeof(Dtype) + // tmp_grad_infeat
+      in_feat_glob.size(0) * in_feat.size(1) *
+          sizeof(Dtype) // tmp_grad_infeat_global
   );
 
   cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
@@ -167,11 +143,9 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(0),
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key],
-      d_scr, d_dscr, handle, at::cuda::getCurrentCUDAStream());
-
-  // p_coords_manager->gpu_memory_manager.reset();
-  // p_coords_manager->dgpu_memory_manager.reset();
+      p_coords_manager->d_in_maps[map_key],
+      p_coords_manager->d_out_maps[map_key], d_scr, d_dscr, handle,
+      at::cuda::getCurrentCUDAStream());
 }
 #endif
 
