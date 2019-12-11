@@ -20,6 +20,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 - Ubuntu 14.04 or higher
 - CUDA 10.1 or higher
 - pytorch 1.3 or higher
+- GCC 6 or higher
 
 
 ## Installation
@@ -39,7 +40,7 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7
 conda activate py3-mink
-conda install openblas numpy tbb tbb-devel
+conda install openblas numpy tbb=2019.9 tbb-devel=2019.9 -c conda-forge
 conda install pytorch torchvision -c pytorch
 ```
 
@@ -58,7 +59,11 @@ python setup.py install
 Like the anaconda installation, make sure that you install pytorch with the the same CUDA version that `nvcc` uses.
 
 ```
+# Latest TBB
+echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
+sudo apt update
 sudo apt install libopenblas-dev libtbb-dev
+
 # within a python3 environment
 pip install torch
 git clone https://github.com/StanfordVL/MinkowskiEngine.git

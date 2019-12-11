@@ -79,7 +79,7 @@ If above method doesn't work, try to create a new conda environment. We found th
 ```
 conda create -n py3-mink-2 python=3.7 anaconda
 conda activate py3-mink-2
-conda install openblas numpy tbb tbb-devel
+conda install openblas numpy tbb=2019.9 tbb-devel=2019.9 -c conda-forge
 conda install pytorch torchvision -c pytorch
 ```
 
@@ -111,7 +111,7 @@ In this example, we assumed that you are using CUDA 10.1, but please make sure t
 ```
 conda create -n py3-mink-2 python=3.7 anaconda
 conda activate py3-mink-2
-conda install openblas numpy tbb tbb-devel
+conda install openblas numpy tbb=2019.9 tbb-devel=2019.9 -c conda-forge
 conda install pytorch torchvision cudatoolkit=10.1 -c pytorch  # Make sure to use the correct cudatoolkit version
 
 cd /path/to/MinkowskiEngine
