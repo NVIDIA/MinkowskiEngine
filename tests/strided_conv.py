@@ -103,10 +103,12 @@ if __name__ == '__main__':
     print('Forward')
     for k, conv in all_convs.items():
         timer = Timer()
-        sinput._F = torch.rand(len(sinput), k[1]).to(device)
+        features = torch.rand(len(coordinates), k[1]).to(device)
 
         # Feed-forward pass and get the prediction
         for i in range(20):
+            sinput = ME.SparseTensor(features, coords=coordinates).to(device)
+
             timer.tic()
             soutput = conv(sinput)
             timer.toc()

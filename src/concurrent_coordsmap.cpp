@@ -1,3 +1,27 @@
+/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
+ * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
+ * of the code.
+ */
 #include "concurrent_coordsmap.hpp"
 
 void ConcurrentCoordsMap::set_threads(int num_threads_) {
@@ -80,13 +104,6 @@ ConcurrentCoordsMap::initialize(vector<int> &&coords_, int nrows_, int ncols_,
   set<int> batch_indices;
   for (const auto &i : concurr_batch_indices)
     batch_indices.insert(i.first);
-
-  /* for (const auto &i : map) {
-    cout << "Init: " << &coords[ncols * i.second] << " " << i.first.ptr << " ";
-    for (int k = 0; k < i.first.size; k++)
-      cout << i.first.ptr[k] << " ";
-    cout << ":" << i.second << endl;
-  } */
 
   // cout << "Creation: " << (t1 - t0).seconds() << endl;
   int unique_size = map.size();
@@ -240,13 +257,6 @@ ConcurrentCoordsMap ConcurrentCoordsMap::stride_region(const Region &region) {
                     },
                     tbb::auto_partitioner());
 
-  /* for (const auto &i : tmp_map) {
-    cout << "Strided : " << i.first.ptr << " ";
-    for (int k = 0; k < i.first.size; k++)
-      cout << i.first.ptr[k] << " ";
-    cout << ":" << i.second << endl;
-  } */
-
   // p_mapping
   tbb::concurrent_vector<int *> p_mapping;
   p_mapping.reserve(tmp_map.size());
@@ -285,14 +295,6 @@ ConcurrentCoordsMap ConcurrentCoordsMap::stride_region(const Region &region) {
                       }
                     },
                     tbb::auto_partitioner());
-
-  /* for (const auto &i : out_inner_map) {
-    cout << "Coords Strided : " << &out_coords[i.second * ncols] << " "
-         << i.first.ptr << " ";
-    for (int k = 0; k < i.first.size; k++)
-      cout << i.first.ptr[k] << " " << out_coords[i.second * ncols + k] << " ";
-    cout << ":" << i.second << endl;
-  } */
 
   ASSERT(out_coords_map.size() == out_coords_map.nrows, "Map size mismatch");
 
@@ -355,14 +357,6 @@ void ConcurrentCoordsMap::updateUniqueCoords(
   ConcurrentCoordsInnerMap new_map;
   vector<int> new_coords(map.size() * ncols);
 
-  /* for (const auto &i : map) {
-    cout << "Before unique: " << &coords[ncols * i.second] << " " << i.first.ptr
-         << " ";
-    for (int k = 0; k < i.first.size; k++)
-      cout << i.first.ptr[k] << " ";
-    cout << ":" << i.second << endl;
-  } */
-
   tbb::parallel_for(map.range(), [&](decltype(map)::const_range_type &r) {
     Coord<int> coord;
     coord.size = ncols;
@@ -374,14 +368,6 @@ void ConcurrentCoordsMap::updateUniqueCoords(
       new_map[coord] = i.second; // replace with the new pointer
     }
   });
-
-  /* for (const auto &i : new_map) {
-    cout << "After unique: " << &out_coords[ncols * i.second] << " "
-         << i.first.ptr << " ";
-    for (int k = 0; k < i.first.size; k++)
-      cout << i.first.ptr[k] << " ";
-    cout << ":" << i.second << endl;
-  } */
 
   ASSERT(map.size() == new_map.size(), "Remapping sizes different.")
 

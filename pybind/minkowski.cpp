@@ -169,7 +169,6 @@ void instantiate(py::module &m) {
 
 void bind_native(py::module &m) {
 #ifndef CPU_ONLY
-  m.def("SparseVoxelization", &SparseVoxelization);
   py::class_<GPUMemoryManager>(m, "MemoryManager")
       .def(py::init<>())
       .def("resize", &GPUMemoryManager::resize);
@@ -186,6 +185,10 @@ void bind_native(py::module &m) {
       .def("setTensorStride", &CoordsKey::setTensorStride)
       .def("getTensorStride", &CoordsKey::getTensorStride)
       .def("__repr__", [](const CoordsKey &a) { return a.toString(); });
+
+  // Quantization
+  m.def("quantize", &quantize);
+  m.def("quantize_label", &quantize_label);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

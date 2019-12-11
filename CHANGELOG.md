@@ -1,11 +1,12 @@
 # Change Log
 
-## [nightly] - 2019-12-10
+## [nightly] - 2019-12-11
 
 ### Changed
 
 - Cache in-out mapping on device
 - Latest TBB installation instruction update and GCC requirement
+- ConcurrentCoordsMap based quantization with label collision
 
 
 ## [0.3.0] - 2019-12-08

@@ -22,6 +22,7 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <torch/extension.h>
 
@@ -255,31 +256,35 @@ void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
  * GlobalMaxPooling
  *************************************/
 template <typename Dtype>
-void GlobalMaxPoolingForwardCPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+void GlobalMaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
+                                at::Tensor num_nonzero,
+                                py::object py_in_coords_key,
+                                py::object py_out_coords_key,
+                                py::object py_coords_manager);
 
 template <typename Dtype>
-void GlobalMaxPoolingBackwardCPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+void GlobalMaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
+                                 at::Tensor grad_out_feat,
+                                 at::Tensor num_nonzero,
+                                 py::object py_in_coords_key,
+                                 py::object py_out_coords_key,
+                                 py::object py_coords_manager);
 
 #ifndef CPU_ONLY
 template <typename Dtype>
-void GlobalMaxPoolingForwardGPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+void GlobalMaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
+                                at::Tensor num_nonzero,
+                                py::object py_in_coords_key,
+                                py::object py_out_coords_key,
+                                py::object py_coords_manager);
 
 template <typename Dtype>
-void GlobalMaxPoolingBackwardGPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat,
-    at::Tensor grad_out_feat, at::Tensor num_nonzero,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
+void GlobalMaxPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
+                                 at::Tensor grad_out_feat,
+                                 at::Tensor num_nonzero,
+                                 py::object py_in_coords_key,
+                                 py::object py_out_coords_key,
+                                 py::object py_coords_manager);
 #endif
 
 /*************************************
@@ -347,12 +352,12 @@ void PruningBackwardGPU(at::Tensor grad_in_feat, at::Tensor grad_out_feat,
 #endif
 
 /*************************************
- * Voxelization
+ * Quantization
  *************************************/
-#ifndef CPU_ONLY
-#include <pybind11/numpy.h>
-std::vector<py::array_t<int>>
-SparseVoxelization(py::array_t<uint64_t, py::array::c_style> keys,
-                   py::array_t<int, py::array::c_style> labels,
-                   int ignore_label, bool has_label);
-#endif
+py::array
+quantize(py::array_t<int, py::array::c_style | py::array::forcecast> coords);
+
+vector<py::array> quantize_label(
+    py::array_t<int, py::array::c_style | py::array::forcecast> coords,
+    py::array_t<int, py::array::c_style | py::array::forcecast> labels,
+    int invalid_label);

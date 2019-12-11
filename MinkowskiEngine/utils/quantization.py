@@ -24,6 +24,7 @@
 import torch
 import numpy as np
 from collections import Sequence
+import MinkowskiEngineBackend as MEB
 
 
 def fnv_hash_vec(arr):
@@ -65,9 +66,7 @@ def sparse_quantize(coords,
                     feats=None,
                     labels=None,
                     ignore_label=255,
-                    set_ignore_label_when_collision=False,
                     return_index=False,
-                    hash_type='fnv',
                     quantization_size=1):
     r"""Given coordinates, and features (optionally labels), the function
     generates quantized (voxelized) coordinates.
@@ -85,14 +84,8 @@ def sparse_quantize(coords,
 
         ignore_label (:attr:`int`, optional): the int value of the IGNORE LABEL.
 
-        set_ignore_label_when_collision (:attr:`bool`, optional): use the `ignore_label`
-        when at least two points fall into the same cell.
-
         return_index (:attr:`bool`, optional): True if you want the indices of the
         quantized coordinates. False by default.
-
-        hash_type (:attr:`str`, optional): Hash function used for quantization. Either
-        `ravel` or `fnv`. `ravel` by default.
 
         quantization_size (:attr:`float`, :attr:`list`, or
         :attr:`numpy.ndarray`, optional): the length of the each side of the
@@ -104,17 +97,18 @@ def sparse_quantize(coords,
     """
     use_label = labels is not None
     use_feat = feats is not None
+
+    # If only coordindates are given, return the index
     if not use_label and not use_feat:
         return_index = True
 
-    assert hash_type in [
-        'ravel', 'fnv'
-    ], "Invalid hash_type. Either ravel, or fnv allowed. You put hash_type=" + hash_type
     assert coords.ndim == 2, \
         "The coordinates must be a 2D matrix. The shape of the input is " + str(coords.shape)
+
     if use_feat:
         assert feats.ndim == 2
         assert coords.shape[0] == feats.shape[0]
+
     if use_label:
         assert coords.shape[0] == len(labels)
 
@@ -124,34 +118,38 @@ def sparse_quantize(coords,
         assert len(
             quantization_size
         ) == dimension, "Quantization size and coordinates size mismatch."
-        quantization_size = [i for i in quantization_size]
+        quantization_size = np.array([i for i in quantization_size])
+        discrete_coords = np.floor(coords / quantization_size)
     elif np.isscalar(quantization_size):  # Assume that it is a scalar
-        quantization_size = [quantization_size for i in range(dimension)]
+
+        if quantization_size == 1:
+            discrete_coords = coords
+        else:
+            quantization_size = np.array(
+                [quantization_size for i in range(dimension)])
+            discrete_coords = np.floor(coords / quantization_size)
     else:
         raise ValueError('Not supported type for quantization_size.')
-    discrete_coords = np.floor(coords / np.array(quantization_size))
 
-    # Hash function type
-    if hash_type == 'ravel':
-        key = ravel_hash_vec(discrete_coords)
-    else:
-        key = fnv_hash_vec(discrete_coords)
-
+    # Return values accordingly
     if use_label:
-        _, inds, counts = np.unique(key, return_index=True, return_counts=True)
-        filtered_labels = labels[inds]
-        if set_ignore_label_when_collision:
-            filtered_labels[counts > 1] = ignore_label
+        mapping, colabels = MEB.quantize_label(discrete_coords, labels,
+                                               ignore_label)
+
         if return_index:
-            return inds, filtered_labels
-        else:
-            return discrete_coords[inds], feats[inds], filtered_labels
-    else:
-        _, inds = np.unique(key, return_index=True)
-        if return_index:
-            return inds
+            return mapping, colabels
         else:
             if use_feat:
-                return discrete_coords[inds], feats[inds]
+                return discrete_coords[mapping], feats[mapping], colabels
             else:
-                return discrete_coords[inds]
+                return discrete_coords[mapping], colabels
+
+    else:
+        mapping = MEB.quantize(discrete_coords)
+        if return_index:
+            return mapping
+        else:
+            if use_feat:
+                return discrete_coords[mapping], feats[mapping]
+            else:
+                return discrete_coords[mapping]
