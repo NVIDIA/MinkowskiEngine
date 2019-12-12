@@ -80,13 +80,16 @@ class TestGPUVoxelization(unittest.TestCase):
         print(sparse_quantize(coords, feats, labels, ignore_label))
 
     def test_collision(self):
-        N = 4
         coords = np.array([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=np.int32)
         labels = np.array([0,     1,      2,      3], dtype=np.int32)
 
         mapping, colabels = sparse_quantize(coords, labels=labels, ignore_label=255)
         print(mapping)
         print(colabels)
+
+        coords = np.array([[0, 0], [0, 1]], dtype=np.int32)
+        discrete_coords = sparse_quantize(coords)
+        print(discrete_coords)
 
 
 if __name__ == '__main__':

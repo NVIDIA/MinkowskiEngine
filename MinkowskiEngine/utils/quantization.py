@@ -146,10 +146,20 @@ def sparse_quantize(coords,
 
     else:
         mapping = MEB.quantize(discrete_coords)
-        if return_index:
-            return mapping
-        else:
-            if use_feat:
-                return discrete_coords[mapping], feats[mapping]
+        if len(mapping) > 0:
+            if return_index:
+                return mapping
             else:
-                return discrete_coords[mapping]
+                if use_feat:
+                    return discrete_coords[mapping], feats[mapping]
+                else:
+                    return discrete_coords[mapping]
+
+        else:
+            if return_index:
+                return np.arange(len(discrete_coords))
+            else:
+                if use_feat:
+                    return discrete_coords, feats
+                else:
+                    return discrete_coords

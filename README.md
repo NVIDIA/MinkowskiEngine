@@ -5,10 +5,9 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 ## Features
 
 - Unlimited high-dimensional sparse tensor support
+- All standard neural network layers (Convolution, Pooling, Broadcast, etc.)
 - Dynamic computation graph
 - Custom kernel shapes
-- [Generalized sparse convolution](https://stanfordvl.github.io/MinkowskiEngine/generalized_sparse_conv.html)
-- Dilated convolution
 - Multi-GPU training
 - Multi-threaded kernel map
 - Multi-threaded compilation
@@ -25,7 +24,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 ## Installation
 
-You can install the MinkowskiEngine without sudo using anaconda. Using anaconda is highly recommended.
+You can install the Minkowski Engine without sudo using anaconda. Using anaconda is highly recommended.
 
 
 ### Anaconda
@@ -56,7 +55,7 @@ python setup.py install
 
 ### Python virtual environment
 
-Like the anaconda installation, make sure that you install pytorch with the the same CUDA version that `nvcc` uses.
+Like the anaconda installation, make sure that you install pytorch with the same CUDA version that `nvcc` uses.
 
 ```
 # Latest TBB
@@ -177,8 +176,6 @@ page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 ```
 
 ## Projects using MinkowskiEngine
-
-Feel free to send me your project link to ![](https://node1.chrischoy.org/data/email.png).
 
 - [4D Spatio-Temporal Segmentation](https://github.com/chrischoy/SpatioTemporalSegmentation)
 - [Fully Convolutional Geometric Features, ICCV'19](https://github.com/chrischoy/FCGF)
