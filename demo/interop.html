@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Working with Pytorch Layers &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Working with Pytorch Layers &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -88,7 +88,7 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
@@ -118,6 +118,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -186,18 +187,18 @@
             
   <div class="section" id="working-with-pytorch-layers">
 <h1>Working with Pytorch Layers<a class="headerlink" href="#working-with-pytorch-layers" title="Permalink to this headline">¶</a></h1>
-<p>The <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> is a shallow wrapper of the
+<p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> is a shallow wrapper of the
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>. Thus, it very easy to convert a sparse tensor to a
 pytorch tensor and vice versa.</p>
 <div class="section" id="example-features-for-classification">
 <h2>Example: Features for Classification<a class="headerlink" href="#example-features-for-classification" title="Permalink to this headline">¶</a></h2>
 <p>In this example, we show how to extract features from a
-<a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> and using the features with a pytorch
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> and using the features with a pytorch
 layer.</p>
 <p>First, let’s create a network that generate a feature vector for each input in
 a min-batch.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="kn">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 
 <span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 
@@ -209,7 +210,7 @@ a min-batch.</p>
                 <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                 <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                 <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">(),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
                 <span class="n">in_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Training Pipeline with Pytorch DataLoader &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Training Pipeline with Pytorch DataLoader &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -88,7 +88,7 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
@@ -120,6 +120,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -225,8 +226,6 @@ In this example, let’s create a random dataset that generates a noisy line.</p
             <span class="n">coords</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span>
             <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span>
             <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-            <span class="n">hash_type</span><span class="o">=</span><span class="s1">&#39;ravel&#39;</span><span class="p">,</span>
-            <span class="n">set_ignore_label_when_collision</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
             <span class="n">quantization_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">quantization_size</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">discrete_coords</span><span class="p">,</span> <span class="n">unique_feats</span><span class="p">,</span> <span class="n">unique_labels</span>
 </pre></div>
@@ -308,8 +307,8 @@ maps, cannot be referenced outside the process that generated it.</p>
         <span class="n">tot_iter</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">tot_iter</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">tot_iter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span>
-                <span class="n">f</span><span class="s1">&#39;Iter: {tot_iter}, Epoch: {epoch}, Loss: {accum_loss / accum_iter}&#39;</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Iter: </span><span class="si">{tot_iter}</span><span class="s1">, Epoch: </span><span class="si">{epoch}</span><span class="s1">, Loss: {accum_loss / accum_iter}&#39;</span>
             <span class="p">)</span>
             <span class="n">accum_loss</span><span class="p">,</span> <span class="n">accum_iter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 </pre></div>

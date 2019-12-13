@@ -47,8 +47,6 @@ In this example, let's create a random dataset that generates a noisy line.
                coords=input,
                feats=feats,
                labels=labels,
-               hash_type='ravel',
-               set_ignore_label_when_collision=False,
                quantization_size=self.quantization_size)
            return discrete_coords, unique_feats, unique_labels
 

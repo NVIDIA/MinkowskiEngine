@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Common Issues &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Common Issues &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Benchmark" href="benchmark.html" />
+    <link rel="next" title="Guidelines for Faster Networks" href="guides.html" />
     <link rel="prev" title="Miscellaneous Classes" href="common.html" /> 
 </head>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -88,7 +88,7 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
@@ -123,10 +123,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#from-a-new-conda-virtual-environment">From a new conda virtual environment</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#cuda-version-mismatch">CUDA Version mismatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cuda-version-mismatch-undefined-symbol-and-invalid-device-function">CUDA Version mismatch: <code class="docutils literal notranslate"><span class="pre">undefined</span> <span class="pre">symbol</span></code> and <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">device</span> <span class="pre">function</span></code>.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#issues-not-listed">Issues not listed</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -256,8 +257,7 @@ This makes the pytorch CPPExtension module to fail leading to problems like <cod
 <p>If above method doesn’t work, try to create a new conda environment. We found that it sometimes solves the compilation issues.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">google</span><span class="o">-</span><span class="n">sparsehash</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span> <span class="n">tbb</span><span class="o">=</span><span class="mf">2019.9</span> <span class="n">tbb</span><span class="o">-</span><span class="n">devel</span><span class="o">=</span><span class="mf">2019.9</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
 </pre></div>
 </div>
@@ -270,20 +270,20 @@ This makes the pytorch CPPExtension module to fail leading to problems like <cod
 </div>
 </div>
 </div>
-<div class="section" id="cuda-version-mismatch">
-<h2>CUDA Version mismatch<a class="headerlink" href="#cuda-version-mismatch" title="Permalink to this headline">¶</a></h2>
-<p>In some cases when the conda pytorch uses a different CUDA version, you might get an undefined symbol error. Try to reinstall pytorch with the correct CUDA version that you are using to compile MinkowskiEngine.</p>
+<div class="section" id="cuda-version-mismatch-undefined-symbol-and-invalid-device-function">
+<h2>CUDA Version mismatch: <code class="docutils literal notranslate"><span class="pre">undefined</span> <span class="pre">symbol</span></code> and <code class="docutils literal notranslate"><span class="pre">invalid</span> <span class="pre">device</span> <span class="pre">function</span></code>.<a class="headerlink" href="#cuda-version-mismatch-undefined-symbol-and-invalid-device-function" title="Permalink to this headline">¶</a></h2>
+<p>In some cases when the conda pytorch uses a different CUDA version, you might get an undefined symbol error or <code class="docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">error:</span> <span class="pre">invalid</span> <span class="pre">device</span> <span class="pre">function</span></code>.
+Try to reinstall pytorch with the correct CUDA version that you are using to compile MinkowskiEngine.</p>
 <p>To find out your CUDA version, run <code class="docutils literal notranslate"><span class="pre">nvcc</span> <span class="pre">--version</span></code>.</p>
 <p>To install the correct CUDA libraries for anaconda pytorch, install <code class="docutils literal notranslate"><span class="pre">cudatoolkit=x.x</span></code> along with pytorch. For example,</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="n">cudatoolkit</span><span class="o">=</span><span class="mf">10.0</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="n">cudatoolkit</span><span class="o">=</span><span class="mf">10.1</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
 </pre></div>
 </div>
-<p>In this example, we assumed that you are using CUDA 10.0, but please make sure that you are installing the correct version. Then, use the following code snippet to create a new conda environment, and install MinkowskiEngine.</p>
+<p>In this example, we assumed that you are using CUDA 10.1, but please make sure that you are installing the correct version. Then, use the following code snippet to create a new conda environment, and install MinkowskiEngine.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">google</span><span class="o">-</span><span class="n">sparsehash</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="n">cudatoolkit</span><span class="o">=</span><span class="mf">10.0</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>  <span class="c1"># Make sure to use the correct cudatoolkit version</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span> <span class="n">tbb</span><span class="o">=</span><span class="mf">2019.9</span> <span class="n">tbb</span><span class="o">-</span><span class="n">devel</span><span class="o">=</span><span class="mf">2019.9</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="n">cudatoolkit</span><span class="o">=</span><span class="mf">10.1</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>  <span class="c1"># Make sure to use the correct cudatoolkit version</span>
 
 <span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span>
@@ -320,7 +320,7 @@ This makes the pytorch CPPExtension module to fail leading to problems like <cod
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="benchmark.html" class="btn btn-neutral float-right" title="Benchmark" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="guides.html" class="btn btn-neutral float-right" title="Guidelines for Faster Networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="common.html" class="btn btn-neutral float-left" title="Miscellaneous Classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

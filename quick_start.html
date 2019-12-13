@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Start &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Quick Start &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Training Pipeline with Pytorch DataLoader" href="demo/training.html" />
-    <link rel="prev" title="Generalized Sparse Convolution" href="generalized_sparse_conv.html" /> 
+    <link rel="prev" title="Convolution on a Sparse Tensor" href="convolution_on_sparse.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -88,7 +88,7 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-a-segmentation-network">Running a segmentation network</a></li>
@@ -120,6 +120,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -195,8 +196,7 @@
 <li><p>Create an anaconda virtual environment and install dependencies.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">google</span><span class="o">-</span><span class="n">sparsehash</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span> <span class="n">tbb</span><span class="o">=</span><span class="mf">2019.9</span> <span class="n">tbb</span><span class="o">-</span><span class="n">devel</span><span class="o">=</span><span class="mf">2019.9</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>  <span class="c1"># Use the correct cudatoolkit version</span>
 </pre></div>
 </div>
@@ -213,7 +213,7 @@
 </div>
 <div class="section" id="running-a-segmentation-network">
 <h2>Running a segmentation network<a class="headerlink" href="#running-a-segmentation-network" title="Permalink to this headline">¶</a></h2>
-<p>Go to the top directory of the MinkowskiEngine and run the following.</p>
+<p>Go to the top directory of the Minkowski Engine and run the following.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
 <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">examples</span><span class="o">.</span><span class="n">indoor</span>
 </pre></div>
@@ -226,7 +226,7 @@ room.</p>
 <h2>CPU only compilation<a class="headerlink" href="#cpu-only-compilation" title="Permalink to this headline">¶</a></h2>
 <ol class="simple">
 <li><p>Uncomment line 8 of the Makefile to enable the flag, <code class="docutils literal notranslate"><span class="pre">CPU_ONLY</span></code>.</p></li>
-<li><p>Uncomment line 66 of the <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> to enable the flag, <code class="docutils literal notranslate"><span class="pre">CPU_ONLY</span></code>.</p></li>
+<li><p>Uncomment line 59 of the <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> to enable the flag, <code class="docutils literal notranslate"><span class="pre">CPU_ONLY</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code></p></li>
 </ol>
 </div>
@@ -257,7 +257,7 @@ room.</p>
         <a href="demo/training.html" class="btn btn-neutral float-right" title="Training Pipeline with Pytorch DataLoader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="generalized_sparse_conv.html" class="btn btn-neutral float-left" title="Generalized Sparse Convolution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="convolution_on_sparse.html" class="btn btn-neutral float-left" title="Convolution on a Sparse Tensor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

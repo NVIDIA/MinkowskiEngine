@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Benchmark &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Benchmark &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Common Issues" href="issues.html" /> 
+    <link rel="prev" title="Guidelines for Faster Networks" href="guides.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -87,7 +87,7 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
@@ -114,6 +114,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Benchmark</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#experiment-setup">Experiment setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#single-convolution-layer">Single Convolution Layer</a></li>
@@ -192,7 +193,7 @@
 <div class="section" id="experiment-setup">
 <h2>Experiment setup<a class="headerlink" href="#experiment-setup" title="Permalink to this headline">¶</a></h2>
 <p>For a single-convolution-layer experiment, we use the following setup.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 
 <span class="n">conv</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
     <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
@@ -200,7 +201,7 @@
     <span class="n">kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
     <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+    <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -269,7 +270,7 @@
         <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
         <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
         <span class="n">in_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
@@ -277,7 +278,7 @@
         <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolutionTranspose</span>
         <span class="n">in_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
@@ -285,7 +286,7 @@
         <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -356,7 +357,7 @@
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="issues.html" class="btn btn-neutral float-left" title="Common Issues" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="guides.html" class="btn btn-neutral float-left" title="Guidelines for Faster Networks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

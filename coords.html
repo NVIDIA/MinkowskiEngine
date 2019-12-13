@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Coordinate Management &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Coordinate Management &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -88,7 +88,7 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
@@ -119,6 +119,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -254,7 +255,7 @@
 
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.get_kernel_map">
-<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param">in_tensor_strides</em>, <em class="sig-param">out_tensor_strides</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param">in_tensor_strides</em>, <em class="sig-param">out_tensor_strides</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">is_pool=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -279,17 +280,32 @@
 
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em>, <em class="sig-param">enforce_creation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="MinkowskiEngine.CoordsManager.initialize_enforce">
-<code class="sig-name descname">initialize_enforce</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize_enforce" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">force_remap=False</em>, <em class="sig-param">allow_duplicates=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.permute_label">
 <code class="sig-name descname">permute_label</code><span class="sig-paren">(</span><em class="sig-param">label</em>, <em class="sig-param">max_label</em>, <em class="sig-param">target_tensor_stride</em>, <em class="sig-param">label_tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.permute_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.CoordsManager.print_diagnostics">
+<code class="sig-name descname">print_diagnostics</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.print_diagnostics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.CoordsManager.reduce">
+<code class="sig-name descname">reduce</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.reduce" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.CoordsManager.stride">
+<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">stride</em>, <em class="sig-param">force_creation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.stride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.CoordsManager.transposed_stride">
+<code class="sig-name descname">transposed_stride</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">stride</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">dilation</em>, <em class="sig-param">force_creation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.transposed_stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

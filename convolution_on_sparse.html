@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Generalized Sparse Convolution &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Convolution on a Sparse Tensor &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -88,9 +88,9 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Generalized Sparse Convolution</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Convolution on a Sparse Tensor</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-tensor">Sparse Tensor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">Generalized Sparse Convolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
@@ -120,6 +120,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -166,13 +167,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Generalized Sparse Convolution</li>
+      <li>Convolution on a Sparse Tensor</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/generalized_sparse_conv.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/convolution_on_sparse.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -186,8 +187,8 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="generalized-sparse-convolution">
-<h1>Generalized Sparse Convolution<a class="headerlink" href="#generalized-sparse-convolution" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="convolution-on-a-sparse-tensor">
+<h1>Convolution on a Sparse Tensor<a class="headerlink" href="#convolution-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="sparse-tensor">
 <h2>Sparse Tensor<a class="headerlink" href="#sparse-tensor" title="Permalink to this headline">¶</a></h2>
 <p>In traditional speech, text, or image data, features are extracted densely.
@@ -199,7 +200,7 @@ features. This representation is an N-dimensional extension of a sparse matrix;
 thus it is known as a sparse tensor.</p>
 <p>In the Minkowski Engine, we adopt the same sparse tensor for the basic data
 representation and the class is provided in
-<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>. We use the COOrdinate (COO) format to
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>. We use the COOrdinate (COO) format to
 save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
 representation is simply a concatenation of coordinates in a matrix <span class="math notranslate nohighlight">\(C\)</span>
 and associated features <span class="math notranslate nohighlight">\(F\)</span>.</p>
@@ -220,7 +221,7 @@ the mini-batch index to disassociate instances within the same batch.
 Internally, we handle the batch index as an additional spatial dimension.</p>
 </div>
 <div class="section" id="id2">
-<h2>Generalized Sparse Convolution<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2>Convolution on a Sparse Tensor<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <p>The convolution is a fundamental operation in many fields. In image perception,
 the 2D convolution has achieved state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
@@ -272,8 +273,8 @@ dense convolution.  If we define the <span class="math notranslate nohighlight">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1] An Investigation of Sparse Tensor Formats for Tensor Libraries, 2015</a></p></li>
-<li><p><a class="reference external" href="https://arxiv.org/abs/1711.10275">[2] 3D Semantic Segmentation with Submanifold Sparse Convolutional Neural Networks, CVPR‘18</a></p></li>
-<li><p><a class="reference external" href="https://arxiv.org/abs/1904.08755">[3] 4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR‘19</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/1711.10275">[2] 3D Semantic Segmentation with Submanifold Sparse Convolutional Neural Networks, CVPR’18</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/1904.08755">[3] 4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR’19</a></p></li>
 </ul>
 </div>
 </div>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -88,7 +88,7 @@
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
@@ -122,6 +122,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -202,6 +203,16 @@
 \mathbf{u} \in \mathcal{C}^\text{out}\]</div>
 <p>where <span class="math notranslate nohighlight">\(y^c_\mathbf{u}\)</span> is a feature at channel <span class="math notranslate nohighlight">\(c\)</span> and a
 coordinate <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The engine will generate the in-out mapping corresponding to a
+pooling function faster if the kernel sizes is equal to the stride
+sizes, e.g. <cite>kernel_size = [2, 1], stride = [2, 1]</cite>.</p>
+<p>If you use a U-network architecture, use the transposed version of
+the same function for up-sampling. e.g. <cite>pool =
+MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
+<cite>unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)</cite>.</p>
+</div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.__init__" title="Permalink to this definition">¶</a></dt>
@@ -231,6 +242,10 @@ all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 </dd>
 </dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Custom kernel shapes are not supported when kernel_size == stride.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -259,6 +274,16 @@ cardinality varies depending on the number of input features per output.
 Thus, the average pooling for a sparse tensor is not equivalent to the
 conventional average pooling layer for a dense tensor. Please refer to
 the <a class="reference internal" href="#MinkowskiEngine.MinkowskiSumPooling" title="MinkowskiEngine.MinkowskiSumPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiSumPooling</span></code></a> for the equivalent layer.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The engine will generate the in-out mapping corresponding to a
+pooling function faster if the kernel sizes is equal to the stride
+sizes, e.g. <cite>kernel_size = [2, 1], stride = [2, 1]</cite>.</p>
+<p>If you use a U-network architecture, use the transposed version of
+the same function for up-sampling. e.g. <cite>pool =
+MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
+<cite>unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)</cite>.</p>
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.__init__">
@@ -289,6 +314,10 @@ all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 </dd>
 </dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Custom kernel shapes are not supported when kernel_size == stride.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -317,6 +346,16 @@ Thus, averaging the input features with the cardinality may not be
 equivalent to the conventional average pooling for a dense tensor.
 This layer provides an alternative that does not divide the sum by the
 cardinality.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The engine will generate the in-out mapping corresponding to a
+pooling function faster if the kernel sizes is equal to the stride
+sizes, e.g. <cite>kernel_size = [2, 1], stride = [2, 1]</cite>.</p>
+<p>If you use a U-network architecture, use the transposed version of
+the same function for up-sampling. e.g. <cite>pool =
+MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
+<cite>unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)</cite>.</p>
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.__init__">
@@ -347,6 +386,10 @@ all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 </dd>
 </dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Custom kernel shapes are not supported when kernel_size == stride.</p>
+</div>
 </dd></dl>
 
 </dd></dl>

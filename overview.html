@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Minkowski Engine &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>Minkowski Engine &mdash; MinkowskiEngine 0.3.0 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Generalized Sparse Convolution" href="generalized_sparse_conv.html" />
+    <link rel="next" title="Convolution on a Sparse Tensor" href="convolution_on_sparse.html" />
     <link rel="prev" title="Welcome to MinkowskiEngine’s documentation!" href="index.html" /> 
 </head>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.3.0
               </div>
             
           
@@ -110,7 +110,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#projects-using-minkowskiengine">Projects using MinkowskiEngine</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
@@ -137,6 +137,7 @@
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -205,15 +206,14 @@
             
   <div class="section" id="minkowski-engine">
 <h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
-<p>The MinkowskiEngine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://stanfordvl.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
+<p>The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://stanfordvl.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Unlimited high-(spatial)-dimensional sparse tensor support</p></li>
+<li><p>Unlimited high-dimensional sparse tensor support</p></li>
+<li><p>All standard neural network layers (Convolution, Pooling, Broadcast, etc.)</p></li>
 <li><p>Dynamic computation graph</p></li>
 <li><p>Custom kernel shapes</p></li>
-<li><p><a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/generalized_sparse_conv.html">Generalized sparse convolution</a></p></li>
-<li><p>Dilated convolution</p></li>
 <li><p>Multi-GPU training</p></li>
 <li><p>Multi-threaded kernel map</p></li>
 <li><p>Multi-threaded compilation</p></li>
@@ -225,12 +225,13 @@
 <ul class="simple">
 <li><p>Ubuntu 14.04 or higher</p></li>
 <li><p>CUDA 10.0 or higher</p></li>
-<li><p>pytorch 1.2 or higher</p></li>
+<li><p>pytorch 1.3 or higher</p></li>
+<li><p>GCC 6 or higher</p></li>
 </ul>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>You can install the MinkowskiEngine without sudo using anaconda. Using anaconda is highly recommended.</p>
+<p>You can install the Minkowski Engine without sudo using anaconda. Using anaconda is highly recommended.</p>
 <div class="section" id="anaconda">
 <h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h3>
 <p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation. If you have compilation issues, please checkout the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/issues.html">common compilation issues page</a> first.</p>
@@ -239,8 +240,7 @@
 <p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">bioconda</span> <span class="n">google</span><span class="o">-</span><span class="n">sparsehash</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span> <span class="n">tbb</span><span class="o">=</span><span class="mf">2019.9</span> <span class="n">tbb</span><span class="o">-</span><span class="n">devel</span><span class="o">=</span><span class="mf">2019.9</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
 </pre></div>
 </div>
@@ -257,8 +257,12 @@
 </div>
 <div class="section" id="python-virtual-environment">
 <h3>Python virtual environment<a class="headerlink" href="#python-virtual-environment" title="Permalink to this headline">¶</a></h3>
-<p>Like the anaconda installation, make sure that you install pytorch with the the same CUDA version that <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> uses.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libsparsehash</span><span class="o">-</span><span class="n">dev</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
+<p>Like the anaconda installation, make sure that you install pytorch with the same CUDA version that <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> uses.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Latest TBB</span>
+<span class="n">echo</span> <span class="s2">&quot;deb http://cz.archive.ubuntu.com/ubuntu eoan main universe&quot;</span> <span class="o">|</span> <span class="n">sudo</span> <span class="n">tee</span> <span class="o">-</span><span class="n">a</span>  <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">apt</span><span class="o">/</span><span class="n">sources</span><span class="o">.</span><span class="n">list</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">update</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span> <span class="n">libtbb</span><span class="o">-</span><span class="n">dev</span>
+
 <span class="c1"># within a python3 environment</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span>
 <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
@@ -278,7 +282,7 @@ sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
 function (<code class="docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code>).</p>
 <div class="section" id="creating-a-network">
 <h3>Creating a Network<a class="headerlink" href="#creating-a-network" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 
 <span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiNetwork</span><span class="p">):</span>
 
@@ -290,7 +294,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
             <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
             <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+            <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
@@ -302,7 +306,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
         <span class="bp">self</span><span class="o">.</span><span class="n">bn2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pooling</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiGlobalPooling</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiLinear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">out_feat</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -323,7 +327,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># loss and network</span>
     <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
     <span class="n">net</span> <span class="o">=</span> <span class="n">ExampleNetwork</span><span class="p">(</span><span class="n">in_feat</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">out_feat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
 
     <span class="c1"># a data loader must return a tuple of coords, features, and labels.</span>
     <span class="n">coords</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">data_loader</span><span class="p">()</span>
@@ -369,8 +373,8 @@ page</a>.</p>
 </div>
 <div class="section" id="projects-using-minkowskiengine">
 <h2>Projects using MinkowskiEngine<a class="headerlink" href="#projects-using-minkowskiengine" title="Permalink to this headline">¶</a></h2>
-<p>Feel free to send me your project link to <img alt="https://node1.chrischoy.org/data/email.png" src="https://node1.chrischoy.org/data/email.png" />.</p>
 <ul class="simple">
+<li><p><a class="reference external" href="https://github.com/chrischoy/SpatioTemporalSegmentation">4D Spatio-Temporal Segmentation</a></p></li>
 <li><p><a class="reference external" href="https://github.com/chrischoy/FCGF">Fully Convolutional Geometric Features, ICCV’19</a></p></li>
 </ul>
 </div>
@@ -398,7 +402,7 @@ page</a>.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="generalized_sparse_conv.html" class="btn btn-neutral float-right" title="Generalized Sparse Convolution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="convolution_on_sparse.html" class="btn btn-neutral float-right" title="Convolution on a Sparse Tensor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MinkowskiEngine’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
