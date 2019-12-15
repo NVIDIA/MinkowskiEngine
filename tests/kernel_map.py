@@ -54,14 +54,15 @@ class TestKernelMap(unittest.TestCase):
             dimension=D).double()
         output = conv(input)
 
-        iC = input.C
-        oC = output.C
+        iC = input.C.numpy()
+        oC = output.C.numpy()
         print(iC)
         print(oC)
         kernel_map = output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
+        self.assertTrue(len(kernel_map) == 26)
         for row in kernel_map:
           k, i, o = row
-          print(k, iC[i], oC[o])
+          print(k.item(), iC[i], oC[o])
 
 
 if __name__ == '__main__':

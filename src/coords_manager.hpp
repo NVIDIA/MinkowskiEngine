@@ -29,10 +29,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <omp.h>
 
 #include <torch/extension.h>
 
-#include "concurrent_coordsmap.hpp"
+#include "robin_coordsmap.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 
@@ -91,7 +92,7 @@ public:
   // Variables
   //
   // Coordinate hash key to coordinate hash map
-  unordered_map<uint64_t, ConcurrentCoordsMap> coords_maps;
+  unordered_map<uint64_t, CoordsMap> coords_maps;
   set<int> batch_indices;
 
   // In to out index mapping for each kernel, pooling
@@ -99,6 +100,10 @@ public:
   unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
 
   CoordsManager(){};
+  CoordsManager(int num_threads) {
+    omp_set_dynamic(0);
+    omp_set_num_threads(num_threads);
+  }
   ~CoordsManager() { clear(); }
 
   void printDiagnostics(py::object py_coords_key);

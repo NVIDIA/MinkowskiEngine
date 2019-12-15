@@ -139,7 +139,7 @@ void instantiate_func(py::module &m, const std::string &dtypestr) {
 void instantiate_coordsman(py::module &m) {
   std::string coords_name = std::string("CoordsManager");
   py::class_<CoordsManager>(m, coords_name.c_str())
-      .def(py::init<>())
+      .def(py::init<int>())
       .def("existsCoordsKey", (bool (CoordsManager::*)(py::object)) &
                                   CoordsManager::existsCoordsKey)
       .def("getCoordsKey", &CoordsManager::getCoordsKey)

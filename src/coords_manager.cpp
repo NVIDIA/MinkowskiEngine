@@ -108,14 +108,21 @@ int CoordsManager::getCoordsSize(py::object py_coords_key) {
 void CoordsManager::getCoords(at::Tensor coords, py::object py_coords_key) {
   CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
   uint64_t coords_key = p_coords_key->getKey();
-  int nrows = getCoordsSize(coords_key);
+
   // initialize
-  int D = p_coords_key->getDimension();
-  coords.resize_({nrows, D + 1});
-  // copy to the out coords
+  const auto &coordmap = coords_maps[coords_key];
+  int nrows = coordmap.nrows;
+  int ncols = coordmap.ncols;
+  coords.resize_({nrows, ncols});
   int *p_coords = coords.data<int>();
-  auto &curr_coords = coords_maps[coords_key].coords;
-  copy(curr_coords.begin(), curr_coords.end(), p_coords);
+
+  // auto &curr_coords = coords_maps[coords_key].coords;
+  // copy(curr_coords.begin(), curr_coords.end(), p_coords);
+
+  // copy to the out coords
+  for (const auto &kv : coordmap) {
+    copy_n(kv.first.begin(), ncols, p_coords + kv.second * ncols);
+  }
 }
 
 /*******************************
@@ -159,12 +166,13 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
 
   // Create the concurrent coords map
   int *p_coords = coords.data<int>();
-  vector<int> coords_vec(nrows * ncols);
-  copy_n(p_coords, nrows * ncols, coords_vec.data());
-
-  ConcurrentCoordsMap coords_map;
+  CoordsMap coords_map;
   auto map_batch_pair =
-      coords_map.initialize(move(coords_vec), nrows, ncols, force_remap);
+      coords_map.initialize(p_coords, nrows, ncols, force_remap);
+  // vector<int> coords_vec(nrows * ncols);
+  // copy_n(p_coords, nrows * ncols, coords_vec.data());
+  // auto map_batch_pair =
+  //     coords_map.initialize(move(coords_vec), nrows, ncols, force_remap);
 
   // initialize the batch indices
   batch_indices = map_batch_pair.second;
@@ -315,7 +323,7 @@ uint64_t CoordsManager::createOriginCoords(int D) {
   if (existsCoordsKey(out_coords_key))
     return out_coords_key;
 
-  coords_maps[out_coords_key] = ConcurrentCoordsMap(D + 1, batch_indices);
+  coords_maps[out_coords_key] = CoordsMap(D + 1, batch_indices);
   return out_coords_key;
 }
 
@@ -371,7 +379,7 @@ CoordsManager::getOriginMapHashKey(py::object py_in_coords_key,
 /**
  * Entry function for coords map generation and the associated kernel maps.
  */
-const pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
+const InOutMapsRefPair<int> CoordsManager::getInOutMaps(
     const vector<int> &tensor_strides, const vector<int> &strides,
     const vector<int> &kernel_sizes, const vector<int> &dilations,
     int region_type, const at::Tensor &offsets, py::object py_in_coords_key,
@@ -414,8 +422,8 @@ const pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, is_transpose, is_pool);
 
-  ConcurrentCoordsMap &in_map = coords_maps[in_coords_key];
-  ConcurrentCoordsMap &out_map = coords_maps[out_coords_key];
+  CoordsMap &in_map = coords_maps[in_coords_key];
+  CoordsMap &out_map = coords_maps[out_coords_key];
 
   // Create kernel maps
   if (!is_transpose) { // NON TRANSPOSE
@@ -493,7 +501,7 @@ const pair<InOutMaps<int> &, InOutMaps<int> &> CoordsManager::getInOutMaps(
   }
 }
 
-const pair<InOutMaps<int> &, InOutMaps<int> &>
+const InOutMapsRefPair<int>
 CoordsManager::getOriginInOutMaps(py::object py_in_coords_key,
                                   py::object py_out_coords_key) {
   CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
@@ -526,7 +534,7 @@ CoordsManager::getOriginInOutMaps(py::object py_in_coords_key,
   return make_pair(ref(in_maps[map_key]), ref(out_maps[map_key]));
 }
 
-const pair<InOutMaps<int> &, InOutMaps<int> &>
+const InOutMapsRefPair<int>
 CoordsManager::getPruningInOutMaps(at::Tensor use_feat,
                                    py::object py_in_coords_key,
                                    py::object py_out_coords_key) {

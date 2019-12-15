@@ -62,7 +62,7 @@ template <typename Itype> struct pVector {
   Itype *ptr_;
   int size_;
 
-  pVector(Itype* ptr, int size) : ptr_(ptr), size_(size) {}
+  pVector(Itype *ptr, int size) : ptr_(ptr), size_(size) {}
   int size() const { return size_; };
   Itype *data() { return ptr_; };
   const Itype *data() const { return ptr_; };

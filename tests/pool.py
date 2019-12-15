@@ -229,7 +229,6 @@ class TestPooling(unittest.TestCase):
         input = conv(input)
         output = unpool(input)
         print(output)
-
         # Check backward
         fn = MinkowskiPoolingTransposeFunction()
 
@@ -246,7 +245,6 @@ class TestPooling(unittest.TestCase):
             print(output)
 
         # Check backward
-        fn = MinkowskiAvgPoolingFunction()
         self.assertTrue(
             gradcheck(fn, (input.F, input.tensor_stride, unpool.stride,
                            unpool.kernel_size, unpool.dilation,

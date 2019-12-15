@@ -26,7 +26,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
-#include "concurrent_coordsmap.hpp"
+#include "robin_coordsmap.hpp"
 #include "utils.hpp"
 
 namespace py = pybind11;
@@ -39,11 +39,10 @@ struct IndexLabel {
   IndexLabel(int index_, int label_) : index(index_), label(label_) {}
 };
 
-using ConcurrentCoordsLabelMap =
-    tbb::concurrent_unordered_map<Coord<int>, IndexLabel, PointerCoordHash<int>,
-                                  PointerEqualTo<int>>;
+using CoordsLabelMap =
+    robin_hood::unordered_flat_map<vector<int>, IndexLabel, byte_hash_vec<int>>;
 
-py::array
+vector<int>
 quantize(py::array_t<int, py::array::c_style | py::array::forcecast> coords) {
   py::buffer_info coords_info = coords.request();
   auto &shape = coords_info.shape;
@@ -55,60 +54,11 @@ quantize(py::array_t<int, py::array::c_style | py::array::forcecast> coords) {
   int nrows = shape[0], ncols = shape[1];
 
   // Create coords map
-  ConcurrentCoordsMap map;
+  CoordsMap map;
+  auto map_batch = map.initialize(p_coords, nrows, ncols, false);
+  vector<int> &mapping = map_batch.first;
 
-  // tbb::tick_count t0 = tbb::tick_count::now();
-  //
-  // Use the input order to define the map coords -> index
-  tbb::parallel_for(tbb::blocked_range<int>(0, nrows),
-                    [&](const tbb::blocked_range<int> &r) {
-                      Coord<int> coord; // only a wrapper.
-                      coord.size = ncols;
-                      for (int i = r.begin(); i != r.end(); ++i) {
-                        coord.ptr = &p_coords[ncols * i];
-                        map[coord] = i;
-                      }
-                    },
-                    tbb::auto_partitioner());
-
-  // cout << "Creation: " << (t1 - t0).seconds() << endl;
-
-  // If the mapping size is different, remap the entire coordinates
-  if (nrows != map.size()) {
-    // Assign a unique index to an item.
-    //
-    // Then assign the unique index to original row index mapping. Order does
-    // not matter.  This randomized order (through multi-threads) will be the
-    // new unique index.
-    tbb::concurrent_vector<int> mapping;
-    mapping.reserve(map.size());
-
-    tbb::parallel_for(map.range(),
-                      [&](decltype(map.map)::const_range_type &r) {
-                        for (const auto &i : r) {
-                          mapping.push_back(i.second);
-                        }
-                      },
-                      tbb::auto_partitioner());
-
-    // Copy the concurrent vector to std vector
-    py::array_t<int> py_mapping = py::array_t<int>(mapping.size());
-    py::buffer_info py_mapping_info = py_mapping.request();
-    int *p_py_mapping = (int *)py_mapping_info.ptr;
-
-    tbb::parallel_for(tbb::blocked_range<int>(0, mapping.size()),
-                      [&](const tbb::blocked_range<int> &r) {
-                        for (int i = r.begin(); i != r.end(); ++i) {
-                          p_py_mapping[i] = mapping[i];
-                        }
-                      },
-                      tbb::auto_partitioner());
-
-    return py_mapping;
-  } else {
-    // Return null vector
-    return py::array_t<int>(0);
-  }
+  return move(mapping);
 }
 
 vector<py::array> quantize_label(
@@ -130,58 +80,17 @@ vector<py::array> quantize_label(
   int nrows = shape[0], ncols = shape[1];
 
   // Create coords map
-  ConcurrentCoordsLabelMap map;
-
-  // tbb::tick_count t0 = tbb::tick_count::now();
-  //
-  // Use the input order to define the map coords -> index
-  tbb::parallel_for(tbb::blocked_range<int>(0, nrows),
-                    [&](const tbb::blocked_range<int> &r) {
-                      Coord<int> coord; // only a wrapper.
-                      coord.size = ncols;
-                      for (int i = r.begin(); i != r.end(); ++i) {
-                        coord.ptr = &p_coords[ncols * i];
-                        map[coord] = IndexLabel(i, p_labels[i]);
-                      }
-                    },
-                    tbb::auto_partitioner());
-
-  // Set labels. All labels need to be set before to avoid race condition
-  tbb::parallel_for(tbb::blocked_range<int>(0, nrows),
-                    [&](const tbb::blocked_range<int> &r) {
-                      Coord<int> coord; // only a wrapper.
-                      coord.size = ncols;
-                      for (int i = r.begin(); i != r.end(); ++i) {
-                        coord.ptr = &p_coords[ncols * i];
-                        auto &index_label = map[coord];
-                        if (p_labels[i] != index_label.label) {
-                          index_label.label = invalid_label;
-                        }
-                      }
-                    },
-                    tbb::auto_partitioner());
-
-  // Unlike the function `quantize`, we need to return the mappping and
-  // corresponding labels as the label order is arbitrary.
-
-  // cout << "Creation: " << (t1 - t0).seconds() << endl;
-
-  // Assign a unique index to an item.
-  //
-  // Then assign the unique index to original row index mapping. Order does
-  // not matter.  This randomized order (through multi-threads) will be the
-  // new unique index.
-  tbb::concurrent_vector<IndexLabel> map_labels;
-  map_labels.reserve(map.size());
-
-  // Copy the map_labels and corresponding label
-  tbb::parallel_for(map.range(),
-                    [&](decltype(map)::const_range_type &r) {
-                      for (const auto &i : r) {
-                        map_labels.push_back(i.second);
-                      }
-                    },
-                    tbb::auto_partitioner());
+  CoordsLabelMap map;
+  for (int i = 0; i < nrows; i++) {
+    vector<int> coord(ncols);
+    copy_n(p_coords + i * ncols, ncols, coord.data());
+    auto map_iter = map.find(coord);
+    if (map_iter == map.end()) {
+      map[move(coord)] = IndexLabel(i, p_labels[i]);
+    } else if (map_iter->second.label != p_labels[i]) {
+      map_iter->second.label = invalid_label;
+    }
+  }
 
   // Copy the concurrent vector to std vector
   py::array_t<int> py_mapping = py::array_t<int>(map.size());
@@ -192,15 +101,12 @@ vector<py::array> quantize_label(
   int *p_py_mapping = (int *)py_mapping_info.ptr;
   int *p_py_colabels = (int *)py_colabels_info.ptr;
 
-  tbb::parallel_for(tbb::blocked_range<int>(0, map.size()),
-                    [&](const tbb::blocked_range<int> &r) {
-                      for (int i = r.begin(); i != r.end(); ++i) {
-                        const auto &index_label = map_labels[i];
-                        p_py_mapping[i] = index_label.index;
-                        p_py_colabels[i] = index_label.label;
-                      }
-                    },
-                    tbb::auto_partitioner());
+  int c = 0;
+  for (const auto &kv : map) {
+    p_py_mapping[c] = kv.second.index;
+    p_py_colabels[c] = kv.second.label;
+    c++;
+  }
 
   vector<py::array> return_pair = {py_mapping, py_colabels};
   return return_pair;

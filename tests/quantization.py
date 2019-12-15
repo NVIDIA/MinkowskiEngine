@@ -43,7 +43,6 @@ class TestGPUVoxelization(unittest.TestCase):
         # Make duplicates
         coords[:3] = 0
         labels[:3] = 2
-
         quantized_coords, quantized_feats, quantized_labels = sparse_quantize(
             coords, feats, labels, ignore_label)
         print(quantized_labels)
@@ -52,10 +51,7 @@ class TestGPUVoxelization(unittest.TestCase):
         N = 16575
         coords = (np.random.rand(N, 3) * 100).astype(np.int32)
         mapping = MEB.quantize(coords)
-        print(mapping)
         print('N unique:', len(mapping), 'N:', N)
-
-        print(sparse_quantize(coords))
 
     def test_label(self):
         N = 16575
@@ -72,12 +68,12 @@ class TestGPUVoxelization(unittest.TestCase):
         labels[:3] = 2
 
         mapping, colabels = MEB.quantize_label(coords, labels, ignore_label)
-        print(mapping)
-        print(colabels)
         print('Unique labels and counts:', np.unique(colabels, return_counts=True))
         print('N unique:', len(mapping), 'N:', N)
 
-        print(sparse_quantize(coords, feats, labels, ignore_label))
+        qcoords, qfeats, qlabels = sparse_quantize(coords, feats, labels, ignore_label)
+        import ipdb; ipdb.set_trace
+        self.assertTrue(len(mapping) == len(qcoords))
 
     def test_collision(self):
         coords = np.array([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=np.int32)

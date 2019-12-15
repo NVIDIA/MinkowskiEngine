@@ -106,7 +106,9 @@ void Region::set_bounds_with_lb(const vector<int> &lb_) {
 }
 
 void Region::set_bounds(const vector<int> &center_) {
-  ASSERT(center_.size() == D + 1, "Size mismatch");
+  ASSERT(center_.size() == D + 1,
+         "Size mismatch. input size: ", ArrToString(center_),
+         ", D + 1 = ", D + 1);
   set_bounds(center_.data());
 }
 

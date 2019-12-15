@@ -50,8 +50,6 @@ setup(
             libraries=[
                 'minkowski',
                 'openblas',  # for other blas, replace openblas
-                'tbb',
-                'tbbmalloc'
             ],
             library_dirs=['objs'],
             # extra_compile_args=['-g']  # Uncomment for debugging

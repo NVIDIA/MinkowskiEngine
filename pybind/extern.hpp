@@ -354,7 +354,7 @@ void PruningBackwardGPU(at::Tensor grad_in_feat, at::Tensor grad_out_feat,
 /*************************************
  * Quantization
  *************************************/
-py::array
+vector<int>
 quantize(py::array_t<int, py::array::c_style | py::array::forcecast> coords);
 
 vector<py::array> quantize_label(

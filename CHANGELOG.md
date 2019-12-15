@@ -1,17 +1,15 @@
 # Change Log
 
-## [nightly] - 2019-12-11
-
-### Changed
+## [nightly] - 2019-12-15
 
 - Cache in-out mapping on device
-- Latest TBB installation instruction update and GCC requirement
-- ConcurrentCoordsMap based quantization with label collision
+- Robinhood unordered map for coordinate management
+- hash based quantization to C++ CoordsManager based quantization with label collision
+- CUDA compilation to support older devices (compute_30, 35)
+- OMP_NUM_THREADS to initialize the number of threads
 
 
 ## [0.3.0] - 2019-12-08
-
-### Changed
 
 - Change the hash map from google-sparsehash to Threading Building Blocks (TBB) `concurrent_unordered_map`.
     - Optional duplicate coords (CoordsMap.initialize, TODO: make mapping more user-friendly)
@@ -27,8 +25,6 @@
 
 ## [0.2.9] - 2019-11-17
 
-### Changed
-
 - Pytorch 1.3 support
     - Update torch cublas, cusparse handles.
 - Global max pooling layers.
@@ -37,8 +33,6 @@
 
 
 ## [0.2.8] - 2019-10-18
-
-### Changed
 
 - ModelNet40 training.
 - open3d v0.8 update.
@@ -49,8 +43,6 @@
 
 Use `std::vector` for all internal coordinates to support arbitrary spatial dimensions.
 
-### Changed
-
 - Vectorized coordinates to support arbitrary spatial dimensions.
 - Removed all dimension template instantiation.
 - Use assertion macro for cleaner exception handling.
@@ -59,8 +51,6 @@ Use `std::vector` for all internal coordinates to support arbitrary spatial dime
 ## [0.2.6] - 2019-08-28
 
 Use OpenMP for multi-threaded kernel map generation and minor renaming and explicit coordinate management for future upgrades.
-
-### Changed
 
 - Major speed up
     - Suboptimal kernels were introduced, and optimal kernels removed for faulty cleanup in v0.2.5. CUDA kernels were re-introduced and major speed up was restored.
@@ -73,14 +63,10 @@ Use OpenMP for multi-threaded kernel map generation and minor renaming and expli
 
 ## [0.2.5a0] - 2019-07-12
 
-### Changed
-
 - Added the `MinkowskiBroadcast` and `MinkowskiBroadcastConcatenation` module.
 
 
 ## [0.2.5] - 2019-07-02
-
-### Changed
 
 - Better GPU memory management:
     - GPU Memory management is now delegated to pytorch. Before the change, we need to cleanup the GPU cache that pytorch created to call `cudaMalloc`, which not only is slow but also hampers the long-running training that dies due to Out Of Memory (OOM).
