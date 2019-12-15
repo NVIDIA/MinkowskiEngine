@@ -151,30 +151,16 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
   size_t numElements =
       out_inner_map.calcNumElementsWithBuffer(out_inner_map.mask() + 1);
 
-  // size_t stride = max((size_t)100, numElements / (2 * omp_get_max_threads()));
-  // size_t N = (numElements + stride - 1) / stride;
-  size_t N = 2 * omp_get_max_threads();
-  size_t stride = (numElements + N - 1) / N;
-
-  // Iterate over the memory
-  //
-  // for (size_t i = 0; i < numElementsWithBuffer; ++i) {
-  //     if (t.mInfo[i]) {
-  //         ::new (static_cast<void*>(t.mKeyVals + i)) Node(t, *s.mKeyVals[i]);
-  //     }
-  // }
-
-  // Iterator initialization
-  //
-  // const size_t idx = findIdx(key);
-  // return const_iterator{mKeyVals + idx, mInfo + idx};
+  // size_t stride = max((size_t)100, numElements / (2 *
+  // omp_get_max_threads())); size_t N = (numElements + stride - 1) / stride;
 
   // compute the chunk size per thread.
   // There's a trade-off between the thread initialization overhead and the job
   // sizes. If some jobs finish earlier than others due to imbalance in hash
   // distribution, these threads will be idle.
-  //
-  // coords_map.begin(i * stride); coords_map.begin((i + 1) * stride);
+  size_t N = 2 * omp_get_max_threads();
+  size_t stride = (numElements + N - 1) / N;
+  N = (numElements + stride - 1) / stride;
 
 #pragma omp parallel for
   for (int n = 0; n < N; n++) {
