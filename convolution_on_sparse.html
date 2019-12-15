@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Convolution on a Sparse Tensor &mdash; MinkowskiEngine 0.3.0 documentation</title>
+  <title>Convolution on a Sparse Tensor &mdash; MinkowskiEngine 0.3.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.3.0
+                0.3.1
               </div>
             
           
@@ -90,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Convolution on a Sparse Tensor</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-tensor">Sparse Tensor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">Convolution on a Sparse Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generalized-convolution-on-a-sparse-tensor">Generalized Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
@@ -116,6 +116,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -220,8 +221,8 @@ x_i^D)\)</span>, and the associated feature <span class="math notranslate nohigh
 the mini-batch index to disassociate instances within the same batch.
 Internally, we handle the batch index as an additional spatial dimension.</p>
 </div>
-<div class="section" id="id2">
-<h2>Convolution on a Sparse Tensor<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="generalized-convolution-on-a-sparse-tensor">
+<h2>Generalized Convolution on a Sparse Tensor<a class="headerlink" href="#generalized-convolution-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h2>
 <p>The convolution is a fundamental operation in many fields. In image perception,
 the 2D convolution has achieved state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.

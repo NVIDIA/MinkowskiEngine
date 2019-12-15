@@ -39,7 +39,7 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7 anaconda
 conda activate py3-mink
-conda install openblas numpy tbb=2019.9 tbb-devel=2019.9 -c conda-forge
+conda install openblas numpy
 conda install pytorch torchvision -c pytorch
 ```
 
@@ -58,10 +58,7 @@ python setup.py install
 Like the anaconda installation, make sure that you install pytorch with the same CUDA version that `nvcc` uses.
 
 ```
-# Latest TBB
-echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
-sudo apt update
-sudo apt install libopenblas-dev libtbb-dev
+sudo apt install libopenblas-dev
 
 # within a python3 environment
 pip install torch

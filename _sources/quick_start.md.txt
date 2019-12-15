@@ -9,7 +9,7 @@
     ```
     conda create -n py3-mink python=3.7 anaconda
     conda activate py3-mink
-    conda install openblas numpy tbb=2019.9 tbb-devel=2019.9 -c conda-forge
+    conda install openblas numpy
     conda install pytorch torchvision -c pytorch  # Use the correct cudatoolkit version
     ```
 
@@ -24,7 +24,7 @@
 
 ## Running a segmentation network
 
-Go to the top directory of the Minkowski Engine and run the following.
+Go to the top directory of the MinkowskiEngine and run the following.
 
 ```
 cd /path/to/MinkowskiEngine
@@ -39,5 +39,5 @@ room.
 ## CPU only compilation
 
 1. Uncomment line 8 of the Makefile to enable the flag, `CPU_ONLY`.
-2. Uncomment line 59 of the `setup.py` to enable the flag, `CPU_ONLY`.
+2. Uncomment line 57 of the `setup.py` to enable the flag, `CPU_ONLY`.
 3. `python setup.py install`

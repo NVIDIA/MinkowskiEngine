@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Start &mdash; MinkowskiEngine 0.3.1 documentation</title>
+  <title>Miscellanea &mdash; MinkowskiEngine 0.3.1 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Training Pipeline with Pytorch DataLoader" href="demo/training.html" />
-    <link rel="prev" title="Convolution on a Sparse Tensor" href="convolution_on_sparse.html" /> 
+    <link rel="next" title="Common Issues" href="issues.html" />
+    <link rel="prev" title="Miscellaneous Classes" href="common.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,15 +86,10 @@
             
             
               <p class="caption"><span class="caption-text">Intro Documentation</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-a-segmentation-network">Running a segmentation network</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cpu-only-compilation">CPU only compilation</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demo Documentation</span></p>
 <ul>
@@ -106,7 +101,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
@@ -116,7 +111,11 @@
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellanea</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Miscellanea</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#controlling-the-number-of-threads">Controlling the number of threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
@@ -168,13 +167,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Quick Start</li>
+      <li>Miscellanea</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/quick_start.md.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/misc.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -188,48 +187,18 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="quick-start">
-<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<ol>
-<li><p>Install Anaconda by following the instruction on <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">anaconda documentation</a>.</p></li>
-<li><p>Create an anaconda virtual environment and install dependencies.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
-<span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>  <span class="c1"># Use the correct cudatoolkit version</span>
-</pre></div>
+  <div class="section" id="miscellanea">
+<h1>Miscellanea<a class="headerlink" href="#miscellanea" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="controlling-the-number-of-threads">
+<h2>Controlling the number of threads<a class="headerlink" href="#controlling-the-number-of-threads" title="Permalink to this headline">¶</a></h2>
+<p>The kernel map <a class="reference external" href="https://arxiv.org/abs/1904.08755">[1]</a> defines which row of an input feature matrix to which row of the output feature matrix. This however is an expensive operation as the dimension increases. Fortunately, some part of the operation can be parallelized and we provide a multi-threaded function to speed up this process.</p>
+<p>By default, we use all CPU threads available in the system. However, this might not be desirable in some cases. Simply define an environmental variable <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> to control the number of threads you want to use. For example, <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">OMP_NUM_THREADS=8;</span> <span class="pre">python</span> <span class="pre">your_program.py</span></code>. If you use SLURM, the environment variable <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> will be automatically set.</p>
 </div>
-</li>
-<li><p>Once you setup the environment, download the repository and install the MinkowskiEngine.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</div>
-<div class="section" id="running-a-segmentation-network">
-<h2>Running a segmentation network<a class="headerlink" href="#running-a-segmentation-network" title="Permalink to this headline">¶</a></h2>
-<p>Go to the top directory of the MinkowskiEngine and run the following.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">examples</span><span class="o">.</span><span class="n">indoor</span>
-</pre></div>
-</div>
-<p>When you run the above example, you will download pretrained-weights of a
-Minkowski network and will see the semantic segmentation results of a hotel
-room.</p>
-</div>
-<div class="section" id="cpu-only-compilation">
-<h2>CPU only compilation<a class="headerlink" href="#cpu-only-compilation" title="Permalink to this headline">¶</a></h2>
-<ol class="simple">
-<li><p>Uncomment line 8 of the Makefile to enable the flag, <code class="docutils literal notranslate"><span class="pre">CPU_ONLY</span></code>.</p></li>
-<li><p>Uncomment line 57 of the <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> to enable the flag, <code class="docutils literal notranslate"><span class="pre">CPU_ONLY</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></code></p></li>
-</ol>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://arxiv.org/abs/1904.08755">[1] 4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR’19</a></p></li>
+</ul>
 </div>
 </div>
 
@@ -255,10 +224,10 @@ room.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="demo/training.html" class="btn btn-neutral float-right" title="Training Pipeline with Pytorch DataLoader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="issues.html" class="btn btn-neutral float-right" title="Common Issues" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="convolution_on_sparse.html" class="btn btn-neutral float-left" title="Convolution on a Sparse Tensor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="common.html" class="btn btn-neutral float-left" title="Miscellaneous Classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

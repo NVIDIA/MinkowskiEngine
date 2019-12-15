@@ -45,7 +45,7 @@ conv = ME.MinkowskiConvolution(
 ```
 
 
-## Pooling for strides in high-dimensional spaces
+## Strided pooling layers for high-dimensional spaces
 
 In extremely high-dimensional spaces, it is very expensive to use strided convolution. Using a cross-shaped kernel is not a good solution for hierarchical maps as everything is very sparse in high-dimensional spaces and cross shaped kernel will end up being empty. Instead, use a pooling layer to create kernel map efficiently and fast.
 

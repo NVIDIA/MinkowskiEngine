@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Common Issues &mdash; MinkowskiEngine 0.3.0 documentation</title>
+  <title>Common Issues &mdash; MinkowskiEngine 0.3.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Guidelines for Faster Networks" href="guides.html" />
-    <link rel="prev" title="Miscellaneous Classes" href="common.html" /> 
+    <link rel="prev" title="Miscellanea" href="misc.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.3.0
+                0.3.1
               </div>
             
           
@@ -111,6 +111,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul class="current">
@@ -257,7 +258,7 @@ This makes the pytorch CPPExtension module to fail leading to problems like <cod
 <p>If above method doesn’t work, try to create a new conda environment. We found that it sometimes solves the compilation issues.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span> <span class="n">tbb</span><span class="o">=</span><span class="mf">2019.9</span> <span class="n">tbb</span><span class="o">-</span><span class="n">devel</span><span class="o">=</span><span class="mf">2019.9</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
 </pre></div>
 </div>
@@ -282,7 +283,7 @@ Try to reinstall pytorch with the correct CUDA version that you are using to com
 <p>In this example, we assumed that you are using CUDA 10.1, but please make sure that you are installing the correct version. Then, use the following code snippet to create a new conda environment, and install MinkowskiEngine.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span><span class="o">-</span><span class="mi">2</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span> <span class="n">tbb</span><span class="o">=</span><span class="mf">2019.9</span> <span class="n">tbb</span><span class="o">-</span><span class="n">devel</span><span class="o">=</span><span class="mf">2019.9</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="n">cudatoolkit</span><span class="o">=</span><span class="mf">10.1</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>  <span class="c1"># Make sure to use the correct cudatoolkit version</span>
 
 <span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
@@ -323,7 +324,7 @@ Try to reinstall pytorch with the correct CUDA version that you are using to com
         <a href="guides.html" class="btn btn-neutral float-right" title="Guidelines for Faster Networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="common.html" class="btn btn-neutral float-left" title="Miscellaneous Classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="misc.html" class="btn btn-neutral float-left" title="Miscellanea" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

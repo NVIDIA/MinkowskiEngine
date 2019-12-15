@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Guidelines for Faster Networks &mdash; MinkowskiEngine 0.3.0 documentation</title>
+  <title>Guidelines for Faster Networks &mdash; MinkowskiEngine 0.3.1 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.3.0
+                0.3.1
               </div>
             
           
@@ -111,6 +111,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul class="current">
@@ -119,7 +120,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#reusing-the-cached-kernel-maps">Reusing the cached kernel maps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reusing-the-cached-kernel-maps-for-transposed-layers">Reusing the cached kernel maps for transposed layers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#high-dimensional-convolution-with-cross-shaped-or-custom-kernels">High-dimensional convolution with cross-shaped or custom kernels</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pooling-for-strides-in-high-dimensional-spaces">Pooling for strides in high-dimensional spaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#strided-pooling-layers-for-high-dimensional-spaces">Strided pooling layers for high-dimensional spaces</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
@@ -227,8 +228,8 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="pooling-for-strides-in-high-dimensional-spaces">
-<h2>Pooling for strides in high-dimensional spaces<a class="headerlink" href="#pooling-for-strides-in-high-dimensional-spaces" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="strided-pooling-layers-for-high-dimensional-spaces">
+<h2>Strided pooling layers for high-dimensional spaces<a class="headerlink" href="#strided-pooling-layers-for-high-dimensional-spaces" title="Permalink to this headline">¶</a></h2>
 <p>In extremely high-dimensional spaces, it is very expensive to use strided convolution. Using a cross-shaped kernel is not a good solution for hierarchical maps as everything is very sparse in high-dimensional spaces and cross shaped kernel will end up being empty. Instead, use a pooling layer to create kernel map efficiently and fast.</p>
 <p>If you use a pooling layer with kernel size == strides, the MinkowskiEngine will generate kernel map very efficiently as the mapping becomes trivial.</p>
 </div>

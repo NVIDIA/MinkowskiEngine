@@ -38,6 +38,7 @@ Table of Contents
    coords
    utils
    common
+   misc
 
 .. toctree::
    :maxdepth: 1
