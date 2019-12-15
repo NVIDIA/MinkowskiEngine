@@ -10,7 +10,6 @@
     conda create -n py3-mink python=3.7 anaconda
     conda activate py3-mink
     conda install openblas numpy
-    conda install -c bioconda google-sparsehash
     conda install pytorch torchvision -c pytorch  # Use the correct cudatoolkit version
     ```
 
@@ -40,5 +39,5 @@ room.
 ## CPU only compilation
 
 1. Uncomment line 8 of the Makefile to enable the flag, `CPU_ONLY`.
-2. Uncomment line 66 of the `setup.py` to enable the flag, `CPU_ONLY`.
+2. Uncomment line 57 of the `setup.py` to enable the flag, `CPU_ONLY`.
 3. `python setup.py install`

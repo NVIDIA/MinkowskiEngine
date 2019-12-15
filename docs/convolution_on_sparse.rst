@@ -1,4 +1,4 @@
-Generalized Sparse Convolution
+Convolution on a Sparse Tensor
 ==============================
 
 Sparse Tensor
@@ -39,8 +39,8 @@ the mini-batch index to disassociate instances within the same batch.
 Internally, we handle the batch index as an additional spatial dimension.
 
 
-Generalized Sparse Convolution
-------------------------------
+Generalized Convolution on a Sparse Tensor
+------------------------------------------
 
 The convolution is a fundamental operation in many fields. In image perception,
 the 2D convolution has achieved state-of-the-art performance in many tasks and

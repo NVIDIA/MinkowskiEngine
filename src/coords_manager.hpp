@@ -74,7 +74,7 @@ inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
   ASSERT(tensor_strides.size() == strides.size(),
          "The dimension of tensor_stride: ", ArrToString(tensor_strides),
          " does not match the dimension of strides: ", ArrToString(strides));
-  for (int i = 0; i < strides.size(); i++) {
+  for (size_t i = 0; i < strides.size(); i++) {
     if (is_transpose) {
       ASSERT(tensor_strides[i] % strides[i] == 0,
              "The output tensor stride is not divisible by ",
