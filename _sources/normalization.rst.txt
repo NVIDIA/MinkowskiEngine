@@ -13,6 +13,18 @@ MinkowskiBatchNorm
     .. automethod:: __init__
 
 
+MinkowskiSyncBatchNorm
+----------------------
+
+.. autoclass:: MinkowskiEngine.MinkowskiSyncBatchNorm
+    :members:
+    :undoc-members:
+    :exclude-members: forward
+
+    .. automethod:: __init__
+
+
+
 MinkowskiInstanceNorm
 ---------------------
 

@@ -108,6 +108,7 @@
 <li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinkowskiNormalization</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskibatchnorm">MinkowskiBatchNorm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskisyncbatchnorm">MinkowskiSyncBatchNorm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskiinstancenorm">MinkowskiInstanceNorm</a></li>
 </ul>
 </li>
@@ -200,6 +201,48 @@
 <dt id="MinkowskiEngine.MinkowskiBatchNorm.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">eps=1e-05</em>, <em class="sig-param">momentum=0.1</em>, <em class="sig-param">affine=True</em>, <em class="sig-param">track_running_stats=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBatchNorm.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskisyncbatchnorm">
+<h2>MinkowskiSyncBatchNorm<a class="headerlink" href="#minkowskisyncbatchnorm" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiSyncBatchNorm">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiSyncBatchNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">eps=1e-05</em>, <em class="sig-param">momentum=0.1</em>, <em class="sig-param">affine=True</em>, <em class="sig-param">track_running_stats=True</em>, <em class="sig-param">process_group=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSyncBatchNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>A batch normalization layer with multi GPU synchronization.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiSyncBatchNorm.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">eps=1e-05</em>, <em class="sig-param">momentum=0.1</em>, <em class="sig-param">affine=True</em>, <em class="sig-param">track_running_stats=True</em>, <em class="sig-param">process_group=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSyncBatchNorm.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiSyncBatchNorm.convert_sync_batchnorm">
+<em class="property">classmethod </em><code class="sig-name descname">convert_sync_batchnorm</code><span class="sig-paren">(</span><em class="sig-param">module</em>, <em class="sig-param">process_group=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSyncBatchNorm.convert_sync_batchnorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to convert <cite>ME.MinkowskiBatchNorm</cite> layer in the model to
+<cite>ME.MinkowskiSyncBatchNorm</cite> layer.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>module (nn.Module): containing module
+process_group (optional): process group to scope synchronization,
+default is the whole world</p>
+</dd>
+<dt>Returns:</dt><dd><p>The original module with the converted <cite>ME.MinkowskiSyncBatchNorm</cite> layer</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Network with nn.BatchNorm layer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">module</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>         <span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># creating process group (optional)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># process_ids is a list of int identifying rank ids.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process_group</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">new_group</span><span class="p">(</span><span class="n">process_ids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sync_bn_module</span> <span class="o">=</span> <span class="n">convert_sync_batchnorm</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">process_group</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
