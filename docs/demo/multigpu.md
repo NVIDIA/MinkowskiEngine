@@ -80,14 +80,68 @@ loss = parallel.gather(losses, target_device, dim=0).mean()
 The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the [complete multi-gpu example](https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/multigpu.py) for more detail.
 
 
-Speed up
+Speedup Experiments
+-------------------
+
+We use various batch sizes on 4x Titan XP's for the experiment and will divide the load to each gpu equally. For instance, with 1 GPU, each batch will have batch size 8. With 2 GPUs, we will have 4 batches for each GPU. With 4 GPUs, each GPU will have batch size 2.
+
+
+| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
+|:--------------:|:------------------:|:------------------:|:---------------:|
+| 1 GPU          | 8                  | 1.611 s            | x1      (x1)    |
+| 2 GPU          | 4                  | 0.916 s            | x1.76   (x2)    |
+| 4 GPU          | 2                  | 0.689 s            | x2.34   (x4)    |
+
+
+
+| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
+|:--------------:|:------------------:|:------------------:|:---------------:|
+| 1 GPU          | 12                 | 2.691 s            | x1      (x1)    |
+| 2 GPU          | 6                  | 1.413 s            | x1.90   (x2)    |
+| 3 GPU          | 4                  | 1.064 s            | x2.53   (x3)    |
+| 4 GPU          | 3                  | 1.006 s            | x2.67   (x4)    |
+
+
+
+| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
+|:--------------:|:------------------:|:------------------:|:---------------:|
+| 1 GPU          | 16                 | 3.543 s            | x1      (x1)    |
+| 2 GPU          | 8                  | 1.933 s            | x1.83   (x2)    |
+| 4 GPU          | 4                  | 1.322 s            | x2.68   (x4)    |
+
+
+
+| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
+|:--------------:|:------------------:|:------------------:|:---------------:|
+| 1 GPU          | 18                 | 4.391 s            | x1      (x1)    |
+| 2 GPU          | 9                  | 2.114 s            | x2.08   (x2)    |
+| 3 GPU          | 6                  | 1.660 s            | x2.65   (x3)    |
+
+
+
+| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
+|:--------------:|:------------------:|:------------------:|:---------------:|
+| 1 GPU          | 20                 | 4.639 s            | x1      (x1)    |
+| 2 GPU          | 10                 | 2.426 s            | x1.91   (x2)    |
+| 4 GPU          | 5                  | 1.707 s            | x2.72   (x4)    |
+
+
+| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
+|:--------------:|:------------------:|:------------------:|:---------------:|
+| 1 GPU          | 21                 | 4.894 s            | x1      (x1)    |
+| 3 GPU          | 7                  | 1.877 s            | x2.61   (x3)    |
+
+
+Analysis
 --------
 
-We use total batch size 8 on 4x Titan XP's for the experiment and will divide the load to each gpu equally. For instance, with 1 GPU, each batch will have batch size 8. With 2 GPUs, we will have 4 batches for each GPU. With 4 GPUs, each GPU will have batch size 2.
+We observe that the speedup is pretty modest with smaller batch sizes. However, for large batch sizes (e.g. 18 and 20), the speedup increases as the thread initialization overhead gets amortized over the large job sizes.
 
+Also, in all cases, using 4 GPUs is not efficient and the speed up seems very small (x2.65 for 3-GPU with total batch size 18 vs. x2.72 for 4-GPU with total batch size 20). Thus, it is recommended to use up to 3 GPUs with large batch sizes.
 
-| Number of GPUs | Batch size per GPU | Time per iteration | Speedup |
-|:--------------:|:------------------:|:------------------:|:-------:|
-| 1 GPU          | 8                  | 1.611 s            | x1      |
-| 2 GPU          | 4                  | 0.916 s            | x1.76   |
-| 4 GPU          | 2                  | 0.689 s            | x2.34   |
+| Number of GPUs | Average Speedup (Ideal) |
+|:--------------:|:-----------------------:|
+| 1 GPU          | x1      (x1)            |
+| 2 GPU          | x1.90   (x2)            |
+| 3 GPU          | x2.60   (x3)            |
+| 4 GPU          | x2.60   (x4)            |
