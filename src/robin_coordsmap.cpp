@@ -104,7 +104,8 @@ CoordsMap CoordsMap::stride_region(const Region &region) const {
   ASSERT(region.tensor_strides.size() == ncols - 1, "Invalid tensor strides");
 
   CoordsMap stride_map;
-  stride_map.reserve(nrows);
+  const int K = region.size();
+  stride_map.reserve(nrows * K);
 
   Region cregion(region);
   int c = 0;
@@ -189,9 +190,9 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
           curr_index = num_used[kernel_ind]++;
 
           // ASSERT(curr_index < num_out, "Fail: ", curr_index, " >= ", num_out);
-          // // In index
+          // In index
           in_maps[kernel_ind][curr_index] = iter_map->second;
-          // // Out index
+          // Out index
           out_maps[kernel_ind][curr_index] = iter_out->second;
         }
         // Post processings

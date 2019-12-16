@@ -76,6 +76,17 @@ private:
   Formatter &operator=(Formatter &);
 };
 
+#define OVERFLOW(condition, ...)                                               \
+  {                                                                            \
+    if (condition) {                                                           \
+      Formatter formatter;                                                     \
+      formatter << __FILE__ << ":" << __LINE__ << ",";                         \
+      formatter << " overflow condition (" #condition << "). ";                \
+      formatter.append(__VA_ARGS__);                                           \
+      throw std::overflow_error(formatter.str());                              \
+    }                                                                          \
+  }
+
 #define ASSERT(condition, ...)                                                 \
   {                                                                            \
     if (!(condition)) {                                                        \

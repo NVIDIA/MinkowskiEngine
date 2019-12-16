@@ -81,6 +81,7 @@ vector<py::array> quantize_label(
 
   // Create coords map
   CoordsLabelMap map;
+  map.reserve(nrows);
   for (int i = 0; i < nrows; i++) {
     vector<int> coord(ncols);
     copy_n(p_coords + i * ncols, ncols, coord.data());
