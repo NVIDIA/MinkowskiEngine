@@ -37,102 +37,126 @@ namespace py = pybind11;
 template <typename Dtype>
 void instantiate_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
-        &ConvolutionForwardCPU<Dtype>);
+        &ConvolutionForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionBackwardCPU") + dtypestr).c_str(),
-        &ConvolutionBackwardCPU<Dtype>);
+        &ConvolutionBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
-        &ConvolutionForwardGPU<Dtype>);
+        &ConvolutionForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionBackwardGPU") + dtypestr).c_str(),
-        &ConvolutionBackwardGPU<Dtype>);
+        &ConvolutionBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
-        &ConvolutionTransposeForwardCPU<Dtype>);
+        &ConvolutionTransposeForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
-        &ConvolutionTransposeBackwardCPU<Dtype>);
+        &ConvolutionTransposeBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
-        &ConvolutionTransposeForwardGPU<Dtype>);
+        &ConvolutionTransposeForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
-        &ConvolutionTransposeBackwardGPU<Dtype>);
+        &ConvolutionTransposeBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
-        &AvgPoolingForwardCPU<Dtype>);
+        &AvgPoolingForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
-        &AvgPoolingBackwardCPU<Dtype>);
+        &AvgPoolingBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("AvgPoolingForwardGPU") + dtypestr).c_str(),
-        &AvgPoolingForwardGPU<Dtype>);
+        &AvgPoolingForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
-        &AvgPoolingBackwardGPU<Dtype>);
+        &AvgPoolingBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
-        &MaxPoolingForwardCPU<Dtype>);
+        &MaxPoolingForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("MaxPoolingBackwardCPU") + dtypestr).c_str(),
-        &MaxPoolingBackwardCPU<Dtype>);
+        &MaxPoolingBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("MaxPoolingForwardGPU") + dtypestr).c_str(),
-        &MaxPoolingForwardGPU<Dtype>);
+        &MaxPoolingForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("MaxPoolingBackwardGPU") + dtypestr).c_str(),
-        &MaxPoolingBackwardGPU<Dtype>);
+        &MaxPoolingBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
-        &PoolingTransposeForwardCPU<Dtype>);
+        &PoolingTransposeForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),
-        &PoolingTransposeBackwardCPU<Dtype>);
+        &PoolingTransposeBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("PoolingTransposeForwardGPU") + dtypestr).c_str(),
-        &PoolingTransposeForwardGPU<Dtype>);
+        &PoolingTransposeForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PoolingTransposeBackwardGPU") + dtypestr).c_str(),
-        &PoolingTransposeBackwardGPU<Dtype>);
+        &PoolingTransposeBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
-        &GlobalPoolingForwardCPU<Dtype>);
+        &GlobalPoolingForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
-        &GlobalPoolingBackwardCPU<Dtype>);
+        &GlobalPoolingBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
-        &GlobalPoolingForwardGPU<Dtype>);
+        &GlobalPoolingForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
-        &GlobalPoolingBackwardGPU<Dtype>);
+        &GlobalPoolingBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("GlobalMaxPoolingForwardCPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingForwardCPU<Dtype>);
+        &GlobalMaxPoolingForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalMaxPoolingBackwardCPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingBackwardCPU<Dtype>);
+        &GlobalMaxPoolingBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("GlobalMaxPoolingForwardGPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingForwardGPU<Dtype>);
+        &GlobalMaxPoolingForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalMaxPoolingBackwardGPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingBackwardGPU<Dtype>);
+        &GlobalMaxPoolingBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
-        &BroadcastForwardCPU<Dtype>);
+        &BroadcastForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
-        &BroadcastBackwardCPU<Dtype>);
+        &BroadcastBackwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
-        &BroadcastForwardGPU<Dtype>);
+        &BroadcastForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
-        &BroadcastBackwardGPU<Dtype>);
+        &BroadcastBackwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
-        &PruningForwardCPU<Dtype>);
+        &PruningForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
-        &PruningBackwardCPU<Dtype>);
+        &PruningBackwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
-        &PruningForwardGPU<Dtype>);
+        &PruningForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
-        &PruningBackwardGPU<Dtype>);
+        &PruningBackwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
 #endif
 }
 
@@ -149,9 +173,10 @@ void instantiate_coordsman(py::module &m) {
       .def("getCoords", &CoordsManager::getCoords)
       .def("getRowIndicesPerBatch", &CoordsManager::getRowIndicesPerBatch)
       .def("initializeCoords",
-           (uint64_t(CoordsManager::*)(at::Tensor, at::Tensor, py::object, bool,
-                                       bool, bool)) &
-               CoordsManager::initializeCoords)
+           (uint64_t (CoordsManager::*)(at::Tensor, at::Tensor, py::object,
+                                        bool, bool, bool)) &
+               CoordsManager::initializeCoords,
+           py::call_guard<py::gil_scoped_release>())
       .def("createStridedCoords", &CoordsManager::createStridedCoords)
       .def("createTransposedStridedRegionCoords",
            &CoordsManager::createTransposedStridedRegionCoords)

@@ -21,84 +21,95 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+import os
+import argparse
+import numpy as np
+from time import time
+from urllib.request import urlretrieve
+try:
+    import open3d as o3d
+except ImportError:
+    raise ImportError(
+        'Please install open3d-python with `pip install open3d`.')
+
 import torch
 import torch.nn as nn
 from torch.optim import SGD
 
 import MinkowskiEngine as ME
-import MinkowskiEngine.MinkowskiFunctional as F
+from examples.minkunet import MinkUNet34C
 
 import torch.nn.parallel as parallel
 
-from tests.common import data_loader
+
+if not os.path.isfile('weights.pth'):
+    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", '1.ply')
 
 
-class ExampleNetwork(ME.MinkowskiNetwork):
+parser = argparse.ArgumentParser()
+parser.add_argument('--file_name', type=str, default='1.ply')
+parser.add_argument('--batch_size', type=int, default=4)
+parser.add_argument('--max_ngpu', type=int, default=2)
 
-    def __init__(self, in_feat, out_feat, D):
-        super(ExampleNetwork, self).__init__(D)
-        self.conv1 = ME.MinkowskiConvolution(
-            in_channels=in_feat,
-            out_channels=64,
-            kernel_size=3,
-            stride=2,
-            dilation=1,
-            has_bias=False,
-            dimension=D)
-        self.bn1 = ME.MinkowskiBatchNorm(64)
-        self.conv2 = ME.MinkowskiConvolution(
-            in_channels=64,
-            out_channels=128,
-            kernel_size=3,
-            stride=2,
-            dimension=D)
-        self.bn2 = ME.MinkowskiBatchNorm(128)
-        self.pooling = ME.MinkowskiGlobalPooling(dimension=D)
-        self.linear = ME.MinkowskiLinear(128, out_feat)
 
-    def forward(self, x):
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = F.relu(out)
+cache = {}
 
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = F.relu(out)
 
-        out = self.pooling(out)
-        return self.linear(out)
+def load_file(file_name, voxel_size):
+    if file_name not in cache:
+        pcd = o3d.io.read_point_cloud(file_name)
+        cache[file_name] = pcd
+
+    pcd = cache[file_name]
+    coords = np.array(pcd.points)
+    feats = np.array(pcd.colors)
+
+    quantized_coords = np.floor(coords / voxel_size)
+    inds = ME.utils.sparse_quantize(quantized_coords)
+    random_labels = torch.zeros(len(inds))
+
+    return quantized_coords[inds], feats[inds], random_labels
 
 
 if __name__ == '__main__':
     # loss and network
+    config = parser.parse_args()
     num_devices = torch.cuda.device_count()
-    assert num_devices > 1, "Cannot detect more than 1 GPU."
+    num_devices = min(config.max_ngpu, num_devices)
     devices = list(range(num_devices))
+    print('Testing ', num_devices, ' GPUs. Total batch size: ', num_devices * config.batch_size)
+
+    # For copying the final loss back to one GPU
     target_device = devices[0]
 
     # Copy the network to GPU
-    net = ExampleNetwork(in_feat=3, out_feat=5, D=2)
-    print(net)
-
+    net = MinkUNet34C(3, 20, D=3)
     net = net.to(target_device)
+
+    # Synchronized batch norm
+    net = ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm(net);
     optimizer = SGD(net.parameters(), lr=1e-1)
 
     # Copy the loss layer
     criterion = nn.CrossEntropyLoss()
     criterions = parallel.replicate(criterion, devices)
+    min_time = np.inf
 
-    for i in range(10):
+    for iteration in range(10):
         optimizer.zero_grad()
 
         # Get new data
         inputs, labels = [], []
         for i in range(num_devices):
-            coords, feat, label = data_loader()
+            batch = [load_file(config.file_name, 0.05) for _ in range(config.batch_size)]
+            coordinates_, featrues_, random_labels = list(zip(*batch))
+            coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
             with torch.cuda.device(devices[i]):
-              inputs.append(ME.SparseTensor(feat, coords=coords).to(devices[i]))
-            labels.append(label.to(devices[i]))
+              inputs.append(ME.SparseTensor(features - 0.5, coords=coordinates).to(devices[i]))
+            labels.append(torch.cat(random_labels).long().to(devices[i]))
 
         # The raw version of the parallel_apply
+        st = time()
         replicas = parallel.replicate(net, devices)
         outputs = parallel.parallel_apply(replicas, inputs, devices=devices)
 
@@ -107,11 +118,10 @@ if __name__ == '__main__':
         losses = parallel.parallel_apply(
             criterions, tuple(zip(out_features, labels)), devices=devices)
         loss = parallel.gather(losses, target_device, dim=0).mean()
-        print('Iteration: ', i, ', Loss: ', loss.item())
+        t = time() - st
+        min_time = min(t, min_time)
+        print('Iteration: ', iteration, ', Loss: ', loss.item(), ', Time: ', t, ', Min time: ', min_time)
 
         # Gradient
         loss.backward()
         optimizer.step()
-
-    torch.save(net.state_dict(), 'test.pth')
-    net.load_state_dict(torch.load('test.pth'))

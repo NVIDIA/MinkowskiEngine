@@ -215,9 +215,8 @@ class RandomRotation:
             axis = self.axis
         else:
             axis = np.random.rand(3) - 0.5
-        R = self._M(
-            axis,
-            (np.pi * self.max_theta / 180) * 2 * (np.random.rand(1) - 0.5))
+        R = self._M(axis, (np.pi * self.max_theta / 180) * 2 *
+                    (np.random.rand(1) - 0.5))
         return coords @ R, feats
 
 
@@ -359,7 +358,7 @@ def make_data_loader(phase, augment_data, batch_size, shuffle, num_workers,
     return loader
 
 
-def test(net, test_iter):
+def test(net, test_iter, phase='val'):
     net.eval()
     num_correct, tot_num = 0, 0
     for i in range(len(test_iter)):
@@ -373,10 +372,9 @@ def test(net, test_iter):
 
         if i % config.stat_freq == 0:
             logging.info(
-                f'{test_iter.dataset.phase} set iter: {i} / {len(test_iter)}, Accuracy : {num_correct / tot_num:.3e}'
+                f'{phase} set iter: {i} / {len(test_iter)}, Accuracy : {num_correct / tot_num:.3e}'
             )
-    logging.info(
-        f'{test_iter.dataset.phase} set accuracy : {num_correct / tot_num:.3e}')
+    logging.info(f'{phase} set accuracy : {num_correct / tot_num:.3e}')
 
 
 def train(net, device, config):
@@ -436,20 +434,21 @@ def train(net, device, config):
 
         if i % config.stat_freq == 0:
             logging.info(
-                f'Iter: {i}, Loss: {loss.item():.3e}, Data Time: {d:.3e}, Tot Time: {t:.3e}'
+                f'Iter: {i}, Loss: {loss.item():.3e}, Data Loading Time: {d:.3e}, Tot Time: {t:.3e}'
             )
 
         if i % config.val_freq == 0 and i > 0:
-            torch.save({
-                'state_dict': net.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'scheduler': scheduler.state_dict(),
-                'curr_iter': i,
-            }, config.weights)
+            torch.save(
+                {
+                    'state_dict': net.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'scheduler': scheduler.state_dict(),
+                    'curr_iter': i,
+                }, config.weights)
 
             # Validation
             logging.info('Validation')
-            test(net, val_iter)
+            test(net, val_iter, 'val')
 
             scheduler.step()
             logging.info(f'LR: {scheduler.get_lr()}')
@@ -476,4 +475,4 @@ if __name__ == '__main__':
         config=config)
 
     logging.info('Test')
-    test(net, iter(test_dataloader))
+    test(net, iter(test_dataloader), 'test')

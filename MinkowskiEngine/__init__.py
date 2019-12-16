@@ -57,9 +57,8 @@ from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoft
     MinkowskiPReLU, MinkowskiELU, MinkowskiSELU, MinkowskiCELU, MinkowskiDropout, \
     MinkowskiThreshold, MinkowskiTanh
 
-
-from MinkowskiNormalization import MinkowskiBatchNorm, MinkowskiInstanceNorm, \
-    MinkowskiInstanceNormFunction, MinkowskiStableInstanceNorm
+from MinkowskiNormalization import MinkowskiBatchNorm, MinkowskiSyncBatchNorm, \
+    MinkowskiInstanceNorm, MinkowskiInstanceNormFunction, MinkowskiStableInstanceNorm
 
 from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
 

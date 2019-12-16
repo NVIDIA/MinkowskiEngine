@@ -1,6 +1,17 @@
 # Change Log
 
+
 ## [nightly] - 2019-12-15
+
+- Synchronized Batch Norm: `ME.MinkowskiSyncBatchNorm`
+    - `ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm` converts a MinkowskiNetwork automatically to use synched batch norm.
+- `examples/multigpu.py` update for `ME.MinkowskiSynchBatchNorm`.
+- Update multigpu documentation
+- Update GIL release
+- Minor error fixes on `examples/modelnet40.py`
+
+
+## [0.3.1] - 2019-12-15
 
 - Cache in-out mapping on device
 - Robinhood unordered map for coordinate management

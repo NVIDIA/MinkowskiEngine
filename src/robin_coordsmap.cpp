@@ -52,8 +52,10 @@ CoordsMap::initialize(int *p_coords, int nrows_, int ncols_, bool force_remap) {
   ncols = ncols_;
 
   vector<int> mapping;
-  mapping.reserve(nrows);
   set<int> batch_indices;
+
+  mapping.reserve(nrows);
+  map.reserve(nrows);
 
   vector<vector<int>> coords_vec;
 
@@ -83,6 +85,7 @@ CoordsMap CoordsMap::stride(const vector<int> &tensor_strides) const {
   ASSERT(tensor_strides.size() == ncols - 1, "Invalid tensor strides");
 
   CoordsMap stride_map;
+  stride_map.reserve(nrows);
 
   int c = 0;
   for (const auto &kv : map) {
@@ -101,6 +104,7 @@ CoordsMap CoordsMap::stride_region(const Region &region) const {
   ASSERT(region.tensor_strides.size() == ncols - 1, "Invalid tensor strides");
 
   CoordsMap stride_map;
+  stride_map.reserve(nrows);
 
   Region cregion(region);
   int c = 0;
@@ -121,6 +125,7 @@ CoordsMap CoordsMap::stride_region(const Region &region) const {
 CoordsMap CoordsMap::prune(bool *p_keep, int n) const {
   int c = 0;
   CoordsMap pruned_map;
+  pruned_map.reserve(nrows);
 
   for (const auto &kv : map) {
     if (p_keep[kv.second]) {
@@ -135,20 +140,21 @@ CoordsMap CoordsMap::prune(bool *p_keep, int n) const {
 
 InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
                                          const Region &region) const {
-  int K = region.size();
+  const int K = region.size();
+  const int num_out = out_coords_map.size();
 
   InOutMaps<int> in_maps(K);
   InOutMaps<int> out_maps(K);
   for (int k = 0; k < K; k++) {
-    in_maps[k].resize(out_coords_map.size());
-    out_maps[k].resize(out_coords_map.size());
+    in_maps[k].resize(num_out);
+    out_maps[k].resize(num_out);
   }
   vector<int> num_used(K);
   fill(num_used.begin(), num_used.end(), 0);
 
   // OMP
   const auto &out_inner_map = out_coords_map.map;
-  size_t numElements =
+  const size_t numElements =
       out_inner_map.calcNumElementsWithBuffer(out_inner_map.mask() + 1);
 
   // size_t stride = max((size_t)100, numElements / (2 *
@@ -159,7 +165,7 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
   // sizes. If some jobs finish earlier than others due to imbalance in hash
   // distribution, these threads will be idle.
   size_t N = 2 * omp_get_max_threads();
-  size_t stride = (numElements + N - 1) / N;
+  const size_t stride = (numElements + N - 1) / N;
   N = (numElements + stride - 1) / stride;
 
 #pragma omp parallel for
@@ -181,6 +187,8 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
         if (iter_map != map.end()) {
 #pragma omp atomic capture
           curr_index = num_used[kernel_ind]++;
+
+          // ASSERT(curr_index < num_out, "Fail: ", curr_index, " >= ", num_out);
           // // In index
           in_maps[kernel_ind][curr_index] = iter_map->second;
           // // Out index

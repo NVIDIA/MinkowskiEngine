@@ -68,6 +68,81 @@ class MinkowskiBatchNorm(Module):
         return self.__class__.__name__ + s
 
 
+class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
+    r"""A batch normalization layer with multi GPU synchronization.
+    """
+
+    def __init__(self,
+                 num_features,
+                 eps=1e-5,
+                 momentum=0.1,
+                 affine=True,
+                 track_running_stats=True,
+                 process_group=None):
+        Module.__init__(self)
+        self.bn = torch.nn.SyncBatchNorm(
+            num_features,
+            eps=eps,
+            momentum=momentum,
+            affine=affine,
+            track_running_stats=track_running_stats,
+            process_group=process_group)
+
+    def forward(self, input):
+        # Weird requirement for the input to have > 2 dimensions which is unnecessary.
+        output = self.bn(input.F.unsqueeze(2)).squeeze(2)
+        return SparseTensor(
+            output,
+            coords_key=input.coords_key,
+            coords_manager=input.coords_man)
+
+    @classmethod
+    def convert_sync_batchnorm(cls, module, process_group=None):
+        r"""Helper function to convert `ME.MinkowskiBatchNorm` layer in the model to
+        `ME.MinkowskiSyncBatchNorm` layer.
+
+        Args:
+            module (nn.Module): containing module
+            process_group (optional): process group to scope synchronization,
+            default is the whole world
+
+        Returns:
+            The original module with the converted `ME.MinkowskiSyncBatchNorm` layer
+
+        Example::
+
+            >>> # Network with nn.BatchNorm layer
+            >>> module = torch.nn.Sequential(
+            >>>            torch.nn.Linear(20, 100),
+            >>>            torch.nn.BatchNorm1d(100)
+            >>>          ).cuda()
+            >>> # creating process group (optional)
+            >>> # process_ids is a list of int identifying rank ids.
+            >>> process_group = torch.distributed.new_group(process_ids)
+            >>> sync_bn_module = convert_sync_batchnorm(module, process_group)
+
+        """
+        module_output = module
+        if isinstance(module, MinkowskiBatchNorm):
+            module_output = MinkowskiSyncBatchNorm(
+                module.bn.num_features, module.bn.eps, module.bn.momentum,
+                module.bn.affine, module.bn.track_running_stats, process_group)
+            if module.bn.affine:
+                module_output.bn.weight.data = module.bn.weight.data.clone().detach()
+                module_output.bn.bias.data = module.bn.bias.data.clone().detach()
+                # keep reuqires_grad unchanged
+                module_output.bn.weight.requires_grad = module.bn.weight.requires_grad
+                module_output.bn.bias.requires_grad = module.bn.bias.requires_grad
+            module_output.bn.running_mean = module.bn.running_mean
+            module_output.bn.running_var = module.bn.running_var
+            module_output.bn.num_batches_tracked = module.bn.num_batches_tracked
+        for name, child in module.named_children():
+            module_output.add_module(
+                name, cls.convert_sync_batchnorm(child, process_group))
+        del module
+        return module_output
+
+
 class MinkowskiInstanceNormFunction(Function):
 
     @staticmethod

@@ -6,34 +6,22 @@ Currently, the MinkowskiEngine supports Multi-GPU training through data parallel
 Let's define a network first.
 
 ```python
-import torch.nn as nn
 import MinkowskiEngine as ME
+from examples.minkunet import MinkUNet34C
 
+# Copy the network to GPU
+net = MinkUNet34C(3, 20, D=3)
+net = net.to(target_device)
+```
 
-class ExampleNetwork(ME.MinkowskiNetwork):
+Synchronized Batch Norm
+-----------------------
 
-    def __init__(self, in_feat, out_feat, D):
-        super(ExampleNetwork, self).__init__(D)
-        self.net = nn.Sequential(
-            ME.MinkowskiConvolution(
-                in_channels=in_feat,
-                out_channels=64,
-                kernel_size=3,
-                stride=2,
-                dilation=1,
-                has_bias=False,
-                dimension=D), ME.MinkowskiBatchNorm(64), ME.MinkowskiReLU(),
-            ME.MinkowskiConvolution(
-                in_channels=64,
-                out_channels=128,
-                kernel_size=3,
-                stride=2,
-                dimension=D), ME.MinkowskiBatchNorm(128), ME.MinkowskiReLU(),
-            ME.MinkowskiGlobalPooling(dimension=D),
-            ME.MinkowskiLinear(128, out_feat))
+Next, we create a new network with `ME.MinkowskiSynchBatchNorm` that replaces all `ME.MinkowskiBatchNorm`. This allows the network to use the large batch size and to maintain the same performance with a single-gpu training.
 
-    def forward(self, x):
-        return self.net(x)
+```
+# Synchronized batch norm
+net = ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm(net);
 ```
 
 Next, we need to create replicas of the network and the final loss layer (if you use one).
@@ -90,3 +78,16 @@ loss = parallel.gather(losses, target_device, dim=0).mean()
 ```
 
 The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the [complete multi-gpu example](https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/multigpu.py) for more detail.
+
+
+Speed up
+--------
+
+We use total batch size 8 on 4x Titan XP's for the experiment and will divide the load to each gpu equally. For instance, with 1 GPU, each batch will have batch size 8. With 2 GPUs, we will have 4 batches for each GPU. With 4 GPUs, each GPU will have batch size 2.
+
+
+| Number of GPUs | Batch size per GPU | Time per iteration | Speedup |
+|:--------------:|:------------------:|:------------------:|:-------:|
+| 1 GPU          | 8                  | 1.611 s            | x1      |
+| 2 GPU          | 4                  | 0.916 s            | x1.76   |
+| 4 GPU          | 2                  | 0.689 s            | x2.34   |

@@ -104,6 +104,7 @@ public:
   }
 
   size_t size() const { return map.size(); }
+  void reserve(size_t size) { map.reserve(size); }
 
   int &operator[](const vector<int> &coord) { return map[coord]; }
 
