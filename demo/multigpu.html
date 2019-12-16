@@ -102,7 +102,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#loading-multiple-batches">Loading multiple batches</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#copying-weights-to-devices">Copying weights to devices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#applying-replicas-to-all-batches">Applying replicas to all batches</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#speed-up">Speed up</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#speedup-experiments">Speedup Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis">Analysis</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pointnet.html">PointNet</a></li>
@@ -254,16 +255,16 @@
 </div>
 <p>The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/multigpu.py">complete multi-gpu example</a> for more detail.</p>
 </div>
-<div class="section" id="speed-up">
-<h2>Speed up<a class="headerlink" href="#speed-up" title="Permalink to this headline">¶</a></h2>
-<p>We use total batch size 8 on 4x Titan XP’s for the experiment and will divide the load to each gpu equally. For instance, with 1 GPU, each batch will have batch size 8. With 2 GPUs, we will have 4 batches for each GPU. With 4 GPUs, each GPU will have batch size 2.</p>
+<div class="section" id="speedup-experiments">
+<h2>Speedup Experiments<a class="headerlink" href="#speedup-experiments" title="Permalink to this headline">¶</a></h2>
+<p>We use various batch sizes on 4x Titan XP’s for the experiment and will divide the load to each gpu equally. For instance, with 1 GPU, each batch will have batch size 8. With 2 GPUs, we will have 4 batches for each GPU. With 4 GPUs, each GPU will have batch size 2.</p>
 <table border="1" class="docutils">
 <thead>
 <tr>
 <th align="center">Number of GPUs</th>
 <th align="center">Batch size per GPU</th>
 <th align="center">Time per iteration</th>
-<th align="center">Speedup</th>
+<th align="center">Speedup (Ideal)</th>
 </tr>
 </thead>
 <tbody>
@@ -271,19 +272,194 @@
 <td align="center">1 GPU</td>
 <td align="center">8</td>
 <td align="center">1.611 s</td>
-<td align="center">x1</td>
+<td align="center">x1      (x1)</td>
 </tr>
 <tr>
 <td align="center">2 GPU</td>
 <td align="center">4</td>
 <td align="center">0.916 s</td>
-<td align="center">x1.76</td>
+<td align="center">x1.76   (x2)</td>
 </tr>
 <tr>
 <td align="center">4 GPU</td>
 <td align="center">2</td>
 <td align="center">0.689 s</td>
-<td align="center">x2.34</td>
+<td align="center">x2.34   (x4)</td>
+</tr>
+</tbody>
+</table><table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Number of GPUs</th>
+<th align="center">Batch size per GPU</th>
+<th align="center">Time per iteration</th>
+<th align="center">Speedup (Ideal)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">1 GPU</td>
+<td align="center">12</td>
+<td align="center">2.691 s</td>
+<td align="center">x1      (x1)</td>
+</tr>
+<tr>
+<td align="center">2 GPU</td>
+<td align="center">6</td>
+<td align="center">1.413 s</td>
+<td align="center">x1.90   (x2)</td>
+</tr>
+<tr>
+<td align="center">3 GPU</td>
+<td align="center">4</td>
+<td align="center">1.064 s</td>
+<td align="center">x2.53   (x3)</td>
+</tr>
+<tr>
+<td align="center">4 GPU</td>
+<td align="center">3</td>
+<td align="center">1.006 s</td>
+<td align="center">x2.67   (x4)</td>
+</tr>
+</tbody>
+</table><table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Number of GPUs</th>
+<th align="center">Batch size per GPU</th>
+<th align="center">Time per iteration</th>
+<th align="center">Speedup (Ideal)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">1 GPU</td>
+<td align="center">16</td>
+<td align="center">3.543 s</td>
+<td align="center">x1      (x1)</td>
+</tr>
+<tr>
+<td align="center">2 GPU</td>
+<td align="center">8</td>
+<td align="center">1.933 s</td>
+<td align="center">x1.83   (x2)</td>
+</tr>
+<tr>
+<td align="center">4 GPU</td>
+<td align="center">4</td>
+<td align="center">1.322 s</td>
+<td align="center">x2.68   (x4)</td>
+</tr>
+</tbody>
+</table><table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Number of GPUs</th>
+<th align="center">Batch size per GPU</th>
+<th align="center">Time per iteration</th>
+<th align="center">Speedup (Ideal)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">1 GPU</td>
+<td align="center">18</td>
+<td align="center">4.391 s</td>
+<td align="center">x1      (x1)</td>
+</tr>
+<tr>
+<td align="center">2 GPU</td>
+<td align="center">9</td>
+<td align="center">2.114 s</td>
+<td align="center">x2.08   (x2)</td>
+</tr>
+<tr>
+<td align="center">3 GPU</td>
+<td align="center">6</td>
+<td align="center">1.660 s</td>
+<td align="center">x2.65   (x3)</td>
+</tr>
+</tbody>
+</table><table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Number of GPUs</th>
+<th align="center">Batch size per GPU</th>
+<th align="center">Time per iteration</th>
+<th align="center">Speedup (Ideal)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">1 GPU</td>
+<td align="center">20</td>
+<td align="center">4.639 s</td>
+<td align="center">x1      (x1)</td>
+</tr>
+<tr>
+<td align="center">2 GPU</td>
+<td align="center">10</td>
+<td align="center">2.426 s</td>
+<td align="center">x1.91   (x2)</td>
+</tr>
+<tr>
+<td align="center">4 GPU</td>
+<td align="center">5</td>
+<td align="center">1.707 s</td>
+<td align="center">x2.72   (x4)</td>
+</tr>
+</tbody>
+</table><table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Number of GPUs</th>
+<th align="center">Batch size per GPU</th>
+<th align="center">Time per iteration</th>
+<th align="center">Speedup (Ideal)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">1 GPU</td>
+<td align="center">21</td>
+<td align="center">4.894 s</td>
+<td align="center">x1      (x1)</td>
+</tr>
+<tr>
+<td align="center">3 GPU</td>
+<td align="center">7</td>
+<td align="center">1.877 s</td>
+<td align="center">x2.61   (x3)</td>
+</tr>
+</tbody>
+</table></div>
+<div class="section" id="analysis">
+<h2>Analysis<a class="headerlink" href="#analysis" title="Permalink to this headline">¶</a></h2>
+<p>We observe that the speedup is pretty modest with smaller batch sizes. However, for large batch sizes (e.g. 18 and 20), the speedup increases as the thread initialization overhead gets amortized over the large job sizes.</p>
+<p>Also, in all cases, using 4 GPUs is not efficient and the speed up seems very small (x2.65 for 3-GPU with total batch size 18 vs. x2.72 for 4-GPU with total batch size 20). Thus, it is recommended to use up to 3 GPUs with large batch sizes.</p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Number of GPUs</th>
+<th align="center">Average Speedup (Ideal)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">1 GPU</td>
+<td align="center">x1      (x1)</td>
+</tr>
+<tr>
+<td align="center">2 GPU</td>
+<td align="center">x1.90   (x2)</td>
+</tr>
+<tr>
+<td align="center">3 GPU</td>
+<td align="center">x2.60   (x3)</td>
+</tr>
+<tr>
+<td align="center">4 GPU</td>
+<td align="center">x2.60   (x4)</td>
 </tr>
 </tbody>
 </table></div>
