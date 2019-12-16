@@ -26,6 +26,7 @@ import argparse
 import numpy as np
 from time import time
 from urllib.request import urlretrieve
+
 try:
     import open3d as o3d
 except ImportError:
@@ -41,16 +42,13 @@ from examples.minkunet import MinkUNet34C
 
 import torch.nn.parallel as parallel
 
-
 if not os.path.isfile('weights.pth'):
     urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", '1.ply')
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_name', type=str, default='1.ply')
 parser.add_argument('--batch_size', type=int, default=4)
 parser.add_argument('--max_ngpu', type=int, default=2)
-
 
 cache = {}
 
@@ -105,8 +103,12 @@ if __name__ == '__main__':
             coordinates_, featrues_, random_labels = list(zip(*batch))
             coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
             with torch.cuda.device(devices[i]):
-              inputs.append(ME.SparseTensor(features - 0.5, coords=coordinates).to(devices[i]))
+                inputs.append(ME.SparseTensor(features - 0.5, coords=coordinates).to(devices[i]))
             labels.append(torch.cat(random_labels).long().to(devices[i]))
+
+        # Gradient
+        loss.backward()
+        optimizer.step()
 
         # The raw version of the parallel_apply
         st = time()
@@ -121,7 +123,3 @@ if __name__ == '__main__':
         t = time() - st
         min_time = min(t, min_time)
         print('Iteration: ', iteration, ', Loss: ', loss.item(), ', Time: ', t, ', Min time: ', min_time)
-
-        # Gradient
-        loss.backward()
-        optimizer.step()
