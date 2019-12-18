@@ -10,6 +10,8 @@
 - Update GIL release
 - Minor error fixes on `examples/modelnet40.py`
 - CoordsMap size initialization updates
+- Added MinkowskiUnion
+- Updated MinkowskiUnion, MinkowskiPruning docs
 
 
 ## [0.3.1] - 2019-12-15

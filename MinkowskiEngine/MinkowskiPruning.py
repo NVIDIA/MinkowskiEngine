@@ -34,14 +34,14 @@ from Common import get_postfix
 class MinkowskiPruningFunction(Function):
 
     @staticmethod
-    def forward(ctx, in_feat, use_feat, in_coords_key, out_coords_key,
+    def forward(ctx, in_feat, mask, in_coords_key, out_coords_key,
                 coords_manager):
-        assert in_feat.size(0) == use_feat.size(0)
-        assert isinstance(use_feat, torch.BoolTensor), "use_feat must be a bool tensor."
+        assert in_feat.size(0) == mask.size(0)
+        assert isinstance(mask, torch.BoolTensor), "mask must be a bool tensor."
         if not in_feat.is_contiguous():
             in_feat = in_feat.contiguous()
-        if not use_feat.is_contiguous():
-            use_feat = use_feat.contiguous()
+        if not mask.is_contiguous():
+            mask = mask.contiguous()
 
         ctx.in_coords_key = in_coords_key
         ctx.out_coords_key = out_coords_key
@@ -50,7 +50,7 @@ class MinkowskiPruningFunction(Function):
         out_feat = in_feat.new()
 
         fw_fn = getattr(MEB, 'PruningForward' + get_postfix(in_feat))
-        fw_fn(in_feat, out_feat, use_feat, ctx.in_coords_key.CPPCoordsKey,
+        fw_fn(in_feat, out_feat, mask, ctx.in_coords_key.CPPCoordsKey,
               ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)
         return out_feat
@@ -69,6 +69,30 @@ class MinkowskiPruningFunction(Function):
 
 
 class MinkowskiPruning(Module):
+    r"""Remove specified coordinates from a :attr:`MinkowskiEngine.SparseTensor`.
+
+    Args:
+        :attr:`input` (:attr:`MinkowskiEnigne.SparseTensor`): a sparse tensor
+        to remove coordinates from.
+
+        :attr:`mask` (:attr:`torch.BoolTensor`): mask vector that specifies
+        which one to keep. Coordinates with False will be removed.
+
+    Returns:
+        A :attr:`MinkowskiEngine.SparseTensor` with C = coordinates
+        corresponding to `mask == True` F = copy of the features from `mask ==
+        True`.
+
+    Example::
+
+        >>> # Define inputs
+        >>> input = SparseTensor(feats, coords=coords)
+        >>> # Any boolean tensor can be used as the filter
+        >>> mask = torch.rand(feats.size(0)) < 0.5
+        >>> pruning = MinkowskiPruning(D)
+        >>> output = pruning(input, mask)
+
+    """
 
     def __init__(self, dimension=-1):
         super(MinkowskiPruning, self).__init__()
@@ -77,12 +101,12 @@ class MinkowskiPruning(Module):
         self.dimension = dimension
         self.pruning = MinkowskiPruningFunction()
 
-    def forward(self, input, use_feat):
+    def forward(self, input, mask):
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
         out_coords_key = CoordsKey(input.coords_key.D)
-        output = self.pruning.apply(input.F, use_feat, input.coords_key,
+        output = self.pruning.apply(input.F, mask, input.coords_key,
                                     out_coords_key, input.coords_man)
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.coords_man)

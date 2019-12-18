@@ -103,3 +103,19 @@ CoordsManager::getPruningInOutMapsGPU(at::Tensor use_feat,
 
   return make_pair(ref(d_in_maps[map_key]), ref(d_out_maps[map_key]));
 }
+
+const pInOutMapsRefPair<int>
+CoordsManager::getUnionInOutMapsGPU(vector<py::object> py_in_coords_keys,
+                                    py::object py_out_coords_key) {
+  const auto &in_out = getUnionInOutMaps(py_in_coords_keys, py_out_coords_key);
+
+  const InOutMapKey map_key =
+      getUnionMapHashKey(py_in_coords_keys, py_out_coords_key);
+
+  if (d_in_maps.find(map_key) == d_in_maps.end()) {
+    d_in_maps[map_key] = copyInOutMapToGPU(in_out.first);
+    d_out_maps[map_key] = copyInOutMapToGPU(in_out.second);
+  }
+
+  return make_pair(ref(d_in_maps[map_key]), ref(d_out_maps[map_key]));
+}

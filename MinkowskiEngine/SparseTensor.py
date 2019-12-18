@@ -82,6 +82,7 @@ class SparseTensor():
                  coords=None,
                  coords_key=None,
                  coords_manager=None,
+                 force_creation=False,
                  tensor_stride=1):
         r"""
 
@@ -155,6 +156,11 @@ class SparseTensor():
             self.mapping = coords_manager.initialize(coords, coords_key)
         else:
             assert isinstance(coords_manager, CoordsManager)
+
+            if not coords_key.isKeySet():
+                assert coords is not None
+                self.mapping = coords_manager.initialize(
+                    coords, coords_key, force_creation=force_creation)
 
         self._F = feats.contiguous()
         self._C = coords

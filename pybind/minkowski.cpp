@@ -158,23 +158,34 @@ void instantiate_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
         &PruningBackwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
 #endif
+
+  m.def((std::string("UnionForwardCPU") + dtypestr).c_str(),
+        &UnionForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("UnionBackwardCPU") + dtypestr).c_str(),
+        &UnionBackwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+#ifndef CPU_ONLY
+  m.def((std::string("UnionForwardGPU") + dtypestr).c_str(),
+        &UnionForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("UnionBackwardGPU") + dtypestr).c_str(),
+        &UnionBackwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+#endif
 }
 
 void instantiate_coordsman(py::module &m) {
   std::string coords_name = std::string("CoordsManager");
   py::class_<CoordsManager>(m, coords_name.c_str())
       .def(py::init<int>())
-      .def("existsCoordsKey", (bool (CoordsManager::*)(py::object)) &
+      .def("existsCoordsKey", (bool (CoordsManager::*)(py::object) const) &
                                   CoordsManager::existsCoordsKey)
       .def("getCoordsKey", &CoordsManager::getCoordsKey)
       .def("getKernelMap", &CoordsManager::getKernelMap)
-      .def("getCoordsSize",
-           (int (CoordsManager::*)(py::object)) & CoordsManager::getCoordsSize)
+      .def("getCoordsSize", (int (CoordsManager::*)(py::object) const) &
+                                CoordsManager::getCoordsSize)
       .def("getCoords", &CoordsManager::getCoords)
       .def("getRowIndicesPerBatch", &CoordsManager::getRowIndicesPerBatch)
       .def("initializeCoords",
-           (uint64_t (CoordsManager::*)(at::Tensor, at::Tensor, py::object,
-                                        bool, bool, bool)) &
+           (uint64_t(CoordsManager::*)(at::Tensor, at::Tensor, py::object, bool,
+                                       bool, bool)) &
                CoordsManager::initializeCoords,
            py::call_guard<py::gil_scoped_release>())
       .def("createStridedCoords", &CoordsManager::createStridedCoords)
@@ -203,6 +214,7 @@ void bind_native(py::module &m) {
   py::class_<CoordsKey>(m, name.c_str())
       .def(py::init<>())
       .def("copy", &CoordsKey::copy)
+      .def("isKeySet", &CoordsKey::isKeySet)
       .def("setKey", &CoordsKey::setKey)
       .def("getKey", &CoordsKey::getKey)
       .def("setDimension", &CoordsKey::setDimension)

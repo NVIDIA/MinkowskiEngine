@@ -25,6 +25,7 @@
 #ifndef ROBIN_COORDSMAP
 #define ROBIN_COORDSMAP
 
+#include <memory>
 #include <set>
 
 #include "robin_hood.h"
@@ -82,6 +83,9 @@ public:
   CoordsMap stride_region(const Region &region) const;
   CoordsMap prune(bool *p_keep, int n) const;
 
+  // class method
+  static CoordsMap union_coords(const vector<shared_ptr<CoordsMap>> &p_maps);
+
   // Generate in-out kernel maps
   InOutMapsPair<int> kernel_map(const CoordsMap &out_coords_map,
                                 const Region &region) const;
@@ -90,6 +94,9 @@ public:
   global_reduction_map(const CoordsMap &gout_coords_map) const;
   InOutMapsPair<int> stride_map(const CoordsMap &out_coords_map,
                                 const vector<int> &tensor_strides) const;
+  static InOutMapsPair<int>
+  union_map(const vector<shared_ptr<CoordsMap>> &p_in_maps,
+            const CoordsMap &out_map);
 
   // Iterators
   CoordsInnerMap::iterator begin() { return map.begin(); }

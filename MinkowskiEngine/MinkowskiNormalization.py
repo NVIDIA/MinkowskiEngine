@@ -98,8 +98,9 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
 
     @classmethod
     def convert_sync_batchnorm(cls, module, process_group=None):
-        r"""Helper function to convert `ME.MinkowskiBatchNorm` layer in the model to
-        `ME.MinkowskiSyncBatchNorm` layer.
+        r"""Helper function to convert
+        :attr:`MinkowskiEngine.MinkowskiBatchNorm` layer in the model to
+        :attr:`MinkowskiEngine.MinkowskiSyncBatchNorm` layer.
 
         Args:
             module (nn.Module): containing module
@@ -107,7 +108,8 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
             default is the whole world
 
         Returns:
-            The original module with the converted `ME.MinkowskiSyncBatchNorm` layer
+            The original module with the converted
+            :attr:`MinkowskiEngine.MinkowskiSyncBatchNorm` layer
 
         Example::
 
@@ -128,8 +130,10 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
                 module.bn.num_features, module.bn.eps, module.bn.momentum,
                 module.bn.affine, module.bn.track_running_stats, process_group)
             if module.bn.affine:
-                module_output.bn.weight.data = module.bn.weight.data.clone().detach()
-                module_output.bn.bias.data = module.bn.bias.data.clone().detach()
+                module_output.bn.weight.data = module.bn.weight.data.clone(
+                ).detach()
+                module_output.bn.bias.data = module.bn.bias.data.clone().detach(
+                )
                 # keep reuqires_grad unchanged
                 module_output.bn.weight.requires_grad = module.bn.weight.requires_grad
                 module_output.bn.bias.requires_grad = module.bn.bias.requires_grad

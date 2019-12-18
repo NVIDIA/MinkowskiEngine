@@ -139,6 +139,28 @@ CoordsMap CoordsMap::prune(bool *p_keep, int n) const {
   return pruned_map;
 }
 
+CoordsMap CoordsMap::union_coords(const vector<shared_ptr<CoordsMap>> &p_maps) {
+  size_t num_tot = 0;
+  for (const auto &p_map : p_maps)
+    num_tot += p_map->size();
+
+  CoordsMap out_map;
+  out_map.reserve(num_tot);
+  size_t c = 0;
+  for (const auto &p_map : p_maps) {
+    for (const auto &kv : *p_map) {
+      if (out_map.find(kv.first) == out_map.end()) {
+        out_map[kv.first] = c++;
+      }
+    }
+  }
+
+  out_map.ncols = p_maps[0]->ncols;
+  out_map.nrows = out_map.size();
+
+  return out_map;
+}
+
 InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
                                          const Region &region) const {
   const int K = region.size();
@@ -188,8 +210,6 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
         if (iter_map != map.end()) {
 #pragma omp atomic capture
           curr_index = num_used[kernel_ind]++;
-
-          // ASSERT(curr_index < num_out, "Fail: ", curr_index, " >= ", num_out);
           // In index
           in_maps[kernel_ind][curr_index] = iter_map->second;
           // Out index
@@ -275,6 +295,31 @@ CoordsMap::stride_map(const CoordsMap &out_coords_map,
   }
 
   return make_pair(move(in_maps), move(out_maps));
+}
+
+InOutMapsPair<int>
+CoordsMap::union_map(const vector<shared_ptr<CoordsMap>> &p_in_maps,
+                     const CoordsMap &out_map) {
+  const size_t num_in_maps = p_in_maps.size();
+  InOutMaps<int> ins(num_in_maps);
+  InOutMaps<int> outs(num_in_maps);
+  for (size_t n = 0; n < num_in_maps; n++) {
+    const size_t in_size = p_in_maps[n]->size();
+    ins[n].reserve(in_size);
+    outs[n].reserve(in_size);
+  }
+
+#pragma omp parallel for
+  for (size_t n = 0; n < num_in_maps; n++) {
+    for (const auto &kv : *p_in_maps[n]) {
+      auto out_iter = out_map.find(kv.first);
+      ASSERT(out_iter != out_map.end(), "Invalid out_map.");
+      ins[n].push_back(kv.second);
+      outs[n].push_back(out_iter->second);
+    }
+  }
+
+  return make_pair(move(ins), move(outs));
 }
 
 void CoordsMap::print() const {

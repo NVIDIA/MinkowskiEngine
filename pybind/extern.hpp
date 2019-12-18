@@ -352,6 +352,32 @@ void PruningBackwardGPU(at::Tensor grad_in_feat, at::Tensor grad_out_feat,
 #endif
 
 /*************************************
+ * Union
+ *************************************/
+template <typename Dtype>
+at::Tensor UnionForwardCPU(vector<at::Tensor> in_feats,
+                           vector<py::object> py_in_coords_keys,
+                           py::object py_out_coords_key,
+                           py::object py_coords_manager);
+
+template <typename Dtype>
+vector<at::Tensor>
+UnionBackwardCPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
+                 py::object py_out_coords_key, py::object py_coords_manager);
+
+#ifndef CPU_ONLY
+template <typename Dtype>
+at::Tensor UnionForwardGPU(vector<at::Tensor> in_feat,
+                           vector<py::object> py_in_coords_keys,
+                           py::object py_out_coords_key,
+                           py::object py_coords_manager);
+
+template <typename Dtype>
+vector<at::Tensor>
+UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
+                 py::object py_out_coords_key, py::object py_coords_manager);
+#endif
+/*************************************
  * Quantization
  *************************************/
 vector<int>

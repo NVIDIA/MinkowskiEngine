@@ -35,6 +35,8 @@ Table of Contents
    broadcast
    normalization
    nonlinearity
+   pruning
+   union
    coords
    utils
    common

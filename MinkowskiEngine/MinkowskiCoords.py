@@ -36,8 +36,11 @@ class CoordsKey():
 
     def __init__(self, D):
         self.D = D
-        self.CPPCoordsKey = getattr(MEB, f'CoordsKey')()
+        self.CPPCoordsKey = MEB.CoordsKey()
         self.CPPCoordsKey.setDimension(D)
+
+    def isKeySet(self):
+        return self.CPPCoordsKey.isKeySet()
 
     def setKey(self, key):
         self.CPPCoordsKey.setKey(key)
@@ -62,7 +65,7 @@ class CoordsManager():
         if D < 1:
             raise ValueError(f"Invalid dimension {D}")
         self.D = D
-        CPPCoordsManager = getattr(MEB, f'CoordsManager')
+        CPPCoordsManager = MEB.CoordsManager
         if num_threads < 0:
             num_threads = CPU_COUNT
         coords_man = CPPCoordsManager(num_threads)

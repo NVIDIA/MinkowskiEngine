@@ -57,9 +57,9 @@ class TestPruning(unittest.TestCase):
             output = pruning(input, use_feat)
             print(output)
 
-        self.assertTrue(
-            gradcheck(fn, (input.F, use_feat, input.coords_key,
-                           output.coords_key, input.coords_man)))
+            self.assertTrue(
+                gradcheck(fn, (input.F, use_feat, input.coords_key,
+                               output.coords_key, input.coords_man)))
 
     def test_with_convtr(self):
         channels, D = [2, 3, 4], 2

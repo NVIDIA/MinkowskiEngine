@@ -56,7 +56,7 @@
 class CoordsKey {
 private:
   uint64_t key_; // Use the key_ for all coordshashmap query. Lazily set
-  int D_;   // dimension of the current coordinate system
+  int D_;        // dimension of the current coordinate system
 
 public:
   bool key_set = false;
@@ -69,12 +69,13 @@ public:
   void copy(py::object ohter);
   void setKey(uint64_t key);
   void setDimension(int dim);
-  uint64_t getKey();
-  uint64_t getDimension();
+  bool isKeySet() const { return key_set; }
+  uint64_t getKey() const;
+  uint64_t getDimension() const { return D_; }
   void setTensorStride(const std::vector<int> &tensor_strides);
   void stride(const std::vector<int> &strides);
   void up_stride(const std::vector<int> &strides);
-  std::vector<int> getTensorStride() { return tensor_strides_; };
+  std::vector<int> getTensorStride() const { return tensor_strides_; }
   std::string toString() const;
 };
 

@@ -99,12 +99,10 @@ void CoordsKey::setDimension(int dim) {
   tensor_strides_.resize(D_);
 }
 
-uint64_t CoordsKey::getKey() {
+uint64_t CoordsKey::getKey() const {
   ASSERT(key_set, "CoordsKey: Key Not set")
   return key_;
 }
-
-uint64_t CoordsKey::getDimension() { return D_; }
 
 std::string CoordsKey::toString() const {
   return "< CoordsKey, key: " + std::to_string(key_) +

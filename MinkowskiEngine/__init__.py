@@ -62,6 +62,8 @@ from MinkowskiNormalization import MinkowskiBatchNorm, MinkowskiSyncBatchNorm, \
 
 from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
 
+from MinkowskiUnion import MinkowskiUnion, MinkowskiUnionFunction
+
 from MinkowskiNetwork import MinkowskiNetwork
 
 import MinkowskiOps

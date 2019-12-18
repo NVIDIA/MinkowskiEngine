@@ -59,8 +59,8 @@ STATIC_LIB := $(OBJ_DIR)/lib$(EXTENSION_NAME).a
 LIBRARIES := stdc++ c10 caffe2 torch torch_python _C
 ifneq ($(CPU_ONLY), 1)
 	LIBRARIES += cudart cublas caffe2_gpu c10_cuda
-	CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
-			-gencode arch=compute_35,code=sm_35 \
+	# Deprecate 3.0 for device memcpy
+	CUDA_ARCH := -gencode arch=compute_35,code=sm_35 \
 			-gencode=arch=compute_50,code=sm_50 \
 			-gencode=arch=compute_52,code=sm_52 \
 			-gencode=arch=compute_60,code=sm_60 \
