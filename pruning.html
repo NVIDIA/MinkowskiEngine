@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Miscellaneous Classes &mdash; MinkowskiEngine 0.3.1 documentation</title>
+  <title>MinkowskiPruning &mdash; MinkowskiEngine 0.3.1 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Miscellanea" href="misc.html" />
-    <link rel="prev" title="Utility Functions and Classes" href="utils.html" /> 
+    <link rel="next" title="MinkowskiUnion" href="union.html" />
+    <link rel="prev" title="MinkowskiNonlinearities" href="nonlinearity.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -108,15 +108,14 @@
 <li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MinkowskiPruning</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">MinkowskiPruning</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Miscellaneous Classes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#kernel-generator">Kernel Generator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#regiontype">RegionType</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
@@ -169,13 +168,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Miscellaneous Classes</li>
+      <li>MinkowskiPruning</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/common.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/pruning.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -189,64 +188,53 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="miscellaneous-classes">
-<h1>Miscellaneous Classes<a class="headerlink" href="#miscellaneous-classes" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="kernel-generator">
-<h2>Kernel Generator<a class="headerlink" href="#kernel-generator" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="minkowskipruning">
+<h1>MinkowskiPruning<a class="headerlink" href="#minkowskipruning" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>MinkowskiPruning<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="MinkowskiEngine.KernelGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">KernelGenerator</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em class="sig-param">region_offsets=None</em>, <em class="sig-param">axis_types=None</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="MinkowskiEngine.KernelGenerator.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em class="sig-param">region_offsets=None</em>, <em class="sig-param">axis_types=None</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">region_type</span></code> (RegionType, optional): defines the kernel
-shape. Please refer to MinkowskiEngine.Comon for details.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> (torch.IntTensor, optional): when the
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">region_type</span></code> is <a class="reference internal" href="#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a>, the convolution
-kernel uses the provided <cite>region_offset</cite> to define offsets. It
-should be a matrix of size <span class="math notranslate nohighlight">\(N \times D\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is
-the number of offsets and <span class="math notranslate nohighlight">\(D\)</span> is the dimension of the
-space.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">axis_types</span></code> (list of RegionType, optional): If given, it
-uses different methods to create a kernel for each axis. e.g., when
-it is <cite>[RegionType.HYPERCUBE, RegionType.HYPERCUBE,
-RegionType.HYPERCROSS]</cite>, the kernel would be rectangular for the
-first two dimensions and cross shaped for the thrid dimension.</p>
+<dt id="MinkowskiEngine.MinkowskiPruning">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPruning</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove specified coordinates from a <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
+<dl>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEnigne.SparseTensor</span></code>): a sparse tensor
+to remove coordinates from.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mask</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.BoolTensor</span></code>): mask vector that specifies
+which one to keep. Coordinates with False will be removed.</p>
+</dd>
+<dt>Returns:</dt><dd><p>A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> with C = coordinates
+corresponding to <cite>mask == True</cite> F = copy of the features from <cite>mask ==
+True</cite>.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define inputs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Any boolean tensor can be used as the filter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">feats</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pruning</span> <span class="o">=</span> <span class="n">MinkowskiPruning</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">pruning</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPruning.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="MinkowskiEngine.KernelGenerator.get_kernel">
-<code class="sig-name descname">get_kernel</code><span class="sig-paren">(</span><em class="sig-param">tensor_stride</em>, <em class="sig-param">is_transpose</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.get_kernel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+<dt id="MinkowskiEngine.MinkowskiPruning.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
 </div>
-<div class="section" id="regiontype">
-<h2>RegionType<a class="headerlink" href="#regiontype" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="MinkowskiEngine.RegionType">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">RegionType</code><a class="headerlink" href="#MinkowskiEngine.RegionType" title="Permalink to this definition">¶</a></dt>
-<dd><p>Define the kernel region type</p>
-<dl class="attribute">
-<dt id="MinkowskiEngine.RegionType.CUSTOM">
-<code class="sig-name descname">CUSTOM</code><em class="property"> = 2</em><a class="headerlink" href="#MinkowskiEngine.RegionType.CUSTOM" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="MinkowskiEngine.RegionType.HYBRID">
-<code class="sig-name descname">HYBRID</code><em class="property"> = 3</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYBRID" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="MinkowskiEngine.RegionType.HYPERCROSS">
-<code class="sig-name descname">HYPERCROSS</code><em class="property"> = 1</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPERCROSS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="MinkowskiEngine.RegionType.HYPERCUBE">
-<code class="sig-name descname">HYPERCUBE</code><em class="property"> = 0</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPERCUBE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -275,10 +263,10 @@ first two dimensions and cross shaped for the thrid dimension.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="misc.html" class="btn btn-neutral float-right" title="Miscellanea" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="union.html" class="btn btn-neutral float-right" title="MinkowskiUnion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="utils.html" class="btn btn-neutral float-left" title="Utility Functions and Classes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="nonlinearity.html" class="btn btn-neutral float-left" title="MinkowskiNonlinearities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

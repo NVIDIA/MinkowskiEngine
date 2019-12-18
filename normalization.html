@@ -113,6 +113,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
@@ -221,14 +223,16 @@
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiSyncBatchNorm.convert_sync_batchnorm">
 <em class="property">classmethod </em><code class="sig-name descname">convert_sync_batchnorm</code><span class="sig-paren">(</span><em class="sig-param">module</em>, <em class="sig-param">process_group=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSyncBatchNorm.convert_sync_batchnorm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Helper function to convert <cite>ME.MinkowskiBatchNorm</cite> layer in the model to
-<cite>ME.MinkowskiSyncBatchNorm</cite> layer.</p>
+<dd><p>Helper function to convert
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiBatchNorm" title="MinkowskiEngine.MinkowskiBatchNorm"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiBatchNorm</span></code></a> layer in the model to
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiSyncBatchNorm" title="MinkowskiEngine.MinkowskiSyncBatchNorm"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiSyncBatchNorm</span></code></a> layer.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p>module (nn.Module): containing module
 process_group (optional): process group to scope synchronization,
 default is the whole world</p>
 </dd>
-<dt>Returns:</dt><dd><p>The original module with the converted <cite>ME.MinkowskiSyncBatchNorm</cite> layer</p>
+<dt>Returns:</dt><dd><p>The original module with the converted
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiSyncBatchNorm" title="MinkowskiEngine.MinkowskiSyncBatchNorm"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiSyncBatchNorm</span></code></a> layer</p>
 </dd>
 </dl>
 <p>Example:</p>

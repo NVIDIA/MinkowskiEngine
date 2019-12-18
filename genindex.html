@@ -107,6 +107,8 @@
 <li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
@@ -239,6 +241,8 @@
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU.__init__">(MinkowskiEngine.MinkowskiPReLU method)</a>
 </li>
+        <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning.__init__">(MinkowskiEngine.MinkowskiPruning method)</a>
+</li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiReLU.__init__">(MinkowskiEngine.MinkowskiReLU method)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiSELU.__init__">(MinkowskiEngine.MinkowskiSELU method)</a>, <a href="nonlinearity.html#MinkowskiEngine.MinkowskiSELU.__init__">[1]</a>
@@ -254,6 +258,8 @@
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiTanh.__init__">(MinkowskiEngine.MinkowskiTanh method)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiThreshold.__init__">(MinkowskiEngine.MinkowskiThreshold method)</a>
+</li>
+        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion.__init__">(MinkowskiEngine.MinkowskiUnion method)</a>
 </li>
         <li><a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.__init__">(MinkowskiEngine.SparseTensor.SparseTensor method)</a>
 </li>
@@ -306,12 +312,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.F">F() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.feats">feats() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose.forward">forward() (MinkowskiEngine.MinkowskiConvolutionTranspose method)</a>
+
+      <ul>
+        <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning.forward">(MinkowskiEngine.MinkowskiPruning method)</a>
 </li>
+        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion.forward">(MinkowskiEngine.MinkowskiUnion method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -371,6 +383,10 @@
       <li><a href="coords.html#MinkowskiEngine.CoordsManager.initialize">initialize() (MinkowskiEngine.CoordsManager method)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="coords.html#MinkowskiEngine.CoordsKey.isKeySet">isKeySet() (MinkowskiEngine.CoordsKey method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="K">K</h2>
@@ -414,6 +430,8 @@
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU">MinkowskiPReLU (class in MinkowskiEngine)</a>
 </li>
+      <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning">MinkowskiPruning (class in MinkowskiEngine)</a>
+</li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiReLU">MinkowskiReLU (class in MinkowskiEngine)</a>
 </li>
   </ul></td>
@@ -431,6 +449,8 @@
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiTanh">MinkowskiTanh (class in MinkowskiEngine)</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiThreshold">MinkowskiThreshold (class in MinkowskiEngine)</a>
+</li>
+      <li><a href="union.html#MinkowskiEngine.MinkowskiUnion">MinkowskiUnion (class in MinkowskiEngine)</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiCELU.MODULE">MODULE (MinkowskiEngine.MinkowskiCELU attribute)</a>
 
