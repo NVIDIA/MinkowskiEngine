@@ -49,7 +49,6 @@ void BroadcastBackwardKernelGPU(
     const Dtype *d_in_feat_global, Dtype *d_grad_in_feat_global,
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
     const pInOutMaps<Itype> &d_in_map, const pInOutMaps<Itype> &d_out_map,
-    Itype *d_scr, Dtype *d_dscr, cusparseHandle_t cushandle,
-    cudaStream_t stream);
+    cusparseHandle_t cushandle, cudaStream_t stream);
 
 #endif

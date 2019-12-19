@@ -111,55 +111,58 @@ set_gradient_nonzero_avg(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
 }
 
 template <typename Dtype, typename Itype>
-void NonzeroAvgPoolingForwardKernelGPU(
-    const Dtype *d_in_feat, int in_nrows, Dtype *d_out_feat, int out_nrows,
-    Dtype *d_num_nonzero, int nchannel, const pInOutMaps<Itype> &in_maps,
-    const pInOutMaps<Itype> &out_maps, bool use_avg, Itype *d_scr,
-    Dtype *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream) {
+void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
+                                       Dtype *d_out_feat, int out_nrows,
+                                       Dtype *d_num_nonzero, int nchannel,
+                                       const pInOutMaps<Itype> &in_maps,
+                                       const pInOutMaps<Itype> &out_maps,
+                                       bool use_avg, cusparseHandle_t cushandle,
+                                       cudaStream_t stream) {
   int nmaps = 0;
   const Dtype alpha = 1;
   const Dtype beta = 0;
   cusparseMatDescr_t descr = 0;
-  Itype *d_in_map, *d_out_map, *d_csr_row;
+  Itype *d_scr, *d_in_map, *d_out_map, *d_csr_row;
   Dtype *d_ones, *d_csr_val, *d_tmp_out_feat;
 
   // Copy all maps to one vector
   for (const auto &map : in_maps)
     nmaps += map.size();
 
-  d_in_map = d_scr;
-  d_out_map = d_scr + nmaps;
-  d_csr_row = d_scr + 2 * nmaps;
+  /* Map prep */
+  // Create d in map
+  CUDA_CHECK(cudaMalloc((void **)&d_scr,
+                        (2 * nmaps + out_nrows + 1) * sizeof(Itype)));
+  d_in_map = d_scr;  // n_maps
+  d_out_map = d_scr + nmaps;     // n_maps
+  d_csr_row = d_scr + 2 * nmaps; // out_nrows + 1
 
-  CUDA_CHECK(cudaMemcpy(
-      d_in_map, in_maps[0].data(), // in_maps are contiguous of size nmaps
-      nmaps * sizeof(int), cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy(d_in_map, in_maps[0].data(), nmaps * sizeof(int),
+                        cudaMemcpyDeviceToDevice));
 
-  CUDA_CHECK(
-      cudaMemcpy(d_out_map,
-                 out_maps[0].data(), // out_maps are contiguous of size nmaps
-                 nmaps * sizeof(int), cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy(d_out_map, out_maps[0].data(), nmaps * sizeof(int),
+                        cudaMemcpyDeviceToDevice));
 
-  // CUDA_CHECK(cudaMalloc((void **)&d_in_map,
-  //                       (2 * nmaps + out_nrows + 1) * sizeof(Itype)));
-
-  // d_ones = (Dtype*)(d_scr) + 2 * nmaps + out_nrows + 1;
-  // CUDA_CHECK(cudaMalloc(
-  //     (void **)&d_ones,
-  //     ((use_avg ? in_nrows : 0) + nmaps + nchannel * out_nrows) *
-  //     sizeof(Dtype)));
-  d_ones = d_dscr;
+  /* sparse mm prep */
+  CUDA_CHECK(cudaMalloc((void **)&d_ones, ((use_avg ? in_nrows : 0) + nmaps +
+                                           nchannel * out_nrows) *
+                                              sizeof(Dtype)));
 
   if (use_avg) {
-    d_csr_val = d_ones + in_nrows;
-    d_tmp_out_feat = d_csr_val + nmaps;
+    // CUDA_CHECK(
+    //     cudaMalloc((void **)&d_ones,
+    //                (in_nrows + nmaps + nchannel * out_nrows) *
+    //                sizeof(Dtype)));
+    d_ones = d_ones;                    // in_nrows;
+    d_csr_val = d_ones + in_nrows;      // nmaps
+    d_tmp_out_feat = d_csr_val + nmaps; // nchannel * out_nrows
     fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
         in_nrows, d_ones, (Dtype)1.);
   } else {
     // CUDA_CHECK(cudaMalloc((void **)&d_ones,
     //                       (nmaps + nchannel * out_nrows) * sizeof(Dtype)));
-    d_csr_val = d_ones;
-    d_tmp_out_feat = d_csr_val + nmaps;
+    d_csr_val = d_ones;                 // nmaps
+    d_tmp_out_feat = d_csr_val + nmaps; // nchannel * out_nrows
   }
 
   fill<Dtype><<<GET_BLOCKS(nmaps), CUDA_NUM_THREADS, 0, stream>>>(
@@ -220,23 +223,25 @@ void NonzeroAvgPoolingForwardKernelGPU(
   }
 
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
-  // cudaFree(d_in_map);
-  // cudaFree(d_ones);
+
+  cudaFree(d_scr);
+  cudaFree(d_ones);
 
   CUDA_CHECK(cudaGetLastError());
+  CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template void NonzeroAvgPoolingForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, float *d_out_feat, int out_nrows,
     float *d_num_nonzero, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, bool use_avg, int32_t *d_scr,
-    float *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream);
+    const pInOutMaps<int32_t> &out_map, bool use_avg,
+    cusparseHandle_t cushandle, cudaStream_t stream);
 
 template void NonzeroAvgPoolingForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nrows, double *d_out_feat, int out_nrows,
     double *d_num_nonzero, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, bool use_avg, int32_t *d_scr,
-    double *d_dscr, cusparseHandle_t cushandle, cudaStream_t stream);
+    const pInOutMaps<int32_t> &out_map, bool use_avg,
+    cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingBackwardKernelGPU(
@@ -266,6 +271,7 @@ void NonzeroAvgPoolingBackwardKernelGPU(
   }
 
   CUDA_CHECK(cudaGetLastError());
+  CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template void NonzeroAvgPoolingBackwardKernelGPU<float, int32_t>(

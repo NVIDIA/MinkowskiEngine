@@ -123,7 +123,7 @@ void BroadcastForwardKernelGPU(
   }
 
   CUDA_CHECK(cudaGetLastError());
-  // cudaFree(d_out_map);
+  CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template void BroadcastForwardKernelGPU<float, int32_t>(
@@ -139,16 +139,13 @@ template void BroadcastForwardKernelGPU<double, int32_t>(
     cusparseHandle_t cuhandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
-void BroadcastBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
-                                int in_nrows, const Dtype *d_in_feat_global,
-                                Dtype *d_grad_in_feat_global,
-                                int in_nrows_global,
-                                const Dtype *d_grad_out_feat, int nchannel,
-                                int op, const pInOutMaps<Itype> &in_maps,
-                                const pInOutMaps<Itype> &out_maps, Itype *d_scr,
-                                Dtype *d_dscr, cusparseHandle_t cushandle,
-                                cudaStream_t stream) {
-  Itype *d_in_map, *d_out_map, *d_csr_row;
+void BroadcastBackwardKernelGPU(
+    const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nrows,
+    const Dtype *d_in_feat_global, Dtype *d_grad_in_feat_global,
+    int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
+    const pInOutMaps<Itype> &in_maps, const pInOutMaps<Itype> &out_maps,
+    cusparseHandle_t cushandle, cudaStream_t stream) {
+  Itype *d_scr, *d_in_map, *d_out_map, *d_csr_row;
   Dtype *d_dtype, *d_csr_val, *d_tmp_grad_in_feat_global, *d_tmp_grad_in_feat;
   cusparseMatDescr_t descr = 0;
   const Dtype alpha = 1;
@@ -164,32 +161,20 @@ void BroadcastBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
   if (in_maps[0].size() != in_nrows)
     throw std::invalid_argument("Invalid in_map");
 
+  /* In Out Map prep */
   // Malloc d_in_map, d_out_map, d_csr_row
   // CSR returns n_row + 1
-  // CUDA_CHECK(cudaMalloc((void **)&d_in_map,
-  //                       (in_maps[0].size() + out_maps[0].size()
-  //                       + in_nrows_global + 1) * sizeof(Itype)));
-
-  // GPUMemoryManager<Dtype> dmem((nnz + (in_nrows + in_nrows_global) *
-  // nchannel)); CUDA_CHECK(cudaMalloc((void **)&d_dtype,
-  //                       (nnz + (in_nrows + in_nrows_global) * nchannel) *
-  //                           sizeof(Dtype)));
-  // d_dtype =
-  //     (Dtype *)(d_scr + in_maps[0].size() + out_maps[0].size()
-  //     + in_nrows_global + 1);
-
-  // Divide the memory space into multiple chunks
-  d_dtype = d_dscr;
-  d_tmp_grad_in_feat_global = d_dtype;
-  d_tmp_grad_in_feat = d_tmp_grad_in_feat_global + in_nrows_global * nchannel;
-  d_csr_val = d_tmp_grad_in_feat + in_nrows * nchannel;
+  CUDA_CHECK(cudaMalloc((void **)&d_scr,
+                        2 * nnz * sizeof(Itype) +                 // in out maps
+                            (in_nrows_global + 1) * sizeof(Itype) // d_csr_row
+                        ));
 
   // COO cols
-  d_in_map = d_scr;
+  d_in_map = d_scr; // nnz
   // COO rows
-  d_out_map = d_scr + nnz;
+  d_out_map = d_scr + nnz; // nnz
   // CSR row indices
-  d_csr_row = d_scr + 2 * nnz;
+  d_csr_row = d_scr + 2 * nnz; // in_nrows_global + 1
 
   CUDA_CHECK(cudaMemcpy(d_in_map,
                         in_maps[0].data(), // in_maps are contiguous of size nnz
@@ -199,6 +184,21 @@ void BroadcastBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
       cudaMemcpy(d_out_map,
                  out_maps[0].data(), // out_maps are contiguous of size nnz
                  nnz * sizeof(int), cudaMemcpyDeviceToDevice));
+
+  /* tmp in out feat */
+  // sparse gemm output
+  CUDA_CHECK(cudaMalloc(
+      (void **)&d_dtype,
+      nnz * sizeof(Dtype) +                          // d_csr_val
+          in_nrows * nchannel * sizeof(Dtype) +      // tmp_grad_infeat
+          in_nrows_global * nchannel * sizeof(Dtype) // tmp_grad_infeat_global
+      ));
+
+  // Divide the memory space into multiple chunks
+  d_tmp_grad_in_feat_global = d_dtype; // in_nrows_global * nchannel
+  d_tmp_grad_in_feat = d_tmp_grad_in_feat_global +
+                       in_nrows_global * nchannel; // in_nrows * nchannel
+  d_csr_val = d_tmp_grad_in_feat + in_nrows * nchannel;
 
   // thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
   fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
@@ -301,12 +301,12 @@ void BroadcastBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
                                             << std::to_string(op));
   }
 
+  cudaFree(d_scr);
+  cudaFree(d_dtype);
   CUSPARSE_CHECK(cusparseDestroyMatDescr(descr));
 
   CUDA_CHECK(cudaGetLastError());
-
-  // cudaFree(d_in_map);
-  // cudaFree(d_dtype);
+  CUDA_CHECK(cudaDeviceSynchronize());
 }
 
 template void BroadcastBackwardKernelGPU<float, int32_t>(
@@ -314,14 +314,12 @@ template void BroadcastBackwardKernelGPU<float, int32_t>(
     const float *d_in_feat_global, float *d_grad_in_feat_global,
     int in_nrows_global, const float *d_grad_out_feat, int nchannel, int op,
     const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
-    int32_t *d_scr, float *d_dscr, cusparseHandle_t cushandle,
-    cudaStream_t stream);
+    cusparseHandle_t cushandle, cudaStream_t stream);
 
 template void BroadcastBackwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_grad_in_feat, int in_nrows,
     const double *d_in_feat_global, double *d_grad_in_feat_global,
     int in_nrows_global, const double *d_grad_out_feat, int nchannel, int op,
     const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
-    int32_t *d_scr, double *d_dscr, cusparseHandle_t cushandle,
-    cudaStream_t stream);
+    cusparseHandle_t cushandle, cudaStream_t stream);
 #endif

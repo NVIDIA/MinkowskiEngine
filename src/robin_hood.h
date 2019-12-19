@@ -1291,7 +1291,7 @@ private:
     size_t insert_move(Node&& keyval) {
         // we don't retry, fail if overflowing
         // don't need to check max num elements
-        OVERFLOW(0 == mMaxNumElementsAllowed && !try_increase_info(), "insertion fail");
+        OVERFLOW_IF(0 == mMaxNumElementsAllowed && !try_increase_info(), "insertion fail");
 
         size_t idx;
         InfoType info;
@@ -1758,7 +1758,7 @@ public:
         while (calcMaxNumElementsAllowed(newSize) < minElementsAllowed && newSize != 0) {
             newSize *= 2;
         }
-        OVERFLOW(ROBIN_HOOD_UNLIKELY(newSize == 0), "reserve fail.");
+        OVERFLOW_IF(ROBIN_HOOD_UNLIKELY(newSize == 0), "reserve fail.");
 
         rehashPowerOfTwo(newSize);
     }
@@ -1826,7 +1826,7 @@ public:
         auto const total64 = ne * s + infos;
         auto const total = static_cast<size_t>(total64);
 
-        OVERFLOW(ROBIN_HOOD_UNLIKELY(static_cast<uint64_t>(total) != total64), "calcNumBytesTotal fail");
+        OVERFLOW_IF(ROBIN_HOOD_UNLIKELY(static_cast<uint64_t>(total) != total64), "calcNumBytesTotal fail");
         return total;
 #endif
     }
@@ -2038,7 +2038,7 @@ private:
                                        << (static_cast<double>(mNumElements) * 100.0 /
                                            (static_cast<double>(mMask) + 1)));
         // it seems we have a really bad hash function! don't try to resize again
-        OVERFLOW(mNumElements * 2 < calcMaxNumElementsAllowed(mMask + 1), "increase_size fail");
+        OVERFLOW_IF(mNumElements * 2 < calcMaxNumElementsAllowed(mMask + 1), "increase_size fail");
 
         rehashPowerOfTwo((mMask + 1) * 2);
     }

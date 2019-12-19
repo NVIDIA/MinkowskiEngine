@@ -122,20 +122,6 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat_glob.resize_as_(in_feat_glob);
   grad_in_feat_glob.zero_();
 
-  const int nnz = getInOutMapsSize(p_coords_manager->d_in_maps[map_key]);
-
-  int *d_scr = (int *)p_coords_manager->getScratchGPUMemory(
-      2 * nnz * sizeof(int) +                  // in, out maps to sort
-      (in_feat_glob.size(0) + 1) * sizeof(int) // d_csr_row
-  );
-
-  Dtype *d_dscr = (Dtype *)p_coords_manager->getScratchGPUMemory2(
-      in_feat.size(0) * sizeof(Dtype) +                   // d_csr_val
-      in_feat.size(0) * in_feat.size(1) * sizeof(Dtype) + // tmp_grad_infeat
-      in_feat_glob.size(0) * in_feat.size(1) *
-          sizeof(Dtype) // tmp_grad_infeat_global
-  );
-
   cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
   cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
 
@@ -144,7 +130,7 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
       p_coords_manager->d_in_maps[map_key],
-      p_coords_manager->d_out_maps[map_key], d_scr, d_dscr, handle,
+      p_coords_manager->d_out_maps[map_key], handle,
       at::cuda::getCurrentCUDAStream());
 }
 #endif

@@ -241,10 +241,11 @@ public:
   getUnionInOutMapsGPU(vector<py::object> py_in_coords_keys,
                        py::object py_out_coords_key);
 
-  void *getScratchGPUMemory(int size) { return gpu_memory_manager.data(size); }
-  void *getScratchGPUMemory2(int size) {
-    return gpu_memory_manager.data2(size);
+  void *getScratchGPUMemory(size_t size) {
+    return gpu_memory_manager.tmp_data(size);
   }
+
+  void clearScratchGPUMemory() { gpu_memory_manager.clear_tmp(); }
 
 #endif // CPU_ONLY
 };

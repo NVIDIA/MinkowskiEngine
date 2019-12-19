@@ -133,7 +133,7 @@ __global__ void matmul2(const Dtype *A, const int wA, const int hA,
   const int tx = threadIdx.x;
   const int ty = threadIdx.y;
 
-  // Coordinate. x is for rows, y is for columns.
+  // Coordinate. y is for rows, x is for columns.
   const int x = BLOCK_SIZE * bx + tx;
   const int y = BLOCK_SIZE * by + ty;
 

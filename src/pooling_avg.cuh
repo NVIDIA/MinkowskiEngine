@@ -33,11 +33,13 @@
 #include "types.hpp"
 
 template <typename Dtype, typename Itype>
-void NonzeroAvgPoolingForwardKernelGPU(
-    const Dtype *d_in_feat, int in_nrows, Dtype *d_out_feat, int out_nrows,
-    Dtype *d_num_nonzero, int nchannel, const pInOutMaps<Itype> &in_map,
-    const pInOutMaps<Itype> &out_map, bool use_avg, Itype *d_scr, Dtype *d_dscr,
-    cusparseHandle_t cushandle, cudaStream_t stream);
+void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
+                                       Dtype *d_out_feat, int out_nrows,
+                                       Dtype *d_num_nonzero, int nchannel,
+                                       const pInOutMaps<Itype> &in_map,
+                                       const pInOutMaps<Itype> &out_map,
+                                       bool use_avg, cusparseHandle_t cushandle,
+                                       cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingBackwardKernelGPU(

@@ -112,27 +112,13 @@ void AvgPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
     num_nonzero_data = num_nonzero.data<Dtype>();
   }
 
-  // int dtype_mult = dtypeMultiplier<Dtype, int>(), nnz = 0;
-  int nnz = getInOutMapsSize(in_out.first);
-
-  int *d_scr = (int *)p_coords_manager->getScratchGPUMemory(
-      2 * nnz * sizeof(int) +         // in, out maps to sort
-      (out_nrows + 1) * sizeof(int)); // csr_row
-
-  Dtype *d_dscr = (Dtype *)p_coords_manager->getScratchGPUMemory2(
-      ((use_avg ? in_feat.size(0) : 0) + // d_ones
-       nnz +                             // d_csr_val
-       in_feat.size(1) * out_nrows       // d_tmp_out_feat
-       ) *
-      sizeof(Dtype));
-
   cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
   cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
 
   NonzeroAvgPoolingForwardKernelGPU<Dtype, int>(
       in_feat.data<Dtype>(), in_feat.size(0), out_feat.data<Dtype>(), out_nrows,
       num_nonzero_data, in_feat.size(1), in_out.first, in_out.second, use_avg,
-      d_scr, d_dscr, handle, at::cuda::getCurrentCUDAStream());
+      handle, at::cuda::getCurrentCUDAStream());
 }
 
 template <typename Dtype>

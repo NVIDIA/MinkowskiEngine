@@ -76,7 +76,7 @@ private:
   Formatter &operator=(Formatter &);
 };
 
-#define OVERFLOW(condition, ...)                                               \
+#define OVERFLOW_IF(condition, ...)                                            \
   {                                                                            \
     if (condition) {                                                           \
       Formatter formatter;                                                     \

@@ -113,6 +113,8 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
       in_feat.data<Dtype>(), out_feat.data<Dtype>(), out_nrows,
       num_nonzero.data<int>(), nchannel, in_out.first, in_out.second, d_scr,
       at::cuda::getCurrentCUDAStream());
+
+  p_coords_manager->clearScratchGPUMemory();
 }
 
 template <typename Dtype>
