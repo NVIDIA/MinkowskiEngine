@@ -13,6 +13,7 @@
 - Added MinkowskiUnion
 - Updated MinkowskiUnion, MinkowskiPruning docs
 - Use cudaMalloc instead of `at::Tensor` for GPU memory management for illegal memory access, invalid arg.
+- Region hypercube iterator with even numbered kernel
 
 
 ## [0.3.1] - 2019-12-15

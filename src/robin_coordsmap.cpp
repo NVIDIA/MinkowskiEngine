@@ -74,7 +74,7 @@ CoordsMap::initialize(int *p_coords, int nrows_, int ncols_, bool force_remap) {
 
       mapping.push_back(i);
 
-      map[coord] = force_remap ? c++ : i;
+      map[move(coord)] = force_remap ? c++ : i;
     }
   }
 

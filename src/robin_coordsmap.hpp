@@ -43,19 +43,21 @@ template <typename Itype>
 vector<int> stride_copy(const vector<Itype> &src,
                         const vector<Itype> &tensor_strides) {
   vector<Itype> dst(src.size());
-  for (int i = 0; i < tensor_strides.size(); i++) {
 #ifdef BATCH_FIRST
-    dst[i + 1] = (src[i + 1] / tensor_strides[i]) * tensor_stride[i];
-#else
-    dst[i] = (src[i] / tensor_strides[i]) * tensor_strides[i];
-#endif
-  }
-#ifdef BATCH_FIRST
+  int b = 1;
   dst[0] = src[0];
 #else
+  int b = 0;
   dst[tensor_strides.size()] = src[tensor_strides.size()];
 #endif
 
+  for (int i = 0; i < tensor_strides.size(); i++) {
+    if (src[i + b] > 0)
+      dst[i + b] = (src[i + b] / tensor_strides[i]) * tensor_strides[i];
+    else
+      dst[i + b] = ((src[i + b] - tensor_strides[i] + 1) / tensor_strides[i]) *
+                   tensor_strides[i];
+  }
   return dst;
 }
 

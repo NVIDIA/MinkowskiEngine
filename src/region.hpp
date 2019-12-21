@@ -59,15 +59,8 @@ public:
          const vector<int> &kernel_size, const vector<int> &dilations,
          int region_type, const int *p_offset, int n_offset);
 
-  Region(const vector<int> &lower_bound_, const vector<int> &tensor_strides,
-         const vector<int> &kernel_size, const vector<int> &dilations,
-         int region_type, const int *p_offset, int n_offset,
-         bool use_lower_bound);
-
   void set_bounds(const int *p_center_);
   void set_bounds(const vector<int> &center_);
-  void set_bounds(const Coord<int> &center_);
-  void set_bounds_with_lb(const vector<int> &lb_);
 
   void set_size() {
     switch (region_type) {
@@ -101,7 +94,6 @@ public:
   vector<int> center;
   vector<int> lb;
   vector<int> ub;
-  bool use_lower_bound;
   int size_ = -1;
 };
 

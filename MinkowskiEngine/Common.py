@@ -197,24 +197,8 @@ def convert_region_type(region_type,
         assert axis_types is None, "Axis types must be None when region_type is given"
         # Typical convolution kernel
         assert torch.prod(kernel_size > 0) == 1
-        assert torch.unique(dilation).numel() == 1
-
-        # Convolution kernel with even numbered kernel size not defined.
-        if (kernel_size % 2).prod() == 1:  # Odd
-            kernel_volume = int(torch.prod(kernel_size))
-        else:  # At least one of the edge is even
-            iter_args = []
-            for d in range(dimension):
-                off_center = int(math.floor(
-                    (kernel_size[d] - 1) / 2)) if center else 0
-                off = (dilation[d] * (tensor_stride[d] / up_stride[d]) * (
-                    torch.arange(kernel_size[d]).int() - off_center)).tolist()
-                iter_args.append(off)
-
-            region_type = RegionType.CUSTOM
-            region_offset = list(product(*iter_args))
-            region_offset = torch.IntTensor(region_offset)
-            kernel_volume = int(region_offset.size(0))
+        # assert torch.unique(dilation).numel() == 1
+        kernel_volume = int(torch.prod(kernel_size))
 
     elif region_type == RegionType.HYPERCROSS:
         assert torch.prod(kernel_size > 0) == 1, "kernel_size must be positive"

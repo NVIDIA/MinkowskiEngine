@@ -59,10 +59,10 @@ class TestKernelMap(unittest.TestCase):
         print(iC)
         print(oC)
         kernel_map = output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
-        self.assertTrue(len(kernel_map) == 26)
         for row in kernel_map:
           k, i, o = row
           print(k.item(), iC[i], oC[o])
+        self.assertTrue(len(kernel_map) == 26)
 
 
 if __name__ == '__main__':

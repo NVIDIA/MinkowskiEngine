@@ -29,7 +29,7 @@ Region::Region(const vector<int> &tensor_strides_,
                int region_type_, const int *p_offset_, int n_offset_)
     : region_type(region_type_), tensor_strides(tensor_strides_),
       kernel_size(kernel_size_), dilations(dilations_), p_offset(p_offset_),
-      n_offset(n_offset_), use_lower_bound(false) {
+      n_offset(n_offset_) {
   D = tensor_strides.size();
 
   center.resize(D + 1);
@@ -43,7 +43,7 @@ Region::Region(const Region &region_)
     : region_type(region_.region_type), tensor_strides(region_.tensor_strides),
       kernel_size(region_.kernel_size), dilations(region_.dilations),
       p_offset(region_.p_offset), n_offset(region_.n_offset),
-      use_lower_bound(false), size_(region_.size_) {
+      size_(region_.size_) {
   D = tensor_strides.size();
 
   center.resize(D + 1);
@@ -56,7 +56,7 @@ Region::Region(const vector<int> &center_, const vector<int> &tensor_strides_,
                int region_type_, const int *p_offset_, int n_offset_)
     : region_type(region_type_), tensor_strides(tensor_strides_),
       kernel_size(kernel_size_), dilations(dilations_), p_offset(p_offset_),
-      n_offset(n_offset_), use_lower_bound(false) {
+      n_offset(n_offset_) {
   D = center_.size() - 1;
 
   center.resize(D + 1);
@@ -65,44 +65,6 @@ Region::Region(const vector<int> &center_, const vector<int> &tensor_strides_,
 
   set_size();
   set_bounds(center_);
-}
-
-Region::Region(const vector<int> &lower_bound_,
-               const vector<int> &tensor_strides_,
-               const vector<int> &kernel_size_, const vector<int> &dilations_,
-               int region_type_, const int *p_offset_, int n_offset_,
-               bool use_lower_bound_)
-    : region_type(region_type_), tensor_strides(tensor_strides_),
-      kernel_size(kernel_size_), dilations(dilations_), p_offset(p_offset_),
-      n_offset(n_offset_), use_lower_bound(use_lower_bound_) {
-  D = lower_bound_.size();
-
-  center.resize(D + 1);
-
-  set_size();
-  set_bounds_with_lb(lower_bound_);
-}
-
-void Region::set_bounds_with_lb(const vector<int> &lb_) {
-  lb = lb_; // input is the lower bound
-  ub.resize(D + 1);
-
-  if (region_type > 0)
-    throw std::invalid_argument(
-        Formatter() << "The region type " << region_type
-                    << " is not supported with the use_lower_bound argument");
-#ifdef BATCH_FIRST
-  ub[0] = lb[0]; // set the batch index
-  for (int i = 0; i < D; i++) {
-    ub[i + 1] =
-        lb[i + 1] + (kernel_size[i] - 1) * dilations[i] * tensor_strides[i];
-  }
-#else
-  for (int i = 0; i < D; i++) {
-    ub[i] = lb[i] + (kernel_size[i] - 1) * dilations[i] * tensor_strides[i];
-  }
-  ub[D] = lb[D]; // set the batch index
-#endif
 }
 
 void Region::set_bounds(const vector<int> &center_) {
@@ -116,45 +78,30 @@ void Region::set_bounds(const int *p_center_) {
   std::copy_n(p_center_, D + 1, center.begin());
 
 #ifdef BATCH_FIRST
+  int batch_offset = 1;
   lb[0] = ub[0] = p_center_[0]; // set the batch index
-  for (int i = 0; i < D; i++) {
-    lb[i + 1] = p_center_[i + 1] -
-                int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
-    ub[i + 1] = p_center_[i + 1] +
-                int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
-  }
 #else
-  for (int i = 0; i < D; i++) {
-    lb[i] = p_center_[i] -
-            int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
-    ub[i] = p_center_[i] +
-            int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
-  }
+  int batch_offset = 0;
   lb[D] = ub[D] = p_center_[D]; // set the batch index
 #endif
-}
 
-void Region::set_bounds(const Coord<int> &center_) {
-  center.resize(center_.size);
-  std::copy_n(center_.ptr, center_.size, center.data());
-
-#ifdef BATCH_FIRST
-  lb[0] = ub[0] = center[0]; // set the batch index
   for (int i = 0; i < D; i++) {
-    lb[i + 1] = center[i + 1] -
-                int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
-    ub[i + 1] = center[i + 1] +
-                int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
+    // If the current kernel size is even, [0, 1, 2, 3] --> [0] for kernel
+    // size 4.
+    if (kernel_size[i] % 2 == 0) {
+      lb[i + batch_offset] = p_center_[i + batch_offset];
+      ub[i + batch_offset] =
+          p_center_[i + batch_offset] +
+          (kernel_size[i] - 1) * dilations[i] * tensor_strides[i];
+    } else {
+      lb[i + batch_offset] =
+          p_center_[i + batch_offset] -
+          int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
+      ub[i + batch_offset] =
+          p_center_[i + batch_offset] +
+          int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
+    }
   }
-#else
-  for (int i = 0; i < D; i++) {
-    lb[i] =
-        center[i] - int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
-    ub[i] =
-        center[i] + int(kernel_size[i] / 2) * dilations[i] * tensor_strides[i];
-  }
-  lb[D] = ub[D] = center[D]; // set the batch index
-#endif
 }
 
 RegionIterator::RegionIterator(const Region &region)

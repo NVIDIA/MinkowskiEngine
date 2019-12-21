@@ -55,6 +55,7 @@ template <typename Itype> struct Coord {
     return equal;
   };
 
+  Itype *data() { return ptr; }
   Itype operator[](const int index) const { return ptr[index]; }
 };
 
