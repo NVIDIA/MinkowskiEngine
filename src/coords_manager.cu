@@ -46,6 +46,15 @@ CoordsManager::copyInOutMapToGPU(const InOutMaps<int> &map) {
   return d_map;
 }
 
+void CoordsManager::copyInOutMapsToGPU(const InOutMapKey &map_key) {
+  if (d_in_maps.find(map_key) == d_in_maps.end()) {
+    ASSERT(in_maps.find(map_key) != in_maps.end(),
+           "The InOutMap doesn't exists.");
+    d_in_maps[map_key] = copyInOutMapToGPU(in_maps[map_key]);
+    d_out_maps[map_key] = copyInOutMapToGPU(out_maps[map_key]);
+  }
+}
+
 const pInOutMapsRefPair<int> CoordsManager::getInOutMapsGPU(
     const vector<int> &tensor_strides, const vector<int> &strides,
     const vector<int> &kernel_sizes, const vector<int> &dilations,
@@ -62,10 +71,7 @@ const pInOutMapsRefPair<int> CoordsManager::getInOutMapsGPU(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, is_transpose, is_pool);
 
-  if (d_in_maps.find(map_key) == d_in_maps.end()) {
-    d_in_maps[map_key] = copyInOutMapToGPU(in_out.first);
-    d_out_maps[map_key] = copyInOutMapToGPU(in_out.second);
-  }
+  copyInOutMapsToGPU(map_key);
 
   return make_pair(ref(d_in_maps[map_key]), ref(d_out_maps[map_key]));
 }
@@ -78,10 +84,7 @@ CoordsManager::getOriginInOutMapsGPU(py::object py_in_coords_key,
   const InOutMapKey map_key =
       getOriginMapHashKey(py_in_coords_key, py_glob_coords_key);
 
-  if (d_in_maps.find(map_key) == d_in_maps.end()) {
-    d_in_maps[map_key] = copyInOutMapToGPU(in_out.first);
-    d_out_maps[map_key] = copyInOutMapToGPU(in_out.second);
-  }
+  copyInOutMapsToGPU(map_key);
 
   return make_pair(ref(d_in_maps[map_key]), ref(d_out_maps[map_key]));
 }
@@ -96,10 +99,7 @@ CoordsManager::getPruningInOutMapsGPU(at::Tensor use_feat,
   const InOutMapKey map_key =
       getOriginMapHashKey(py_in_coords_key, py_out_coords_key);
 
-  if (d_in_maps.find(map_key) == d_in_maps.end()) {
-    d_in_maps[map_key] = copyInOutMapToGPU(in_out.first);
-    d_out_maps[map_key] = copyInOutMapToGPU(in_out.second);
-  }
+  copyInOutMapsToGPU(map_key);
 
   return make_pair(ref(d_in_maps[map_key]), ref(d_out_maps[map_key]));
 }
@@ -112,10 +112,7 @@ CoordsManager::getUnionInOutMapsGPU(vector<py::object> py_in_coords_keys,
   const InOutMapKey map_key =
       getUnionMapHashKey(py_in_coords_keys, py_out_coords_key);
 
-  if (d_in_maps.find(map_key) == d_in_maps.end()) {
-    d_in_maps[map_key] = copyInOutMapToGPU(in_out.first);
-    d_out_maps[map_key] = copyInOutMapToGPU(in_out.second);
-  }
+  copyInOutMapsToGPU(map_key);
 
   return make_pair(ref(d_in_maps[map_key]), ref(d_out_maps[map_key]));
 }

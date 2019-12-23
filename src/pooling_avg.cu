@@ -252,9 +252,6 @@ void NonzeroAvgPoolingBackwardKernelGPU(
   // d_grad_in_feat must be all set to 0
 
   int nmaps = 0;
-  const Itype *d_in_map = in_maps[0].data(), // In out maps must be contiguous
-      *d_out_map = out_maps[0].data();
-
   for (const auto &map : in_maps)
     nmaps += map.size();
 
@@ -262,12 +259,12 @@ void NonzeroAvgPoolingBackwardKernelGPU(
     set_gradient_nonzero_avg<Dtype>
         <<<GET_BLOCKS(nmaps * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
             nmaps * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
-            d_num_nonzero, d_in_map, d_out_map);
+            d_num_nonzero, in_maps[0].data(), out_maps[0].data());
   } else {
     set_gradient_nonzero<Dtype>
         <<<GET_BLOCKS(nmaps * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
             nmaps * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
-            d_in_map, d_out_map);
+            in_maps[0].data(), out_maps[0].data());
   }
 
   CUDA_CHECK(cudaGetLastError());

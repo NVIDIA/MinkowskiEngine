@@ -66,12 +66,11 @@ class MinkowskiBroadcastFunction(Function):
         ctx.glob_coords_key = glob_coords_key
         ctx.coords_manager = coords_manager
 
-        out_feat = input_features.new()
-
         fw_fn = getattr(MEB, 'BroadcastForward' + get_postfix(input_features))
-        fw_fn(ctx.in_feat, ctx.in_feat_glob, out_feat, ctx.op,
-              ctx.in_coords_key.CPPCoordsKey, ctx.glob_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager)
+        out_feat = fw_fn(ctx.in_feat, ctx.in_feat_glob, ctx.op,
+                         ctx.in_coords_key.CPPCoordsKey,
+                         ctx.glob_coords_key.CPPCoordsKey,
+                         ctx.coords_manager.CPPCoordsManager)
         return out_feat
 
     @staticmethod
@@ -227,15 +226,13 @@ class MinkowskiBroadcast(Module):
         assert isinstance(input_glob, SparseTensor)
         assert input.D == self.dimension
 
-        coo = input.coords_man.get_coo_broadcast_coords(input.coords_key)
-        perm_mat = torch.sparse_coo_tensor(
-            coo,
-            torch.ones(len(input), dtype=input.dtype, device=input.device),
-            requires_grad=False)
+        broadcast_feat = torch.empty_like(input.F)
+        row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)
+        for b, row_ind in enumerate(row_inds):
+            broadcast_feat[row_ind] = input_glob.F[b]
 
-        broadcasted_input_glob = perm_mat.mm(input_glob.F)
         return SparseTensor(
-            broadcasted_input_glob,
+            broadcast_feat,
             coords_key=input.coords_key,
             coords_manager=input.coords_man)
 
@@ -266,14 +263,12 @@ class MinkowskiBroadcastConcatenation(MinkowskiBroadcast):
         assert isinstance(input_glob, SparseTensor)
         assert input.D == self.dimension
 
-        coo = input.coords_man.get_coo_broadcast_coords(input.coords_key)
-        perm_mat = torch.sparse_coo_tensor(
-            coo,
-            torch.ones(len(input), dtype=input.dtype, device=input.device),
-            requires_grad=False)
+        broadcast_feat = torch.empty_like(input.F)
+        row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)
+        for b, row_ind in enumerate(row_inds):
+            broadcast_feat[row_ind] = input_glob.F[b]
 
-        broadcasted_input_glob = perm_mat.mm(input_glob.F)
-        broadcast_cat = torch.cat((input.F, broadcasted_input_glob), dim=1)
+        broadcast_cat = torch.cat((input.F, broadcast_feat), dim=1)
         return SparseTensor(
             broadcast_cat,
             coords_key=input.coords_key,

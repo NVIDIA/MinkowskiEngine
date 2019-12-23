@@ -102,6 +102,24 @@ def get_postfix(tensor):
     return postfix
 
 
+class GlobalPoolingMode(Enum):
+    """
+    Define the global pooling mode
+    """
+    AUTO = 0, 'AUTO'
+    INDEX_SELECT = 1, 'INDEX_SELECT'
+    SPARSE = 2, 'SPARSE'
+
+    def __new__(cls, value, name):
+        member = object.__new__(cls)
+        member._value_ = value
+        member.fullname = name
+        return member
+
+    def __int__(self):
+        return self.value
+
+
 class RegionType(Enum):
     """
     Define the kernel region type

@@ -14,6 +14,16 @@
 - Updated MinkowskiUnion, MinkowskiPruning docs
 - Use cudaMalloc instead of `at::Tensor` for GPU memory management for illegal memory access, invalid arg.
 - Region hypercube iterator with even numbered kernel
+- Fix global reduction in-out map with non contiguous batch indices
+- GlobalPooling with torch reduction
+    - GlobalPoolingMode with index select and sparse backbone
+    - If batch size == 1, skip the backend
+- Added CoordsManager functions
+    - `get_batch_size`
+    - `get_batch_indices`
+    - `set_origin_coords_key`
+- Updated CoordsManager function `get_row_indices_per_batch` to return a list of `torch.LongTensor` for mapping indices. The corresponding batch indices is accessible by `get_batch_indices`.
+- Update `MinkowskiBroadcast`, `MinkowskiBroadcastConcatenation` to use row indices per batch (`getRowIndicesPerBatch`)
 
 
 ## [0.3.1] - 2019-12-15

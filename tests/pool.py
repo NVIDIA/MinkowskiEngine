@@ -30,7 +30,8 @@ from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
     MinkowskiGlobalMaxPoolingFunction, MinkowskiGlobalMaxPooling, \
-    MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
+    MinkowskiMaxPoolingFunction, MinkowskiMaxPooling, \
+    GlobalPoolingMode
 
 from utils.gradcheck import gradcheck
 from tests.common import data_loader
@@ -163,7 +164,7 @@ class TestPooling(unittest.TestCase):
 
     def test_global_avgpool(self):
         in_channels, D = 2, 2
-        coords, feats, labels = data_loader(in_channels)
+        coords, feats, labels = data_loader(in_channels, batch_size=2)
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
@@ -174,8 +175,26 @@ class TestPooling(unittest.TestCase):
         # Check backward
         fn = MinkowskiGlobalPoolingFunction()
         self.assertTrue(
-            gradcheck(
-                fn, (input.F, True, input.coords_key, None, input.coords_man)))
+            gradcheck(fn, (input.F, True, GlobalPoolingMode.INDEX_SELECT,
+                           input.coords_key, None, input.coords_man)))
+
+        self.assertTrue(
+            gradcheck(fn, (input.F, True, GlobalPoolingMode.SPARSE,
+                           input.coords_key, None, input.coords_man)))
+
+        coords, feats, labels = data_loader(in_channels, batch_size=1)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords=coords)
+        pool = MinkowskiGlobalPooling(dimension=D)
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiGlobalPoolingFunction()
+        self.assertTrue(
+            gradcheck(fn, (input.F, True, GlobalPoolingMode.AUTO,
+                           input.coords_key, None, input.coords_man)))
 
     def test_global_maxpool(self):
         in_channels, D = 2, 2

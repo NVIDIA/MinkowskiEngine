@@ -72,7 +72,6 @@ class TestGPUVoxelization(unittest.TestCase):
         print('N unique:', len(mapping), 'N:', N)
 
         qcoords, qfeats, qlabels = sparse_quantize(coords, feats, labels, ignore_label)
-        import ipdb; ipdb.set_trace
         self.assertTrue(len(mapping) == len(qcoords))
 
     def test_collision(self):

@@ -31,7 +31,7 @@ from MinkowskiPooling import MinkowskiGlobalPooling
 from MinkowskiBroadcast import MinkowskiBroadcastAddition, MinkowskiBroadcastMultiplication, OperationType, operation_type_to_int
 import MinkowskiEngineBackend as MEB
 from MinkowskiCoords import CoordsKey
-from Common import get_postfix
+from Common import get_postfix, GlobalPoolingMode
 
 
 class MinkowskiBatchNorm(Module):
@@ -152,9 +152,12 @@ class MinkowskiInstanceNormFunction(Function):
     @staticmethod
     def forward(ctx,
                 in_feat,
+                mode=GlobalPoolingMode.AUTO,
                 in_coords_key=None,
                 glob_coords_key=None,
                 coords_manager=None):
+        assert isinstance(mode, GlobalPoolingMode), \
+            f"Mode must be an instance of GlobalPoolingMode, {mode}"
         if glob_coords_key is None:
             glob_coords_key = CoordsKey(in_coords_key.D)
 
@@ -172,26 +175,29 @@ class MinkowskiInstanceNormFunction(Function):
         cpp_glob_coords_key = glob_coords_key.CPPCoordsKey
         cpp_coords_manager = coords_manager.CPPCoordsManager
 
-        gpool_forward(in_feat, mean, num_nonzero, cpp_in_coords_key,
-                      cpp_glob_coords_key, cpp_coords_manager, True)
+        mean, num_nonzero = gpool_forward(in_feat, cpp_in_coords_key,
+                                          cpp_glob_coords_key,
+                                          cpp_coords_manager, True, mode.value)
         # X - \mu
-        centered_feat = in_feat.new()
-        broadcast_forward(in_feat, -mean, centered_feat, add, cpp_in_coords_key,
-                          cpp_glob_coords_key, cpp_coords_manager)
+        centered_feat = broadcast_forward(in_feat, -mean, add,
+                                          cpp_in_coords_key,
+                                          cpp_glob_coords_key,
+                                          cpp_coords_manager)
 
         # Variance = 1/N \sum (X - \mu) ** 2
-        variance = in_feat.new()
-        gpool_forward(centered_feat**2, variance, num_nonzero,
-                      cpp_in_coords_key, cpp_glob_coords_key,
-                      cpp_coords_manager, True)
+        variance, num_nonzero = gpool_forward(centered_feat**2,
+                                              cpp_in_coords_key,
+                                              cpp_glob_coords_key,
+                                              cpp_coords_manager, True,
+                                              mode.value)
 
         # norm_feat = (X - \mu) / \sigma
         inv_std = 1 / (variance + 1e-8).sqrt()
-        norm_feat = in_feat.new()
-        broadcast_forward(centered_feat, inv_std, norm_feat, multiply,
-                          cpp_in_coords_key, cpp_glob_coords_key,
-                          cpp_coords_manager)
+        norm_feat = broadcast_forward(centered_feat, inv_std, multiply,
+                                      cpp_in_coords_key, cpp_glob_coords_key,
+                                      cpp_coords_manager)
 
+        ctx.mode = mode
         ctx.in_coords_key, ctx.glob_coords_key = in_coords_key, glob_coords_key
         ctx.coords_manager = coords_manager
         # For GPU tensors, must use save_for_backward.
@@ -219,32 +225,32 @@ class MinkowskiInstanceNormFunction(Function):
         cpp_coords_manager = coords_manager.CPPCoordsManager
 
         # 1/N \sum dout
-        num_nonzero = out_grad.new()
-        mean_dout = out_grad.new()
-        gpool_forward(out_grad, mean_dout, num_nonzero, cpp_in_coords_key,
-                      cpp_glob_coords_key, cpp_coords_manager, True)
+        mean_dout, num_nonzero = gpool_forward(out_grad,
+                                               cpp_in_coords_key,
+                                               cpp_glob_coords_key,
+                                               cpp_coords_manager, True,
+                                               ctx.mode.value)
 
         # 1/N \sum (dout * out)
-        mean_dout_feat = out_grad.new()
-        gpool_forward(out_grad * norm_feat, mean_dout_feat, num_nonzero,
-                      cpp_in_coords_key, cpp_glob_coords_key,
-                      cpp_coords_manager, True)
+        mean_dout_feat, num_nonzero = gpool_forward(out_grad * norm_feat,
+                                                    cpp_in_coords_key,
+                                                    cpp_glob_coords_key,
+                                                    cpp_coords_manager, True,
+                                                    ctx.mode.value)
 
         # out * 1/N \sum (dout * out)
-        feat_mean_dout_feat = out_grad.new()
-        broadcast_forward(norm_feat, mean_dout_feat, feat_mean_dout_feat,
-                          multiply, cpp_in_coords_key, cpp_glob_coords_key,
-                          cpp_coords_manager)
+        feat_mean_dout_feat = broadcast_forward(norm_feat, mean_dout_feat,
+                                                multiply, cpp_in_coords_key,
+                                                cpp_glob_coords_key,
+                                                cpp_coords_manager)
 
-        unnorm_din = out_grad.new()
-        broadcast_forward(out_grad - feat_mean_dout_feat, -mean_dout,
-                          unnorm_din, add, cpp_in_coords_key,
-                          cpp_glob_coords_key, cpp_coords_manager)
+        unnorm_din = broadcast_forward(out_grad - feat_mean_dout_feat,
+                                       -mean_dout, add, cpp_in_coords_key,
+                                       cpp_glob_coords_key, cpp_coords_manager)
 
-        norm_din = out_grad.new()
-        broadcast_forward(unnorm_din, inv_std, norm_din, multiply,
-                          cpp_in_coords_key, cpp_glob_coords_key,
-                          cpp_coords_manager)
+        norm_din = broadcast_forward(unnorm_din, inv_std, multiply,
+                                     cpp_in_coords_key, cpp_glob_coords_key,
+                                     cpp_coords_manager)
 
         return norm_din, None, None, None, None
 
@@ -301,7 +307,7 @@ class MinkowskiInstanceNorm(Module):
 
     """
 
-    def __init__(self, num_features, dimension=-1):
+    def __init__(self, num_features, mode=GlobalPoolingMode.AUTO, dimension=-1):
         r"""
         Args:
 
@@ -316,6 +322,7 @@ class MinkowskiInstanceNorm(Module):
         self.bias = nn.Parameter(torch.zeros(1, num_features))
         self.dimension = dimension
         self.reset_parameters()
+        self.mode = mode
         self.inst_norm = MinkowskiInstanceNormFunction()
 
     def __repr__(self):
@@ -330,8 +337,8 @@ class MinkowskiInstanceNorm(Module):
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
-        output = self.inst_norm.apply(input.F, input.coords_key, None,
-                                      input.coords_man)
+        output = self.inst_norm.apply(input.F, self.mode, input.coords_key,
+                                      None, input.coords_man)
         output = output * self.weight + self.bias
 
         return SparseTensor(

@@ -71,6 +71,8 @@ class Test(unittest.TestCase):
         print(mapping, len(mapping))
         cm.print_diagnostics(key)
         print(cm)
+        print(cm.get_batch_size())
+        print(cm.get_batch_indices())
 
         # Create a strided map
         stride_key = cm.stride(key, [4])

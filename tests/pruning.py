@@ -35,13 +35,14 @@ class TestPruning(unittest.TestCase):
 
     def test_pruning(self):
         in_channels, D = 2, 2
-        coords, feats, labels = data_loader(in_channels)
+        coords, feats, labels = data_loader(in_channels, batch_size=1)
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         use_feat = torch.rand(feats.size(0)) < 0.5
         pruning = MinkowskiPruning(D)
         output = pruning(input, use_feat)
+        print(input)
         print(use_feat)
         print(output)
 

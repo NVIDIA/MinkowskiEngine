@@ -28,8 +28,7 @@ from urllib.request import urlretrieve
 try:
     import open3d as o3d
 except ImportError:
-    raise ImportError(
-        'Please install open3d with `pip install open3d`.')
+    raise ImportError('Please install open3d with `pip install open3d`.')
 
 import torch
 import MinkowskiEngine as ME
@@ -131,21 +130,22 @@ if __name__ == '__main__':
     model.eval()
 
     # Measure time
-    for voxel_size in [0.1, 0.05, 0.02]:
-        timer = Timer()
-        coordinates, features = generate_input_sparse_tensor(
-            config.file_name, voxel_size=voxel_size)
+    with torch.no_grad():
+        for voxel_size in [0.1, 0.05, 0.02]:
+            timer = Timer()
+            coordinates, features = generate_input_sparse_tensor(
+                config.file_name, voxel_size=voxel_size)
 
-        # Feed-forward pass and get the prediction
-        for i in range(4):
-            timer.tic()
-            sinput = ME.SparseTensor(features, coords=coordinates).to(device)
-            soutput = model(sinput)
-            timer.toc()
-        print(
-            f'Time to process a room with {voxel_size}m voxel downsampling '
-            f'containing {len(sinput)} voxels: {timer.min_time}'
-        )
+            # Feed-forward pass and get the prediction
+            for i in range(4):
+                timer.tic()
+                sinput = ME.SparseTensor(
+                    features, coords=coordinates).to(device)
+                soutput = model(sinput)
+                timer.toc()
+            print(
+                f'Time to process a room with {voxel_size}m voxel downsampling '
+                f'containing {len(sinput)} voxels: {timer.min_time}')
 
     # Feed-forward pass and get the prediction
     _, pred = soutput.F.max(1)
@@ -162,7 +162,8 @@ if __name__ == '__main__':
 
     # Move the original point cloud
     pcd = o3d.io.read_point_cloud(config.file_name)
-    pcd.points = o3d.utility.Vector3dVector(np.array(pcd.points) + np.array([0, 5, 0]))
+    pcd.points = o3d.utility.Vector3dVector(
+        np.array(pcd.points) + np.array([0, 5, 0]))
 
     # Visualize the input point cloud and the prediction
     o3d.visualization.draw_geometries([pcd, pred_pcd])

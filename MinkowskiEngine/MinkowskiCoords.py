@@ -145,36 +145,31 @@ class CoordsManager():
         self.CPPCoordsManager.getCoords(coords, coords_key.CPPCoordsKey)
         return coords
 
-    def get_row_indices_per_batch(self, coords_key):
-        r"""
-        return a list of unique batch indices, and a list of lists of row indices per batch.
+    def get_batch_size(self):
+        return self.CPPCoordsManager.getBatchSize()
+
+    def get_batch_indices(self):
+        return self.CPPCoordsManager.getBatchIndices()
+
+    def set_origin_coords_key(self, coords_key):
+        self.CPPCoordsManager.setOriginCoordsKey(coords_key.CPPCoordsKey)
+
+    def get_row_indices_per_batch(self, coords_key, out_coords_key=None):
+        r"""Return a list of lists of row indices per batch.
+
+        The corresponding batch indices are accessible by `get_batch_indices`.
 
         .. code-block:: python
 
            sp_tensor = ME.SparseTensor(features, coords=coordinates)
-           batch_indices, list_of_row_indices = sp_tensor.coords_man.get_row_indices_per_batch(sp_tensor.coords_key)
+           batch_indices = sp_tensor.coords_man.get_row_indices_per_batch(sp_tensor.coords_key)
 
         """
         assert isinstance(coords_key, CoordsKey)
-        out_key = CoordsKey(self.D)
+        if out_coords_key is None:
+            out_coords_key = CoordsKey(self.D)
         return self.CPPCoordsManager.getRowIndicesPerBatch(
-            coords_key.CPPCoordsKey, out_key.CPPCoordsKey)
-
-    def get_coo_broadcast_coords(self, coords_key, transpose=False):
-        _, list_of_row_indices = self.get_row_indices_per_batch(coords_key)
-        coos = []
-        for batch_ind, row_inds in enumerate(list_of_row_indices):
-            if transpose:
-                coo = torch.LongTensor([[
-                    batch_ind,
-                ] * len(row_inds), row_inds])
-            else:
-                coo = torch.LongTensor([row_inds, [
-                    batch_ind,
-                ] * len(row_inds)])
-            coos.append(coo)
-
-        return torch.cat(coos, dim=1)
+            coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey)
 
     def get_kernel_map(self,
                        in_tensor_strides,

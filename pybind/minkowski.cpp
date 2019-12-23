@@ -182,7 +182,10 @@ void instantiate_coordsman(py::module &m) {
       .def("getCoordsSize", (int (CoordsManager::*)(py::object) const) &
                                 CoordsManager::getCoordsSize)
       .def("getCoords", &CoordsManager::getCoords)
+      .def("getBatchSize", &CoordsManager::getBatchSize)
+      .def("getBatchIndices", &CoordsManager::getBatchIndices)
       .def("getRowIndicesPerBatch", &CoordsManager::getRowIndicesPerBatch)
+      .def("setOriginCoordsKey", &CoordsManager::setOriginCoordsKey)
       .def("initializeCoords",
            (uint64_t(CoordsManager::*)(at::Tensor, at::Tensor, py::object, bool,
                                        bool, bool)) &

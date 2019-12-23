@@ -110,16 +110,23 @@ public:
 
   bool existsCoordsKey(uint64_t coords_key) const;
   bool existsCoordsKey(py::object py_coords_key) const;
+  bool existsInOutMapKey(const InOutMapKey &map_key) const {
+    return in_maps.find(map_key) != in_maps.end();
+  }
   int getCoordsSize(uint64_t coords_key) const;
   int getCoordsSize(py::object py_coords_key) const;
   uint64_t getCoordsKey(const vector<int> &tensor_strides) const;
-
+  long int getBatchSize() const { return batch_indices.size(); }
+  set<int> getBatchIndices() const { return batch_indices; }
   void getCoords(at::Tensor coords, py::object py_coords_key) const;
   void getKernelMap(at::Tensor kernel_map, vector<int> tensor_strides,
                     vector<int> strides, vector<int> kernel_sizes,
                     vector<int> dilations, int region_type,
                     py::object py_in_coords_key, py::object py_out_coords_key,
                     bool is_transpose, bool is_pool) const;
+
+  // Set the py_coords_key to the origin coords map key
+  void setOriginCoordsKey(py::object py_coords_key);
 
   // New coords map initialzation entry
   uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
@@ -206,9 +213,8 @@ public:
     out_maps.clear();
   }
 
-  pair<vector<int>, vector<vector<int>>>
-  getRowIndicesPerBatch(py::object py_in_coords_key,
-                        py::object py_out_coords_key);
+  vector<at::Tensor> getRowIndicesPerBatch(py::object py_in_coords_key,
+                                           py::object py_out_coords_key);
 
 #ifndef CPU_ONLY
   // GPU memory manager
@@ -220,6 +226,7 @@ public:
   unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_out_maps;
 
   const pInOutMaps<int> copyInOutMapToGPU(const InOutMaps<int> &map);
+  void copyInOutMapsToGPU(const InOutMapKey &map_key);
 
   const pInOutMapsRefPair<int>
   getInOutMapsGPU(const vector<int> &tensor_strides, const vector<int> &strides,

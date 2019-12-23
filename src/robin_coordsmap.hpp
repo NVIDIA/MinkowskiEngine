@@ -73,6 +73,7 @@ public:
 
   // Constructors
   CoordsMap() {}
+  // batch indices must be arranged in ascending order for coordsmap.map
   CoordsMap(int ncols_, const set<int> &batch_indices);
 
   // Initializations
@@ -92,8 +93,8 @@ public:
   InOutMapsPair<int> kernel_map(const CoordsMap &out_coords_map,
                                 const Region &region) const;
   InOutMapsPair<int> pruned_kernel_map(const CoordsMap &out_coords_map) const;
-  InOutMapsPair<int>
-  global_reduction_map(const CoordsMap &gout_coords_map) const;
+  InOutMapsPair<int> global_reduction_map(const CoordsMap &gout_coords_map,
+                                          bool return_per_batch = true) const;
   InOutMapsPair<int> stride_map(const CoordsMap &out_coords_map,
                                 const vector<int> &tensor_strides) const;
   static InOutMapsPair<int>

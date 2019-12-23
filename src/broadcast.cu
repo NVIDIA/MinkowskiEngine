@@ -32,18 +32,29 @@ template <class T> struct IsIntType { static const bool value = false; };
 
 template <> struct IsIntType<int> { static const bool value = true; };
 
+template <typename Dtype>
+__device__ void atomic_addition_n(Dtype *dst, const Dtype *src,
+                                  int num_elements) {
+  for (int i = 0; i < num_elements; ++i)
+    atomicAdd(dst + i, src[i]);
+}
+
+/* Must be applied to collision free destinations */
+template <typename Dtype>
+__device__ void multiplication_n(Dtype *dst, const Dtype *src,
+                                 int num_elements) {
+  for (int i = 0; i < num_elements; ++i)
+    dst[i] *= src[i];
+}
+
 template <typename Dtype, typename Itype>
 __global__ void
 channelwise_addition(const int n, const int nchannel, const Dtype *d_glob_feat,
                      const Itype *d_in_map, const Itype *d_out_map,
                      Dtype *d_out_feat) {
-  int row_index, ch_index;
   CUDA_KERNEL_LOOP(index, n) {
-    ch_index = index % nchannel;
-    row_index = index / nchannel;
-
-    d_out_feat[d_in_map[row_index] * nchannel + ch_index] +=
-        d_glob_feat[d_out_map[row_index] * nchannel + ch_index];
+    atomic_addition_n(&d_out_feat[d_in_map[index] * nchannel],
+                      &d_glob_feat[d_out_map[index] * nchannel], nchannel);
   }
 }
 
@@ -52,28 +63,9 @@ __global__ void
 channelwise_multiplication(const int n, const int nchannel,
                            const Dtype *d_glob_feat, const Itype *d_in_map,
                            const Itype *d_out_map, Dtype *d_out_feat) {
-  int row_index, ch_index;
   CUDA_KERNEL_LOOP(index, n) {
-    ch_index = index % nchannel;
-    row_index = index / nchannel;
-
-    d_out_feat[d_in_map[row_index] * nchannel + ch_index] *=
-        d_glob_feat[d_out_map[row_index] * nchannel + ch_index];
-  }
-}
-
-template <typename Dtype, typename Itype>
-__global__ void
-channelwise_division(const int n, const int nchannel, const Dtype *d_glob_feat,
-                     const Itype *d_in_map, const Itype *d_out_map,
-                     Dtype *d_out_feat) {
-  int row_index, ch_index;
-  CUDA_KERNEL_LOOP(index, n) {
-    ch_index = index % nchannel;
-    row_index = index / nchannel;
-
-    d_out_feat[d_in_map[row_index] * nchannel + ch_index] /=
-        d_glob_feat[d_out_map[row_index] * nchannel + ch_index];
+    multiplication_n(&d_out_feat[d_in_map[index] * nchannel],
+                     &d_glob_feat[d_out_map[index] * nchannel], nchannel);
   }
 }
 
@@ -89,14 +81,12 @@ void BroadcastForwardKernelGPU(
     const pInOutMaps<Itype> &in_maps, const pInOutMaps<Itype> &out_maps,
     cusparseHandle_t cushandle, cudaStream_t stream) {
 
-  if (in_maps.size() != 1)
-    throw std::invalid_argument("InOut map must have one kernel for Broadcast");
-
-  if (in_maps[0].size() != in_nrows) {
-    std::cout << "in_map[0].size(): " << in_maps[0].size()
-              << ", in_nrows: " << in_nrows << std::endl;
+  // Sum all sizes
+  int num_map = 0;
+  for (const auto &in_map : in_maps)
+    num_map += in_map.size();
+  if (num_map != in_nrows)
     throw std::invalid_argument("Invalid in_map");
-  }
 
   // Copy all in_feat to out_feat
   CUDA_CHECK(cudaMemcpy(d_out_feat, d_in_feat,
@@ -107,14 +97,14 @@ void BroadcastForwardKernelGPU(
   switch (op) {
   case 0: // +
     channelwise_addition<Dtype, Itype>
-        <<<GET_BLOCKS(in_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-            nchannel * in_nrows, nchannel, d_in_feat_global, in_maps[0].data(),
+        <<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
+            in_nrows, nchannel, d_in_feat_global, in_maps[0].data(),
             out_maps[0].data(), d_out_feat);
     break;
   case 1: // *
     channelwise_multiplication<Dtype, Itype>
-        <<<GET_BLOCKS(in_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-            nchannel * in_nrows, nchannel, d_in_feat_global, in_maps[0].data(),
+        <<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
+            in_nrows, nchannel, d_in_feat_global, in_maps[0].data(),
             out_maps[0].data(), d_out_feat);
     break;
   default:
@@ -155,10 +145,16 @@ void BroadcastBackwardKernelGPU(
   if (!IsIntType<Itype>::value)
     throw std::invalid_argument("Not implemented"); // Due to cusparseXcoo2csr
 
-  if (in_maps.size() != 1)
-    throw std::invalid_argument("InOut map must have one kernel for Broadcast");
+  // if (in_maps.size() != 1) {
+  // All in_maps[k] are contiguous.
+  // TODO. Assert contiguous.
+  // }
 
-  if (in_maps[0].size() != in_nrows)
+  // Sum all sizes
+  int num_map = 0;
+  for (const auto &in_map : in_maps)
+    num_map += in_map.size();
+  if (num_map != in_nrows)
     throw std::invalid_argument("Invalid in_map");
 
   /* In Out Map prep */
@@ -201,8 +197,8 @@ void BroadcastBackwardKernelGPU(
   d_csr_val = d_tmp_grad_in_feat + in_nrows * nchannel;
 
   // thrust::fill(d_csr_val.begin(), d_csr_val.end(), 1);
-  fill<Dtype><<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
-      nnz, d_csr_val, (Dtype)1.);
+  fill<Dtype><<<GET_BLOCKS(nnz), CUDA_NUM_THREADS, 0, stream>>>(nnz, d_csr_val,
+                                                                (Dtype)1.);
 
   CUSPARSE_CHECK(cusparseCreateMatDescr(&descr));
   cusparseSetMatType(descr, CUSPARSE_MATRIX_TYPE_GENERAL);

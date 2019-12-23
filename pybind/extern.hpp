@@ -223,33 +223,33 @@ void PoolingTransposeBackwardGPU(
  * GlobalPooling
  *************************************/
 template <typename Dtype>
-void GlobalPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                             at::Tensor num_nonzero,
-                             py::object py_in_coords_key,
-                             py::object py_out_coords_key,
-                             py::object py_coords_manager, bool use_avg);
+vector<at::Tensor> GlobalPoolingForwardCPU(at::Tensor in_feat,
+                                           py::object py_in_coords_key,
+                                           py::object py_out_coords_key,
+                                           py::object py_coords_manager,
+                                           bool use_avg, int pooling_mode);
 
 template <typename Dtype>
-void GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                              at::Tensor grad_out_feat, at::Tensor num_nonzero,
-                              py::object py_in_coords_key,
-                              py::object py_out_coords_key,
-                              py::object py_coords_manager, bool use_avg);
+at::Tensor
+GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_out_feat,
+                         at::Tensor num_nonzero, py::object py_in_coords_key,
+                         py::object py_out_coords_key,
+                         py::object py_coords_manager, bool use_avg);
 
 #ifndef CPU_ONLY
 template <typename Dtype>
-void GlobalPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
-                             at::Tensor num_nonzero,
-                             py::object py_in_coords_key,
-                             py::object py_out_coords_key,
-                             py::object py_coords_manager, bool use_avg);
+vector<at::Tensor> GlobalPoolingForwardGPU(at::Tensor in_feat,
+                                           py::object py_in_coords_key,
+                                           py::object py_out_coords_key,
+                                           py::object py_coords_manager,
+                                           bool use_avg, int pooling_mode);
 
 template <typename Dtype>
-void GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                              at::Tensor grad_out_feat, at::Tensor num_nonzero,
-                              py::object py_in_coords_key,
-                              py::object py_out_coords_key,
-                              py::object py_coords_manager, bool use_avg);
+at::Tensor
+GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_out_feat,
+                         at::Tensor num_nonzero, py::object py_in_coords_key,
+                         py::object py_out_coords_key,
+                         py::object py_coords_manager, bool use_avg);
 #endif
 
 /*************************************
@@ -291,11 +291,10 @@ void GlobalMaxPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
  * Broadcast
  *************************************/
 template <typename Dtype>
-void BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
-                         at::Tensor out_feat, int op,
-                         py::object py_in_coords_key,
-                         py::object py_out_coords_key,
-                         py::object py_coords_manager);
+at::Tensor BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
+                               int op, py::object py_in_coords_key,
+                               py::object py_out_coords_key,
+                               py::object py_coords_manager);
 
 template <typename Dtype>
 void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
@@ -307,11 +306,10 @@ void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 
 #ifndef CPU_ONLY
 template <typename Dtype>
-void BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
-                         at::Tensor out_feat, int op,
-                         py::object py_in_coords_key,
-                         py::object py_out_coords_key,
-                         py::object py_coords_manager);
+at::Tensor BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
+                               int op, py::object py_in_coords_key,
+                               py::object py_out_coords_key,
+                               py::object py_coords_manager);
 
 template <typename Dtype>
 void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,

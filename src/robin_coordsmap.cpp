@@ -249,30 +249,60 @@ CoordsMap::pruned_kernel_map(const CoordsMap &out_coords_map) const {
 }
 
 InOutMapsPair<int>
-CoordsMap::global_reduction_map(const CoordsMap &gout_coords_map) const {
-
-  InOutMaps<int> in_maps(1);
-  InOutMaps<int> out_maps(1);
-
-  in_maps.reserve(map.size());
-  out_maps.reserve(map.size());
-
-  vector<int> coord(ncols);
-  fill(coord.begin(), coord.end(), 0);
-  for (const auto &kv : map) {
+CoordsMap::global_reduction_map(const CoordsMap &gout_coords_map,
+                                bool return_per_batch) const {
 #ifdef BATCH_FIRST
-    coord[0] = kv.first[0];
+  int batch_index = 0;
 #else
-    coord[ncols - 1] = kv.first[ncols - 1];
+  int batch_index = ncols - 1;
 #endif
-    const auto &iter_out = gout_coords_map.find(coord);
-    ASSERT(iter_out != gout_coords_map.end(),
-           "Key not found: ", ArrToString(coord));
-    in_maps[0].push_back(kv.second);
-    out_maps[0].push_back(iter_out->second);
-  }
 
-  return make_pair(move(in_maps), move(out_maps));
+  if (!return_per_batch) {
+    // Combine all maps into one
+    InOutMaps<int> in_maps(1);
+    InOutMaps<int> out_maps(1);
+
+    in_maps.reserve(map.size());
+    out_maps.reserve(map.size());
+
+    vector<int> coord(ncols);
+    fill(coord.begin(), coord.end(), 0);
+    for (const auto &kv : map) {
+      coord[batch_index] = kv.first[batch_index];
+      const auto &iter_out = gout_coords_map.find(coord);
+      ASSERT(iter_out != gout_coords_map.end(),
+             "Key not found: ", ArrToString(coord));
+      in_maps[0].push_back(kv.second);
+      out_maps[0].push_back(iter_out->second);
+    }
+
+    return make_pair(move(in_maps), move(out_maps));
+  } else {
+    // Return separate maps per batch
+    const int batch_size = gout_coords_map.size();
+    InOutMaps<int> in_maps(batch_size);
+    InOutMaps<int> out_maps(batch_size);
+    for (int b = 0; b < batch_size; ++b) {
+      in_maps[b].reserve(nrows / batch_size);
+      out_maps[b].reserve(nrows / batch_size);
+    }
+
+    vector<int> coord(ncols);
+    fill(coord.begin(), coord.end(), 0);
+    for (const auto &kv : map) {
+      coord[batch_index] = kv.first[batch_index];
+      const auto &iter_out = gout_coords_map.find(coord);
+      const int b = iter_out->second;
+      ASSERT(iter_out != gout_coords_map.end(),
+             "Key not found: ", ArrToString(coord));
+      ASSERT(b < batch_size, "Invalid batch index: ", coord[batch_index],
+             "max batch size: ", batch_size);
+      in_maps[b].push_back(kv.second);
+      out_maps[b].push_back(b);
+    }
+
+    return make_pair(move(in_maps), move(out_maps));
+  }
 }
 
 InOutMapsPair<int>

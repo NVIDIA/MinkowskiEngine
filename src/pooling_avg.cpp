@@ -73,9 +73,9 @@ void AvgPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false, true);
 
-  ASSERT(p_coords_manager->in_maps.find(map_key) !=
-             p_coords_manager->in_maps.end(),
-         "The in-out map doesn't exist for backward. Did you run forward pass?")
+  ASSERT(
+      p_coords_manager->existsInOutMapKey(map_key),
+      "The in-out map doesn't exist for backward. Did you run forward pass?");
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();
@@ -134,9 +134,9 @@ void AvgPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false, true);
 
-  ASSERT(p_coords_manager->d_in_maps.find(map_key) !=
-             p_coords_manager->d_in_maps.end(),
-         "The in-out map doesn't exist for backward. Did you run forward pass?")
+  ASSERT(
+      p_coords_manager->existsInOutMapKey(map_key),
+      "The in-out map doesn't exist for backward. Did you run forward pass?");
 
   grad_in_feat.resize_as_(in_feat);
   grad_in_feat.zero_();

@@ -94,7 +94,8 @@ class TestConvolution(unittest.TestCase):
         output = conv(input)
         print(output)
 
-        kernel_map = input.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
+        kernel_map = input.coords_man.get_kernel_map(
+            1, 2, stride=2, kernel_size=3)
         print(kernel_map)
 
         # Check backward
@@ -135,8 +136,9 @@ class TestConvolutionTranspose(unittest.TestCase):
             stride=2,
             has_bias=True,
             dimension=D).double().to(device)
-        input = conv(input)
-        output = conv_tr(input)
+        tr_input = conv(input)
+        print(tr_input)
+        output = conv_tr(tr_input)
         print(output)
 
         # Check backward
@@ -144,10 +146,10 @@ class TestConvolutionTranspose(unittest.TestCase):
 
         self.assertTrue(
             gradcheck(fn,
-                      (input.F, conv_tr.kernel, input.tensor_stride,
+                      (tr_input.F, conv_tr.kernel, tr_input.tensor_stride,
                        conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
                        conv_tr.region_type_, conv_tr.region_offset_, False,
-                       input.coords_key, None, input.coords_man)))
+                       tr_input.coords_key, None, tr_input.coords_man)))
 
     def test(self):
         print(f"{self.__class__.__name__}: test")

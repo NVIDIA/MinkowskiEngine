@@ -118,10 +118,12 @@ def gradcheck(func,
 
         for j, (a, n) in enumerate(zip(analytical, numerical)):
             if a.numel() != 0 or n.numel() != 0:
-                if not ((a - n).abs() <= (atol + rtol * n.abs())).all():
+                succ_index = (a - n).abs() <= (atol + rtol * n.abs())
+                if not succ_index.all():
                     return fail_test(
                         'Jacobian mismatch for output %d with respect to input %d,\n'
-                        'numerical:%s\nanalytical:%s\n' % (i, j, n, a))
+                        'numerical:%s\nanalytical:%s\nsuccess:%s\ndifference a - n:%s\n'
+                        % (i, j, n, a, succ_index, a - n))
 
         if not reentrant:
             return fail_test(

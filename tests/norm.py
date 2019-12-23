@@ -24,7 +24,7 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiInstanceNorm, MinkowskiInstanceNormFunction
+from MinkowskiEngine import SparseTensor, MinkowskiInstanceNorm, MinkowskiInstanceNormFunction, GlobalPoolingMode
 from utils.gradcheck import gradcheck
 
 from tests.common import data_loader
@@ -46,8 +46,8 @@ class TestNormalization(unittest.TestCase):
 
         fn = MinkowskiInstanceNormFunction()
         self.assertTrue(
-            gradcheck(fn,
-                      (input.F, input.coords_key, None, input.coords_man)))
+            gradcheck(fn, (input.F, GlobalPoolingMode.AUTO, input.coords_key,
+                           None, input.coords_man)))
 
     def test_inst_norm_gpu(self):
         in_channels, D = 2, 2
@@ -65,8 +65,8 @@ class TestNormalization(unittest.TestCase):
 
         fn = MinkowskiInstanceNormFunction()
         self.assertTrue(
-            gradcheck(fn,
-                      (input.F, input.coords_key, None, input.coords_man)))
+            gradcheck(fn, (input.F, GlobalPoolingMode.AUTO, input.coords_key,
+                           None, input.coords_man)))
 
 
 if __name__ == '__main__':

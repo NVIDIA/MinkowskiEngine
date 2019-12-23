@@ -131,6 +131,23 @@ void CoordsManager::getCoords(at::Tensor coords,
   }
 }
 
+void CoordsManager::setOriginCoordsKey(py::object py_coords_key) {
+  CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
+  int D = p_coords_key->getDimension();
+  ASSERT(D > 0, "Invalid dimension: ", D);
+  if (!p_coords_key->key_set) {
+    p_coords_key->setKey(createOriginCoords(D));
+    vector<int> zero_vec(D);
+    fill(zero_vec.begin(), zero_vec.end(), 0);
+    p_coords_key->setTensorStride(zero_vec);
+  } else {
+    auto coords_key = p_coords_key->getKey();
+    auto origin_key = createOriginCoords(D);
+    ASSERT(coords_key == origin_key, "Invalid key: ", to_string(coords_key),
+           " != Origin key: ", to_string(origin_key));
+  }
+}
+
 /*******************************
  * Initialization
  *******************************/
@@ -557,7 +574,9 @@ const InOutMapsRefPair<int> CoordsManager::getInOutMaps(
 
     // Check if the temporary key exists and return swapped in/out
     if (in_maps.find(tmp_map_key) != in_maps.end()) {
-      return make_pair(ref(out_maps[tmp_map_key]), ref(in_maps[tmp_map_key]));
+      // copy the in out maps from the existing maps
+      in_maps[map_key] = out_maps[tmp_map_key];
+      out_maps[map_key] = in_maps[tmp_map_key];
 
     } else { // create in out kernel if it doesn't exist
 
@@ -582,9 +601,8 @@ const InOutMapsRefPair<int> CoordsManager::getInOutMaps(
         in_maps[map_key] = move(out_in.second);
         out_maps[map_key] = move(out_in.first);
       }
-
-      return make_pair(ref(in_maps[map_key]), ref(out_maps[map_key]));
     }
+    return make_pair(ref(in_maps[map_key]), ref(out_maps[map_key]));
   }
 }
 
@@ -723,7 +741,7 @@ void CoordsManager::printDiagnostics(py::object py_coords_key) const {
 /*
  * Return the batch indices and row indices for each image.
  */
-pair<vector<int>, vector<vector<int>>>
+vector<at::Tensor>
 CoordsManager::getRowIndicesPerBatch(py::object py_in_coords_key,
                                      py::object py_out_coords_key) {
   // py_out_coords_key will be set after the above call.
@@ -732,25 +750,25 @@ CoordsManager::getRowIndicesPerBatch(py::object py_in_coords_key,
   ASSERT(coords_maps.find(in_coords_key) != coords_maps.end(),
          "The in_coords_key, ", to_string(in_coords_key), ", does not exist.");
 
-  auto in_out = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
+  const auto &in_outs = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
+  const auto &ins = in_outs.first;
 
-  // list of row indices. The batch index is defined as the returned batch
-  // indices
-  vector<vector<int>> batch2row_inds(batch_indices.size());
-  const auto &in = in_out.first, out = in_out.second;
-  for (size_t k = 0; k < in.size(); k++) {
-    const auto &curr_in = in[k];
-    const auto &curr_out = out[k];
-    for (size_t i = 0; i < curr_in.size(); i++)
-      batch2row_inds[curr_out[i]].push_back(curr_in[i]);
+  // Return index.
+  vector<at::Tensor> out_inds;
+
+  for (const auto &in : ins) {
+    at::Tensor mapping = torch::zeros(
+        {(long)in.size()}, torch::TensorOptions().dtype(torch::kInt64));
+
+    // copy all from a vector
+    auto a_mapping = mapping.accessor<long, 1>();
+
+    for (int i = 0; i < in.size(); i++)
+      a_mapping[i] = in[i];
+
+    // ::memcpy(mapping.data<int>(), in.data(), in.size() * sizeof(int));
+    out_inds.push_back(mapping);
   }
 
-  // copy batch_indices, move batch2row_inds
-  vector<int> vec_batch_indices;
-  vec_batch_indices.reserve(batch_indices.size());
-  for (int b : batch_indices) {
-    vec_batch_indices.push_back(b);
-  }
-
-  return make_pair(move(vec_batch_indices), move(batch2row_inds));
+  return out_inds;
 }

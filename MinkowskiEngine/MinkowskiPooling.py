@@ -26,7 +26,8 @@ from torch.autograd import Function
 
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import KernelGenerator, RegionType, MinkowskiModuleBase, \
+from Common import KernelGenerator, RegionType, GlobalPoolingMode, \
+    MinkowskiModuleBase, \
     convert_to_int_list, convert_to_int_tensor, \
     prep_args, save_ctx, get_postfix
 from MinkowskiCoords import CoordsKey
@@ -678,35 +679,43 @@ class MinkowskiGlobalPoolingFunction(Function):
     def forward(ctx,
                 input_features,
                 average=True,
+                mode=GlobalPoolingMode.AUTO,
                 in_coords_key=None,
                 out_coords_key=None,
                 coords_manager=None):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
+        assert isinstance(mode, GlobalPoolingMode), \
+            f"Mode must be an instance of GlobalPoolingMode, {mode}"
+
         ctx.in_coords_key = in_coords_key
         ctx.out_coords_key = out_coords_key
 
         ctx.in_feat = input_features
-        out_feat = input_features.new()
         ctx.average = average
-        ctx.num_nonzero = input_features.new()
         ctx.coords_manager = coords_manager
+        ctx.mode = mode.value
 
         fw_fn = getattr(MEB,
                         'GlobalPoolingForward' + get_postfix(input_features))
-        fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager, ctx.average)
+        out_feat, num_nonzero = fw_fn(ctx.in_feat,
+                                      ctx.in_coords_key.CPPCoordsKey,
+                                      ctx.out_coords_key.CPPCoordsKey,
+                                      ctx.coords_manager.CPPCoordsManager,
+                                      ctx.average, ctx.mode)
+
+        ctx.num_nonzero = num_nonzero
+
         return out_feat
 
     @staticmethod
     def backward(ctx, grad_out_feat):
-        grad_in_feat = grad_out_feat.new()
         bw_fn = getattr(MEB,
                         'GlobalPoolingBackward' + get_postfix(grad_out_feat))
-        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager, ctx.average)
+        grad_in_feat = bw_fn(ctx.in_feat, grad_out_feat, ctx.num_nonzero,
+                             ctx.in_coords_key.CPPCoordsKey,
+                             ctx.out_coords_key.CPPCoordsKey,
+                             ctx.coords_manager.CPPCoordsManager, ctx.average)
         return grad_in_feat, None, None, None, None, None
 
 
@@ -720,7 +729,7 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
 
     """
 
-    def __init__(self, average=True, dimension=-1):
+    def __init__(self, average=True, mode=GlobalPoolingMode.AUTO, dimension=-1):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
@@ -737,7 +746,10 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         """
         super(MinkowskiGlobalPooling, self).__init__()
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
+        assert isinstance(mode, GlobalPoolingMode), \
+            f"Mode must be an instance of GlobalPoolingMode. mode={mode}"
 
+        self.mode = mode
         self.average = average
         self.dimension = dimension
         self.pooling = MinkowskiGlobalPoolingFunction()
@@ -747,8 +759,9 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         assert input.D == self.dimension
 
         out_coords_key = CoordsKey(input.coords_key.D)
-        output = self.pooling.apply(input.F, self.average, input.coords_key,
-                                    out_coords_key, input.coords_man)
+        output = self.pooling.apply(input.F, self.average, self.mode,
+                                    input.coords_key, out_coords_key,
+                                    input.coords_man)
 
         return SparseTensor(
             output, coords_key=out_coords_key, coords_manager=input.coords_man)

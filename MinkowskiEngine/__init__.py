@@ -35,7 +35,7 @@ import torch
 from SparseTensor import SparseTensor
 
 from Common import RegionType, convert_to_int_tensor, convert_region_type, \
-    MinkowskiModuleBase, KernelGenerator
+    MinkowskiModuleBase, KernelGenerator, GlobalPoolingMode
 
 from MinkowskiCoords import CoordsKey, CoordsManager
 
