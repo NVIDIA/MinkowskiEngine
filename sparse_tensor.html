@@ -85,16 +85,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+              <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<p class="caption"><span class="caption-text">Demos</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline with Pytorch DataLoader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/modelnet40.html">Training A ModelNet40 Classification Network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/modelnet40.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
@@ -263,13 +263,15 @@ it, make sure you understand what you are doing.</p>
 coordinates. This allows generating a new set of coordinates even
 when there exists another set of coordinates with the same
 tensor stride. This could happen when you manually feed the same
-attr:<cite>coords_manager</cite>.</p>
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">coords_manager</span></code>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">allow_duplicate_coords</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>): Allow duplicate
 coordinates when creating the sparse tensor. Internally, it will
 generate a new unique set of coordinates and use features of at the
 corresponding unique coordinates. In general, setting
 <cite>allow_duplicate_coords=True</cite> is not recommended as it could hide
-obvious errors in your data loading and preprocessing steps.</p>
+obvious errors in your data loading and preprocessing steps. Please
+refer to the quantization and data loading tutorial on <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">here</a>
+for more details.</p>
 <p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>,
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.array</span></code>, or <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor.Tensor</span></code>): The tensor stride
 of the current sparse tensor. By default, it is 1.</p>

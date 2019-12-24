@@ -8,7 +8,7 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 1
-   :caption: Intro Documentation
+   :caption: Introduction
 
    overview
    convolution_on_sparse
@@ -16,7 +16,7 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Demo Documentation
+   :caption: Demos
 
    demo/training
    demo/modelnet40

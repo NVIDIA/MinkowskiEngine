@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Training Pipeline with Pytorch DataLoader &mdash; MinkowskiEngine 0.3.1 documentation</title>
+  <title>Training Pipeline &mdash; MinkowskiEngine 0.3.1 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Training A ModelNet40 Classification Network" href="modelnet40.html" />
+    <link rel="next" title="ModelNet40 Classification" href="modelnet40.html" />
     <link rel="prev" title="Quick Start" href="../quick_start.html" /> 
 </head>
 
@@ -85,21 +85,22 @@
               
             
             
-              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+              <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<p class="caption"><span class="caption-text">Demos</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Training Pipeline with Pytorch DataLoader</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Training Pipeline</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#making-a-dataset">Making a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quantization">Quantization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#making-a-dataloader">Making a DataLoader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="modelnet40.html">Training A ModelNet40 Classification Network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modelnet40.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multigpu.html">Multi-GPU Training</a></li>
@@ -170,7 +171,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Training Pipeline with Pytorch DataLoader</li>
+      <li>Training Pipeline</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -190,8 +191,8 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="training-pipeline-with-pytorch-dataloader">
-<h1>Training Pipeline with Pytorch DataLoader<a class="headerlink" href="#training-pipeline-with-pytorch-dataloader" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="training-pipeline">
+<h1>Training Pipeline<a class="headerlink" href="#training-pipeline" title="Permalink to this headline">¶</a></h1>
 <p>The Minkowski Engine works seamlessly with the PyTorch
 <a class="reference external" href="https://pytorch.org/docs/stable/data.html">torch.utils.data.DataLoader</a>.
 Before you proceed, make sure that you are familiar with the data loading
@@ -222,20 +223,67 @@ In this example, let’s create a random dataset that generates a noisy line.</p
         <span class="c1"># Concatenate data</span>
         <span class="nb">input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">xs_data</span><span class="p">,</span> <span class="n">ys_data</span><span class="p">])</span>
         <span class="n">feats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">num_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">num_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 
-        <span class="c1"># Discretize</span>
-        <span class="n">discrete_coords</span><span class="p">,</span> <span class="n">unique_feats</span><span class="p">,</span> <span class="n">unique_labels</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span>
-            <span class="n">coords</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span>
-            <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span>
-            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-            <span class="n">quantization_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">quantization_size</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">discrete_coords</span><span class="p">,</span> <span class="n">unique_feats</span><span class="p">,</span> <span class="n">unique_labels</span>
+        <span class="o">...</span>
+
+        <span class="c1"># quantization step</span>
+        <span class="k">return</span> <span class="n">various_outputs</span>
 </pre></div>
 </div>
 <p>Here, I created a dataset that inherits the <a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset">torch.utils.data.Dataset</a>, but you
 can inherit <a class="reference external" href="https://pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset">torch.utils.data.IterableDataset</a>
 and fill out <cite>__iter__(self)</cite> instead.</p>
+</div>
+<div class="section" id="quantization">
+<h2>Quantization<a class="headerlink" href="#quantization" title="Permalink to this headline">¶</a></h2>
+<p>We use a sparse tensor as an input. Like any tensors, a sparse tensor value is
+defined at a discrete location (indices). Thus, quantizing the coordinates
+whose features are defined is the critical step and <cite>quantization_size</cite> is an
+important hyper-parameter that affects the performance of a network
+drastically. You must choose the correct quantization size as well as quantize
+the coordinate correctly.</p>
+<p>The Minkowski Engine provides a set of fast and optimized functions for
+quantization and sparse tensor generation. Here, we use
+<a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_quantize" title="MinkowskiEngine.utils.sparse_quantize"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">RandomLineDataset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+        <span class="o">...</span>
+
+        <span class="c1"># Quantize the input</span>
+        <span class="n">discrete_coords</span><span class="p">,</span> <span class="n">unique_feats</span><span class="p">,</span> <span class="n">unique_labels</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span>
+            <span class="n">coords</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span>
+            <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">quantization_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">quantization_size</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">discrete_coords</span><span class="p">,</span> <span class="n">unique_feats</span><span class="p">,</span> <span class="n">unique_labels</span>
+</pre></div>
+</div>
+<p>Another way to quantize a coordinate is to use the returned mapping indices.
+This is useful if you have an unconventional input.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">RandomLineDataset</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+
+        <span class="o">...</span>
+
+        <span class="n">coords</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantization_size</span>
+
+        <span class="c1"># Quantize the input</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span>
+            <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span>
+            <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">coords</span><span class="p">[</span><span class="n">mapping</span><span class="p">],</span> <span class="n">feats</span><span class="p">[</span><span class="n">mapping</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">mapping</span><span class="p">]</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="making-a-dataloader">
 <h2>Making a DataLoader<a class="headerlink" href="#making-a-dataloader" title="Permalink to this headline">¶</a></h2>
@@ -244,32 +292,43 @@ generate a mini-batch for neural network training. This part is relatively
 easy, but we have to use a custom <a class="reference external" href="https://pytorch.org/docs/stable/data.html?highlight=collate_fn#torch.utils.data.DataLoader">collate_fn</a>
 to generate a suitable sparse tensor.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">RandomLineDataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
-    <span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collation_fn</span><span class="p">)</span>
+<span class="c1"># Option 1</span>
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">train_dataset</span><span class="p">,</span>
+    <span class="o">...</span>
+    <span class="n">collate_fn</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">SparseCollation</span><span class="p">())</span>
+
+<span class="c1"># Option 2</span>
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">train_dataset</span><span class="p">,</span>
+    <span class="o">...</span>
+    <span class="n">collate_fn</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">batch_sparse_collate</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here, we used our custom <code class="xref py py-attr docutils literal notranslate"><span class="pre">collation_fn</span></code>. The collation function has to
-concatenate all sparse tensors generate from each call that generates a batch
-and assign the correct batch index to the coordinates.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">collation_fn</span><span class="p">(</span><span class="n">data_labels</span><span class="p">):</span>
+<p>Here, we can use the provided collation class
+<a class="reference internal" href="../utils.html#MinkowskiEngine.utils.SparseCollation" title="MinkowskiEngine.utils.SparseCollation"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.SparseCollation</span></code></a> or the function
+<a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batch_sparse_collate" title="MinkowskiEngine.utils.batch_sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batch_sparse_collate</span></code></a> to convert the inputs into
+appropriate outputs that we can use to initialize a sparse tensor. However, if
+you need your own collation function, you can follow the example below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">custom_collation_fn</span><span class="p">(</span><span class="n">data_labels</span><span class="p">):</span>
     <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data_labels</span><span class="p">))</span>
-    <span class="n">coords_batch</span><span class="p">,</span> <span class="n">feats_batch</span><span class="p">,</span> <span class="n">labels_batch</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
 
-    <span class="k">for</span> <span class="n">batch_id</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
-        <span class="n">N</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">batch_id</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="n">coords_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span>
-                <span class="n">coords</span><span class="p">[</span><span class="n">batch_id</span><span class="p">])</span><span class="o">.</span><span class="n">int</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span> <span class="o">*</span> <span class="n">batch_id</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="n">feats_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">feats</span><span class="p">[</span><span class="n">batch_id</span><span class="p">]))</span>
-        <span class="n">labels_batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">batch_id</span><span class="p">]))</span>
+    <span class="c1"># Create batched coordinates for the SparseTensor input</span>
+    <span class="n">bcoords</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">batched_coordinates</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
 
     <span class="c1"># Concatenate all lists</span>
-    <span class="n">coords_batch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">coords_batch</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
-    <span class="n">feats_batch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">feats_batch</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-    <span class="n">labels_batch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">labels_batch</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+    <span class="n">feats_batch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+    <span class="n">labels_batch</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
 
-    <span class="k">return</span> <span class="n">coords_batch</span><span class="p">,</span> <span class="n">feats_batch</span><span class="p">,</span> <span class="n">labels_batch</span>
+    <span class="k">return</span> <span class="n">bcoords</span><span class="p">,</span> <span class="n">feats</span><span class="p">,</span> <span class="n">labels</span>
+
+<span class="o">...</span>
+
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">RandomLineDataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">train_dataset</span><span class="p">,</span>
+    <span class="o">...</span>
+    <span class="n">collate_fn</span><span class="o">=</span><span class="n">custom_collation_fn</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -278,22 +337,36 @@ and assign the correct batch index to the coordinates.</p>
 <p>Once you have everything, let’s create a network and train it with the
 generated data. One thing to note is that if you use more than one
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_workers</span></code> for the data loader, you have to make sure that the
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">ME.SparseTensor</span></code> generation part has to be located within the main python
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> generation part has to be located within the main python
 process since all python multi-processes use separate processes and the
-<a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/coords.html#coordsmanager">ME.CoordManager</a>, the
+<a class="reference internal" href="../coords.html#MinkowskiEngine.CoordsManager" title="MinkowskiEngine.CoordsManager"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsManager</span></code></a>, the
 internal C++ structure that maintains the coordinate hash tables and kernel
 maps, cannot be referenced outside the process that generated it.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">net</span> <span class="o">=</span> <span class="n">UNet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Binary classification</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">UNet</span><span class="p">(</span>
+    <span class="mi">2</span><span class="p">,</span>  <span class="c1"># in nchannel</span>
+    <span class="mi">2</span><span class="p">,</span>  <span class="c1"># out_nchannel</span>
+    <span class="n">D</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
 <span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span>
     <span class="n">net</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
     <span class="n">lr</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span>
     <span class="n">momentum</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span>
     <span class="n">weight_decay</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">weight_decay</span><span class="p">)</span>
-<span class="n">binary_crossentropy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BCEWithLogitsLoss</span><span class="p">()</span>
-<span class="n">accum_loss</span><span class="p">,</span> <span class="n">accum_iter</span><span class="p">,</span> <span class="n">tot_iter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+
+<span class="n">criterion</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">ignore_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># Dataset, data loader</span>
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">RandomLineDataset</span><span class="p">(</span><span class="n">noise_type</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">)</span>
+
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">train_dataset</span><span class="p">,</span>
+    <span class="n">batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+    <span class="n">collate_fn</span><span class="o">=</span><span class="n">collation_fn</span><span class="p">,</span>
+    <span class="n">num_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">max_epochs</span><span class="p">):</span>
-    <span class="n">train_iter</span> <span class="o">=</span> <span class="n">train_dataloader</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+    <span class="n">train_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">train_dataloader</span><span class="p">)</span>
 
     <span class="c1"># Training</span>
     <span class="n">net</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
@@ -301,7 +374,7 @@ maps, cannot be referenced outside the process that generated it.</p>
         <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">data</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="p">))</span>
         <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
-        <span class="n">loss</span> <span class="o">=</span> <span class="n">binary_crossentropy</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">labels</span><span class="o">.</span><span class="n">long</span><span class="p">())</span>
         <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
         <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
@@ -317,19 +390,33 @@ maps, cannot be referenced outside the process that generated it.</p>
 </pre></div>
 </div>
 <p>Finally, once you assemble all the codes, you can train your network.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m examples.two_dim_training
-Iter: 1, Epoch: 0, Loss: 0.8510904908180237
-Iter: 10, Epoch: 2, Loss: 0.4347594661845101
-Iter: 20, Epoch: 4, Loss: 0.02069884107913822
-Iter: 30, Epoch: 7, Loss: 0.0010139490244910122
-Iter: 40, Epoch: 9, Loss: 0.0003139576627290808
-Iter: 50, Epoch: 12, Loss: 0.000194330868544057
-Iter: 60, Epoch: 14, Loss: 0.00015514824335696175
-Iter: 70, Epoch: 17, Loss: 0.00014614587998948992
-Iter: 80, Epoch: 19, Loss: 0.00013127068668836728
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m examples.training
+
+Epoch: 0 iter: 1, Loss: 0.7992178201675415
+Epoch: 0 iter: 10, Loss: 0.5555745628145006
+Epoch: 0 iter: 20, Loss: 0.4025680094957352
+Epoch: 0 iter: 30, Loss: 0.3157463788986206
+Epoch: 0 iter: 40, Loss: 0.27348957359790804
+Epoch: 0 iter: 50, Loss: 0.2690591633319855
+Epoch: 0 iter: 60, Loss: 0.258208692073822
+Epoch: 0 iter: 70, Loss: 0.34842072874307634
+Epoch: 0 iter: 80, Loss: 0.27565130293369294
+Epoch: 0 iter: 90, Loss: 0.2860450878739357
+Epoch: 0 iter: 100, Loss: 0.24737665355205535
+Epoch: 1 iter: 110, Loss: 0.2428090125322342
+Epoch: 1 iter: 120, Loss: 0.25397603064775465
+Epoch: 1 iter: 130, Loss: 0.23624965399503708
+Epoch: 1 iter: 140, Loss: 0.2247777447104454
+Epoch: 1 iter: 150, Loss: 0.22956613600254058
+Epoch: 1 iter: 160, Loss: 0.22803852707147598
+Epoch: 1 iter: 170, Loss: 0.24081039279699326
+Epoch: 1 iter: 180, Loss: 0.22322929948568343
+Epoch: 1 iter: 190, Loss: 0.22531934976577758
+Epoch: 1 iter: 200, Loss: 0.2116936132311821
+...
 </pre></div>
 </div>
-<p>The original code can be found at <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/two_dim_training.py">example/two_dim_training.py</a>.</p>
+<p>The original code can be found at <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/training.py">examples/training.py</a>.</p>
 </div>
 </div>
 
@@ -355,7 +442,7 @@ Iter: 80, Epoch: 19, Loss: 0.00013127068668836728
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="modelnet40.html" class="btn btn-neutral float-right" title="Training A ModelNet40 Classification Network" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="modelnet40.html" class="btn btn-neutral float-right" title="ModelNet40 Classification" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
