@@ -1,5 +1,5 @@
-Training Pipeline with Pytorch DataLoader
-=========================================
+Training Pipeline
+=================
 
 The Minkowski Engine works seamlessly with the PyTorch
 `torch.utils.data.DataLoader <https://pytorch.org/docs/stable/data.html>`_.
@@ -40,22 +40,77 @@ In this example, let's create a random dataset that generates a noisy line.
            # Concatenate data
            input = np.hstack([xs_data, ys_data])
            feats = np.random.rand(self.num_data, 1)
-           labels = np.ones((self.num_data, 1))
+           labels = np.ones((self.num_data, 1)).astype(np.int32)
 
-           # Discretize
-           discrete_coords, unique_feats, unique_labels = ME.utils.sparse_quantize(
-               coords=input,
-               feats=feats,
-               labels=labels,
-               quantization_size=self.quantization_size)
-           return discrete_coords, unique_feats, unique_labels
+           ...
 
+           # quantization step
+           return various_outputs
 
 Here, I created a dataset that inherits the `torch.utils.data.Dataset
 <https://pytorch.org/docs/stable/data.html#torch.utils.data.Dataset>`_, but you
 can inherit `torch.utils.data.IterableDataset
 <https://pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset>`_
 and fill out `__iter__(self)` instead.
+
+
+Quantization
+------------
+
+We use a sparse tensor as an input. Like any tensors, a sparse tensor value is
+defined at a discrete location (indices). Thus, quantizing the coordinates
+whose features are defined is the critical step and `quantization_size` is an
+important hyper-parameter that affects the performance of a network
+drastically. You must choose the correct quantization size as well as quantize
+the coordinate correctly.
+
+The Minkowski Engine provides a set of fast and optimized functions for
+quantization and sparse tensor generation. Here, we use
+:attr:`MinkowskiEngine.utils.sparse_quantize`.
+
+
+.. code-block:: python
+
+   class RandomLineDataset(torch.utils.data.Dataset):
+
+       ...
+
+       def __getitem__(self, i): 
+
+           ...
+
+           # Quantize the input
+           discrete_coords, unique_feats, unique_labels = ME.utils.sparse_quantize(
+               coords=input,
+               feats=feats,
+               labels=labels,
+               quantization_size=self.quantization_size)
+
+           return discrete_coords, unique_feats, unique_labels
+
+
+Another way to quantize a coordinate is to use the returned mapping indices.
+This is useful if you have an unconventional input.
+
+
+.. code-block:: python
+
+   class RandomLineDataset(torch.utils.data.Dataset):
+
+       ...
+
+       def __getitem__(self, i): 
+
+           ...
+
+           coords /= self.quantization_size
+
+           # Quantize the input
+           mapping = ME.utils.sparse_quantize(
+               coords=coords,
+               return_index=True)
+
+           return coords[mapping], feats[mapping], labels[mapping]
 
 
 Making a DataLoader
@@ -70,34 +125,48 @@ to generate a suitable sparse tensor.
 .. code-block:: python
 
    train_dataset = RandomLineDataset(...)
-   train_dataloader = torch.utils.data.DataLoader(
-       train_dataset, batch_size=config.batch_size, collate_fn=collation_fn)
+   # Option 1
+   train_dataloader = DataLoader(
+       train_dataset,
+       ...
+       collate_fn=ME.utils.SparseCollation())
 
-Here, we used our custom :attr:`collation_fn`. The collation function has to
-concatenate all sparse tensors generate from each call that generates a batch
-and assign the correct batch index to the coordinates.
+   # Option 2
+   train_dataloader = DataLoader(
+       train_dataset,
+       ...
+       collate_fn=ME.utils.batch_sparse_collate)
+
+
+Here, we can use the provided collation class
+:attr:`MinkowskiEngine.utils.SparseCollation` or the function
+:attr:`MinkowskiEngine.utils.batch_sparse_collate` to convert the inputs into
+appropriate outputs that we can use to initialize a sparse tensor. However, if
+you need your own collation function, you can follow the example below.
+
 
 .. code-block:: python
 
-   def collation_fn(data_labels):
+   def custom_collation_fn(data_labels):
        coords, feats, labels = list(zip(*data_labels))
-       coords_batch, feats_batch, labels_batch = [], [], []
 
-       for batch_id, _ in enumerate(coords):
-           N = coords[batch_id].shape[0]
-
-           coords_batch.append(
-               torch.cat((torch.from_numpy(
-                   coords[batch_id]).int(), torch.ones(N, 1).int() * batch_id), 1))
-           feats_batch.append(torch.from_numpy(feats[batch_id]))
-           labels_batch.append(torch.from_numpy(labels[batch_id]))
+       # Create batched coordinates for the SparseTensor input
+       bcoords = ME.utils.batched_coordinates(coords)
 
        # Concatenate all lists
-       coords_batch = torch.cat(coords_batch, 0).int()
-       feats_batch = torch.cat(feats_batch, 0).float()
-       labels_batch = torch.cat(labels_batch, 0).float()
+       feats_batch = torch.from_numpy(np.concatenate(feats, 0)).float()
+       labels_batch = torch.from_numpy(np.concatenate(labels, 0)).int()
 
-       return coords_batch, feats_batch, labels_batch
+       return bcoords, feats, labels
+
+   ...
+
+   train_dataset = RandomLineDataset(...)
+   train_dataloader = DataLoader(
+       train_dataset,
+       ...
+       collate_fn=custom_collation_fn)
+
 
 Training
 --------
@@ -105,26 +174,39 @@ Training
 Once you have everything, let's create a network and train it with the
 generated data. One thing to note is that if you use more than one
 :attr:`num_workers` for the data loader, you have to make sure that the
-:attr:`ME.SparseTensor` generation part has to be located within the main python
+:attr:`MinkowskiEngine.SparseTensor` generation part has to be located within the main python
 process since all python multi-processes use separate processes and the
-`ME.CoordManager
-<https://stanfordvl.github.io/MinkowskiEngine/coords.html#coordsmanager>`_, the
+:attr:`MinkowskiEngine.CoordsManager`, the
 internal C++ structure that maintains the coordinate hash tables and kernel
 maps, cannot be referenced outside the process that generated it.
 
 .. code-block:: python
 
-   net = UNet(1, 1, D=2)
+   # Binary classification
+   net = UNet(
+       2,  # in nchannel
+       2,  # out_nchannel
+       D=2)
+
    optimizer = optim.SGD(
        net.parameters(),
        lr=config.lr,
        momentum=config.momentum,
        weight_decay=config.weight_decay)
-   binary_crossentropy = torch.nn.BCEWithLogitsLoss()
-   accum_loss, accum_iter, tot_iter = 0, 0, 0
+
+   criterion = torch.nn.CrossEntropyLoss(ignore_index=-100)
+
+   # Dataset, data loader
+   train_dataset = RandomLineDataset(noise_type='gaussian')
+
+   train_dataloader = DataLoader(
+       train_dataset,
+       batch_size=config.batch_size,
+       collate_fn=collation_fn,
+       num_workers=1)
 
    for epoch in range(config.max_epochs):
-       train_iter = train_dataloader.__iter__()
+       train_iter = iter(train_dataloader)
 
        # Training
        net.train()
@@ -132,7 +214,7 @@ maps, cannot be referenced outside the process that generated it.
            coords, feats, labels = data
            out = net(ME.SparseTensor(feats, coords))
            optimizer.zero_grad()
-           loss = binary_crossentropy(out.F, labels)
+           loss = criterion(out.F.squeeze(), labels.long())
            loss.backward()
            optimizer.step()
 
@@ -151,17 +233,30 @@ Finally, once you assemble all the codes, you can train your network.
 
 ::
 
-   $ python -m examples.two_dim_training
-   Iter: 1, Epoch: 0, Loss: 0.8510904908180237
-   Iter: 10, Epoch: 2, Loss: 0.4347594661845101
-   Iter: 20, Epoch: 4, Loss: 0.02069884107913822
-   Iter: 30, Epoch: 7, Loss: 0.0010139490244910122
-   Iter: 40, Epoch: 9, Loss: 0.0003139576627290808
-   Iter: 50, Epoch: 12, Loss: 0.000194330868544057
-   Iter: 60, Epoch: 14, Loss: 0.00015514824335696175
-   Iter: 70, Epoch: 17, Loss: 0.00014614587998948992
-   Iter: 80, Epoch: 19, Loss: 0.00013127068668836728
+   $ python -m examples.training
 
+   Epoch: 0 iter: 1, Loss: 0.7992178201675415
+   Epoch: 0 iter: 10, Loss: 0.5555745628145006
+   Epoch: 0 iter: 20, Loss: 0.4025680094957352
+   Epoch: 0 iter: 30, Loss: 0.3157463788986206
+   Epoch: 0 iter: 40, Loss: 0.27348957359790804
+   Epoch: 0 iter: 50, Loss: 0.2690591633319855
+   Epoch: 0 iter: 60, Loss: 0.258208692073822
+   Epoch: 0 iter: 70, Loss: 0.34842072874307634
+   Epoch: 0 iter: 80, Loss: 0.27565130293369294
+   Epoch: 0 iter: 90, Loss: 0.2860450878739357
+   Epoch: 0 iter: 100, Loss: 0.24737665355205535
+   Epoch: 1 iter: 110, Loss: 0.2428090125322342
+   Epoch: 1 iter: 120, Loss: 0.25397603064775465
+   Epoch: 1 iter: 130, Loss: 0.23624965399503708
+   Epoch: 1 iter: 140, Loss: 0.2247777447104454
+   Epoch: 1 iter: 150, Loss: 0.22956613600254058
+   Epoch: 1 iter: 160, Loss: 0.22803852707147598
+   Epoch: 1 iter: 170, Loss: 0.24081039279699326
+   Epoch: 1 iter: 180, Loss: 0.22322929948568343
+   Epoch: 1 iter: 190, Loss: 0.22531934976577758
+   Epoch: 1 iter: 200, Loss: 0.2116936132311821
+   ...
 
-The original code can be found at `example/two_dim_training.py
-<https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/two_dim_training.py>`_.
+The original code can be found at `examples/training.py
+<https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/training.py>`_.

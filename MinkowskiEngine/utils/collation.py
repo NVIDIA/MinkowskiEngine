@@ -34,10 +34,11 @@ def batched_coordinates(coords):
     batched coordinates suitable for `ME.SparseTensor`.
 
     Args:
-        coords (a sequence of `torch.Tensor` or `numpy.ndarray`): a list of coordinates.
+        :attr:`coords` (a sequence of `torch.Tensor` or `numpy.ndarray`): a
+        list of coordinates.
 
     Returns:
-        coords (`torch.IntTensor`): a batched coordinates.
+        :attr:`coords` (`torch.IntTensor`): a batched coordinates.
 
     .. warning::
 
@@ -70,30 +71,32 @@ def batched_coordinates(coords):
     return bcoords
 
 
-def sparse_collate(coords, feats, labels=None, is_double=False):
-    r"""Create a sparse tensor with batch indices C in `the documentation
+def sparse_collate(coords, feats, labels=None):
+    r"""Create input arguments for a sparse tensor `the documentation
     <https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html>`_.
 
     Convert a set of coordinates and features into the batch coordinates and
     batch features.
 
     Args:
-        coords (set of `torch.Tensor` or `numpy.ndarray`): a set of coordinates.
+        :attr:`coords` (set of `torch.Tensor` or `numpy.ndarray`): a set of coordinates.
 
-        feats (set of `torch.Tensor` or `numpy.ndarray`): a set of features.
+        :attr:`feats` (set of `torch.Tensor` or `numpy.ndarray`): a set of features.
 
-        labels (set of `torch.Tensor` or `numpy.ndarray`): a set of labels
+        :attr:`labels` (set of `torch.Tensor` or `numpy.ndarray`): a set of labels
         associated to the inputs.
-
-        is_double (`bool`): return double precision features if True. False by
-        default.
 
     """
     use_label = False if labels is None else True
+    feats_batch, labels_batch = [], []
     assert isinstance(coords, collections.abc.Sequence), \
             "The coordinates must be a sequence of arrays or tensors."
     assert isinstance(feats, collections.abc.Sequence), \
             "The features must be a sequence of arrays or tensors."
+    D = np.unique(np.array([cs.shape[1] for cs in coords]))
+    assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
+    D = D[0]
+
     if use_label:
         assert isinstance(labels, collections.abc.Sequence), \
             "The labels must be a sequence of arrays or tensors."
@@ -118,7 +121,6 @@ def sparse_collate(coords, feats, labels=None, is_double=False):
         else:
             assert isinstance( feat, torch.Tensor), \
                 "Features must be of type numpy.ndarray or torch.Tensor"
-        feat = feat.double() if is_double else feat.float()
 
         # Labels
         if use_label:
@@ -133,7 +135,7 @@ def sparse_collate(coords, feats, labels=None, is_double=False):
         # Batched coords
         cn = coord.shape[0]
         bcoords[s:s + cn, :D] = coord
-        bcoords[s:s + cn, D] = b
+        bcoords[s:s + cn, D] = batch_id
 
         # Features
         feats_batch.append(feat)
@@ -146,28 +148,56 @@ def sparse_collate(coords, feats, labels=None, is_double=False):
     feats_batch = torch.cat(feats_batch, 0)
     if use_label:
         labels_batch = torch.cat(labels_batch, 0)
-        return coords_batch, feats_batch, labels_batch
+        return bcoords, feats_batch, labels_batch
     else:
-        return coords_batch, feats_batch
+        return bcoords, feats_batch
+
+
+def batch_sparse_collate(data):
+    r"""The wrapper function that can be used in in conjunction with
+    `torch.utils.data.DataLoader` to generate inputs for a sparse tensor.
+
+    Please refer to `the training example
+    <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ for the
+    usage.
+
+    Args:
+        :attr:`data`: list of (coordinates, features, labels) tuples.
+
+    """
+    return sparse_collate(*list(zip(*data)))
 
 
 class SparseCollation:
-    """Generates collate function for coords, feats, labels.
+    r"""Generates collate function for coords, feats, labels.
+
+    Please refer to `the training example
+    <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ for the
+    usage.
 
     Args:
-      limit_numpoints: If 0 or False, does not alter batch size. If positive
-        integer, limits batch size so that the number of input
-        coordinates is below limit_numpoints.
+        :attr:`limit_numpoints` (int): If positive integer, limits batch size
+        so that the number of input coordinates is below limit_numpoints. If 0
+        or False, concatenate all points. -1 by default.
+
+    Example::
+
+        >>> data_loader = torch.utils.data.DataLoader(
+        >>>     dataset,
+        >>>     ...,
+        >>>     collate_fn=SparseCollation())
+        >>> for d in iter(data_loader):
+        >>>     print(d)
+
     """
 
-    def __init__(self, limit_numpoints):
+    def __init__(self, limit_numpoints=-1):
         self.limit_numpoints = limit_numpoints
 
     def __call__(self, list_data):
         coords, feats, labels = list(zip(*list_data))
         coords_batch, feats_batch, labels_batch = [], [], []
 
-        batch_id = 0
         batch_num_points = 0
         for batch_id, _ in enumerate(coords):
             num_points = coords[batch_id].shape[0]
@@ -181,16 +211,9 @@ class SparseCollation:
                     f'size at {batch_id} out of {num_full_batch_size} with '
                     f'{batch_num_points - num_points}.')
                 break
-            coords_batch.append(
-                torch.cat((torch.from_numpy(coords[batch_id]).int(),
-                           torch.ones(num_points, 1).int() * batch_id), 1))
-            feats_batch.append(torch.from_numpy(feats[batch_id]))
-            labels_batch.append(torch.from_numpy(labels[batch_id]))
-
-            batch_id += 1
+            coords_batch.append(coords[batch_id])
+            feats_batch.append(feats[batch_id])
+            labels_batch.append(labels[batch_id])
 
         # Concatenate all lists
-        coords_batch = torch.cat(coords_batch, 0).int()
-        feats_batch = torch.cat(feats_batch, 0).float()
-        labels_batch = torch.cat(labels_batch, 0)  # arbitrary format
-        return coords_batch, feats_batch, labels_batch
+        return sparse_collate(coords_batch, feats_batch, labels_batch)

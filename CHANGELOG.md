@@ -10,14 +10,12 @@
 - Update GIL release
 - Minor error fixes on `examples/modelnet40.py`
 - CoordsMap size initialization updates
-- Add MinkowskiUnion
-- Update MinkowskiUnion, MinkowskiPruning docs
+- Add `MinkowskiUnion`
+- Update `MinkowskiUnion`, `MinkowskiPruning` docs
 - Use cudaMalloc instead of `at::Tensor` for GPU memory management for illegal memory access, invalid arg.
 - Region hypercube iterator with even numbered kernel
 - Fix global reduction in-out map with non contiguous batch indices
 - GlobalPooling with torch reduction
-    - GlobalPoolingMode with index select and sparse backbone
-    - If batch size == 1, skip the backend
 - Add CoordsManager functions
     - `get_batch_size`
     - `get_batch_indices`
@@ -28,6 +26,8 @@
     - `allow_duplicate_coords` argument support
     - update documentation, add unittest
 - Add `quantize_th`, `quantize_label_th`
+- Update the training demo and documentation.
+- Update `MinkowskiInstanceNorm`: no `dimension` argument.
 
 
 ## [0.3.1] - 2019-12-15

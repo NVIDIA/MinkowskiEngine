@@ -77,47 +77,57 @@ def quantize_label(coords, labels, ignore_label):
     assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
         "Invalid coords type"
     if isinstance(coords, np.ndarray):
-        assert isinstance(labels, np.ndarray), "Invalid label type"
-        assert coords.dtype == np.int32, "Invalid coords type"
-        assert labels.dtype == np.int32, "Invalid coords type"
+        assert isinstance(labels, np.ndarray)
+        assert coords.dtype == np.int32, f"Invalid coords type {coords.dtype} != np.int32"
+        assert labels.dtype == np.int32, f"Invalid label type {labels.dtype} != np.int32"
         return MEB.quantize_label_np(coords, labels, ignore_label)
     else:
-        assert isinstance(labels, torch.Tensor), "Invalid label type"
+        assert isinstance(labels, torch.Tensor)
         # Type check done inside
-        return MEB.quantize_label_th(coords, labels, ignore_label)
+        return MEB.quantize_label_th(coords, labels.int(), ignore_label)
 
 
 def sparse_quantize(coords,
                     feats=None,
                     labels=None,
-                    ignore_label=255,
+                    ignore_label=-100,
                     return_index=False,
                     quantization_size=None):
     r"""Given coordinates, and features (optionally labels), the function
     generates quantized (voxelized) coordinates.
 
     Args:
-        coords (:attr:`numpy.ndarray` or :attr:`torch.Tensor`): a matrix of size
-        :math:`N \times D` where :math:`N` is the number of points in the
-        :math:`D` dimensional space.
+        :attr:`coords` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`): a
+        matrix of size :math:`N \times D` where :math:`N` is the number of
+        points in the :math:`D` dimensional space.
 
-        feats (:attr:`numpy.ndarray` or :attr:`torch.Tensor`, optional): a matrix of size
-        :math:`N \times D_F` where :math:`N` is the number of points and
-        :math:`D_F` is the dimension of the features.
+        :attr:`feats` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`, optional): a
+        matrix of size :math:`N \times D_F` where :math:`N` is the number of
+        points and :math:`D_F` is the dimension of the features. Must have the
+        same container as `coords` (i.e. if `coords` is a torch.Tensor, `feats`
+        must also be a torch.Tensor).
 
-        labels (:attr:`numpy.ndarray`, optional): labels associated to eah coordinates.
+        :attr:`labels` (:attr:`numpy.ndarray` or :attr:`torch.IntTensor`,
+        optional): integer labels associated to eah coordinates.  Must have the
+        same container as `coords` (i.e. if `coords` is a torch.Tensor,
+        `labels` must also be a torch.Tensor).
 
-        ignore_label (:attr:`int`, optional): the int value of the IGNORE LABEL.
+        :attr:`ignore_label` (:attr:`int`, optional): the int value of the IGNORE LABEL..
 
-        return_index (:attr:`bool`, optional): True if you want the indices of the
+        :attr:`return_index` (:attr:`bool`, optional): True if you want the indices of the
         quantized coordinates. False by default.
 
-        quantization_size (:attr:`float`, :attr:`list`, or
+        :attr:`quantization_size` (:attr:`float`, :attr:`list`, or
         :attr:`numpy.ndarray`, optional): the length of the each side of the
         hyperrectangle of of the grid cell.
 
-    .. note::
-        Please check `examples/indoor.py` for the usage.
+     Example::
+
+        >>> criterion = torch.nn.CrossEntropyLoss(ignore_index=-100)
+        >>> coords, feats, labels = MinkowskiEngine.utils.sparse_quantize(
+        >>>     coords, feats, labels, ignore_label=-100, quantization_size=0.1)
+        >>> output = net(MinkowskiEngine.SparseTensor(feats, coords))
+        >>> loss = criterion(output.F, labels.long())
 
     """
     assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
@@ -125,10 +135,6 @@ def sparse_quantize(coords,
 
     use_label = labels is not None
     use_feat = feats is not None
-
-    # If only coordindates are given, return the index
-    if not use_label and not use_feat:
-        return_index = True
 
     assert coords.ndim == 2, \
         "The coordinates must be a 2D matrix. The shape of the input is " + str(coords.shape)
@@ -147,8 +153,13 @@ def sparse_quantize(coords,
             assert len(
                 quantization_size
             ) == dimension, "Quantization size and coordinates size mismatch."
-            quantization_size = np.array([i for i in quantization_size])
-            discrete_coords = np.floor(coords / quantization_size)
+            if isinstance(coords, np.ndarray):
+                quantization_size = np.array([i for i in quantization_size])
+                discrete_coords = np.floor(coords / quantization_size)
+            else:
+                quantization_size = torch.Tensor([i for i in quantization_size])
+                discrete_coords = (coords / quantization_size).floor()
+
         elif np.isscalar(quantization_size):  # Assume that it is a scalar
 
             if quantization_size == 1:

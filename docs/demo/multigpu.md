@@ -145,3 +145,5 @@ Also, in all cases, using 4 GPUs is not efficient and the speed up seems very sm
 | 2 GPU          | x1.90   (x2)            |
 | 3 GPU          | x2.60   (x3)            |
 | 4 GPU          | x2.60   (x4)            |
+
+The reason for the modest speed-up is due to the heavy CPU usage. In Minkowski Engine, all sparse tensor coordinates are managed on CPU and the kernel in-out map requires significant CPU computation. Thus, for larger speed-up, it is recommended to use faster CPUs which could be a bottleneck for large point clouds.

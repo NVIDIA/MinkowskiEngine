@@ -1,5 +1,5 @@
-Training A ModelNet40 Classification Network
-============================================
+ModelNet40 Classification
+=========================
 
 Please go over `the training and data loading tutorial
 <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ first.

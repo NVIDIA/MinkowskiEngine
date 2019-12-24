@@ -71,8 +71,8 @@ class MinkowskiUnion(Module):
         A set or list of :attr:`MinkowskiEngine.SparseTensor`'s.
 
     Returns:
-        A :attr:`MinkowskiEngine.SparseTensor` with C = union of all input
-        coordinates and F = sum of all features corresponding to the
+        A :attr:`MinkowskiEngine.SparseTensor` with coordinates = union of all
+        input coordinates, and features = sum of all features corresponding to the
         coordinate.
 
     Example::

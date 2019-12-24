@@ -19,6 +19,12 @@ sparse_collate
 .. autofunction:: MinkowskiEngine.utils.sparse_collate
 
 
+batch_sparse_collate
+--------------------
+
+.. autofunction:: MinkowskiEngine.utils.batch_sparse_collate
+
+
 SparseCollation
 ---------------
 

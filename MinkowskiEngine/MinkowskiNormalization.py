@@ -307,7 +307,7 @@ class MinkowskiInstanceNorm(Module):
 
     """
 
-    def __init__(self, num_features, mode=GlobalPoolingMode.AUTO, dimension=-1):
+    def __init__(self, num_features, mode=GlobalPoolingMode.AUTO):
         r"""
         Args:
 
@@ -320,13 +320,12 @@ class MinkowskiInstanceNorm(Module):
         self.num_features = num_features
         self.weight = nn.Parameter(torch.ones(1, num_features))
         self.bias = nn.Parameter(torch.zeros(1, num_features))
-        self.dimension = dimension
         self.reset_parameters()
         self.mode = mode
         self.inst_norm = MinkowskiInstanceNormFunction()
 
     def __repr__(self):
-        s = f'(nchannels={self.num_features}, D={self.dimension})'
+        s = f'(nchannels={self.num_features})'
         return self.__class__.__name__ + s
 
     def reset_parameters(self):
@@ -335,7 +334,6 @@ class MinkowskiInstanceNorm(Module):
 
     def forward(self, input):
         assert isinstance(input, SparseTensor)
-        assert input.D == self.dimension
 
         output = self.inst_norm.apply(input.F, self.mode, input.coords_key,
                                       None, input.coords_man)

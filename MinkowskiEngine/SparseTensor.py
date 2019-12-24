@@ -120,14 +120,17 @@ class SparseTensor():
             coordinates. This allows generating a new set of coordinates even
             when there exists another set of coordinates with the same
             tensor stride. This could happen when you manually feed the same
-            attr:`coords_manager`.
+            :attr:`coords_manager`.
 
             :attr:`allow_duplicate_coords` (:attr:`bool`): Allow duplicate
             coordinates when creating the sparse tensor. Internally, it will
             generate a new unique set of coordinates and use features of at the
             corresponding unique coordinates. In general, setting
             `allow_duplicate_coords=True` is not recommended as it could hide
-            obvious errors in your data loading and preprocessing steps.
+            obvious errors in your data loading and preprocessing steps. Please
+            refer to the quantization and data loading tutorial on `here
+            <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_
+            for more details.
 
             :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
             :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
