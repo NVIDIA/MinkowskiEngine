@@ -62,12 +62,37 @@ def ravel_hash_vec(arr):
     return keys
 
 
+def quantize(coords):
+    assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
+        "Invalid coords type"
+    if isinstance(coords, np.ndarray):
+        assert coords.dtype == np.int32, f"Invalid coords type {coords.dtype} != np.int32"
+        return MEB.quantize_np(coords.astype(np.int32))
+    else:
+        # Type check done inside
+        return MEB.quantize_th(coords.int())
+
+
+def quantize_label(coords, labels, ignore_label):
+    assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
+        "Invalid coords type"
+    if isinstance(coords, np.ndarray):
+        assert isinstance(labels, np.ndarray), "Invalid label type"
+        assert coords.dtype == np.int32, "Invalid coords type"
+        assert labels.dtype == np.int32, "Invalid coords type"
+        return MEB.quantize_label_np(coords, labels, ignore_label)
+    else:
+        assert isinstance(labels, torch.Tensor), "Invalid label type"
+        # Type check done inside
+        return MEB.quantize_label_th(coords, labels, ignore_label)
+
+
 def sparse_quantize(coords,
                     feats=None,
                     labels=None,
                     ignore_label=255,
                     return_index=False,
-                    quantization_size=1):
+                    quantization_size=None):
     r"""Given coordinates, and features (optionally labels), the function
     generates quantized (voxelized) coordinates.
 
@@ -95,6 +120,9 @@ def sparse_quantize(coords,
         Please check `examples/indoor.py` for the usage.
 
     """
+    assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
+        'Coords must be either np.array or torch.Tensor.'
+
     use_label = labels is not None
     use_feat = feats is not None
 
@@ -112,29 +140,36 @@ def sparse_quantize(coords,
     if use_label:
         assert coords.shape[0] == len(labels)
 
-    # Quantize the coordinates
     dimension = coords.shape[1]
-    if isinstance(quantization_size, (Sequence, np.ndarray, torch.Tensor)):
-        assert len(
-            quantization_size
-        ) == dimension, "Quantization size and coordinates size mismatch."
-        quantization_size = np.array([i for i in quantization_size])
-        discrete_coords = np.floor(coords / quantization_size)
-    elif np.isscalar(quantization_size):  # Assume that it is a scalar
-
-        if quantization_size == 1:
-            discrete_coords = coords
-        else:
-            quantization_size = np.array(
-                [quantization_size for i in range(dimension)])
+    # Quantize the coordinates
+    if quantization_size is not None:
+        if isinstance(quantization_size, (Sequence, np.ndarray, torch.Tensor)):
+            assert len(
+                quantization_size
+            ) == dimension, "Quantization size and coordinates size mismatch."
+            quantization_size = np.array([i for i in quantization_size])
             discrete_coords = np.floor(coords / quantization_size)
+        elif np.isscalar(quantization_size):  # Assume that it is a scalar
+
+            if quantization_size == 1:
+                discrete_coords = coords
+            else:
+                discrete_coords = np.floor(coords / quantization_size)
+        else:
+            raise ValueError('Not supported type for quantization_size.')
     else:
-        raise ValueError('Not supported type for quantization_size.')
+        discrete_coords = coords
+
+    discrete_coords = np.floor(discrete_coords)
+    if isinstance(coords, np.ndarray):
+        discrete_coords = discrete_coords.astype(np.int32)
+    else:
+        discrete_coords = discrete_coords.int()
 
     # Return values accordingly
     if use_label:
-        mapping, colabels = MEB.quantize_label(discrete_coords, labels,
-                                               ignore_label)
+        mapping, colabels = quantize_label(discrete_coords, labels,
+                                           ignore_label)
 
         if return_index:
             return mapping, colabels
@@ -145,7 +180,7 @@ def sparse_quantize(coords,
                 return discrete_coords[mapping], colabels
 
     else:
-        mapping = MEB.quantize(discrete_coords)
+        mapping = quantize(discrete_coords)
         if len(mapping) > 0:
             if return_index:
                 return mapping
@@ -157,7 +192,10 @@ def sparse_quantize(coords,
 
         else:
             if return_index:
-                return np.arange(len(discrete_coords))
+                if isinstance(discrete_coords, np.ndarray):
+                    return np.arange(len(discrete_coords))
+                else:
+                    return torch.range(len(discrete_coords), dtype=torch.long)
             else:
                 if use_feat:
                     return discrete_coords, feats

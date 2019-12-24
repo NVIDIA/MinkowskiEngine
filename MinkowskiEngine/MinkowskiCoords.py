@@ -76,13 +76,13 @@ class CoordsManager():
                    coords_key,
                    force_creation=False,
                    force_remap=False,
-                   allow_duplicates=False):
+                   allow_duplicate_coords=False):
         assert isinstance(coords_key, CoordsKey)
-        mapping = torch.IntTensor()
+        mapping = torch.LongTensor()
         self.CPPCoordsManager.initializeCoords(coords, mapping,
                                                coords_key.CPPCoordsKey,
                                                force_creation, force_remap,
-                                               allow_duplicates)
+                                               allow_duplicate_coords)
         return mapping
 
     def stride(self, coords_key, stride, force_creation=False):

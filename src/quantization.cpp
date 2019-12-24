@@ -25,6 +25,7 @@
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <torch/extension.h>
 
 #include "robin_coordsmap.hpp"
 #include "utils.hpp"
@@ -42,8 +43,8 @@ struct IndexLabel {
 using CoordsLabelMap =
     robin_hood::unordered_flat_map<vector<int>, IndexLabel, byte_hash_vec<int>>;
 
-vector<int>
-quantize(py::array_t<int, py::array::c_style | py::array::forcecast> coords) {
+vector<int> quantize_np(
+    py::array_t<int, py::array::c_style | py::array::forcecast> coords) {
   py::buffer_info coords_info = coords.request();
   auto &shape = coords_info.shape;
 
@@ -58,10 +59,36 @@ quantize(py::array_t<int, py::array::c_style | py::array::forcecast> coords) {
   auto map_batch = map.initialize(p_coords, nrows, ncols, false);
   vector<int> &mapping = map_batch.first;
 
-  return move(mapping);
+  // mapping is empty when coords are all unique
+  return ::move(mapping);
 }
 
-vector<py::array> quantize_label(
+at::Tensor quantize_th(at::Tensor coords) {
+  ASSERT(coords.dtype() == torch::kInt32,
+         "Coordinates must be an int type tensor.");
+  ASSERT(coords.dim() == 2,
+         "Coordinates must be represnted as a matrix. Dimensions: ",
+         coords.dim(), "!= 2.");
+
+  CoordsMap map;
+  auto map_batch =
+      map.initialize(coords.data<int>(), coords.size(0), coords.size(1), false);
+  vector<int> &mapping = map_batch.first;
+
+  // Long tensor for for easier indexing
+  auto th_mapping = torch::empty({(long)mapping.size()},
+                                 torch::TensorOptions().dtype(torch::kInt64));
+  auto a_th_mapping = th_mapping.accessor<long int, 1>();
+
+  // Copy the output
+  for (size_t i = 0; i < mapping.size(); ++i)
+    a_th_mapping[i] = mapping[i];
+
+  // mapping is empty when coords are all unique
+  return th_mapping;
+}
+
+vector<py::array> quantize_label_np(
     py::array_t<int, py::array::c_style | py::array::forcecast> coords,
     py::array_t<int, py::array::c_style | py::array::forcecast> labels,
     int invalid_label) {
@@ -84,10 +111,10 @@ vector<py::array> quantize_label(
   map.reserve(nrows);
   for (int i = 0; i < nrows; i++) {
     vector<int> coord(ncols);
-    copy_n(p_coords + i * ncols, ncols, coord.data());
+    ::copy_n(p_coords + i * ncols, ncols, coord.data());
     auto map_iter = map.find(coord);
     if (map_iter == map.end()) {
-      map[move(coord)] = IndexLabel(i, p_labels[i]);
+      map[::move(coord)] = IndexLabel(i, p_labels[i]);
     } else if (map_iter->second.label != p_labels[i]) {
       map_iter->second.label = invalid_label;
     }
@@ -109,6 +136,54 @@ vector<py::array> quantize_label(
     c++;
   }
 
-  vector<py::array> return_pair = {py_mapping, py_colabels};
-  return return_pair;
+  return {py_mapping, py_colabels};
+}
+
+vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
+                                     int invalid_label) {
+  ASSERT(coords.dtype() == torch::kInt32,
+         "Coordinates must be an int type tensor.");
+  ASSERT(labels.dtype() == torch::kInt32, "Labels must be an int type tensor.");
+  ASSERT(coords.dim() == 2,
+         "Coordinates must be represnted as a matrix. Dimensions: ",
+         coords.dim(), "!= 2.");
+  ASSERT(coords.size(0) == labels.size(0),
+         "Coords nrows must be equal to label size.");
+
+  int *p_coords = coords.data<int>();
+  int *p_labels = labels.data<int>();
+  int nrows = coords.size(0), ncols = coords.size(1);
+
+  // Create coords map
+  CoordsLabelMap map;
+  map.reserve(nrows);
+  for (int i = 0; i < nrows; i++) {
+    vector<int> coord(ncols);
+    ::copy_n(p_coords + i * ncols, ncols, coord.data());
+    auto map_iter = map.find(coord);
+    if (map_iter == map.end()) {
+      map[::move(coord)] = IndexLabel(i, p_labels[i]);
+    } else if (map_iter->second.label != p_labels[i]) {
+      map_iter->second.label = invalid_label;
+    }
+  }
+
+  // Copy the concurrent vector to std vector
+  //
+  // Long tensor for for easier indexing
+  auto th_mapping =
+      torch::empty({(long)map.size()}, torch::TensorOptions().dtype(torch::kInt64));
+  auto a_th_mapping = th_mapping.accessor<long int, 1>();
+  auto th_colabels =
+      torch::empty({(long)map.size()}, torch::TensorOptions().dtype(torch::kInt64));
+  auto a_th_colabels = th_colabels.accessor<long int, 1>();
+
+  int c = 0;
+  for (const auto &kv : map) {
+    a_th_mapping[c] = kv.second.index;
+    a_th_colabels[c] = kv.second.label;
+    c++;
+  }
+
+  return {th_mapping, th_colabels};
 }

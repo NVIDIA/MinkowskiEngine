@@ -41,7 +41,7 @@ def batched_coordinates(coords):
 
     .. warning::
 
-       From v0.3, the batch index will be prepended before all coordinates.
+       From v0.4, the batch index will be prepended before all coordinates.
 
     """
     assert isinstance(
@@ -90,33 +90,35 @@ def sparse_collate(coords, feats, labels=None, is_double=False):
 
     """
     use_label = False if labels is None else True
-    coords_batch, feats_batch, labels_batch = [], [], []
+    assert isinstance(coords, collections.abc.Sequence), \
+            "The coordinates must be a sequence of arrays or tensors."
+    assert isinstance(feats, collections.abc.Sequence), \
+            "The features must be a sequence of arrays or tensors."
+    if use_label:
+        assert isinstance(labels, collections.abc.Sequence), \
+            "The labels must be a sequence of arrays or tensors."
+
+    N = np.array([len(cs) for cs in coords]).sum()
+    Nf = np.array([len(fs) for fs in feats]).sum()
+    assert N == Nf, f"Coordinate length {N} != Feature length {Nf}"
 
     batch_id = 0
+    s = 0  # start index
+    bcoords = torch.IntTensor(N, D + 1)  # uninitialized batched coords
     for coord, feat in zip(coords, feats):
         if isinstance(coord, np.ndarray):
             coord = torch.from_numpy(coord)
         else:
-            assert isinstance(
-                coord, torch.Tensor
-            ), "Coords must be of type numpy.ndarray or torch.Tensor"
+            assert isinstance( coord, torch.Tensor), \
+                "Coords must be of type numpy.ndarray or torch.Tensor"
         coord = coord.int()
 
         if isinstance(feat, np.ndarray):
             feat = torch.from_numpy(feat)
         else:
-            assert isinstance(
-                feat, torch.Tensor
-            ), "Features must be of type numpy.ndarray or torch.Tensor"
+            assert isinstance( feat, torch.Tensor), \
+                "Features must be of type numpy.ndarray or torch.Tensor"
         feat = feat.double() if is_double else feat.float()
-
-        # Batched coords
-        num_points = coord.shape[0]
-        coords_batch.append(
-            torch.cat((coord, torch.ones(num_points, 1).int() * batch_id), 1))
-
-        # Features
-        feats_batch.append(feat)
 
         # Labels
         if use_label:
@@ -124,15 +126,23 @@ def sparse_collate(coords, feats, labels=None, is_double=False):
             if isinstance(label, np.ndarray):
                 label = torch.from_numpy(label)
             else:
-                assert isinstance(
-                    label, torch.Tensor
-                ), "labels must be of type numpy.ndarray or torch.Tensor"
+                assert isinstance(label, torch.Tensor), \
+                    "labels must be of type numpy.ndarray or torch.Tensor"
             labels_batch.append(label)
 
+        # Batched coords
+        cn = coord.shape[0]
+        bcoords[s:s + cn, :D] = coord
+        bcoords[s:s + cn, D] = b
+
+        # Features
+        feats_batch.append(feat)
+
+        # Post processing steps
         batch_id += 1
+        s += cn
 
     # Concatenate all lists
-    coords_batch = torch.cat(coords_batch, 0).int()
     feats_batch = torch.cat(feats_batch, 0)
     if use_label:
         labels_batch = torch.cat(labels_batch, 0)

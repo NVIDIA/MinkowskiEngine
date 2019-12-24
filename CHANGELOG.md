@@ -1,7 +1,7 @@
 # Change Log
 
 
-## [nightly] - 2019-12-15
+## [nightly] - 2019-12-24
 
 - Synchronized Batch Norm: `ME.MinkowskiSyncBatchNorm`
     - `ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm` converts a MinkowskiNetwork automatically to use synched batch norm.
@@ -10,20 +10,24 @@
 - Update GIL release
 - Minor error fixes on `examples/modelnet40.py`
 - CoordsMap size initialization updates
-- Added MinkowskiUnion
-- Updated MinkowskiUnion, MinkowskiPruning docs
+- Add MinkowskiUnion
+- Update MinkowskiUnion, MinkowskiPruning docs
 - Use cudaMalloc instead of `at::Tensor` for GPU memory management for illegal memory access, invalid arg.
 - Region hypercube iterator with even numbered kernel
 - Fix global reduction in-out map with non contiguous batch indices
 - GlobalPooling with torch reduction
     - GlobalPoolingMode with index select and sparse backbone
     - If batch size == 1, skip the backend
-- Added CoordsManager functions
+- Add CoordsManager functions
     - `get_batch_size`
     - `get_batch_indices`
     - `set_origin_coords_key`
-- Updated CoordsManager function `get_row_indices_per_batch` to return a list of `torch.LongTensor` for mapping indices. The corresponding batch indices is accessible by `get_batch_indices`.
+- Update CoordsManager function `get_row_indices_per_batch` to return a list of `torch.LongTensor` for mapping indices. The corresponding batch indices is accessible by `get_batch_indices`.
 - Update `MinkowskiBroadcast`, `MinkowskiBroadcastConcatenation` to use row indices per batch (`getRowIndicesPerBatch`)
+- Update `SparseTensor`
+    - `allow_duplicate_coords` argument support
+    - update documentation, add unittest
+- Add `quantize_th`, `quantize_label_th`
 
 
 ## [0.3.1] - 2019-12-15

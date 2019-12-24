@@ -132,11 +132,11 @@ public:
   uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
                             const vector<int> &tensor_strides,
                             bool force_creation, bool force_remap,
-                            bool allow_duplicate);
+                            bool allow_duplicate_coords);
 
   uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
                             py::object py_coords_key, bool force_creation,
-                            bool force_remap, bool allow_duplicate);
+                            bool force_remap, bool allow_duplicate_coords);
 
   // New coords map given an input
   uint64_t createStridedCoords(uint64_t coords_key,

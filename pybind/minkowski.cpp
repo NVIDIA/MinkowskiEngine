@@ -221,8 +221,10 @@ void bind_native(py::module &m) {
       .def("__repr__", [](const CoordsKey &a) { return a.toString(); });
 
   // Quantization
-  m.def("quantize", &quantize);
-  m.def("quantize_label", &quantize_label);
+  m.def("quantize_np", &quantize_np);
+  m.def("quantize_th", &quantize_th);
+  m.def("quantize_label_np", &quantize_label_np);
+  m.def("quantize_label_th", &quantize_label_th);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

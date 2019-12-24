@@ -60,8 +60,13 @@ class SparseTensor():
 
     .. warning::
 
-       From the version 0.3, we will put the batch indices on the first column
+       From the version 0.4, we will put the batch indices on the first column
        to be consistent with the standard neural network packages.
+
+       Please use :attr:`MinkowskiEngine.utils.batched_coordinates` or
+       :attr:`MinkowskiEngine.utils.sparse_collate` when creating coordinates
+       to make your code to generate batched coordinates automatically that are
+       compatible with the latest version of Minkowski Engine.
 
        .. math::
 
@@ -83,6 +88,7 @@ class SparseTensor():
                  coords_key=None,
                  coords_manager=None,
                  force_creation=False,
+                 allow_duplicate_coords=False,
                  tensor_stride=1):
         r"""
 
@@ -109,6 +115,19 @@ class SparseTensor():
             create a new computation graph. In most cases, this process is
             handled automatically and you do not need to use this. When you use
             it, make sure you understand what you are doing.
+
+            :attr:`force_creation` (:attr:`bool`): Force creation of the
+            coordinates. This allows generating a new set of coordinates even
+            when there exists another set of coordinates with the same
+            tensor stride. This could happen when you manually feed the same
+            attr:`coords_manager`.
+
+            :attr:`allow_duplicate_coords` (:attr:`bool`): Allow duplicate
+            coordinates when creating the sparse tensor. Internally, it will
+            generate a new unique set of coordinates and use features of at the
+            corresponding unique coordinates. In general, setting
+            `allow_duplicate_coords=True` is not recommended as it could hide
+            obvious errors in your data loading and preprocessing steps.
 
             :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
             :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
@@ -153,14 +172,29 @@ class SparseTensor():
             assert coords is not None, "Initial coordinates must be given"
             D = coords.size(1) - 1
             coords_manager = CoordsManager(D=D)
-            self.mapping = coords_manager.initialize(coords, coords_key)
+            self.mapping = coords_manager.initialize(
+                coords,
+                coords_key,
+                force_creation=force_creation,
+                force_remap=allow_duplicate_coords,
+                allow_duplicate_coords=allow_duplicate_coords)
+            if len(self.mapping) > 0:
+                coords = coords[self.mapping]
+                feats = feats[self.mapping]
         else:
             assert isinstance(coords_manager, CoordsManager)
 
             if not coords_key.isKeySet():
                 assert coords is not None
                 self.mapping = coords_manager.initialize(
-                    coords, coords_key, force_creation=force_creation)
+                    coords,
+                    coords_key,
+                    force_creation=force_creation,
+                    force_remap=allow_duplicate_coords,
+                    allow_duplicate_coords=allow_duplicate_coords)
+                if len(self.mapping) > 0:
+                    coords = coords[self.mapping]
+                    feats = feats[self.mapping]
 
         self._F = feats.contiguous()
         self._C = coords
@@ -249,7 +283,7 @@ class SparseTensor():
         return self.__class__.__name__ + '(' + os.linesep \
             + '  Coords=' + str(self.C) + os.linesep \
             + '  Feats=' + str(self.F) + os.linesep \
-            + '  coords_key=' + str(self.coords_key) + os.linesep \
+            + '  coords_key=' + str(self.coords_key) \
             + '  tensor_stride=' + str(self.coords_key.getTensorStride()) + os.linesep \
             + '  coords_man=' + str(self.coords_man) + ')'
 

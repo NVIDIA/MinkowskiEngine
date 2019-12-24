@@ -67,7 +67,7 @@ class Test(unittest.TestCase):
 
         # Initialize map
         mapping = cm.initialize(
-            coords, key, force_remap=True, allow_duplicates=False)
+            coords, key, force_remap=True, allow_duplicate_coords=False)
         print(mapping, len(mapping))
         cm.print_diagnostics(key)
         print(cm)

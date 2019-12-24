@@ -157,13 +157,15 @@ void CoordsManager::setOriginCoordsKey(py::object py_coords_key) {
  * mapping: output mapping in IntTensor
  * tensor_strides: current tensor strides this coords will be initializeds
  * force_creation: even when there's a duplicate coords with the same tensor
- *                 strides, enforce creation
+ *                 strides.
  * force_remap: if there's duplicate coords, remap
+ * allow_duplicate_coords: create map when there are duplicates in the
+ * coordinates
  */
 uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
                                          const vector<int> &tensor_strides,
                                          bool force_creation, bool force_remap,
-                                         bool allow_duplicate) {
+                                         bool allow_duplicate_coords) {
   int nrows = coords.size(0);
   int ncols = coords.size(1);
   int D = ncols - 1;
@@ -183,7 +185,9 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
     } else {
       ASSERT(false, "The coord map already exists for the given tensor stride ",
              "tensor_stride: ", ArrToString(tensor_strides),
-             ". To enforce creation, set true for force_creation.");
+             "For more information, please refer to the SparseTensor creation "
+             "documentation available at:"
+             "https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html");
     }
   }
 
@@ -200,16 +204,21 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
   // initialize the batch indices
   batch_indices = map_batch_pair.second;
 
-  if (!allow_duplicate && !force_remap) {
-    ASSERT(nrows == coords_map.size(), "A duplicate coordinates found. ",
-           "If the duplication was intentional, set force_remap to true.");
+  if (!allow_duplicate_coords && !force_remap) {
+    ASSERT(nrows == coords_map.size(), "A duplicate coordinate found. ",
+           "If the duplication was intentional, set force_remap to true."
+           "For more information, please refer to the SparseTensor creation "
+           "documentation available at:"
+           "https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html");
   }
 
   // When remapping, return the mapping to pytorch.
   if (force_remap) {
+    ASSERT(mapping.dtype() == torch::kInt64,
+           "Mapping must be a torch::LongTensor");
     const vector<int> &map = map_batch_pair.first;
     mapping.resize_({(long)map.size()});
-    copy(map.begin(), map.end(), mapping.data<int>());
+    copy(map.begin(), map.end(), mapping.data<long>());
   }
 
   // Save the returned results
@@ -221,17 +230,12 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
 uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
                                          py::object py_coords_key,
                                          bool force_creation, bool force_remap,
-                                         bool allow_duplicates) {
+                                         bool allow_duplicate_coords) {
   CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
-
-  ASSERT(coords.size(1) - 1 == p_coords_key->tensor_strides_.size(),
-         "The coordinate dimension - 1, ", coords.size(1) - 1,
-         ", mismatches the tensor stride size: ",
-         p_coords_key->tensor_strides_.size());
 
   uint64_t in_coords_key =
       initializeCoords(coords, mapping, p_coords_key->tensor_strides_,
-                       force_creation, force_remap, allow_duplicates);
+                       force_creation, force_remap, allow_duplicate_coords);
 
   // Tensor strides initialized on the python side.
   p_coords_key->setKey(in_coords_key);
@@ -706,29 +710,24 @@ CoordsManager::getUnionInOutMaps(vector<py::object> py_in_coords_keys,
 }
 
 string CoordsManager::toString() const {
-  string tmp;
-  tmp += "< CoordsManager, Number of Coordinate Hashmaps: ";
-  tmp += to_string(coords_maps.size());
-  for (auto kv : coords_maps) {
-    tmp += " \n\tCoords Key: ";
-    tmp += to_string(kv.first);
-    tmp += ", Size: ";
-    tmp += to_string((kv.second).size());
+  Formatter out;
+  out << "< CoordsManager\n\tNumber of Coordinate Maps: "
+      << to_string(coords_maps.size());
+  for (const auto &kv : coords_maps) {
+    out << " \n\t\tCoordinate Map Key: " << to_string(kv.first)
+        << ", Size: " << to_string((kv.second).size());
   }
-  tmp += "\n  Number of Kernel Maps: ";
-  tmp += to_string(in_maps.size());
-  for (auto kv : in_maps) {
-    tmp += " \n\tKernel Map Key: ";
-    tmp += to_string(hash_vec<InOutMapKey>(kv.first));
-    int size = 0;
-    for (auto map : kv.second) {
+  out << "\n\tNumber of Kernel Maps: " << to_string(in_maps.size());
+  for (const auto &kv : in_maps) {
+    size_t size = 0;
+    for (const auto &map : kv.second)
       size += map.size();
-    }
-    tmp += ", Size: ";
-    tmp += to_string(size);
+    out << " \n\t\tKernel In-Out Map Key: "
+        << to_string(hash_vec<InOutMapKey>(kv.first))
+        << ", Size: " << to_string(size);
   }
-  tmp += " >";
-  return tmp;
+  out << " >\n";
+  return out;
 }
 
 void CoordsManager::printDiagnostics(py::object py_coords_key) const {
