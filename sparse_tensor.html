@@ -194,7 +194,7 @@
 <h2>SparseTensor<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">allow_duplicate_coords=False</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>A sparse tensor class. Can be accessed via
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
 <p>The <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. We
@@ -219,8 +219,12 @@ batch.  Internally, we handle the batch index as an additional spatial
 dimension.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>From the version 0.3, we will put the batch indices on the first column
+<p>From the version 0.4, we will put the batch indices on the first column
 to be consistent with the standard neural network packages.</p>
+<p>Please use <a class="reference internal" href="utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> or
+<a class="reference internal" href="utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> when creating coordinates
+to make your code to generate batched coordinates automatically that are
+compatible with the latest version of Minkowski Engine.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbf{C} = \begin{bmatrix}
 b_1    &amp; x_1^1   &amp; x_1^2  &amp; \cdots &amp; x_1^D    \\
@@ -234,7 +238,7 @@ b_N    &amp; x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">allow_duplicate_coords=False</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
 <dt>Args:</dt><dd><p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="MinkowskiEngine.SparseTensor.SparseTensor.feats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.FloatTensor</span></code>,
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.DoubleTensor</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.cuda.FloatTensor</span></code>, or
@@ -255,6 +259,17 @@ CoordsManager object. If not provided, the MinkowskiEngine will
 create a new computation graph. In most cases, this process is
 handled automatically and you do not need to use this. When you use
 it, make sure you understand what you are doing.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">force_creation</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>): Force creation of the
+coordinates. This allows generating a new set of coordinates even
+when there exists another set of coordinates with the same
+tensor stride. This could happen when you manually feed the same
+attr:<cite>coords_manager</cite>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">allow_duplicate_coords</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>): Allow duplicate
+coordinates when creating the sparse tensor. Internally, it will
+generate a new unique set of coordinates and use features of at the
+corresponding unique coordinates. In general, setting
+<cite>allow_duplicate_coords=True</cite> is not recommended as it could hide
+obvious errors in your data loading and preprocessing steps.</p>
 <p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>,
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.array</span></code>, or <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor.Tensor</span></code>): The tensor stride
 of the current sparse tensor. By default, it is 1.</p>

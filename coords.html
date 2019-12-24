@@ -242,8 +242,13 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="MinkowskiEngine.CoordsManager.get_coo_broadcast_coords">
-<code class="sig-name descname">get_coo_broadcast_coords</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_coo_broadcast_coords" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordsManager.get_batch_indices">
+<code class="sig-name descname">get_batch_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_batch_indices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.CoordsManager.get_batch_size">
+<code class="sig-name descname">get_batch_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_batch_size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -278,17 +283,18 @@
 
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.get_row_indices_per_batch">
-<code class="sig-name descname">get_row_indices_per_batch</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_row_indices_per_batch" title="Permalink to this definition">¶</a></dt>
-<dd><p>return a list of unique batch indices, and a list of lists of row indices per batch.</p>
+<code class="sig-name descname">get_row_indices_per_batch</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">out_coords_key=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_row_indices_per_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of lists of row indices per batch.</p>
+<p>The corresponding batch indices are accessible by <cite>get_batch_indices</cite>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
-<span class="n">batch_indices</span><span class="p">,</span> <span class="n">list_of_row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_per_batch</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">)</span>
+<span class="n">batch_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_per_batch</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">force_remap=False</em>, <em class="sig-param">allow_duplicates=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">force_remap=False</em>, <em class="sig-param">allow_duplicate_coords=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -304,6 +310,11 @@
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.reduce">
 <code class="sig-name descname">reduce</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.reduce" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.CoordsManager.set_origin_coords_key">
+<code class="sig-name descname">set_origin_coords_key</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.set_origin_coords_key" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

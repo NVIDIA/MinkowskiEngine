@@ -213,7 +213,7 @@ done by calling <a class="reference internal" href="../utils.html#MinkowskiEngin
 </div>
 <p>Once you prepare a voxelized coordinates and features, we should wrap it with
 the <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>. Before we do that, we should create a
-batch by calling <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code>. This function
+batch by calling <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a>. This function
 takes a set of coordinates and features and concatenate the set. Also it append
 the batch index to the coordinates. Finally, we pseudo-normalize the features
 by subtracting 0.5 from the colors.</p>

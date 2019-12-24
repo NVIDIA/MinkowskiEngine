@@ -444,14 +444,14 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 <h2>MinkowskiGlobalPooling<a class="headerlink" href="#minkowskiglobalpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pool all input features to one output.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \sum_{\mathbf{i} \in
 \mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}\]</div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reduces sparse coords into points at origin, i.e. reduce each point
 cloud into a point at the origin, returning batch_size number of points
 [[0, 0, …, 0], [0, 0, …, 1],, [0, 0, …, 2]] where the last elem

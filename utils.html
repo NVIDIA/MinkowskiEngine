@@ -113,6 +113,8 @@
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Utility Functions and Classes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-quantize">sparse_quantize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batched-coordinates">batched_coordinates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-collate">sparse_collate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sparsecollation">SparseCollation</a></li>
 </ul>
 </li>
@@ -195,7 +197,7 @@
 <h2>sparse_quantize<a class="headerlink" href="#sparse-quantize" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="MinkowskiEngine.utils.sparse_quantize">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=255</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=255</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">quantization_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given coordinates, and features (optionally labels), the function
 generates quantized (voxelized) coordinates.</p>
 <dl>
@@ -218,6 +220,47 @@ hyperrectangle of of the grid cell.</p>
 <p class="admonition-title">Note</p>
 <p>Please check <cite>examples/indoor.py</cite> for the usage.</p>
 </div>
+</dd></dl>
+
+</div>
+<div class="section" id="batched-coordinates">
+<h2>batched_coordinates<a class="headerlink" href="#batched-coordinates" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="MinkowskiEngine.utils.batched_coordinates">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">batched_coordinates</code><span class="sig-paren">(</span><em class="sig-param">coords</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.batched_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <cite>ME.SparseTensor</cite> coordinates from a sequence of coordinates</p>
+<p>Given a list of either numpy or pytorch tensor coordinates, return the
+batched coordinates suitable for <cite>ME.SparseTensor</cite>.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>coords (a sequence of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a list of coordinates.</p>
+</dd>
+<dt>Returns:</dt><dd><p>coords (<cite>torch.IntTensor</cite>): a batched coordinates.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>From v0.4, the batch index will be prepended before all coordinates.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sparse-collate">
+<h2>sparse_collate<a class="headerlink" href="#sparse-collate" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="MinkowskiEngine.utils.sparse_collate">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_collate</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">is_double=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_collate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sparse tensor with batch indices C in <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html">the documentation</a>.</p>
+<p>Convert a set of coordinates and features into the batch coordinates and
+batch features.</p>
+<dl>
+<dt>Args:</dt><dd><p>coords (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
+<p>feats (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of features.</p>
+<p>labels (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of labels
+associated to the inputs.</p>
+<p>is_double (<cite>bool</cite>): return double precision features if True. False by
+default.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
