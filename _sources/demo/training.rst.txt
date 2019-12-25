@@ -35,12 +35,16 @@ In this example, let's create a random dataset that generates a noisy line.
            # Drop some samples
            xs_data = self._sample_xs(self.num_data)
            ys_data = angle * xs_data + intercept + self._sample_noise(
-               xs_data, [0, 1])
+               self.num_data, [0, 0.1])
+
+           noise = 4 * (self.rng.rand(self.num_noise, 2) - 0.5)
 
            # Concatenate data
-           input = np.hstack([xs_data, ys_data])
-           feats = np.random.rand(self.num_data, 1)
-           labels = np.ones((self.num_data, 1)).astype(np.int32)
+           input = np.vstack([np.hstack([xs_data, ys_data]), noise])
+           feats = input
+           labels = np.vstack(
+               [np.ones((self.num_data, 1)),
+                np.zeros((self.num_noise, 1))]).astype(np.int32)
 
            ...
 
