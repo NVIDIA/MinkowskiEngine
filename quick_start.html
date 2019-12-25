@@ -194,30 +194,24 @@
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<ol>
-<li><p>Install Anaconda by following the instruction on <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">anaconda documentation</a>.</p></li>
-<li><p>Create an anaconda virtual environment and install dependencies.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
-<span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>  <span class="c1"># Use the correct cudatoolkit version</span>
+<p>The MinkowskiEngine can be installed via <code class="docutils literal notranslate"><span class="pre">pip</span></code> or using conda. Currently, the installation requirements are:</p>
+<ul class="simple">
+<li><p>Ubuntu 14.04 or higher</p></li>
+<li><p>CUDA 10.1 or higher if you want CUDA acceleration</p></li>
+<li><p>pytorch 1.3 or higher</p></li>
+<li><p>python 3.6 or higher</p></li>
+<li><p>GCC 6 or higher</p></li>
+</ul>
+<p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span>
 </pre></div>
 </div>
-</li>
-<li><p>Once you setup the environment, download the repository and install the MinkowskiEngine.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-</pre></div>
-</div>
-</li>
-</ol>
 </div>
 <div class="section" id="running-a-segmentation-network">
 <h2>Running a segmentation network<a class="headerlink" href="#running-a-segmentation-network" title="Permalink to this headline">¶</a></h2>
-<p>Go to the top directory of the MinkowskiEngine and run the following.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
+<p>Download the MinkowskiEngine and run the example code.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
 <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">examples</span><span class="o">.</span><span class="n">indoor</span>
 </pre></div>
 </div>
@@ -227,7 +221,11 @@ room.</p>
 </div>
 <div class="section" id="cpu-only-compilation">
 <h2>CPU only compilation<a class="headerlink" href="#cpu-only-compilation" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span> <span class="pre">--cpu_only</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
+<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span> <span class="o">--</span><span class="n">cpu_only</span>
+</pre></div>
+</div>
 </div>
 </div>
 

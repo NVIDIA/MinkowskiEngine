@@ -91,12 +91,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pip">Pip</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#anaconda">Anaconda</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#create-a-conda-virtual-environment-and-install-requirements">1. Create a conda virtual environment and install requirements.</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#compilation-and-installation">2. Compilation and installation</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#python-virtual-environment">Python virtual environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#system-python">System Python</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
@@ -227,21 +228,29 @@
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Ubuntu 14.04 or higher</p></li>
-<li><p>CUDA 10.0 or higher</p></li>
+<li><p>CUDA 10.1 or higher</p></li>
 <li><p>pytorch 1.3 or higher</p></li>
+<li><p>python 3.6 or higher</p></li>
 <li><p>GCC 6 or higher</p></li>
 </ul>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>You can install the Minkowski Engine without sudo using anaconda. Using anaconda is highly recommended.</p>
+<p>You can install the Minkowski Engine with <code class="docutils literal notranslate"><span class="pre">pip</span></code>, with anaconda, or on the system directly.</p>
+<div class="section" id="pip">
+<h3>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h3>
+<p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="anaconda">
 <h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h3>
 <p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation. If you have compilation issues, please checkout the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/issues.html">common compilation issues page</a> first.</p>
 <div class="section" id="create-a-conda-virtual-environment-and-install-requirements">
 <h4>1. Create a conda virtual environment and install requirements.<a class="headerlink" href="#create-a-conda-virtual-environment-and-install-requirements" title="Permalink to this headline">¶</a></h4>
 <p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span> <span class="n">anaconda</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
@@ -258,8 +267,8 @@
 </div>
 </div>
 </div>
-<div class="section" id="python-virtual-environment">
-<h3>Python virtual environment<a class="headerlink" href="#python-virtual-environment" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="system-python">
+<h3>System Python<a class="headerlink" href="#system-python" title="Permalink to this headline">¶</a></h3>
 <p>Like the anaconda installation, make sure that you install pytorch with the same CUDA version that <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> uses.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
 
