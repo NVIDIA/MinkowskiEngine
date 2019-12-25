@@ -2,32 +2,28 @@
 
 ## Installation
 
-1. Install Anaconda by following the instruction on [anaconda documentation](https://docs.anaconda.com/anaconda/install/).
+The MinkowskiEngine can be installed via `pip` or using conda. Currently, the installation requirements are:
 
-2. Create an anaconda virtual environment and install dependencies.
+- Ubuntu 14.04 or higher
+- CUDA 10.1 or higher if you want CUDA acceleration
+- pytorch 1.3 or higher
+- python 3.6 or higher
+- GCC 6 or higher
 
-    ```
-    conda create -n py3-mink python=3.7 anaconda
-    conda activate py3-mink
-    conda install openblas numpy
-    conda install pytorch torchvision -c pytorch  # Use the correct cudatoolkit version
-    ```
 
-3. Once you setup the environment, download the repository and install the MinkowskiEngine.
+The MinkowskiEngine is distributed via [PyPI MinkowskiEngine](https://pypi.org/project/MinkowskiEngine/) which can be installed simply with `pip`.
 
-    ```
-    conda activate py3-mink
-    git clone https://github.com/StanfordVL/MinkowskiEngine.git
-    cd MinkowskiEngine
-    python setup.py install
-    ```
+```
+pip install -U MinkowskiEngine
+```
 
 ## Running a segmentation network
 
-Go to the top directory of the MinkowskiEngine and run the following.
+Download the MinkowskiEngine and run the example code.
 
 ```
-cd /path/to/MinkowskiEngine
+git clone https://github.com/StanfordVL/MinkowskiEngine.git
+cd MinkowskiEngine
 python -m examples.indoor
 ```
 
@@ -38,4 +34,9 @@ room.
 
 ## CPU only compilation
 
-`python setup.py install --cpu_only`
+
+```
+git clone https://github.com/StanfordVL/MinkowskiEngine.git
+cd MinkowskiEngine
+python setup.py install --cpu_only
+```

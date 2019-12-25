@@ -19,13 +19,21 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 - Ubuntu 14.04 or higher
 - CUDA 10.1 or higher
 - pytorch 1.3 or higher
+- python 3.6 or higher
 - GCC 6 or higher
 
 
 ## Installation
 
-You can install the Minkowski Engine without sudo using anaconda. Using anaconda is highly recommended.
+You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly.
 
+### Pip
+
+The MinkowskiEngine is distributed via [PyPI MinkowskiEngine](https://pypi.org/project/MinkowskiEngine/) which can be installed simply with `pip`.
+
+```
+pip install -U MinkowskiEngine
+```
 
 ### Anaconda
 
@@ -53,7 +61,7 @@ python setup.py install
 ```
 
 
-### Python virtual environment
+### System Python
 
 Like the anaconda installation, make sure that you install pytorch with the same CUDA version that `nvcc` uses.
 
