@@ -1,33 +1,39 @@
 # Change Log
 
 
-## [nightly] - 2019-12-24
+## [0.3.2] - 2019-12-25
 
+### Added
 - Synchronized Batch Norm: `ME.MinkowskiSyncBatchNorm`
     - `ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm` converts a MinkowskiNetwork automatically to use synched batch norm.
 - `examples/multigpu.py` update for `ME.MinkowskiSynchBatchNorm`.
-- Update multigpu documentation
-- Update GIL release
-- Minor error fixes on `examples/modelnet40.py`
-- CoordsMap size initialization updates
 - Add `MinkowskiUnion`
-- Update `MinkowskiUnion`, `MinkowskiPruning` docs
-- Use cudaMalloc instead of `at::Tensor` for GPU memory management for illegal memory access, invalid arg.
-- Region hypercube iterator with even numbered kernel
-- Fix global reduction in-out map with non contiguous batch indices
-- GlobalPooling with torch reduction
 - Add CoordsManager functions
     - `get_batch_size`
     - `get_batch_indices`
     - `set_origin_coords_key`
+- Add `quantize_th`, `quantize_label_th`
+- Add MANIFEST
+
+### Changed
+
+- Update `MinkowskiUnion`, `MinkowskiPruning` docs
+- Update multigpu documentation
+- Update GIL release
+- Use cudaMalloc instead of `at::Tensor` for GPU memory management for illegal memory access, invalid arg.
+- Minor error fixes on `examples/modelnet40.py`
+- CoordsMap size initialization updates
+- Region hypercube iterator with even numbered kernel
+- Fix global reduction in-out map with non contiguous batch indices
+- GlobalPooling with torch reduction
 - Update CoordsManager function `get_row_indices_per_batch` to return a list of `torch.LongTensor` for mapping indices. The corresponding batch indices is accessible by `get_batch_indices`.
 - Update `MinkowskiBroadcast`, `MinkowskiBroadcastConcatenation` to use row indices per batch (`getRowIndicesPerBatch`)
 - Update `SparseTensor`
     - `allow_duplicate_coords` argument support
     - update documentation, add unittest
-- Add `quantize_th`, `quantize_label_th`
 - Update the training demo and documentation.
 - Update `MinkowskiInstanceNorm`: no `dimension` argument.
+- Fix CPU only build
 
 
 ## [0.3.1] - 2019-12-15

@@ -38,6 +38,4 @@ room.
 
 ## CPU only compilation
 
-1. Uncomment line 8 of the Makefile to enable the flag, `CPU_ONLY`.
-2. Uncomment line 57 of the `setup.py` to enable the flag, `CPU_ONLY`.
-3. `python setup.py install`
+`python setup.py install --cpu_only`

@@ -110,9 +110,12 @@ def sparse_quantize(coords,
         :attr:`labels` (:attr:`numpy.ndarray` or :attr:`torch.IntTensor`,
         optional): integer labels associated to eah coordinates.  Must have the
         same container as `coords` (i.e. if `coords` is a torch.Tensor,
-        `labels` must also be a torch.Tensor).
+        `labels` must also be a torch.Tensor). For classification where a set
+        of points are mapped to one label, do not feed the labels.
 
-        :attr:`ignore_label` (:attr:`int`, optional): the int value of the IGNORE LABEL..
+        :attr:`ignore_label` (:attr:`int`, optional): the int value of the
+        IGNORE LABEL.
+        :attr:`torch.nn.CrossEntropyLoss(ignore_index=ignore_label)`
 
         :attr:`return_index` (:attr:`bool`, optional): True if you want the indices of the
         quantized coordinates. False by default.
@@ -123,11 +126,19 @@ def sparse_quantize(coords,
 
      Example::
 
+        >>> # Segmentation
         >>> criterion = torch.nn.CrossEntropyLoss(ignore_index=-100)
         >>> coords, feats, labels = MinkowskiEngine.utils.sparse_quantize(
         >>>     coords, feats, labels, ignore_label=-100, quantization_size=0.1)
         >>> output = net(MinkowskiEngine.SparseTensor(feats, coords))
         >>> loss = criterion(output.F, labels.long())
+        >>>
+        >>> # Classification
+        >>> criterion = torch.nn.CrossEntropyLoss(ignore_index=-100)
+        >>> coords, feats = MinkowskiEngine.utils.sparse_quantize(coords, feats)
+        >>> output = net(MinkowskiEngine.SparseTensor(feats, coords))
+        >>> loss = criterion(output.F, labels.long())
+
 
     """
     assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
