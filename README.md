@@ -1,6 +1,13 @@
+[pypi-image]: https://badge.fury.io/py/MinkowskiEngine.svg
+[pypi-url]: https://pypi.org/project/MinkowskiEngine/
+
 # Minkowski Engine
 
+[![PyPI Version][pypi-image]][pypi-url]
+
 The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://stanfordvl.github.io/MinkowskiEngine/overview.html).
+
+--------------------------------------------------------------------------------
 
 ## Features
 
@@ -29,7 +36,7 @@ You can install the Minkowski Engine with `pip`, with anaconda, or on the system
 
 ### Pip
 
-The MinkowskiEngine is distributed via [PyPI MinkowskiEngine](https://pypi.org/project/MinkowskiEngine/) which can be installed simply with `pip`.
+The MinkowskiEngine is distributed via [PyPI MinkowskiEngine][pypi-url] which can be installed simply with `pip`.
 
 ```
 pip install -U MinkowskiEngine

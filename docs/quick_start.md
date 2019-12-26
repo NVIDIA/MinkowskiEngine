@@ -27,9 +27,8 @@ cd MinkowskiEngine
 python -m examples.indoor
 ```
 
-When you run the above example, you will download pretrained-weights of a
-Minkowski network and will see the semantic segmentation results of a hotel
-room.
+When you run the above example, it will download pretrained weights of a
+Minkowski network and will visualize the semantic segmentation results of a 3D scene.
 
 
 ## CPU only compilation

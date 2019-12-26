@@ -1,6 +1,12 @@
 # Change Log
 
 
+## [nightly] - 2019-12-26
+
+- Minor changes on `setup.py` for torch installation check and system assertions.
+- Add `MinkowskiConvolutionOnCoords`, `MinkowskiConvolutionTransposeOnCoords`
+
+
 ## [0.3.2] - 2019-12-25
 
 ### Added

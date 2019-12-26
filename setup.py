@@ -1,12 +1,20 @@
+try:
+    import torch
+except ImportError:
+    raise ImportError('Pytorch not found. Please install pytorch first.')
+
 import codecs
 import os
 import re
 import subprocess
-from sys import argv
+from sys import argv, platform
 from setuptools import setup
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
 
 from distutils.sysconfig import get_python_inc
+
+if platform == 'win32':
+    raise ImportError('Windows is currently not supported.')
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -64,6 +72,7 @@ setup(
         Extension(
             name='MinkowskiEngineBackend',
             include_dirs=['./', get_python_inc() + "/.."],
+            library_dirs=['objs'],
             sources=[
                 'pybind/minkowski.cpp',
             ],
@@ -71,7 +80,6 @@ setup(
                 'minkowski',
                 'openblas',  # for other blas, replace openblas
             ],
-            library_dirs=['objs'],
             extra_compile_args=extra_compile_args,
         )
     ],

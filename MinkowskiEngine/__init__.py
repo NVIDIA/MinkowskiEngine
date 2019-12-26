@@ -42,6 +42,8 @@ from MinkowskiCoords import CoordsKey, CoordsManager
 from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
     MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose
 
+from MinkowskiConvolutionOnCoords import MinkowskiConvolutionOnCoords, MinkowskiConvolutionTransposeOnCoords
+
 from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiSumPooling, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
