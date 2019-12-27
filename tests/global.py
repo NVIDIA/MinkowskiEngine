@@ -52,7 +52,7 @@ def load_file(file_name, voxel_size):
     feats = np.array(pcd.colors)
 
     quantized_coords = np.floor(coords / voxel_size)
-    inds = ME.utils.sparse_quantize(quantized_coords)
+    inds = ME.utils.sparse_quantize(quantized_coords, return_index=True)
 
     return quantized_coords[inds], feats[inds], pcd
 

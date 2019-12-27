@@ -77,14 +77,14 @@ public:
   CoordsMap(int ncols_, const set<int> &batch_indices);
 
   // Initializations
-  pair<vector<int>, set<int>> initialize(int *p_coords_, int nrows_, int ncols_,
+  pair<vector<int>, set<int>> initialize(const int *p_coords_, int nrows_, int ncols_,
                                          bool force_remap = false);
 
   // Generate strided version of the input coordinate map.
   // returns mapping: out_coord row index to in_coord row index
   CoordsMap stride(const vector<int> &tensor_strides) const;
   CoordsMap stride_region(const Region &region) const;
-  CoordsMap prune(bool *p_keep, int n) const;
+  CoordsMap prune(const bool *p_keep, int n) const;
 
   // class method
   static CoordsMap union_coords(const vector<shared_ptr<CoordsMap>> &p_maps);

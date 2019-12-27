@@ -69,7 +69,7 @@ class ResNetBase(nn.Module):
             self.inplanes, self.inplanes, kernel_size=3, stride=3, dimension=D)
         self.bn5 = ME.MinkowskiBatchNorm(self.inplanes)
 
-        self.glob_avg = ME.MinkowskiGlobalPooling(dimension=D)
+        self.glob_avg = ME.MinkowskiGlobalMaxPooling(dimension=D)
 
         self.final = ME.MinkowskiLinear(self.inplanes, out_channels, bias=True)
 

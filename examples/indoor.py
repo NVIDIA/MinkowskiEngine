@@ -104,7 +104,7 @@ def load_file(file_name, voxel_size):
     feats = np.array(pcd.colors)
 
     quantized_coords = np.floor(coords / voxel_size)
-    inds = ME.utils.sparse_quantize(quantized_coords)
+    inds = ME.utils.sparse_quantize(quantized_coords, return_index=True)
 
     return quantized_coords[inds], feats[inds], pcd
 
@@ -116,7 +116,7 @@ def generate_input_sparse_tensor(file_name, voxel_size=0.05):
     coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
 
     # Normalize features and create a sparse tensor
-    return coordinates, features - 0.5
+    return coordinates, (features - 0.5).float()
 
 
 if __name__ == '__main__':

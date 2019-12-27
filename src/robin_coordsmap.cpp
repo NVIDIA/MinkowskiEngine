@@ -47,7 +47,7 @@ CoordsMap::CoordsMap(int ncols_, const set<int> &batch_indices)
 }
 
 pair<vector<int>, set<int>>
-CoordsMap::initialize(int *p_coords, int nrows_, int ncols_, bool force_remap) {
+CoordsMap::initialize(const int *p_coords, int nrows_, int ncols_, bool force_remap) {
   nrows = nrows_;
   ncols = ncols_;
 
@@ -123,7 +123,7 @@ CoordsMap CoordsMap::stride_region(const Region &region) const {
   return stride_map;
 };
 
-CoordsMap CoordsMap::prune(bool *p_keep, int n) const {
+CoordsMap CoordsMap::prune(const bool *p_keep, int n) const {
   int c = 0;
   CoordsMap pruned_map;
   pruned_map.reserve(nrows);

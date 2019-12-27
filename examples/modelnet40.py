@@ -57,7 +57,7 @@ logging.basicConfig(
     handlers=[ch])
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--voxel_size', type=float, default=0.05)
+parser.add_argument('--voxel_size', type=float, default=0.025)
 parser.add_argument('--max_iter', type=int, default=120000)
 parser.add_argument('--val_freq', type=int, default=1000)
 parser.add_argument('--batch_size', default=256, type=int)
@@ -65,7 +65,7 @@ parser.add_argument('--lr', default=1e-1, type=float)
 parser.add_argument('--momentum', type=float, default=0.9)
 parser.add_argument('--weight_decay', type=float, default=1e-4)
 parser.add_argument('--num_workers', type=int, default=1)
-parser.add_argument('--stat_freq', type=int, default=100)
+parser.add_argument('--stat_freq', type=int, default=50)
 parser.add_argument('--checkpoint_weights', type=str, default='modelnet.pth')
 parser.add_argument('--weights', type=str, default='modelnet.pth')
 parser.add_argument('--load_optimizer', type=str, default='true')
@@ -217,7 +217,10 @@ class RandomRotation:
             axis = np.random.rand(3) - 0.5
         R = self._M(axis, (np.pi * self.max_theta / 180) * 2 *
                     (np.random.rand(1) - 0.5))
-        return coords @ R, feats
+        R_n = self._M(
+            np.random.rand(3) - 0.5,
+            (np.pi * 15 / 180) * 2 * (np.random.rand(1) - 0.5))
+        return coords @ R @ R_n, feats
 
 
 class RandomScale:
@@ -269,6 +272,7 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
         self.data_objects = []
         self.transform = transform
         self.voxel_size = config.voxel_size
+        self.last_cache_percent = 0
 
         self.root = './ModelNet40'
         self.files = open(os.path.join(self.root,
@@ -304,6 +308,12 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
             # Oversample points and copy
             xyz = resample_mesh(pcd, density=self.density)
             self.cache[idx] = xyz
+            cache_percent = int((len(self.cache) / len(self)) * 100)
+            if cache_percent > 0 and cache_percent % 10 == 0 and cache_percent != self.last_cache_percent:
+                logging.info(
+                    f"Cached {self.phase}: {len(self.cache)} / {len(self)}: {cache_percent}%"
+                )
+                self.last_cache_percent = cache_percent
 
         # Use color or other features if available
         feats = np.ones((len(xyz), 1))
@@ -317,22 +327,17 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
         if self.transform:
             xyz, feats = self.transform(xyz, feats)
 
-        # Voxelization
-        sel = ME.utils.sparse_quantize(xyz / self.voxel_size, return_index=True)
-
-        down_xyz, down_feat = xyz[sel], feats[sel]
-
         # Get coords
-        coords = np.floor(down_xyz / self.voxel_size)
+        coords = np.floor(xyz / self.voxel_size)
 
-        return (coords, down_feat, label)
+        return (coords, xyz, label)
 
 
 def make_data_loader(phase, augment_data, batch_size, shuffle, num_workers,
                      repeat, config):
     transformations = []
     if augment_data:
-        transformations.append(RandomRotation())
+        transformations.append(RandomRotation(axis=np.array([0, 0, 1])))
         transformations.append(RandomTranslation())
         transformations.append(RandomScale(0.8, 1.2))
         transformations.append(RandomShear())
@@ -358,13 +363,16 @@ def make_data_loader(phase, augment_data, batch_size, shuffle, num_workers,
     return loader
 
 
-def test(net, test_iter, phase='val'):
+def test(net, test_iter, config, phase='val'):
     net.eval()
     num_correct, tot_num = 0, 0
     for i in range(len(test_iter)):
         data_dict = test_iter.next()
-        sin = ME.SparseTensor(data_dict['feats'],
-                              data_dict['coords'].int()).to(device)
+        sin = ME.SparseTensor(
+            data_dict['coords'][:, :3] * config.voxel_size,
+            data_dict['coords'].int(),
+            allow_duplicate_coords=True,  # for classification, it doesn't matter
+        ).to(device)
         sout = net(sin)
         is_correct = data_dict['labels'] == torch.argmax(sout.F, 1).cpu()
         num_correct += is_correct.sum().item()
@@ -424,8 +432,11 @@ def train(net, device, config):
         d = time() - s
 
         optimizer.zero_grad()
-        sin = ME.SparseTensor(data_dict['feats'],
-                              data_dict['coords'].int()).to(device)
+        sin = ME.SparseTensor(
+            data_dict['coords'][:, :3] * config.voxel_size,
+            data_dict['coords'].int(),
+            allow_duplicate_coords=True,  # for classification, it doesn't matter
+        ).to(device)
         sout = net(sin)
         loss = crit(sout.F, data_dict['labels'].to(device))
         loss.backward()
@@ -448,7 +459,7 @@ def train(net, device, config):
 
             # Validation
             logging.info('Validation')
-            test(net, val_iter, 'val')
+            test(net, val_iter, config, 'val')
 
             scheduler.step()
             logging.info(f'LR: {scheduler.get_lr()}')
@@ -460,7 +471,7 @@ if __name__ == '__main__':
     config = parser.parse_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    net = ResNet50(1, 40, D=3)
+    net = ResNet50(3, 40, D=3)
     net.to(device)
 
     train(net, device, config)
@@ -475,4 +486,4 @@ if __name__ == '__main__':
         config=config)
 
     logging.info('Test')
-    test(net, iter(test_dataloader), 'test')
+    test(net, iter(test_dataloader), config, 'test')

@@ -264,7 +264,7 @@ if __name__ == '__main__':
     coords = np.array(pcd.points)
     feats = coords - coords.mean(0)  # Coordinates are features for pointnet
     quantized_coords = np.floor(coords / voxel_size)
-    inds = ME.utils.sparse_quantize(quantized_coords)
+    inds = ME.utils.sparse_quantize(quantized_coords, return_index=True)
     quantized_coords, feats = ME.utils.sparse_collate([quantized_coords[inds]],
                                                       [feats[inds]])
     sinput = ME.SparseTensor(feats, quantized_coords)
