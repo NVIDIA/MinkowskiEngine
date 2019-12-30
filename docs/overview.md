@@ -54,7 +54,7 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7
 conda activate py3-mink
-conda install openblas numpy
+conda install numpy openblas
 conda install pytorch torchvision -c pytorch
 ```
 
@@ -73,15 +73,26 @@ python setup.py install
 Like the anaconda installation, make sure that you install pytorch with the same CUDA version that `nvcc` uses.
 
 ```
-sudo apt install libopenblas-dev
+# install system requirements
+sudo apt install python3-dev openblas
 
-# within a python3 environment
-pip install torch
+# Skip if you already have pip installed on your python3
+curl https://bootstrap.pypa.io/get-pip.py | python3
+
+# Get pip and install python requirements
+python3 -m pip install torch numpy
+
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
+
 cd MinkowskiEngine
-pip install -r requirements.txt
+
 python setup.py install
 ```
+
+
+## CPU only build and BLAS configuration (MKL)
+
+The Minkowski Engine supports CPU only build on other platforms that do not have NVidia GPUs. Please refer to [quick start](https://stanfordvl.github.io/MinkowskiEngine/quick_start.html) for more details.
 
 
 ## Quick Start

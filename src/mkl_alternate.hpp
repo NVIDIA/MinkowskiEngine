@@ -34,7 +34,6 @@
 extern "C" {
 #include <cblas.h>
 }
-
 #include <math.h>
 
 

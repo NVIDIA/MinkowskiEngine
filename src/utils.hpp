@@ -37,7 +37,7 @@ template <typename T> std::string ArrToString(T arr) {
 
 template <typename T> std::string PtrToString(T *ptr, int size) {
   std::string buf = "[";
-  for (size_t i = 0; i < size; i++) {
+  for (int i = 0; i < size; i++) {
     buf += (i ? ", " : "") + std::to_string(ptr[i]);
   }
   buf += "]";

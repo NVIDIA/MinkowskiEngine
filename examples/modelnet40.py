@@ -57,7 +57,7 @@ logging.basicConfig(
     handlers=[ch])
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--voxel_size', type=float, default=0.025)
+parser.add_argument('--voxel_size', type=float, default=0.05)
 parser.add_argument('--max_iter', type=int, default=120000)
 parser.add_argument('--val_freq', type=int, default=1000)
 parser.add_argument('--batch_size', default=256, type=int)

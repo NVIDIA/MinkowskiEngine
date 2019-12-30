@@ -7,15 +7,17 @@ Q ?= @
 # Uncomment for CPU only build. From the command line, `python setup.py install --cpu_only`
 # CPU_ONLY := 1
 
-CXX := g++
+CXX ?= g++
+PYTHON ?= python
 
 EXTENSION_NAME := minkowski
 
 # BLAS choice:
-# atlas for ATLAS (default)
-# mkl for MKL
-# open for OpenBlas
-BLAS := open
+# atlas for ATLAS
+# blas for default blas
+# mkl for MKL. For conda, conda install -c intel mkl mkl-include
+# openblas for OpenBlas (default)
+BLAS ?= openblas
 
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
@@ -25,9 +27,9 @@ BLAS := open
 
 ###############################################################################
 # PYTHON Header path
-PYTHON_HEADER_DIR := $(shell python -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())')
-PYTORCH_INCLUDES := $(shell python -c 'from torch.utils.cpp_extension import include_paths; [print(p) for p in include_paths()]')
-PYTORCH_LIBRARIES := $(shell python -c 'from torch.utils.cpp_extension import library_paths; [print(p) for p in library_paths()]')
+PYTHON_HEADER_DIR := $(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())')
+PYTORCH_INCLUDES := $(shell $(PYTHON) -c 'from torch.utils.cpp_extension import include_paths; [print(p) for p in include_paths()]')
+PYTORCH_LIBRARIES := $(shell $(PYTHON) -c 'from torch.utils.cpp_extension import library_paths; [print(p) for p in library_paths()]')
 
 # HEADER DIR is in pythonX.Xm folder
 INCLUDE_DIRS := $(PYTHON_HEADER_DIR)
@@ -37,6 +39,21 @@ LIBRARY_DIRS := $(PYTORCH_LIBRARIES)
 
 # Determine ABI support
 WITH_ABI := $(shell python -c 'import torch; print(int(torch._C._GLIBCXX_USE_CXX11_ABI))')
+
+# Determine platform
+UNAME := $(shell uname -s)
+ifeq ($(UNAME), Linux)
+	LINUX := 1
+else ifeq ($(UNAME), Darwin)
+	OSX := 1
+	OSX_MAJOR_VERSION := $(shell sw_vers -productVersion | cut -f 1 -d .)
+	OSX_MINOR_VERSION := $(shell sw_vers -productVersion | cut -f 2 -d .)
+
+	CXX := /usr/local/opt/llvm/bin/clang
+	# brew install llvm libomp
+	INCLUDE_DIRS += /usr/local/opt/llvm/include
+	LIBRARY_DIRS += /usr/local/opt/llvm/lib
+endif
 
 ifneq ($(CPU_ONLY), 1)
 	# CUDA ROOT DIR that contains bin/ lib64/ and include/
@@ -58,9 +75,9 @@ STATIC_LIB := $(OBJ_DIR)/lib$(EXTENSION_NAME).a
 # We will also explicitly add stdc++ to the link target.
 LIBRARIES := stdc++ c10 caffe2 torch torch_python _C
 ifneq ($(CPU_ONLY), 1)
-	LIBRARIES += cudart cublas caffe2_gpu c10_cuda
-	# Deprecate 3.0 for device memcpy
-	CUDA_ARCH := -gencode arch=compute_35,code=sm_35 \
+	LIBRARIES += cudart cublas cusparse caffe2_gpu c10_cuda
+	CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
+			-gencode arch=compute_35,code=sm_35 \
 			-gencode=arch=compute_50,code=sm_50 \
 			-gencode=arch=compute_52,code=sm_52 \
 			-gencode=arch=compute_60,code=sm_60 \
@@ -70,8 +87,8 @@ ifneq ($(CPU_ONLY), 1)
 			-gencode=arch=compute_75,code=compute_75
 endif
 
-# BLAS configuration
-BLAS ?= open
+# BLAS configuration: mkl, atlas, open, blas
+BLAS ?= openblas
 ifeq ($(BLAS), mkl)
 	# MKL
 	LIBRARIES += mkl_rt
@@ -79,12 +96,12 @@ ifeq ($(BLAS), mkl)
 	MKLROOT ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
-else ifeq ($(BLAS), open)
+else ifeq ($(BLAS), openblas)
 	# OpenBLAS
 	LIBRARIES += openblas
-else ifeq ($(BLAS), cblas)
+else ifeq ($(BLAS), blas)
 	# OpenBLAS
-	LIBRARIES += cblas
+	LIBRARIES += blas
 else
 	# ATLAS
 	LIBRARIES += atlas
@@ -113,6 +130,7 @@ CXXFLAGS += -MMD -MP
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir)) \
 	     -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=$(EXTENSION_NAME) \
 	     -D_GLIBCXX_USE_CXX11_ABI=$(WITH_ABI)
+
 CXXFLAGS += -fopenmp -fPIC -fwrapv -std=c++11 $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -std=c++11 -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 LINKFLAGS += -pthread -fPIC $(WARNINGS) -Wl,-rpath=$(PYTHON_LIB_DIR) -Wl,--no-as-needed -Wl,--sysroot=/
