@@ -179,6 +179,7 @@ void instantiate_coordsman(py::module &m) {
                                   CoordsManager::existsCoordsKey)
       .def("getCoordsKey", &CoordsManager::getCoordsKey)
       .def("getKernelMap", &CoordsManager::getKernelMap)
+      .def("getCoordsMap", &CoordsManager::getCoordsMap)
       .def("getCoordsSize", (int (CoordsManager::*)(py::object) const) &
                                 CoordsManager::getCoordsSize)
       .def("getCoords", &CoordsManager::getCoords)

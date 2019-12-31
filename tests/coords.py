@@ -24,18 +24,16 @@
 import unittest
 
 import torch
+import numpy as np
 
 from MinkowskiEngine import CoordsKey, CoordsManager
+
+from tests.common import data_loader
 
 
 class Test(unittest.TestCase):
 
     def test_hash(self):
-        try:
-            import numpy as np
-        except:
-            return
-
         N, M = 1000, 1000
         I, J = np.meshgrid(np.arange(N), np.arange(M))
         I = I.reshape(-1, 1) - 100
@@ -81,8 +79,7 @@ class Test(unittest.TestCase):
         print(cm)
 
         # Create a transposed stride map
-        transposed_key = cm.transposed_stride(
-            stride_key, [2], [3], [1])
+        transposed_key = cm.transposed_stride(stride_key, [2], [3], [1])
         print('Transposed Stride: ', cm.get_coords(transposed_key))
         print(cm)
 
@@ -99,6 +96,34 @@ class Test(unittest.TestCase):
 
         print('Reduction mapping: ', cm.get_row_indices_per_batch(stride_key))
         print(cm)
+
+    def test_coords_map(self):
+        coords, _, _ = data_loader(1)
+
+        key = CoordsKey(D=2)
+        key.setTensorStride(1)
+
+        # Initialize map
+        cm = CoordsManager(D=2)
+        mapping = cm.initialize(
+            coords, key, force_remap=True, allow_duplicate_coords=False)
+        print(mapping, len(mapping))
+        cm.print_diagnostics(key)
+        print(cm)
+        print(cm.get_batch_size())
+        print(cm.get_batch_indices())
+
+        # Create a strided map
+        stride_key = cm.stride(key, [2, 2])
+        print('Stride: ', cm.get_coords(stride_key))
+        cm.print_diagnostics(key)
+        print(cm)
+
+        ins, outs = cm.get_coords_map(1, 2)
+        inc = cm.get_coords(1)
+        outc = cm.get_coords(2)
+        for i, o in zip(ins, outs):
+          print(f"{i}: ({inc[i]}) -> {o}: ({outc[o]})")
 
 
 if __name__ == '__main__':

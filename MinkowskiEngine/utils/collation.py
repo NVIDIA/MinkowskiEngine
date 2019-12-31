@@ -63,9 +63,13 @@ def batched_coordinates(coords):
         if isinstance(cs, np.ndarray):
             cs = torch.from_numpy(np.floor(cs).astype(np.int32))
         else:
-            cs = cs.floor().int()
+            if isinstance(cs, torch.IntTensor) or isinstance(cs, torch.LongTensor):
+                cs = cs
+            else:
+                cs = cs.floor()
+
         cn = len(cs)
-        bcoords[s:s + cn, :D] = cs
+        bcoords[s:s + cn, :D] = cs.int()
         bcoords[s:s + cn, D] = b
         s += cn
     return bcoords
@@ -112,14 +116,14 @@ def sparse_collate(coords, feats, labels=None):
         if isinstance(coord, np.ndarray):
             coord = torch.from_numpy(coord)
         else:
-            assert isinstance( coord, torch.Tensor), \
+            assert isinstance(coord, torch.Tensor), \
                 "Coords must be of type numpy.ndarray or torch.Tensor"
         coord = coord.int()
 
         if isinstance(feat, np.ndarray):
             feat = torch.from_numpy(feat)
         else:
-            assert isinstance( feat, torch.Tensor), \
+            assert isinstance(feat, torch.Tensor), \
                 "Features must be of type numpy.ndarray or torch.Tensor"
 
         # Labels

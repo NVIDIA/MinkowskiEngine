@@ -264,6 +264,12 @@ class SparseTensor():
         """
         return self.coords_key.D
 
+    def float(self):
+        self._F = self._F.float()
+
+    def double(self):
+        self._F = self._F.double()
+
     def stride(self, s):
         ss = convert_to_int_list(s)
         tensor_strides = self.coords_key.getTensorStride()

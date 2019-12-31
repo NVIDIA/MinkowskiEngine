@@ -43,7 +43,7 @@
 
 template <typename VType> int getInOutMapsSize(const VType &map) {
   int n = 0;
-  for (auto cmap = begin(map); cmap != end(map); cmap++)
+  for (auto cmap = ::begin(map); cmap != ::end(map); ++cmap)
     n += cmap->size();
   return n;
 }
@@ -119,11 +119,14 @@ public:
   long int getBatchSize() const { return batch_indices.size(); }
   set<int> getBatchIndices() const { return batch_indices; }
   void getCoords(at::Tensor coords, py::object py_coords_key) const;
-  void getKernelMap(at::Tensor kernel_map, vector<int> tensor_strides,
-                    vector<int> strides, vector<int> kernel_sizes,
-                    vector<int> dilations, int region_type,
-                    py::object py_in_coords_key, py::object py_out_coords_key,
-                    bool is_transpose, bool is_pool) const;
+  vector<at::Tensor> getKernelMap(vector<int> tensor_strides,
+                                  vector<int> strides, vector<int> kernel_sizes,
+                                  vector<int> dilations, int region_type,
+                                  py::object py_in_coords_key,
+                                  py::object py_out_coords_key,
+                                  bool is_transpose, bool is_pool) const;
+  vector<at::Tensor> getCoordsMap(py::object py_in_coords_key,
+                                  py::object py_out_coords_key) const;
 
   // Set the py_coords_key to the origin coords map key
   void setOriginCoordsKey(py::object py_coords_key);

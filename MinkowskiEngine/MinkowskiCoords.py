@@ -23,6 +23,8 @@
 # of the code.
 import os
 import numpy as np
+from collections import Sequence
+
 import torch
 from Common import convert_to_int_list, convert_to_int_tensor, prep_args
 import MinkowskiEngineBackend as MEB
@@ -131,16 +133,23 @@ class CoordsManager():
                 force_creation))
         return strided_key
 
-    def get_coords_key(self, tensor_strides):
-        tensor_strides = convert_to_int_list(tensor_strides, self.D)
-        key = self.CPPCoordsManager.getCoordsKey(tensor_strides)
-        coords_key = CoordsKey(self.D)
-        coords_key.setKey(key)
-        coords_key.setTensorStride(tensor_strides)
-        return coords_key
+    def get_coords_key(self, key_or_tensor_strides):
+        assert isinstance(key_or_tensor_strides, CoordsKey) or \
+            isinstance(key_or_tensor_strides, (Sequence, np.ndarray, torch.IntTensor, int)), \
+            f"The input must be either a CoordsKey or tensor_stride of type (int, list, tuple, array, Tensor). Invalid: {key_or_tensor_strides}"
+        if isinstance(key_or_tensor_strides, CoordsKey):
+            # Do nothing and return the input
+            return key_or_tensor_strides
+        else:
+            tensor_strides = convert_to_int_list(key_or_tensor_strides, self.D)
+            key = self.CPPCoordsManager.getCoordsKey(tensor_strides)
+            coords_key = CoordsKey(self.D)
+            coords_key.setKey(key)
+            coords_key.setTensorStride(tensor_strides)
+            return coords_key
 
-    def get_coords(self, coords_key):
-        assert isinstance(coords_key, CoordsKey)
+    def get_coords(self, coords_key_or_tensor_strides):
+        coords_key = self.get_coords_key(coords_key_or_tensor_strides)
         coords = torch.IntTensor()
         self.CPPCoordsManager.getCoords(coords, coords_key.CPPCoordsKey)
         return coords
@@ -172,16 +181,25 @@ class CoordsManager():
             coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey)
 
     def get_kernel_map(self,
-                       in_tensor_strides,
-                       out_tensor_strides,
+                       in_key_or_tensor_strides,
+                       out_key_or_tensor_strides,
                        stride=1,
                        kernel_size=3,
                        dilation=1,
                        region_type=0,
                        is_transpose=False,
                        is_pool=False):
-        in_coords_key = self.get_coords_key(in_tensor_strides)
-        out_coords_key = self.get_coords_key(out_tensor_strides)
+        r"""Get kernel in-out maps for the specified coords keys or tensor strides.
+
+        """
+
+        if isinstance(in_key_or_tensor_strides, CoordsKey):
+            in_tensor_strides = in_key_or_tensor_strides.getTensorStride()
+        else:
+            in_tensor_strides = in_key_or_tensor_strides
+
+        in_coords_key = self.get_coords_key(in_key_or_tensor_strides)
+        out_coords_key = self.get_coords_key(out_key_or_tensor_strides)
 
         tensor_strides = convert_to_int_tensor(in_tensor_strides, self.D)
         strides = convert_to_int_tensor(stride, self.D)
@@ -191,9 +209,7 @@ class CoordsManager():
         tensor_strides, strides, kernel_sizes, dilations, region_type = prep_args(
             tensor_strides, strides, kernel_sizes, dilations, region_type, D)
 
-        kernel_map = torch.IntTensor()
-        self.CPPCoordsManager.getKernelMap(
-            kernel_map,
+        kernel_map = self.CPPCoordsManager.getKernelMap(
             convert_to_int_list(tensor_strides, D),  #
             convert_to_int_list(strides, D),  #
             convert_to_int_list(kernel_sizes, D),  #
@@ -206,27 +222,29 @@ class CoordsManager():
 
         return kernel_map
 
-    def get_kernel_map_by_key(self,
-                              in_coords_key,
-                              out_coords_key,
-                              tensor_strides=1,
-                              stride=1,
-                              kernel_size=3,
-                              dilation=1,
-                              region_type=0,
-                              is_transpose=False):
-        tensor_strides = convert_to_int_list(tensor_strides, self.D)
-        strides = convert_to_int_list(stride, self.D)
-        kernel_sizes = convert_to_int_list(kernel_size, self.D)
-        dilations = convert_to_int_list(dilation, self.D)
+    def get_coords_map(self, in_key_or_tensor_strides,
+                       out_key_or_tensor_strides):
+        r"""Extract input coords indices that maps to output coords indices.
 
-        kernel_map = torch.IntTensor()
-        self.CPPCoordsManager.getKernelMap(kernel_map, tensor_strides, strides,
-                                           kernel_sizes, dilations, region_type,
-                                           in_coords_key.CPPCoordsKey,
-                                           out_coords_key.CPPCoordsKey,
-                                           is_transpose)
-        return kernel_map
+        .. code-block:: python
+
+           sp_tensor = ME.SparseTensor(features, coords=coordinates)
+           out_sp_tensor = stride_2_conv(sp_tensor)
+
+           cm = sp_tensor.coords_man
+           # cm = out_sp_tensor.coords_man  # doesn't matter which tensor you pick
+           ins, outs = cm.get_coords_map(1,  # in stride
+                                         2)  # out stride
+           for i, o in zip(ins, outs):
+              print(f"{i} -> {o}")
+
+        r"""
+
+        in_coords_key = self.get_coords_key(in_key_or_tensor_strides)
+        out_coords_key = self.get_coords_key(out_key_or_tensor_strides)
+
+        return self.CPPCoordsManager.getCoordsMap(in_coords_key.CPPCoordsKey,
+                                                  out_coords_key.CPPCoordsKey)
 
     def get_coords_size_by_coords_key(self, coords_key):
         assert isinstance(coords_key, CoordsKey)
@@ -243,8 +261,6 @@ class CoordsManager():
                       max_label,
                       target_tensor_stride,
                       label_tensor_stride=1):
-        """
-        """
         if target_tensor_stride == label_tensor_stride:
             return label
 
