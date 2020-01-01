@@ -23,6 +23,7 @@
  * of the code.
  */
 #include <iostream>
+#include <numeric>
 #include <omp.h>
 
 #include "robin_coordsmap.hpp"
@@ -31,8 +32,7 @@ CoordsMap::CoordsMap(int ncols_, const set<int> &batch_indices)
     : nrows(batch_indices.size()), ncols(ncols_) {
   int c = 0;
   map.reserve(nrows);
-  vector<int> coord(ncols);
-  fill(coord.begin(), coord.end(), 0);
+  vector<int> coord(ncols, 0);
 
   for (int b : batch_indices) {
     // Create a key
@@ -46,8 +46,9 @@ CoordsMap::CoordsMap(int ncols_, const set<int> &batch_indices)
   }
 }
 
-pair<vector<int>, set<int>>
-CoordsMap::initialize(const int *p_coords, int nrows_, int ncols_, bool force_remap) {
+pair<vector<int>, set<int>> CoordsMap::initialize(const int *p_coords,
+                                                  int nrows_, int ncols_,
+                                                  bool force_remap) {
   nrows = nrows_;
   ncols = ncols_;
 
@@ -139,23 +140,24 @@ CoordsMap CoordsMap::prune(const bool *p_keep, int n) const {
   return pruned_map;
 }
 
-CoordsMap CoordsMap::union_coords(const vector<shared_ptr<CoordsMap>> &p_maps) {
-  size_t num_tot = 0;
-  for (const auto &p_map : p_maps)
-    num_tot += p_map->size();
+CoordsMap
+CoordsMap::union_coords(const vector<::reference_wrapper<CoordsMap>> &maps) {
+  const size_t num_tot = ::accumulate(
+      maps.begin(), maps.end(), 0,
+      [](size_t count, const CoordsMap &it) { return count + it.size(); });
 
   CoordsMap out_map;
   out_map.reserve(num_tot);
   size_t c = 0;
-  for (const auto &p_map : p_maps) {
-    for (const auto &kv : *p_map) {
+  for (const CoordsMap &map : maps) {
+    for (const auto &kv : map) {
       if (out_map.find(kv.first) == out_map.end()) {
         out_map[kv.first] = c++;
       }
     }
   }
 
-  out_map.ncols = p_maps[0]->ncols;
+  out_map.ncols = maps[0].get().ncols;
   out_map.nrows = out_map.size();
 
   return out_map;
@@ -172,8 +174,7 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
     in_maps[k].resize(num_out);
     out_maps[k].resize(num_out);
   }
-  vector<int> num_used(K);
-  fill(num_used.begin(), num_used.end(), 0);
+  vector<int> num_used(K, 0);
 
   // OMP
   const auto &out_inner_map = out_coords_map.map;
@@ -265,8 +266,7 @@ CoordsMap::global_reduction_map(const CoordsMap &gout_coords_map,
     in_maps.reserve(map.size());
     out_maps.reserve(map.size());
 
-    vector<int> coord(ncols);
-    fill(coord.begin(), coord.end(), 0);
+    vector<int> coord(ncols, 0);
     for (const auto &kv : map) {
       coord[batch_index] = kv.first[batch_index];
       const auto &iter_out = gout_coords_map.find(coord);
@@ -287,8 +287,7 @@ CoordsMap::global_reduction_map(const CoordsMap &gout_coords_map,
       out_maps[b].reserve(nrows / batch_size);
     }
 
-    vector<int> coord(ncols);
-    fill(coord.begin(), coord.end(), 0);
+    vector<int> coord(ncols, 0);
     for (const auto &kv : map) {
       coord[batch_index] = kv.first[batch_index];
       const auto &iter_out = gout_coords_map.find(coord);
@@ -328,20 +327,20 @@ CoordsMap::stride_map(const CoordsMap &out_coords_map,
 }
 
 InOutMapsPair<int>
-CoordsMap::union_map(const vector<shared_ptr<CoordsMap>> &p_in_maps,
+CoordsMap::union_map(const vector<::reference_wrapper<CoordsMap>> &in_maps,
                      const CoordsMap &out_map) {
-  const size_t num_in_maps = p_in_maps.size();
+  const size_t num_in_maps = in_maps.size();
   InOutMaps<int> ins(num_in_maps);
   InOutMaps<int> outs(num_in_maps);
   for (size_t n = 0; n < num_in_maps; n++) {
-    const size_t in_size = p_in_maps[n]->size();
+    const size_t in_size = in_maps[n].get().size();
     ins[n].reserve(in_size);
     outs[n].reserve(in_size);
   }
 
 #pragma omp parallel for
   for (size_t n = 0; n < num_in_maps; n++) {
-    for (const auto &kv : *p_in_maps[n]) {
+    for (const auto &kv : (const CoordsMap &)in_maps[n]) {
       auto out_iter = out_map.find(kv.first);
       ASSERT(out_iter != out_map.end(), "Invalid out_map.");
       ins[n].push_back(kv.second);
@@ -354,6 +353,7 @@ CoordsMap::union_map(const vector<shared_ptr<CoordsMap>> &p_in_maps,
 
 void CoordsMap::print() const {
   for (const auto &kv : map) {
-    cout << ArrToString(kv.first) << ":" << kv.second << endl;
+    cout << ArrToString(kv.first) << ":" << kv.second << "\n";
   }
+  cout << ::flush;
 }

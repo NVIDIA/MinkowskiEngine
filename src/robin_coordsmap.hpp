@@ -77,8 +77,8 @@ public:
   CoordsMap(int ncols_, const set<int> &batch_indices);
 
   // Initializations
-  pair<vector<int>, set<int>> initialize(const int *p_coords_, int nrows_, int ncols_,
-                                         bool force_remap = false);
+  pair<vector<int>, set<int>> initialize(const int *p_coords_, int nrows_,
+                                         int ncols_, bool force_remap = false);
 
   // Generate strided version of the input coordinate map.
   // returns mapping: out_coord row index to in_coord row index
@@ -87,7 +87,8 @@ public:
   CoordsMap prune(const bool *p_keep, int n) const;
 
   // class method
-  static CoordsMap union_coords(const vector<shared_ptr<CoordsMap>> &p_maps);
+  static CoordsMap
+  union_coords(const vector<::reference_wrapper<CoordsMap>> &maps);
 
   // Generate in-out kernel maps
   InOutMapsPair<int> kernel_map(const CoordsMap &out_coords_map,
@@ -98,7 +99,7 @@ public:
   InOutMapsPair<int> stride_map(const CoordsMap &out_coords_map,
                                 const vector<int> &tensor_strides) const;
   static InOutMapsPair<int>
-  union_map(const vector<shared_ptr<CoordsMap>> &p_in_maps,
+  union_map(const vector<::reference_wrapper<CoordsMap>> &in_maps,
             const CoordsMap &out_map);
 
   // Iterators

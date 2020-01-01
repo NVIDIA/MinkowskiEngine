@@ -42,6 +42,8 @@
 #endif // CPU_ONLY
 
 template <typename VType> int getInOutMapsSize(const VType &map) {
+  // can't use ::accumulate as pVector template instantiation requires a bit
+  // dirty syntax
   int n = 0;
   for (auto cmap = ::begin(map); cmap != ::end(map); ++cmap)
     n += cmap->size();
@@ -152,7 +154,7 @@ public:
       bool force_creation);
   uint64_t createPrunedCoords(at::Tensor use_feat, py::object py_in_coords_key,
                               py::object py_out_coords_key);
-  uint64_t createOriginCoords(int D);
+  uint64_t createOriginCoords(const int D);
   uint64_t createUnionCoords(vector<py::object> py_in_coords_keys,
                              py::object py_out_coords_key);
 

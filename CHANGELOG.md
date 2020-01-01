@@ -1,10 +1,13 @@
 # Change Log
 
 
-## [nightly] - 2019-12-26
+## [master] - 2019-12-31
 
 - Minor changes on `setup.py` for torch installation check and system assertions.
-- Add `MinkowskiConvolutionOnCoords`, `MinkowskiConvolutionTransposeOnCoords`
+- Add `MinkowskiConvolutionOnCoords`, `MinkowskiConvolutionTransposeOnCoords`.
+- Update BLAS installation configuration.
+- Add `get_coords_map` on `CoordsManager`.
+- Update union kernel map and union coords to use reference wrappers.
 
 
 ## [0.3.2] - 2019-12-25

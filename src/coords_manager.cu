@@ -32,7 +32,7 @@ const pInOutMaps<int>
 CoordsManager::copyInOutMapToGPU(const InOutMaps<int> &map) {
   pInOutMaps<int> d_map;
 
-  int n = getInOutMapsSize(map);
+  const int n = getInOutMapsSize(map);
   int *d_scr = (int *)gpu_memory_manager.gpuMalloc(n * sizeof(int));
 
   for (const auto &cmap : map) {

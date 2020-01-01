@@ -186,6 +186,8 @@ page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
 ## References
 
+If you use Minkowski Engine, please cite the following paper.
+
 - [4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR'19](https://arxiv.org/abs/1904.08755), [[pdf]](https://arxiv.org/pdf/1904.08755.pdf)
 
 ```
