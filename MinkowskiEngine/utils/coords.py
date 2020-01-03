@@ -21,8 +21,39 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-from .quantization import sparse_quantize, ravel_hash_vec, fnv_hash_vec
-from .collation import SparseCollation, batched_coordinates, sparse_collate, batch_sparse_collate
-from .gradcheck import gradcheck
-from .coords import get_coords_map
-from .init import kaiming_normal_
+from SparseTensor import SparseTensor
+
+
+def get_coords_map(x, y):
+    r"""Get mapping between sparse tensor 1 and sparse tensor 2.
+
+    Args:
+        :attr:`x` (:attr:`MinkowskiEngine.SparseTensor`): a sparse tensor with
+        `x.tensor_stride` <= `y.tensor_stride`.
+
+        :attr:`y` (:attr:`MinkowskiEngine.SparseTensor`): a sparse tensor with
+        `x.tensor_stride` <= `y.tensor_stride`.
+
+    Returns:
+        :attr:`x_indices` (:attr:`torch.LongTensor`): the indices of x that
+        corresponds to the returned indices of y.
+
+        :attr:`x_indices` (:attr:`torch.LongTensor`): the indices of y that
+        corresponds to the returned indices of x.
+
+    Example::
+
+        .. code-block:: python
+
+           sp_tensor = ME.SparseTensor(features, coords=coordinates)
+           out_sp_tensor = stride_2_conv(sp_tensor)
+
+           ins, outs = get_coords_map(sp_tensor, out_sp_tensor)
+           for i, o in zip(ins, outs):
+              print(f"{i} -> {o}")
+
+    """
+    assert isinstance(x, SparseTensor)
+    assert isinstance(y, SparseTensor)
+    assert x.coords_man == y.coords_man, "X and Y are using different CoordinateManagers. Y must be derived from X through strided conv/pool/etc."
+    return x.coords_man.get_coords_map(x.coords_key, y.coords_key)

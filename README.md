@@ -37,9 +37,12 @@ You can install the Minkowski Engine with `pip`, with anaconda, or on the system
 ### Pip
 
 The MinkowskiEngine is distributed via [PyPI MinkowskiEngine][pypi-url] which can be installed simply with `pip`.
+First, install pytorch following the [instruction](https://pytorch.org). Next, install `openblas`.
 
 ```
-pip install -U MinkowskiEngine
+sudo apt install openblas
+pip3 install torch torchvision
+pip3 install -U MinkowskiEngine
 ```
 
 ### Anaconda
@@ -184,9 +187,9 @@ an issue on the [github issue
 page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
 
-## References
+## Citing Minkowski Engine
 
-If you use Minkowski Engine, please cite the following paper.
+If you use the Minkowski Engine, please cite:
 
 - [4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR'19](https://arxiv.org/abs/1904.08755), [[pdf]](https://arxiv.org/pdf/1904.08755.pdf)
 

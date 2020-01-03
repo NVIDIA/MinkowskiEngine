@@ -7,6 +7,7 @@
 - Add `MinkowskiConvolutionOnCoords`, `MinkowskiConvolutionTransposeOnCoords`.
 - Update BLAS installation configuration.
 - Add `get_coords_map` on `CoordsManager`.
+- Add `get_coords_map` on `MinkowskiEngine.utils`.
 - Update union kernel map and union coords to use reference wrappers.
 
 

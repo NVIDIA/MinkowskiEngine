@@ -27,6 +27,7 @@ import torch
 import numpy as np
 
 from MinkowskiEngine import CoordsKey, CoordsManager
+from MinkowskiEngine.utils import get_coords_map
 
 from tests.common import data_loader
 
