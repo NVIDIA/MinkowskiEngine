@@ -33,6 +33,8 @@
 #include "region.hpp"
 #include "types.hpp"
 
+namespace minkowski {
+
 template <typename Itype> struct byte_hash_vec {
   size_t operator()(std::vector<Itype> const &vec) const noexcept {
     return robin_hood::hash_bytes(vec.data(), sizeof(Itype) * vec.size());
@@ -122,4 +124,6 @@ public:
   void print() const;
 };
 
-#endif
+} // end namespace minkowski
+
+#endif // robin coordsmap

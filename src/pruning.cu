@@ -25,6 +25,8 @@
 #include "gpu.cuh"
 #include "pruning.cuh"
 
+namespace minkowski {
+
 template <typename Dtype>
 __device__ void device_memcpy(Dtype *dst, const Dtype *src, int num_elements) {
   for (int i = 0; i < num_elements; ++i)
@@ -88,3 +90,5 @@ template void PruningBackwardKernelGPU<double, int32_t>(
     double *d_grad_in_feat, const double *d_grad_out_feat, int nchannel,
     const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
     cudaStream_t stream);
+
+} // end namespace minkowski

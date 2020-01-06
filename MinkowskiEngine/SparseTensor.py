@@ -24,9 +24,38 @@
 import os
 import warnings
 import torch
+import copy
+from enum import Enum
 
 from Common import convert_to_int_list
 from MinkowskiCoords import CoordsKey, CoordsManager
+
+
+class SparseTensorOperationMode(Enum):
+    """
+    SEPARATE_COORDS_MANAGER: always create a new coordinate manager.
+    SHARE_COORDS_MANAGER: always use the globally defined coordinate manager.
+    """
+    SEPARATE_COORDS_MANAGER = 0
+    SHARE_COORDS_MANAGER = 1
+
+
+_sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDS_MANAGER
+_global_coords_man = None
+COORDS_MAN_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
+COORDS_KEY_DIFFERENT_ERROR = "SparseTensors must have the same coords_key."
+
+
+def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
+    assert isinstance(operation_mode, SparseTensorOperationMode), \
+      f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
+    global _sparse_tensor_operation_mode
+    _sparse_tensor_operation_mode = operation_mode
+
+
+def sparse_tensor_operation_mode():
+    global _sparse_tensor_operation_mode
+    return copy.deepcopy(_sparse_tensor_operation_mode)
 
 
 class SparseTensor():
@@ -172,18 +201,26 @@ class SparseTensor():
             coords = coords.contiguous()
 
         if coords_manager is None:
-            assert coords is not None, "Initial coordinates must be given"
-            D = coords.size(1) - 1
-            coords_manager = CoordsManager(D=D)
-            self.mapping = coords_manager.initialize(
-                coords,
-                coords_key,
-                force_creation=force_creation,
-                force_remap=allow_duplicate_coords,
-                allow_duplicate_coords=allow_duplicate_coords)
-            if len(self.mapping) > 0:
-                coords = coords[self.mapping]
-                feats = feats[self.mapping]
+            # If set to share the coords man, use the global coords man
+            global _sparse_tensor_operation_mode, _global_coords_man
+            if _sparse_tensor_operation_mode == SparseTensorOperationMode.SHARE_COORDS_MANAGER:
+                if _global_coords_man is None:
+                    _global_coords_man = CoordsManager(D=coords.size(1) - 1)
+                coords_manager = _global_coords_man
+            else:
+                assert coords is not None, "Initial coordinates must be given"
+                coords_manager = CoordsManager(D=coords.size(1) - 1)
+
+            if not coords_key.isKeySet():
+                self.mapping = coords_manager.initialize(
+                    coords,
+                    coords_key,
+                    force_creation=force_creation,
+                    force_remap=allow_duplicate_coords,
+                    allow_duplicate_coords=allow_duplicate_coords)
+                if len(self.mapping) > 0:
+                    coords = coords[self.mapping]
+                    feats = feats[self.mapping]
         else:
             assert isinstance(coords_manager, CoordsManager)
 
@@ -264,29 +301,24 @@ class SparseTensor():
         """
         return self.coords_key.D
 
+    @property
+    def requires_grad(self):
+        return self._F.requires_grad
+
+    def requires_grad_(self, requires_grad: bool = True):
+        self._F.requires_grad_(requires_grad)
+
     def float(self):
         self._F = self._F.float()
 
     def double(self):
         self._F = self._F.double()
 
-    def stride(self, s):
+    def set_tensor_stride(self, s):
         ss = convert_to_int_list(s)
         tensor_strides = self.coords_key.getTensorStride()
         self.coords_key.setTensorStride(
             [s * p for s, p in zip(ss, tensor_strides)])
-
-    def __add__(self, other):
-        return SparseTensor(
-            self._F + (other.F if isinstance(other, SparseTensor) else other),
-            coords_key=self.coords_key,
-            coords_manager=self.coords_man)
-
-    def __power__(self, power):
-        return SparseTensor(
-            self._F**power,
-            coords_key=self.coords_key,
-            coords_manager=self.coords_man)
 
     def __repr__(self):
         return self.__class__.__name__ + '(' + os.linesep \
@@ -328,6 +360,190 @@ class SparseTensor():
     def getKey(self):
         return self.coords_key
 
+    # Operation overloading
+    def __iadd__(self, other):
+        assert isinstance(other, SparseTensor)
+        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
+
+        self._F += other.F
+        return self
+
+    def __isub__(self, other):
+        assert isinstance(other, SparseTensor)
+        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
+
+        self._F -= other.F
+        return self
+
+    def __imul__(self, other):
+        assert isinstance(other, SparseTensor)
+        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
+
+        self._F *= other.F
+        return self
+
+    def __idiv__(self, other):
+        assert isinstance(other, SparseTensor)
+        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
+
+        self._F /= other.F
+        return self
+
+    def __add__(self, other):
+        r"""
+        Add its feature with the corresponding feature of the other
+        :attr:`MinkowskiEngine.SparseTensor` or a :attr:`torch.Tensor`
+        element-wise. For coordinates that exist on one sparse tensor but not
+        on the other, features of the counterpart that do not exist will be set
+        to 0.
+        """
+        assert isinstance(other, (SparseTensor, torch.Tensor))
+        if isinstance(other, SparseTensor):
+            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+
+            if self.coords_key == other.coords_key:
+                return SparseTensor(
+                    self._F + other.F,
+                    coords_key=self.coords_key,
+                    coords_manager=self.coords_man)
+            else:
+                # Generate union maps
+                out_key = CoordsKey(self.coords_man.D)
+                ins, outs = self.coords_man.get_union_map(
+                    (self.coords_key, other.coords_key), out_key)
+                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
+                out_F = torch.zeros((N_out, self._F.size(1)),
+                                    dtype=self.dtype,
+                                    device=self.device)
+                out_F[outs[0]] = self._F[ins[0]]
+                out_F[outs[1]] += other._F[ins[1]]
+                return SparseTensor(
+                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+        else:  # when it is a torch.Tensor
+            return SparseTensor(
+                self._F + other,
+                coords_key=self.coords_key,
+                coords_manager=self.coords_man)
+
+    def __sub__(self, other):
+        r"""
+        Subtract the feature of the other :attr:`MinkowskiEngine.SparseTensor`
+        or a :attr:`torch.Tensor` from its corresponding feature element-wise.
+        For coordinates that exist on one sparse tensor but not on the other,
+        features of the counterpart that do not exist will be set to 0.
+        """
+        assert isinstance(other, (SparseTensor, torch.Tensor))
+        if isinstance(other, SparseTensor):
+            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+
+            if self.coords_key == other.coords_key:
+                return SparseTensor(
+                    self._F - other.F,
+                    coords_key=self.coords_key,
+                    coords_manager=self.coords_man)
+            else:
+                # Generate union maps
+                out_key = CoordsKey(self.coords_man.D)
+                ins, outs = self.coords_man.get_union_map(
+                    (self.coords_key, other.coords_key), out_key)
+                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
+                out_F = torch.zeros((N_out, self._F.size(1)),
+                                    dtype=self.dtype,
+                                    device=self.device)
+                out_F[outs[0]] = self._F[ins[0]]
+                out_F[outs[1]] -= other._F[ins[1]]
+                return SparseTensor(
+                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+
+        else:  # when it is a torch.Tensor
+            return SparseTensor(
+                self._F - other,
+                coords_key=self.coords_key,
+                coords_manager=self.coords_man)
+
+    def __mul__(self, other):
+        r"""
+        Multiply its feature of with the corresponding feature of the other
+        :attr:`MinkowskiEngine.SparseTensor` or a :attr:`torch.Tensor`
+        element-wise. For coordinates that exist on one sparse tensor but not
+        on the other, features of the counterpart that do not exist will be set
+        to 0.
+        """
+        assert isinstance(other, (SparseTensor, torch.Tensor))
+        if isinstance(other, SparseTensor):
+            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+
+            if self.coords_key == other.coords_key:
+                return SparseTensor(
+                    self._F * other.F,
+                    coords_key=self.coords_key,
+                    coords_manager=self.coords_man)
+            else:
+                # Generate union maps
+                out_key = CoordsKey(self.coords_man.D)
+                ins, outs = self.coords_man.get_union_map(
+                    (self.coords_key, other.coords_key), out_key)
+                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
+                out_F = torch.zeros((N_out, self._F.size(1)),
+                                    dtype=self.dtype,
+                                    device=self.device)
+                out_F[outs[0]] = self._F[ins[0]]
+                out_F[outs[1]] *= other._F[ins[1]]
+                return SparseTensor(
+                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+        else:  # when it is a torch.Tensor
+            return SparseTensor(
+                self._F * other,
+                coords_key=self.coords_key,
+                coords_manager=self.coords_man)
+
+    def __truediv__(self, other):
+        r"""
+        Divide its feature by the corresponding feature of the other
+        :attr:`MinkowskiEngine.SparseTensor` or a :attr:`torch.Tensor`
+        element-wise. For coordinates that exist on one sparse tensor but not
+        on the other, features of the counterpart that do not exist will be set
+        to 0.
+        """
+        assert isinstance(other, (SparseTensor, torch.Tensor))
+        if isinstance(other, SparseTensor):
+            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+
+            if self.coords_key == other.coords_key:
+                return SparseTensor(
+                    self._F / other.F,
+                    coords_key=self.coords_key,
+                    coords_manager=self.coords_man)
+            else:
+                # Generate union maps
+                out_key = CoordsKey(self.coords_man.D)
+                ins, outs = self.coords_man.get_union_map(
+                    (self.coords_key, other.coords_key), out_key)
+                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
+                out_F = torch.zeros((N_out, self._F.size(1)),
+                                    dtype=self.dtype,
+                                    device=self.device)
+                out_F[outs[0]] = self._F[ins[0]]
+                out_F[outs[1]] /= other._F[ins[1]]
+                return SparseTensor(
+                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+        else:  # when it is a torch.Tensor
+            return SparseTensor(
+                self._F / other,
+                coords_key=self.coords_key,
+                coords_manager=self.coords_man)
+
+    def __power__(self, power):
+        return SparseTensor(
+            self._F**power,
+            coords_key=self.coords_key,
+            coords_manager=self.coords_man)
+
+    # Conversion functions
     def sparse(self, min_coords=None, max_coords=None, contract_coords=True):
         r"""Convert the :attr:`MinkowskiEngine.SparseTensor` to a torch sparse
         tensor.

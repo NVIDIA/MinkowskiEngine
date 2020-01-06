@@ -22,10 +22,12 @@
  *  Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  *  of the code.
  */
-#ifndef CPU_PRUNING
-#define CPU_PRUNING
+#ifndef CPU_UNION
+#define CPU_UNION
 
 #include "common.hpp"
+
+namespace minkowski {
 
 template <typename Dtype, typename Itype>
 void UnionForwardKernelCPU(const std::vector<Dtype *> p_in_feats,
@@ -71,4 +73,6 @@ void UnionBackwardKernelCPU(std::vector<Dtype *> p_grad_in_feats,
   }
 }
 
-#endif
+} // end namespace minkowski
+
+#endif // CPU_UNION

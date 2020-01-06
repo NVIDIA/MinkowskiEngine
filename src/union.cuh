@@ -30,6 +30,8 @@
 
 #include "types.hpp"
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void UnionForwardKernelGPU(const vector<Dtype *> d_in_feats, Dtype *d_out_feat,
                            int nchannel, const pInOutMaps<Itype> &in_maps,
@@ -42,4 +44,7 @@ void UnionBackwardKernelGPU(vector<Dtype *> d_grad_in_feats,
                             const pInOutMaps<Itype> &in_maps,
                             const pInOutMaps<Itype> &out_maps,
                             cudaStream_t stream);
-#endif
+
+} // namespace minkowski
+
+#endif // GPU_PRUNING

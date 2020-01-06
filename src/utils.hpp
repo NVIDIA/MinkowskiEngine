@@ -109,4 +109,4 @@ private:
     }                                                                          \
   }
 
-#endif
+#endif // UTILS

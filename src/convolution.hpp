@@ -28,6 +28,8 @@
 #include "common.hpp"
 #include "math_functions.hpp"
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void ConvolutionForwardKernelCPU(const Dtype *p_in_feat, int in_nchannel,
                                  Dtype *p_out_feat, int out_nchannel,
@@ -141,4 +143,6 @@ void ConvolutionBackwardKernelCPU(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
   }
 }
 
-#endif
+} // end namespace minkowski
+
+#endif // CPU_CONVOLUTION

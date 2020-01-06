@@ -28,6 +28,8 @@
 
 #include "src/common.hpp"
 
+namespace minkowski {
+
 /*************************************
  * Convolution
  *************************************/
@@ -390,3 +392,5 @@ at::Tensor quantize_th(at::Tensor coords);
 
 vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
                                      int invalid_label);
+
+} // end namespace minkowski

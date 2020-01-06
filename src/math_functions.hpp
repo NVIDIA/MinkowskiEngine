@@ -30,6 +30,8 @@
 #endif
 #include "mkl_alternate.hpp"
 
+namespace minkowski {
+
 template <typename Dtype>
 void cpu_gemm(const CBLAS_ORDER Layout, const CBLAS_TRANSPOSE TransA,
               const CBLAS_TRANSPOSE TransB, const int M, const int N,
@@ -87,6 +89,8 @@ cusparse_csrmm(cusparseHandle_t handle, cusparseOperation_t transA,
 
 void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,
                   const int nnz, int *d_coo_row, int *d_coo_col);
-#endif
+#endif // not CPU_ONLY
 
-#endif
+} // end namespace minkowski
+
+#endif // MATH_FUNCTIONS

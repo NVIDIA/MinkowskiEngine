@@ -27,6 +27,8 @@
 
 #include <pybind11/pybind11.h>
 
+namespace minkowski {
+
 template <typename Dtype>
 void GlobalMaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                                 at::Tensor max_index,
@@ -170,3 +172,5 @@ template void GlobalMaxPoolingBackwardGPU<double>(
     at::Tensor num_nonzero, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 #endif
+
+} // end namespace minkowski

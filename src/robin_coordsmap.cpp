@@ -28,6 +28,8 @@
 
 #include "robin_coordsmap.hpp"
 
+namespace minkowski {
+
 CoordsMap::CoordsMap(int ncols_, const set<int> &batch_indices)
     : nrows(batch_indices.size()), ncols(ncols_) {
   int c = 0;
@@ -357,3 +359,5 @@ void CoordsMap::print() const {
   }
   cout << ::flush;
 }
+
+} // end namespace minkowski

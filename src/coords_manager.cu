@@ -28,6 +28,8 @@
 
 namespace py = pybind11;
 
+namespace minkowski {
+
 const pInOutMaps<int>
 CoordsManager::copyInOutMapToGPU(const InOutMaps<int> &map) {
   pInOutMaps<int> d_map;
@@ -116,3 +118,5 @@ CoordsManager::getUnionInOutMapsGPU(vector<py::object> py_in_coords_keys,
 
   return make_pair(ref(d_in_maps[map_key]), ref(d_out_maps[map_key]));
 }
+
+} // end namespace minkowski

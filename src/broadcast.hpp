@@ -28,6 +28,8 @@
 #include "math_functions.hpp"
 #include "utils.hpp"
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
                                const Dtype *p_in_feat_global,
@@ -153,5 +155,7 @@ void BroadcastBackwardKernelCPU(const Dtype *p_in_feat, /* */
                                             << std::to_string(op));
   }
 }
+
+} // namespace minkowski
 
 #endif

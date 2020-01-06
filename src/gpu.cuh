@@ -40,6 +40,23 @@
 
 #include "utils.hpp"
 
+// AtomicAddition for double with cuda arch <= 600
+#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
+#else
+__device__ double atomicAdd(double *address, double val) {
+  unsigned long long int *address_as_ull = (unsigned long long int *)address;
+  unsigned long long int old = *address_as_ull, assumed;
+  do {
+    assumed = old;
+    old = atomicCAS(address_as_ull, assumed,
+                    __double_as_longlong(val + __longlong_as_double(assumed)));
+  } while (assumed != old);
+  return __longlong_as_double(old);
+}
+#endif
+
+namespace minkowski {
+
 //
 // CUDA macros
 //
@@ -74,8 +91,8 @@
     cublasStatus_t status = condition;                                         \
     if (status != CUBLAS_STATUS_SUCCESS) {                                     \
       throw std::runtime_error(Formatter()                                     \
-                               << cublasGetErrorString(status) << " at "       \
-                               << __FILE__ << ":" << __LINE__);                \
+                               << minkowski::cublasGetErrorString(status)      \
+                               << " at " << __FILE__ << ":" << __LINE__);      \
     }                                                                          \
   }
 
@@ -84,8 +101,8 @@
     cusparseStatus_t err;                                                      \
     if ((err = (call)) != CUSPARSE_STATUS_SUCCESS) {                           \
       throw std::runtime_error(Formatter()                                     \
-                               << cusparseGetErrorString(err) << " at "        \
-                               << __FILE__ << ":" << __LINE__);                \
+                               << minkowski::cusparseGetErrorString(err)       \
+                               << " at " << __FILE__ << ":" << __LINE__);      \
     }                                                                          \
   }
 
@@ -145,19 +162,6 @@ template <typename Dtype1, typename Dtype2>
 void print(const thrust::device_vector<Dtype1> &v1,
            const thrust::device_vector<Dtype2> &v2);
 
-// AtomicAddition for double with cuda arch <= 600
-#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
-#else
-__device__ double atomicAdd(double *address, double val) {
-  unsigned long long int *address_as_ull = (unsigned long long int *)address;
-  unsigned long long int old = *address_as_ull, assumed;
-  do {
-    assumed = old;
-    old = atomicCAS(address_as_ull, assumed,
-                    __double_as_longlong(val + __longlong_as_double(assumed)));
-  } while (assumed != old);
-  return __longlong_as_double(old);
-}
-#endif
+} // end namespace minkowski
 
 #endif // GPU_H_

@@ -27,6 +27,8 @@
 
 #include "common.hpp"
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void PruningForwardKernelCPU(const Dtype *p_in_feat, Dtype *p_out_feat,
                              int nchannel, const InOutMaps<Itype> &in_map,
@@ -59,4 +61,6 @@ void PruningBackwardKernelCPU(Dtype *p_grad_in_feat,
   }
 }
 
-#endif
+} // end namespace minkowski
+
+#endif // CPU_PRUNING

@@ -42,6 +42,8 @@ __global__ void add_mapped_output(const int n, const int nchannel,
                                   const Dtype *in_feat, Dtype *out_feat,
                                   const Itype map);
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
                                  Dtype *d_out_feat, int out_nchannel,
@@ -60,5 +62,6 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
                                   const pInOutMaps<Itype> &out_map,
                                   int out_nrows, cublasHandle_t cuhandle,
                                   cudaStream_t stream);
+} //end namespace minkowski
 
-#endif
+#endif // end CONVOLUTION_CUH

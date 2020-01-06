@@ -29,6 +29,8 @@
 
 #include <limits>
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
                                        Dtype *p_out_feat, Dtype *p_num_nonzero,
@@ -135,4 +137,6 @@ void NonzeroAvgPoolingBackwardKernelCPU(
   }
 }
 
-#endif
+} // namespace minkowski
+
+#endif // end CPU_POOLING_AVG

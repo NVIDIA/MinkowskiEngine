@@ -207,6 +207,8 @@ __global__ void matmul2(const Dtype *A, const int wA, const int hA,
     atomicAdd(&C[hB * in_row + x], Csub);
 }
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
                                  Dtype *d_out_feat, int out_nchannel,
@@ -400,4 +402,7 @@ template void ConvolutionBackwardKernelGPU<double, int32_t>(
     double *p_grad_kernel, const pInOutMaps<int32_t> &in_map,
     const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
     cudaStream_t stream);
-#endif
+
+} // end namespace minkowski
+
+#endif // end GPU_CONVOLUTION

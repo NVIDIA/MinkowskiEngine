@@ -24,7 +24,7 @@
 import unittest
 import torch
 
-from MinkowskiEngine import SparseTensor, MinkowskiConvolution
+from MinkowskiEngine import SparseTensor, MinkowskiConvolution, SparseTensorOperationMode, set_sparse_tensor_operation_mode
 
 from tests.common import data_loader
 
@@ -33,15 +33,13 @@ class Test(unittest.TestCase):
 
     def test(self):
         print(f"{self.__class__.__name__}: test SparseTensor")
-        in_channels, out_channels, D = 2, 3, 2
-        coords, feats, labels = data_loader(in_channels)
+        coords, feats, labels = data_loader(nchannel=2)
         input = SparseTensor(feats, coords=coords)
         print(input)
 
     def test_force_creation(self):
         print(f"{self.__class__.__name__}: test_force_creation")
-        in_channels, out_channels, D = 2, 3, 2
-        coords, feats, labels = data_loader(in_channels)
+        coords, feats, labels = data_loader(nchannel=2)
         input1 = SparseTensor(feats, coords=coords, tensor_stride=1)
         input2 = SparseTensor(
             feats,
@@ -53,8 +51,7 @@ class Test(unittest.TestCase):
 
     def test_duplicate_coords(self):
         print(f"{self.__class__.__name__}: test_duplicate_coords")
-        in_channels, out_channels, D = 2, 3, 2
-        coords, feats, labels = data_loader(in_channels)
+        coords, feats, labels = data_loader(nchannel=2)
         # create duplicate coords
         coords[0] = coords[1]
         coords[2] = coords[3]
@@ -62,6 +59,43 @@ class Test(unittest.TestCase):
         self.assertTrue(len(input) == len(coords) - 2)
         print(coords)
         print(input)
+
+    def test_operation_mode(self):
+        # Set to use the global sparse tensor coords manager by default
+        set_sparse_tensor_operation_mode(
+            SparseTensorOperationMode.SHARE_COORDS_MANAGER)
+
+        coords, feats, labels = data_loader(nchannel=2)
+
+        # Create a sparse tensor on two different coordinates.
+        A = SparseTensor(torch.rand(feats.shape), coords, force_creation=True)
+        B = SparseTensor(
+            torch.rand(4, 2),
+            torch.IntTensor([[0, 0, 0], [1, 1, 1], [0, 1, 0], [1, 0, 1]]),
+            force_creation=True)
+
+        self.assertTrue(A.coords_man == B.coords_man)
+
+        A.requires_grad_(True)
+        B.requires_grad_(True)
+
+        C = A + B
+
+        C.F.sum().backward()
+
+        self.assertTrue(torch.all(A.F.grad == 1).item())
+        self.assertTrue(torch.all(B.F.grad == 1).item())
+
+        C = A - B
+        C = A * B
+        C = A / B
+
+        # Inplace
+        A.requires_grad_(False)
+        D = SparseTensor(torch.rand(feats.shape), coords_key=A.coords_key)
+        A -= D
+        A *= D
+        A /= D
 
 
 if __name__ == '__main__':

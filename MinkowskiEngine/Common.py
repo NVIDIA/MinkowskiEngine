@@ -26,80 +26,11 @@ from collections import Sequence
 import numpy as np
 from enum import Enum
 from itertools import product
+from typing import Union
 
 import torch
 
 from torch.nn import Module
-
-
-def convert_to_int_list(arg, dimension):
-    if isinstance(arg, list):
-        assert len(arg) == dimension
-        return arg
-
-    if isinstance(arg, (Sequence, np.ndarray, torch.Tensor)):
-        tmp = [i for i in arg]
-        assert len(tmp) == dimension
-    elif np.isscalar(arg):  # Assume that it is a scalar
-        tmp = [int(arg) for i in range(dimension)]
-    else:
-        raise ValueError('Input must be a scalar or a sequence')
-
-    return tmp
-
-
-def convert_to_int_tensor(arg, dimension):
-    if isinstance(arg, torch.IntTensor):
-        assert arg.numel() == dimension
-        return arg
-
-    if isinstance(arg, (Sequence, np.ndarray)):
-        tmp = torch.IntTensor([i for i in arg])
-        assert tmp.numel() == dimension
-    elif isinstance(arg, str):
-        raise ValueError('Input must be a scalar or a sequence')
-    elif np.isscalar(arg):  # Assume that it is a scalar
-        tmp = torch.IntTensor([int(arg) for i in range(dimension)])
-    else:
-        raise ValueError('Input must be a scalar or a sequence')
-
-    return tmp
-
-
-def prep_args(tensor_stride, stride, kernel_size, dilation, region_type, D=-1):
-    assert torch.prod(
-        kernel_size > 0
-    ), f"kernel_size must be a positive integer, provided {kernel_size}"
-    assert D > 0, f"dimension must be a positive integer, {D}"
-    tensor_stride = convert_to_int_tensor(tensor_stride, D)
-    stride = convert_to_int_tensor(stride, D)
-    kernel_size = convert_to_int_tensor(kernel_size, D)
-    dilation = convert_to_int_tensor(dilation, D)
-    region_type = int(region_type)
-    return tensor_stride, stride, kernel_size, dilation, region_type,
-
-
-def save_ctx(ctx, tensor_stride, stride, kernel_size, dilation, region_type,
-             in_coords_key, out_coords_key, coords_man):
-    ctx.tensor_stride = tensor_stride
-    ctx.stride = stride
-    ctx.kernel_size = kernel_size
-    ctx.dilation = dilation
-    ctx.region_type = region_type
-    ctx.in_coords_key = in_coords_key
-    ctx.out_coords_key = out_coords_key
-    ctx.coords_man = coords_man
-    return ctx
-
-
-def get_postfix(tensor):
-    postfix = 'GPU' if tensor.is_cuda else 'CPU'
-    if isinstance(tensor, torch.DoubleTensor) or isinstance(
-            tensor, torch.cuda.DoubleTensor):
-        postfix += 'd'
-    else:
-        postfix += 'f'
-    return postfix
 
 
 class GlobalPoolingMode(Enum):
@@ -137,6 +68,68 @@ class RegionType(Enum):
 
     def __int__(self):
         return self.value
+
+
+def convert_to_int_list(arg: Union[int, Sequence, np.ndarray, torch.Tensor],
+                        dimension: int):
+    if isinstance(arg, list):
+        assert len(arg) == dimension
+        return arg
+
+    if isinstance(arg, (Sequence, np.ndarray, torch.Tensor)):
+        tmp = [i for i in arg]
+        assert len(tmp) == dimension
+    elif np.isscalar(arg):  # Assume that it is a scalar
+        tmp = [int(arg) for i in range(dimension)]
+    else:
+        raise ValueError('Input must be a scalar or a sequence')
+
+    return tmp
+
+
+def convert_to_int_tensor(
+        arg: Union[int, Sequence, np.ndarray, torch.IntTensor], dimension: int):
+    if isinstance(arg, torch.IntTensor):
+        assert arg.numel() == dimension
+        return arg
+
+    if isinstance(arg, (Sequence, np.ndarray)):
+        tmp = torch.IntTensor([i for i in arg])
+        assert tmp.numel() == dimension
+    elif np.isscalar(arg):  # Assume that it is a scalar
+        tmp = torch.IntTensor([int(arg) for i in range(dimension)])
+    else:
+        raise ValueError('Input must be a scalar or a sequence')
+
+    return tmp
+
+
+def prep_args(tensor_stride: Union[int, Sequence, np.ndarray, torch.IntTensor],
+              stride: Union[int, Sequence, np.ndarray, torch.IntTensor],
+              kernel_size: Union[int, Sequence, np.ndarray, torch.IntTensor],
+              dilation: Union[int, Sequence, np.ndarray, torch.IntTensor],
+              region_type: Union[int, RegionType],
+              D=-1):
+    assert torch.prod(
+        kernel_size > 0
+    ), f"kernel_size must be a positive integer, provided {kernel_size}"
+    assert D > 0, f"dimension must be a positive integer, {D}"
+    tensor_stride = convert_to_int_tensor(tensor_stride, D)
+    stride = convert_to_int_tensor(stride, D)
+    kernel_size = convert_to_int_tensor(kernel_size, D)
+    dilation = convert_to_int_tensor(dilation, D)
+    region_type = int(region_type)
+    return tensor_stride, stride, kernel_size, dilation, region_type,
+
+
+def get_postfix(tensor: torch.Tensor):
+    postfix = 'GPU' if tensor.is_cuda else 'CPU'
+    if isinstance(tensor, torch.DoubleTensor) or isinstance(
+            tensor, torch.cuda.DoubleTensor):
+        postfix += 'd'
+    else:
+        postfix += 'f'
+    return postfix
 
 
 def get_kernel_volume(region_type, kernel_size, region_offset, axis_types,
@@ -194,15 +187,16 @@ def get_kernel_volume(region_type, kernel_size, region_offset, axis_types,
     return kernel_volume
 
 
-def convert_region_type(region_type,
-                        tensor_stride,
-                        kernel_size,
-                        up_stride,
-                        dilation,
-                        region_offset,
-                        axis_types,
-                        dimension,
-                        center=True):
+def convert_region_type(
+        region_type: RegionType,
+        tensor_stride: Union[Sequence, np.ndarray, torch.IntTensor],
+        kernel_size: Union[Sequence, np.ndarray, torch.IntTensor],
+        up_stride: Union[Sequence, np.ndarray, torch.IntTensor],
+        dilation: Union[Sequence, np.ndarray, torch.IntTensor],
+        region_offset: Union[Sequence, np.ndarray, torch.IntTensor],
+        axis_types: Union[Sequence, np.ndarray, torch.IntTensor],
+        dimension: int,
+        center: bool = True):
     """
     when center is True, the custom region_offset will be centered at the
     origin. Currently, for HYPERCUBE, HYPERCROSS with odd kernel sizes cannot
@@ -338,8 +332,9 @@ class KernelGenerator:
         self.region_offsets = region_offsets
         self.axis_types = axis_types
         self.dimension = dimension
-        self.kernel_volume = get_kernel_volume(
-            region_type, kernel_size, region_offsets, axis_types, dimension)
+        self.kernel_volume = get_kernel_volume(region_type, kernel_size,
+                                               region_offsets, axis_types,
+                                               dimension)
 
     def get_kernel(self, tensor_stride, is_transpose):
         assert len(tensor_stride) == self.dimension

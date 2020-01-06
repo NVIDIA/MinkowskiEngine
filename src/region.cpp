@@ -24,6 +24,8 @@
  */
 #include "region.hpp"
 
+namespace minkowski {
+
 Region::Region(const vector<int> &tensor_strides_,
                const vector<int> &kernel_size_, const vector<int> &dilations_,
                int region_type_, const int *p_offset_, int n_offset_)
@@ -196,3 +198,5 @@ RegionIterator &RegionIterator::operator++() {
   // To make the compiler happy
   return *this;
 }
+
+} // end namespace minkowski

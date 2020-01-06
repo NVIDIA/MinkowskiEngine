@@ -30,6 +30,14 @@
 
 namespace py = pybind11;
 
+namespace minkowski {
+
+template <typename T1, typename T2> void copy_types(const T1 &src, T2 &dst) {
+  size_t curr_it = 0;
+  for (const auto s : src)
+    dst[curr_it++] = s;
+}
+
 /*
  * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps
  * and return the indices of the coord_map_ind in coord_map_dst
@@ -96,9 +104,9 @@ CoordsManager::getCoordsMap(py::object py_in_coords_key,
   const auto &outs = in_out.second;
   // All size
   const auto N = ::accumulate(ins.begin(), ins.end(), 0,
-                        [](size_t curr_sum, const vector<int> &map) {
-                          return curr_sum + map.size();
-                        });
+                              [](size_t curr_sum, const vector<int> &map) {
+                                return curr_sum + map.size();
+                              });
 
   at::Tensor in_out_1 =
       torch::empty({N}, torch::TensorOptions().dtype(torch::kInt64));
@@ -119,6 +127,39 @@ CoordsManager::getCoordsMap(py::object py_in_coords_key,
       a_in_out_2[curr_it++] = o;
 
   return {in_out_1, in_out_2};
+}
+
+// Generate and return the ins -> out map.
+pair<vector<at::Tensor>, vector<at::Tensor>>
+CoordsManager::getUnionMap(vector<py::object> py_in_coords_keys,
+                           py::object py_out_coords_key) {
+
+  // all exception handling will be done inside the following
+  const InOutMapsRefPair<int> in_outs =
+      getUnionInOutMaps(py_in_coords_keys, py_out_coords_key);
+  const auto &ins = in_outs.first;
+  const auto &outs = in_outs.second;
+
+  // Size of the in out maps
+  const auto N = ins.size();
+
+  // Return torch tensor
+  vector<at::Tensor> th_ins;
+  vector<at::Tensor> th_outs;
+  for (size_t i = 0; i < N; ++i) {
+    at::Tensor th_in = torch::empty(
+        {(long)ins[i].size()}, torch::TensorOptions().dtype(torch::kInt64));
+    at::Tensor th_out = torch::empty(
+        {(long)outs[i].size()}, torch::TensorOptions().dtype(torch::kInt64));
+
+    copy_types(ins[i], th_in);
+    copy_types(outs[i], th_out);
+
+    th_ins.push_back(::move(th_in));
+    th_outs.push_back(::move(th_out));
+  }
+
+  return make_pair(th_ins, th_outs);
 }
 
 uint64_t CoordsManager::getCoordsKey(const vector<int> &tensor_strides) const {
@@ -750,6 +791,7 @@ CoordsManager::getUnionInOutMaps(vector<py::object> py_in_coords_keys,
     in_maps[map_key] = in_out.first;
     out_maps[map_key] = in_out.second;
   }
+
   return make_pair(ref(in_maps[map_key]), ref(out_maps[map_key]));
 }
 
@@ -793,7 +835,7 @@ CoordsManager::getRowIndicesPerBatch(py::object py_in_coords_key,
   ASSERT(coords_maps.find(in_coords_key) != coords_maps.end(),
          "The in_coords_key, ", to_string(in_coords_key), ", does not exist.");
 
-  const auto &in_outs = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
+  const auto in_outs = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
   const auto &ins = in_outs.first;
 
   // Return index.
@@ -815,3 +857,5 @@ CoordsManager::getRowIndicesPerBatch(py::object py_in_coords_key,
 
   return out_inds;
 }
+
+} // end namespace minkowski

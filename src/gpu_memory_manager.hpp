@@ -10,6 +10,8 @@
 
 using namespace std;
 
+namespace minkowski {
+
 class GPUMemoryManager {
   int initial_size = 256;
   int device_id;
@@ -57,6 +59,8 @@ public:
     return p_buffer;
   }
 };
+
+} // end namespace minkowski
 
 #endif // GPU_MEMORY_MANAGER
 #endif // CPU_ONLY

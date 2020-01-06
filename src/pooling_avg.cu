@@ -41,6 +41,8 @@
 #include "pooling_avg.cuh"
 #include "utils.hpp"
 
+namespace minkowski {
+
 template <typename Dtype>
 __global__ void fill(const int n, Dtype *in_feat, Dtype val) {
   CUDA_KERNEL_LOOP(index, n) { in_feat[index] = val; }
@@ -282,4 +284,7 @@ template void NonzeroAvgPoolingBackwardKernelGPU<double, int32_t>(
     int out_nrows, const double *d_num_nonzero, int nchannel,
     const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
     bool use_avg, cudaStream_t stream);
-#endif
+
+} // end namespace minkowski
+
+#endif // end GPU_POOLING_AVG

@@ -28,6 +28,8 @@
 
 #include "gpu.cuh"
 
+namespace minkowski {
+
 template <typename Dtype> void print(const thrust::device_vector<Dtype> &v) {
   for (size_t i = 0; i < v.size(); i++)
     std::cout << " " << std::fixed << std::setprecision(3) << v[i];
@@ -110,3 +112,5 @@ const char* cusparseGetErrorString(cusparseStatus_t error) {
 
   return "<unknown>";
 }
+
+} //end namespace minkowski

@@ -25,6 +25,8 @@
 #include "gpu.cuh"
 #include "pruning.cuh"
 
+namespace minkowski {
+
 template <typename Dtype>
 __device__ void device_atomic_addition(Dtype *dst, const Dtype *src,
                                        int num_elements) {
@@ -108,3 +110,5 @@ template void UnionBackwardKernelGPU<double, int32_t>(
     vector<double *> d_grad_in_feats, const double *d_grad_out_feat,
     int nchannel, const pInOutMaps<int32_t> &in_maps,
     const pInOutMaps<int32_t> &out_maps, cudaStream_t stream);
+
+} // end namespace minkowski

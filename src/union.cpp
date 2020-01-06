@@ -28,6 +28,8 @@
 #include "union.cuh"
 #endif
 
+namespace minkowski {
+
 template <typename Dtype>
 at::Tensor UnionForwardCPU(vector<at::Tensor> in_feats,
                            vector<py::object> py_in_coords_keys,
@@ -52,7 +54,7 @@ at::Tensor UnionForwardCPU(vector<at::Tensor> in_feats,
   }
 
   // Create new out map and get the in-out map
-  const auto &in_out =
+  const auto in_out =
       p_coords_manager->getUnionInOutMaps(py_in_coords_keys, py_out_coords_key);
 
   // Out feat memory alloc
@@ -134,7 +136,7 @@ at::Tensor UnionForwardGPU(vector<at::Tensor> in_feats,
   }
 
   // Create new out map and get the in-out map
-  const auto &in_out = p_coords_manager->getUnionInOutMapsGPU(
+  const auto in_out = p_coords_manager->getUnionInOutMapsGPU(
       py_in_coords_keys, py_out_coords_key);
 
   // Out feat memory alloc
@@ -228,4 +230,6 @@ template vector<at::Tensor> UnionBackwardGPU<double>(
     at::Tensor grad_out_feat, vector<py::object> py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-#endif
+#endif // not CPU_ONLY
+
+} // end namespace minkowski

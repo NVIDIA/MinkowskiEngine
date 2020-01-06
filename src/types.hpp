@@ -31,6 +31,8 @@
 
 using namespace std;
 
+namespace minkowski {
+
 // D-Dimensional coordinate + batch dimension = D + 1
 template <typename Itype> using Stride = vector<Itype>;
 
@@ -115,5 +117,7 @@ template <uint8_t D, typename Itype> struct ArrHash {
     return hash_vec<Arr<D, Itype>>(p);
   }
 };
+
+} // end namespace minkowski
 
 #endif // TYPES

@@ -31,6 +31,8 @@
 
 #include <pybind11/pybind11.h>
 
+namespace minkowski {
+
 template <typename Dtype>
 vector<at::Tensor> GlobalPoolingForwardCPU(at::Tensor in_feat,
                                            py::object py_in_coords_key,
@@ -224,7 +226,7 @@ GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_out_feat,
   }
   return grad_in_feat;
 }
-#endif
+#endif // CPU_ONLY
 
 template vector<at::Tensor>
 GlobalPoolingForwardCPU<float>(at::Tensor in_feat, py::object py_in_coords_key,
@@ -270,4 +272,6 @@ template at::Tensor GlobalPoolingBackwardGPU<double>(
     at::Tensor in_feat, at::Tensor grad_out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
-#endif
+#endif // end CPU_ONLY
+
+} // end namespace minkowski

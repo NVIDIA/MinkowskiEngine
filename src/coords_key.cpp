@@ -28,6 +28,8 @@
 
 namespace py = pybind11;
 
+namespace minkowski {
+
 CoordsKey::CoordsKey(int dim) {
   reset();
   setDimension(dim);
@@ -111,3 +113,5 @@ std::string CoordsKey::toString() const {
       << " in dimension: " << std::to_string(D_) << " >\n";
   return out;
 }
+
+} //end namespace minkowski

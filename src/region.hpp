@@ -33,6 +33,8 @@
 
 using namespace std;
 
+namespace minkowski {
+
 class Region;
 class RegionIterator {
 private:
@@ -102,4 +104,6 @@ inline bool operator!=(const RegionIterator &lhs, const RegionIterator &rhs) {
   return !lhs.done;
 }
 
-#endif
+} // end namespace minkowski
+
+#endif // REGION

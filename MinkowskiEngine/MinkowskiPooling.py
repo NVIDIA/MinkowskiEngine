@@ -29,8 +29,8 @@ from SparseTensor import SparseTensor
 from Common import KernelGenerator, RegionType, GlobalPoolingMode, \
     MinkowskiModuleBase, \
     convert_to_int_list, convert_to_int_tensor, \
-    prep_args, save_ctx, get_postfix
-from MinkowskiCoords import CoordsKey
+    prep_args, get_postfix
+from MinkowskiCoords import CoordsKey, save_ctx
 
 
 class MinkowskiMaxPoolingFunction(Function):

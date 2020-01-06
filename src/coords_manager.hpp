@@ -41,6 +41,8 @@
 #include "gpu_memory_manager.hpp"
 #endif // CPU_ONLY
 
+namespace minkowski {
+
 template <typename VType> int getInOutMapsSize(const VType &map) {
   // can't use ::accumulate as pVector template instantiation requires a bit
   // dirty syntax
@@ -127,8 +129,12 @@ public:
                                   py::object py_in_coords_key,
                                   py::object py_out_coords_key,
                                   bool is_transpose, bool is_pool) const;
+  // TODO make this function non-const with ability to generate a new map
   vector<at::Tensor> getCoordsMap(py::object py_in_coords_key,
                                   py::object py_out_coords_key) const;
+  pair<vector<at::Tensor>, vector<at::Tensor>>
+  getUnionMap(vector<py::object> py_in_coords_keys,
+              py::object py_out_coords_key);
 
   // Set the py_coords_key to the origin coords map key
   void setOriginCoordsKey(py::object py_coords_key);
@@ -260,6 +266,8 @@ public:
   void clearScratchGPUMemory() { gpu_memory_manager.clear_tmp(); }
 
 #endif // CPU_ONLY
-};
+};     // coordsmanager
+
+} // namespace minkowski
 
 #endif // COORDS_MAN

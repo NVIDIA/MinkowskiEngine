@@ -31,6 +31,8 @@
 
 #include <pybind11/pybind11.h>
 
+namespace minkowski {
+
 template <typename Dtype>
 void ConvolutionTransposeForwardCPU(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
@@ -194,7 +196,7 @@ void ConvolutionTransposeBackwardGPU(
         at::cuda::getCurrentCUDAStream());
   }
 }
-#endif
+#endif // end CPU_ONLY
 
 template void ConvolutionTransposeForwardCPU<float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
@@ -252,4 +254,6 @@ template void ConvolutionTransposeBackwardGPU<double>(
     vector<int> strides, vector<int> kernel_sizes, vector<int> dilations,
     int region_type, py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
-#endif
+#endif // end CPU_ONLY
+
+} // end namespace minkowski

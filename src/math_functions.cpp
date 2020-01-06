@@ -24,6 +24,8 @@
  */
 #include "math_functions.hpp"
 
+namespace minkowski {
+
 template <>
 void cpu_gemm<float>(const CBLAS_ORDER Layout, const CBLAS_TRANSPOSE TransA,
                      const CBLAS_TRANSPOSE TransB, const int M, const int N,
@@ -91,3 +93,5 @@ template <>
 void cpu_div<double>(const int n, const double *a, const double *b, double *y) {
   vdMul(n, a, b, y);
 }
+
+} // end namespace minkowski

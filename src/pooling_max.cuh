@@ -32,6 +32,8 @@
 #include "math_functions.hpp"
 #include "types.hpp"
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 int out_nrows, Itype *d_max_index, int nchannel,
@@ -44,4 +46,7 @@ void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  const Dtype *d_grad_out_feat, int out_nrows,
                                  const Itype *d_max_index, int nchannel,
                                  cudaStream_t stream);
-#endif
+
+} //end namespace minkowski
+
+#endif // end POOLING_MAX_CUH

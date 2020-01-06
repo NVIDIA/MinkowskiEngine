@@ -34,6 +34,8 @@
 #include "math_functions.hpp"
 #include "types.hpp"
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void BroadcastForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
                                const Dtype *d_in_feat_global,
@@ -50,5 +52,7 @@ void BroadcastBackwardKernelGPU(
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
     const pInOutMaps<Itype> &d_in_map, const pInOutMaps<Itype> &d_out_map,
     cusparseHandle_t cushandle, cudaStream_t stream);
+
+} // namespace minkowski
 
 #endif

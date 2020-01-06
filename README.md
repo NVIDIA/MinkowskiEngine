@@ -45,6 +45,14 @@ pip3 install torch torchvision
 pip3 install -U MinkowskiEngine
 ```
 
+### Pip from the latest source
+
+```
+sudo apt install openblas
+pip3 install torch torchvision
+pip3 install -U git+https://github.com/StanfordVL/MinkowskiEngine
+```
+
 ### Anaconda
 
 We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) first.

@@ -24,6 +24,8 @@
  */
 #include "math_functions.hpp"
 
+namespace minkowski {
+
 // CUBLAS, CUSPARSE assume all dense matrices to be col major
 template <>
 void gpu_gemm<float>(cublasHandle_t handle, const CBLAS_TRANSPOSE TransA,
@@ -229,3 +231,5 @@ void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,
   cudaFree(pBuffer);
   cudaFree(P);
 }
+
+} // end namespace minkowski

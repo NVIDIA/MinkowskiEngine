@@ -32,6 +32,8 @@
 
 namespace py = pybind11;
 
+namespace minkowski {
+
 struct IndexLabel {
   int index;
   int label;
@@ -187,3 +189,5 @@ vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
 
   return {th_mapping, th_colabels};
 }
+
+} // end namespace minkowski

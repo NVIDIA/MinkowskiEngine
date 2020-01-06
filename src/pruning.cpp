@@ -28,6 +28,8 @@
 #include "pruning.cuh"
 #endif
 
+namespace minkowski {
+
 template <typename Dtype>
 void PruningForwardCPU(at::Tensor in_feat,  // CPU feat
                        at::Tensor out_feat, // CPU out feat
@@ -180,4 +182,6 @@ template void PruningBackwardGPU<double>(at::Tensor grad_in_feat,
                                          py::object py_in_coords_key,
                                          py::object py_out_coords_key,
                                          py::object py_coords_manager);
-#endif
+#endif // not CPU_ONLY
+
+} // end namespace minkowski

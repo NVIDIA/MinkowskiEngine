@@ -1,14 +1,25 @@
 # Change Log
 
 
-## [master] - 2019-12-31
+## [0.3.3] - 2020-01-07
 
-- Minor changes on `setup.py` for torch installation check and system assertions.
-- Add `MinkowskiConvolutionOnCoords`, `MinkowskiConvolutionTransposeOnCoords`.
-- Update BLAS installation configuration.
+### Added
+
 - Add `get_coords_map` on `CoordsManager`.
 - Add `get_coords_map` on `MinkowskiEngine.utils`.
+- Add `MinkowskiConvolutionOnCoords`, `MinkowskiConvolutionTransposeOnCoords`.
+- Sparse Tensor Sparse Tensor binary operations `(+,-,*,/)`
+    - Binary operations between sparse tensors or sparse tensor + pytorch tensor
+    - Inplace operations for the same coords key
+- Sparse Tensor operation mode
+    - Add `set_sparse_tensor_operation_mode` sharing the global coords manager by default
+
+### Changed
+
+- Minor changes on `setup.py` for torch installation check and system assertions.
+- Update BLAS installation configuration.
 - Update union kernel map and union coords to use reference wrappers.
+- namespace `minkowski` for all cpp, cu files
 
 
 ## [0.3.2] - 2019-12-25

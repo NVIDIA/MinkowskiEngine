@@ -31,6 +31,8 @@
 
 #include <pybind11/pybind11.h>
 
+namespace minkowski {
+
 template <typename Dtype>
 void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                           at::Tensor max_index, vector<int> tensor_strides,
@@ -192,4 +194,6 @@ template void MaxPoolingBackwardGPU<double>(
     vector<int> kernel_sizes, vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
-#endif
+#endif // CPU_ONLY
+
+} // end namespace minkowski

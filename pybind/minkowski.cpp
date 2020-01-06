@@ -34,171 +34,192 @@
 
 namespace py = pybind11;
 
+namespace mink = minkowski;
+
 template <typename Dtype>
 void instantiate_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
-        &ConvolutionForwardCPU<Dtype>,
+        &mink::ConvolutionForwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionBackwardCPU") + dtypestr).c_str(),
-        &ConvolutionBackwardCPU<Dtype>,
+        &mink::ConvolutionBackwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
-        &ConvolutionForwardGPU<Dtype>,
+        &mink::ConvolutionForwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionBackwardGPU") + dtypestr).c_str(),
-        &ConvolutionBackwardGPU<Dtype>,
+        &mink::ConvolutionBackwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
-        &ConvolutionTransposeForwardCPU<Dtype>,
+        &mink::ConvolutionTransposeForwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
-        &ConvolutionTransposeBackwardCPU<Dtype>,
+        &mink::ConvolutionTransposeBackwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
-        &ConvolutionTransposeForwardGPU<Dtype>,
+        &mink::ConvolutionTransposeForwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
-        &ConvolutionTransposeBackwardGPU<Dtype>,
+        &mink::ConvolutionTransposeBackwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
-        &AvgPoolingForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::AvgPoolingForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
-        &AvgPoolingBackwardCPU<Dtype>,
+        &mink::AvgPoolingBackwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("AvgPoolingForwardGPU") + dtypestr).c_str(),
-        &AvgPoolingForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::AvgPoolingForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
-        &AvgPoolingBackwardGPU<Dtype>,
+        &mink::AvgPoolingBackwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
-        &MaxPoolingForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::MaxPoolingForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("MaxPoolingBackwardCPU") + dtypestr).c_str(),
-        &MaxPoolingBackwardCPU<Dtype>,
+        &mink::MaxPoolingBackwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("MaxPoolingForwardGPU") + dtypestr).c_str(),
-        &MaxPoolingForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::MaxPoolingForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("MaxPoolingBackwardGPU") + dtypestr).c_str(),
-        &MaxPoolingBackwardGPU<Dtype>,
+        &mink::MaxPoolingBackwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
-        &PoolingTransposeForwardCPU<Dtype>,
+        &mink::PoolingTransposeForwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),
-        &PoolingTransposeBackwardCPU<Dtype>,
+        &mink::PoolingTransposeBackwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("PoolingTransposeForwardGPU") + dtypestr).c_str(),
-        &PoolingTransposeForwardGPU<Dtype>,
+        &mink::PoolingTransposeForwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PoolingTransposeBackwardGPU") + dtypestr).c_str(),
-        &PoolingTransposeBackwardGPU<Dtype>,
+        &mink::PoolingTransposeBackwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
-        &GlobalPoolingForwardCPU<Dtype>,
+        &mink::GlobalPoolingForwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
-        &GlobalPoolingBackwardCPU<Dtype>,
+        &mink::GlobalPoolingBackwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
-        &GlobalPoolingForwardGPU<Dtype>,
+        &mink::GlobalPoolingForwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
-        &GlobalPoolingBackwardGPU<Dtype>,
+        &mink::GlobalPoolingBackwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("GlobalMaxPoolingForwardCPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingForwardCPU<Dtype>,
+        &mink::GlobalMaxPoolingForwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalMaxPoolingBackwardCPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingBackwardCPU<Dtype>,
+        &mink::GlobalMaxPoolingBackwardCPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("GlobalMaxPoolingForwardGPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingForwardGPU<Dtype>,
+        &mink::GlobalMaxPoolingForwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("GlobalMaxPoolingBackwardGPU") + dtypestr).c_str(),
-        &GlobalMaxPoolingBackwardGPU<Dtype>,
+        &mink::GlobalMaxPoolingBackwardGPU<Dtype>,
         py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
-        &BroadcastForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::BroadcastForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
-        &BroadcastBackwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::BroadcastBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
-        &BroadcastForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::BroadcastForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
-        &BroadcastBackwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::BroadcastBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
-        &PruningForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::PruningForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
-        &PruningBackwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::PruningBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
-        &PruningForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::PruningForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
-        &PruningBackwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::PruningBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 
   m.def((std::string("UnionForwardCPU") + dtypestr).c_str(),
-        &UnionForwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::UnionForwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("UnionBackwardCPU") + dtypestr).c_str(),
-        &UnionBackwardCPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::UnionBackwardCPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #ifndef CPU_ONLY
   m.def((std::string("UnionForwardGPU") + dtypestr).c_str(),
-        &UnionForwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::UnionForwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("UnionBackwardGPU") + dtypestr).c_str(),
-        &UnionBackwardGPU<Dtype>, py::call_guard<py::gil_scoped_release>());
+        &mink::UnionBackwardGPU<Dtype>,
+        py::call_guard<py::gil_scoped_release>());
 #endif
 }
 
 void instantiate_coordsman(py::module &m) {
   std::string coords_name = std::string("CoordsManager");
-  py::class_<CoordsManager>(m, coords_name.c_str())
+  py::class_<mink::CoordsManager>(m, coords_name.c_str())
       .def(py::init<int>())
-      .def("existsCoordsKey", (bool (CoordsManager::*)(py::object) const) &
-                                  CoordsManager::existsCoordsKey)
-      .def("getCoordsKey", &CoordsManager::getCoordsKey)
-      .def("getKernelMap", &CoordsManager::getKernelMap)
-      .def("getCoordsMap", &CoordsManager::getCoordsMap)
-      .def("getCoordsSize", (int (CoordsManager::*)(py::object) const) &
-                                CoordsManager::getCoordsSize)
-      .def("getCoords", &CoordsManager::getCoords)
-      .def("getBatchSize", &CoordsManager::getBatchSize)
-      .def("getBatchIndices", &CoordsManager::getBatchIndices)
-      .def("getRowIndicesPerBatch", &CoordsManager::getRowIndicesPerBatch)
-      .def("setOriginCoordsKey", &CoordsManager::setOriginCoordsKey)
+      .def("existsCoordsKey",
+           (bool (mink::CoordsManager::*)(py::object) const) &
+               mink::CoordsManager::existsCoordsKey)
+      .def("getCoordsKey", &mink::CoordsManager::getCoordsKey)
+      .def("getKernelMap", &mink::CoordsManager::getKernelMap)
+      .def("getCoordsMap", &mink::CoordsManager::getCoordsMap)
+      .def("getUnionMap", &mink::CoordsManager::getUnionMap)
+      .def("getCoordsSize", (int (mink::CoordsManager::*)(py::object) const) &
+                                mink::CoordsManager::getCoordsSize)
+      .def("getCoords", &mink::CoordsManager::getCoords)
+      .def("getBatchSize", &mink::CoordsManager::getBatchSize)
+      .def("getBatchIndices", &mink::CoordsManager::getBatchIndices)
+      .def("getRowIndicesPerBatch", &mink::CoordsManager::getRowIndicesPerBatch)
+      .def("setOriginCoordsKey", &mink::CoordsManager::setOriginCoordsKey)
       .def("initializeCoords",
-           (uint64_t(CoordsManager::*)(at::Tensor, at::Tensor, py::object, bool,
-                                       bool, bool)) &
-               CoordsManager::initializeCoords,
+           (uint64_t(mink::CoordsManager::*)(at::Tensor, at::Tensor, py::object,
+                                             bool, bool, bool)) &
+               mink::CoordsManager::initializeCoords,
            py::call_guard<py::gil_scoped_release>())
-      .def("createStridedCoords", &CoordsManager::createStridedCoords)
+      .def("createStridedCoords", &mink::CoordsManager::createStridedCoords)
       .def("createTransposedStridedRegionCoords",
-           &CoordsManager::createTransposedStridedRegionCoords)
-      .def("createPrunedCoords", &CoordsManager::createPrunedCoords)
-      .def("createOriginCoords", &CoordsManager::createOriginCoords)
-      .def("printDiagnostics", &CoordsManager::printDiagnostics)
-      .def("__repr__", [](const CoordsManager &a) { return a.toString(); });
+           &mink::CoordsManager::createTransposedStridedRegionCoords)
+      .def("createPrunedCoords", &mink::CoordsManager::createPrunedCoords)
+      .def("createOriginCoords", &mink::CoordsManager::createOriginCoords)
+      .def("printDiagnostics", &mink::CoordsManager::printDiagnostics)
+      .def("__repr__",
+           [](const mink::CoordsManager &a) { return a.toString(); });
 }
 
 void instantiate(py::module &m) {
@@ -209,23 +230,23 @@ void instantiate(py::module &m) {
 
 void bind_native(py::module &m) {
   std::string name = std::string("CoordsKey");
-  py::class_<CoordsKey>(m, name.c_str())
+  py::class_<mink::CoordsKey>(m, name.c_str())
       .def(py::init<>())
-      .def("copy", &CoordsKey::copy)
-      .def("isKeySet", &CoordsKey::isKeySet)
-      .def("setKey", &CoordsKey::setKey)
-      .def("getKey", &CoordsKey::getKey)
-      .def("setDimension", &CoordsKey::setDimension)
-      .def("getDimension", &CoordsKey::getDimension)
-      .def("setTensorStride", &CoordsKey::setTensorStride)
-      .def("getTensorStride", &CoordsKey::getTensorStride)
-      .def("__repr__", [](const CoordsKey &a) { return a.toString(); });
+      .def("copy", &mink::CoordsKey::copy)
+      .def("isKeySet", &mink::CoordsKey::isKeySet)
+      .def("setKey", &mink::CoordsKey::setKey)
+      .def("getKey", &mink::CoordsKey::getKey)
+      .def("setDimension", &mink::CoordsKey::setDimension)
+      .def("getDimension", &mink::CoordsKey::getDimension)
+      .def("setTensorStride", &mink::CoordsKey::setTensorStride)
+      .def("getTensorStride", &mink::CoordsKey::getTensorStride)
+      .def("__repr__", [](const mink::CoordsKey &a) { return a.toString(); });
 
   // Quantization
-  m.def("quantize_np", &quantize_np);
-  m.def("quantize_th", &quantize_th);
-  m.def("quantize_label_np", &quantize_label_np);
-  m.def("quantize_label_th", &quantize_label_th);
+  m.def("quantize_np", &mink::quantize_np);
+  m.def("quantize_th", &mink::quantize_th);
+  m.def("quantize_label_np", &mink::quantize_label_np);
+  m.def("quantize_label_th", &mink::quantize_label_th);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {

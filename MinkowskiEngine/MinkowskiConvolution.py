@@ -30,9 +30,9 @@ from torch.nn import Parameter
 import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
 from Common import RegionType, MinkowskiModuleBase, KernelGenerator, \
-    prep_args, save_ctx, convert_to_int_list, convert_to_int_tensor, \
+    prep_args, convert_to_int_list, convert_to_int_tensor, \
     get_postfix
-from MinkowskiCoords import CoordsKey
+from MinkowskiCoords import CoordsKey, save_ctx
 
 
 class MinkowskiConvolutionFunction(Function):

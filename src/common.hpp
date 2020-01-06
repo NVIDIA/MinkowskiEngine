@@ -50,6 +50,8 @@
 #include "gpu_memory_manager.hpp"
 #endif
 
+namespace minkowski {
+
 // Will be exported to python for lazy key initialization.
 // For instance, ConvModule.out_coords_key can be used for other layers before
 // feedforward
@@ -77,6 +79,8 @@ public:
   void up_stride(const std::vector<int> &strides);
   std::vector<int> getTensorStride() const { return tensor_strides_; }
   std::string toString() const;
-};
+}; // CoordsKey
+
+} // namespace minkowski
 
 #endif // COMMON

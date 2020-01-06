@@ -29,6 +29,8 @@
 
 #include <limits>
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void MaxPoolingForwardKernelCPU(const Dtype *p_in_feat, Dtype *p_out_feat,
                                 Itype *p_mask_index, int nchannel,
@@ -98,4 +100,6 @@ void MaxPoolingBackwardKernelCPU(Dtype *p_grad_in_feat, int in_nrows,
   }
 }
 
-#endif
+} // end namespace minkowski
+
+#endif // CPU_POOLING_MAX

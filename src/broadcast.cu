@@ -74,6 +74,8 @@ __global__ void fill(const int n, Dtype *in_feat, Dtype val) {
   CUDA_KERNEL_LOOP(index, n) { in_feat[index] = val; }
 }
 
+namespace minkowski {
+
 template <typename Dtype, typename Itype>
 void BroadcastForwardKernelGPU(
     const Dtype *d_in_feat, int in_nrows, const Dtype *d_in_feat_global,
@@ -318,4 +320,7 @@ template void BroadcastBackwardKernelGPU<double, int32_t>(
     int in_nrows_global, const double *d_grad_out_feat, int nchannel, int op,
     const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
     cusparseHandle_t cushandle, cudaStream_t stream);
-#endif
+
+} // namespace minkowski
+
+#endif // GPU_BROADCAST
