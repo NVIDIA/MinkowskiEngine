@@ -104,15 +104,19 @@ def operation_mode():
     new_coords = torch.IntTensor([[0, 1], [2, 3], [4, 5]])
     new_feats = torch.rand(len(new_coords), feats.size(1))
 
-    # sparse tensors
-    A = ME.SparseTensor(coords=coords, feats=feats)
-    B = ME.SparseTensor(
-        coords=new_coords,
-        feats=new_feats,
-        #coords_manager=A.coords_man,  No need to feed the coords_man
-        force_creation=True)
+    for _ in range(2):
+        # sparse tensors
+        A = ME.SparseTensor(coords=coords, feats=feats)
+        B = ME.SparseTensor(
+            coords=new_coords,
+            feats=new_feats,
+            # coords_manager=A.coords_man,  No need to feed the coords_man
+            force_creation=True)
 
-    C = A + B
+        C = A + B
+
+        # When done using it for forward and backward, you must cleanup the coords man
+        ME.clear_global_coords_man()
 
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@ sys.path.append(file_dir)
 import torch
 
 from SparseTensor import SparseTensor, SparseTensorOperationMode, \
-    set_sparse_tensor_operation_mode, sparse_tensor_operation_mode
+    set_sparse_tensor_operation_mode, sparse_tensor_operation_mode, clear_global_coords_man
 
 from Common import RegionType, convert_to_int_tensor, convert_region_type, \
     MinkowskiModuleBase, KernelGenerator, GlobalPoolingMode

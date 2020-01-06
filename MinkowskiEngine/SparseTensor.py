@@ -58,6 +58,16 @@ def sparse_tensor_operation_mode():
     return copy.deepcopy(_sparse_tensor_operation_mode)
 
 
+def clear_global_coords_man():
+    r"""
+    When using the operation mode:
+    `SparseTensorOperationMode.SHARE_COORDS_MANAGER`, you must explicitly clear
+    the coordinate manager when done using it.
+    """
+    global _global_coords_man
+    _global_coords_man = None
+
+
 class SparseTensor():
     r"""A sparse tensor class. Can be accessed via
     :attr:`MinkowskiEngine.SparseTensor`.
