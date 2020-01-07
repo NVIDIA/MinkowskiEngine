@@ -117,6 +117,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#sparse-collate">sparse_collate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#batch-sparse-collate">batch_sparse_collate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sparsecollation">SparseCollation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-coords-map">get_coords_map</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
@@ -330,6 +331,38 @@ or False, concatenate all points. -1 by default.</p>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="get-coords-map">
+<h2>get_coords_map<a class="headerlink" href="#get-coords-map" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="MinkowskiEngine.utils.get_coords_map">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">get_coords_map</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.get_coords_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get mapping between sparse tensor 1 and sparse tensor 2.</p>
+<dl>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>): a sparse tensor with
+<cite>x.tensor_stride</cite> &lt;= <cite>y.tensor_stride</cite>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">y</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>): a sparse tensor with
+<cite>x.tensor_stride</cite> &lt;= <cite>y.tensor_stride</cite>.</p>
+</dd>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x_indices</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.LongTensor</span></code>): the indices of x that
+corresponds to the returned indices of y.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x_indices</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.LongTensor</span></code>): the indices of y that
+corresponds to the returned indices of x.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="o">-</span><span class="n">block</span><span class="p">::</span> <span class="n">python</span>
+
+   <span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+   <span class="n">out_sp_tensor</span> <span class="o">=</span> <span class="n">stride_2_conv</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">)</span>
+
+   <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">get_coords_map</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">,</span> <span class="n">out_sp_tensor</span><span class="p">)</span>
+   <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{i}</span><span class="s2"> -&gt; </span><span class="si">{o}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

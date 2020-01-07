@@ -33,3 +33,9 @@ SparseCollation
     :undoc-members:
 
     .. automethod:: __init__
+
+
+get_coords_map
+--------------
+
+.. autofunction:: MinkowskiEngine.utils.get_coords_map

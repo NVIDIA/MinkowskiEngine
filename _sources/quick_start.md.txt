@@ -11,11 +11,34 @@ The MinkowskiEngine can be installed via `pip` or using conda. Currently, the in
 - GCC 6 or higher
 
 
+## System requirements
+
+MinkowskiEngine requires `openblas`, `python3-dev` and `torch`, `numpy` python packages. Using anaconda is highly recommended and the following instructions will install all the requirements.
+
+### Anaconda
+
+We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) first.
+
+
+#### 1. Create a conda virtual environment and install requirements.
+
+First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
+
+```
+conda create -n py3-mink python=3.7
+conda activate py3-mink
+conda install numpy openblas
+conda install pytorch torchvision -c pytorch
+```
+
+### 2. Installation
+
 The MinkowskiEngine is distributed via [PyPI MinkowskiEngine](https://pypi.org/project/MinkowskiEngine/) which can be installed simply with `pip`.
 
 ```
 pip install -U MinkowskiEngine
 ```
+
 
 ## Running a segmentation network
 
@@ -27,9 +50,8 @@ cd MinkowskiEngine
 python -m examples.indoor
 ```
 
-When you run the above example, you will download pretrained-weights of a
-Minkowski network and will see the semantic segmentation results of a hotel
-room.
+When you run the above example, it will download pretrained weights of a
+Minkowski network and will visualize the semantic segmentation results of a 3D scene.
 
 
 ## CPU only compilation
@@ -39,4 +61,22 @@ room.
 git clone https://github.com/StanfordVL/MinkowskiEngine.git
 cd MinkowskiEngine
 python setup.py install --cpu_only
+```
+
+## Other BLAS and MKL support
+
+On intel CPU devices, `conda` installs `numpy` with `Intel Math Kernel Library` or `MKL`. The Minkowski Engine will automatically detect the MKL using `numpy` and use `MKL` instead of `openblas` or `atlas`.
+
+In many cases, this will be done automatically. However, if the numpy is not using MKL, but you have an Intel CPU, use conda to install MKL.
+
+```
+conda install -c intel mkl mkl-include
+python setup.py install --blas=mkl
+```
+
+If you want to use a specific BLAS among MKL, ATLAS, OpenBLAS, and the system BLAS, provide the blas name as follows:
+
+```
+cd MinkowskiEngine
+python setup.py install --blas=openblas
 ```

@@ -100,6 +100,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#system-python">System Python</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#cpu-only-build-and-blas-configuration-mkl">CPU only build and BLAS configuration (MKL)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-network">Creating a Network</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#forward-and-backward-using-the-custom-network">Forward and backward using the custom network</a></li>
@@ -107,7 +108,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#discussion-and-documentation">Discussion and Documentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citing-minkowski-engine">Citing Minkowski Engine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#projects-using-minkowskiengine">Projects using MinkowskiEngine</a></li>
 </ul>
 </li>
@@ -210,7 +211,9 @@
             
   <div class="section" id="minkowski-engine">
 <h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a></p>
 <p>The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://stanfordvl.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
+<hr class="docutils" />
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -239,8 +242,11 @@
 <p>You can install the Minkowski Engine with <code class="docutils literal notranslate"><span class="pre">pip</span></code>, with anaconda, or on the system directly.</p>
 <div class="section" id="pip">
 <h3>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h3>
-<p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span>
+<p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.
+First, install pytorch following the <a class="reference external" href="https://pytorch.org">instruction</a>. Next, install <code class="docutils literal notranslate"><span class="pre">openblas</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">openblas</span>
+<span class="n">pip3</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">torchvision</span>
+<span class="n">pip3</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span>
 </pre></div>
 </div>
 </div>
@@ -252,7 +258,7 @@
 <p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">openblas</span> <span class="n">numpy</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">openblas</span>
 <span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
 </pre></div>
 </div>
@@ -270,17 +276,27 @@
 <div class="section" id="system-python">
 <h3>System Python<a class="headerlink" href="#system-python" title="Permalink to this headline">¶</a></h3>
 <p>Like the anaconda installation, make sure that you install pytorch with the same CUDA version that <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> uses.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># install system requirements</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">python3</span><span class="o">-</span><span class="n">dev</span> <span class="n">openblas</span>
 
-<span class="c1"># within a python3 environment</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span>
+<span class="c1"># Skip if you already have pip installed on your python3</span>
+<span class="n">curl</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">bootstrap</span><span class="o">.</span><span class="n">pypa</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">get</span><span class="o">-</span><span class="n">pip</span><span class="o">.</span><span class="n">py</span> <span class="o">|</span> <span class="n">python3</span>
+
+<span class="c1"># Get pip and install python requirements</span>
+<span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">numpy</span>
+
 <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
+
 <span class="n">cd</span> <span class="n">MinkowskiEngine</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+
 <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
 </div>
+</div>
+<div class="section" id="cpu-only-build-and-blas-configuration-mkl">
+<h2>CPU only build and BLAS configuration (MKL)<a class="headerlink" href="#cpu-only-build-and-blas-configuration-mkl" title="Permalink to this headline">¶</a></h2>
+<p>The Minkowski Engine supports CPU only build on other platforms that do not have NVidia GPUs. Please refer to <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/quick_start.html">quick start</a> for more details.</p>
 </div>
 <div class="section" id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
@@ -365,8 +381,9 @@ page</a> for more detail.</p>
 an issue on the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/issues">github issue
 page</a>.</p>
 </div>
-<div class="section" id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="citing-minkowski-engine">
+<h2>Citing Minkowski Engine<a class="headerlink" href="#citing-minkowski-engine" title="Permalink to this headline">¶</a></h2>
+<p>If you use the Minkowski Engine, please cite:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://arxiv.org/abs/1904.08755">4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR’19</a>, <a class="reference external" href="https://arxiv.org/pdf/1904.08755.pdf">[pdf]</a></p></li>
 </ul>
