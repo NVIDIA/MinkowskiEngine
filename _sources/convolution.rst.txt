@@ -7,7 +7,7 @@ MinkowskiConvolution
 --------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiConvolution
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
 
     .. automethod:: __init__
@@ -17,7 +17,7 @@ MinkowskiConvolutionTranspose
 -----------------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiConvolutionTranspose
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
 
     .. automethod:: __init__

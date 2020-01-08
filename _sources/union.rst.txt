@@ -5,7 +5,7 @@ MinkowskiUnion
 --------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiUnion
-    :members:
+    :members: forward
     :undoc-members:
 
     .. automethod:: __init__

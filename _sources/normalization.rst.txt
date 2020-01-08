@@ -6,9 +6,9 @@ MinkowskiBatchNorm
 ------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiBatchNorm
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -17,9 +17,9 @@ MinkowskiSyncBatchNorm
 ----------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiSyncBatchNorm
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -29,8 +29,8 @@ MinkowskiInstanceNorm
 ---------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiInstanceNorm
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
