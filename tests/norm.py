@@ -33,13 +33,12 @@ from tests.common import data_loader
 class TestNormalization(unittest.TestCase):
 
     def test_inst_norm(self):
-        in_channels, D = 2, 2
+        in_channels = 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         input = SparseTensor(feats, coords=coords)
         input.F.requires_grad_()
-        norm = MinkowskiInstanceNorm(
-            num_features=in_channels, dimension=D).double()
+        norm = MinkowskiInstanceNorm(num_features=in_channels).double()
 
         out = norm(input)
         print(out)
@@ -50,7 +49,7 @@ class TestNormalization(unittest.TestCase):
                            None, input.coords_man)))
 
     def test_inst_norm_gpu(self):
-        in_channels, D = 2, 2
+        in_channels = 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
 
@@ -58,7 +57,7 @@ class TestNormalization(unittest.TestCase):
         input = SparseTensor(feats, coords=coords).to(device)
         input.F.requires_grad_()
         norm = MinkowskiInstanceNorm(
-            num_features=in_channels, dimension=D).to(device).double()
+            num_features=in_channels).to(device).double()
 
         out = norm(input)
         print(out)

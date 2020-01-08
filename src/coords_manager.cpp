@@ -426,9 +426,10 @@ uint64_t CoordsManager::createPrunedCoords(at::Tensor use_feat,
   const uint64_t out_coords_key = getRandomCoordsKey();
 
   // Set the pycoordskey
-  p_out_coords_key->setTensorStride(p_in_coords_key->getTensorStride());
   p_out_coords_key->setDimension(p_in_coords_key->getDimension());
   p_out_coords_key->setKey(out_coords_key);
+  if (!p_out_coords_key->tensor_stride_set)
+    p_out_coords_key->setTensorStride(p_in_coords_key->getTensorStride());
 
   coords_maps[out_coords_key] =
       coords_maps[in_coords_key].prune(use_feat.data<bool>(), use_feat.size(0));
@@ -479,9 +480,9 @@ uint64_t CoordsManager::createUnionCoords(vector<py::object> py_in_coords_keys,
   const uint64_t out_coords_key = getRandomCoordsKey();
 
   // Set the pycoordskey using the last coords_key
-  p_out_coords_key->setTensorStride(tensor_strides);
   p_out_coords_key->setDimension(p_in_coords_key->getDimension());
   p_out_coords_key->setKey(out_coords_key);
+  p_out_coords_key->setTensorStride(tensor_strides);
 
   coords_maps[out_coords_key] = CoordsMap::union_coords(in_coords_maps);
 
@@ -621,8 +622,10 @@ const InOutMapsRefPair<int> CoordsManager::getInOutMaps(
 
   // Create kernel maps
   if (!is_transpose) { // NON TRANSPOSE
-    p_out_coords_key->setTensorStride(tensor_strides);
-    p_out_coords_key->stride(strides);
+    if (!p_out_coords_key->tensor_stride_set) {
+      p_out_coords_key->setTensorStride(tensor_strides);
+      p_out_coords_key->stride(strides);
+    }
     // For non transpose case
     // make a kernel mapping. The kernel will be saved with the map_key.
     if (in_maps.find(map_key) == in_maps.end()) {
@@ -654,8 +657,10 @@ const InOutMapsRefPair<int> CoordsManager::getInOutMaps(
 
   } else { // TRANSPOSE
 
-    p_out_coords_key->setTensorStride(tensor_strides);
-    p_out_coords_key->up_stride(strides);
+    if (!p_out_coords_key->tensor_stride_set) {
+      p_out_coords_key->setTensorStride(tensor_strides);
+      p_out_coords_key->up_stride(strides);
+    }
 
     // Create temporary key for the flipped in/out
     const InOutMapKey tmp_map_key = getMapHashKey(

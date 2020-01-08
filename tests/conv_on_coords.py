@@ -24,8 +24,8 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiConvolutionOnCoords, \
-    MinkowskiConvolutionTransposeOnCoords
+from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
+    MinkowskiConvolutionTranspose
 
 from tests.common import data_loader
 
@@ -49,9 +49,9 @@ class TestConvolution(unittest.TestCase):
         input = SparseTensor(feats, coords=coords)
         print(input.mapping)
         cm = input.coords_man
-        print(cm.get_coords_key(1))
+        print(cm._get_coords_key(1))
 
-        conv = MinkowskiConvolutionOnCoords(
+        conv = MinkowskiConvolution(
             in_channels,
             out_channels,
             kernel_size=3,
@@ -61,14 +61,18 @@ class TestConvolution(unittest.TestCase):
 
         print('Initial input: ', input)
         print('Specified output coords: ', out_coords)
-        output = conv(input, out_coords, tensor_stride=2)
+        output = conv(input, out_coords)
+
+        # To specify the tensor stride
+        out_coords_key = cm.create_coords_key(out_coords, tensor_stride=2)
+        output = conv(input, out_coords_key)
         print('Conv output: ', output)
 
         output.F.sum().backward()
         print(input.F.grad)
 
     def test_tr(self):
-        print(f"{self.__class__.__name__}: test")
+        print(f"{self.__class__.__name__}: test_tr")
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels, batch_size=2)
         # tensor stride must be at least 2 for convolution transpose with stride 2
@@ -80,12 +84,13 @@ class TestConvolution(unittest.TestCase):
 
         feats = feats.double()
         feats.requires_grad_()
+
         input = SparseTensor(feats, coords=coords, tensor_stride=2)
         print(input.mapping)
         cm = input.coords_man
-        print(cm.get_coords_key(2))
+        print(cm._get_coords_key(2))
 
-        conv_tr = MinkowskiConvolutionTransposeOnCoords(
+        conv_tr = MinkowskiConvolutionTranspose(
             in_channels,
             out_channels,
             kernel_size=3,

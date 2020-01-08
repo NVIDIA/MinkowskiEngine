@@ -41,9 +41,11 @@ void CoordsKey::setTensorStride(const std::vector<int> &tensor_strides) {
          "The tensor strides dimension mismatch: ", ArrToString(tensor_strides),
          ", dimension of the key: ", D);
   tensor_strides_ = tensor_strides;
+  tensor_stride_set = true;
 }
 
 void CoordsKey::stride(const std::vector<int> &strides) {
+  ASSERT(tensor_stride_set, "You must set the tensor strides first.");
   ASSERT(getDimension() == strides.size(),
          "The size of strides: ", ArrToString(strides),
          " does not match the dimension of the PyCoordKey coordinate system: ",
@@ -53,6 +55,7 @@ void CoordsKey::stride(const std::vector<int> &strides) {
 }
 
 void CoordsKey::up_stride(const std::vector<int> &strides) {
+  ASSERT(tensor_stride_set, "You must set the tensor strides first.");
   ASSERT(getDimension() == strides.size(),
          "The size of strides: ", ArrToString(strides),
          " does not match the dimension of the PyCoordKey coordinate system: ",
@@ -80,12 +83,14 @@ void CoordsKey::copy(py::object py_other) {
          " does not match the dimension of the PyCoordKey coordinate system: ",
          std::to_string(getDimension()), ".");
   tensor_strides_ = p_other->tensor_strides_;
+  tensor_stride_set = p_other->tensor_stride_set;
 }
 
 void CoordsKey::reset() {
   key_ = 0;
   D_ = -1;
   key_set = false;
+  tensor_stride_set = false;
   tensor_strides_.clear();
 }
 

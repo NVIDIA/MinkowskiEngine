@@ -92,6 +92,26 @@ class CoordsManager():
                                                allow_duplicate_coords)
         return mapping
 
+    def create_coords_key(self,
+                          coords: torch.IntTensor,
+                          tensor_stride: int = 1,
+                          force_creation: bool = False,
+                          force_remap: bool = False,
+                          allow_duplicate_coords: bool = False) -> CoordsKey:
+        coords_key = CoordsKey(self.D)
+        # coords_key.setTensorStride(tensor_stride)
+        mapping = self.initialize(
+            coords,
+            coords_key,
+            force_creation=True,
+            force_remap=True,
+            allow_duplicate_coords=True)
+        # Set the tensor stride
+        tensor_stride = convert_to_int_list(tensor_stride, self.D)
+        coords_key.setTensorStride(tensor_stride)
+
+        return coords_key
+
     def stride(self,
                coords_key: CoordsKey,
                stride: Union[int, Sequence, np.ndarray, torch.Tensor],

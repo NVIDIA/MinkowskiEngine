@@ -62,6 +62,7 @@ private:
 
 public:
   bool key_set = false;
+  bool tensor_stride_set = false;
   std::vector<int> tensor_strides_;
 
   // Functions
