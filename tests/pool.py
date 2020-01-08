@@ -51,7 +51,7 @@ class TestPooling(unittest.TestCase):
         print(input)
         print(output)
         C = output.coords_man
-        print(C.get_coords(C.get_coords_key(2)))
+        print(C.get_coords(2))
         region_type, _, _ = pool.kernel_generator.cache[(1, 1)]
         print(
             C.get_kernel_map(

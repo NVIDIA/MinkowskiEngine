@@ -21,7 +21,7 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 import os
 import sys
@@ -42,8 +42,6 @@ from MinkowskiCoords import CoordsKey, CoordsManager
 
 from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
     MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose
-
-from MinkowskiConvolutionOnCoords import MinkowskiConvolutionOnCoords, MinkowskiConvolutionTransposeOnCoords
 
 from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiSumPooling, \

@@ -367,9 +367,6 @@ class SparseTensor():
     def get_device(self):
         return self._F.get_device()
 
-    def getKey(self):
-        return self.coords_key
-
     # Operation overloading
     def __iadd__(self, other):
         assert isinstance(other, SparseTensor)
@@ -759,3 +756,26 @@ class SparseTensor():
 
         tensor_stride = torch.IntTensor(self.tensor_stride)
         return dense_F, min_coords, tensor_stride
+
+
+def _get_coords_key(input: SparseTensor, coords=None):
+    r"""Process coords according to its type.
+    """
+    if coords is not None:
+        assert isinstance(coords, (CoordsKey, torch.IntTensor, SparseTensor))
+        if isinstance(coords, torch.IntTensor):
+            coords_key = CoordsKey(input.D)
+            # coords_key.setTensorStride(tensor_stride)
+            mapping = input.coords_man.initialize(
+                coords,
+                coords_key,
+                force_creation=True,
+                force_remap=True,
+                allow_duplicate_coords=True)
+        elif isinstance(coords, SparseTensor):
+            coords_key = coords.coords_key
+        else:  # CoordsKey type due to the previous assertion
+            coords_key = coords
+    else:
+        coords_key = CoordsKey(input.D)
+    return coords_key

@@ -55,14 +55,14 @@ def cat(sparse_tensors):
     for s in sparse_tensors:
         assert isinstance(s, SparseTensor)
     coords_man = sparse_tensors[0].coords_man
-    coords_key = sparse_tensors[0].getKey().getKey()
+    coords_key = sparse_tensors[0].coords_key
     for s in sparse_tensors:
         assert coords_man == s.coords_man
-        assert coords_key == s.getKey().getKey()
+        assert coords_key == s.coords_key
     tens = []
     for s in sparse_tensors:
         tens.append(s.F)
     return SparseTensor(
         torch.cat(tens, dim=1),
-        coords_key=sparse_tensors[0].getKey(),
+        coords_key=sparse_tensors[0].coords_key,
         coords_manager=coords_man)

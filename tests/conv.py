@@ -159,8 +159,6 @@ class TestConvolutionTranspose(unittest.TestCase):
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         print(input.mapping)
-        cm = input.coords_man
-        ikey = cm.get_coords_key(1)
 
         # Initialize context
         conv = MinkowskiConvolution(

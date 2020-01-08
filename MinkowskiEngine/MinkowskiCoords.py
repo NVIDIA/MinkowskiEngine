@@ -61,6 +61,10 @@ class CoordsKey():
     def __repr__(self):
         return str(self.CPPCoordsKey)
 
+    def __eq__(self, other):
+        assert isinstance(other, CoordsKey)
+        return self.getKey() == other.getKey()
+
 
 class CoordsManager():
 

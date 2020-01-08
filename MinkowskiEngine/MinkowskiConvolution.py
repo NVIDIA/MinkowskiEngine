@@ -22,13 +22,14 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import math
+from typing import Union
 
 import torch
 from torch.autograd import Function
 from torch.nn import Parameter
 
 import MinkowskiEngineBackend as MEB
-from SparseTensor import SparseTensor
+from SparseTensor import SparseTensor, _get_coords_key
 from Common import RegionType, MinkowskiModuleBase, KernelGenerator, \
     prep_args, convert_to_int_list, convert_to_int_tensor, \
     get_postfix
@@ -200,13 +201,10 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                  dilation=1,
                  has_bias=False,
                  kernel_generator=None,
-                 out_coords_key=None,
                  is_transpose=False,
                  dimension=-1):
         super(MinkowskiConvolutionBase, self).__init__()
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
-        if out_coords_key is not None:
-            assert isinstance(out_coords_key, CoordsKey)
 
         if kernel_generator is None:
             kernel_generator = KernelGenerator(
@@ -231,7 +229,6 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         self.stride = stride
         self.dilation = dilation
         self.kernel_generator = kernel_generator
-        self.out_coords_key = out_coords_key
         self.dimension = dimension
         self.use_mm = False  # use matrix multiplication when kernel is 1
 
@@ -247,7 +244,18 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         self.bias = Parameter(Tensor(1, out_channels)) if has_bias else None
         self.has_bias = has_bias
 
-    def forward(self, input):
+    def forward(self,
+                input: SparseTensor,
+                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+        r"""
+        :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
+        convolution on.
+
+        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        `MinkowskiEngine.SparseTensor`), optional): If provided, generate
+        results on the provided coordinates. None by default.
+
+        """
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
@@ -255,16 +263,14 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         self.region_type_, self.region_offset_, _ = \
             self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
-        if self.out_coords_key is None:
-            out_coords_key = CoordsKey(input.coords_key.D)
-        else:
-            out_coords_key = self.out_coords_key
-        # If the kernel_size == 1, the convolution is simply a matrix
-        # multiplication
-        if self.use_mm:
+        if self.use_mm and coords is None:
+            # If the kernel_size == 1, the convolution is simply a matrix
+            # multiplication
             outfeat = input.F.mm(self.kernel)
             out_coords_key = input.coords_key
         else:
+            # Get a new coords key or extract one from the coords
+            out_coords_key = _get_coords_key(input, coords)
             outfeat = self.conv.apply(input.F, self.kernel, input.tensor_stride,
                                       self.stride, self.kernel_size,
                                       self.dilation, self.region_type_,
@@ -300,7 +306,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
 
 
 class MinkowskiConvolution(MinkowskiConvolutionBase):
-    r"""The generalized sparse convolution layer.
+    r"""Convolution layer for a sparse tensor.
 
 
     .. math::
@@ -330,9 +336,8 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
                  dilation=1,
                  has_bias=False,
                  kernel_generator=None,
-                 out_coords_key=None,
                  dimension=None):
-        r"""a generalized sparse convolution layer.
+        r"""convolution on a sparse tensor
 
         Args:
             :attr:`in_channels` (int): the number of input channels in the
@@ -363,10 +368,6 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): defines custom kernel shape.
 
-            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specified coordinates
-            for the output coordinates.
-
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
@@ -381,7 +382,6 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             dilation,
             has_bias,
             kernel_generator,
-            out_coords_key,
             is_transpose=False,
             dimension=dimension)
         self.reset_parameters()
@@ -400,7 +400,6 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
                  dilation=1,
                  has_bias=False,
                  kernel_generator=None,
-                 out_coords_key=None,
                  generate_new_coords=False,
                  dimension=None):
         r"""a generalized sparse transposed convolution layer.
@@ -434,10 +433,6 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): defines custom kernel shape.
 
-            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specified coordinates
-            for the output coordinates.
-
             :attr:`generate_new_coords` (bool, optional): Force generation of
             new coordinates. When True, the output coordinates will be the
             outer product of the kernel shape and the input coordinates.
@@ -460,14 +455,24 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             dilation,
             has_bias,
             kernel_generator,
-            out_coords_key,
             is_transpose=True,
             dimension=dimension)
         self.reset_parameters(True)
         self.generate_new_coords = generate_new_coords
         self.conv = MinkowskiConvolutionTransposeFunction()
 
-    def forward(self, input):
+    def forward(self,
+                input: SparseTensor,
+                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+        r"""
+        :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
+        convolution on.
+
+        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        `MinkowskiEngine.SparseTensor`), optional): If provided, generate
+        results on the provided coordinates. None by default.
+
+        """
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
@@ -475,16 +480,14 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
         self.region_type_, self.region_offset_, _ = \
             self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
-        if self.out_coords_key is None:
-            out_coords_key = CoordsKey(input.coords_key.D)
-        else:
-            out_coords_key = self.out_coords_key
-        # If the kernel_size == 1, the convolution is simply a matrix
-        # multiplication
-        if self.use_mm:
+        if self.use_mm and coords is None:
+            # If the kernel_size == 1, the convolution is simply a matrix
+            # multiplication
             outfeat = input.F.mm(self.kernel)
             out_coords_key = input.coords_key
         else:
+            # Get a new coords key or extract one from the coords
+            out_coords_key = _get_coords_key(input, coords)
             outfeat = self.conv.apply(
                 input.F, self.kernel, input.tensor_stride, self.stride,
                 self.kernel_size, self.dilation, self.region_type_,

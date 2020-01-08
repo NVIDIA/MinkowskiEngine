@@ -21,11 +21,13 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+from typing import Union
+
 import torch
 from torch.autograd import Function
 
 import MinkowskiEngineBackend as MEB
-from SparseTensor import SparseTensor
+from SparseTensor import SparseTensor, _get_coords_key
 from Common import KernelGenerator, RegionType, GlobalPoolingMode, \
     MinkowskiModuleBase, \
     convert_to_int_list, convert_to_int_tensor, \
@@ -181,13 +183,10 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
                  stride=1,
                  dilation=1,
                  kernel_generator=None,
-                 out_coords_key=None,
                  is_transpose=False,
                  average=True,
                  dimension=-1):
         super(MinkowskiPoolingBase, self).__init__()
-        if out_coords_key is not None:
-            assert isinstance(out_coords_key, CoordsKey)
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
         stride = convert_to_int_tensor(stride, dimension)
@@ -209,10 +208,20 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         self.stride = stride
         self.dilation = dilation
         self.kernel_generator = kernel_generator
-        self.out_coords_key = out_coords_key
         self.dimension = dimension
 
-    def forward(self, input):
+    def forward(self,
+                input: SparseTensor,
+                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+        r"""
+        :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
+        convolution on.
+
+        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        `MinkowskiEngine.SparseTensor`), optional): If provided, generate
+        results on the provided coordinates. None by default.
+
+        """
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
@@ -220,10 +229,8 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         self.region_type_, self.region_offset_, _ = \
             self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
-        if self.out_coords_key is None:
-            out_coords_key = CoordsKey(input.coords_key.D)
-        else:
-            out_coords_key = self.out_coords_key
+        # Get a new coords key or extract one from the coords
+        out_coords_key = _get_coords_key(input, coords)
 
         output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
                                     self.kernel_size, self.dilation,
@@ -282,7 +289,6 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
                  stride=1,
                  dilation=1,
                  kernel_generator=None,
-                 out_coords_key=None,
                  dimension=None):
         r"""a high-dimensional sparse average pooling layer.
 
@@ -306,11 +312,6 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specific coordinates
-            for the output coordinates.  It must be a type of
-            :attr:`MinkowskiEngine.CoordsKey`.
-
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
@@ -327,7 +328,6 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             stride,
             dilation,
             kernel_generator,
-            out_coords_key,
             is_transpose,
             average=True,
             dimension=dimension)
@@ -377,7 +377,6 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
                  stride=1,
                  dilation=1,
                  kernel_generator=None,
-                 out_coords_key=None,
                  dimension=None):
         r"""a high-dimensional sum pooling layer
 
@@ -401,11 +400,6 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specific coordinates
-            for the output coordinates.  It must be a type of
-            :attr:`MinkowskiEngine.CoordsKey`.
-
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
@@ -422,7 +416,6 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
             stride,
             dilation,
             kernel_generator,
-            out_coords_key,
             is_transpose,
             average=False,
             dimension=dimension)
@@ -459,7 +452,6 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
                  stride=1,
                  dilation=1,
                  kernel_generator=None,
-                 out_coords_key=None,
                  dimension=None):
         r"""a high-dimensional max pooling layer for sparse tensors.
 
@@ -483,11 +475,6 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specific coordinates
-            for the output coordinates.  It must be a type of
-            :attr:`MinkowskiEngine.CoordsKey`.
-
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
@@ -504,12 +491,22 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
             stride,
             dilation,
             kernel_generator,
-            out_coords_key,
             is_transpose=False,
             dimension=dimension)
         self.pooling = MinkowskiMaxPoolingFunction()
 
-    def forward(self, input):
+    def forward(self,
+                input: SparseTensor,
+                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+        r"""
+        :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
+        convolution on.
+
+        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        `MinkowskiEngine.SparseTensor`), optional): If provided, generate
+        results on the provided coordinates. None by default.
+
+        """
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
@@ -517,10 +514,8 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
         self.region_type_, self.region_offset_, _ = \
             self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
-        if self.out_coords_key is None:
-            out_coords_key = CoordsKey(input.coords_key.D)
-        else:
-            out_coords_key = self.out_coords_key
+        # Get a new coords key or extract one from the coords
+        out_coords_key = _get_coords_key(input, coords)
 
         output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
                                     self.kernel_size, self.dilation,
@@ -603,7 +598,6 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
                  stride,
                  dilation=1,
                  kernel_generator=None,
-                 out_coords_key=None,
                  dimension=None):
         r"""a high-dimensional unpooling layer for sparse tensors.
 
@@ -627,11 +621,6 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): define custom kernel shape.
 
-            :attr:`out_coords_key` (:attr:`MinkowskiEngine.CoordsKey`,
-            optional): when given, the network uses the specific coordinates
-            for the output coordinates.  It must be a type of
-            :attr:`MinkowskiEngine.CoordsKey`.
-
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
@@ -644,13 +633,23 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
             stride,
             dilation,
             kernel_generator,
-            out_coords_key,
             is_transpose,
             average=False,
             dimension=dimension)
         self.pooling = MinkowskiPoolingTransposeFunction()
 
-    def forward(self, input):
+    def forward(self,
+                input: SparseTensor,
+                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+        r"""
+        :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
+        convolution on.
+
+        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        `MinkowskiEngine.SparseTensor`), optional): If provided, generate
+        results on the provided coordinates. None by default.
+
+        """
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
@@ -658,10 +657,8 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
         self.region_type_, self.region_offset_, _ = \
             self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
 
-        if self.out_coords_key is None:
-            out_coords_key = CoordsKey(input.coords_key.D)
-        else:
-            out_coords_key = self.out_coords_key
+        # Get a new coords key or extract one from the coords
+        out_coords_key = _get_coords_key(input, coords)
 
         output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
                                     self.kernel_size, self.dilation,

@@ -20,6 +20,12 @@
 - Update BLAS installation configuration.
 - Update union kernel map and union coords to use reference wrappers.
 - namespace `minkowski` for all cpp, cu files
+- `MinkowskiConvolution` and `MinkowskiConvolutionTranspose` now support output coordinate speicification on the function call.
+- `Minkowski[Avg|Max|Sum]Pooling` and `Minkowski[Avg|Max|Sum]PoolingTranspose` now support output coordinate speicification on the function call.
+
+### Removed
+
+- `MinkowskiConvolutionOnCoords` and transposed version are both deprecated with the output coordinate speicification on `MinkowskiConvolution`.
 
 
 ## [0.3.2] - 2019-12-25
