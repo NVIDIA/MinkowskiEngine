@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.3.2 documentation</title>
+  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.3.3 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.3.2
+                0.3.3
               </div>
             
           
@@ -198,7 +198,7 @@
 <h2>MinkowskiMaxPooling<a class="headerlink" href="#minkowskimaxpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiMaxPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiMaxPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>A max pooling layer for a sparse tensor.</p>
 <div class="math notranslate nohighlight">
 \[y^c_\mathbf{u} = \max_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
@@ -218,7 +218,7 @@ MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>a high-dimensional max pooling layer for sparse tensors.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
@@ -236,10 +236,6 @@ convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
 optional): define custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
-optional): when given, the network uses the specific coordinates
-for the output coordinates.  It must be a type of
-<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
 all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
@@ -258,7 +254,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 <h2>MinkowskiAvgPooling<a class="headerlink" href="#minkowskiavgpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiAvgPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiAvgPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Average input features within a kernel.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y}_\mathbf{u} = \frac{1}{|\mathcal{N}^D(\mathbf{u},
@@ -290,7 +286,7 @@ MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>a high-dimensional sparse average pooling layer.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
@@ -308,10 +304,6 @@ convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
 optional): define custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
-optional): when given, the network uses the specific coordinates
-for the output coordinates.  It must be a type of
-<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
 all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
@@ -330,7 +322,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 <h2>MinkowskiSumPooling<a class="headerlink" href="#minkowskisumpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiSumPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiSumPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiSumPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sum all input features within a kernel.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u},
@@ -362,7 +354,7 @@ MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>a high-dimensional sum pooling layer</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
@@ -380,10 +372,6 @@ convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
 optional): define custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
-optional): when given, the network uses the specific coordinates
-for the output coordinates.  It must be a type of
-<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
 all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
@@ -402,13 +390,13 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 <h2>MinkowskiPoolingTranspose<a class="headerlink" href="#minkowskipoolingtranspose" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
 <dd><p>A pooling transpose layer for a sparse tensor.</p>
 <p>Unpool the features and divide it by the number of non zero elements that
 contributed.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>a high-dimensional unpooling layer for sparse tensors.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
@@ -426,10 +414,6 @@ convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
 optional): define custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
-optional): when given, the network uses the specific coordinates
-for the output coordinates.  It must be a type of
-<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
 all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>

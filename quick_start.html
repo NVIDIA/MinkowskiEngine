@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Start &mdash; MinkowskiEngine 0.3.2 documentation</title>
+  <title>Quick Start &mdash; MinkowskiEngine 0.3.3 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.3.2
+                0.3.3
               </div>
             
           
@@ -91,14 +91,8 @@
 <li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#system-requirements">System requirements</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#anaconda">Anaconda</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#create-a-conda-virtual-environment-and-install-requirements">1. Create a conda virtual environment and install requirements.</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">2. Installation</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#system-requirements">System requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-a-segmentation-network">Running a segmentation network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cpu-only-compilation">CPU only compilation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#other-blas-and-mkl-support">Other BLAS and MKL support</a></li>
@@ -215,27 +209,14 @@
 <div class="section" id="system-requirements">
 <h2>System requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h2>
 <p>MinkowskiEngine requires <code class="docutils literal notranslate"><span class="pre">openblas</span></code>, <code class="docutils literal notranslate"><span class="pre">python3-dev</span></code> and <code class="docutils literal notranslate"><span class="pre">torch</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code> python packages. Using anaconda is highly recommended and the following instructions will install all the requirements.</p>
-<div class="section" id="anaconda">
-<h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h3>
-<p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation. If you have compilation issues, please checkout the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/issues.html">common compilation issues page</a> first.</p>
-<div class="section" id="create-a-conda-virtual-environment-and-install-requirements">
-<h4>1. Create a conda virtual environment and install requirements.<a class="headerlink" href="#create-a-conda-virtual-environment-and-install-requirements" title="Permalink to this headline">¶</a></h4>
-<p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span>
-<span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">openblas</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
-</pre></div>
-</div>
-</div>
 </div>
 <div class="section" id="id1">
-<h3>2. Installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h2>Installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip3</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span>
 </pre></div>
 </div>
-</div>
+<p>To install the latest version, use <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">git+https://github.com/StanfordVL/MinkowskiEngine</span></code>.</p>
 </div>
 <div class="section" id="running-a-segmentation-network">
 <h2>Running a segmentation network<a class="headerlink" href="#running-a-segmentation-network" title="Permalink to this headline">¶</a></h2>

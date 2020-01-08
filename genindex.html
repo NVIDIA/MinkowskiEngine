@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; MinkowskiEngine 0.3.2 documentation</title>
+  <title>Index &mdash; MinkowskiEngine 0.3.3 documentation</title>
   
 
   
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.3.2
+                0.3.3
               </div>
             
           
@@ -228,11 +228,7 @@
 </li>
         <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolution.__init__">(MinkowskiEngine.MinkowskiConvolution method)</a>
 </li>
-        <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionOnCoords.__init__">(MinkowskiEngine.MinkowskiConvolutionOnCoords method)</a>
-</li>
         <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose.__init__">(MinkowskiEngine.MinkowskiConvolutionTranspose method)</a>
-</li>
-        <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords.__init__">(MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords method)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiDropout.__init__">(MinkowskiEngine.MinkowskiDropout method)</a>
 </li>
@@ -295,13 +291,15 @@
 </li>
       <li><a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.coords">coords() (MinkowskiEngine.SparseTensor.SparseTensor property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coords.html#MinkowskiEngine.CoordsKey">CoordsKey (class in MinkowskiEngine)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coords.html#MinkowskiEngine.CoordsManager">CoordsManager (class in MinkowskiEngine)</a>
 </li>
       <li><a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.cpu">cpu() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>
+</li>
+      <li><a href="coords.html#MinkowskiEngine.CoordsManager.create_coords_key">create_coords_key() (MinkowskiEngine.CoordsManager method)</a>
 </li>
       <li><a href="common.html#MinkowskiEngine.RegionType.CUSTOM">CUSTOM (MinkowskiEngine.RegionType attribute)</a>
 </li>
@@ -335,13 +333,11 @@
 </li>
       <li><a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.float">float() (MinkowskiEngine.SparseTensor.SparseTensor method)</a>
 </li>
-      <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionOnCoords.forward">forward() (MinkowskiEngine.MinkowskiConvolutionOnCoords method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose.forward">forward() (MinkowskiEngine.MinkowskiConvolutionTranspose method)</a>
 
       <ul>
-        <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose.forward">(MinkowskiEngine.MinkowskiConvolutionTranspose method)</a>
-</li>
-        <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords.forward">(MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords method)</a>
-</li>
         <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning.forward">(MinkowskiEngine.MinkowskiPruning method)</a>
 </li>
         <li><a href="union.html#MinkowskiEngine.MinkowskiUnion.forward">(MinkowskiEngine.MinkowskiUnion method)</a>
@@ -382,11 +378,7 @@
       <li><a href="coords.html#MinkowskiEngine.CoordsManager.get_union_map">get_union_map() (MinkowskiEngine.CoordsManager method)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordsKey.getKey">getKey() (MinkowskiEngine.CoordsKey method)</a>
-
-      <ul>
-        <li><a href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.getKey">(MinkowskiEngine.SparseTensor.SparseTensor method)</a>
 </li>
-      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordsKey.getTensorStride">getTensorStride() (MinkowskiEngine.CoordsKey method)</a>
 </li>
   </ul></td>
@@ -445,11 +437,7 @@
 </li>
       <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolution">MinkowskiConvolution (class in MinkowskiEngine)</a>
 </li>
-      <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionOnCoords">MinkowskiConvolutionOnCoords (class in MinkowskiEngine)</a>
-</li>
       <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose">MinkowskiConvolutionTranspose (class in MinkowskiEngine)</a>
-</li>
-      <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords">MinkowskiConvolutionTransposeOnCoords (class in MinkowskiEngine)</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiDropout">MinkowskiDropout (class in MinkowskiEngine)</a>
 </li>
@@ -465,10 +453,10 @@
 </li>
       <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning">MinkowskiPruning (class in MinkowskiEngine)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiReLU">MinkowskiReLU (class in MinkowskiEngine)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiSELU">MinkowskiSELU (class in MinkowskiEngine)</a>, <a href="nonlinearity.html#MinkowskiEngine.MinkowskiSELU">[1]</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiSigmoid">MinkowskiSigmoid (class in MinkowskiEngine)</a>

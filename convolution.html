@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiConvolution &mdash; MinkowskiEngine 0.3.2 documentation</title>
+  <title>MinkowskiConvolution &mdash; MinkowskiEngine 0.3.3 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.3.2
+                0.3.3
               </div>
             
           
@@ -106,8 +106,6 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MinkowskiConvolution</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#id1">MinkowskiConvolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskiconvolutiontranspose">MinkowskiConvolutionTranspose</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#minkowskiconvolutiononcoords">MinkowskiConvolutionOnCoords</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#minkowskiconvolutiontransposeoncoords">MinkowskiConvolutionTransposeOnCoords</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
@@ -198,8 +196,8 @@
 <h2>MinkowskiConvolution<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolution">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiConvolution</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution" title="Permalink to this definition">¶</a></dt>
-<dd><p>The generalized sparse convolution layer.</p>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiConvolution</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolution layer for a sparse tensor.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, K,
 \mathcal{C}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
@@ -217,8 +215,8 @@ range from <span class="math notranslate nohighlight">\(\mathbf{i} \in [0, K)^D,
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiConvolution.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>a generalized sparse convolution layer.</p>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>convolution on a sparse tensor</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_channels</span></code> (int): the number of input channels in the
 input tensor.</p>
@@ -241,9 +239,6 @@ each element is an axis specific dilation. All elements must be &gt; 0.</p>
 has a bias.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
 optional): defines custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
-optional): when given, the network uses the specified coordinates
-for the output coordinates.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
 all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
@@ -258,11 +253,11 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 <h2>MinkowskiConvolutionTranspose<a class="headerlink" href="#minkowskiconvolutiontranspose" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolutionTranspose">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
 <dd><p>A generalized sparse transposed convolution or deconvolution layer.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiConvolutionTranspose.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>a generalized sparse transposed convolution layer.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_channels</span></code> (int): the number of input channels in the
@@ -286,9 +281,6 @@ each element is an axis specific dilation. All elements must be &gt; 0.</p>
 has a bias.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
 optional): defines custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>,
-optional): when given, the network uses the specified coordinates
-for the output coordinates.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">generate_new_coords</span></code> (bool, optional): Force generation of
 new coordinates. When True, the output coordinates will be the
 outer product of the kernel shape and the input coordinates.
@@ -302,147 +294,12 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiConvolutionTranspose.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="minkowskiconvolutiononcoords">
-<h2>MinkowskiConvolutionOnCoords<a class="headerlink" href="#minkowskiconvolutiononcoords" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="MinkowskiEngine.MinkowskiConvolutionOnCoords">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiConvolutionOnCoords</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionOnCoords" title="Permalink to this definition">¶</a></dt>
-<dd><p>The generalized sparse convolution on a set of specified output coordinates.</p>
-<div class="math notranslate nohighlight">
-\[\mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, K,
-\mathcal{C}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
-\mathbf{u}} \;\text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}\]</div>
-<p>where <span class="math notranslate nohighlight">\(K\)</span> is the kernel size and <span class="math notranslate nohighlight">\(\mathcal{N}^D(\mathbf{u}, K,
-\mathcal{C}^\text{in})\)</span> is the set of offsets that are at most <span class="math notranslate nohighlight">\(\left
-\lceil{\frac{1}{2}(K - 1)} \right \rceil\)</span> away from <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>
-definied in <span class="math notranslate nohighlight">\(\mathcal{S}^\text{in}\)</span>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For even <span class="math notranslate nohighlight">\(K\)</span>, the kernel offset <span class="math notranslate nohighlight">\(\mathcal{N}^D\)</span>
-implementation is different from the above definition. The offsets
-range from <span class="math notranslate nohighlight">\(\mathbf{i} \in [0, K)^D, \; \mathbf{i} \in
-\mathbb{Z}_+^D\)</span>.</p>
-</div>
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiConvolutionOnCoords.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionOnCoords.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>a generalized sparse convolution layer.</p>
-<dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_channels</span></code> (int): the number of input channels in the
-input tensor.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_channels</span></code> (int): the number of output channels in the
-output tensor.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
-output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
-matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
-offsets in D-dimension.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size of the
-convolution layer. If non-identity is used, the output coordinates
-will be at least <code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> <span class="math notranslate nohighlight">\(\times\)</span> <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code>
-away. When a list is given, the length must be D; each element will
-be used for stride size for the specific axis.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dilation</span></code> (int, or list, optional): dilation size for the
-convolution kernel. When a list is given, the length must be D and
-each element is an axis specific dilation. All elements must be &gt; 0.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">has_bias</span></code> (bool, optional): if True, the convolution layer
-has a bias.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
-optional): defines custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
-all the inputs and the network are defined. For example, images are
-in a 2D space, meshes and 3D shapes are in a 3D space.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiConvolutionOnCoords.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">coords</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionOnCoords.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="minkowskiconvolutiontransposeoncoords">
-<h2>MinkowskiConvolutionTransposeOnCoords<a class="headerlink" href="#minkowskiconvolutiontransposeoncoords" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiConvolutionTransposeOnCoords</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords" title="Permalink to this definition">¶</a></dt>
-<dd><p>A generalized sparse transposed convolution or deconvolution layer on a set of specified output coordinates.</p>
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>a generalized sparse transposed convolution layer.</p>
-<dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_channels</span></code> (int): the number of input channels in the
-input tensor.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_channels</span></code> (int): the number of output channels in the
-output tensor.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
-output tensor. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be
-<a class="reference internal" href="common.html#MinkowskiEngine.RegionType.CUSTOM" title="MinkowskiEngine.RegionType.CUSTOM"><code class="xref py py-attr docutils literal notranslate"><span class="pre">RegionType.CUSTOM</span></code></a> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> should be a 2D
-matrix with size <span class="math notranslate nohighlight">\(N\times D\)</span> such that it lists all <span class="math notranslate nohighlight">\(N\)</span>
-offsets in D-dimension.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> (int, or list, optional): stride size that defines
-upsampling rate. If non-identity is used, the output coordinates
-will be <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> / <code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code> apart.  When a list is
-given, the length must be D; each element will be used for stride
-size for the specific axis.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dilation</span></code> (int, or list, optional): dilation size for the
-convolution kernel. When a list is given, the length must be D and
-each element is an axis specific dilation. All elements must be &gt; 0.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">has_bias</span></code> (bool, optional): if True, the convolution layer
-has a bias.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
-optional): defines custom kernel shape.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">generate_new_coords</span></code> (bool, optional): Force generation of
-new coordinates. When True, the output coordinates will be the
-outer product of the kernel shape and the input coordinates.
-<cite>False</cite> by defaul.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
-all the inputs and the network are defined. For example, images are
-in a 2D space, meshes and 3D shapes are in a 3D space.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">coords</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolutionTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
 </dd></dl>
 
 </dd></dl>

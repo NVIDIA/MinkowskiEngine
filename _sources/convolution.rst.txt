@@ -21,23 +21,3 @@ MinkowskiConvolutionTranspose
     :undoc-members:
 
     .. automethod:: __init__
-
-
-MinkowskiConvolutionOnCoords
-----------------------------
-
-.. autoclass:: MinkowskiEngine.MinkowskiConvolutionOnCoords
-    :members:
-    :undoc-members:
-
-    .. automethod:: __init__
-
-
-MinkowskiConvolutionTransposeOnCoords
------------------------------
-
-.. autoclass:: MinkowskiEngine.MinkowskiConvolutionTransposeOnCoords
-    :members:
-    :undoc-members:
-
-    .. automethod:: __init__
