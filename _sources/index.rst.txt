@@ -13,6 +13,7 @@ Table of Contents
    overview
    convolution_on_sparse
    quick_start
+   terminology
 
 .. toctree::
    :maxdepth: 2

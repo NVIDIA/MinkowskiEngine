@@ -50,7 +50,7 @@ pip3 install -U MinkowskiEngine
 ```
 sudo apt install openblas
 pip3 install torch torchvision
-pip3 install -U git+https://github.com/StanfordVL/MinkowskiEngine
+pip3 install -U -I git+https://github.com/StanfordVL/MinkowskiEngine
 ```
 
 ### Anaconda

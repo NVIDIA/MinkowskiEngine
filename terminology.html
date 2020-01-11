@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Definitions and Terminology &mdash; MinkowskiEngine 0.3.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Training Pipeline" href="demo/training.html" />
+    <link rel="prev" title="Quick Start" href="quick_start.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Definitions and Terminology</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-tensor">Sparse Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensor-stride">Tensor Stride</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinate-manager">Coordinate Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinate-key">Coordinate Key</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kernel-map">Kernel Map</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Demos</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/modelnet40.html">ModelNet40 Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellanea</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Miscellanea</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MinkowskiEngine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Definitions and Terminology</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/terminology.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+
+           <div itemprop="articleBody">
+            
+  <div class="section" id="definitions-and-terminology">
+<h1>Definitions and Terminology<a class="headerlink" href="#definitions-and-terminology" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sparse-tensor">
+<h2>Sparse Tensor<a class="headerlink" href="#sparse-tensor" title="Permalink to this headline">¶</a></h2>
+<p>A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. We use the COOrdinate list (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This representation is simply a concatenation of coordinates into a matrix <span class="math notranslate nohighlight">\(C\)</span> and associated values or features <span class="math notranslate nohighlight">\(F\)</span>.</p>
+<p>In Minkowski Engine, we allow negative indices (or coordinates) and associated values are vectors.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathbf{C} = \begin{bmatrix}
+x_1^1   &amp; x_1^2  &amp; \cdots &amp; x_1^D  \\
+ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D
+\end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
+\mathbf{f}_1^T\\
+\vdots\\
+\mathbf{f}_N^T
+\end{bmatrix}\end{split}\]</div>
+<p>The indices <span class="math notranslate nohighlight">\(C\)</span> are the column-wise concatenation of indices of non-zero values. In sum, a sparse tensor consists of a set of coordinates <span class="math notranslate nohighlight">\(C \in \mathbb{Z}^{N \times D}\)</span> and associated features <span class="math notranslate nohighlight">\(F \in \mathbb{R}^{N \times N_F}\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of non-zero elements within a sparse tensor, <span class="math notranslate nohighlight">\(D\)</span> is the dimension of the space, and <span class="math notranslate nohighlight">\(N_F\)</span> is the number of channels.</p>
+</div>
+<div class="section" id="tensor-stride">
+<h2>Tensor Stride<a class="headerlink" href="#tensor-stride" title="Permalink to this headline">¶</a></h2>
+<p>In 2D ConvNets, convolution/pooling layers have stride size. This allows the neural networks to have exponentially large receptive field size as well as shrink down the space the convolution/pooling layers operate on. For example, if we apply a stride 2 convolution on a 32 <span class="math notranslate nohighlight">\(\times\)</span> 32 pixel image, we get 16 <span class="math notranslate nohighlight">\(\times\)</span> 16 resolution image as an output. The pixels in 16 <span class="math notranslate nohighlight">\(\times\)</span> 16 resolution image have stride size 2 between neighboring pixels. Likewise, in Minkowski Engine, sparse tensors have stride size and it indicates the minimum distance between neighboring elements in a dense grid the sparse tensor is defined. For example, a sparse tensor with tensor stride 8 will have at least distance 8 between all coordinates (-8, 0, 8, 16, …).</p>
+</div>
+<div class="section" id="coordinate-manager">
+<h2>Coordinate Manager<a class="headerlink" href="#coordinate-manager" title="Permalink to this headline">¶</a></h2>
+<p>Many basic operations such as convolution, pooling, etc, all requires 1) hashing a set of coordinates, 2) finding neighbors between them for convolution/pooling, and 3) generating a new set of coordinates given the input coordinates. The complex operations are all managed and cached by the coordinate manager. We cache the outputs of all these operations as they are pretty expensive, and we need to reuse them very often. For example, in many conventional neural networks, there are blocks of repetitive operations such as multiple residual blocks that all shares the same architecture. Thus, recomputing all these every time is very wasteful, and we need an object that can manage and cache all of them and the coordinate manager handles all these.</p>
+<p>In Minkowski Engine, we create a coordinate manager when <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> is generated. You can optionally share an existing coordinate manager with a new <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> to share the coordinates and kernel maps between them. You can access the coordinate manager of a sparse tensor by <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.coords_man</span></code>.</p>
+</div>
+<div class="section" id="coordinate-key">
+<h2>Coordinate Key<a class="headerlink" href="#coordinate-key" title="Permalink to this headline">¶</a></h2>
+<p>Within a coordinate manager, all objects are cached using a hash table. A coordinate key is a hash key for coordinates of a sparse tensor. If two sparse tensors have the same coordinate manager and the same coordinate key, then the coordinates of the sparse tensors are identical and shares the same memory space and the orderings of the features are also identical.</p>
+</div>
+<div class="section" id="kernel-map">
+<h2>Kernel Map<a class="headerlink" href="#kernel-map" title="Permalink to this headline">¶</a></h2>
+<p>A sparse tensor consists of a set of coordinates <span class="math notranslate nohighlight">\(C \in \mathbb{Z}^{N \times D}\)</span> and associated features <span class="math notranslate nohighlight">\(F \in \mathbb{R}^{N \times N_F}\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of non-zero elements within a sparse tensor, <span class="math notranslate nohighlight">\(D\)</span> is the dimension of the space, and <span class="math notranslate nohighlight">\(N_F\)</span> is the number of channels. As we use a hash table for coordinates, the order of coordinates are arbitrary, and we need to find correct mapping between an input sparse tensor to an output sparse if we use a convolution operation.</p>
+<p>We call this mapping from an input sparse tensor to an output sparse tensor a kernel map.  To illustrate this better, we will use a 2D convolution with kernel size 2. The convolution has <span class="math notranslate nohighlight">\(2 \times 2\)</span> kernel which consists of 4 matrices, each for one of the cells of <span class="math notranslate nohighlight">\(2 \times 2\)</span>. Similarly, in a sparse tensor, we require the same number of matrices to define a convolution and each cell within a convolution kernel defines a different map. We define a map as a pair of a list of integers: <span class="math notranslate nohighlight">\(\mathcal{I}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{O}\)</span>.  A pair forms one map <span class="math notranslate nohighlight">\((\mathcal{I} \rightarrow \mathcal{O})\)</span> which defines index of input feature that maps to the index of output feature.</p>
+<p>Since a single map is defined only on a specific cell of a convolution kernel, one convolution requires multiple maps. If we use the same <span class="math notranslate nohighlight">\(2 \times 2\)</span> example, we need 4 maps to define a complete kernel map.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1] An Investigation of Sparse Tensor Formats for Tensor Libraries, 2015</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+<a href="https://github.com/StanfordVL/MinkowskiEngine">
+    <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
+</a>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-43980256-3"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-43980256-3');
+</script>
+
+
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="demo/training.html" class="btn btn-neutral float-right" title="Training Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quick_start.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Chris Choy
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Definitions and Terminology</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Demos</span></p>
 <ul>
@@ -194,10 +195,27 @@
 <h2>MinkowskiUnion<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiUnion">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiUnion</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiUnion</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a union of all sparse tensors and add overlapping features.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>A set or list of <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>’s.</p>
+<dt>Args:</dt><dd><p>None</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function is experimental and the usage can be changed in the future updates.</p>
+</div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiUnion.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiUnion.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">*inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.forward" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>A variable number of <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>’s.</p>
 </dd>
 <dt>Returns:</dt><dd><p>A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> with coordinates = union of all
 input coordinates, and features = sum of all features corresponding to the
@@ -215,31 +233,9 @@ coordinate.</p>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">coords_manager</span><span class="o">=</span><span class="n">input1</span><span class="o">.</span><span class="n">coords_man</span><span class="p">,</span>  <span class="c1"># Must use same coords manager</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">force_creation</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># The tensor stride [1, 1] already exists.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">union</span> <span class="o">=</span> <span class="n">MinkowskiUnion</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">union</span><span class="p">((</span><span class="n">input1</span><span class="p">,</span> <span class="n">iput2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">union</span> <span class="o">=</span> <span class="n">MinkowskiUnion</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">union</span><span class="p">(</span><span class="n">input1</span><span class="p">,</span> <span class="n">iput2</span><span class="p">)</span>
 </pre></div>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This function is experimental and the usage can be changed in the future updates.</p>
-</div>
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiUnion.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiUnion.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
