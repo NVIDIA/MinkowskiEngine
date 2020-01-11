@@ -5,9 +5,9 @@ MinkowskiMaxPooling
 -------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiMaxPooling
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -16,9 +16,9 @@ MinkowskiAvgPooling
 -------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiAvgPooling
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -27,9 +27,9 @@ MinkowskiSumPooling
 -------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiSumPooling
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -38,9 +38,9 @@ MinkowskiPoolingTranspose
 -------------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiPoolingTranspose
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -49,8 +49,8 @@ MinkowskiGlobalPooling
 ----------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiGlobalPooling
-    :members:
+    :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__

@@ -355,21 +355,30 @@ uint64_t CoordsManager::createStridedCoords(uint64_t coords_key,
          "CoordsManager dimension: ", to_string(D),
          ", tensor_strides dimension: ", to_string(tensor_strides.size()));
 
-  // tensor_strides.size() == strides.size() on computeOutTensorStride
-  uint64_t out_coords_key = hash_vec(out_tensor_strides);
+  uint64_t out_coords_key = 0;
+  const bool is_identity =
+      ::all_of(strides.begin(), strides.end(), [](int s) { return s == 1; });
 
-  // If force creationg, get a random key.
-  // ElseIf the coordinates already exists, return the key.
-  if (force_creation) {
-    if (existsCoordsKey(out_coords_key))
-      out_coords_key = getRandomCoordsKey();
-  } else if (existsCoordsKey(out_coords_key)) {
-    return out_coords_key;
+  if (is_identity) {
+    out_coords_key = coords_key;
+  } else {
+
+    // tensor_strides.size() == strides.size() on computeOutTensorStride
+    out_coords_key = hash_vec(out_tensor_strides);
+
+    // If force creationg, get a random key.
+    // ElseIf the coordinates already exists, return the key.
+    if (force_creation) {
+      if (existsCoordsKey(out_coords_key))
+        out_coords_key = getRandomCoordsKey();
+    } else if (existsCoordsKey(out_coords_key)) {
+      return out_coords_key;
+    }
+
+    // Create a strided coords map
+    coords_maps[out_coords_key] =
+        coords_maps[coords_key].stride(out_tensor_strides);
   }
-
-  // Create a strided coords map
-  coords_maps[out_coords_key] =
-      coords_maps[coords_key].stride(out_tensor_strides);
 
   return out_coords_key;
 }
@@ -597,6 +606,7 @@ const InOutMapsRefPair<int> CoordsManager::getInOutMaps(
   // create a new output coordinates if it is transpose and gen new coords
   if (!p_out_coords_key->key_set || force_creation) {
     if (!is_transpose) {
+      // Will return the in_coords_key if strides == 1.
       out_coords_key = createStridedCoords(
           p_in_coords_key->getKey(), tensor_strides, strides, force_creation);
     } else {

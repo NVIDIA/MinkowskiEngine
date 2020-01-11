@@ -24,16 +24,15 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiUnion, MinkowskiUnionFunction
+from MinkowskiEngine import SparseTensor, MinkowskiUnion
 
-from utils.gradcheck import gradcheck
 from tests.common import data_loader
 
 
 class TestUnion(unittest.TestCase):
 
     def test_union(self):
-        in_channels, D = 2, 2
+        in_channels = 2
         coords, feats, labels = data_loader(in_channels)
         N = len(coords)
         input1 = SparseTensor(
@@ -49,15 +48,15 @@ class TestUnion(unittest.TestCase):
         input1.F.requires_grad_()
         input2.F.requires_grad_()
         inputs = [input1, input2]
-        union = MinkowskiUnion(D)
-        output = union(inputs)  # or union((input1, input2))
+        union = MinkowskiUnion()
+        output = union(input1, input2)
         print(output)
         output.F.sum().backward()
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
             inputs = [input.to(device) for input in inputs]
-            output = union(inputs)
+            output = union(*inputs)
 
             output.F.sum().backward()
             print(output)

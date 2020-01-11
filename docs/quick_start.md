@@ -15,29 +15,15 @@ The MinkowskiEngine can be installed via `pip` or using conda. Currently, the in
 
 MinkowskiEngine requires `openblas`, `python3-dev` and `torch`, `numpy` python packages. Using anaconda is highly recommended and the following instructions will install all the requirements.
 
-### Anaconda
-
-We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) first.
-
-
-#### 1. Create a conda virtual environment and install requirements.
-
-First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
-
-```
-conda create -n py3-mink python=3.7
-conda activate py3-mink
-conda install numpy openblas
-conda install pytorch torchvision -c pytorch
-```
-
-### 2. Installation
+## Installation
 
 The MinkowskiEngine is distributed via [PyPI MinkowskiEngine](https://pypi.org/project/MinkowskiEngine/) which can be installed simply with `pip`.
 
 ```
-pip install -U MinkowskiEngine
+pip3 install -U MinkowskiEngine
 ```
+
+To install the latest version, use `pip3 install -U git+https://github.com/StanfordVL/MinkowskiEngine`.
 
 
 ## Running a segmentation network

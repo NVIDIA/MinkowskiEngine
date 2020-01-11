@@ -1,5 +1,18 @@
 # Change Log
 
+## [master] - 2020-01-10
+
+### Added
+
+- Add `MinkowskiGlobalSumPooling`, `MinkowskiGlobalAvgPooling`
+- Add `examples/convolution.py` to showcase various usages
+
+### Changed
+
+- `SparseTensor` additional coords.device guard
+- `MinkowskiConvolution`, `Minkowski*Pooling` output coordinates will be equal to the input coordinates if stride == 1. Before this change, they generated output coordinates defined first for a speicific tensor stride.
+- `MinkowskiUnion` and `Ops.cat` will take a variable number of sparse tensors not a list of sparse tensors
+
 
 ## [0.3.3] - 2020-01-07
 
@@ -7,7 +20,6 @@
 
 - Add `get_coords_map` on `CoordsManager`.
 - Add `get_coords_map` on `MinkowskiEngine.utils`.
-- Add `MinkowskiConvolutionOnCoords`, `MinkowskiConvolutionTransposeOnCoords`.
 - Sparse Tensor Sparse Tensor binary operations `(+,-,*,/)`
     - Binary operations between sparse tensors or sparse tensor + pytorch tensor
     - Inplace operations for the same coords key
@@ -20,12 +32,8 @@
 - Update BLAS installation configuration.
 - Update union kernel map and union coords to use reference wrappers.
 - namespace `minkowski` for all cpp, cu files
-- `MinkowskiConvolution` and `MinkowskiConvolutionTranspose` now support output coordinate speicification on the function call.
-- `Minkowski[Avg|Max|Sum]Pooling` and `Minkowski[Avg|Max|Sum]PoolingTranspose` now support output coordinate speicification on the function call.
-
-### Removed
-
-- `MinkowskiConvolutionOnCoords` and transposed version are both deprecated with the output coordinate speicification on `MinkowskiConvolution`.
+- `MinkowskiConvolution` and `MinkowskiConvolutionTranspose` now support output coordinate specification on the function call.
+- `Minkowski[Avg|Max|Sum]Pooling` and `Minkowski[Avg|Max|Sum]PoolingTranspose` now support output coordinate specification on the function call.
 
 
 ## [0.3.2] - 2019-12-25

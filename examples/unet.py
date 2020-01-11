@@ -97,10 +97,10 @@ class UNet(ME.MinkowskiNetwork):
         out = MF.relu(out_s4)
 
         out = MF.relu(self.block3_tr(out))
-        out = ME.cat((out, out_s2))
+        out = ME.cat(out, out_s2)
 
         out = MF.relu(self.block2_tr(out))
-        out = ME.cat((out, out_s1))
+        out = ME.cat(out, out_s1)
 
         return self.conv1_tr(out)
 

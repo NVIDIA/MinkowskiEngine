@@ -26,8 +26,22 @@ import unittest
 
 from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
     MinkowskiConvolutionTranspose
+import MinkowskiEngine as ME
+
 
 from tests.common import data_loader
+
+
+def get_random_coords(dimension=2, tensor_stride=2):
+    torch.manual_seed(0)
+    # Create random coordinates with tensor stride == 2
+    coords = torch.rand(10, dimension + 1)
+    coords[:, :dimension] *= 5  # random coords
+    coords[:, -1] *= 2  # random batch index
+    coords = coords.floor().int()
+    coords = ME.utils.sparse_quantize(coords)
+    coords[:, :dimension] *= tensor_stride  # make the tensor stride 2
+    return coords, tensor_stride
 
 
 class TestConvolution(unittest.TestCase):
@@ -38,11 +52,7 @@ class TestConvolution(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels, batch_size=2)
 
         # Create random coordinates with tensor stride == 2
-        out_coords = torch.rand(10, 3)
-        out_coords[:, :2] *= 5  # random coords
-        out_coords[:, 2] *= 2  # random batch index
-        out_coords = out_coords.floor().int()
-        out_coords[:, :2] *= 2  # make the tensor stride 2
+        out_coords = get_random_coords()
 
         feats = feats.double()
         feats.requires_grad_()

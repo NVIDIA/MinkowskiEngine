@@ -150,7 +150,7 @@ class MinkUNetBase(ResNetBase):
         out = self.bntr4(out)
         out = self.relu(out)
 
-        out = ME.cat((out, out_b3p8))
+        out = ME.cat(out, out_b3p8)
         out = self.block5(out)
 
         # tensor_stride=4
@@ -158,7 +158,7 @@ class MinkUNetBase(ResNetBase):
         out = self.bntr5(out)
         out = self.relu(out)
 
-        out = ME.cat((out, out_b2p4))
+        out = ME.cat(out, out_b2p4)
         out = self.block6(out)
 
         # tensor_stride=2
@@ -166,7 +166,7 @@ class MinkUNetBase(ResNetBase):
         out = self.bntr6(out)
         out = self.relu(out)
 
-        out = ME.cat((out, out_b1p2))
+        out = ME.cat(out, out_b1p2)
         out = self.block7(out)
 
         # tensor_stride=1
@@ -174,7 +174,7 @@ class MinkUNetBase(ResNetBase):
         out = self.bntr7(out)
         out = self.relu(out)
 
-        out = ME.cat((out, out_p1))
+        out = ME.cat(out, out_p1)
         out = self.block8(out)
 
         return self.final(out)

@@ -113,10 +113,11 @@ uint64_t CoordsKey::getKey() const {
 
 std::string CoordsKey::toString() const {
   Formatter out;
-  out << "< CoordsKey, key: " << std::to_string(key_)
-      << ", tensor_stride: " << ArrToString(tensor_strides_)
+  out << "< CoordsKey, key: " << (key_set ? std::to_string(key_) : "None")
+      << ", tensor_stride: "
+      << (tensor_stride_set ? ArrToString(tensor_strides_) : "None")
       << " in dimension: " << std::to_string(D_) << " >\n";
   return out;
 }
 
-} //end namespace minkowski
+} // end namespace minkowski

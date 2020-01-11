@@ -487,7 +487,7 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             out_coords_key = input.coords_key
         else:
             # Get a new coords key or extract one from the coords
-            out_coords_key = _get_coords_key(input, coords)
+            out_coords_key = _get_coords_key(input, coords, tensor_stride=1)
             outfeat = self.conv.apply(
                 input.F, self.kernel, input.tensor_stride, self.stride,
                 self.kernel_size, self.dilation, self.region_type_,

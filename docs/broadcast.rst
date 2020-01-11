@@ -5,9 +5,9 @@ MinkowskiBroadcastAddition
 --------------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiBroadcastAddition
-    :members:
+    :members: forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -16,9 +16,9 @@ MinkowskiBroadcastMultiplication
 --------------------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiBroadcastMultiplication
-    :members:
+    :members: forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -27,9 +27,9 @@ MinkowskiBroadcastConcatenation
 -------------------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiBroadcastConcatenation
-    :members:
+    :members: forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__
 
@@ -38,8 +38,8 @@ MinkowskiBroadcast
 ------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiBroadcast
-    :members:
+    :members: forward
     :undoc-members:
-    :exclude-members: forward
+    :exclude-members:
 
     .. automethod:: __init__

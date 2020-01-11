@@ -47,6 +47,7 @@ from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiSumPooling, \
     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
+    MinkowskiGlobalSumPooling, MinkowskiGlobalAvgPooling, \
     MinkowskiGlobalMaxPoolingFunction, MinkowskiGlobalMaxPooling, \
     MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
 

@@ -36,8 +36,9 @@ def data_generation():
     coords, feats = [], []
     for i, row in enumerate(data):
         for j, val in enumerate(row):
-            coords.append([i, j])
-            feats.append([val])
+            if val != 0:
+                coords.append([i, j])
+                feats.append([val])
     coords = torch.IntTensor(coords)
     feats = torch.FloatTensor(feats)
 

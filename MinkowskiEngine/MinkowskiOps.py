@@ -23,7 +23,7 @@
 # of the code.
 import torch
 from torch.nn.modules import Module
-from SparseTensor import SparseTensor
+from SparseTensor import SparseTensor, COORDS_MAN_DIFFERENT_ERROR, COORDS_KEY_DIFFERENT_ERROR
 
 
 class MinkowskiLinear(Module):
@@ -46,19 +46,19 @@ class MinkowskiLinear(Module):
         return self.__class__.__name__ + s
 
 
-def cat(sparse_tensors):
+def cat(*sparse_tensors):
     """
     Given a tuple of sparse tensors, concatenate them.
 
     Ex) cat((a, b, c))
     """
     for s in sparse_tensors:
-        assert isinstance(s, SparseTensor)
+        assert isinstance(s, SparseTensor), "Inputs must be sparse tensors."
     coords_man = sparse_tensors[0].coords_man
     coords_key = sparse_tensors[0].coords_key
     for s in sparse_tensors:
-        assert coords_man == s.coords_man
-        assert coords_key == s.coords_key
+        assert coords_man == s.coords_man, COORDS_MAN_DIFFERENT_ERROR
+        assert coords_key == s.coords_key, COORDS_KEY_DIFFERENT_ERROR
     tens = []
     for s in sparse_tensors:
         tens.append(s.F)

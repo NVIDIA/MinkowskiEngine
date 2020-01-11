@@ -26,6 +26,9 @@ import warnings
 import torch
 import copy
 from enum import Enum
+from typing import Union
+from collections import Sequence
+import numpy as np
 
 from Common import convert_to_int_list
 from MinkowskiCoords import CoordsKey, CoordsManager
@@ -204,6 +207,13 @@ class SparseTensor():
                     'To remove this warning, use `.int()` to convert the ' +
                     'coords into an torch.IntTensor')
                 coords = coords.int()
+
+            if coords.device.type != 'cpu':
+                warnings.warn(
+                    'Coords implicitly converted to CPU type. ' +
+                    'To remove this warning, use `.cpu()` to convert the ' +
+                    'coords into a CPU type')
+                coords = coords.cpu()
 
             assert feats.shape[0] == coords.shape[0], \
                 "Number of rows in features and coordinates do not match."
@@ -758,17 +768,18 @@ class SparseTensor():
         return dense_F, min_coords, tensor_stride
 
 
-def _get_coords_key(input: SparseTensor, coords=None):
+def _get_coords_key(
+        input: SparseTensor,
+        coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None,
+        tensor_stride: Union[Sequence, np.ndarray, torch.IntTensor] = 1):
     r"""Process coords according to its type.
     """
     if coords is not None:
         assert isinstance(coords, (CoordsKey, torch.IntTensor, SparseTensor))
         if isinstance(coords, torch.IntTensor):
-            coords_key = CoordsKey(input.D)
-            # coords_key.setTensorStride(tensor_stride)
-            mapping = input.coords_man.initialize(
+            coords_key = input.coords_man.create_coords_key(
                 coords,
-                coords_key,
+                tensor_stride=tensor_stride,
                 force_creation=True,
                 force_remap=True,
                 allow_duplicate_coords=True)

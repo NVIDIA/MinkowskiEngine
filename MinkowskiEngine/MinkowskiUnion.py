@@ -68,51 +68,49 @@ class MinkowskiUnion(Module):
     r"""Create a union of all sparse tensors and add overlapping features.
 
     Args:
-        A set or list of :attr:`MinkowskiEngine.SparseTensor`'s.
-
-    Returns:
-        A :attr:`MinkowskiEngine.SparseTensor` with coordinates = union of all
-        input coordinates, and features = sum of all features corresponding to the
-        coordinate.
-
-    Example::
-
-        >>> # Define inputs
-        >>> input1 = SparseTensor(
-        >>>     torch.rand(N, in_channels, dtype=torch.double), coords=coords)
-        >>> # All inputs must share the same coordinate manager
-        >>> input2 = SparseTensor(
-        >>>     torch.rand(N, in_channels, dtype=torch.double),
-        >>>     coords=coords + 1,
-        >>>     coords_manager=input1.coords_man,  # Must use same coords manager
-        >>>     force_creation=True  # The tensor stride [1, 1] already exists.
-        >>> )
-        >>> union = MinkowskiUnion(D)
-        >>> output = union((input1, iput2))
+        None
 
     .. warning::
        This function is experimental and the usage can be changed in the future updates.
 
     """
 
-    def __init__(self, dimension=-1):
+    def __init__(self):
         super(MinkowskiUnion, self).__init__()
-        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
-
-        self.dimension = dimension
         self.union = MinkowskiUnionFunction()
 
-    def forward(self, inputs):
-        assert isinstance(inputs, list) or isinstance(inputs, tuple), \
-            "Input must be a list or a set of SparseTensors"
+    def forward(self, *inputs):
+        r"""
+        Args:
+            A variable number of :attr:`MinkowskiEngine.SparseTensor`'s.
+
+        Returns:
+            A :attr:`MinkowskiEngine.SparseTensor` with coordinates = union of all
+            input coordinates, and features = sum of all features corresponding to the
+            coordinate.
+
+        Example::
+
+            >>> # Define inputs
+            >>> input1 = SparseTensor(
+            >>>     torch.rand(N, in_channels, dtype=torch.double), coords=coords)
+            >>> # All inputs must share the same coordinate manager
+            >>> input2 = SparseTensor(
+            >>>     torch.rand(N, in_channels, dtype=torch.double),
+            >>>     coords=coords + 1,
+            >>>     coords_manager=input1.coords_man,  # Must use same coords manager
+            >>>     force_creation=True  # The tensor stride [1, 1] already exists.
+            >>> )
+            >>> union = MinkowskiUnion()
+            >>> output = union(input1, iput2)
+
+        """
+        for s in inputs:
+            assert isinstance(s, SparseTensor), "Inputs must be sparse tensors."
         assert len(inputs) > 1, \
             "input must be a set with at least 2 SparseTensors"
-        for input in inputs:
-            assert isinstance(input, SparseTensor), \
-                "Input must be a collection of SparseTensor"
-            assert input.D == self.dimension
 
-        out_coords_key = CoordsKey(input.coords_key.D)
+        out_coords_key = CoordsKey(inputs[0].coords_key.D)
         output = self.union.apply([input.coords_key for input in inputs],
                                   out_coords_key, inputs[0].coords_man,
                                   *[input.F for input in inputs])
