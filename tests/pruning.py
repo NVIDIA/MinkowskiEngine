@@ -91,7 +91,7 @@ class TestPruning(unittest.TestCase):
             dimension=D).double()
         conv2 = MinkowskiConvolution(
             channels[2], channels[2], kernel_size=3, dimension=D).double()
-        pruning = MinkowskiPruning(D)
+        pruning = MinkowskiPruning()
 
         out1 = conv_tr1(input)
         self.assertTrue(torch.prod(torch.abs(out1.F) > 0).item() == 1)

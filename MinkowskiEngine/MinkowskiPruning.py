@@ -37,7 +37,7 @@ class MinkowskiPruningFunction(Function):
     def forward(ctx, in_feat, mask, in_coords_key, out_coords_key,
                 coords_manager):
         assert in_feat.size(0) == mask.size(0)
-        assert isinstance(mask, torch.BoolTensor), "mask must be a bool tensor."
+        assert isinstance(mask, torch.BoolTensor), "Mask must be a cpu bool tensor."
         if not in_feat.is_contiguous():
             in_feat = in_feat.contiguous()
         if not mask.is_contiguous():
@@ -71,39 +71,37 @@ class MinkowskiPruningFunction(Function):
 class MinkowskiPruning(Module):
     r"""Remove specified coordinates from a :attr:`MinkowskiEngine.SparseTensor`.
 
-    Args:
-        :attr:`input` (:attr:`MinkowskiEnigne.SparseTensor`): a sparse tensor
-        to remove coordinates from.
-
-        :attr:`mask` (:attr:`torch.BoolTensor`): mask vector that specifies
-        which one to keep. Coordinates with False will be removed.
-
-    Returns:
-        A :attr:`MinkowskiEngine.SparseTensor` with C = coordinates
-        corresponding to `mask == True` F = copy of the features from `mask ==
-        True`.
-
-    Example::
-
-        >>> # Define inputs
-        >>> input = SparseTensor(feats, coords=coords)
-        >>> # Any boolean tensor can be used as the filter
-        >>> mask = torch.rand(feats.size(0)) < 0.5
-        >>> pruning = MinkowskiPruning(D)
-        >>> output = pruning(input, mask)
-
     """
 
-    def __init__(self, dimension=-1):
+    def __init__(self):
         super(MinkowskiPruning, self).__init__()
-        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
-
-        self.dimension = dimension
         self.pruning = MinkowskiPruningFunction()
 
     def forward(self, input, mask):
+        r"""
+        Args:
+            :attr:`input` (:attr:`MinkowskiEnigne.SparseTensor`): a sparse tensor
+            to remove coordinates from.
+
+            :attr:`mask` (:attr:`torch.BoolTensor`): mask vector that specifies
+            which one to keep. Coordinates with False will be removed.
+
+        Returns:
+            A :attr:`MinkowskiEngine.SparseTensor` with C = coordinates
+            corresponding to `mask == True` F = copy of the features from `mask ==
+            True`.
+
+        Example::
+
+            >>> # Define inputs
+            >>> input = SparseTensor(feats, coords=coords)
+            >>> # Any boolean tensor can be used as the filter
+            >>> mask = torch.rand(feats.size(0)) < 0.5
+            >>> pruning = MinkowskiPruning()
+            >>> output = pruning(input, mask)
+
+        """
         assert isinstance(input, SparseTensor)
-        assert input.D == self.dimension
 
         out_coords_key = CoordsKey(input.coords_key.D)
         output = self.pruning.apply(input.F, mask, input.coords_key,
