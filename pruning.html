@@ -195,7 +195,7 @@
 <h2>MinkowskiPruning<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPruning">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPruning</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPruning</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove specified coordinates from a <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEnigne.SparseTensor</span></code>): a sparse tensor
@@ -213,13 +213,13 @@ True</cite>.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Any boolean tensor can be used as the filter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">feats</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.5</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pruning</span> <span class="o">=</span> <span class="n">MinkowskiPruning</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pruning</span> <span class="o">=</span> <span class="n">MinkowskiPruning</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">pruning</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPruning.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
