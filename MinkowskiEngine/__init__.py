@@ -74,5 +74,5 @@ from MinkowskiOps import MinkowskiLinear, cat
 
 import MinkowskiFunctional
 
-import utils
-import modules
+import MinkowskiEngine.utils as utils
+import MinkowskiEngine.modules as modules
