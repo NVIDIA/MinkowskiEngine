@@ -131,9 +131,6 @@ def sparse_collate(coords, feats, labels=None):
             label = labels[batch_id]
             if isinstance(label, np.ndarray):
                 label = torch.from_numpy(label)
-            else:
-                assert isinstance(label, torch.Tensor), \
-                    "labels must be of type numpy.ndarray or torch.Tensor"
             labels_batch.append(label)
 
         # Batched coords
@@ -151,7 +148,8 @@ def sparse_collate(coords, feats, labels=None):
     # Concatenate all lists
     feats_batch = torch.cat(feats_batch, 0)
     if use_label:
-        labels_batch = torch.cat(labels_batch, 0)
+        if isinstance(labels_batch[0], torch.Tensor):
+            labels_batch = torch.cat(labels_batch, 0)
         return bcoords, feats_batch, labels_batch
     else:
         return bcoords, feats_batch
