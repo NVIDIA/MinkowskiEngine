@@ -39,6 +39,7 @@ the mini-batch index to disassociate instances within the same batch.
 Internally, we handle the batch index as an additional spatial dimension.
 
 
+
 Generalized Convolution on a Sparse Tensor
 ------------------------------------------
 
@@ -94,6 +95,22 @@ special case is the sparse submanifold convolution when we set
 dense convolution.  If we define the :math:`\mathcal{C}^\text{in}` and
 :math:`\mathcal{C}^\text{out}` as multiples of a natural number and
 :math:`\mathcal{N}^D = \mathcal{V}^D(K)`, we have a strided dense convolution.
+
+
+.. |dense| image:: images/conv_dense.gif
+   :width: 100%
+
+.. |sparse| image:: images/conv_sparse.gif
+   :width: 100%
+
+
+We visualize a simple 2D image convolution on a dense tensor and a sparse tensor. Note that the order of convolution on a sparse tensor is not sequential.
+
++--------------+---------------+
+| Dense Tensor | Sparse Tensor |
++--------------+---------------+
+| |dense|      | |sparse|      |
++--------------+---------------+
 
 
 References
