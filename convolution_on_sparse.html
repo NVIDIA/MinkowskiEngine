@@ -229,13 +229,13 @@ Internally, we handle the batch index as an additional spatial dimension.</p>
 <p>The convolution is a fundamental operation in many fields. In image perception,
 the 2D convolution has achieved state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
-In this work, we adopt the sparse convolution <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a> and propose the generalized sparse
-convolution. We use the generalized sparse convolution not only to the 3D
+In this work, we adopt the sparse convolution <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a> and propose the generalized convolution on a sparse
+tensor. We use the generalized convolution not only to the 3D
 spatial axes, but also to the temporal axis, which is proven to be more
 effective than recurrent neural networks (RNN) in some applications.</p>
-<p>Specifically, we generalize the sparse convolution for generic input and
-output coordinates, and for arbitrary kernel shapes. The generalized sparse
-convolution encompasses not only all sparse convolutions but also the
+<p>Specifically, we the generalize convolution for generic input and
+output coordinates, and for arbitrary kernel shapes. The generalized convolution
+encompasses not only all sparse convolutions but also the
 conventional dense convolutions. Let <span class="math notranslate nohighlight">\(x^{\text{in}}_\mathbf{u} \in
 \mathbb{R}^{N^\text{in}}\)</span> be an <span class="math notranslate nohighlight">\(N^\text{in}\)</span>-dimensional input feature
 vector in a <span class="math notranslate nohighlight">\(D\)</span>-dimensional space at <span class="math notranslate nohighlight">\(\mathbf{u} \in \mathbb{R}^D\)</span>
@@ -249,7 +249,7 @@ convolution in D-dimension is</p>
 \[\mathbf{x}^{\text{out}}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{V}^D(K)} W_\mathbf{i} \mathbf{x}^{\text{in}}_{\mathbf{u} + \mathbf{i}} \text{ for } \mathbf{u} \in \mathbb{Z}^D,\]</div>
 <p>where <span class="math notranslate nohighlight">\(\mathcal{V}^D(K)\)</span> is the list of offsets in <span class="math notranslate nohighlight">\(D\)</span>-dimensional
 hypercube centered at the origin. e.g. <span class="math notranslate nohighlight">\(\mathcal{V}^1(3)=\{-1, 0, 1\}\)</span>.
-The generalized sparse convolution in the following equation relaxes the above
+The generalized convolution in the following equation relaxes the above
 equation.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{x}^{\text{out}}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, \mathcal{C}^{\text{in}})} W_\mathbf{i} \mathbf{x}^{\text{in}}_{\mathbf{u} + \mathbf{i}} \text{ for } \mathbf{u} \in \mathcal{C}^{\text{out}}\]</div>
@@ -268,7 +268,7 @@ special case is the sparse submanifold convolution when we set
 <span class="math notranslate nohighlight">\(\mathcal{C}^\text{out} = \mathcal{C}^\text{in}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{N}^D
 = \mathcal{V}^D(K)\)</span>. If we set <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} =
 \mathcal{C}^\text{out} = \mathbb{Z}^D\)</span> and <span class="math notranslate nohighlight">\(\mathcal{N}^D =
-\mathcal{V}^D(K)\)</span>, the generalized sparse convolution becomes the conventional
+\mathcal{V}^D(K)\)</span>, the generalized convolution on a sparse tensor becomes the conventional
 dense convolution.  If we define the <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in}\)</span> and
 <span class="math notranslate nohighlight">\(\mathcal{C}^\text{out}\)</span> as multiples of a natural number and
 <span class="math notranslate nohighlight">\(\mathcal{N}^D = \mathcal{V}^D(K)\)</span>, we have a strided dense convolution.</p>
@@ -285,8 +285,11 @@ dense convolution.  If we define the <span class="math notranslate nohighlight">
 <tr class="row-even"><td><p><a class="reference internal" href="_images/conv_dense.gif"><img alt="dense" src="_images/conv_dense.gif" style="width: 100%;" /></a></p></td>
 <td><p><a class="reference internal" href="_images/conv_sparse.gif"><img alt="sparse" src="_images/conv_sparse.gif" style="width: 100%;" /></a></p></td>
 </tr>
+<tr class="row-odd"><td colspan="2"><p>[Photo Credit: <a class="reference external" href="https://chrischoy.org">Chris Choy</a>]</p></td>
+</tr>
 </tbody>
 </table>
+<p>To efficiently compute the convolution on a sparse tensor, we must find how each non-zero element in an input sparse tensor is mapped to the output sparse tensor. We call this mapping a kernel map <a class="reference external" href="https://arxiv.org/abs/1904.08755">[3]</a> since it defines how an input is mapped to an output through a kernel. Please refer to the <a class="reference external" href="terminology.html">terminology</a> for more details.</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>

@@ -228,8 +228,28 @@ x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D
 <div class="section" id="kernel-map">
 <h2>Kernel Map<a class="headerlink" href="#kernel-map" title="Permalink to this headline">¶</a></h2>
 <p>A sparse tensor consists of a set of coordinates <span class="math notranslate nohighlight">\(C \in \mathbb{Z}^{N \times D}\)</span> and associated features <span class="math notranslate nohighlight">\(F \in \mathbb{R}^{N \times N_F}\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of non-zero elements within a sparse tensor, <span class="math notranslate nohighlight">\(D\)</span> is the dimension of the space, and <span class="math notranslate nohighlight">\(N_F\)</span> is the number of channels. As we use a hash table for coordinates, the order of coordinates is arbitrary, and we need to find the correct mapping between an input sparse tensor to an output sparse if we use a convolution operation.</p>
-<p>We call this mapping from an input sparse tensor to an output sparse tensor a kernel map.  For example, a 2D convolution with kernel size 2 has a <span class="math notranslate nohighlight">\(2 \times 2\)</span> convolution kernel, which consists of 4 matrices. With each kernel, some input coordinates will be mapped to corresponding output coordinates. We define such maps as pairs of lists of integers: <span class="math notranslate nohighlight">\(\mathcal{I}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{O}\)</span>.  A pair forms one map <span class="math notranslate nohighlight">\((\mathcal{I} \rightarrow \mathcal{O})\)</span> which defines row indices of input feature <span class="math notranslate nohighlight">\(F_I\)</span> that map to the row indices of output feature <span class="math notranslate nohighlight">\(F_O\)</span>.</p>
-<p>Since a single map is defined only on a specific cell of a convolution kernel, one convolution requires multiple maps. In the case of a <span class="math notranslate nohighlight">\(2 \times 2\)</span> convolution, we need 4 maps to define a complete kernel map.</p>
+<p>We call this mapping from an input sparse tensor to an output sparse tensor a kernel map.  For example, a 2D convolution with kernel size 3 has a <span class="math notranslate nohighlight">\(3 \times 3\)</span> convolution kernel, which consists of 9 matrices. With each kernel, some input coordinates will be mapped to corresponding output coordinates. We define such maps as pairs of lists of integers: <span class="math notranslate nohighlight">\(\mathcal{I}\)</span> and <span class="math notranslate nohighlight">\(\mathcal{O}\)</span>.  A pair forms one map <span class="math notranslate nohighlight">\((\mathcal{I} \rightarrow \mathcal{O})\)</span> which defines row indices of input feature <span class="math notranslate nohighlight">\(F_I\)</span> that map to the row indices of output feature <span class="math notranslate nohighlight">\(F_O\)</span>.</p>
+<p>Since a single map is defined only on a specific cell of a convolution kernel, one convolution requires multiple maps. In the case of a <span class="math notranslate nohighlight">\(3 \times 3\)</span> convolution, we need 9 maps to define a complete kernel map.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Convolution Kernel Map</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_images/kernel_map.gif"><img alt="kernel_map" src="_images/kernel_map.gif" style="width: 100%;" /></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>[Photo Credit: <a class="reference external" href="https://chrischoy.org">Chris Choy</a>]</p></td>
+</tr>
+</tbody>
+</table>
+<p>Using the above example, we can extract the convolution kernel map as follows:</p>
+<ul class="simple">
+<li><p>Kernel B: 1 → 0</p></li>
+<li><p>Kernel B: 0 → 2</p></li>
+<li><p>Kernel H: 2 → 3</p></li>
+<li><p>Kernel I: 0 → 2</p></li>
+</ul>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>

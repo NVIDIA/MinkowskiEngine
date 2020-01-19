@@ -88,6 +88,7 @@
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Minkowski Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#building-a-neural-network-on-a-sparse-tensor">Building a Neural Network on a Sparse Tensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
@@ -215,6 +216,25 @@
 <h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a></p>
 <p>The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://stanfordvl.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
+<div class="section" id="building-a-neural-network-on-a-sparse-tensor">
+<h2>Building a Neural Network on a Sparse Tensor<a class="headerlink" href="#building-a-neural-network-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h2>
+<p>The Minkowski Engine provides APIs that allow users to build a neural network on a sparse tensor. Then, how dow we define convolution/pooling/transposed operations on a sparse tensor?
+Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution output on a few specified points. For more information, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html">convolution on a sparse tensor</a></p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Dense Tensor</th>
+<th align="center">Sparse Tensor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="" src="./_images/conv_dense.gif" /></td>
+<td align="center"><img alt="" src="./_images/conv_sparse.gif" /></td>
+</tr>
+</tbody>
+</table><p><em>[Photo Credit: <a class="reference external" href="https://chrischoy.org">Chris Choy</a>]</em></p>
+</div>
 <hr class="docutils" />
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>

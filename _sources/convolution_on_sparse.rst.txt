@@ -47,14 +47,14 @@ The convolution is a fundamental operation in many fields. In image perception,
 the 2D convolution has achieved state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
 In this work, we adopt the sparse convolution `[2]
-<https://arxiv.org/abs/1711.10275>`_ and propose the generalized sparse
-convolution. We use the generalized sparse convolution not only to the 3D
+<https://arxiv.org/abs/1711.10275>`_ and propose the generalized convolution on a sparse
+tensor. We use the generalized convolution not only to the 3D
 spatial axes, but also to the temporal axis, which is proven to be more
 effective than recurrent neural networks (RNN) in some applications.
 
-Specifically, we generalize the sparse convolution for generic input and
-output coordinates, and for arbitrary kernel shapes. The generalized sparse
-convolution encompasses not only all sparse convolutions but also the
+Specifically, we the generalize convolution for generic input and
+output coordinates, and for arbitrary kernel shapes. The generalized convolution
+encompasses not only all sparse convolutions but also the
 conventional dense convolutions. Let :math:`x^{\text{in}}_\mathbf{u} \in
 \mathbb{R}^{N^\text{in}}` be an :math:`N^\text{in}`-dimensional input feature
 vector in a :math:`D`-dimensional space at :math:`\mathbf{u} \in \mathbb{R}^D`
@@ -70,7 +70,7 @@ convolution in D-dimension is
 
 where :math:`\mathcal{V}^D(K)` is the list of offsets in :math:`D`-dimensional
 hypercube centered at the origin. e.g. :math:`\mathcal{V}^1(3)=\{-1, 0, 1\}`.
-The generalized sparse convolution in the following equation relaxes the above
+The generalized convolution in the following equation relaxes the above
 equation.
 
 .. math::
@@ -91,7 +91,7 @@ special case is the sparse submanifold convolution when we set
 :math:`\mathcal{C}^\text{out} = \mathcal{C}^\text{in}` and :math:`\mathcal{N}^D
 = \mathcal{V}^D(K)`. If we set :math:`\mathcal{C}^\text{in} =
 \mathcal{C}^\text{out} = \mathbb{Z}^D` and :math:`\mathcal{N}^D =
-\mathcal{V}^D(K)`, the generalized sparse convolution becomes the conventional
+\mathcal{V}^D(K)`, the generalized convolution on a sparse tensor becomes the conventional
 dense convolution.  If we define the :math:`\mathcal{C}^\text{in}` and
 :math:`\mathcal{C}^\text{out}` as multiples of a natural number and
 :math:`\mathcal{N}^D = \mathcal{V}^D(K)`, we have a strided dense convolution.
@@ -106,11 +106,15 @@ dense convolution.  If we define the :math:`\mathcal{C}^\text{in}` and
 
 We visualize a simple 2D image convolution on a dense tensor and a sparse tensor. Note that the order of convolution on a sparse tensor is not sequential.
 
-+--------------+---------------+
-| Dense Tensor | Sparse Tensor |
-+--------------+---------------+
-| |dense|      | |sparse|      |
-+--------------+---------------+
++--------------------------+----------------------------+
+| Dense Tensor             | Sparse Tensor              |
++--------------------------+----------------------------+
+| |dense|                  | |sparse|                   |
++--------------------------+----------------------------+
+| [Photo Credit: `Chris Choy <https://chrischoy.org>`_] |
++-------------------------------------------------------+
+
+To efficiently compute the convolution on a sparse tensor, we must find how each non-zero element in an input sparse tensor is mapped to the output sparse tensor. We call this mapping a kernel map `[3] <https://arxiv.org/abs/1904.08755>`_ since it defines how an input is mapped to an output through a kernel. Please refer to the `terminology <terminology.html>`_ for more details.
 
 
 References
