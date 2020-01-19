@@ -6,12 +6,14 @@
 
 - Add `MinkowskiGlobalSumPooling`, `MinkowskiGlobalAvgPooling`
 - Add `examples/convolution.py` to showcase various usages
+- Add convolution, kernel map gifs
 
 ### Changed
 
 - `SparseTensor` additional coords.device guard
 - `MinkowskiConvolution`, `Minkowski*Pooling` output coordinates will be equal to the input coordinates if stride == 1. Before this change, they generated output coordinates defined first for a speicific tensor stride.
 - `MinkowskiUnion` and `Ops.cat` will take a variable number of sparse tensors not a list of sparse tensors
+- Namespace cleanup
 
 
 ## [0.3.3] - 2020-01-07

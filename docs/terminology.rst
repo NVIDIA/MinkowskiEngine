@@ -48,10 +48,28 @@ Kernel Map
 
 A sparse tensor consists of a set of coordinates :math:`C \in \mathbb{Z}^{N \times D}` and associated features :math:`F \in \mathbb{R}^{N \times N_F}` where :math:`N` is the number of non-zero elements within a sparse tensor, :math:`D` is the dimension of the space, and :math:`N_F` is the number of channels. As we use a hash table for coordinates, the order of coordinates is arbitrary, and we need to find the correct mapping between an input sparse tensor to an output sparse if we use a convolution operation.
 
-We call this mapping from an input sparse tensor to an output sparse tensor a kernel map.  For example, a 2D convolution with kernel size 2 has a :math:`2 \times 2` convolution kernel, which consists of 4 matrices. With each kernel, some input coordinates will be mapped to corresponding output coordinates. We define such maps as pairs of lists of integers: :math:`\mathcal{I}` and :math:`\mathcal{O}`.  A pair forms one map :math:`(\mathcal{I} \rightarrow \mathcal{O})` which defines row indices of input feature :math:`F_I` that map to the row indices of output feature :math:`F_O`.
+We call this mapping from an input sparse tensor to an output sparse tensor a kernel map.  For example, a 2D convolution with kernel size 3 has a :math:`3 \times 3` convolution kernel, which consists of 9 matrices. With each kernel, some input coordinates will be mapped to corresponding output coordinates. We define such maps as pairs of lists of integers: :math:`\mathcal{I}` and :math:`\mathcal{O}`.  A pair forms one map :math:`(\mathcal{I} \rightarrow \mathcal{O})` which defines row indices of input feature :math:`F_I` that map to the row indices of output feature :math:`F_O`.
 
-Since a single map is defined only on a specific cell of a convolution kernel, one convolution requires multiple maps. In the case of a :math:`2 \times 2` convolution, we need 4 maps to define a complete kernel map.
+Since a single map is defined only on a specific cell of a convolution kernel, one convolution requires multiple maps. In the case of a :math:`3 \times 3` convolution, we need 9 maps to define a complete kernel map.
 
+
+.. |kernel_map| image:: images/kernel_map.gif
+   :width: 100%
+
++-------------------------------------------------------+
+| Convolution Kernel Map                                |
++-------------------------------------------------------+
+| |kernel_map|                                          |
++-------------------------------------------------------+
+| [Photo Credit: `Chris Choy <https://chrischoy.org>`_] |
++-------------------------------------------------------+
+
+Using the above example, we can extract the convolution kernel map as follows:
+
+- Kernel B: 1 → 0
+- Kernel B: 0 → 2
+- Kernel H: 2 → 3
+- Kernel I: 0 → 2
 
 
 References

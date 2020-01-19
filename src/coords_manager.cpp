@@ -74,7 +74,7 @@ vector<at::Tensor> CoordsManager::getKernelMap(
       p_kernel_map += 2;
     }
 
-    vec_tensors.push_back(::move(kernel_map));
+    vec_tensors.push_back(move(kernel_map));
   }
 
   return vec_tensors;
@@ -103,10 +103,10 @@ CoordsManager::getCoordsMap(py::object py_in_coords_key,
   const auto &ins = in_out.first;
   const auto &outs = in_out.second;
   // All size
-  const auto N = ::accumulate(ins.begin(), ins.end(), 0,
-                              [](size_t curr_sum, const vector<int> &map) {
-                                return curr_sum + map.size();
-                              });
+  const auto N = std::accumulate(ins.begin(), ins.end(), 0,
+                                 [](size_t curr_sum, const vector<int> &map) {
+                                   return curr_sum + map.size();
+                                 });
 
   at::Tensor in_out_1 =
       torch::empty({N}, torch::TensorOptions().dtype(torch::kInt64));
@@ -155,8 +155,8 @@ CoordsManager::getUnionMap(vector<py::object> py_in_coords_keys,
     copy_types(ins[i], th_in);
     copy_types(outs[i], th_out);
 
-    th_ins.push_back(::move(th_in));
-    th_outs.push_back(::move(th_out));
+    th_ins.push_back(move(th_in));
+    th_outs.push_back(move(th_out));
   }
 
   return make_pair(th_ins, th_outs);
@@ -357,7 +357,7 @@ uint64_t CoordsManager::createStridedCoords(uint64_t coords_key,
 
   uint64_t out_coords_key = 0;
   const bool is_identity =
-      ::all_of(strides.begin(), strides.end(), [](int s) { return s == 1; });
+      std::all_of(strides.begin(), strides.end(), [](int s) { return s == 1; });
 
   if (is_identity) {
     out_coords_key = coords_key;
@@ -466,11 +466,11 @@ uint64_t CoordsManager::createUnionCoords(vector<py::object> py_in_coords_keys,
     // Set the tensor strides to the smallest elements.
     p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
     p_in_coords_keys.push_back(p_in_coords_key);
-    transform(tensor_strides.begin(),                       /* In1 begin */
-              tensor_strides.end(),                         /* In1 end */
-              p_in_coords_key->getTensorStride().begin(),   /* In2 begin */
-              tensor_strides.begin(),                       /* out begin */
-              [](int a, int b) -> int { return min(a, b); } /* binary op */
+    transform(tensor_strides.begin(),                            /* In1 begin */
+              tensor_strides.end(),                              /* In1 end */
+              p_in_coords_key->getTensorStride().begin(),        /* In2 begin */
+              tensor_strides.begin(),                            /* out begin */
+              [](int a, int b) -> int { return std::min(a, b); } /* binary op */
     );
     const uint64_t in_coords_key = p_in_coords_key->getKey();
     ASSERT(existsCoordsKey(in_coords_key),
@@ -479,10 +479,10 @@ uint64_t CoordsManager::createUnionCoords(vector<py::object> py_in_coords_keys,
   }
   CoordsKey *p_out_coords_key = py_out_coords_key.cast<CoordsKey *>();
 
-  vector<::reference_wrapper<CoordsMap>> in_coords_maps;
+  vector<reference_wrapper<CoordsMap>> in_coords_maps;
   for (const CoordsKey *p_in_coords_key : p_in_coords_keys) {
     CoordsMap &curr_map = coords_maps[p_in_coords_key->getKey()];
-    in_coords_maps.push_back(::ref(curr_map));
+    in_coords_maps.push_back(ref(curr_map));
   }
 
   // set a random coords key
@@ -791,11 +791,11 @@ CoordsManager::getUnionInOutMaps(vector<py::object> py_in_coords_keys,
   const InOutMapKey map_key =
       getUnionMapHashKey(py_in_coords_keys, py_out_coords_key);
 
-  vector<::reference_wrapper<CoordsMap>> in_coords_maps;
+  vector<reference_wrapper<CoordsMap>> in_coords_maps;
   for (const auto &py_in_coords_key : py_in_coords_keys) {
     const CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
     uint64_t in_coords_key = p_in_coords_key->getKey();
-    in_coords_maps.push_back(::ref(coords_maps[in_coords_key]));
+    in_coords_maps.push_back(ref(coords_maps[in_coords_key]));
   }
 
   // For non transpose case

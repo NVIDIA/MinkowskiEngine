@@ -8,9 +8,9 @@
 #include "gpu.cuh"
 #include "types.hpp"
 
-using namespace std;
-
 namespace minkowski {
+
+using std::vector;
 
 class GPUMemoryManager {
   int initial_size = 256;

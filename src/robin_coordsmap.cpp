@@ -65,7 +65,7 @@ pair<vector<int>, set<int>> CoordsMap::initialize(const int *p_coords,
   int c = 0;
   for (int i = 0; i < nrows; i++) {
     vector<int> coord(ncols);
-    copy_n(p_coords + i * ncols, ncols, coord.data());
+    std::copy_n(p_coords + i * ncols, ncols, coord.data());
 
     if (map.find(coord) == map.end()) {
 #ifdef BATCH_FIRST
@@ -143,8 +143,8 @@ CoordsMap CoordsMap::prune(const bool *p_keep, int n) const {
 }
 
 CoordsMap
-CoordsMap::union_coords(const vector<::reference_wrapper<CoordsMap>> &maps) {
-  const size_t num_tot = ::accumulate(
+CoordsMap::union_coords(const vector<reference_wrapper<CoordsMap>> &maps) {
+  const size_t num_tot = std::accumulate(
       maps.begin(), maps.end(), 0,
       [](size_t count, const CoordsMap &it) { return count + it.size(); });
 
@@ -199,7 +199,7 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
     Region cregion(region);
     int kernel_ind, curr_index;
     for (auto iter_out = out_inner_map.begin(stride * n);
-         iter_out.num_steps() < min(stride, numElements - n * stride);
+         iter_out.num_steps() < std::min(stride, numElements - n * stride);
          ++iter_out) {
 
       // set the bounds for the current region
@@ -329,7 +329,7 @@ CoordsMap::stride_map(const CoordsMap &out_coords_map,
 }
 
 InOutMapsPair<int>
-CoordsMap::union_map(const vector<::reference_wrapper<CoordsMap>> &in_maps,
+CoordsMap::union_map(const vector<reference_wrapper<CoordsMap>> &in_maps,
                      const CoordsMap &out_map) {
   const size_t num_in_maps = in_maps.size();
   InOutMaps<int> ins(num_in_maps);
@@ -355,9 +355,9 @@ CoordsMap::union_map(const vector<::reference_wrapper<CoordsMap>> &in_maps,
 
 void CoordsMap::print() const {
   for (const auto &kv : map) {
-    cout << ArrToString(kv.first) << ":" << kv.second << "\n";
+    std::cout << ArrToString(kv.first) << ":" << kv.second << "\n";
   }
-  cout << ::flush;
+  std::cout << std::flush;
 }
 
 } // end namespace minkowski

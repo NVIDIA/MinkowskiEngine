@@ -12,9 +12,9 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 The Minkowski Engine provides APIs that allow users to build a neural network on a sparse tensor. Then, how dow we define convolution/pooling/transposed operations on a sparse tensor?
 Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution output on a few specified points. For more information, please visit [convolution on a sparse tensor](https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html)
 
-| Dense Tensor                 | Sparse Tensor                |
-|:----------------------------:|:----------------------------:|
-| ![](./images/conv_dense.gif) |![](./images/conv_sparse.gif) |
+| Dense Tensor                  | Sparse Tensor                 |
+|:-----------------------------:|:-----------------------------:|
+| ![](./_images/conv_dense.gif) |![](./_images/conv_sparse.gif) |
 
 --------------------------------------------------------------------------------
 

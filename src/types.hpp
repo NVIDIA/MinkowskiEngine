@@ -29,9 +29,11 @@
 #include <functional>
 #include <vector>
 
-using namespace std;
-
 namespace minkowski {
+
+using std::array;
+using std::pair;
+using std::vector;
 
 // D-Dimensional coordinate + batch dimension = D + 1
 template <typename Itype> using Stride = vector<Itype>;

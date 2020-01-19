@@ -31,8 +31,6 @@
 #include "types.hpp"
 #include "utils.hpp"
 
-using namespace std;
-
 namespace minkowski {
 
 class Region;

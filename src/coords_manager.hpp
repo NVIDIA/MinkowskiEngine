@@ -25,10 +25,15 @@
 #ifndef COORDS_MAN
 #define COORDS_MAN
 
+#include <algorithm>
 #include <array>
+#include <functional>
 #include <iostream>
+#include <iterator>
 #include <omp.h>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <torch/extension.h>
@@ -43,11 +48,20 @@
 
 namespace minkowski {
 
+using std::begin;
+using std::end;
+using std::get;
+using std::move;
+using std::ref;
+using std::string;
+using std::to_string;
+using std::unordered_map;
+
 template <typename VType> int getInOutMapsSize(const VType &map) {
   // can't use ::accumulate as pVector template instantiation requires a bit
   // dirty syntax
   int n = 0;
-  for (auto cmap = ::begin(map); cmap != ::end(map); ++cmap)
+  for (auto cmap = begin(map); cmap != end(map); ++cmap)
     n += cmap->size();
   return n;
 }
@@ -66,7 +80,7 @@ inline long computeKernelVolume(int region_type, const vector<int> &kernel_size,
   } else if (region_type == 2) {
     kernel_volume = n_offset;
   } else {
-    throw invalid_argument("Invalid region type");
+    throw std::invalid_argument("Invalid region type");
   }
   return kernel_volume;
 }

@@ -35,8 +35,12 @@
 
 namespace minkowski {
 
+using std::reference_wrapper;
+using std::set;
+using std::vector;
+
 template <typename Itype> struct byte_hash_vec {
-  size_t operator()(std::vector<Itype> const &vec) const noexcept {
+  size_t operator()(vector<Itype> const &vec) const noexcept {
     return robin_hood::hash_bytes(vec.data(), sizeof(Itype) * vec.size());
   }
 };
@@ -64,7 +68,7 @@ vector<int> stride_copy(const vector<Itype> &src,
 }
 
 using CoordsInnerMap =
-    robin_hood::unordered_flat_map<std::vector<int>, int, byte_hash_vec<int>>;
+    robin_hood::unordered_flat_map<vector<int>, int, byte_hash_vec<int>>;
 
 class CoordsMap {
 private:
@@ -90,7 +94,7 @@ public:
 
   // class method
   static CoordsMap
-  union_coords(const vector<::reference_wrapper<CoordsMap>> &maps);
+  union_coords(const vector<reference_wrapper<CoordsMap>> &maps);
 
   // Generate in-out kernel maps
   InOutMapsPair<int> kernel_map(const CoordsMap &out_coords_map,
@@ -101,7 +105,7 @@ public:
   InOutMapsPair<int> stride_map(const CoordsMap &out_coords_map,
                                 const vector<int> &tensor_strides) const;
   static InOutMapsPair<int>
-  union_map(const vector<::reference_wrapper<CoordsMap>> &in_maps,
+  union_map(const vector<reference_wrapper<CoordsMap>> &in_maps,
             const CoordsMap &out_map);
 
   // Iterators

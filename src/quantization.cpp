@@ -62,7 +62,7 @@ vector<int> quantize_np(
   vector<int> &mapping = map_batch.first;
 
   // mapping is empty when coords are all unique
-  return ::move(mapping);
+  return move(mapping);
 }
 
 at::Tensor quantize_th(at::Tensor coords) {
@@ -113,10 +113,10 @@ vector<py::array> quantize_label_np(
   map.reserve(nrows);
   for (int i = 0; i < nrows; i++) {
     vector<int> coord(ncols);
-    ::copy_n(p_coords + i * ncols, ncols, coord.data());
+    std::copy_n(p_coords + i * ncols, ncols, coord.data());
     auto map_iter = map.find(coord);
     if (map_iter == map.end()) {
-      map[::move(coord)] = IndexLabel(i, p_labels[i]);
+      map[move(coord)] = IndexLabel(i, p_labels[i]);
     } else if (map_iter->second.label != p_labels[i]) {
       map_iter->second.label = invalid_label;
     }
@@ -161,10 +161,10 @@ vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
   map.reserve(nrows);
   for (int i = 0; i < nrows; i++) {
     vector<int> coord(ncols);
-    ::copy_n(p_coords + i * ncols, ncols, coord.data());
+    std::copy_n(p_coords + i * ncols, ncols, coord.data());
     auto map_iter = map.find(coord);
     if (map_iter == map.end()) {
-      map[::move(coord)] = IndexLabel(i, p_labels[i]);
+      map[move(coord)] = IndexLabel(i, p_labels[i]);
     } else if (map_iter->second.label != p_labels[i]) {
       map_iter->second.label = invalid_label;
     }
