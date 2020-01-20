@@ -25,6 +25,7 @@
 #ifndef ROBIN_COORDSMAP
 #define ROBIN_COORDSMAP
 
+#include <cmath>
 #include <memory>
 #include <set>
 
@@ -46,23 +47,21 @@ template <typename Itype> struct byte_hash_vec {
 };
 
 template <typename Itype>
-vector<int> stride_copy(const vector<Itype> &src,
-                        const vector<Itype> &tensor_strides) {
+inline vector<int> stride_copy(const vector<Itype> &src,
+                               const vector<Itype> &tensor_strides) noexcept {
   vector<Itype> dst(src.size());
+  const int size = tensor_strides.size();
 #ifdef BATCH_FIRST
-  int b = 1;
+  const int b = 1;
   dst[0] = src[0];
 #else
-  int b = 0;
-  dst[tensor_strides.size()] = src[tensor_strides.size()];
+  const int b = 0;
+  dst[size] = src[size];
 #endif
 
-  for (int i = 0; i < tensor_strides.size(); i++) {
-    if (src[i + b] > 0)
-      dst[i + b] = (src[i + b] / tensor_strides[i]) * tensor_strides[i];
-    else
-      dst[i + b] = ((src[i + b] - tensor_strides[i] + 1) / tensor_strides[i]) *
-                   tensor_strides[i];
+  for (int i = 0; i < size; i++) {
+    dst[i + b] =
+        std::floor((float)src[i + b] / tensor_strides[i]) * tensor_strides[i];
   }
   return dst;
 }

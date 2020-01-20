@@ -126,6 +126,9 @@ LIBRARY_DIRS += $(BLAS_LIB)
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
+# Fast math
+CXX_FLAGS += -ffast-math -funsafe-math-optimizations -fno-math-errno
+
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir)) \
 	     -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=$(EXTENSION_NAME) \

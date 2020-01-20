@@ -126,6 +126,31 @@ class Test(unittest.TestCase):
         for i, o in zip(ins, outs):
           print(f"{i}: ({inc[i]}) -> {o}: ({outc[o]})")
 
+    def test_negative_coords(self):
+        print('Negative coords test')
+        key = CoordsKey(D=1)
+        key.setTensorStride(1)
+
+        cm = CoordsManager(D=1)
+        coords = torch.IntTensor([[-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0]])
+
+        # Initialize map
+        mapping = cm.initialize(coords, key)
+        print(mapping, len(mapping))
+        cm.print_diagnostics(key)
+
+        # Create a strided map
+        stride_key = cm.stride(key, [2])
+        strided_coords = cm.get_coords(stride_key).numpy().tolist()
+        self.assertTrue(len(strided_coords) == 4)
+        self.assertTrue([-4, 0] in strided_coords)
+        self.assertTrue([-2, 0] in strided_coords)
+        self.assertTrue([2, 0] in strided_coords)
+
+        print('Stride: ', cm.get_coords(stride_key))
+        cm.print_diagnostics(stride_key)
+        print(cm)
+
 
 if __name__ == '__main__':
     unittest.main()
