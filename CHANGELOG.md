@@ -1,6 +1,6 @@
 # Change Log
 
-## [master] - 2020-01-10
+## [master] - 2020-01-19
 
 ### Added
 
@@ -14,6 +14,8 @@
 - `MinkowskiConvolution`, `Minkowski*Pooling` output coordinates will be equal to the input coordinates if stride == 1. Before this change, they generated output coordinates defined first for a speicific tensor stride.
 - `MinkowskiUnion` and `Ops.cat` will take a variable number of sparse tensors not a list of sparse tensors
 - Namespace cleanup
+- Fix global in out map with uninitialized global map
+- `getKernelMap` now can generate new kernel map if it doesn't exist
 
 
 ## [0.3.3] - 2020-01-07

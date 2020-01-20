@@ -48,9 +48,33 @@ CoordsMap::CoordsMap(int ncols_, const set<int> &batch_indices)
   }
 }
 
-pair<vector<int>, set<int>> CoordsMap::initialize(const int *p_coords,
-                                                  int nrows_, int ncols_,
-                                                  bool force_remap) {
+vector<int> CoordsMap::initialize(const int *p_coords, const int nrows_,
+                                  const int ncols_, const bool force_remap) {
+  nrows = nrows_;
+  ncols = ncols_;
+
+  vector<int> mapping;
+
+  mapping.reserve(nrows);
+  map.reserve(nrows);
+
+  int c = 0;
+  for (int i = 0; i < nrows; i++) {
+    vector<int> coord(ncols);
+    std::copy_n(p_coords + i * ncols, ncols, coord.data());
+
+    if (map.find(coord) == map.end()) {
+      mapping.push_back(i);
+      map[move(coord)] = force_remap ? c++ : i;
+    }
+  }
+
+  return mapping;
+}
+
+pair<vector<int>, set<int>>
+CoordsMap::initialize_batch(const int *p_coords, const int nrows_,
+                            const int ncols_, const bool force_remap) {
   nrows = nrows_;
   ncols = ncols_;
 
@@ -59,8 +83,6 @@ pair<vector<int>, set<int>> CoordsMap::initialize(const int *p_coords,
 
   mapping.reserve(nrows);
   map.reserve(nrows);
-
-  vector<vector<int>> coords_vec;
 
   int c = 0;
   for (int i = 0; i < nrows; i++) {
@@ -73,8 +95,6 @@ pair<vector<int>, set<int>> CoordsMap::initialize(const int *p_coords,
 #else
       batch_indices.insert(coord[ncols - 1]);
 #endif
-      coords_vec.push_back(coord);
-
       mapping.push_back(i);
 
       map[move(coord)] = force_remap ? c++ : i;

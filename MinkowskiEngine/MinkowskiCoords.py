@@ -99,7 +99,7 @@ class CoordsManager():
                           force_remap: bool = False,
                           allow_duplicate_coords: bool = False) -> CoordsKey:
         coords_key = CoordsKey(self.D)
-        # coords_key.setTensorStride(tensor_stride)
+        coords_key.setTensorStride(tensor_stride)
         mapping = self.initialize(
             coords,
             coords_key,
@@ -216,16 +216,23 @@ class CoordsManager():
                        kernel_size=3,
                        dilation=1,
                        region_type=0,
+                       region_offset=None,
                        is_transpose=False,
                        is_pool=False):
         r"""Get kernel in-out maps for the specified coords keys or tensor strides.
 
         """
+        # region type 1 iteration with kernel_size 1 is invalid
+        assert kernel_size > 0, "Invalid kernel size."
+        if kernel_size == 1:
+            region_type = 0
 
         if isinstance(in_key_or_tensor_strides, CoordsKey):
             in_tensor_strides = in_key_or_tensor_strides.getTensorStride()
         else:
             in_tensor_strides = in_key_or_tensor_strides
+        if region_offset is None:
+            region_offset = torch.IntTensor()
 
         in_coords_key = self._get_coords_key(in_key_or_tensor_strides)
         out_coords_key = self._get_coords_key(out_key_or_tensor_strides)
@@ -244,6 +251,7 @@ class CoordsManager():
             convert_to_int_list(kernel_sizes, D),  #
             convert_to_int_list(dilations, D),  #
             region_type,
+            region_offset,
             in_coords_key.CPPCoordsKey,
             out_coords_key.CPPCoordsKey,
             is_transpose,

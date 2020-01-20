@@ -42,42 +42,55 @@ template <typename T1, typename T2> void copy_types(const T1 &src, T2 &dst) {
  * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps
  * and return the indices of the coord_map_ind in coord_map_dst
  */
-vector<at::Tensor> CoordsManager::getKernelMap(
+vector<vector<at::Tensor>> CoordsManager::getKernelMap(
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
-    vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, bool is_transpose, bool is_pool) const {
+    vector<int> dilations, int region_type, at::Tensor offsets,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    bool is_transpose, bool is_pool) {
+  // WARNING: This function will not work properly with custon region types.
+  ASSERT(region_type != 2,
+         "Currently, it does not support the custom region type.");
   const InOutMapKey map_key = getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, is_transpose, is_pool);
-  const auto &in_map_iter = in_maps.find(map_key);
-  const auto &out_map_iter = out_maps.find(map_key);
-  ASSERT(in_map_iter != in_maps.end(), "The kernelmap does not exist.");
 
-  const InOutMaps<int> &in_map = in_map_iter->second;
-  const InOutMaps<int> &out_map = out_map_iter->second;
+  const auto &in_map_iter = in_maps.find(map_key);
+
+  if (in_map_iter == in_maps.end()) {
+    getInOutMaps(tensor_strides, strides, kernel_sizes, dilations, region_type,
+                 offsets, py_in_coords_key, py_out_coords_key, false);
+    ASSERT(in_maps.find(map_key) != in_maps.end(), "Kernel map not found.");
+  }
+
+  const InOutMaps<int> &in_map = in_maps[map_key];
+  const InOutMaps<int> &out_map = out_maps[map_key];
 
   int all_volume = 0, kernel_volume = in_map.size();
   for (int k = 0; k < kernel_volume; k++)
     all_volume += in_map[k].size();
 
-  vector<at::Tensor> vec_tensors;
+  vector<at::Tensor> in_tensors, out_tensors;
   for (int k = 0; k < kernel_volume; k++) {
     auto curr_volume = in_map[k].size();
 
-    at::Tensor kernel_map = torch::empty(
-        {(long)curr_volume, 2}, torch::TensorOptions().dtype(torch::kInt64));
-    long *p_kernel_map = kernel_map.data<long>();
+    at::Tensor in_kernel_map = torch::empty(
+        {(long)curr_volume}, torch::TensorOptions().dtype(torch::kInt64));
+    at::Tensor out_kernel_map = torch::empty(
+        {(long)curr_volume}, torch::TensorOptions().dtype(torch::kInt64));
+
+    long *p_in_kernel_map = in_kernel_map.data<long>();
+    long *p_out_kernel_map = out_kernel_map.data<long>();
 
     for (int i = 0; i < curr_volume; i++) {
-      p_kernel_map[0] = in_map[k][i];
-      p_kernel_map[1] = out_map[k][i];
-      p_kernel_map += 2;
+      p_in_kernel_map[i] = in_map[k][i];
+      p_out_kernel_map[i] = out_map[k][i];
     }
 
-    vec_tensors.push_back(move(kernel_map));
+    in_tensors.push_back(move(in_kernel_map));
+    out_tensors.push_back(move(out_kernel_map));
   }
 
-  return vec_tensors;
+  return {in_tensors, out_tensors};
 }
 
 vector<at::Tensor>
@@ -287,11 +300,7 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
   int *p_coords = coords.data<int>();
   CoordsMap coords_map;
   auto map_batch_pair =
-      coords_map.initialize(p_coords, nrows, ncols, force_remap);
-  // vector<int> coords_vec(nrows * ncols);
-  // copy_n(p_coords, nrows * ncols, coords_vec.data());
-  // auto map_batch_pair =
-  //     coords_map.initialize(move(coords_vec), nrows, ncols, force_remap);
+      coords_map.initialize_batch(p_coords, nrows, ncols, force_remap);
 
   // initialize the batch indices
   batch_indices = map_batch_pair.second;
@@ -328,7 +337,7 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
   CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
 
   const uint64_t in_coords_key =
-      initializeCoords(coords, mapping, p_coords_key->tensor_strides_,
+      initializeCoords(coords, mapping, p_coords_key->getTensorStride(),
                        force_creation, force_remap, allow_duplicate_coords);
 
   // Tensor strides initialized on the python side.
@@ -723,6 +732,9 @@ CoordsManager::getOriginInOutMaps(py::object py_in_coords_key,
     p_out_coords_key->setKey(createOriginCoords(D));
     const vector<int> zero_vec(D, 0);
     p_out_coords_key->setTensorStride(zero_vec);
+  } else {
+    ASSERT(coords_maps.find(p_out_coords_key->getKey()) != coords_maps.end(),
+           "Global map not initialized.");
   }
 
   const uint64_t in_coords_key = p_in_coords_key->getKey();
@@ -735,6 +747,10 @@ CoordsManager::getOriginInOutMaps(py::object py_in_coords_key,
   // For non transpose case
   // make a kernel mapping. The kernel will be saved with the map_key.
   if (in_maps.find(map_key) == in_maps.end()) {
+    ASSERT(coords_maps[out_coords_key].size() == batch_indices.size(),
+           "Coords size mismatch. CoordsMap size: ",
+           coords_maps[out_coords_key].size(),
+           ", batch size: ", batch_indices.size());
     const auto in_out = coords_maps[in_coords_key].global_reduction_map(
         coords_maps[out_coords_key]);
     in_maps[map_key] = in_out.first;

@@ -51,6 +51,8 @@ Region::Region(const Region &region_)
   center.resize(D + 1);
   lb.resize(D + 1);
   ub.resize(D + 1);
+
+  // set_size not required since it's copied from the other
 }
 
 Region::Region(const vector<int> &center_, const vector<int> &tensor_strides_,

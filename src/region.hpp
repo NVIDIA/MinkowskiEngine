@@ -71,6 +71,9 @@ public:
       break;
     case 1:
       size_ = 1;
+      ASSERT(std::all_of(kernel_size.begin(), kernel_size.end(),
+                         [](int k) { return k > 2; }),
+             "Invalid kernel size for hypercross: ", ArrToString(kernel_size));
       for (const int curr_k : kernel_size)
         size_ += (curr_k - 1);
       break;

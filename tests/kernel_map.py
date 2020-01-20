@@ -38,7 +38,7 @@ class TestKernelMap(unittest.TestCase):
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         cm = input.coords_man
-        ikey = cm.get_coords_key(1)
+        ikey = cm._get_coords_key(1)
         print('Input coords: ')
         cm.print_diagnostics(ikey)
 
@@ -58,11 +58,13 @@ class TestKernelMap(unittest.TestCase):
         oC = output.C.numpy()
         print(iC)
         print(oC)
-        kernel_map = output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
-        for row in kernel_map:
-          k, i, o = row
-          print(k.item(), iC[i], oC[o])
-        self.assertTrue(len(kernel_map) == 26)
+        in_maps, out_maps = output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
+        kernel_index = 0
+        for in_map, out_map in zip(in_maps, out_maps):
+          for i, o in zip(in_map, out_map):
+            print(kernel_index, iC[i], '->', oC[o])
+          kernel_index += 1
+        self.assertTrue(sum(len(in_map) for in_map in in_maps) == 26)
 
 
 if __name__ == '__main__':

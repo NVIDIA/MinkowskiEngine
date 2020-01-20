@@ -52,7 +52,7 @@ class TestConvolution(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels, batch_size=2)
 
         # Create random coordinates with tensor stride == 2
-        out_coords = get_random_coords()
+        out_coords, tensor_stride = get_random_coords()
 
         feats = feats.double()
         feats.requires_grad_()

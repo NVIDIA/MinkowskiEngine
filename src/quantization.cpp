@@ -58,8 +58,7 @@ vector<int> quantize_np(
 
   // Create coords map
   CoordsMap map;
-  auto map_batch = map.initialize(p_coords, nrows, ncols, false);
-  vector<int> &mapping = map_batch.first;
+  vector<int> mapping = map.initialize(p_coords, nrows, ncols, false);
 
   // mapping is empty when coords are all unique
   return move(mapping);
@@ -73,9 +72,8 @@ at::Tensor quantize_th(at::Tensor coords) {
          coords.dim(), "!= 2.");
 
   CoordsMap map;
-  auto map_batch =
+  vector<int> mapping =
       map.initialize(coords.data<int>(), coords.size(0), coords.size(1), false);
-  vector<int> &mapping = map_batch.first;
 
   // Long tensor for for easier indexing
   auto th_mapping = torch::empty({(long)mapping.size()},
@@ -173,11 +171,11 @@ vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
   // Copy the concurrent vector to std vector
   //
   // Long tensor for for easier indexing
-  auto th_mapping =
-      torch::empty({(long)map.size()}, torch::TensorOptions().dtype(torch::kInt64));
+  auto th_mapping = torch::empty({(long)map.size()},
+                                 torch::TensorOptions().dtype(torch::kInt64));
   auto a_th_mapping = th_mapping.accessor<long int, 1>();
-  auto th_colabels =
-      torch::empty({(long)map.size()}, torch::TensorOptions().dtype(torch::kInt64));
+  auto th_colabels = torch::empty({(long)map.size()},
+                                  torch::TensorOptions().dtype(torch::kInt64));
   auto a_th_colabels = th_colabels.accessor<long int, 1>();
 
   int c = 0;

@@ -137,12 +137,11 @@ public:
   long int getBatchSize() const { return batch_indices.size(); }
   set<int> getBatchIndices() const { return batch_indices; }
   void getCoords(at::Tensor coords, py::object py_coords_key) const;
-  vector<at::Tensor> getKernelMap(vector<int> tensor_strides,
-                                  vector<int> strides, vector<int> kernel_sizes,
-                                  vector<int> dilations, int region_type,
-                                  py::object py_in_coords_key,
-                                  py::object py_out_coords_key,
-                                  bool is_transpose, bool is_pool) const;
+  vector<vector<at::Tensor>>
+  getKernelMap(vector<int> tensor_strides, vector<int> strides,
+               vector<int> kernel_sizes, vector<int> dilations, int region_type,
+               at::Tensor offsets, py::object py_in_coords_key,
+               py::object py_out_coords_key, bool is_transpose, bool is_pool);
   // TODO make this function non-const with ability to generate a new map
   vector<at::Tensor> getCoordsMap(py::object py_in_coords_key,
                                   py::object py_out_coords_key) const;
