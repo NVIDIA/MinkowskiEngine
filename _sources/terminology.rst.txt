@@ -4,9 +4,7 @@ Definitions and Terminology
 Sparse Tensor
 -------------
 
-A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. We use the COOrdinate list (COO) format to save a sparse tensor `[1] <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This representation is simply a concatenation of coordinates into a matrix :math:`C` and associated values or features :math:`F`.
-
-In Minkowski Engine, we allow negative indices (or coordinates), and associated values are vectors.
+A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices :math:`\mathcal{C}` and associated values (or features) :math:`\mathcal{F}`. We use the COOrdinate list (COO) format to save a sparse tensor `[1] <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This representation is simply a concatenation of coordinates into a matrix :math:`C` and associated values or features :math:`F`. In traditional sparse tensor, indices or coordinates have to be non-negative integers, whereas, in Minkowski Engine, negative coordinates are also valid coordinates. A final sparse tensor :math:`\mathscr{T}` with :math:`D` dimensional coordinates is a rank-:math:`D` tensor if features are scalars, or a rank-:math:`D + 1` if features are vectors.
 
 .. math::
 
@@ -20,7 +18,14 @@ In Minkowski Engine, we allow negative indices (or coordinates), and associated 
    \mathbf{f}_N^T
    \end{bmatrix}
 
-The indices :math:`C` are the column-wise concatenation of indices of non-zero values. In sum, a sparse tensor consists of a set of coordinates :math:`C \in \mathbb{Z}^{N \times D}` and associated features :math:`F \in \mathbb{R}^{N \times N_F}` where :math:`N` is the number of non-zero elements within a sparse tensor, :math:`D` is the dimension of the space, and :math:`N_F` is the number of channels.
+.. math::
+
+   \mathscr{T}[x^1_i,  x^2_i,  \cdots, x^D_i] = \begin{cases}
+      \mathbf{f}_i \;\; & \text{if} \; (x^1_i,  x^2_i, \cdots, x^D_i) \in \mathcal{C} \\
+      0   \;\; & \text{otherwise}
+   \end{cases}
+
+In sum, a sparse tensor consists of a set of coordinates :math:`\mathcal{C}` or equivalently a coordinate matrix :math:`C \in \mathbb{Z}^{N \times D}` and associated features :math:`\mathcal{F}` or a feature matrix :math:`F \in \mathbb{R}^{N \times N_F}` where :math:`N` is the number of non-zero elements within a sparse tensor, :math:`D` is the dimension of the space, and :math:`N_F` is the number of channels. The rest of the elements in a sparse tensor is 0.
 
 
 Tensor Stride

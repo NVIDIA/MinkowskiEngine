@@ -16,8 +16,6 @@ Visually, a convolution on a sparse tensor is similar to that on a dense tensor.
 |:-----------------------------:|:-----------------------------:|
 | ![](./_images/conv_dense.gif) |![](./_images/conv_sparse.gif) |
 
-*[Photo Credit: [Chris Choy](https://chrischoy.org)]*
-
 --------------------------------------------------------------------------------
 
 ## Features

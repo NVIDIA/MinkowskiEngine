@@ -114,7 +114,7 @@ We visualize a simple 2D image convolution on a dense tensor and a sparse tensor
 | [Photo Credit: `Chris Choy <https://chrischoy.org>`_] |
 +-------------------------------------------------------+
 
-To efficiently compute the convolution on a sparse tensor, we must find how each non-zero element in an input sparse tensor is mapped to the output sparse tensor. We call this mapping a kernel map `[3] <https://arxiv.org/abs/1904.08755>`_ since it defines how an input is mapped to an output through a kernel. Please refer to the `terminology <terminology.html>`_ for more details.
+To efficiently compute the convolution on a sparse tensor, we must find how each non-zero element in an input sparse tensor is mapped to the output sparse tensor. We call this mapping a kernel map `[3] <https://arxiv.org/abs/1904.08755>`_ since it defines how an input is mapped to an output through a kernel. Please refer to the `terminology page <terminology.html>`_ for more details.
 
 
 References

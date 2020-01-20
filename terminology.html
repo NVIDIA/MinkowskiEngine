@@ -198,8 +198,7 @@
 <h1>Definitions and Terminology<a class="headerlink" href="#definitions-and-terminology" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="sparse-tensor">
 <h2>Sparse Tensor<a class="headerlink" href="#sparse-tensor" title="Permalink to this headline">¶</a></h2>
-<p>A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. We use the COOrdinate list (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This representation is simply a concatenation of coordinates into a matrix <span class="math notranslate nohighlight">\(C\)</span> and associated values or features <span class="math notranslate nohighlight">\(F\)</span>.</p>
-<p>In Minkowski Engine, we allow negative indices (or coordinates), and associated values are vectors.</p>
+<p>A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices <span class="math notranslate nohighlight">\(\mathcal{C}\)</span> and associated values (or features) <span class="math notranslate nohighlight">\(\mathcal{F}\)</span>. We use the COOrdinate list (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This representation is simply a concatenation of coordinates into a matrix <span class="math notranslate nohighlight">\(C\)</span> and associated values or features <span class="math notranslate nohighlight">\(F\)</span>. In traditional sparse tensor, indices or coordinates have to be non-negative integers, whereas, in Minkowski Engine, negative coordinates are also valid coordinates. A final sparse tensor <span class="math notranslate nohighlight">\(\mathscr{T}\)</span> with <span class="math notranslate nohighlight">\(D\)</span> dimensional coordinates is a rank-<span class="math notranslate nohighlight">\(D\)</span> tensor if features are scalars, or a rank-<span class="math notranslate nohighlight">\(D + 1\)</span> if features are vectors.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbf{C} = \begin{bmatrix}
 x_1^1   &amp; x_1^2  &amp; \cdots &amp; x_1^D  \\
@@ -210,7 +209,12 @@ x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D
 \vdots\\
 \mathbf{f}_N^T
 \end{bmatrix}\end{split}\]</div>
-<p>The indices <span class="math notranslate nohighlight">\(C\)</span> are the column-wise concatenation of indices of non-zero values. In sum, a sparse tensor consists of a set of coordinates <span class="math notranslate nohighlight">\(C \in \mathbb{Z}^{N \times D}\)</span> and associated features <span class="math notranslate nohighlight">\(F \in \mathbb{R}^{N \times N_F}\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of non-zero elements within a sparse tensor, <span class="math notranslate nohighlight">\(D\)</span> is the dimension of the space, and <span class="math notranslate nohighlight">\(N_F\)</span> is the number of channels.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathscr{T}[x^1_i,  x^2_i,  \cdots, x^D_i] = \begin{cases}
+   \mathbf{f}_i \;\; &amp; \text{if} \; (x^1_i,  x^2_i, \cdots, x^D_i) \in \mathcal{C} \\
+   0   \;\; &amp; \text{otherwise}
+\end{cases}\end{split}\]</div>
+<p>In sum, a sparse tensor consists of a set of coordinates <span class="math notranslate nohighlight">\(\mathcal{C}\)</span> or equivalently a coordinate matrix <span class="math notranslate nohighlight">\(C \in \mathbb{Z}^{N \times D}\)</span> and associated features <span class="math notranslate nohighlight">\(\mathcal{F}\)</span> or a feature matrix <span class="math notranslate nohighlight">\(F \in \mathbb{R}^{N \times N_F}\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of non-zero elements within a sparse tensor, <span class="math notranslate nohighlight">\(D\)</span> is the dimension of the space, and <span class="math notranslate nohighlight">\(N_F\)</span> is the number of channels. The rest of the elements in a sparse tensor is 0.</p>
 </div>
 <div class="section" id="tensor-stride">
 <h2>Tensor Stride<a class="headerlink" href="#tensor-stride" title="Permalink to this headline">¶</a></h2>
