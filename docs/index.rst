@@ -17,6 +17,12 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Tutorials
+
+   tutorial/sparse_tensor_basic
+
+.. toctree::
+   :maxdepth: 2
    :caption: Demos
 
    demo/training

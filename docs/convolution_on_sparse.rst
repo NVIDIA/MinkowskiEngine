@@ -12,32 +12,10 @@ only save the non-empty part of the space as its coordinates and the associated
 features. This representation is an N-dimensional extension of a sparse matrix;
 thus it is known as a sparse tensor.
 
-In the Minkowski Engine, we adopt the same sparse tensor for the basic data
-representation and the class is provided in
-:attr:`MinkowskiEngine.SparseTensor`. We use the COOrdinate (COO) format to
-save a sparse tensor `[1]
-<http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This
-representation is simply a concatenation of coordinates in a matrix :math:`C`
-and associated features :math:`F`.
-
-.. math::
-
-   \mathbf{C} = \begin{bmatrix}
-   x_1^1   & x_1^2  & \cdots & x_1^D  & b_1    \\
-    \vdots & \vdots & \ddots & \vdots & \vdots \\
-   x_N^1   & x_N^2  & \cdots & x_N^D  & b_N
-   \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
-   \mathbf{f}_1^T\\
-   \vdots\\
-   \mathbf{f}_N^T
-   \end{bmatrix}
-
-In the above equation, we use a :math:`D`-dimensional space and :math:`N`
-number of points, each with the coordinate :math:`(x_i^1, x_i^1, \cdots,
-x_i^D)`, and the associated feature :math:`\mathbf{f}_i`. :math:`b_i` indicates
-the mini-batch index to disassociate instances within the same batch.
-Internally, we handle the batch index as an additional spatial dimension.
-
+In Minkowski Engine, we adopt the same sparse tensor for the basic data
+representation and the class is provided as
+:attr:`MinkowskiEngine.SparseTensor`. Fore more information on sparse tensors
+please refer to the `terminology page <terminology.html>`_.
 
 
 Generalized Convolution on a Sparse Tensor

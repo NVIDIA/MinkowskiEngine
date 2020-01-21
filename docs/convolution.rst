@@ -3,6 +3,7 @@ MinkowskiConvolution
 
 All classes defined in this class does not require :attr:`region_type`, :attr:`region_offset`, :attr:`out_coords_key`, and :attr:`axis_types`. If you provide those to the class initialization, make sure that you are providing valid arguments.
 
+
 MinkowskiConvolution
 --------------------
 

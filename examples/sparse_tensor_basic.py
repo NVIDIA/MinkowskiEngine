@@ -94,6 +94,9 @@ def sparse_tensor_arithmetics():
     A *= D
     A /= D
 
+    # If you have two or more sparse tensors with the same coords_key, you can concatenate features
+    E = ME.cat(A, D)
+
 
 def operation_mode():
     # Set to share the coords_man by default

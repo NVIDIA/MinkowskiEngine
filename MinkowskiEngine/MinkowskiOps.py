@@ -47,10 +47,21 @@ class MinkowskiLinear(Module):
 
 
 def cat(*sparse_tensors):
-    """
-    Given a tuple of sparse tensors, concatenate them.
+    r"""Concatenate sparse tensors
 
-    Ex) cat((a, b, c))
+    Concatenate sparse tensor features. All sparse tensors must have the same
+    `coords_key` (the same coordinates). To concatenate sparse tensors with
+    different sparsity patterns, use SparseTensor binary operations, or
+    :attr:`MinkowskiEngine.MinkowskiUnion`.
+
+    Example::
+
+       >>> import MinkowskiEngine as ME
+       >>> sin = ME.SparseTensor(feats, coords)
+       >>> sin2 = ME.SparseTensor(feats2, coords_key=sin.coords_key, coords_man=sin.coords_man)
+       >>> sout = UNet(sin)  # Returns an output sparse tensor on the same coordinates
+       >>> sout2 = ME.cat(sin, sin2, sout)  # Can concatenate multiple sparse tensors
+
     """
     for s in sparse_tensors:
         assert isinstance(s, SparseTensor), "Inputs must be sparse tensors."
