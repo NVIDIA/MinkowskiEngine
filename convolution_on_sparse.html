@@ -97,6 +97,10 @@
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terminology.html">Definitions and Terminology</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/sparse_tensor_basic.html">Sparse Tensor Basics</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Demos</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline</a></li>
@@ -202,27 +206,10 @@ such dense representations are inefficient due to the sparsity. Instead, we can
 only save the non-empty part of the space as its coordinates and the associated
 features. This representation is an N-dimensional extension of a sparse matrix;
 thus it is known as a sparse tensor.</p>
-<p>In the Minkowski Engine, we adopt the same sparse tensor for the basic data
-representation and the class is provided in
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>. We use the COOrdinate (COO) format to
-save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
-representation is simply a concatenation of coordinates in a matrix <span class="math notranslate nohighlight">\(C\)</span>
-and associated features <span class="math notranslate nohighlight">\(F\)</span>.</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\mathbf{C} = \begin{bmatrix}
-x_1^1   &amp; x_1^2  &amp; \cdots &amp; x_1^D  &amp; b_1    \\
- \vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots \\
-x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D  &amp; b_N
-\end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
-\mathbf{f}_1^T\\
-\vdots\\
-\mathbf{f}_N^T
-\end{bmatrix}\end{split}\]</div>
-<p>In the above equation, we use a <span class="math notranslate nohighlight">\(D\)</span>-dimensional space and <span class="math notranslate nohighlight">\(N\)</span>
-number of points, each with the coordinate <span class="math notranslate nohighlight">\((x_i^1, x_i^1, \cdots,
-x_i^D)\)</span>, and the associated feature <span class="math notranslate nohighlight">\(\mathbf{f}_i\)</span>. <span class="math notranslate nohighlight">\(b_i\)</span> indicates
-the mini-batch index to disassociate instances within the same batch.
-Internally, we handle the batch index as an additional spatial dimension.</p>
+<p>In Minkowski Engine, we adopt the same sparse tensor for the basic data
+representation and the class is provided as
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>. Fore more information on sparse tensors
+please refer to the <a class="reference external" href="terminology.html">terminology page</a>.</p>
 </div>
 <div class="section" id="generalized-convolution-on-a-sparse-tensor">
 <h2>Generalized Convolution on a Sparse Tensor<a class="headerlink" href="#generalized-convolution-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h2>

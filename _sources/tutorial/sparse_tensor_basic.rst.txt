@@ -1,0 +1,103 @@
+Sparse Tensor Basics
+====================
+
+A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. Please refer to the `terminology page <https://stanfordvl.github.io/MinkowskiEngine/terminology.html>`_ for more details.
+
+
+Data Generation
+---------------
+
+One can generate data directly by extracting non-zero elements. Here, we present a simple 2D array with 5 non-zero elements at the center.
+
+.. code-block:: python
+
+   data = [[0, 0, 2.1, 0, 0],
+           [0, 1, 1.4, 3, 0],
+           [0, 0, 4,   0, 0]]
+   # coordinates and corresponding features
+   coords, feats = [], []
+   for i, row in enumerate(data):
+       for j, val in enumerate(row):
+           if val != 0:
+               coords.append([i, j])
+               feats.append([val])
+   coords = torch.IntTensor(coords)
+   feats = torch.FloatTensor(feats)
+
+   return coords, feats
+
+Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the `training demo page <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_.
+
+
+Sparse Tensor Initialization
+----------------------------
+
+The next step in the pipeline is initializing a sparse tensor. A :attr:`MinkowskiEngine.SparseTensor` requires coordinates with batch indices; this results in a sparse tensor with :math:`D+1` spatial dimensions if the original coordinates have :math:`D` dimensions.
+
+
+.. code-block:: python
+
+   coords, feats = data_generation()
+   # collate sparse tensor data to augment batch indices
+   coords, feats = ME.utils.sparse_collate(coords=[coords], feats=[feats])
+   sparse_tensor = ME.SparseTensor(coords=coords, feats=feats)
+
+
+Here, we used :attr:`MinkowskiEngine.utils.sparse_collate` function, but you can use :attr:`MinkowskiEngine.utils.batched_coordinates` to convert a list of coordinates to :attr:`MinkowskiEngine.SparseTensor` compatible coordinates.
+
+
+Sparse Tensor Arithmetics
+-------------------------
+
+You can use the initialized sparse tensor with a simple feed-forward neural network, but in many cases, you need to do some unconventional operations, and that is why you came to use this library :) Here, we provide some simple operations that allow binary operations between sparse tensors and concatenation along the feature dimension.
+
+.. code-block:: python
+
+   # sparse tensors
+   A = ME.SparseTensor(coords=coords, feats=feats)
+   B = ME.SparseTensor(
+       coords=new_coords,
+       feats=new_feats,
+       coords_manager=A.coords_man,  # must share the same coordinate manager
+       force_creation=True  # must force creation since tensor stride [1] exists
+   )
+
+   C = A + B
+   C = A - B
+   C = A * B
+   C = A / B
+
+
+Here, we create two sparse tensors with different sparsity patterns. However, we forced the second sparse tensor `B` to share the `coords_man`, a coordinate manager. This allows sharing the computation graph between two sparse tensors. The semantics is rather ugly for now, but will be hidden in the future.
+
+If you add two sparse tensors, this will add two features. In case where there is a non-zero element, but not on the other sparse tensor at a specific coordinate, we assume `0` for the non-existing value since a sparse tensor saves non-zero elements only. Anything that we do not specify is `0` by definition. Same goes for all other binary operations.
+
+However, for in-place operations, we force the coordinates to have the same sparsity pattern.
+
+.. code-block:: python
+
+   # in place operations
+   # Note that it requires the same coords_key (no need to feed coords)
+   D = ME.SparseTensor(
+       # coords=coords,  not required
+       feats=feats,
+       coords_manager=A.coords_man,  # must share the same coordinate manager
+       coords_key=A.coords_key  # For inplace, must share the same coords key
+   )
+
+   A += D
+   A -= D
+   A *= D
+   A /= D
+
+Note that we use the same `coords_key` for the sparse tensor `D`. It will give you an assertion error if you try to use a sparse tensor with different `coords_key`.
+
+Finally, you can concatenate two sparse tensors along the feature dimension if they share the same `coords_key`.
+
+.. code-block:: python
+
+   # If you have two or more sparse tensors with the same coords_key, you can concatenate features
+   E = ME.cat(A, D)
+
+
+For more information, please refer to `examples/sparse_tensor_basic.py <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py>`_.

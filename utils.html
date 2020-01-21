@@ -92,6 +92,10 @@
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terminology.html">Definitions and Terminology</a></li>
 </ul>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/sparse_tensor_basic.html">Sparse Tensor Basics</a></li>
+</ul>
 <p class="caption"><span class="caption-text">Demos</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline</a></li>
@@ -118,7 +122,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#sparse-collate">sparse_collate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#batch-sparse-collate">batch_sparse_collate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sparsecollation">SparseCollation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#get-coords-map">get_coords_map</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-coords-map">get_coords_map</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cat">cat</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
@@ -366,6 +373,27 @@ corresponds to the returned indices of x.</p>
 </div>
 </dd></dl>
 
+<div class="section" id="cat">
+<h3>cat<a class="headerlink" href="#cat" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="MinkowskiEngine.cat">
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">cat</code><span class="sig-paren">(</span><em class="sig-param">*sparse_tensors</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.cat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenate sparse tensors</p>
+<p>Concatenate sparse tensor features. All sparse tensors must have the same
+<cite>coords_key</cite> (the same coordinates). To concatenate sparse tensors with
+different sparsity patterns, use SparseTensor binary operations, or
+<a class="reference internal" href="union.html#MinkowskiEngine.MinkowskiUnion" title="MinkowskiEngine.MinkowskiUnion"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiUnion</span></code></a>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats2</span><span class="p">,</span> <span class="n">coords_key</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">coords_man</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coords_man</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sout</span> <span class="o">=</span> <span class="n">UNet</span><span class="p">(</span><span class="n">sin</span><span class="p">)</span>  <span class="c1"># Returns an output sparse tensor on the same coordinates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sout2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="n">sin2</span><span class="p">,</span> <span class="n">sout</span><span class="p">)</span>  <span class="c1"># Can concatenate multiple sparse tensors</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
 </div>
 </div>
 
