@@ -28,6 +28,7 @@ Table of Contents
    demo/training
    demo/modelnet40_classification
    demo/segmentation
+   demo/sparse_tensor_reconstruction
    demo/interop
    demo/multigpu
    demo/pointnet
