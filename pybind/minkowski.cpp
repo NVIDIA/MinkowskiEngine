@@ -205,6 +205,8 @@ void instantiate_coordsman(py::module &m) {
       .def("getCoords", &mink::CoordsManager::getCoords)
       .def("getBatchSize", &mink::CoordsManager::getBatchSize)
       .def("getBatchIndices", &mink::CoordsManager::getBatchIndices)
+      .def("getRowIndicesAtBatchIndex",
+           &mink::CoordsManager::getRowIndicesAtBatchIndex)
       .def("getRowIndicesPerBatch", &mink::CoordsManager::getRowIndicesPerBatch)
       .def("setOriginCoordsKey", &mink::CoordsManager::setOriginCoordsKey)
       .def("initializeCoords",

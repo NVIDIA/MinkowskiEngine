@@ -112,6 +112,7 @@ public:
   // Coordinate hash key to coordinate hash map
   unordered_map<uint64_t, CoordsMap> coords_maps;
   set<int> batch_indices;
+  vector<int> vec_batch_indices;
 
   // In to out index mapping for each kernel, pooling
   unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
@@ -237,6 +238,9 @@ public:
     out_maps.clear();
   }
 
+  at::Tensor getRowIndicesAtBatchIndex(py::object py_in_coords_key,
+                                       py::object py_out_coords_key,
+                                       const int batch_index);
   vector<at::Tensor> getRowIndicesPerBatch(py::object py_in_coords_key,
                                            py::object py_out_coords_key);
 

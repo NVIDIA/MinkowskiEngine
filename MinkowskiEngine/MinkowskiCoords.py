@@ -200,7 +200,7 @@ class CoordsManager():
         .. code-block:: python
 
            sp_tensor = ME.SparseTensor(features, coords=coordinates)
-           batch_indices = sp_tensor.coords_man.get_row_indices_per_batch(sp_tensor.coords_key)
+           row_indices = sp_tensor.coords_man.get_row_indices_per_batch(sp_tensor.coords_key)
 
         """
         assert isinstance(coords_key, CoordsKey)
@@ -208,6 +208,20 @@ class CoordsManager():
             out_coords_key = CoordsKey(self.D)
         return self.CPPCoordsManager.getRowIndicesPerBatch(
             coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey)
+
+    def get_row_indices_at(self, coords_key, batch_index):
+        r"""Return an torch.LongTensor of row indices for the specified batch index
+
+        .. code-block:: python
+
+           sp_tensor = ME.SparseTensor(features, coords=coordinates)
+           row_indices = sp_tensor.coords_man.get_row_indices_at_batch_index(sp_tensor.coords_key, batch_index)
+
+        """
+        assert isinstance(coords_key, CoordsKey)
+        out_coords_key = CoordsKey(self.D)
+        return self.CPPCoordsManager.getRowIndicesAtBatchIndex(
+            coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey, batch_index)
 
     def get_kernel_map(self,
                        in_key_or_tensor_strides,

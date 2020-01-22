@@ -1,12 +1,20 @@
 # Change Log
 
-## [master] - 2020-01-19
+## [master] - 2020-01-22
 
 ### Added
 
 - Add `MinkowskiGlobalSumPooling`, `MinkowskiGlobalAvgPooling`
 - Add `examples/convolution.py` to showcase various usages
+- Add `examples/sparse_tensor_basic.py` and a SparseTensor tutorial page
 - Add convolution, kernel map gifs
+- Add batch decomposition functions
+    - Add `SparseTensor.decomposed_coordinates`
+    - Add `SparseTensor.decomposed_features`
+    - Add `SparseTensor.coordinates_at(batch_index)`
+    - Add `SparseTensor.features_at(batch_index)`
+    - Add `CoordsManager.get_row_indices_at(coords_key, batch_index)`
+
 
 ### Changed
 

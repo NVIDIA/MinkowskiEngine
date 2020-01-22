@@ -148,16 +148,17 @@ if __name__ == '__main__':
                 f'containing {len(sinput)} voxels: {timer.min_time}')
 
     # Feed-forward pass and get the prediction
-    _, pred = soutput.F.max(1)
-    pred = pred.cpu().numpy()
+    coordinates, features = soutput.decomposed_coordinates_and_features
+    batch_index = 0
 
-    # Map color
-    colors = np.array([SCANNET_COLOR_MAP[VALID_CLASS_IDS[l]] for l in pred])
+    _, pred = features[batch_index].max(1)
+    pred = pred.cpu().numpy()
 
     # Create a point cloud file
     pred_pcd = o3d.geometry.PointCloud()
-    coordinates = soutput.C.numpy()[:, :3]  # last column is the batch index
-    pred_pcd.points = o3d.utility.Vector3dVector(coordinates * 0.02)
+    # Map color
+    colors = np.array([SCANNET_COLOR_MAP[VALID_CLASS_IDS[l]] for l in pred])
+    pred_pcd.points = o3d.utility.Vector3dVector(coordinates[batch_index] * 0.02)
     pred_pcd.colors = o3d.utility.Vector3dVector(colors / 255)
 
     # Move the original point cloud

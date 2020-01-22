@@ -28,9 +28,11 @@
 
 template <typename T> std::string ArrToString(T arr) {
   std::string buf = "[";
-  for (size_t i = 0; i < arr.size(); i++) {
-    buf += (i ? ", " : "") + std::to_string(arr[i]);
+  for (const auto& a : arr) {
+    buf += std::to_string(a) + ", ";
   }
+  buf.pop_back();
+  buf.pop_back();
   buf += "]";
   return buf;
 }

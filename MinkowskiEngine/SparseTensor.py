@@ -298,6 +298,31 @@ class SparseTensor():
         return self._C
 
     @property
+    def decomposed_coordinates(self):
+        r"""Returns a list of coordinates per batch.
+
+        Returns a list of torch.IntTensor :math:`C \in \mathcal{R}^{N_i
+        \times D}` coordinates per batch where :math:`N_i` is the number of non
+        zero elements in the :math:`i`th batch index in :math:`D` dimensional
+        space.
+        """
+        row_inds_list = self.coords_man.get_row_indices_per_batch(
+            self.coords_key)
+        return [self.C[row_inds, :-1] for row_inds in row_inds_list]
+
+    def coordinates_at(self, batch_index):
+        r"""Return coordinates at the specified batch index.
+
+        Returns a torch.IntTensor :math:`C \in \mathcal{R}^{N_i
+        \times D}` coordinates at the specified batch index where :math:`N_i`
+        is the number of non zero elements in the :math:`i`th batch index in
+        :math:`D` dimensional space.
+        """
+        row_inds = self.coords_man.get_row_indices_at_batch_index(
+            self.coords_key, batch_index)
+        return self.C[row_inds, :-1]
+
+    @property
     def F(self):
         r"""The alias of :attr:`feats`.
         """
@@ -312,6 +337,41 @@ class SparseTensor():
         :attr:`coords` to access the associated coordinates.
         """
         return self._F
+
+    @property
+    def decomposed_features(self):
+        r"""Returns a list of features per batch.
+
+        Returns a list of torch.Tensor :math:`C \in \mathcal{R}^{N_i
+        \times N_F}` features per batch where :math:`N_i` is the number of non
+        zero elements in the :math:`i`th batch index in :math:`D` dimensional
+        space.
+        """
+        row_inds_list = self.coords_man.get_row_indices_per_batch(
+            self.coords_key)
+        return [self._F[row_inds] for row_inds in row_inds_list]
+
+    def features_at(self, batch_index):
+        r"""Returns a feature matrix at the specified batch index.
+
+        Returns a list of torch.IntTensor :math:`C \in \mathcal{R}^{N_i
+        \times D}` coordinates per batch where :math:`N_i` is the number of non
+        zero elements in the :math:`i`th batch index in :math:`D` dimensional
+        space.
+        """
+        row_inds = self.coords_man.get_row_indices_at(self.coords_key,
+                                                      batch_index)
+        return self._F[row_inds]
+
+    @property
+    def decomposed_coordinates_and_features(self):
+        r"""Returns a list of coordinates and a list of features per batch.abs
+
+        """
+        row_inds_list = self.coords_man.get_row_indices_per_batch(
+            self.coords_key)
+        return [self.C[row_inds, :-1] for row_inds in row_inds_list], \
+            [self._F[row_inds] for row_inds in row_inds_list]
 
     @property
     def D(self):

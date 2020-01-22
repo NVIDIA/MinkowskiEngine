@@ -304,6 +304,7 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
 
   // initialize the batch indices
   batch_indices = map_batch_pair.second;
+  vec_batch_indices = vector<int>(batch_indices.begin(), batch_indices.end());
 
   if (!allow_duplicate_coords && !force_remap) {
     ASSERT(nrows == coords_map.size(), "Duplicate coordinates found. ",
@@ -855,14 +856,52 @@ void CoordsManager::printDiagnostics(py::object py_coords_key) const {
 }
 
 /*
- * Return the batch indices and row indices for each image.
+ * Return row indices for each batch index
+ */
+at::Tensor
+CoordsManager::getRowIndicesAtBatchIndex(py::object py_in_coords_key,
+                                         py::object py_out_coords_key,
+                                         const int batch_index) {
+  // py_out_coords_key will be set after the above call.
+  CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
+  const auto in_coords_key = p_in_coords_key->getKey();
+  ASSERT(coords_maps.find(in_coords_key) != coords_maps.end(),
+         "The in_coords_key, ", to_string(in_coords_key), ", does not exist.");
+  ASSERT(batch_index > -1, "Invalid batch index: ", batch_index,
+         ", batch_index must be a non-negative integer.");
+  ASSERT(batch_index < batch_indices.size(),
+         "Invalid batch index: ", batch_index,
+         ", batch_index exceeds current maximum batch size: ",
+         batch_indices.size(),
+         " of a provided batch indices: ", ArrToString(batch_indices));
+  ASSERT(vec_batch_indices[batch_index] == batch_index,
+         "Batch index mismatch: provided batch indices are ",
+         ArrToString(vec_batch_indices), " ", batch_index,
+         "'th element != ", batch_index);
+
+  const auto in_outs = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
+  const auto &in = in_outs.first[batch_index];
+
+  at::Tensor in_rows = torch::zeros(
+      {(long)in.size()}, torch::TensorOptions().dtype(torch::kInt64));
+
+  // copy all from a vector. int -> long
+  auto a_in_rows = in_rows.accessor<long, 1>();
+  for (auto i = 0; i < in.size(); i++)
+    a_in_rows[i] = in[i];
+
+  return in_rows;
+}
+
+/*
+ * Return row indices per batch
  */
 vector<at::Tensor>
 CoordsManager::getRowIndicesPerBatch(py::object py_in_coords_key,
                                      py::object py_out_coords_key) {
   // py_out_coords_key will be set after the above call.
   CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
-  auto in_coords_key = p_in_coords_key->getKey();
+  const auto in_coords_key = p_in_coords_key->getKey();
   ASSERT(coords_maps.find(in_coords_key) != coords_maps.end(),
          "The in_coords_key, ", to_string(in_coords_key), ", does not exist.");
 
@@ -871,14 +910,12 @@ CoordsManager::getRowIndicesPerBatch(py::object py_in_coords_key,
 
   // Return index.
   vector<at::Tensor> out_inds;
-
   for (const auto &in : ins) {
     at::Tensor mapping = torch::zeros(
         {(long)in.size()}, torch::TensorOptions().dtype(torch::kInt64));
 
-    // copy all from a vector
+    // copy all from a vector, int -> long
     auto a_mapping = mapping.accessor<long, 1>();
-
     for (auto i = 0; i < in.size(); i++)
       a_mapping[i] = in[i];
 
