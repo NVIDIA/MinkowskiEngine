@@ -215,7 +215,7 @@ class CoordsManager():
         .. code-block:: python
 
            sp_tensor = ME.SparseTensor(features, coords=coordinates)
-           row_indices = sp_tensor.coords_man.get_row_indices_at_batch_index(sp_tensor.coords_key, batch_index)
+           row_indices = sp_tensor.coords_man.get_row_indices_at(sp_tensor.coords_key, batch_index)
 
         """
         assert isinstance(coords_key, CoordsKey)

@@ -318,7 +318,7 @@ class SparseTensor():
         is the number of non zero elements in the :math:`i`th batch index in
         :math:`D` dimensional space.
         """
-        row_inds = self.coords_man.get_row_indices_at_batch_index(
+        row_inds = self.coords_man.get_row_indices_at(
             self.coords_key, batch_index)
         return self.C[row_inds, :-1]
 
