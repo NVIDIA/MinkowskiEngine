@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PointNet &mdash; MinkowskiEngine 0.3.3 documentation</title>
+  <title>3D Sparsity Pattern Reconstruction &mdash; MinkowskiEngine 0.3.3 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="SparseTensor" href="../sparse_tensor.html" />
-    <link rel="prev" title="Multi-GPU Training" href="multigpu.html" /> 
+    <link rel="next" title="Working with Pytorch Layers" href="interop.html" />
+    <link rel="prev" title="Semantic Segmentation" href="segmentation.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -101,10 +101,14 @@
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modelnet40_classification.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="segmentation.html">Semantic Segmentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3D Sparsity Pattern Reconstruction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#making-a-sparsity-pattern-reconstruction-network">Making a Sparsity Pattern Reconstruction Network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-example">Running the Example</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multigpu.html">Multi-GPU Training</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">PointNet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
 <ul>
@@ -171,13 +175,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>PointNet</li>
+      <li>3D Sparsity Pattern Reconstruction</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/demo/pointnet.md.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/demo/sparse_tensor_reconstruction.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -191,25 +195,46 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="pointnet">
-<h1>PointNet<a class="headerlink" href="#pointnet" title="Permalink to this headline">¶</a></h1>
-<p>A PointNet uses a series of multi-layered perceptrons (linear layers) with
-spatial transformers and global pooling layers.</p>
-<p>However, you can think of a PointNet as a specialization of a convolutional
-neural network consisting of a series of convolution layers and global poolings.
-In this network, all convolution layers have kernel size 1, and stride 1. Also,
-the input is a sparse tensor where features are normalized coordinates.</p>
-<p>This generalization allows the network to process an arbitrary number of
-points, but allows you to think of linear layers as a specialization of
-convolution.</p>
-<p>In addition to being able to process arbitrary number of points, it allows you
-to define</p>
-<ol class="simple">
-<li><p>Features as arbitrary generic features such as color.</p></li>
-<li><p>Convolutions with kernel size &gt; 1.</p></li>
-<li><p>Convolutions with stride &gt; 1.</p></li>
-</ol>
-<p>Please refer to the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/pointnet.py">complete pointnet example</a> for more detail.</p>
+  <div class="section" id="d-sparsity-pattern-reconstruction">
+<h1>3D Sparsity Pattern Reconstruction<a class="headerlink" href="#d-sparsity-pattern-reconstruction" title="Permalink to this headline">¶</a></h1>
+<p>In this page, we will go over a simple demo example that trains a 3D
+convolutional neural network that reconstructs a 3D sparsity pattern from an
+one-hot vector. This is similar to the <a class="reference external" href="https://arxiv.org/abs/1703.09438">Octree Generating Networks, ICCV’17</a>. The input one-hot vector indicates a 3D
+Computer Aided Design (CAD) chair index from the ModelNet40 dataset.</p>
+<p>We use <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose" title="MinkowskiEngine.MinkowskiConvolutionTranspose"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolutionTranspose</span></code></a> along with
+<a class="reference internal" href="../pruning.html#MinkowskiEngine.MinkowskiPruning" title="MinkowskiEngine.MinkowskiPruning"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPruning</span></code></a> to sequentially upsample a voxel by a
+factor of 2 and then remove some of the upsampled voxels to generate target
+shapes.  The general network architecture looks similar to the following
+diagram, but the details might differ.</p>
+<img alt="../_images/generative_3d_net.png" src="../_images/generative_3d_net.png" />
+<p>Before we proceed, please go over <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">the training and data loading tutorial</a> first.</p>
+<div class="section" id="making-a-sparsity-pattern-reconstruction-network">
+<h2>Making a Sparsity Pattern Reconstruction Network<a class="headerlink" href="#making-a-sparsity-pattern-reconstruction-network" title="Permalink to this headline">¶</a></h2>
+<p>To create a sparse tensor defined in a 3D grid world from a vector, we need to upsample sequentially from a <span class="math notranslate nohighlight">\(1 \times 1 \times 1\)</span> resolution voxel. Here, we use a block that consists of <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose" title="MinkowskiEngine.MinkowskiConvolutionTranspose"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolutionTranspose</span></code></a>, <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution" title="MinkowskiEngine.MinkowskiConvolution"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution</span></code></a>, and <a class="reference internal" href="../pruning.html#MinkowskiEngine.MinkowskiPruning" title="MinkowskiEngine.MinkowskiPruning"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPruning</span></code></a>.</p>
+<p>During a forward pass, we create two paths for 1) the main features and 2) a sparse voxel classification to remove unnecessary voxels.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">upsample_block</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+<span class="n">out_cls</span> <span class="o">=</span> <span class="n">classification</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="o">.</span><span class="n">F</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">pruning</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">out_cls</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Until the input sparse tensor reaches the target resolution, the network repeats a series of upsampling and pruning that removes out unnecessary voxels. We visualize the results on the following figure. Note that the final reconstruction captures the target geometry very accurately. We also visualized the hierarchical reconstruction process of upsampling and pruning.</p>
+<img alt="../_images/generative_3d_results.gif" src="../_images/generative_3d_results.gif" />
+</div>
+<div class="section" id="running-the-example">
+<h2>Running the Example<a class="headerlink" href="#running-the-example" title="Permalink to this headline">¶</a></h2>
+<p>To train a network, go to the Minkowski Engine root directory, and type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">examples</span><span class="o">.</span><span class="n">reconstruction</span> <span class="o">--</span><span class="n">train</span>
+</pre></div>
+</div>
+<p>To visualize network predictions, or to try out a pretrained model, type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">examples</span><span class="o">.</span><span class="n">reconstruction</span>
+</pre></div>
+</div>
+<img alt="../_images/demo_reconstruction.png" src="../_images/demo_reconstruction.png" />
+<p>The program will visualize two 3D shapes. One on the left is the target 3D
+shape, one on the right is the reconstructed network prediction.</p>
+<p>The entire code can be found at <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/reconstruction.py">example/reconstruction.py</a>.</p>
+</div>
 </div>
 
 
@@ -234,10 +259,10 @@ to define</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../sparse_tensor.html" class="btn btn-neutral float-right" title="SparseTensor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="interop.html" class="btn btn-neutral float-right" title="Working with Pytorch Layers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="multigpu.html" class="btn btn-neutral float-left" title="Multi-GPU Training" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="segmentation.html" class="btn btn-neutral float-left" title="Semantic Segmentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

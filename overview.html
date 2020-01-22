@@ -127,6 +127,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/modelnet40_classification.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
@@ -400,10 +401,29 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
 </div>
 <div class="section" id="running-the-examples">
 <h3>Running the Examples<a class="headerlink" href="#running-the-examples" title="Permalink to this headline">¶</a></h3>
-<p>After installing the package, run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">examples.example</span></code> in the package root directory.
-For indoor semantic segmentation. run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">examples.indoor</span></code> in the package root directory.</p>
-<p><img alt="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" /></p>
-</div>
+<p>After installing the package, run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">examples.example</span></code> in the package root directory. There are many more examples, but here’s a gist of some of exciting examples. To run them, simply type the command below an example image in terminal.</p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Example</th>
+<th align="center">Figures and Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">Semantic Segmentation</td>
+<td align="center"><p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" width="256"> </p> <br /> <code>python -m examples.indoor</code></td>
+</tr>
+<tr>
+<td align="center">Classification</td>
+<td align="center"><img alt="" src="https://stanfordvl.github.io/MinkowskiEngine/_images/classification_3d_net.png" /> <br /> <code>python -m examples.modelnet40</code></td>
+</tr>
+<tr>
+<td align="center">Reconstruction</td>
+<td align="center"><p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> </p> <img alt="" src="" /> <br /> <code>python -m examples.reconstruction</code></td>
+</tr>
+</tbody>
+</table></div>
 </div>
 <div class="section" id="discussion-and-documentation">
 <h2>Discussion and Documentation<a class="headerlink" href="#discussion-and-documentation" title="Permalink to this headline">¶</a></h2>
