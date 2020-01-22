@@ -58,7 +58,7 @@ Finally, we feed-forward the sparse tensor into the network and get the predicti
 After doing some post-processing. We can color the labels and visualize the
 input and the prediction side-by-side.
 
-.. image:: segmentation.png
+.. image:: ../images/segmentation.png
 
 
 The weights are downloaded automatically once you run the example and the

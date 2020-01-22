@@ -1,7 +1,15 @@
 ModelNet40 Classification
 =========================
 
-Please go over `the training and data loading tutorial
+In this page, we will go over a simple demo example that trains a 3D
+convolutional neural network with for classification. The input is a sparse
+tensor and convolution is defined on a sparse tensor as well. The network is an
+extension of the following architecture, but with residual blocks and a lot
+more layers.
+
+.. image:: ../images/classification_3d_net.png
+
+Before we proceed, please go over `the training and data loading tutorial
 <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ first.
 
 
