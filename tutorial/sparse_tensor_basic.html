@@ -98,6 +98,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#data-generation">Data Generation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-tensor-initialization">Sparse Tensor Initialization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-tensor-arithmetics">Sparse Tensor Arithmetics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#feature-concatenation">Feature Concatenation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batch-wise-decomposition">Batch-wise Decomposition</a></li>
 </ul>
 </li>
 </ul>
@@ -201,20 +203,23 @@
 <div class="section" id="data-generation">
 <h2>Data Generation<a class="headerlink" href="#data-generation" title="Permalink to this headline">¶</a></h2>
 <p>One can generate data directly by extracting non-zero elements. Here, we present a simple 2D array with 5 non-zero elements at the center.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-        <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span>   <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>
-<span class="c1"># coordinates and corresponding features</span>
-<span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
-            <span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">val</span><span class="p">])</span>
-<span class="n">coords</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
-<span class="n">feats</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">1.4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="p">]</span>
 
-<span class="k">return</span> <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span>
+<span class="k">def</span> <span class="nf">to_sparse_coo</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="c1"># An intuitive way to extract coordinates and features</span>
+    <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">coords</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+                <span class="n">feats</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">val</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">(</span><span class="n">coords</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">)</span>
+
+<span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">training demo page</a>.</p>
@@ -222,10 +227,10 @@
 <div class="section" id="sparse-tensor-initialization">
 <h2>Sparse Tensor Initialization<a class="headerlink" href="#sparse-tensor-initialization" title="Permalink to this headline">¶</a></h2>
 <p>The next step in the pipeline is initializing a sparse tensor. A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> requires coordinates with batch indices; this results in a sparse tensor with <span class="math notranslate nohighlight">\(D+1\)</span> spatial dimensions if the original coordinates have <span class="math notranslate nohighlight">\(D\)</span> dimensions.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">data_generation</span><span class="p">()</span>
-<span class="c1"># collate sparse tensor data to augment batch indices</span>
-<span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">coords</span><span class="p">],</span> <span class="n">feats</span><span class="o">=</span><span class="p">[</span><span class="n">feats</span><span class="p">])</span>
-<span class="n">sparse_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coords0</span><span class="p">,</span> <span class="n">feats0</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_0</span><span class="p">)</span>
+<span class="n">coords1</span><span class="p">,</span> <span class="n">feats1</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_1</span><span class="p">)</span>
+<span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span>
+    <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">coords0</span><span class="p">,</span> <span class="n">coords1</span><span class="p">],</span> <span class="n">feats</span><span class="o">=</span><span class="p">[</span><span class="n">feats0</span><span class="p">,</span> <span class="n">feats1</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Here, we used <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> function, but you can use <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> to convert a list of coordinates to <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> compatible coordinates.</p>
@@ -267,9 +272,39 @@
 </pre></div>
 </div>
 <p>Note that we use the same <cite>coords_key</cite> for the sparse tensor <cite>D</cite>. It will give you an assertion error if you try to use a sparse tensor with different <cite>coords_key</cite>.</p>
-<p>Finally, you can concatenate two sparse tensors along the feature dimension if they share the same <cite>coords_key</cite>.</p>
+</div>
+<div class="section" id="feature-concatenation">
+<h2>Feature Concatenation<a class="headerlink" href="#feature-concatenation" title="Permalink to this headline">¶</a></h2>
+<p>You can concatenate two sparse tensors along the feature dimension if they share the same <cite>coords_key</cite>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you have two or more sparse tensors with the same coords_key, you can concatenate features</span>
 <span class="n">E</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="batch-wise-decomposition">
+<h2>Batch-wise Decomposition<a class="headerlink" href="#batch-wise-decomposition" title="Permalink to this headline">¶</a></h2>
+<p>The internal structure of a sparse tensor collapses all non-zero elements within a batch into a coordinate matrix and a feature matrix.
+To decompose the outputs, you can use a couple function and attributes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coords0</span><span class="p">,</span> <span class="n">feats0</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_0</span><span class="p">)</span>
+<span class="n">coords1</span><span class="p">,</span> <span class="n">feats1</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_1</span><span class="p">)</span>
+<span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span>
+    <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">coords0</span><span class="p">,</span> <span class="n">coords1</span><span class="p">],</span> <span class="n">feats</span><span class="o">=</span><span class="p">[</span><span class="n">feats0</span><span class="p">,</span> <span class="n">feats1</span><span class="p">])</span>
+
+<span class="c1"># sparse tensors</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">)</span>
+<span class="n">conv</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+    <span class="n">in_channels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out_channels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+<span class="c1"># Extract features and coordinates per batch index</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">decomposed_coordinates</span>
+<span class="n">feats</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">decomposed_features</span>
+<span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">decomposed_coordinates_and_features</span>
+
+<span class="c1"># To specify a batch index</span>
+<span class="n">batch_index</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">coords</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">coordinates_at</span><span class="p">(</span><span class="n">batch_index</span><span class="p">)</span>
+<span class="n">feats</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">features_at</span><span class="p">(</span><span class="n">batch_index</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For more information, please refer to <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py">examples/sparse_tensor_basic.py</a>.</p>

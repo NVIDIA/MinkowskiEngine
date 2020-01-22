@@ -11,20 +11,24 @@ One can generate data directly by extracting non-zero elements. Here, we present
 
 .. code-block:: python
 
-   data = [[0, 0, 2.1, 0, 0],
-           [0, 1, 1.4, 3, 0],
-           [0, 0, 4,   0, 0]]
-   # coordinates and corresponding features
-   coords, feats = [], []
-   for i, row in enumerate(data):
-       for j, val in enumerate(row):
-           if val != 0:
-               coords.append([i, j])
-               feats.append([val])
-   coords = torch.IntTensor(coords)
-   feats = torch.FloatTensor(feats)
+   data = [
+       [0, 0, 2.1, 0, 0],
+       [0, 1, 1.4, 3, 0],
+       [0, 0, 4.0, 0, 0]
+   ]
 
-   return coords, feats
+   def to_sparse_coo(data):
+       # An intuitive way to extract coordinates and features
+       coords, feats = [], []
+       for i, row in enumerate(data):
+           for j, val in enumerate(row):
+               if val != 0:
+                   coords.append([i, j])
+                   feats.append([val])
+       return torch.IntTensor(coords), torch.FloatTensor(feats)
+
+   to_sparse_coo(data)
+
 
 Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the `training demo page <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_.
 
@@ -34,13 +38,12 @@ Sparse Tensor Initialization
 
 The next step in the pipeline is initializing a sparse tensor. A :attr:`MinkowskiEngine.SparseTensor` requires coordinates with batch indices; this results in a sparse tensor with :math:`D+1` spatial dimensions if the original coordinates have :math:`D` dimensions.
 
-
 .. code-block:: python
 
-   coords, feats = data_generation()
-   # collate sparse tensor data to augment batch indices
-   coords, feats = ME.utils.sparse_collate(coords=[coords], feats=[feats])
-   sparse_tensor = ME.SparseTensor(coords=coords, feats=feats)
+   coords0, feats0 = to_sparse_coo(data_batch_0)
+   coords1, feats1 = to_sparse_coo(data_batch_1)
+   coords, feats = ME.utils.sparse_collate(
+       coords=[coords0, coords1], feats=[feats0, feats1])
 
 
 Here, we used :attr:`MinkowskiEngine.utils.sparse_collate` function, but you can use :attr:`MinkowskiEngine.utils.batched_coordinates` to convert a list of coordinates to :attr:`MinkowskiEngine.SparseTensor` compatible coordinates.
@@ -92,12 +95,46 @@ However, for in-place operations, we force the coordinates to have the same spar
 
 Note that we use the same `coords_key` for the sparse tensor `D`. It will give you an assertion error if you try to use a sparse tensor with different `coords_key`.
 
-Finally, you can concatenate two sparse tensors along the feature dimension if they share the same `coords_key`.
+
+Feature Concatenation
+---------------------
+
+You can concatenate two sparse tensors along the feature dimension if they share the same `coords_key`.
 
 .. code-block:: python
 
    # If you have two or more sparse tensors with the same coords_key, you can concatenate features
    E = ME.cat(A, D)
+
+
+Batch-wise Decomposition
+------------------------
+
+The internal structure of a sparse tensor collapses all non-zero elements within a batch into a coordinate matrix and a feature matrix.
+To decompose the outputs, you can use a couple function and attributes.
+
+.. code-block:: python
+
+   coords0, feats0 = to_sparse_coo(data_batch_0)
+   coords1, feats1 = to_sparse_coo(data_batch_1)
+   coords, feats = ME.utils.sparse_collate(
+       coords=[coords0, coords1], feats=[feats0, feats1])
+
+   # sparse tensors
+   A = ME.SparseTensor(coords=coords, feats=feats)
+   conv = ME.MinkowskiConvolution(
+       in_channels=1, out_channels=2, kernel_size=3, stride=2, dimension=2)
+   B = conv(A)
+
+   # Extract features and coordinates per batch index
+   coords = B.decomposed_coordinates
+   feats = B.decomposed_features
+   coords, feats = B.decomposed_coordinates_and_features
+
+   # To specify a batch index
+   batch_index = 1
+   coords = B.coordinates_at(batch_index)
+   feats = B.features_at(batch_index)
 
 
 For more information, please refer to `examples/sparse_tensor_basic.py <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py>`_.
