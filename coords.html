@@ -99,7 +99,7 @@
 <p class="caption"><span class="caption-text">Demos</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="demo/training.html">Training Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/modelnet40.html">ModelNet40 Classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/modelnet40_classification.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
@@ -304,7 +304,7 @@
 <code class="sig-name descname">get_row_indices_at</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">batch_index</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_row_indices_at" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an torch.LongTensor of row indices for the specified batch index</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
-<span class="n">row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_at_batch_index</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">batch_index</span><span class="p">)</span>
+<span class="n">row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_at</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">batch_index</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
