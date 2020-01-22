@@ -19,7 +19,7 @@
 ### Changed
 
 - `SparseTensor` additional coords.device guard
-- `MinkowskiConvolution`, `Minkowski*Pooling` output coordinates will be equal to the input coordinates if stride == 1. Before this change, they generated output coordinates defined first for a speicific tensor stride.
+- `MinkowskiConvolution`, `Minkowski*Pooling` output coordinates will be equal to the input coordinates if stride == 1. Before this change, they generated output coordinates previously defined for a specific tensor stride.
 - `MinkowskiUnion` and `Ops.cat` will take a variable number of sparse tensors not a list of sparse tensors
 - Namespace cleanup
 - Fix global in out map with uninitialized global map

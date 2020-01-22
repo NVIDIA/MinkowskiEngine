@@ -5,8 +5,7 @@ In this page, we will go over a simple demo example that trains a 3D
 convolutional neural network that reconstructs a 3D sparsity pattern from an
 one-hot vector. This is similar to the `Octree Generating Networks, ICCV'17
 <https://arxiv.org/abs/1703.09438>`_. The input one-hot vector indicates a 3D
-Computer Aided Design (CAD) chairs from the ModelNet40 dataset. Here, we use a
-small subset.
+Computer Aided Design (CAD) chair index from the ModelNet40 dataset.
 
 We use :attr:`MinkowskiEngine.MinkowskiConvolutionTranspose` along with
 :attr:`MinkowskiEngine.MinkowskiPruning` to sequentially upsample a voxel by a
@@ -35,7 +34,7 @@ During a forward pass, we create two paths for 1) the main features and 2) a spa
    out = pruning(out, out_cls > 0)
 
 
-After multiple steps of upsampling and carving out unnecessary voxels, we have a target sparse tensor. The final reconstruction captures the geometry very accurately. Here, we visualized the hierarchical reconstruction result at each step: upsampling, pruning.
+Until the input sparse tensor reaches the target resolution, the network repeats a series of upsampling and pruning that removes out unnecessary voxels. We visualize the results on the following figure. Note that the final reconstruction captures the target geometry very accurately. We also visualized the hierarchical reconstruction process of upsampling and pruning.
 
 .. image:: ../images/generative_3d_results.gif
 
@@ -43,7 +42,7 @@ After multiple steps of upsampling and carving out unnecessary voxels, we have a
 Running the Example
 -------------------
 
-To train a network, go to the Minkowski Engine root directory, and type
+To train a network, go to the Minkowski Engine root directory, and type:
 
 
 .. code-block::
@@ -51,7 +50,7 @@ To train a network, go to the Minkowski Engine root directory, and type
    python -m examples.reconstruction --train
 
 
-To visualize the network prediction after you finished training, type
+To visualize network predictions, or to try out a pretrained model, type:
 
 .. code-block::
 
@@ -60,14 +59,8 @@ To visualize the network prediction after you finished training, type
 
 .. image:: ../images/demo_reconstruction.png
 
-The program will visualize two 3D shapes. One one the left is the target 3D
+The program will visualize two 3D shapes. One on the left is the target 3D
 shape, one on the right is the reconstructed network prediction.
-
-
-Using Pretrained Weights
-------------------------
-
-You can also download a pretrained model from here: `modelnet_reconstruction.pth <>`_.
 
 The entire code can be found at `example/reconstruction.py
 <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/reconstruction.py>`_.

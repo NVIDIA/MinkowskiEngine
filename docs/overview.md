@@ -187,10 +187,13 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
 ### Running the Examples
 
-After installing the package, run `python -m examples.example` in the package root directory.
-For indoor semantic segmentation. run `python -m examples.indoor` in the package root directory.
+After installing the package, run `python -m examples.example` in the package root directory. There are many more examples, but here's a gist of some of exciting examples. To run them, simply type the command below an example image in terminal.
 
-![](https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png)
+| Example               | Figures and Code                                                                                                                                                                |
+|:---------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Semantic Segmentation | <p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" width="256"> </p> <br /> `python -m examples.indoor`                        |
+| Classification        | ![](https://stanfordvl.github.io/MinkowskiEngine/_images/classification_3d_net.png) <br /> `python -m examples.modelnet40`                                                      |
+| Reconstruction        | <p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> </p> ![]() <br /> `python -m examples.reconstruction` |
 
 
 ## Discussion and Documentation
