@@ -88,6 +88,7 @@
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Minkowski Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example-networks">Example Networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#building-a-neural-network-on-a-sparse-tensor">Building a Neural Network on a Sparse Tensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
@@ -106,12 +107,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-network">Creating a Network</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#forward-and-backward-using-the-custom-network">Forward and backward using the custom network</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#running-the-examples">Running the Examples</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#discussion-and-documentation">Discussion and Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citing-minkowski-engine">Citing Minkowski Engine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#projects-using-minkowskiengine">Projects using MinkowskiEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#projects-using-minkowski-engine">Projects using Minkowski Engine</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
@@ -221,10 +221,39 @@
 <h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a></p>
 <p>The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://stanfordvl.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
+<div class="section" id="example-networks">
+<h2>Example Networks<a class="headerlink" href="#example-networks" title="Permalink to this headline">¶</a></h2>
+<p>The Minkowski Engine supports various functions that can be built on a sparse tensor. We list a few popular network architectures and applications here. To run the examples, please install the package and run the command in the package root directory.</p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center">Examples</th>
+<th align="center">Networks and Commands</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">Semantic Segmentation</td>
+<td align="center"><img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" width="256"> <br /> <code>python -m examples.indoor</code></td>
+</tr>
+<tr>
+<td align="center">Classification</td>
+<td align="center"><img alt="" src="https://stanfordvl.github.io/MinkowskiEngine/_images/classification_3d_net.png" /> <br /> <code>python -m examples.modelnet40</code></td>
+</tr>
+<tr>
+<td align="center">Reconstruction</td>
+<td align="center"><img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> <br /> <code>python -m examples.reconstruction</code></td>
+</tr>
+<tr>
+<td align="center">Completion</td>
+<td align="center"><img src="https://stanfordvl.github.io/MinkowskiEngine/_images/completion_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/completion.png" width="256"> <br /> <code>python -m examples.completion</code></td>
+</tr>
+</tbody>
+</table></div>
 <div class="section" id="building-a-neural-network-on-a-sparse-tensor">
 <h2>Building a Neural Network on a Sparse Tensor<a class="headerlink" href="#building-a-neural-network-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h2>
 <p>The Minkowski Engine provides APIs that allow users to build a neural network on a sparse tensor. Then, how dow we define convolution/pooling/transposed operations on a sparse tensor?
-Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution output on a few specified points. For more information, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html">convolution on a sparse tensor</a></p>
+Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points. For more information, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html">convolution on a sparse tensor</a></p>
 <table border="1" class="docutils">
 <thead>
 <tr>
@@ -341,41 +370,39 @@ sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
 function (<code class="docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code>).</p>
 <div class="section" id="creating-a-network">
 <h3>Creating a Network<a class="headerlink" href="#creating-a-network" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="kn">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
 
 <span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiNetwork</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_feat</span><span class="p">,</span> <span class="n">out_feat</span><span class="p">,</span> <span class="n">D</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ExampleNetwork</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
-            <span class="n">in_channels</span><span class="o">=</span><span class="n">in_feat</span><span class="p">,</span>
-            <span class="n">out_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-            <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
-            <span class="n">in_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-            <span class="n">out_channels</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
-            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bn2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+                <span class="n">in_channels</span><span class="o">=</span><span class="n">in_feat</span><span class="p">,</span>
+                <span class="n">out_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span>
+            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>
+            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
+                <span class="n">in_channels</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                <span class="n">out_channels</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span>
+            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span>
+            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pooling</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiGlobalPooling</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiLinear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">out_feat</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn2</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-
         <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pooling</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
 </pre></div>
@@ -399,31 +426,6 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
 </pre></div>
 </div>
 </div>
-<div class="section" id="running-the-examples">
-<h3>Running the Examples<a class="headerlink" href="#running-the-examples" title="Permalink to this headline">¶</a></h3>
-<p>After installing the package, run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">examples.example</span></code> in the package root directory. There are many more examples, but here’s a gist of some of exciting examples. To run them, simply type the command below an example image in terminal.</p>
-<table border="1" class="docutils">
-<thead>
-<tr>
-<th align="center">Example</th>
-<th align="center">Figures and Code</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center">Semantic Segmentation</td>
-<td align="center"><p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" width="256"> </p> <br /> <code>python -m examples.indoor</code></td>
-</tr>
-<tr>
-<td align="center">Classification</td>
-<td align="center"><img alt="" src="https://stanfordvl.github.io/MinkowskiEngine/_images/classification_3d_net.png" /> <br /> <code>python -m examples.modelnet40</code></td>
-</tr>
-<tr>
-<td align="center">Reconstruction</td>
-<td align="center"><p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> </p> <img alt="" src="" /> <br /> <code>python -m examples.reconstruction</code></td>
-</tr>
-</tbody>
-</table></div>
 </div>
 <div class="section" id="discussion-and-documentation">
 <h2>Discussion and Documentation<a class="headerlink" href="#discussion-and-documentation" title="Permalink to this headline">¶</a></h2>
@@ -450,11 +452,12 @@ page</a>.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="projects-using-minkowskiengine">
-<h2>Projects using MinkowskiEngine<a class="headerlink" href="#projects-using-minkowskiengine" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="projects-using-minkowski-engine">
+<h2>Projects using Minkowski Engine<a class="headerlink" href="#projects-using-minkowski-engine" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/chrischoy/SpatioTemporalSegmentation">4D Spatio-Temporal Segmentation</a></p></li>
 <li><p><a class="reference external" href="https://github.com/chrischoy/FCGF">Fully Convolutional Geometric Features, ICCV’19</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/2001.05119">Learning multiview 3D point cloud registration</a></p></li>
 </ul>
 </div>
 </div>
