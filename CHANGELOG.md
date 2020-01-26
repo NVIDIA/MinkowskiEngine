@@ -25,6 +25,7 @@
 - Fix global in out map with uninitialized global map
 - `getKernelMap` now can generate new kernel map if it doesn't exist
 - `MinkowskiPruning` initialization takes no argument
+- Batched coordinates with batch indices prepended before coordinates
 
 
 ## [0.3.3] - 2020-01-07

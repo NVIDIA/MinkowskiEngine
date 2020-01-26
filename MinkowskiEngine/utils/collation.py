@@ -57,7 +57,6 @@ def batched_coordinates(coords):
     N = np.array([len(cs) for cs in coords]).sum()
     bcoords = torch.IntTensor(N, D + 1)  # uninitialized
 
-    # if not BATCH_FIRST:
     s = 0
     for b, cs in enumerate(coords):
         if isinstance(cs, np.ndarray):
@@ -69,8 +68,9 @@ def batched_coordinates(coords):
                 cs = cs.floor()
 
         cn = len(cs)
-        bcoords[s:s + cn, :D] = cs.int()
-        bcoords[s:s + cn, D] = b
+        # BATCH_FIRST:
+        bcoords[s:s + cn, 1:] = cs.int()
+        bcoords[s:s + cn, 0] = b
         s += cn
     return bcoords
 
@@ -133,10 +133,10 @@ def sparse_collate(coords, feats, labels=None):
                 label = torch.from_numpy(label)
             labels_batch.append(label)
 
-        # Batched coords
         cn = coord.shape[0]
-        bcoords[s:s + cn, :D] = coord
-        bcoords[s:s + cn, D] = batch_id
+        # Batched coords
+        bcoords[s:s + cn, 1:] = coord
+        bcoords[s:s + cn, 0] = batch_id
 
         # Features
         feats_batch.append(feat)

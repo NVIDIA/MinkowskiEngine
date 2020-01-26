@@ -82,10 +82,10 @@ void Region::set_bounds(const int *p_center_) {
   std::copy_n(p_center_, D + 1, center.begin());
 
 #ifdef BATCH_FIRST
-  int batch_offset = 1;
+  constexpr int batch_offset = 1;
   lb[0] = ub[0] = p_center_[0]; // set the batch index
 #else
-  int batch_offset = 0;
+  constexpr int batch_offset = 0;
   lb[D] = ub[D] = p_center_[D]; // set the batch index
 #endif
 
@@ -123,79 +123,86 @@ RegionIterator::RegionIterator(const Region &region)
     point.resize(D + 1);
     // First offset
 #ifdef BATCH_FIRST
+    constexpr int b = 1;
     point[0] = region.center[0];
-    for (int i = 1; i < D + 1; i++) {
-      point[i] = region.center[i] + region.p_offset[i];
-    }
 #else
-    for (int i = 0; i < D; i++) {
-      point[i] = region.center[i] + region.p_offset[i];
-    }
+    constexpr int b = 0;
     point[D] = region.center[D];
 #endif
+    for (int i = 0; i < D; i++) {
+      point[i + b] = region.center[i + b] + region.p_offset[i];
+    }
     break;
   }
 }
 
 RegionIterator &RegionIterator::operator++() {
   switch (region.region_type) {
-  case 0:
+  case 0: {
 #ifdef BATCH_FIRST
-    ASSERT(false, "Not implemented.");
+    constexpr int b = 1;
 #else
+    constexpr int b = 0;
+#endif
     // Iterate only from 0 to D-1, point[D] reserved for batch index
     for (int d = 0; d < D;) {
-      point[d] += region.dilations[d] *
-                  region.tensor_strides[d]; // point is initialized as lb
-      if (point[d] <= region.ub[d])
+      point[d + b] += region.dilations[d] *
+                      region.tensor_strides[d]; // point is initialized as lb
+      if (point[d + b] <= region.ub[d + b])
         break;
-      point[d] = region.lb[d];
+      point[d + b] = region.lb[d + b];
       d++;
       if (d >= D) {
         done = true; // Signal to operator!= to end iteration
         break;
       }
     }
-#endif
     return *this;
-  case 1:
+  }
+  case 1: {
 #ifdef BATCH_FIRST
-    ASSERT(false, "Not implemented.");
+    constexpr int b = 1;
 #else
+    constexpr int b = 0;
+#endif
     while (curr_axis < D) {
       // Go through [4, 5, 1, 2] when kernel_size = 5, and ceter = 3.
       // Center passed at the initialization
-      point[curr_axis] +=
+      point[curr_axis + b] +=
           region.dilations[curr_axis] * region.tensor_strides[curr_axis];
       // skip if the current point is crossing the center
-      if (point[curr_axis] == region.center[curr_axis]) {
+      if (point[curr_axis + b] == region.center[curr_axis + b]) {
         curr_axis++;
         continue;
       }
       // When it passes the last point, reset to the lower bound
-      if (point[curr_axis] > region.ub[curr_axis])
-        point[curr_axis] = region.lb[curr_axis];
+      if (point[curr_axis + b] > region.ub[curr_axis + b])
+        point[curr_axis + b] = region.lb[curr_axis + b];
       break;
     }
     if (curr_axis >= D) { // if it has past all axes
       done = true;
     }
-#endif
     return *this;
-  case 2:         // custom offset
-    offset_ind++; // already past the first offset
+  }
+  case 2: // custom offset
+  {
 #ifdef BATCH_FIRST
-    ASSERT(false, "Not implemented.");
+    constexpr int b = 1;
 #else
+    constexpr int b = 0;
+#endif
+    offset_ind++; // already past the first offset
     if (offset_ind >= region.n_offset) {
       done = true;
     } else {
       for (int i = 0; i < D; i++) {
-        point[i] = region.center[i] + region.p_offset[D * offset_ind + i];
+        point[i + b] =
+            region.center[i + b] + region.p_offset[D * offset_ind + i];
       }
     }
-#endif
     return *this;
+  }
   }
   // To make the compiler happy
   return *this;

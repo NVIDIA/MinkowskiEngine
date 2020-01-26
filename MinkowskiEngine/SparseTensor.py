@@ -84,9 +84,9 @@ class SparseTensor():
     .. math::
 
        \mathbf{C} = \begin{bmatrix}
-       x_1^1   & x_1^2  & \cdots & x_1^D  & b_1    \\
+       b_1     & x_1^1  & x_1^2  & \cdots & x_1^D  \\
         \vdots & \vdots & \ddots & \vdots & \vdots \\
-       x_N^1   & x_N^2  & \cdots & x_N^D  & b_N
+       b_N     & x_N^1  & x_N^2  & \cdots & x_N^D
        \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
        \mathbf{f}_1^T\\
        \vdots\\
@@ -102,25 +102,25 @@ class SparseTensor():
 
     .. warning::
 
-       From the version 0.4, we will put the batch indices on the first column
-       to be consistent with the standard neural network packages.
-
-       Please use :attr:`MinkowskiEngine.utils.batched_coordinates` or
+       Before MinkowskiEngine version 0.4, we put the batch indices on the last
+       column. We do not recommend modifying or accessing coordinates directly.
+       Instead, please use :attr:`MinkowskiEngine.utils.batched_coordinates` or
        :attr:`MinkowskiEngine.utils.sparse_collate` when creating coordinates
        to make your code to generate batched coordinates automatically that are
        compatible with the latest version of Minkowski Engine.
 
-       .. math::
+       Also, to access coordinates or features batch-wise, use the functions
+       `coordinates_at(batch_index : int)`, `features_at(batch_index : int)` of
+       a sparse tensor. Or to access all batch-wise coordinates and features,
+       `decomposed_coordinates`, `decomposed_features`,
+       `decomposed_coordinates_and_features` of a sparse tensor.
 
-          \mathbf{C} = \begin{bmatrix}
-          b_1    & x_1^1   & x_1^2  & \cdots & x_1^D    \\
-          \vdots &    \vdots & \vdots & \ddots & \vdots \\
-          b_N    & x_N^1   & x_N^2  & \cdots & x_N^D
-          \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
-          \mathbf{f}_1^T\\
-          \vdots\\
-          \mathbf{f}_N^T
-          \end{bmatrix}
+       Example::
+
+           >>> coords, feats = ME.utils.sparse_collate([coords_batch0, coords_batch1], [feats_batch0, feats_batch1])
+           >>> A = ME.SparseTensor(feats=feats, coords=coords)
+           >>> coords_batch0 = A.coordinates_at(0)
+           >>> list_of_coords, list_of_featurs = A.decomposed_coordinates_and_features
 
     """
 
@@ -308,7 +308,7 @@ class SparseTensor():
         """
         row_inds_list = self.coords_man.get_row_indices_per_batch(
             self.coords_key)
-        return [self.C[row_inds, :-1] for row_inds in row_inds_list]
+        return [self.C[row_inds, 1:] for row_inds in row_inds_list]
 
     def coordinates_at(self, batch_index):
         r"""Return coordinates at the specified batch index.
@@ -318,9 +318,9 @@ class SparseTensor():
         is the number of non zero elements in the :math:`i`th batch index in
         :math:`D` dimensional space.
         """
-        row_inds = self.coords_man.get_row_indices_at(
-            self.coords_key, batch_index)
-        return self.C[row_inds, :-1]
+        row_inds = self.coords_man.get_row_indices_at(self.coords_key,
+                                                      batch_index)
+        return self.C[row_inds, 1:]
 
     @property
     def F(self):
@@ -370,7 +370,7 @@ class SparseTensor():
         """
         row_inds_list = self.coords_man.get_row_indices_per_batch(
             self.coords_key)
-        return [self.C[row_inds, :-1] for row_inds in row_inds_list], \
+        return [self.C[row_inds, 1:] for row_inds in row_inds_list], \
             [self._F[row_inds] for row_inds in row_inds_list]
 
     @property

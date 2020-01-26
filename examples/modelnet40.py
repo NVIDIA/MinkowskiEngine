@@ -61,12 +61,11 @@ parser.add_argument('--voxel_size', type=float, default=0.05)
 parser.add_argument('--max_iter', type=int, default=120000)
 parser.add_argument('--val_freq', type=int, default=1000)
 parser.add_argument('--batch_size', default=256, type=int)
-parser.add_argument('--lr', default=1e-1, type=float)
+parser.add_argument('--lr', default=1e-2, type=float)
 parser.add_argument('--momentum', type=float, default=0.9)
 parser.add_argument('--weight_decay', type=float, default=1e-4)
 parser.add_argument('--num_workers', type=int, default=1)
 parser.add_argument('--stat_freq', type=int, default=50)
-parser.add_argument('--checkpoint_weights', type=str, default='modelnet.pth')
 parser.add_argument('--weights', type=str, default='modelnet.pth')
 parser.add_argument('--load_optimizer', type=str, default='true')
 
@@ -413,8 +412,8 @@ def train(net, device, config):
         config=config)
 
     curr_iter = 0
-    if os.path.exists(config.checkpoint_weights):
-        checkpoint = torch.load(config.checkpoint_weights)
+    if os.path.exists(config.weights):
+        checkpoint = torch.load(config.weights)
         net.load_state_dict(checkpoint['state_dict'])
         if config.load_optimizer.lower() == 'true':
             curr_iter = checkpoint['curr_iter'] + 1

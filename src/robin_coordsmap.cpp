@@ -275,9 +275,9 @@ InOutMapsPair<int>
 CoordsMap::global_reduction_map(const CoordsMap &gout_coords_map,
                                 bool return_per_batch) const {
 #ifdef BATCH_FIRST
-  int batch_index = 0;
+  constexpr int batch_index = 0;
 #else
-  int batch_index = ncols - 1;
+  constexpr int batch_index = ncols - 1;
 #endif
 
   if (!return_per_batch) {

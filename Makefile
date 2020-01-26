@@ -127,7 +127,10 @@ LIBRARY_DIRS += $(BLAS_LIB)
 CXXFLAGS += -MMD -MP
 
 # Fast math
-CXX_FLAGS += -ffast-math -funsafe-math-optimizations -fno-math-errno
+CXXFLAGS += -ffast-math -funsafe-math-optimizations -fno-math-errno
+
+# BATCH FIRST
+CXXFLAGS += -DBATCH_FIRST=1
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir)) \

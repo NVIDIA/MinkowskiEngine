@@ -499,7 +499,8 @@ def train(net, dataloader, device, config):
 
         optimizer.zero_grad()
         init_coords = torch.zeros((config.batch_size, 4), dtype=torch.int)
-        init_coords[:, -1] = torch.arange(config.batch_size)
+        # Batch index
+        init_coords[:, 0] = torch.arange(config.batch_size)
 
         in_feat = torch.zeros((config.batch_size, in_nchannel))
         in_feat[torch.arange(config.batch_size), data_dict['labels']] = 1
@@ -559,7 +560,8 @@ def visualize(net, dataloader, device, config):
 
     for data_dict in dataloader:
         init_coords = torch.zeros((config.batch_size, 4), dtype=torch.int)
-        init_coords[:, -1] = torch.arange(config.batch_size)
+        # Batch index
+        init_coords[:, 0] = torch.arange(config.batch_size)
 
         in_feat = torch.zeros((config.batch_size, in_nchannel))
         in_feat[torch.arange(config.batch_size), data_dict['labels']] = 1
