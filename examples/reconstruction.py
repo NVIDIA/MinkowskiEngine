@@ -71,23 +71,7 @@ def PointCloud(points, colors=None):
 
 
 def collate_pointcloud_fn(list_data):
-    new_list_data = []
-    num_removed = 0
-    for data in list_data:
-        if data is not None:
-            new_list_data.append(data)
-        else:
-            num_removed += 1
-
-    list_data = new_list_data
-
-    if len(list_data) == 0:
-        raise ValueError('No data in the batch')
-
     coords, feats, labels = list(zip(*list_data))
-
-    eff_num_batch = len(coords)
-    assert len(labels) == eff_num_batch
 
     # Concatenate all lists
     return {
@@ -212,6 +196,7 @@ parser.add_argument(
     '--weights', type=str, default='modelnet_reconstruction.pth')
 parser.add_argument('--load_optimizer', type=str, default='true')
 parser.add_argument('--train', action='store_true')
+parser.add_argument('--max_visualization', type=int, default=4)
 
 ###############################################################################
 # End of utility functions
@@ -499,7 +484,6 @@ def train(net, dataloader, device, config):
 
         optimizer.zero_grad()
         init_coords = torch.zeros((config.batch_size, 4), dtype=torch.int)
-        # Batch index
         init_coords[:, 0] = torch.arange(config.batch_size)
 
         in_feat = torch.zeros((config.batch_size, in_nchannel))
@@ -557,10 +541,11 @@ def visualize(net, dataloader, device, config):
     in_nchannel = len(dataloader.dataset)
     net.eval()
     crit = nn.BCEWithLogitsLoss()
+    n_vis = 0
 
     for data_dict in dataloader:
+
         init_coords = torch.zeros((config.batch_size, 4), dtype=torch.int)
-        # Batch index
         init_coords[:, 0] = torch.arange(config.batch_size)
 
         in_feat = torch.zeros((config.batch_size, in_nchannel))
@@ -598,6 +583,10 @@ def visualize(net, dataloader, device, config):
             opcd.estimate_normals()
             opcd.rotate(M)
             o3d.visualization.draw_geometries([pcd, opcd])
+
+            n_vis += 1
+            if n_vis > config.max_visualization:
+                return
 
 
 if __name__ == '__main__':

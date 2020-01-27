@@ -131,21 +131,14 @@ if __name__ == '__main__':
 
     # Measure time
     with torch.no_grad():
-        for voxel_size in [0.1, 0.05, 0.02]:
-            timer = Timer()
-            coordinates, features = generate_input_sparse_tensor(
-                config.file_name, voxel_size=voxel_size)
+        voxel_size = 0.02
+        coordinates, features = generate_input_sparse_tensor(
+            config.file_name, voxel_size=voxel_size)
 
-            # Feed-forward pass and get the prediction
-            for i in range(4):
-                timer.tic()
-                sinput = ME.SparseTensor(
-                    features, coords=coordinates).to(device)
-                soutput = model(sinput)
-                timer.toc()
-            print(
-                f'Time to process a room with {voxel_size}m voxel downsampling '
-                f'containing {len(sinput)} voxels: {timer.min_time}')
+        # Feed-forward pass and get the prediction
+        sinput = ME.SparseTensor(
+            features, coords=coordinates).to(device)
+        soutput = model(sinput)
 
     # Feed-forward pass and get the prediction
     coordinates, features = soutput.decomposed_coordinates_and_features

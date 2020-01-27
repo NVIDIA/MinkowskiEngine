@@ -7,14 +7,26 @@
 
 The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://stanfordvl.github.io/MinkowskiEngine/overview.html).
 
+## Example Networks
+
+The Minkowski Engine supports various functions that can be built on a sparse tensor. We list a few popular network architectures and applications here. To run the examples, please install the package and run the command in the package root directory.
+
+| Examples              | Networks and Commands                                                                                                                                                           |
+|:---------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Semantic Segmentation | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" width="256"> <br /> `python -m examples.indoor` |
+| Classification        | ![](https://stanfordvl.github.io/MinkowskiEngine/_images/classification_3d_net.png) <br /> `python -m examples.modelnet40`                                                      |
+| Reconstruction        | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> <br /> `python -m examples.reconstruction` |
+
+
 ## Building a Neural Network on a Sparse Tensor
 
 The Minkowski Engine provides APIs that allow users to build a neural network on a sparse tensor. Then, how dow we define convolution/pooling/transposed operations on a sparse tensor?
-Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution output on a few specified points. For more information, please visit [convolution on a sparse tensor](https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html)
+Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points. For more information, please visit [convolution on a sparse tensor](https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html)
 
 | Dense Tensor                  | Sparse Tensor                 |
 |:-----------------------------:|:-----------------------------:|
 | ![](./_images/conv_dense.gif) |![](./_images/conv_sparse.gif) |
+
 
 --------------------------------------------------------------------------------
 
@@ -127,41 +139,39 @@ function (`MinkowskiEngine.utils.sparse_quantize`).
 ### Creating a Network
 
 ```python
+import torch.nn as nn
 import MinkowskiEngine as ME
 
 class ExampleNetwork(ME.MinkowskiNetwork):
 
     def __init__(self, in_feat, out_feat, D):
         super(ExampleNetwork, self).__init__(D)
-        self.conv1 = ME.MinkowskiConvolution(
-            in_channels=in_feat,
-            out_channels=64,
-            kernel_size=3,
-            stride=2,
-            dilation=1,
-            has_bias=False,
-            dimension=D)
-        self.bn1 = ME.MinkowskiBatchNorm(64)
-        self.conv2 = ME.MinkowskiConvolution(
-            in_channels=64,
-            out_channels=128,
-            kernel_size=3,
-            stride=2,
-            dimension=D)
-        self.bn2 = ME.MinkowskiBatchNorm(128)
+        self.conv1 = nn.Sequential(
+            ME.MinkowskiConvolution(
+                in_channels=in_feat,
+                out_channels=64,
+                kernel_size=3,
+                stride=2,
+                dilation=1,
+                has_bias=False,
+                dimension=D),
+            ME.MinkowskiBatchNorm(64),
+            ME.MinkowskiReLU())
+        self.conv2 = nn.Sequential(
+            ME.MinkowskiConvolution(
+                in_channels=64,
+                out_channels=128,
+                kernel_size=3,
+                stride=2,
+                dimension=D),
+            ME.MinkowskiBatchNorm(128),
+            ME.MinkowskiReLU())
         self.pooling = ME.MinkowskiGlobalPooling(dimension=D)
         self.linear = ME.MinkowskiLinear(128, out_feat)
-        self.relu = ME.MinkowskiReLU(inplace=True)
 
     def forward(self, x):
         out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
         out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
-
         out = self.pooling(out)
         return self.linear(out)
 ```
@@ -183,18 +193,6 @@ class ExampleNetwork(ME.MinkowskiNetwork):
     # Loss
     loss = criterion(output.F, label)
 ```
-
-
-### Running the Examples
-
-After installing the package, run `python -m examples.example` in the package root directory. There are many more examples, but here's a gist of some of exciting examples. To run them, simply type the command below an example image in terminal.
-
-| Example               | Figures and Code                                                                                                                                                                |
-|:---------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Semantic Segmentation | <p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" width="256"> </p> <br /> `python -m examples.indoor`                        |
-| Classification        | ![](https://stanfordvl.github.io/MinkowskiEngine/_images/classification_3d_net.png) <br /> `python -m examples.modelnet40`                                                      |
-| Reconstruction        | <p align="center"> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> </p> ![]() <br /> `python -m examples.reconstruction` |
-
 
 ## Discussion and Documentation
 
@@ -223,7 +221,8 @@ If you use the Minkowski Engine, please cite:
 }
 ```
 
-## Projects using MinkowskiEngine
+## Projects using Minkowski Engine
 
 - [4D Spatio-Temporal Segmentation](https://github.com/chrischoy/SpatioTemporalSegmentation)
 - [Fully Convolutional Geometric Features, ICCV'19](https://github.com/chrischoy/FCGF)
+- [Learning multiview 3D point cloud registration](https://arxiv.org/abs/2001.05119)
