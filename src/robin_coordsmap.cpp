@@ -214,32 +214,55 @@ InOutMapsPair<int> CoordsMap::kernel_map(const CoordsMap &out_coords_map,
   const size_t stride = (numElements + N - 1) / N;
   N = (numElements + stride - 1) / stride;
 
+  // When no need to iterate through the region
+  // Put if outside the loop for speed
+  if (region.region_type != 2 && K == 1) {
 #pragma omp parallel for
-  for (int n = 0; n < N; n++) {
-    Region cregion(region);
-    int kernel_ind, curr_index;
-    for (auto iter_out = out_inner_map.begin(stride * n);
-         iter_out.num_steps() < std::min(stride, numElements - n * stride);
-         ++iter_out) {
+    for (int n = 0; n < N; n++) {
+      int curr_index;
+      for (auto iter_out = out_inner_map.begin(stride * n);
+           iter_out.num_steps() < std::min(stride, numElements - n * stride);
+           ++iter_out) {
 
-      // set the bounds for the current region
-      cregion.set_bounds(iter_out->first);
-
-      // For elements in the current region
-      kernel_ind = 0;
-      for (const auto &point : cregion) {
-        // If the input coord exists
-        const auto iter_map = map.find(point);
+        const auto iter_map = map.find(iter_out->first);
         if (iter_map != map.end()) {
 #pragma omp atomic capture
-          curr_index = num_used[kernel_ind]++;
+          curr_index = num_used[0]++;
           // In index
-          in_maps[kernel_ind][curr_index] = iter_map->second;
+          in_maps[0][curr_index] = iter_map->second;
           // Out index
-          out_maps[kernel_ind][curr_index] = iter_out->second;
+          out_maps[0][curr_index] = iter_out->second;
         }
-        // Post processings
-        kernel_ind++;
+      }
+    }
+  } else {
+#pragma omp parallel for
+    for (int n = 0; n < N; n++) {
+      Region cregion(region);
+      int kernel_ind, curr_index;
+      for (auto iter_out = out_inner_map.begin(stride * n);
+           iter_out.num_steps() < std::min(stride, numElements - n * stride);
+           ++iter_out) {
+
+        // set the bounds for the current region
+        cregion.set_bounds(iter_out->first);
+
+        // For elements in the current region
+        kernel_ind = 0;
+        for (const auto &point : cregion) {
+          // If the input coord exists
+          const auto iter_map = map.find(point);
+          if (iter_map != map.end()) {
+#pragma omp atomic capture
+            curr_index = num_used[kernel_ind]++;
+            // In index
+            in_maps[kernel_ind][curr_index] = iter_map->second;
+            // Out index
+            out_maps[kernel_ind][curr_index] = iter_out->second;
+          }
+          // Post processings
+          kernel_ind++;
+        }
       }
     }
   }

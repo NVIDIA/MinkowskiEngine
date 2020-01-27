@@ -23,9 +23,9 @@ The Minkowski Engine supports various functions that can be built on a sparse te
 The Minkowski Engine provides APIs that allow users to build a neural network on a sparse tensor. Then, how dow we define convolution/pooling/transposed operations on a sparse tensor?
 Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points. For more information, please visit [convolution on a sparse tensor](https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html)
 
-| Dense Tensor                      | Sparse Tensor                     |
-|:---------------------------------:|:---------------------------------:|
-| ![](./docs/images/conv_dense.gif) |![](./docs/images/conv_sparse.gif) |
+| Dense Tensor                                                                    | Sparse Tensor                                                                     |
+|:-------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|
+| <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/conv_dense.gif"> | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/conv_sparse.gif" > |
 
 --------------------------------------------------------------------------------
 

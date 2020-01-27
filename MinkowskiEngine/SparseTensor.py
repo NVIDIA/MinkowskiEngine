@@ -75,8 +75,10 @@ class SparseTensor():
     r"""A sparse tensor class. Can be accessed via
     :attr:`MinkowskiEngine.SparseTensor`.
 
-    The :attr:`SparseTensor` class is the basic tensor in MinkowskiEngine. We
-    use the COOrdinate (COO) format to save a sparse tensor `[1]
+    The :attr:`SparseTensor` class is the basic tensor in MinkowskiEngine. For
+    the definition of a sparse tensor, please visit `[the terminology page]
+    <https://stanfordvl.github.io/MinkowskiEngine/terminology.html#sparse-tensor>`_.
+    We use the COOrdinate (COO) format to save a sparse tensor `[1]
     <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This
     representation is simply a concatenation of coordinates in a matrix
     :math:`C` and associated features :math:`F`.
@@ -84,33 +86,33 @@ class SparseTensor():
     .. math::
 
        \mathbf{C} = \begin{bmatrix}
-       b_1     & x_1^1  & x_1^2  & \cdots & x_1^D  \\
-        \vdots & \vdots & \ddots & \vdots & \vdots \\
-       b_N     & x_N^1  & x_N^2  & \cdots & x_N^D
+       b_1    & x_1^1  & x_1^2  & \cdots & x_1^D  \\
+       \vdots & \vdots & \vdots & \ddots & \vdots \\
+       b_N    & x_N^1  & x_N^2  & \cdots & x_N^D
        \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
        \mathbf{f}_1^T\\
        \vdots\\
        \mathbf{f}_N^T
        \end{bmatrix}
 
-    In the above equation, we use a :math:`D`-dimensional space and :math:`N`
-    number of points, each with the coordinate :math:`(x_i^1, x_i^1, \cdots,
-    x_i^D)`, and the associated feature :math:`\mathbf{f}_i`. :math:`b_i`
-    indicates the mini-batch index to disassociate instances within the same
-    batch.  Internally, we handle the batch index as an additional spatial
-    dimension.
+    where :math:`\mathbf{x}_i \in \mathcal{Z}^D` is a :math:`D`-dimensional
+    coordinate and :math:`b_i \in \mathcal{Z}_+` denotes the corresponding
+    batch index. :math:`N` is the number of non-zero elements in the sparse
+    tensor, each with the coordinate :math:`(b_i, x_i^1, x_i^1, \cdots,
+    x_i^D)`, and the associated feature :math:`\mathbf{f}_i`. Internally, we
+    handle the batch index as an additional spatial dimension.
 
     .. warning::
 
        Before MinkowskiEngine version 0.4, we put the batch indices on the last
-       column. We do not recommend modifying or accessing coordinates directly.
-       Instead, please use :attr:`MinkowskiEngine.utils.batched_coordinates` or
-       :attr:`MinkowskiEngine.utils.sparse_collate` when creating coordinates
-       to make your code to generate batched coordinates automatically that are
-       compatible with the latest version of Minkowski Engine.
+       column. Thus, direct manipulation of coordinates will be incompatible
+       with the latest versions. Instead, please use
+       :attr:`MinkowskiEngine.utils.batched_coordinates` or
+       :attr:`MinkowskiEngine.utils.sparse_collate` to create batched
+       coordinates.
 
        Also, to access coordinates or features batch-wise, use the functions
-       `coordinates_at(batch_index : int)`, `features_at(batch_index : int)` of
+       :attr:`coordinates_at(batch_index : int)`, :attr:`features_at(batch_index : int)` of
        a sparse tensor. Or to access all batch-wise coordinates and features,
        `decomposed_coordinates`, `decomposed_features`,
        `decomposed_coordinates_and_features` of a sparse tensor.
@@ -119,7 +121,8 @@ class SparseTensor():
 
            >>> coords, feats = ME.utils.sparse_collate([coords_batch0, coords_batch1], [feats_batch0, feats_batch1])
            >>> A = ME.SparseTensor(feats=feats, coords=coords)
-           >>> coords_batch0 = A.coordinates_at(0)
+           >>> coords_batch0 = A.coordinates_at(batch_index=0)
+           >>> feats_batch1 = A.features_at(batch_index=1)
            >>> list_of_coords, list_of_featurs = A.decomposed_coordinates_and_features
 
     """

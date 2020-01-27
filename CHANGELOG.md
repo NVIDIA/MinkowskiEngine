@@ -1,5 +1,12 @@
 # Change Log
 
+## [master] - 2020-01-27
+
+### Changed
+
+- For kernel maps with region size 1 does not require `Region` class initialization.
+
+
 ## [0.4.0] - 2020-01-26
 
 ### Added
