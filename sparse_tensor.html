@@ -203,43 +203,45 @@
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">allow_duplicate_coords=False</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>A sparse tensor class. Can be accessed via
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
-<p>The <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. We
-use the COOrdinate (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
+<p>The <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. For
+the definition of a sparse tensor, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/terminology.html#sparse-tensor">[the terminology page]</a>.
+We use the COOrdinate (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
 representation is simply a concatenation of coordinates in a matrix
 <span class="math notranslate nohighlight">\(C\)</span> and associated features <span class="math notranslate nohighlight">\(F\)</span>.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbf{C} = \begin{bmatrix}
-b_1     &amp; x_1^1  &amp; x_1^2  &amp; \cdots &amp; x_1^D  \\
- \vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots \\
-b_N     &amp; x_N^1  &amp; x_N^2  &amp; \cdots &amp; x_N^D
+b_1    &amp; x_1^1  &amp; x_1^2  &amp; \cdots &amp; x_1^D  \\
+\vdots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+b_N    &amp; x_N^1  &amp; x_N^2  &amp; \cdots &amp; x_N^D
 \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
 \mathbf{f}_1^T\\
 \vdots\\
 \mathbf{f}_N^T
 \end{bmatrix}\end{split}\]</div>
-<p>In the above equation, we use a <span class="math notranslate nohighlight">\(D\)</span>-dimensional space and <span class="math notranslate nohighlight">\(N\)</span>
-number of points, each with the coordinate <span class="math notranslate nohighlight">\((x_i^1, x_i^1, \cdots,
-x_i^D)\)</span>, and the associated feature <span class="math notranslate nohighlight">\(\mathbf{f}_i\)</span>. <span class="math notranslate nohighlight">\(b_i\)</span>
-indicates the mini-batch index to disassociate instances within the same
-batch.  Internally, we handle the batch index as an additional spatial
-dimension.</p>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{x}_i \in \mathcal{Z}^D\)</span> is a <span class="math notranslate nohighlight">\(D\)</span>-dimensional
+coordinate and <span class="math notranslate nohighlight">\(b_i \in \mathcal{Z}_+\)</span> denotes the corresponding
+batch index. <span class="math notranslate nohighlight">\(N\)</span> is the number of non-zero elements in the sparse
+tensor, each with the coordinate <span class="math notranslate nohighlight">\((b_i, x_i^1, x_i^1, \cdots,
+x_i^D)\)</span>, and the associated feature <span class="math notranslate nohighlight">\(\mathbf{f}_i\)</span>. Internally, we
+handle the batch index as an additional spatial dimension.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Before MinkowskiEngine version 0.4, we put the batch indices on the last
-column. We do not recommend modifying or accessing coordinates directly.
-Instead, please use <a class="reference internal" href="utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> or
-<a class="reference internal" href="utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> when creating coordinates
-to make your code to generate batched coordinates automatically that are
-compatible with the latest version of Minkowski Engine.</p>
+column. Thus, direct manipulation of coordinates will be incompatible
+with the latest versions. Instead, please use
+<a class="reference internal" href="utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> or
+<a class="reference internal" href="utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> to create batched
+coordinates.</p>
 <p>Also, to access coordinates or features batch-wise, use the functions
-<cite>coordinates_at(batch_index : int)</cite>, <cite>features_at(batch_index : int)</cite> of
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates_at(batch_index</span> <span class="pre">:</span> <span class="pre">int)</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">features_at(batch_index</span> <span class="pre">:</span> <span class="pre">int)</span></code> of
 a sparse tensor. Or to access all batch-wise coordinates and features,
 <cite>decomposed_coordinates</cite>, <cite>decomposed_features</cite>,
 <cite>decomposed_coordinates_and_features</cite> of a sparse tensor.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">([</span><span class="n">coords_batch0</span><span class="p">,</span> <span class="n">coords_batch1</span><span class="p">],</span> <span class="p">[</span><span class="n">feats_batch0</span><span class="p">,</span> <span class="n">feats_batch1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">coords_batch0</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">coordinates_at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords_batch0</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">coordinates_at</span><span class="p">(</span><span class="n">batch_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feats_batch1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">features_at</span><span class="p">(</span><span class="n">batch_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">list_of_coords</span><span class="p">,</span> <span class="n">list_of_featurs</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">decomposed_coordinates_and_features</span>
 </pre></div>
 </div>
