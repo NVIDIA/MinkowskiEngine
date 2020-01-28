@@ -24,6 +24,7 @@
 import torch
 import unittest
 
+import MinkowskiEngine as ME
 from MinkowskiEngine import SparseTensor, MinkowskiUnion
 
 from tests.common import data_loader
@@ -32,34 +33,42 @@ from tests.common import data_loader
 class TestUnion(unittest.TestCase):
 
     def test_union(self):
-        in_channels = 2
-        coords, feats, labels = data_loader(in_channels)
-        N = len(coords)
-        input1 = SparseTensor(
-            torch.rand(N, in_channels, dtype=torch.double), coords=coords)
+        coords1 = torch.IntTensor([[0, 0], [0, 1]])
+        coords2 = torch.IntTensor([[0, 1], [1, 1]])
+        feats1 = torch.DoubleTensor([[1], [2]])
+        feats2 = torch.DoubleTensor([[3], [4]])
+        input1 = SparseTensor(coords=ME.utils.batched_coordinates([coords1]), feats=feats1)
 
         input2 = SparseTensor(
-            torch.rand(N, in_channels, dtype=torch.double),
-            coords=coords + 1,
+            feats=feats2,
+            coords=ME.utils.batched_coordinates([coords2]),
             coords_manager=input1.coords_man,  # Must use same coords manager
             force_creation=True  # The tensor stride [1, 1] already exists.
         )
 
-        input1.F.requires_grad_()
-        input2.F.requires_grad_()
-        inputs = [input1, input2]
+        input1.requires_grad_()
+        input2.requires_grad_()
         union = MinkowskiUnion()
         output = union(input1, input2)
         print(output)
+
+        self.assertTrue(len(output) == 3)
+        self.assertTrue(5 in output.F)
         output.F.sum().backward()
+
+        # Grad of sum feature is 1.
+        self.assertTrue(torch.prod(input1.F.grad) == 1)
+        self.assertTrue(torch.prod(input2.F.grad) == 1)
 
         device = torch.device('cuda')
         with torch.cuda.device(0):
-            inputs = [input.to(device) for input in inputs]
-            output = union(*inputs)
+            input1, input2 = input1.to(device), input2.to(device)
+            output = union(input1, input2)
 
             output.F.sum().backward()
             print(output)
+            self.assertTrue(len(output) == 3)
+            self.assertTrue(5 in output.F)
 
 
 if __name__ == '__main__':

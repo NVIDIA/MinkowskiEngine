@@ -168,10 +168,23 @@ CoordsMap::union_coords(const vector<reference_wrapper<CoordsMap>> &maps) {
       maps.begin(), maps.end(), 0,
       [](size_t count, const CoordsMap &it) { return count + it.size(); });
 
-  CoordsMap out_map;
+  const auto max_iter = std::max_element(
+      maps.begin(), maps.end(), [](const CoordsMap &a, const CoordsMap &b) {
+        return a.size() < b.size();
+      });
+  const auto max_index = std::distance(maps.begin(), max_iter);
+
+  // Initialize with the largest coords map.
+  const CoordsMap& max_map = maps[max_index];
+  CoordsMap out_map(max_map);
   out_map.reserve(num_tot);
-  size_t c = 0;
-  for (const CoordsMap &map : maps) {
+  size_t c = max_map.size();
+  for (size_t i = 0; i < maps.size(); ++i) {
+    // Skip the map it was initialized with
+    if (i == max_index)
+      continue;
+
+    const CoordsMap &map = maps[i];
     for (const auto &kv : map) {
       if (out_map.find(kv.first) == out_map.end()) {
         out_map[kv.first] = c++;
