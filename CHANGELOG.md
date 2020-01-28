@@ -1,10 +1,12 @@
 # Change Log
 
-## [master] - 2020-01-27
+## [master] - 2020-01-28
 
 ### Changed
 
-- For kernel maps with region size 1 does not require `Region` class initialization.
+- Kernel maps with region size 1 do not require `Region` class initialization.
+- Faster union map with out map initialization
+- Batch index order hot fix on `dense()`, `sparse()`
 
 
 ## [0.4.0] - 2020-01-26

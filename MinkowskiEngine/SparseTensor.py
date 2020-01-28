@@ -685,7 +685,7 @@ class SparseTensor():
 
         # New coordinates
         coords = self.C
-        coords, batch_indices = coords[:, :-1], coords[:, -1]
+        coords, batch_indices = coords[:, 1:], coords[:, 0]
 
         # TODO, batch first
         if min_coords is None:
@@ -724,7 +724,7 @@ class SparseTensor():
             # Squeeze to make the size one-dimensional
             size = size.squeeze()
 
-            max_batch = batch_indices.max().item()
+            max_batch = max(self.coords_man.get_batch_indices())
             size = torch.Size([max_batch + 1, *size, self.F.size(1)])
 
         sparse_tensor = torch_sparse_Tensor(new_coords.t().to(self.F.device),
@@ -776,7 +776,7 @@ class SparseTensor():
 
         # New coordinates
         coords = self.C
-        coords, batch_indices = coords[:, :-1], coords[:, -1]
+        coords, batch_indices = coords[:, 1:], coords[:, 0]
 
         # TODO, batch first
         if min_coords is None:
@@ -807,16 +807,14 @@ class SparseTensor():
 
         size = None
         nchannels = self.F.size(1)
+        max_batch = max(self.coords_man.get_batch_indices())
         if max_coords is not None:
             size = max_coords - min_coords + 1  # inclusive
             # Squeeze to make the size one-dimensional
             size = size.squeeze()
-
-            max_batch = batch_indices.max().item()
             size = torch.Size([max_batch + 1, nchannels, *size])
         else:
             size = coords.max(0)[0] + 1
-            max_batch = batch_indices.max().item()
             size = torch.Size([max_batch + 1, nchannels, *size.numpy()])
 
         dense_F = torch.zeros(size, dtype=self.F.dtype, device=self.F.device)

@@ -27,8 +27,6 @@ import unittest
 import MinkowskiEngine as ME
 from MinkowskiEngine import SparseTensor, MinkowskiUnion
 
-from tests.common import data_loader
-
 
 class TestUnion(unittest.TestCase):
 
