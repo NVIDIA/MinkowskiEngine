@@ -76,7 +76,7 @@ class SparseTensor():
     :attr:`MinkowskiEngine.SparseTensor`.
 
     The :attr:`SparseTensor` class is the basic tensor in MinkowskiEngine. For
-    the definition of a sparse tensor, please visit `[the terminology page]
+    the definition of a sparse tensor, please visit `the terminology page
     <https://stanfordvl.github.io/MinkowskiEngine/terminology.html#sparse-tensor>`_.
     We use the COOrdinate (COO) format to save a sparse tensor `[1]
     <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This
