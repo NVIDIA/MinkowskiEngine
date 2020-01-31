@@ -726,7 +726,7 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
 
     """
 
-    def __init__(self, average=True, mode=GlobalPoolingMode.AUTO, dimension=-1):
+    def __init__(self, average=True, mode=GlobalPoolingMode.AUTO):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
@@ -736,24 +736,17 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
             :attr:`average` (bool): when True, return the averaged output. If
             not, return the sum of all input features.
 
-            :attr:`dimension` (int): the spatial dimension of the space where
-            all the inputs and the network are defined. For example, images are
-            in a 2D space, meshes and 3D shapes are in a 3D space.
-
         """
         super(MinkowskiGlobalPooling, self).__init__()
-        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
         assert isinstance(mode, GlobalPoolingMode), \
             f"Mode must be an instance of GlobalPoolingMode. mode={mode}"
 
         self.mode = mode
         self.average = average
-        self.dimension = dimension
         self.pooling = MinkowskiGlobalPoolingFunction()
 
     def forward(self, input):
         assert isinstance(input, SparseTensor)
-        assert input.D == self.dimension
 
         out_coords_key = CoordsKey(input.coords_key.D)
         output = self.pooling.apply(input.F, self.average, self.mode,
@@ -769,38 +762,26 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
 
 class MinkowskiGlobalSumPooling(MinkowskiGlobalPooling):
 
-    def __init__(self, mode=GlobalPoolingMode.AUTO, dimension=-1):
+    def __init__(self, mode=GlobalPoolingMode.AUTO):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
-        Args:
-            :attr:`dimension` (int): the spatial dimension of the space where
-            all the inputs and the network are defined. For example, images are
-            in a 2D space, meshes and 3D shapes are in a 3D space.
-
         """
-        MinkowskiGlobalPooling.__init__(
-            self, False, mode=mode, dimension=dimension)
+        MinkowskiGlobalPooling.__init__(self, False, mode=mode)
 
 
 class MinkowskiGlobalAvgPooling(MinkowskiGlobalPooling):
 
-    def __init__(self, mode=GlobalPoolingMode.AUTO, dimension=-1):
+    def __init__(self, mode=GlobalPoolingMode.AUTO):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
-        Args:
-            :attr:`dimension` (int): the spatial dimension of the space where
-            all the inputs and the network are defined. For example, images are
-            in a 2D space, meshes and 3D shapes are in a 3D space.
-
         """
-        MinkowskiGlobalPooling.__init__(
-            self, True, mode=mode, dimension=dimension)
+        MinkowskiGlobalPooling.__init__(self, True, mode=mode)
 
 
 class MinkowskiGlobalMaxPoolingFunction(Function):
@@ -852,28 +833,18 @@ class MinkowskiGlobalMaxPooling(MinkowskiModuleBase):
 
     """
 
-    def __init__(self, dimension=-1):
+    def __init__(self):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
-        Args:
-
-            :attr:`dimension` (int): the spatial dimension of the space where
-            all the inputs and the network are defined. For example, images are
-            in a 2D space, meshes and 3D shapes are in a 3D space.
-
         """
         super(MinkowskiGlobalMaxPooling, self).__init__()
-        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
-
-        self.dimension = dimension
         self.pooling = MinkowskiGlobalMaxPoolingFunction()
 
     def forward(self, input):
         assert isinstance(input, SparseTensor)
-        assert input.D == self.dimension
 
         out_coords_key = CoordsKey(input.coords_key.D)
         output = self.pooling.apply(input.F, input.coords_key, out_coords_key,

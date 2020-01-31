@@ -78,8 +78,8 @@ class STN3d(nn.Module):
             c[4], 9, kernel_size=1, has_bias=True, dimension=3)
 
         self.relu = ME.MinkowskiReLU(inplace=True)
-        self.avgpool = ME.MinkowskiGlobalPooling(dimension=D)
-        self.broadcast = ME.MinkowskiBroadcast(dimension=D)
+        self.avgpool = ME.MinkowskiGlobalPooling()
+        self.broadcast = ME.MinkowskiBroadcast()
 
         self.bn1 = ME.MinkowskiInstanceNorm(c[0], dimension=3)
         self.bn2 = ME.MinkowskiInstanceNorm(c[1], dimension=3)
@@ -156,8 +156,8 @@ class PointNetFeature(nn.Module):
         self.bn3 = ME.MinkowskiInstanceNorm(c[2], dimension=3)
 
         self.relu = ME.MinkowskiReLU(inplace=True)
-        self.avgpool = ME.MinkowskiGlobalPooling(dimension=3)
-        self.concat = ME.MinkowskiBroadcastConcatenation(dimension=3)
+        self.avgpool = ME.MinkowskiGlobalPooling()
+        self.concat = ME.MinkowskiBroadcastConcatenation()
 
     def forward(self, x):
         """

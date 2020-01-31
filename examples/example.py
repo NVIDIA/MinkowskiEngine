@@ -49,7 +49,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
                 kernel_size=3,
                 stride=2,
                 dimension=D), ME.MinkowskiBatchNorm(128), ME.MinkowskiReLU(),
-            ME.MinkowskiGlobalPooling(dimension=D),
+            ME.MinkowskiGlobalPooling(),
             ME.MinkowskiLinear(128, out_feat))
 
     def forward(self, x):

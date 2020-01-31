@@ -163,12 +163,12 @@ class TestPooling(unittest.TestCase):
                  input.coords_key, None, input.coords_man)))
 
     def test_global_avgpool(self):
-        in_channels, D = 2, 2
+        in_channels = 2
         coords, feats, labels = data_loader(in_channels, batch_size=2)
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalPooling(dimension=D)
+        pool = MinkowskiGlobalPooling()
         output = pool(input)
         print(output)
 
@@ -186,7 +186,7 @@ class TestPooling(unittest.TestCase):
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalPooling(dimension=D)
+        pool = MinkowskiGlobalPooling()
         output = pool(input)
         print(output)
 
@@ -197,12 +197,12 @@ class TestPooling(unittest.TestCase):
                            input.coords_key, None, input.coords_man)))
 
     def test_global_maxpool(self):
-        in_channels, D = 2, 2
+        in_channels = 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalMaxPooling(dimension=D)
+        pool = MinkowskiGlobalMaxPooling()
         output = pool(input)
         print(output)
 

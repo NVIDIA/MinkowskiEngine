@@ -38,8 +38,8 @@ class SELayer(nn.Module):
             ME.MinkowskiReLU(inplace=True),
             ME.MinkowskiLinear(channel // reduction, channel),
             ME.MinkowskiSigmoid())
-        self.pooling = ME.MinkowskiGlobalPooling(dimension=D)
-        self.broadcast_mul = ME.MinkowskiBroadcastMultiplication(dimension=D)
+        self.pooling = ME.MinkowskiGlobalPooling()
+        self.broadcast_mul = ME.MinkowskiBroadcastMultiplication()
 
     def forward(self, x):
         y = self.pooling(x)

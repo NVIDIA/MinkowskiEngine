@@ -1,5 +1,14 @@
 # Change Log
 
+## [master] - 2020-01-30
+
+### Changed
+
+- Fix dtype double to float on the multi-gpu example
+- Remove the dimension input argument on GlobalPooling, Broadcast functions
+- Kernel map generation has tensor stride > 0 check
+
+
 ## [0.4.1] - 2020-01-28
 
 ### Changed

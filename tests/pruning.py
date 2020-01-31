@@ -40,7 +40,7 @@ class TestPruning(unittest.TestCase):
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
         use_feat = torch.rand(feats.size(0)) < 0.5
-        pruning = MinkowskiPruning(D)
+        pruning = MinkowskiPruning()
         output = pruning(input, use_feat)
         print(input)
         print(use_feat)

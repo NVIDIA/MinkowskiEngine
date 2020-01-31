@@ -90,19 +90,16 @@ class MinkowskiBroadcastFunction(Function):
 
 class AbstractMinkowskiBroadcast(Module):
 
-    def __init__(self, operation_type, dimension=-1):
+    def __init__(self, operation_type):
         super(AbstractMinkowskiBroadcast, self).__init__()
         assert isinstance(operation_type, OperationType)
-        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
         self.operation_type = operation_type
-        self.dimension = dimension
 
         self.broadcast = MinkowskiBroadcastFunction()
 
     def forward(self, input, input_glob):
         assert isinstance(input, SparseTensor)
-        assert input.D == self.dimension
 
         output = self.broadcast.apply(input.F, input_glob.F,
                                       self.operation_type, input.coords_key,
@@ -136,17 +133,8 @@ class MinkowskiBroadcastAddition(AbstractMinkowskiBroadcast):
 
     """
 
-    def __init__(self, dimension=-1):
-        r"""a broadcast addition layer.
-
-        Args:
-            :attr:`dimension` (int): the dimension of the space where all the
-            inputs and the network is defined. For example, images are in a 2D
-            space, meshes and 3D shapes are in a 3D space.
-
-        """
-        super(MinkowskiBroadcastAddition,
-              self).__init__(OperationType.ADDITION, dimension)
+    def __init__(self):
+        AbstractMinkowskiBroadcast.__init__(self, OperationType.ADDITION)
 
 
 class MinkowskiBroadcastMultiplication(AbstractMinkowskiBroadcast):
@@ -169,17 +157,8 @@ class MinkowskiBroadcastMultiplication(AbstractMinkowskiBroadcast):
 
     """
 
-    def __init__(self, dimension=-1):
-        r"""a broadcast multiplication layer.
-
-        Args:
-            :attr:`dimension` (int): the dimension of the space where all the
-            inputs and the network is defined. For example, images are in a 2D
-            space, meshes and 3D shapes are in a 3D space.
-
-        """
-        super(MinkowskiBroadcastMultiplication,
-              self).__init__(OperationType.MULTIPLICATION, dimension)
+    def __init__(self):
+        AbstractMinkowskiBroadcast.__init__(self, OperationType.MULTIPLICATION)
 
 
 class MinkowskiBroadcast(Module):
@@ -204,27 +183,12 @@ class MinkowskiBroadcast(Module):
 
     """
 
-    def __init__(self, dimension=-1):
-        r"""broadcast layer.
-
-        Args:
-            :attr:`dimension` (int): the dimension of the space where all the
-            inputs and the network is defined. For example, images are in a 2D
-            space, meshes and 3D shapes are in a 3D space.
-
-        """
-        super(MinkowskiBroadcast, self).__init__()
-        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
-
-        self.dimension = dimension
-
     def __repr__(self):
         return self.__class__.__name__
 
     def forward(self, input, input_glob):
         assert isinstance(input, SparseTensor)
         assert isinstance(input_glob, SparseTensor)
-        assert input.D == self.dimension
 
         broadcast_feat = torch.empty_like(input.F)
         row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)
@@ -261,7 +225,6 @@ class MinkowskiBroadcastConcatenation(MinkowskiBroadcast):
     def forward(self, input, input_glob):
         assert isinstance(input, SparseTensor)
         assert isinstance(input_glob, SparseTensor)
-        assert input.D == self.dimension
 
         broadcast_feat = torch.empty_like(input.F)
         row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)

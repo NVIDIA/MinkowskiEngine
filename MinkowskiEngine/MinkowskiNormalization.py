@@ -264,11 +264,11 @@ class MinkowskiStableInstanceNorm(Module):
         self.weight = nn.Parameter(torch.ones(1, num_features))
         self.bias = nn.Parameter(torch.zeros(1, num_features))
 
-        self.mean_in = MinkowskiGlobalPooling(dimension=dimension)
-        self.glob_sum = MinkowskiBroadcastAddition(dimension=dimension)
-        self.glob_sum2 = MinkowskiBroadcastAddition(dimension=dimension)
-        self.glob_mean = MinkowskiGlobalPooling(dimension=dimension)
-        self.glob_times = MinkowskiBroadcastMultiplication(dimension=dimension)
+        self.mean_in = MinkowskiGlobalPooling()
+        self.glob_sum = MinkowskiBroadcastAddition()
+        self.glob_sum2 = MinkowskiBroadcastAddition()
+        self.glob_mean = MinkowskiGlobalPooling()
+        self.glob_times = MinkowskiBroadcastMultiplication()
         self.dimension = dimension
         self.reset_parameters()
 

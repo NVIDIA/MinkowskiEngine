@@ -605,6 +605,10 @@ const InOutMapsRefPair<int> CoordsManager::getInOutMaps(
          "Size mismatch. tensor_strides: ", tensor_strides.size(),
          ", strides: ", strides.size(), ", kernel_sizes: ", kernel_sizes.size(),
          ", dilations: ", dilations.size());
+  ASSERT(std::all_of(tensor_strides.begin(), tensor_strides.end(),
+                     [](int k) { return k > 0; }),
+         "Invalid tensor_strides: ", ArrToString(tensor_strides),
+         " Tensor strides must be positive integers.");
 
   CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
   CoordsKey *p_out_coords_key = py_out_coords_key.cast<CoordsKey *>();

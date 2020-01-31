@@ -165,7 +165,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
                 dimension=D),
             ME.MinkowskiBatchNorm(128),
             ME.MinkowskiReLU())
-        self.pooling = ME.MinkowskiGlobalPooling(dimension=D)
+        self.pooling = ME.MinkowskiGlobalPooling()
         self.linear = ME.MinkowskiLinear(128, out_feat)
 
     def forward(self, x):
