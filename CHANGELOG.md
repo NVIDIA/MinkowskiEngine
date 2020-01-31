@@ -7,6 +7,7 @@
 - Fix dtype double to float on the multi-gpu example
 - Remove the dimension input argument on GlobalPooling, Broadcast functions
 - Kernel map generation has tensor stride > 0 check
+- Fix `SparseTensor.set_tensor_stride`
 
 
 ## [0.4.1] - 2020-01-28

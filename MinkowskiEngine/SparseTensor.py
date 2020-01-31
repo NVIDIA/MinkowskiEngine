@@ -385,6 +385,12 @@ class SparseTensor():
         return self.coords_key.D
 
     @property
+    def dimension(self):
+        r"""Alias of attr:`D`
+        """
+        return self.D
+
+    @property
     def requires_grad(self):
         return self._F.requires_grad
 
@@ -398,10 +404,8 @@ class SparseTensor():
         self._F = self._F.double()
 
     def set_tensor_stride(self, s):
-        ss = convert_to_int_list(s)
-        tensor_strides = self.coords_key.getTensorStride()
-        self.coords_key.setTensorStride(
-            [s * p for s, p in zip(ss, tensor_strides)])
+        ss = convert_to_int_list(s, self.D)
+        self.coords_key.setTensorStride(ss)
 
     def __repr__(self):
         return self.__class__.__name__ + '(' + os.linesep \
