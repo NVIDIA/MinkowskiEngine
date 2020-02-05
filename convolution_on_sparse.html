@@ -91,7 +91,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Convolution on a Sparse Tensor</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-tensor">Sparse Tensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#generalized-convolution-on-a-sparse-tensor">Generalized Convolution on a Sparse Tensor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#extending-the-sparse-convolution">Extending the Sparse Convolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#special-cases-of-generalized-convolution">Special Cases of Generalized Convolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
@@ -219,8 +219,9 @@ please refer to the <a class="reference external" href="terminology.html">termin
 the 2D convolution has achieved state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
 In this work, we adopt the sparse convolution <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a> and propose the generalized convolution on a sparse
-tensor. We use the generalized convolution not only to the 3D
-spatial axes, but also to the temporal axis, which is proven to be more
+tensor. The generalized convolution incorporates all discrete convolutions as special cases.
+We use the generalized convolution not only on the 3D
+spatial axes, but on any arbitrary dimensions, or also on the temporal axis, which is proven to be more
 effective than recurrent neural networks (RNN) in some applications.</p>
 <p>Specifically, we the generalize convolution for generic input and
 output coordinates, and for arbitrary kernel shapes. The generalized convolution
@@ -267,10 +268,12 @@ dense convolution.  If we define the <span class="math notranslate nohighlight">
 <col style="width: 48%" />
 <col style="width: 52%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>Dense Tensor</p></td>
-<td><p>Sparse Tensor</p></td>
+<thead>
+<tr class="row-odd"><th class="head"><p>Dense Tensor</p></th>
+<th class="head"><p>Sparse Tensor</p></th>
 </tr>
+</thead>
+<tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="_images/conv_dense.gif"><img alt="dense" src="_images/conv_dense.gif" style="width: 100%;" /></a></p></td>
 <td><p><a class="reference internal" href="_images/conv_sparse.gif"><img alt="sparse" src="_images/conv_sparse.gif" style="width: 100%;" /></a></p></td>
 </tr>
@@ -280,20 +283,25 @@ dense convolution.  If we define the <span class="math notranslate nohighlight">
 </table>
 <p>To efficiently compute the convolution on a sparse tensor, we must find how each non-zero element in an input sparse tensor is mapped to the output sparse tensor. We call this mapping a kernel map <a class="reference external" href="https://arxiv.org/abs/1904.08755">[3]</a> since it defines how an input is mapped to an output through a kernel. Please refer to the <a class="reference external" href="terminology.html">terminology page</a> for more details.</p>
 </div>
-<div class="section" id="extending-the-sparse-convolution">
-<h2>Extending the Sparse Convolution<a class="headerlink" href="#extending-the-sparse-convolution" title="Permalink to this headline">¶</a></h2>
-<p>The generalized convolution extends the sparse convolution <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a>. We visually summarized the difference on the following table. Compared with the sparse convolution, the generalized convolution relaxes the constraint on the output and allows the output sparse tensor to have a different sparsity pattern from the input. Secondly, the generalized convolution allows the convolution kernels to be located on arbitrary points, which is crucial for high-dimensional convolutional neural networks as hyper-cubic kernels require an exponentially large number of parameters as the dimension increases <a class="reference external" href="https://arxiv.org/abs/1904.08755">[3]</a>.</p>
+<div class="section" id="special-cases-of-generalized-convolution">
+<h2>Special Cases of Generalized Convolution<a class="headerlink" href="#special-cases-of-generalized-convolution" title="Permalink to this headline">¶</a></h2>
+<p>The generalized convolution encompasses all discrete convolution as its special cases. We will go over a few special cases in this section.
+First, when the input and output coordinates are all elements on a grid. i.e. a dense tensor, the generalized convolution is equivalent to regular convolution on a dense tensor.
+Second, when the input and output coordinates are the coordinates of non-zero elements on a sparse tensor, the generalized convolution becomes the sparse convolution <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a>.
+Also, when we use a hyper-cross shaped kernel <a class="reference external" href="https://arxiv.org/abs/1904.08755">[3]</a>, the generalized convolution is equivalent to the separable convolution.</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 33%" />
 <col style="width: 33%" />
 <col style="width: 33%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><p>Sparse Convolution</p></td>
-<td><p>Arbitrary input outputs</p></td>
-<td><p>Generalized Convolution</p></td>
+<thead>
+<tr class="row-odd"><th class="head"><p>Same in/out coordinates</p></th>
+<th class="head"><p>Arbitrary in/out coordinates</p></th>
+<th class="head"><p>Generalized Convolution</p></th>
 </tr>
+</thead>
+<tbody>
 <tr class="row-even"><td><p><a class="reference internal" href="_images/conv_sparse_conv.gif"><img alt="sparse_conv" src="_images/conv_sparse_conv.gif" style="width: 100%;" /></a></p></td>
 <td><p><a class="reference internal" href="_images/conv_sparse.gif"><img alt="sparse" src="_images/conv_sparse.gif" style="width: 100%;" /></a></p></td>
 <td><p><a class="reference internal" href="_images/conv_generalized.gif"><img alt="generalized" src="_images/conv_generalized.gif" style="width: 100%;" /></a></p></td>
@@ -302,11 +310,6 @@ dense convolution.  If we define the <span class="math notranslate nohighlight">
 </tr>
 </tbody>
 </table>
-<ul class="simple">
-<li><p>Sparse Convolution: Convolution a sparse tensor</p></li>
-<li><p>Arbitrary patterns: Different input, output sparsity patterns</p></li>
-<li><p>Generalized Convoluion: Different input, output sparsity patterns and arbitrary kernel shapes.</p></li>
-</ul>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>

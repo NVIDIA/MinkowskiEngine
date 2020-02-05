@@ -227,7 +227,7 @@ a min-batch.</p>
                 <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                 <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                 <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">128</span><span class="p">),</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">(),</span>
-            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiGlobalPooling</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span>
+            <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiGlobalPooling</span><span class="p">(),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiLinear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">out_feat</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
