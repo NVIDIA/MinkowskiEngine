@@ -26,8 +26,9 @@ the 2D convolution has achieved state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
 In this work, we adopt the sparse convolution `[2]
 <https://arxiv.org/abs/1711.10275>`_ and propose the generalized convolution on a sparse
-tensor. We use the generalized convolution not only to the 3D
-spatial axes, but also to the temporal axis, which is proven to be more
+tensor. The generalized convolution incorporates all discrete convolutions as special cases.
+We use the generalized convolution not only on the 3D
+spatial axes, but on any arbitrary dimensions, or also on the temporal axis, which is proven to be more
 effective than recurrent neural networks (RNN) in some applications.
 
 Specifically, we the generalize convolution for generic input and
@@ -92,7 +93,7 @@ We visualize a simple 2D image convolution on a dense tensor and a sparse tensor
 
 +--------------------------+----------------------------+
 | Dense Tensor             | Sparse Tensor              |
-+--------------------------+----------------------------+
++==========================+============================+
 | |dense|                  | |sparse|                   |
 +--------------------------+----------------------------+
 | [Photo Credit: `Chris Choy <https://chrischoy.org>`_] |
@@ -101,22 +102,22 @@ We visualize a simple 2D image convolution on a dense tensor and a sparse tensor
 To efficiently compute the convolution on a sparse tensor, we must find how each non-zero element in an input sparse tensor is mapped to the output sparse tensor. We call this mapping a kernel map `[3] <https://arxiv.org/abs/1904.08755>`_ since it defines how an input is mapped to an output through a kernel. Please refer to the `terminology page <terminology.html>`_ for more details.
 
 
-Extending the Sparse Convolution
---------------------------------
+Special Cases of Generalized Convolution
+----------------------------------------
 
-The generalized convolution extends the sparse convolution `[2] <https://arxiv.org/abs/1711.10275>`_. We visually summarized the difference on the following table. Compared with the sparse convolution, the generalized convolution relaxes the constraint on the output and allows the output sparse tensor to have a different sparsity pattern from the input. Secondly, the generalized convolution allows the convolution kernels to be located on arbitrary points, which is crucial for high-dimensional convolutional neural networks as hyper-cubic kernels require an exponentially large number of parameters as the dimension increases `[3] <https://arxiv.org/abs/1904.08755>`_.
+The generalized convolution encompasses all discrete convolution as its special cases. We will go over a few special cases in this section.
+First, when the input and output coordinates are all elements on a grid. i.e. a dense tensor, the generalized convolution is equivalent to regular convolution on a dense tensor.
+Second, when the input and output coordinates are the coordinates of non-zero elements on a sparse tensor, the generalized convolution becomes the sparse convolution `[2] <https://arxiv.org/abs/1711.10275>`_.
+Also, when we use a hyper-cross shaped kernel `[3] <https://arxiv.org/abs/1904.08755>`_, the generalized convolution is equivalent to the separable convolution.
 
-+-------------------------+-------------------------+-------------------------+
-| Sparse Convolution      | Arbitrary input outputs | Generalized Convolution |
-+-------------------------+-------------------------+-------------------------+
-| |sparse_conv|           | |sparse|                | |generalized|           |
-+-------------------------+-------------------------+-------------------------+
-| [Photo Credit: `Chris Choy <https://chrischoy.org>`_]                       |
-+-----------------------------------------------------------------------------+
 
-- Sparse Convolution: Convolution a sparse tensor
-- Arbitrary patterns: Different input, output sparsity patterns
-- Generalized Convoluion: Different input, output sparsity patterns and arbitrary kernel shapes.
++------------------------------+------------------------------+------------------------------+
+| Same in/out coordinates      | Arbitrary in/out coordinates | Generalized Convolution      |
++==============================+==============================+==============================+
+| |sparse_conv|                | |sparse|                     | |generalized|                |
++------------------------------+------------------------------+------------------------------+
+| [Photo Credit: `Chris Choy <https://chrischoy.org>`_]                                      |
++--------------------------------------------------------------------------------------------+
 
 
 References
