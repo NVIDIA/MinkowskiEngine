@@ -27,7 +27,7 @@
 #include <pybind11/pybind11.h>
 #include <torch/extension.h>
 
-#include "robin_coordsmap.hpp"
+#include "coordsmap.hpp"
 #include "utils.hpp"
 
 namespace py = pybind11;

@@ -38,7 +38,7 @@
 
 #include <torch/extension.h>
 
-#include "robin_coordsmap.hpp"
+#include "coordsmap.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 

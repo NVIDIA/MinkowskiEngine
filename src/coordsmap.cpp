@@ -26,7 +26,7 @@
 #include <numeric>
 #include <omp.h>
 
-#include "robin_coordsmap.hpp"
+#include "coordsmap.hpp"
 
 namespace minkowski {
 
