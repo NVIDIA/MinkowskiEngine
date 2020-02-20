@@ -111,6 +111,9 @@ public:
   //
   // Coordinate hash key to coordinate hash map
   unordered_map<uint64_t, CoordsMap> coords_maps;
+
+  // Track whether the batch indices are set
+  bool is_batch_indices_set = false;
   set<int> batch_indices;
   vector<int> vec_batch_indices;
 

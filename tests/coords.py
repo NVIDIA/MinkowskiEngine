@@ -132,7 +132,7 @@ class Test(unittest.TestCase):
         key.setTensorStride(1)
 
         cm = CoordsManager(D=1)
-        coords = torch.IntTensor([[-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0]])
+        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [0, 3]])
 
         # Initialize map
         mapping = cm.initialize(coords, key)
@@ -143,9 +143,9 @@ class Test(unittest.TestCase):
         stride_key = cm.stride(key, [2])
         strided_coords = cm.get_coords(stride_key).numpy().tolist()
         self.assertTrue(len(strided_coords) == 4)
-        self.assertTrue([-4, 0] in strided_coords)
-        self.assertTrue([-2, 0] in strided_coords)
-        self.assertTrue([2, 0] in strided_coords)
+        self.assertTrue([0, -4] in strided_coords)
+        self.assertTrue([0, -2] in strided_coords)
+        self.assertTrue([0, 2] in strided_coords)
 
         print('Stride: ', cm.get_coords(stride_key))
         cm.print_diagnostics(stride_key)

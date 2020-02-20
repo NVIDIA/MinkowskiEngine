@@ -303,8 +303,11 @@ uint64_t CoordsManager::initializeCoords(at::Tensor coords, at::Tensor mapping,
       coords_map.initialize_batch(p_coords, nrows, ncols, force_remap);
 
   // initialize the batch indices
-  batch_indices = map_batch_pair.second;
-  vec_batch_indices = vector<int>(batch_indices.begin(), batch_indices.end());
+  if (!is_batch_indices_set) {
+    batch_indices = map_batch_pair.second;
+    vec_batch_indices = vector<int>(batch_indices.begin(), batch_indices.end());
+    is_batch_indices_set = true;
+  }
 
   if (!allow_duplicate_coords && !force_remap) {
     ASSERT(nrows == coords_map.size(), "Duplicate coordinates found. ",
