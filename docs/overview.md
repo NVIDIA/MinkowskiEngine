@@ -16,6 +16,7 @@ The Minkowski Engine supports various functions that can be built on a sparse te
 | Semantic Segmentation | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/segmentation.png" width="256"> <br /> `python -m examples.indoor` |
 | Classification        | ![](https://stanfordvl.github.io/MinkowskiEngine/_images/classification_3d_net.png) <br /> `python -m examples.modelnet40`                                                      |
 | Reconstruction        | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> <br /> `python -m examples.reconstruction` |
+| Completion            | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/completion_3d_net.png"> <br /> `python -m examples.completion`                                                   |
 
 
 ## Building a Neural Network on a Sparse Tensor
