@@ -467,6 +467,8 @@ def train(net, device, config):
 
 
 if __name__ == '__main__':
+    print('Warning: This process will cache the entire voxelized ModelNet40 dataset, which will take up ~10G of memory.')
+
     config = parser.parse_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

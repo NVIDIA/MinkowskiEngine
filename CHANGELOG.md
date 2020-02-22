@@ -9,6 +9,7 @@
 - Kernel map generation has tensor stride > 0 check
 - Fix `SparseTensor.set_tensor_stride`
 - Track whether the batch indices are set first when initializing coords, The initial batch indices will be used throughout the lifetime of a sparse tensor
+- Added warning on ModelNet40 training (Issue #86)
 
 
 ## [0.4.1] - 2020-01-28

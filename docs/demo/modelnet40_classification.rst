@@ -194,3 +194,7 @@ When you assemble all the code blocks, you can run your own ModelNet40 classific
 
 The entire code can be found at `example/modelnet40.py
 <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/modelnet40.py>`_.
+
+.. warning::
+
+    The ModelNet40 data loading and voxelization is the most time consuming part of the training. Thus, the example caches all ModelNet40 data into memory which takes up about 10G of memory.

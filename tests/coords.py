@@ -151,6 +151,19 @@ class Test(unittest.TestCase):
         cm.print_diagnostics(stride_key)
         print(cm)
 
+    def test_batch_size_initialize(self):
+        cm = CoordsManager(D=1)
+        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [1, 1], [1, 2], [1, 3]])
+
+        # key with batch_size 2
+        cm.create_coords_key(coords)
+        self.assertTrue(cm.get_batch_size() == 2)
+
+        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [0, 3]])
+        cm.create_coords_key(coords)
+
+        self.assertTrue(cm.get_batch_size() == 2)
+
 
 if __name__ == '__main__':
     unittest.main()

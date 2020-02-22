@@ -61,7 +61,7 @@ vector<int> quantize_np(
   vector<int> mapping = map.initialize(p_coords, nrows, ncols, false);
 
   // mapping is empty when coords are all unique
-  return move(mapping);
+  return mapping;
 }
 
 at::Tensor quantize_th(at::Tensor coords) {
