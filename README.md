@@ -61,7 +61,7 @@ The MinkowskiEngine is distributed via [PyPI MinkowskiEngine][pypi-url] which ca
 First, install pytorch following the [instruction](https://pytorch.org). Next, install `openblas`.
 
 ```
-sudo apt install openblas
+sudo apt install libopenblas-dev
 pip3 install torch torchvision
 pip3 install -U MinkowskiEngine
 ```
@@ -69,7 +69,7 @@ pip3 install -U MinkowskiEngine
 ### Pip from the latest source
 
 ```
-sudo apt install openblas
+sudo apt install libopenblas-dev
 pip3 install torch torchvision
 pip3 install -U -I git+https://github.com/StanfordVL/MinkowskiEngine
 ```
@@ -86,8 +86,8 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7
 conda activate py3-mink
-conda install numpy openblas
-conda install pytorch torchvision -c pytorch
+conda install numpy mkl-include
+conda install pytorch -c pytorch
 ```
 
 #### 2. Compilation and installation
@@ -106,7 +106,7 @@ Like the anaconda installation, make sure that you install pytorch with the same
 
 ```
 # install system requirements
-sudo apt install python3-dev openblas
+sudo apt install python3-dev libopenblas-dev
 
 # Skip if you already have pip installed on your python3
 curl https://bootstrap.pypa.io/get-pip.py | python3
