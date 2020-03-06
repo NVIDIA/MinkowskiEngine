@@ -1,6 +1,6 @@
 # Change Log
 
-## [master] - 2020-01-30
+## [master] - 2020-03-05
 
 ### Changed
 
@@ -9,7 +9,9 @@
 - Kernel map generation has tensor stride > 0 check
 - Fix `SparseTensor.set_tensor_stride`
 - Track whether the batch indices are set first when initializing coords, The initial batch indices will be used throughout the lifetime of a sparse tensor
-- Added warning on ModelNet40 training (Issue #86)
+- Add warning on ModelNet40 training (Issue #86)
+- Update the readme, definition
+- Fix an error on examples.convolution
 
 
 ## [0.4.1] - 2020-01-28

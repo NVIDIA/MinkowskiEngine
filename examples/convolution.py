@@ -113,11 +113,8 @@ def conv_on_coords():
         dimension=D)
 
     pool_tr = ME.MinkowskiPoolingTranspose(
-        in_channels,
-        out_channels,
         kernel_size=2,
         stride=2,
-        has_bias=False,
         dimension=D)
 
     # If the there is no coordinates defined for the tensor stride, it will create one

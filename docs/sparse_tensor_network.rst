@@ -1,30 +1,37 @@
-Convolution on a Sparse Tensor
-==============================
+Sparse Tensor Networks
+======================
 
 Sparse Tensor
 -------------
 
 In traditional speech, text, or image data, features are extracted densely.
-Thus, the most common representations of these data are vectors, matrices, and
+Thus, the most common representations used for these data are vectors, matrices, and
 tensors. However, for 3-dimensional scans or even higher-dimensional spaces,
-such dense representations are inefficient due to the sparsity. Instead, we can
-only save the non-empty part of the space as its coordinates and the associated
-features. This representation is an N-dimensional extension of a sparse matrix;
-thus it is known as a sparse tensor.
+such dense representations are inefficient as effective information occupy only a small fraction of the space. Instead, we can
+only save information on the non-empty region of the space similar to how we save information on a sparse matrix.
+This representation is an N-dimensional extension of a sparse matrix; thus it is known as a sparse tensor.
 
-In Minkowski Engine, we adopt the same sparse tensor for the basic data
+In Minkowski Engine, we adopt the sparse tensor as the basic data
 representation and the class is provided as
 :attr:`MinkowskiEngine.SparseTensor`. Fore more information on sparse tensors
 please refer to the `terminology page <terminology.html>`_.
 
 
-Generalized Convolution on a Sparse Tensor
-------------------------------------------
+Sparse Tensor Network
+---------------------
+
+Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in a convnet, is also known as a *sparse convolutional networks* `[1] <https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf>`_. Such parameter-space sparsity used for model compression still operates on dense tensors and all intermediate activations are also dense tensors.
+
+However, in this work, we focus on *spatially* sparse data, in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs *sparse tensor networks*  and these sparse tensor networks processes and generates sparse tensors. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define on a dense tensor and implemented in the Minkowski Engine.
+
+
+Generalized Convolution
+-----------------------
 
 The convolution is a fundamental operation in many fields. In image perception,
-the 2D convolution has achieved state-of-the-art performance in many tasks and
+convolutions have been the crux of achieving the state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
-In this work, we adopt the sparse convolution `[2]
+In this work, we adopt the convolution on a sparse tensor `[2]
 <https://arxiv.org/abs/1711.10275>`_ and propose the generalized convolution on a sparse
 tensor. The generalized convolution incorporates all discrete convolutions as special cases.
 We use the generalized convolution not only on the 3D
@@ -123,6 +130,6 @@ Also, when we use a hyper-cross shaped kernel `[3] <https://arxiv.org/abs/1904.0
 References
 ----------
 
-- `[1] An Investigation of Sparse Tensor Formats for Tensor Libraries, 2015 <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_
+- `[1] Sparse Convolutional Neural Networks, CVPR'15 <https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf>`_
 - `[2] 3D Semantic Segmentation with Submanifold Sparse Convolutional Neural Networks, CVPR'18 <https://arxiv.org/abs/1711.10275>`_
 - `[3] 4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR'19 <https://arxiv.org/abs/1904.08755>`_

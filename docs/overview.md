@@ -3,7 +3,7 @@
 
 # Minkowski Engine
 
-[![PyPI Version][pypi-image]][pypi-url]
+[![PyPI Version][pypi-image]][pypi-url][![Join the chat at https://gitter.im/MinkowskiEngineGitter/general](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/MinkowskiEngineGitter/general)
 
 The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://stanfordvl.github.io/MinkowskiEngine/overview.html).
 
@@ -19,15 +19,17 @@ The Minkowski Engine supports various functions that can be built on a sparse te
 | Completion            | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/completion_3d_net.png"> <br /> `python -m examples.completion`                                                   |
 
 
-## Building a Neural Network on a Sparse Tensor
+## Sparse Tensor Networks: Neural Networks for Spatially Sparse Tensors
 
-The Minkowski Engine provides APIs that allow users to build a neural network on a sparse tensor. Then, how dow we define convolution/pooling/transposed operations on a sparse tensor?
-Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points. For more information, please visit [convolution on a sparse tensor](https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html)
+Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in a convnet, is also known as a *sparse convolutional networks* [[Liu et al. CVPR'15]](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf). Such parameter-space sparsity used for model compression still operates on dense tensors and all intermediate activations are also dense tensors.
 
-| Dense Tensor                  | Sparse Tensor                 |
-|:-----------------------------:|:-----------------------------:|
-| ![](./_images/conv_dense.gif) |![](./_images/conv_sparse.gif) |
+However, in this work, we focus on *spatially* sparse data, in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs *sparse tensor networks*  and these sparse tensor networks processes and generates sparse tensors. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define on a dense tensor and implemented in the Minkowski Engine.
 
+We visualized a sparse tensor network operation on a sparse tensor, convolution, below. The convolution layer on a sparse tensor works similarly to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points which we can control in the [generalized convolution](https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor_network.html). For more information, please visit [the documentation page on sparse tensor networks](https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor_network.html) and [the terminology page](https://stanfordvl.github.io/MinkowskiEngine/terminology.html).
+
+| Dense Tensor                                                                    | Sparse Tensor                                                                     |
+|:-------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|
+| <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/conv_dense.gif"> | <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/conv_sparse.gif" > |
 
 --------------------------------------------------------------------------------
 
@@ -62,16 +64,16 @@ The MinkowskiEngine is distributed via [PyPI MinkowskiEngine][pypi-url] which ca
 First, install pytorch following the [instruction](https://pytorch.org). Next, install `openblas`.
 
 ```
-sudo apt install openblas
-pip3 install torch torchvision
+sudo apt install libopenblas-dev
+pip3 install torch
 pip3 install -U MinkowskiEngine
 ```
 
 ### Pip from the latest source
 
 ```
-sudo apt install openblas
-pip3 install torch torchvision
+sudo apt install libopenblas-dev
+pip3 install torch
 pip3 install -U -I git+https://github.com/StanfordVL/MinkowskiEngine
 ```
 
@@ -87,8 +89,8 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.7
 conda activate py3-mink
-conda install numpy openblas
-conda install pytorch torchvision -c pytorch
+conda install numpy mkl-include
+conda install pytorch -c pytorch
 ```
 
 #### 2. Compilation and installation
@@ -107,7 +109,7 @@ Like the anaconda installation, make sure that you install pytorch with the same
 
 ```
 # install system requirements
-sudo apt install python3-dev openblas
+sudo apt install python3-dev libopenblas-dev
 
 # Skip if you already have pip installed on your python3
 curl https://bootstrap.pypa.io/get-pip.py | python3
