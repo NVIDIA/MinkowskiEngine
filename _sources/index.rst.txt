@@ -11,7 +11,7 @@ Table of Contents
    :caption: Introduction
 
    overview
-   convolution_on_sparse
+   sparse_tensor_network
    quick_start
    terminology
 

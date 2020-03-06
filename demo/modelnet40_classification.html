@@ -88,7 +88,7 @@
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor_network.html">Sparse Tensor Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../terminology.html">Definitions and Terminology</a></li>
 </ul>
@@ -362,6 +362,10 @@ the training logic is independent of the batch-size.</p>
 </pre></div>
 </div>
 <p>The entire code can be found at <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/modelnet40.py">example/modelnet40.py</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The ModelNet40 data loading and voxelization is the most time consuming part of the training. Thus, the example caches all ModelNet40 data into memory which takes up about 10G of memory.</p>
+</div>
 </div>
 </div>
 

@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Convolution on a Sparse Tensor" href="convolution_on_sparse.html" />
+    <link rel="next" title="Sparse Tensor Networks" href="sparse_tensor_network.html" />
     <link rel="prev" title="Welcome to MinkowskiEngine’s documentation!" href="index.html" /> 
 </head>
 
@@ -89,7 +89,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Minkowski Engine</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#example-networks">Example Networks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#building-a-neural-network-on-a-sparse-tensor">Building a Neural Network on a Sparse Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-tensor-networks-neural-networks-for-spatially-sparse-tensors">Sparse Tensor Networks: Neural Networks for Spatially Sparse Tensors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
@@ -114,7 +114,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#projects-using-minkowski-engine">Projects using Minkowski Engine</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="convolution_on_sparse.html">Convolution on a Sparse Tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor_network.html">Sparse Tensor Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="terminology.html">Definitions and Terminology</a></li>
 </ul>
@@ -219,7 +219,7 @@
             
   <div class="section" id="minkowski-engine">
 <h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a></p>
+<p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a><a class="reference external" href="https://gitter.im/MinkowskiEngineGitter/general"><img alt="Join the chat at https://gitter.im/MinkowskiEngineGitter/general" src="https://badges.gitter.im/Join%20Chat.svg" /></a></p>
 <p>The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://stanfordvl.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
 <div class="section" id="example-networks">
 <h2>Example Networks<a class="headerlink" href="#example-networks" title="Permalink to this headline">¶</a></h2>
@@ -244,12 +244,17 @@
 <td align="center">Reconstruction</td>
 <td align="center"><img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_net.png"> <br /> <img src="https://stanfordvl.github.io/MinkowskiEngine/_images/generative_3d_results.gif" width="256"> <br /> <code>python -m examples.reconstruction</code></td>
 </tr>
+<tr>
+<td align="center">Completion</td>
+<td align="center"><img src="https://stanfordvl.github.io/MinkowskiEngine/_images/completion_3d_net.png"> <br /> <code>python -m examples.completion</code></td>
+</tr>
 </tbody>
 </table></div>
-<div class="section" id="building-a-neural-network-on-a-sparse-tensor">
-<h2>Building a Neural Network on a Sparse Tensor<a class="headerlink" href="#building-a-neural-network-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h2>
-<p>The Minkowski Engine provides APIs that allow users to build a neural network on a sparse tensor. Then, how dow we define convolution/pooling/transposed operations on a sparse tensor?
-Visually, a convolution on a sparse tensor is similar to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points. For more information, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/convolution_on_sparse.html">convolution on a sparse tensor</a></p>
+<div class="section" id="sparse-tensor-networks-neural-networks-for-spatially-sparse-tensors">
+<h2>Sparse Tensor Networks: Neural Networks for Spatially Sparse Tensors<a class="headerlink" href="#sparse-tensor-networks-neural-networks-for-spatially-sparse-tensors" title="Permalink to this headline">¶</a></h2>
+<p>Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in a convnet, is also known as a <em>sparse convolutional networks</em> <a class="reference external" href="https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf">[Liu et al. CVPR’15]</a>. Such parameter-space sparsity used for model compression still operates on dense tensors and all intermediate activations are also dense tensors.</p>
+<p>However, in this work, we focus on <em>spatially</em> sparse data, in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs <em>sparse tensor networks</em>  and these sparse tensor networks processes and generates sparse tensors. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define on a dense tensor and implemented in the Minkowski Engine.</p>
+<p>We visualized a sparse tensor network operation on a sparse tensor, convolution, below. The convolution layer on a sparse tensor works similarly to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points which we can control in the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor_network.html">generalized convolution</a>. For more information, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor_network.html">the documentation page on sparse tensor networks</a> and <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/terminology.html">the terminology page</a>.</p>
 <table border="1" class="docutils">
 <thead>
 <tr>
@@ -259,8 +264,8 @@ Visually, a convolution on a sparse tensor is similar to that on a dense tensor.
 </thead>
 <tbody>
 <tr>
-<td align="center"><img alt="" src="./_images/conv_dense.gif" /></td>
-<td align="center"><img alt="" src="./_images/conv_sparse.gif" /></td>
+<td align="center"><img src="https://stanfordvl.github.io/MinkowskiEngine/_images/conv_dense.gif"></td>
+<td align="center"><img src="https://stanfordvl.github.io/MinkowskiEngine/_images/conv_sparse.gif" ></td>
 </tr>
 </tbody>
 </table></div>
@@ -295,16 +300,16 @@ Visually, a convolution on a sparse tensor is similar to that on a dense tensor.
 <h3>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h3>
 <p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.
 First, install pytorch following the <a class="reference external" href="https://pytorch.org">instruction</a>. Next, install <code class="docutils literal notranslate"><span class="pre">openblas</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">openblas</span>
-<span class="n">pip3</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">torchvision</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
+<span class="n">pip3</span> <span class="n">install</span> <span class="n">torch</span>
 <span class="n">pip3</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="pip-from-the-latest-source">
 <h3>Pip from the latest source<a class="headerlink" href="#pip-from-the-latest-source" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">openblas</span>
-<span class="n">pip3</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">torchvision</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
+<span class="n">pip3</span> <span class="n">install</span> <span class="n">torch</span>
 <span class="n">pip3</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="o">-</span><span class="n">I</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">StanfordVL</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
 </pre></div>
 </div>
@@ -317,8 +322,8 @@ First, install pytorch following the <a class="reference external" href="https:/
 <p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">openblas</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="n">torchvision</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">mkl</span><span class="o">-</span><span class="n">include</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">pytorch</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
 </pre></div>
 </div>
 </div>
@@ -336,7 +341,7 @@ First, install pytorch following the <a class="reference external" href="https:/
 <h3>System Python<a class="headerlink" href="#system-python" title="Permalink to this headline">¶</a></h3>
 <p>Like the anaconda installation, make sure that you install pytorch with the same CUDA version that <code class="docutils literal notranslate"><span class="pre">nvcc</span></code> uses.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># install system requirements</span>
-<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">python3</span><span class="o">-</span><span class="n">dev</span> <span class="n">openblas</span>
+<span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">python3</span><span class="o">-</span><span class="n">dev</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
 
 <span class="c1"># Skip if you already have pip installed on your python3</span>
 <span class="n">curl</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">bootstrap</span><span class="o">.</span><span class="n">pypa</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">get</span><span class="o">-</span><span class="n">pip</span><span class="o">.</span><span class="n">py</span> <span class="o">|</span> <span class="n">python3</span>
@@ -480,7 +485,7 @@ page</a>.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="convolution_on_sparse.html" class="btn btn-neutral float-right" title="Convolution on a Sparse Tensor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="sparse_tensor_network.html" class="btn btn-neutral float-right" title="Sparse Tensor Networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MinkowskiEngine’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

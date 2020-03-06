@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Convolution on a Sparse Tensor &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Sparse Tensor Networks &mdash; MinkowskiEngine 0.4.1 documentation</title>
   
 
   
@@ -88,9 +88,10 @@
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Convolution on a Sparse Tensor</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Sparse Tensor Networks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-tensor">Sparse Tensor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#generalized-convolution-on-a-sparse-tensor">Generalized Convolution on a Sparse Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparse-tensor-network">Sparse Tensor Network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generalized-convolution">Generalized Convolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#special-cases-of-generalized-convolution">Special Cases of Generalized Convolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
@@ -177,13 +178,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Convolution on a Sparse Tensor</li>
+      <li>Sparse Tensor Networks</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/convolution_on_sparse.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/sparse_tensor_network.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -197,28 +198,32 @@
 
            <div itemprop="articleBody">
             
-  <div class="section" id="convolution-on-a-sparse-tensor">
-<h1>Convolution on a Sparse Tensor<a class="headerlink" href="#convolution-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="sparse-tensor-networks">
+<h1>Sparse Tensor Networks<a class="headerlink" href="#sparse-tensor-networks" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="sparse-tensor">
 <h2>Sparse Tensor<a class="headerlink" href="#sparse-tensor" title="Permalink to this headline">¶</a></h2>
 <p>In traditional speech, text, or image data, features are extracted densely.
-Thus, the most common representations of these data are vectors, matrices, and
+Thus, the most common representations used for these data are vectors, matrices, and
 tensors. However, for 3-dimensional scans or even higher-dimensional spaces,
-such dense representations are inefficient due to the sparsity. Instead, we can
-only save the non-empty part of the space as its coordinates and the associated
-features. This representation is an N-dimensional extension of a sparse matrix;
-thus it is known as a sparse tensor.</p>
-<p>In Minkowski Engine, we adopt the same sparse tensor for the basic data
+such dense representations are inefficient as effective information occupy only a small fraction of the space. Instead, we can
+only save information on the non-empty region of the space similar to how we save information on a sparse matrix.
+This representation is an N-dimensional extension of a sparse matrix; thus it is known as a sparse tensor.</p>
+<p>In Minkowski Engine, we adopt the sparse tensor as the basic data
 representation and the class is provided as
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>. Fore more information on sparse tensors
 please refer to the <a class="reference external" href="terminology.html">terminology page</a>.</p>
 </div>
-<div class="section" id="generalized-convolution-on-a-sparse-tensor">
-<h2>Generalized Convolution on a Sparse Tensor<a class="headerlink" href="#generalized-convolution-on-a-sparse-tensor" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sparse-tensor-network">
+<h2>Sparse Tensor Network<a class="headerlink" href="#sparse-tensor-network" title="Permalink to this headline">¶</a></h2>
+<p>Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in a convnet, is also known as a <em>sparse convolutional networks</em> <a class="reference external" href="https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf">[1]</a>. Such parameter-space sparsity used for model compression still operates on dense tensors and all intermediate activations are also dense tensors.</p>
+<p>However, in this work, we focus on <em>spatially</em> sparse data, in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs <em>sparse tensor networks</em>  and these sparse tensor networks processes and generates sparse tensors. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define on a dense tensor and implemented in the Minkowski Engine.</p>
+</div>
+<div class="section" id="generalized-convolution">
+<h2>Generalized Convolution<a class="headerlink" href="#generalized-convolution" title="Permalink to this headline">¶</a></h2>
 <p>The convolution is a fundamental operation in many fields. In image perception,
-the 2D convolution has achieved state-of-the-art performance in many tasks and
+convolutions have been the crux of achieving the state-of-the-art performance in many tasks and
 is proven to be the most crucial operation in AI, and computer vision research.
-In this work, we adopt the sparse convolution <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a> and propose the generalized convolution on a sparse
+In this work, we adopt the convolution on a sparse tensor <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a> and propose the generalized convolution on a sparse
 tensor. The generalized convolution incorporates all discrete convolutions as special cases.
 We use the generalized convolution not only on the 3D
 spatial axes, but on any arbitrary dimensions, or also on the temporal axis, which is proven to be more
@@ -314,7 +319,7 @@ Also, when we use a hyper-cross shaped kernel <a class="reference external" href
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1] An Investigation of Sparse Tensor Formats for Tensor Libraries, 2015</a></p></li>
+<li><p><a class="reference external" href="https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf">[1] Sparse Convolutional Neural Networks, CVPR’15</a></p></li>
 <li><p><a class="reference external" href="https://arxiv.org/abs/1711.10275">[2] 3D Semantic Segmentation with Submanifold Sparse Convolutional Neural Networks, CVPR’18</a></p></li>
 <li><p><a class="reference external" href="https://arxiv.org/abs/1904.08755">[3] 4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR’19</a></p></li>
 </ul>
