@@ -56,7 +56,8 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 ## Installation
 
-You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly.
+You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly. If you experience issues installing the package, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) or [the installation wiki page](https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation).
+If you cannot find a relevant problem, please report the issue on [the github issue page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
 ### Pip
 
@@ -79,7 +80,7 @@ pip3 install -U -I git+https://github.com/StanfordVL/MinkowskiEngine
 
 ### Anaconda
 
-We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) first.
+We recommend `python>=3.6` for installation.
 
 
 #### 1. Create a conda virtual environment and install requirements.

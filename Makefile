@@ -38,7 +38,7 @@ INCLUDE_DIRS += $(PYTORCH_INCLUDES)
 LIBRARY_DIRS := $(PYTORCH_LIBRARIES)
 
 # Determine ABI support
-WITH_ABI := $(shell python -c 'import torch; print(int(torch._C._GLIBCXX_USE_CXX11_ABI))')
+WITH_ABI := $(shell $(PYTHON) -c 'import torch; print(int(torch._C._GLIBCXX_USE_CXX11_ABI))')
 
 # Determine platform
 UNAME := $(shell uname -s)
@@ -58,7 +58,7 @@ endif
 ifneq ($(CPU_ONLY), 1)
 	# CUDA ROOT DIR that contains bin/ lib64/ and include/
 	# CUDA_DIR := /usr/local/cuda
-	CUDA_DIR := $(shell python -c 'from torch.utils.cpp_extension import _find_cuda_home; print(_find_cuda_home())')
+	CUDA_DIR := $(shell $(PYTHON) -c 'from torch.utils.cpp_extension import _find_cuda_home; print(_find_cuda_home())')
 	
 	INCLUDE_DIRS += ./ $(CUDA_DIR)/include
 	LIBRARY_DIRS += $(CUDA_DIR)/lib64
@@ -105,7 +105,7 @@ else ifeq ($(BLAS), blas)
 else
 	# ATLAS
 	LIBRARIES += atlas
-	ATLAS_PATH := $(shell python -c "import numpy.distutils.system_info as si; ai = si.atlas_info(); [print(p) for p in ai.get_lib_dirs()]")
+	ATLAS_PATH := $(shell $(PYTHON) -c "import numpy.distutils.system_info as si; ai = si.atlas_info(); [print(p) for p in ai.get_lib_dirs()]")
 	LIBRARY_DIRS += $(ATLAS_PATH)
 endif
 
