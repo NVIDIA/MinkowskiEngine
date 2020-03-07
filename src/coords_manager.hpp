@@ -43,6 +43,7 @@
 #include "utils.hpp"
 
 #ifndef CPU_ONLY
+#include <ATen/cuda/CUDAContext.h>
 #include "gpu_memory_manager.hpp"
 #endif // CPU_ONLY
 
@@ -146,6 +147,14 @@ public:
                vector<int> kernel_sizes, vector<int> dilations, int region_type,
                at::Tensor offsets, py::object py_in_coords_key,
                py::object py_out_coords_key, bool is_transpose, bool is_pool);
+#ifndef CPU_ONLY
+  vector<vector<at::Tensor>>
+  getKernelMapGPU(vector<int> tensor_strides, vector<int> strides,
+                  vector<int> kernel_sizes, vector<int> dilations,
+                  int region_type, at::Tensor offsets,
+                  py::object py_in_coords_key, py::object py_out_coords_key,
+                  bool is_transpose, bool is_pool);
+#endif
   // TODO make this function non-const with ability to generate a new map
   vector<at::Tensor> getCoordsMap(py::object py_in_coords_key,
                                   py::object py_out_coords_key) const;

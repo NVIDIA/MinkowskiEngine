@@ -14,9 +14,10 @@ using std::vector;
 
 class GPUMemoryManager {
   int initial_size = 256;
-  int device_id;
 
 public:
+  int device_id;
+
   // A set of data that will be not be freed untill the class is destroyed.
   vector<void *> persist_vec_ptr;
   vector<void *> tmp_vec_ptr;

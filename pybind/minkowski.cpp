@@ -198,6 +198,9 @@ void instantiate_coordsman(py::module &m) {
                mink::CoordsManager::existsCoordsKey)
       .def("getCoordsKey", &mink::CoordsManager::getCoordsKey)
       .def("getKernelMap", &mink::CoordsManager::getKernelMap)
+#ifndef CPU_ONLY
+      .def("getKernelMapGPU", &mink::CoordsManager::getKernelMapGPU)
+#endif
       .def("getCoordsMap", &mink::CoordsManager::getCoordsMap)
       .def("getUnionMap", &mink::CoordsManager::getUnionMap)
       .def("getCoordsSize", (int (mink::CoordsManager::*)(py::object) const) &

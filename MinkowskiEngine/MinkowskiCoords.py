@@ -232,7 +232,8 @@ class CoordsManager():
                        region_type=0,
                        region_offset=None,
                        is_transpose=False,
-                       is_pool=False):
+                       is_pool=False,
+                       on_gpu=False):
         r"""Get kernel in-out maps for the specified coords keys or tensor strides.
 
         """
@@ -258,8 +259,9 @@ class CoordsManager():
         D = in_coords_key.D
         tensor_strides, strides, kernel_sizes, dilations, region_type = prep_args(
             tensor_strides, strides, kernel_sizes, dilations, region_type, D)
-
-        kernel_map = self.CPPCoordsManager.getKernelMap(
+        kernel_map_fn = self.CPPCoordsManager.getKernelMapGPU \
+            if on_gpu else self.CPPCoordsManager.getKernelMapGPU
+        kernel_map = kernel_map_fn(
             convert_to_int_list(tensor_strides, D),  #
             convert_to_int_list(strides, D),  #
             convert_to_int_list(kernel_sizes, D),  #

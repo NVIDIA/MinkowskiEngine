@@ -2,6 +2,11 @@
 
 ## [master] - 2020-03-05
 
+### Added
+
+- GPU version of getKernelMap: getKernelMapGPU
+
+
 ### Changed
 
 - Fix dtype double to float on the multi-gpu example

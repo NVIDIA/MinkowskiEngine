@@ -70,8 +70,11 @@ vector<vector<at::Tensor>> CoordsManager::getKernelMap(
     all_volume += in_map[k].size();
 
   vector<at::Tensor> in_tensors, out_tensors;
+
   for (int k = 0; k < kernel_volume; k++) {
     auto curr_volume = in_map[k].size();
+    if (curr_volume <= 0)
+      continue;
 
     at::Tensor in_kernel_map = torch::empty(
         {(long)curr_volume}, torch::TensorOptions().dtype(torch::kInt64));
