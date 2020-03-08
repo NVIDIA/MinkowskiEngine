@@ -21,9 +21,9 @@ The Minkowski Engine supports various functions that can be built on a sparse te
 
 ## Sparse Tensor Networks: Neural Networks for Spatially Sparse Tensors
 
-Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in a convnet, is also known as a *sparse convolutional networks* [[Liu et al. CVPR'15]](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf). Such parameter-space sparsity used for model compression still operates on dense tensors and all intermediate activations are also dense tensors.
+Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in convnets, is also known as [*sparse convolutional networks*](https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf). Such parameter-space sparsity used for model compression compresses networks that operate on dense tensors and all intermediate activations of these networks are also dense tensors.
 
-However, in this work, we focus on *spatially* sparse data, in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs *sparse tensor networks*  and these sparse tensor networks processes and generates sparse tensors. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define on a dense tensor and implemented in the Minkowski Engine.
+However, in this work, we focus on [*spatially* sparse data](https://arxiv.org/abs/1409.6070), in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs as *sparse tensor networks*  and these sparse tensor networks process and generate sparse tensors as outputs. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define them on a dense tensor and implemented in the Minkowski Engine.
 
 We visualized a sparse tensor network operation on a sparse tensor, convolution, below. The convolution layer on a sparse tensor works similarly to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points which we can control in the [generalized convolution](https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor_network.html). For more information, please visit [the documentation page on sparse tensor networks](https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor_network.html) and [the terminology page](https://stanfordvl.github.io/MinkowskiEngine/terminology.html).
 
@@ -226,6 +226,6 @@ If you use the Minkowski Engine, please cite:
 
 ## Projects using Minkowski Engine
 
-- [4D Spatio-Temporal Segmentation](https://github.com/chrischoy/SpatioTemporalSegmentation)
+- [3D and 4D Spatio-Temporal Semantic Segmentation, CVPR'19](https://github.com/chrischoy/SpatioTemporalSegmentation)
 - [Fully Convolutional Geometric Features, ICCV'19](https://github.com/chrischoy/FCGF)
 - [Learning multiview 3D point cloud registration](https://arxiv.org/abs/2001.05119)
