@@ -217,7 +217,7 @@ def sparse_quantize(coords,
                 if isinstance(discrete_coords, np.ndarray):
                     return np.arange(len(discrete_coords))
                 else:
-                    return torch.range(len(discrete_coords), dtype=torch.long)
+                    return torch.arange(len(discrete_coords), dtype=torch.long)
             else:
                 if use_feat:
                     return discrete_coords, feats

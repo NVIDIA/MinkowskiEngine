@@ -16,8 +16,9 @@
 - Track whether the batch indices are set first when initializing coords, The initial batch indices will be used throughout the lifetime of a sparse tensor
 - Add warning on ModelNet40 training (Issue #86)
 - Update the readme, definition
-- Fix an error on examples.convolution
+- Fix an error in examples.convolution
 - Changed `features_at`, `coordinates_at` to take a batch index not the index of the unique batch indices. (Issue #100)
+- Fix an error torch.range --> torch.arange in `sparse_quantize` (Issue #101)
 
 
 ## [0.4.1] - 2020-01-28
