@@ -143,14 +143,18 @@ def decomposition():
     B = conv(A)
 
     # Extract features and coordinates per batch index
-    coords = B.decomposed_coordinates
-    feats = B.decomposed_features
-    coords, feats = B.decomposed_coordinates_and_features
+    list_of_coords = B.decomposed_coordinates
+    list_of_feats = B.decomposed_features
+    list_of_coords, list_of_feats = B.decomposed_coordinates_and_features
 
     # To specify a batch index
     batch_index = 1
     coords = B.coordinates_at(batch_index)
     feats = B.features_at(batch_index)
+
+    # Empty list if given an invalid batch index
+    batch_index = 3
+    print(B.coordinates_at(batch_index))
 
 
 if __name__ == '__main__':

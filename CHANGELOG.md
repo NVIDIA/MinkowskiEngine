@@ -17,6 +17,7 @@
 - Add warning on ModelNet40 training (Issue #86)
 - Update the readme, definition
 - Fix an error on examples.convolution
+- Changed `features_at`, `coordinates_at` to take a batch index not the index of the unique batch indices. (Issue #100)
 
 
 ## [0.4.1] - 2020-01-28

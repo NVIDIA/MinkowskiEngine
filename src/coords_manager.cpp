@@ -877,30 +877,35 @@ CoordsManager::getRowIndicesAtBatchIndex(py::object py_in_coords_key,
   const auto in_coords_key = p_in_coords_key->getKey();
   ASSERT(coords_maps.find(in_coords_key) != coords_maps.end(),
          "The in_coords_key, ", to_string(in_coords_key), ", does not exist.");
-  ASSERT(batch_index > -1, "Invalid batch index: ", batch_index,
-         ", batch_index must be a non-negative integer.");
-  ASSERT(batch_index < batch_indices.size(),
-         "Invalid batch index: ", batch_index,
-         ", batch_index exceeds current maximum batch size: ",
-         batch_indices.size(),
-         " of a provided batch indices: ", ArrToString(batch_indices));
-  ASSERT(vec_batch_indices[batch_index] == batch_index,
-         "Batch index mismatch: provided batch indices are ",
-         ArrToString(vec_batch_indices), " ", batch_index,
-         "'th element != ", batch_index);
+  // Find the batch index in the current batch indices.
+  const vector<int>::iterator batch_iter = std::find(
+      vec_batch_indices.begin(), vec_batch_indices.end(), batch_index);
 
-  const auto in_outs = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
-  const auto &in = in_outs.first[batch_index];
+  // ASSERT(batch_iter != vec_batch_indices.end(),
+  //        "Invalid batch index:", batch_index,
+  //        " does not exist in the provided batch indices:",
+  //        ArrToString(vec_batch_indices));
 
-  at::Tensor in_rows = torch::zeros(
-      {(long)in.size()}, torch::TensorOptions().dtype(torch::kInt64));
+  // Return an empty list if not found.
+  if (batch_iter == vec_batch_indices.end()) {
+    at::Tensor in_rows = torch::zeros({0}, torch::TensorOptions().dtype(torch::kInt64));
+    return in_rows;
 
-  // copy all from a vector. int -> long
-  auto a_in_rows = in_rows.accessor<long, 1>();
-  for (auto i = 0; i < in.size(); i++)
-    a_in_rows[i] = in[i];
+  } else {
 
-  return in_rows;
+    const auto in_outs = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
+    const auto &in = in_outs.first[*batch_iter];
+
+    at::Tensor in_rows = torch::zeros(
+        {(long)in.size()}, torch::TensorOptions().dtype(torch::kInt64));
+
+    // copy all from a vector. int -> long
+    auto a_in_rows = in_rows.accessor<long, 1>();
+    for (auto i = 0; i < in.size(); i++)
+      a_in_rows[i] = in[i];
+
+    return in_rows;
+  }
 }
 
 /*
