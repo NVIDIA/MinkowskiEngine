@@ -88,10 +88,18 @@ else:
     # Search blas in this order
     for blas in ['openblas', 'atlas', 'mkl', 'blas']:
         if 'libraries' in sysinfo.get_info(blas):
-            print(f'\nUsing {blas}')
             BLAS = blas
             libraries += sysinfo.get_info(blas)['libraries']
             break
+    else:
+        # BLAS not found
+        raise ImportError(' \
+\nBLAS not found from numpy.distutils.system_info.get_info. \
+\nPlease specify BLAS with: python setup.py install --blas=openblas" \
+\nPlease visit https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation \
+for more detail.')
+
+print(f'\nUsing BLAS={BLAS}')
 
 compile_args += ['BLAS=' + BLAS]
 

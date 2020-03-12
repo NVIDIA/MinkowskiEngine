@@ -22,8 +22,9 @@ BLAS ?= openblas
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
-# BLAS_INCLUDE := /path/to/your/blas
-# BLAS_LIB := /path/to/your/blas
+# BLAS_INCLUDE_DIRS := /custom/path1
+# BLAS_LIBRARY_DIRS := /custom/path2
+
 
 ###############################################################################
 # PYTHON Header path
@@ -94,8 +95,8 @@ ifeq ($(BLAS), mkl)
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
 	MKLROOT ?= /opt/intel/mkl
-	BLAS_INCLUDE ?= $(MKLROOT)/include
-	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
+	BLAS_INCLUDE_DIRS += $(MKLROOT)/include
+	BLAS_LIBRARY_DIRS += $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 else ifeq ($(BLAS), openblas)
 	# OpenBLAS
 	LIBRARIES += openblas
@@ -106,8 +107,11 @@ else
 	# ATLAS
 	LIBRARIES += atlas
 	ATLAS_PATH := $(shell $(PYTHON) -c "import numpy.distutils.system_info as si; ai = si.atlas_info(); [print(p) for p in ai.get_lib_dirs()]")
-	LIBRARY_DIRS += $(ATLAS_PATH)
+	BLAS_LIBRARY_DIRS += $(ATLAS_PATH)
 endif
+
+INCLUDE_DIRS += $(BLAS_INCLUDE_DIRS)
+LIBRARY_DIRS += $(BLAS_LIBRARY_DIRS)
 
 # Debugging
 ifeq ($(DEBUG), 1)
@@ -119,9 +123,6 @@ else
 endif
 
 WARNINGS := -Wall -Wcomment -Wno-sign-compare -Wno-deprecated-declarations
-
-INCLUDE_DIRS += $(BLAS_INCLUDE)
-LIBRARY_DIRS += $(BLAS_LIB)
 
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
