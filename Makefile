@@ -22,9 +22,8 @@ BLAS ?= openblas
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
 # (which should work)!
-# BLAS_INCLUDE_DIRS := /custom/path1
-# BLAS_LIBRARY_DIRS := /custom/path2
-
+# BLAS_INCLUDE_DIRS ?=
+# BLAS_LIBRARY_DIRS ?=
 
 ###############################################################################
 # PYTHON Header path
@@ -95,8 +94,8 @@ ifeq ($(BLAS), mkl)
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
 	MKLROOT ?= /opt/intel/mkl
-	BLAS_INCLUDE_DIRS += $(MKLROOT)/include
-	BLAS_LIBRARY_DIRS += $(MKLROOT)/lib $(MKLROOT)/lib/intel64
+	BLAS_INCLUDE_DIRS ?= $(MKLROOT)/include
+	BLAS_LIBRARY_DIRS ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 else ifeq ($(BLAS), openblas)
 	# OpenBLAS
 	LIBRARIES += openblas

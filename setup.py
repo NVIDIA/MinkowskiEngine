@@ -60,6 +60,7 @@ compile_args = [
     'PYTHON=' + sys.executable,  # curr python
 ]
 extra_compile_args = ['-Wno-deprecated-declarations']
+extra_link_args = []
 libraries = ['minkowski']
 
 # extra_compile_args+=['-g']  # Uncomment for debugging
@@ -82,6 +83,12 @@ if len(BLAS) > 0:
     argv.remove(BLAS)
     BLAS = BLAS.split('=')[1]
     assert BLAS in ['openblas', 'mkl', 'atlas', 'blas']
+    libraries.append(BLAS)
+    blas_inc_dirs = os.environ.get('BLAS_INCLUDE_DIRS')
+    compile_args += [f'BLAS_INCLUDE_DIRS={blas_inc_dirs}']
+    blas_lib_dirs = os.environ.get('BLAS_LIBRARY_DIRS')
+    if blas_lib_dirs is not None:
+        extra_link_args += [f'-Wl,-rpath,{blas_lib_dirs}']
 else:
     # find the default BLAS library
     import numpy.distutils.system_info as sysinfo
@@ -96,8 +103,7 @@ else:
         raise ImportError(' \
 \nBLAS not found from numpy.distutils.system_info.get_info. \
 \nPlease specify BLAS with: python setup.py install --blas=openblas" \
-\nPlease visit https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation \
-for more detail.')
+\nfor more information, please visit https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation')
 
 print(f'\nUsing BLAS={BLAS}')
 
@@ -130,6 +136,7 @@ setup(
             ],
             libraries=libraries,
             extra_compile_args=extra_compile_args,
+            extra_link_args=extra_link_args,
         )
     ],
     cmdclass={'build_ext': BuildExtension},
