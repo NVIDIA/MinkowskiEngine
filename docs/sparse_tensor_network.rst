@@ -38,10 +38,16 @@ We use the generalized convolution not only on the 3D
 spatial axes, but on any arbitrary dimensions, or also on the temporal axis, which is proven to be more
 effective than recurrent neural networks (RNN) in some applications.
 
-Specifically, we the generalize convolution for generic input and
-output coordinates, and for arbitrary kernel shapes. The generalized convolution
+Specifically, we generalize convolution for generic input and output coordinates, and for arbitrary kernel shapes. It allows extending a sparse tensor network to extremely high-dimensional spaces and dynamically generate coordinates for generative tasks.
+Also, the generalized convolution
 encompasses not only all sparse convolutions but also the
-conventional dense convolutions. Let :math:`x^{\text{in}}_\mathbf{u} \in
+conventional dense convolutions. We list some of characteristics and applications of generalized convolution below.
+
+- Sparse tensors for convolution kernels allow high-dimensional convolutions with specialized kernels `[3] <https://arxiv.org/abs/1904.08755>`_
+- Arbitrary input coordinates generalized convolution encompasses all discrete convolutions
+- Arbitrary output coordinates allows dynamic coordinate generation and generative networks `[reconstruction and completion networks] <https://github.com/StanfordVL/MinkowskiEngine#example-networks>`_
+
+Let :math:`x^{\text{in}}_\mathbf{u} \in
 \mathbb{R}^{N^\text{in}}` be an :math:`N^\text{in}`-dimensional input feature
 vector in a :math:`D`-dimensional space at :math:`\mathbf{u} \in \mathbb{R}^D`
 (a D-dimensional coordinate), and convolution kernel weights be

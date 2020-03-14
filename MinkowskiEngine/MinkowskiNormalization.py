@@ -225,8 +225,7 @@ class MinkowskiInstanceNormFunction(Function):
         cpp_coords_manager = coords_manager.CPPCoordsManager
 
         # 1/N \sum dout
-        mean_dout, num_nonzero = gpool_forward(out_grad,
-                                               cpp_in_coords_key,
+        mean_dout, num_nonzero = gpool_forward(out_grad, cpp_in_coords_key,
                                                cpp_glob_coords_key,
                                                cpp_coords_manager, True,
                                                ctx.mode.value)
@@ -257,7 +256,7 @@ class MinkowskiInstanceNormFunction(Function):
 
 class MinkowskiStableInstanceNorm(Module):
 
-    def __init__(self, num_features, dimension=-1):
+    def __init__(self, num_features):
         Module.__init__(self)
         self.num_features = num_features
         self.eps = 1e-6
@@ -269,11 +268,10 @@ class MinkowskiStableInstanceNorm(Module):
         self.glob_sum2 = MinkowskiBroadcastAddition()
         self.glob_mean = MinkowskiGlobalPooling()
         self.glob_times = MinkowskiBroadcastMultiplication()
-        self.dimension = dimension
         self.reset_parameters()
 
     def __repr__(self):
-        s = f'(nchannels={self.num_features}, D={self.dimension})'
+        s = f'(nchannels={self.num_features})'
         return self.__class__.__name__ + s
 
     def reset_parameters(self):
@@ -313,8 +311,7 @@ class MinkowskiInstanceNorm(Module):
 
             num_features (int): the dimension of the input feautres.
 
-            dimension (int): the spatial dimension of the input tensor.
-
+            mode (GlobalPoolingModel, optional): The internal global pooling computation mode.
         """
         Module.__init__(self)
         self.num_features = num_features

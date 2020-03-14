@@ -1,5 +1,7 @@
 import os
 import sys
+# import pkg_resources
+# pkg_resources.require('MinkowskiEngine==0.4.2a1')
 import MinkowskiEngine as ME
 
 from recommonmark.parser import CommonMarkParser
@@ -18,9 +20,9 @@ from recommonmark.parser import CommonMarkParser
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-sys.path.insert(0, os.path.abspath('../'))
+# sys.path.insert(0, os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../../'))
-autodoc_mock_imports = ['MinkowskiEngine.examples']
+# autodoc_mock_imports = ['MinkowskiEngine.examples']
 
 
 # -- Project information -----------------------------------------------------
@@ -75,7 +77,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None

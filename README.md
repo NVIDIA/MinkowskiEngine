@@ -3,7 +3,7 @@
 
 # Minkowski Engine
 
-[![PyPI Version][pypi-image]][pypi-url][![Join the chat at https://gitter.im/MinkowskiEngineGitter/general](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/MinkowskiEngineGitter/general)
+[![PyPI Version][pypi-image]][pypi-url] [![Join the chat at https://gitter.im/MinkowskiEngineGitter/general](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/MinkowskiEngineGitter/general)
 
 The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://stanfordvl.github.io/MinkowskiEngine/overview.html).
 

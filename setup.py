@@ -103,7 +103,8 @@ else:
         raise ImportError(' \
 \nBLAS not found from numpy.distutils.system_info.get_info. \
 \nPlease specify BLAS with: python setup.py install --blas=openblas" \
-\nfor more information, please visit https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation')
+\nfor more information, please visit https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation'
+                         )
 
 print(f'\nUsing BLAS={BLAS}')
 
@@ -151,4 +152,24 @@ setup(
         'Convolutional Neural Networks', '3D Vision', 'Deep Learning'
     ],
     zip_safe=False,
+    classifiers=[
+        # https://pypi.org/classifiers/
+        'Environment :: Console',
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Other Audience',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Programming Language :: C++',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Topic :: Multimedia :: Graphics',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Scientific/Engineering :: Physics',
+        'Topic :: Scientific/Engineering :: Visualization',
+    ],
     python_requires='>=3.6')
