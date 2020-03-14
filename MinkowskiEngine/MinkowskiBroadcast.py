@@ -190,7 +190,7 @@ class MinkowskiBroadcast(Module):
         assert isinstance(input, SparseTensor)
         assert isinstance(input_glob, SparseTensor)
 
-        broadcast_feat = torch.empty_like(input.F)
+        broadcast_feat = input.F.new(len(input), input_glob.size()[1])
         row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)
         for b, row_ind in enumerate(row_inds):
             broadcast_feat[row_ind] = input_glob.F[b]
@@ -226,7 +226,7 @@ class MinkowskiBroadcastConcatenation(MinkowskiBroadcast):
         assert isinstance(input, SparseTensor)
         assert isinstance(input_glob, SparseTensor)
 
-        broadcast_feat = torch.empty_like(input.F)
+        broadcast_feat = input.F.new(len(input), input_glob.size()[1])
         row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)
         for b, row_ind in enumerate(row_inds):
             broadcast_feat[row_ind] = input_glob.F[b]

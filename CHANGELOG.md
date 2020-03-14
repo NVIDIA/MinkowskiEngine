@@ -19,6 +19,8 @@
 - Fix an error in examples.convolution
 - Changed `features_at`, `coordinates_at` to take a batch index not the index of the unique batch indices. (Issue #100)
 - Fix an error torch.range --> torch.arange in `sparse_quantize` (Issue #101)
+- Fix BLAS installation link error (Issue #94)
+- Fix `MinkowskiBroadcast` and `MinkowskiBroadcastConcatenation` to use arbitrary channel sizes
 
 
 ## [0.4.1] - 2020-01-28
