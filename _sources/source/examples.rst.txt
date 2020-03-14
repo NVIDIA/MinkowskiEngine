@@ -12,6 +12,22 @@ examples.common module
    :undoc-members:
    :show-inheritance:
 
+examples.completion module
+--------------------------
+
+.. automodule:: examples.completion
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.convolution module
+---------------------------
+
+.. automodule:: examples.convolution
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 examples.example module
 -----------------------
 
@@ -24,6 +40,14 @@ examples.indoor module
 ----------------------
 
 .. automodule:: examples.indoor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.issue98 module
+-----------------------
+
+.. automodule:: examples.issue98
    :members:
    :undoc-members:
    :show-inheritance:
@@ -60,6 +84,14 @@ examples.pointnet module
    :undoc-members:
    :show-inheritance:
 
+examples.reconstruction module
+------------------------------
+
+.. automodule:: examples.reconstruction
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 examples.resnet module
 ----------------------
 
@@ -68,10 +100,18 @@ examples.resnet module
    :undoc-members:
    :show-inheritance:
 
-examples.two\_dim\_training module
-----------------------------------
+examples.sparse\_tensor\_basic module
+-------------------------------------
 
-.. automodule:: examples.two_dim_training
+.. automodule:: examples.sparse_tensor_basic
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.training module
+------------------------
+
+.. automodule:: examples.training
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,10 +124,10 @@ examples.unet module
    :undoc-members:
    :show-inheritance:
 
-examples.upsampling module
---------------------------
+examples.vae module
+-------------------
 
-.. automodule:: examples.upsampling
+.. automodule:: examples.vae
    :members:
    :undoc-members:
    :show-inheritance:

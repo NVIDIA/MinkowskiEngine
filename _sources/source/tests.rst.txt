@@ -28,6 +28,14 @@ tests.conv module
    :undoc-members:
    :show-inheritance:
 
+tests.conv\_on\_coords module
+-----------------------------
+
+.. automodule:: tests.conv_on_coords
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tests.coords module
 -------------------
 
@@ -40,6 +48,14 @@ tests.dense module
 ------------------
 
 .. automodule:: tests.dense
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tests.global module
+-------------------
+
+.. automodule:: tests.global
    :members:
    :undoc-members:
    :show-inheritance:
@@ -76,6 +92,22 @@ tests.pruning module
    :undoc-members:
    :show-inheritance:
 
+tests.quantization module
+-------------------------
+
+.. automodule:: tests.quantization
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tests.sparse\_tensor module
+---------------------------
+
+.. automodule:: tests.sparse_tensor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tests.strided\_conv module
 --------------------------
 
@@ -84,10 +116,10 @@ tests.strided\_conv module
    :undoc-members:
    :show-inheritance:
 
-tests.voxelization module
--------------------------
+tests.union module
+------------------
 
-.. automodule:: tests.voxelization
+.. automodule:: tests.union
    :members:
    :undoc-members:
    :show-inheritance:

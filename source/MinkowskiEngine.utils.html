@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiEngine.utils package &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>MinkowskiEngine.utils package &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.4.2
               </div>
             
           
@@ -83,17 +83,23 @@
               
             
             
-              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+              <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor_network.html">Sparse Tensor Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Definitions and Terminology</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline with Pytorch DataLoader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40.html">Training A ModelNet40 Classification Network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/sparse_tensor_basic.html">Sparse Tensor Basics</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demos</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40_classification.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/pointnet.html">PointNet</a></li>
@@ -106,13 +112,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -188,34 +198,105 @@
 <span id="minkowskiengine-utils-collation-module"></span><h2>MinkowskiEngine.utils.collation module<a class="headerlink" href="#module-MinkowskiEngine.utils.collation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.utils.collation.SparseCollation">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">SparseCollation</code><span class="sig-paren">(</span><em class="sig-param">limit_numpoints</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.SparseCollation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">SparseCollation</code><span class="sig-paren">(</span><em class="sig-param">limit_numpoints=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.SparseCollation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Generates collate function for coords, feats, labels.</p>
+<p>Please refer to <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">the training example</a> for the
+usage.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><dl class="simple">
-<dt>limit_numpoints: If 0 or False, does not alter batch size. If positive</dt><dd><p>integer, limits batch size so that the number of input
-coordinates is below limit_numpoints.</p>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">limit_numpoints</span></code> (int): If positive integer, limits batch size
+so that the number of input coordinates is below limit_numpoints. If 0
+or False, concatenate all points. -1 by default.</p>
 </dd>
 </dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">dataset</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">collate_fn</span><span class="o">=</span><span class="n">SparseCollation</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">data_loader</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.utils.collation.batch_sparse_collate">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">batch_sparse_collate</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.batch_sparse_collate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The wrapper function that can be used in in conjunction with
+<cite>torch.utils.data.DataLoader</cite> to generate inputs for a sparse tensor.</p>
+<p>Please refer to <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">the training example</a> for the
+usage.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">data</span></code>: list of (coordinates, features, labels) tuples.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="function">
+<dt id="MinkowskiEngine.utils.collation.batched_coordinates">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">batched_coordinates</code><span class="sig-paren">(</span><em class="sig-param">coords</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.batched_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <cite>ME.SparseTensor</cite> coordinates from a sequence of coordinates</p>
+<p>Given a list of either numpy or pytorch tensor coordinates, return the
+batched coordinates suitable for <cite>ME.SparseTensor</cite>.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (a sequence of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a
+list of coordinates.</p>
+</dd>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (<cite>torch.IntTensor</cite>): a batched coordinates.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>From v0.4, the batch index will be prepended before all coordinates.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="MinkowskiEngine.utils.collation.sparse_collate">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">sparse_collate</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">is_double=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.sparse_collate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a sparse tensor with batch indices C in <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html">the documentation</a>.</p>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.collation.</code><code class="sig-name descname">sparse_collate</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats</em>, <em class="sig-param">labels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.collation.sparse_collate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create input arguments for a sparse tensor <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html">the documentation</a>.</p>
 <p>Convert a set of coordinates and features into the batch coordinates and
 batch features.</p>
 <dl>
-<dt>Args:</dt><dd><p>coords (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
-<p>feats (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of features.</p>
-<p>labels (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of labels
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of features.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">labels</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of labels
 associated to the inputs.</p>
-<p>is_double (<cite>bool</cite>): return double precision features if True. False by
-default.</p>
 </dd>
 </dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.utils.coords">
+<span id="minkowskiengine-utils-coords-module"></span><h2>MinkowskiEngine.utils.coords module<a class="headerlink" href="#module-MinkowskiEngine.utils.coords" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="MinkowskiEngine.utils.coords.get_coords_map">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.coords.</code><code class="sig-name descname">get_coords_map</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.coords.get_coords_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get mapping between sparse tensor 1 and sparse tensor 2.</p>
+<dl>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x</span></code> (<a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>): a sparse tensor with
+<cite>x.tensor_stride</cite> &lt;= <cite>y.tensor_stride</cite>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">y</span></code> (<a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>): a sparse tensor with
+<cite>x.tensor_stride</cite> &lt;= <cite>y.tensor_stride</cite>.</p>
+</dd>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x_indices</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.LongTensor</span></code>): the indices of x that
+corresponds to the returned indices of y.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x_indices</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.LongTensor</span></code>): the indices of y that
+corresponds to the returned indices of x.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">code</span><span class="o">-</span><span class="n">block</span><span class="p">::</span> <span class="n">python</span>
+
+   <span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+   <span class="n">out_sp_tensor</span> <span class="o">=</span> <span class="n">stride_2_conv</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">)</span>
+
+   <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">get_coords_map</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">,</span> <span class="n">out_sp_tensor</span><span class="p">)</span>
+   <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
+      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -277,49 +358,76 @@ exact nature of the failure. This is helpful when debugging gradchecks.</p>
 <dd></dd></dl>
 
 </div>
-<div class="section" id="module-MinkowskiEngine.utils.voxelization">
-<span id="minkowskiengine-utils-voxelization-module"></span><h2>MinkowskiEngine.utils.voxelization module<a class="headerlink" href="#module-MinkowskiEngine.utils.voxelization" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-MinkowskiEngine.utils.quantization">
+<span id="minkowskiengine-utils-quantization-module"></span><h2>MinkowskiEngine.utils.quantization module<a class="headerlink" href="#module-MinkowskiEngine.utils.quantization" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="MinkowskiEngine.utils.voxelization.fnv_hash_vec">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.voxelization.</code><code class="sig-name descname">fnv_hash_vec</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.fnv_hash_vec" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.utils.quantization.fnv_hash_vec">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.quantization.</code><code class="sig-name descname">fnv_hash_vec</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.quantization.fnv_hash_vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>FNV64-1A</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="MinkowskiEngine.utils.voxelization.ravel_hash_vec">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.voxelization.</code><code class="sig-name descname">ravel_hash_vec</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.ravel_hash_vec" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.utils.quantization.quantize">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.quantization.</code><code class="sig-name descname">quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.quantization.quantize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.utils.quantization.quantize_label">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.quantization.</code><code class="sig-name descname">quantize_label</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">labels</em>, <em class="sig-param">ignore_label</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.quantization.quantize_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.utils.quantization.ravel_hash_vec">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.quantization.</code><code class="sig-name descname">ravel_hash_vec</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.quantization.ravel_hash_vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ravel the coordinates after subtracting the min coordinates.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="MinkowskiEngine.utils.voxelization.sparse_quantize">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.voxelization.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=255</em>, <em class="sig-param">set_ignore_label_when_collision=False</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">hash_type='fnv'</em>, <em class="sig-param">quantization_size=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.voxelization.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.utils.quantization.sparse_quantize">
+<code class="sig-prename descclassname">MinkowskiEngine.utils.quantization.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=-100</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">quantization_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.quantization.sparse_quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given coordinates, and features (optionally labels), the function
 generates quantized (voxelized) coordinates.</p>
 <dl>
-<dt>Args:</dt><dd><p>coords (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a matrix of size
-<span class="math notranslate nohighlight">\(N \times D\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points in the
-<span class="math notranslate nohighlight">\(D\)</span> dimensional space.</p>
-<p>feats (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, optional): a matrix of size
-<span class="math notranslate nohighlight">\(N \times D_F\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points and
-<span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of the features.</p>
-<p>labels (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): labels associated to eah coordinates.</p>
-<p>ignore_label (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, optional): the int value of the IGNORE LABEL.</p>
-<p>set_ignore_label_when_collision (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): use the <cite>ignore_label</cite>
-when at least two points fall into the same cell.</p>
-<p>return_index (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): True if you want the indices of the
+<dt>Args:</dt><dd><blockquote>
+<div><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a
+matrix of size <span class="math notranslate nohighlight">\(N \times D\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of
+points in the <span class="math notranslate nohighlight">\(D\)</span> dimensional space.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, optional): a
+matrix of size <span class="math notranslate nohighlight">\(N \times D_F\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of
+points and <span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of the features. Must have the
+same container as <cite>coords</cite> (i.e. if <cite>coords</cite> is a torch.Tensor, <cite>feats</cite>
+must also be a torch.Tensor).</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">labels</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.IntTensor</span></code>,
+optional): integer labels associated to eah coordinates.  Must have the
+same container as <cite>coords</cite> (i.e. if <cite>coords</cite> is a torch.Tensor,
+<cite>labels</cite> must also be a torch.Tensor). For classification where a set
+of points are mapped to one label, do not feed the labels.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">ignore_label</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, optional): the int value of the
+IGNORE LABEL.
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.nn.CrossEntropyLoss(ignore_index=ignore_label)</span></code></p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_index</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): True if you want the indices of the
 quantized coordinates. False by default.</p>
-<p>hash_type (<code class="xref py py-attr docutils literal notranslate"><span class="pre">str</span></code>, optional): Hash function used for quantization. Either
-<cite>ravel</cite> or <cite>fnv</cite>. <cite>ravel</cite> by default.</p>
-<p>quantization_size (<code class="xref py py-attr docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>, or
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">quantization_size</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>, or
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): the length of the each side of the
 hyperrectangle of of the grid cell.</p>
+</div></blockquote>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Segmentation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">criterion</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">ignore_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">ignore_label</span><span class="o">=-</span><span class="mi">100</span><span class="p">,</span> <span class="n">quantization_size</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">long</span><span class="p">())</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Classification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">criterion</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(</span><span class="n">ignore_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">long</span><span class="p">())</span>
+</pre></div>
+</div>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Please check <cite>examples/indoor.py</cite> for the usage.</p>
-</div>
 </dd></dl>
 
 </div>

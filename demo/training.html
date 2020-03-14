@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Training Pipeline &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Training Pipeline &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -289,7 +289,7 @@ This is useful if you have an unconventional input.</p>
         <span class="c1"># Quantize the input</span>
         <span class="n">mapping</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span>
             <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span>
-            <span class="n">return_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">coords</span><span class="p">[</span><span class="n">mapping</span><span class="p">],</span> <span class="n">feats</span><span class="p">[</span><span class="n">mapping</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">mapping</span><span class="p">]</span>
 </pre></div>
@@ -347,7 +347,7 @@ you need your own collation function, you can follow the example below.</p>
 <p>Once you have everything, let’s create a network and train it with the
 generated data. One thing to note is that if you use more than one
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_workers</span></code> for the data loader, you have to make sure that the
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> generation part has to be located within the main python
+<a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> generation part has to be located within the main python
 process since all python multi-processes use separate processes and the
 <a class="reference internal" href="../coords.html#MinkowskiEngine.CoordsManager" title="MinkowskiEngine.CoordsManager"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsManager</span></code></a>, the
 internal C++ structure that maintains the coordinate hash tables and kernel
@@ -393,8 +393,8 @@ maps, cannot be referenced outside the process that generated it.</p>
         <span class="n">tot_iter</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">tot_iter</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">tot_iter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span>
-                <span class="n">f</span><span class="s1">&#39;Iter: {tot_iter}, Epoch: {epoch}, Loss: {accum_loss / accum_iter}&#39;</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Iter: </span><span class="si">{</span><span class="n">tot_iter</span><span class="si">}</span><span class="s1">, Epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s1">, Loss: </span><span class="si">{</span><span class="n">accum_loss</span> <span class="o">/</span> <span class="n">accum_iter</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="p">)</span>
             <span class="n">accum_loss</span><span class="p">,</span> <span class="n">accum_iter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 </pre></div>

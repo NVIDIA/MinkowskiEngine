@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Multi-GPU Training &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Multi-GPU Training &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -203,7 +203,7 @@
 <h1>Multi-GPU Training<a class="headerlink" href="#multi-gpu-training" title="Permalink to this headline">¶</a></h1>
 <p>Currently, the MinkowskiEngine supports Multi-GPU training through data parallelization. In data parallelization, we have a set of mini batches that will be fed into a set of replicas of a network.</p>
 <p>Let’s define a network first.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 <span class="kn">from</span> <span class="nn">examples.minkunet</span> <span class="kn">import</span> <span class="n">MinkUNet34C</span>
 
 <span class="c1"># Copy the network to GPU</span>
@@ -219,7 +219,7 @@
 </pre></div>
 </div>
 <p>Next, we need to create replicas of the network and the final loss layer (if you use one).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn.parallel</span> <span class="kn">as</span> <span class="nn">parallel</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn.parallel</span> <span class="k">as</span> <span class="nn">parallel</span>
 
 <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
 <span class="n">criterions</span> <span class="o">=</span> <span class="n">parallel</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="n">criterion</span><span class="p">,</span> <span class="n">devices</span><span class="p">)</span>

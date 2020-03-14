@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -213,7 +213,7 @@
 generates quantized (voxelized) coordinates.</p>
 <dl>
 <dt>Args:</dt><dd><blockquote>
-<div><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a
+<div><p><a class="reference internal" href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords" title="MinkowskiEngine.utils.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a
 matrix of size <span class="math notranslate nohighlight">\(N \times D\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of
 points in the <span class="math notranslate nohighlight">\(D\)</span> dimensional space.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> or <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>, optional): a
@@ -264,10 +264,10 @@ hyperrectangle of of the grid cell.</p>
 <p>Given a list of either numpy or pytorch tensor coordinates, return the
 batched coordinates suitable for <cite>ME.SparseTensor</cite>.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (a sequence of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a
+<dt>Args:</dt><dd><p><a class="reference internal" href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords" title="MinkowskiEngine.utils.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> (a sequence of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a
 list of coordinates.</p>
 </dd>
-<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (<cite>torch.IntTensor</cite>): a batched coordinates.</p>
+<dt>Returns:</dt><dd><p><a class="reference internal" href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords" title="MinkowskiEngine.utils.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> (<cite>torch.IntTensor</cite>): a batched coordinates.</p>
 </dd>
 </dl>
 <div class="admonition warning">
@@ -286,7 +286,7 @@ list of coordinates.</p>
 <p>Convert a set of coordinates and features into the batch coordinates and
 batch features.</p>
 <dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
+<dt>Args:</dt><dd><p><a class="reference internal" href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords" title="MinkowskiEngine.utils.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of features.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">labels</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of labels
 associated to the inputs.</p>
@@ -350,9 +350,9 @@ or False, concatenate all points. -1 by default.</p>
 <code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">get_coords_map</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.get_coords_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get mapping between sparse tensor 1 and sparse tensor 2.</p>
 <dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>): a sparse tensor with
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x</span></code> (<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>): a sparse tensor with
 <cite>x.tensor_stride</cite> &lt;= <cite>y.tensor_stride</cite>.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">y</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>): a sparse tensor with
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">y</span></code> (<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>): a sparse tensor with
 <cite>x.tensor_stride</cite> &lt;= <cite>y.tensor_stride</cite>.</p>
 </dd>
 <dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x_indices</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.LongTensor</span></code>): the indices of x that
@@ -369,7 +369,7 @@ corresponds to the returned indices of x.</p>
 
    <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">get_coords_map</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">,</span> <span class="n">out_sp_tensor</span><span class="p">)</span>
    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
-      <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{i}</span><span class="s2"> -&gt; </span><span class="si">{o}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

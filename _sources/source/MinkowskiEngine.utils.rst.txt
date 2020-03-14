@@ -12,6 +12,14 @@ MinkowskiEngine.utils.collation module
    :undoc-members:
    :show-inheritance:
 
+MinkowskiEngine.utils.coords module
+-----------------------------------
+
+.. automodule:: MinkowskiEngine.utils.coords
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 MinkowskiEngine.utils.gradcheck module
 --------------------------------------
 
@@ -28,10 +36,10 @@ MinkowskiEngine.utils.init module
    :undoc-members:
    :show-inheritance:
 
-MinkowskiEngine.utils.voxelization module
+MinkowskiEngine.utils.quantization module
 -----------------------------------------
 
-.. automodule:: MinkowskiEngine.utils.voxelization
+.. automodule:: MinkowskiEngine.utils.quantization
    :members:
    :undoc-members:
    :show-inheritance:

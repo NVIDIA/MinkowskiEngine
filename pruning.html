@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiPruning &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>MinkowskiPruning &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -201,7 +201,7 @@
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPruning">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPruning</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove specified coordinates from a <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
+<dd><p>Remove specified coordinates from a <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPruning.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.__init__" title="Permalink to this definition">¶</a></dt>
@@ -217,7 +217,7 @@ to remove coordinates from.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mask</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.BoolTensor</span></code>): mask vector that specifies
 which one to keep. Coordinates with False will be removed.</p>
 </dd>
-<dt>Returns:</dt><dd><p>A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> with C = coordinates
+<dt>Returns:</dt><dd><p>A <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> with C = coordinates
 corresponding to <cite>mask == True</cite> F = copy of the features from <cite>mask ==
 True</cite>.</p>
 </dd>

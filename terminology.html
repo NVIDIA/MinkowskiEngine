@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Definitions and Terminology &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Definitions and Terminology &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -229,7 +229,7 @@ x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D
 <div class="section" id="coordinate-manager">
 <h2>Coordinate Manager<a class="headerlink" href="#coordinate-manager" title="Permalink to this headline">¶</a></h2>
 <p>Many basic operations such as convolution, pooling, etc, require finding neighbors between non-zero elements. If we use a strided convolution or pooling layer, we need to generate a new set of output coordinates that are different from the input coordinates. All these coordinate-related operations are all managed by a coordinate manager. One thing to note is that coordinate managers cache all coordinates and kernel maps as these coordinates and kernel maps are reused very frequently. For example, in many conventional neural networks, we repeat the same operations in series multiple times such as multiple residual blocks in a ResNet or a DenseNet. Thus, instead of recomputing the same coordinates and same kernel maps, a coordinate manager caches all these and reuses if it detects the same operation in the dictionary.</p>
-<p>In Minkowski Engine, we create a coordinate manager when <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> is initialized. You can optionally share an existing coordinate manager with a new <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> by providing optional coordinate manager argument during initialization. You can access the coordinate manager of a sparse tensor with <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.coords_man</span></code>.</p>
+<p>In Minkowski Engine, we create a coordinate manager when <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> is initialized. You can optionally share an existing coordinate manager with a new <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> by providing optional coordinate manager argument during initialization. You can access the coordinate manager of a sparse tensor with <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.coords_man</span></code>.</p>
 </div>
 <div class="section" id="coordinate-key">
 <h2>Coordinate Key<a class="headerlink" href="#coordinate-key" title="Permalink to this headline">¶</a></h2>

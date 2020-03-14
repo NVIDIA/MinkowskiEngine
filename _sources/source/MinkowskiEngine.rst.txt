@@ -28,6 +28,14 @@ MinkowskiEngine.MinkowskiBroadcast module
    :undoc-members:
    :show-inheritance:
 
+MinkowskiEngine.MinkowskiChannelwiseConvolution module
+------------------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiChannelwiseConvolution
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 MinkowskiEngine.MinkowskiConvolution module
 -------------------------------------------
 
@@ -96,6 +104,14 @@ MinkowskiEngine.MinkowskiPruning module
 ---------------------------------------
 
 .. automodule:: MinkowskiEngine.MinkowskiPruning
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+MinkowskiEngine.MinkowskiUnion module
+-------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiUnion
    :members:
    :undoc-members:
    :show-inheritance:

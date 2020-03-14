@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Semantic Segmentation &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Semantic Segmentation &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -218,7 +218,7 @@ done by calling <a class="reference internal" href="../utils.html#MinkowskiEngin
 </pre></div>
 </div>
 <p>Once you prepare a voxelized coordinates and features, we should wrap it with
-the <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>. Before we do that, we should create a
+the <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>. Before we do that, we should create a
 batch by calling <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a>. This function
 takes a set of coordinates and features and concatenate the set. Also it append
 the batch index to the coordinates. Finally, we pseudo-normalize the features

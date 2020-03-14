@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiEngine.modules package &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>MinkowskiEngine.modules package &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.4.2
               </div>
             
           
@@ -83,17 +83,23 @@
               
             
             
-              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+              <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor_network.html">Sparse Tensor Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Definitions and Terminology</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline with Pytorch DataLoader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40.html">Training A ModelNet40 Classification Network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/sparse_tensor_basic.html">Sparse Tensor Basics</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demos</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40_classification.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/pointnet.html">PointNet</a></li>
@@ -106,13 +112,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
 </ul>
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Minkowski Engine &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Minkowski Engine &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -219,7 +219,7 @@
             
   <div class="section" id="minkowski-engine">
 <h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a><a class="reference external" href="https://gitter.im/MinkowskiEngineGitter/general"><img alt="Join the chat at https://gitter.im/MinkowskiEngineGitter/general" src="https://badges.gitter.im/Join%20Chat.svg" /></a></p>
+<p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a> <a class="reference external" href="https://gitter.im/MinkowskiEngineGitter/general"><img alt="Join the chat at https://gitter.im/MinkowskiEngineGitter/general" src="https://badges.gitter.im/Join%20Chat.svg" /></a></p>
 <p>The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://stanfordvl.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
 <div class="section" id="example-networks">
 <h2>Example Networks<a class="headerlink" href="#example-networks" title="Permalink to this headline">¶</a></h2>
@@ -371,8 +371,8 @@ sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
 function (<code class="docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code>).</p>
 <div class="section" id="creating-a-network">
 <h3>Creating a Network<a class="headerlink" href="#creating-a-network" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="kn">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 
 <span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiNetwork</span><span class="p">):</span>
 
@@ -385,7 +385,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
                 <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                 <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                 <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">())</span>
@@ -414,7 +414,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># loss and network</span>
     <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
     <span class="n">net</span> <span class="o">=</span> <span class="n">ExampleNetwork</span><span class="p">(</span><span class="n">in_feat</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">out_feat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
 
     <span class="c1"># a data loader must return a tuple of coords, features, and labels.</span>
     <span class="n">coords</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">data_loader</span><span class="p">()</span>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiEngine &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>MinkowskiEngine &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.4.2
               </div>
             
           
@@ -83,17 +83,23 @@
               
             
             
-              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+              <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor_network.html">Sparse Tensor Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Definitions and Terminology</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline with Pytorch DataLoader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40.html">Training A ModelNet40 Classification Network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/sparse_tensor_basic.html">Sparse Tensor Basics</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demos</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40_classification.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/pointnet.html">PointNet</a></li>
@@ -106,13 +112,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -195,9 +205,10 @@
 <li class="toctree-l3"><a class="reference internal" href="MinkowskiEngine.utils.html">MinkowskiEngine.utils package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">MinkowskiEngine.utils.collation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords">MinkowskiEngine.utils.coords module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">MinkowskiEngine.utils.gradcheck module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.init">MinkowskiEngine.utils.init module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.voxelization">MinkowskiEngine.utils.voxelization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.quantization">MinkowskiEngine.utils.quantization module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils">Module contents</a></li>
 </ul>
 </li>
@@ -206,6 +217,7 @@
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.Common">MinkowskiEngine.Common module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiBroadcast">MinkowskiEngine.MinkowskiBroadcast module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiChannelwiseConvolution">MinkowskiEngine.MinkowskiChannelwiseConvolution module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiConvolution">MinkowskiEngine.MinkowskiConvolution module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCoords">MinkowskiEngine.MinkowskiCoords module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiFunctional">MinkowskiEngine.MinkowskiFunctional module</a></li>
@@ -215,41 +227,51 @@
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiOps">MinkowskiEngine.MinkowskiOps module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPooling">MinkowskiEngine.MinkowskiPooling module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPruning">MinkowskiEngine.MinkowskiPruning module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiUnion">MinkowskiEngine.MinkowskiUnion module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor">MinkowskiEngine.SparseTensor module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.html#module-MinkowskiEngine">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">examples package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#module-examples.common">examples.common module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-common-module">examples.common module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-completion-module">examples.completion module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-convolution-module">examples.convolution module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-example-module">examples.example module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#module-examples.indoor">examples.indoor module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#module-examples.minkunet">examples.minkunet module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#module-examples.modelnet40">examples.modelnet40 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-indoor-module">examples.indoor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-issue98-module">examples.issue98 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-minkunet-module">examples.minkunet module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-modelnet40-module">examples.modelnet40 module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-multigpu-module">examples.multigpu module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#module-examples.pointnet">examples.pointnet module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#module-examples.resnet">examples.resnet module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-two-dim-training-module">examples.two_dim_training module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-pointnet-module">examples.pointnet module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-reconstruction-module">examples.reconstruction module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-resnet-module">examples.resnet module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-sparse-tensor-basic-module">examples.sparse_tensor_basic module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-training-module">examples.training module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-unet-module">examples.unet module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-upsampling-module">examples.upsampling module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#module-examples">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-vae-module">examples.vae module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">setup module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">tests package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tests.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.broadcast">tests.broadcast module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.common">tests.common module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.conv">tests.conv module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.coords">tests.coords module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.dense">tests.dense module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.kernel_map">tests.kernel_map module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.norm">tests.norm module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.pool">tests.pool module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.pruning">tests.pruning module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.strided_conv">tests.strided_conv module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests.voxelization">tests.voxelization module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#module-tests">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-broadcast-module">tests.broadcast module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-common-module">tests.common module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-conv-module">tests.conv module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-conv-on-coords-module">tests.conv_on_coords module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-coords-module">tests.coords module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-dense-module">tests.dense module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-global-module">tests.global module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-kernel-map-module">tests.kernel_map module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-norm-module">tests.norm module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-pool-module">tests.pool module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-pruning-module">tests.pruning module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-quantization-module">tests.quantization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-sparse-tensor-module">tests.sparse_tensor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-strided-conv-module">tests.strided_conv module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-union-module">tests.union module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tests.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 </ul>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiEngine package &mdash; MinkowskiEngine 0.2.8 documentation</title>
+  <title>MinkowskiEngine package &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2.8
+                0.4.2
               </div>
             
           
@@ -83,17 +83,23 @@
               
             
             
-              <p class="caption"><span class="caption-text">Intro Documentation</span></p>
+              <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview.html">Minkowski Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generalized_sparse_conv.html">Generalized Sparse Convolution</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor_network.html">Sparse Tensor Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../terminology.html">Definitions and Terminology</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Demo Documentation</span></p>
+<p class="caption"><span class="caption-text">Tutorials</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline with Pytorch DataLoader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40.html">Training A ModelNet40 Classification Network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/sparse_tensor_basic.html">Sparse Tensor Basics</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Demos</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../demo/training.html">Training Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/modelnet40_classification.html">ModelNet40 Classification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/pointnet.html">PointNet</a></li>
@@ -106,13 +112,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../common.html">Miscellaneous Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../misc.html">Miscellanea</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Miscellanea</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guides.html">Guidelines for Faster Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -195,9 +205,10 @@
 <li class="toctree-l1"><a class="reference internal" href="MinkowskiEngine.utils.html">MinkowskiEngine.utils package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">MinkowskiEngine.utils.collation module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords">MinkowskiEngine.utils.coords module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">MinkowskiEngine.utils.gradcheck module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.init">MinkowskiEngine.utils.init module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.voxelization">MinkowskiEngine.utils.voxelization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.quantization">MinkowskiEngine.utils.quantization module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MinkowskiEngine.utils.html#module-MinkowskiEngine.utils">Module contents</a></li>
 </ul>
 </li>
@@ -209,6 +220,28 @@
 </div>
 <div class="section" id="module-MinkowskiEngine.Common">
 <span id="minkowskiengine-common-module"></span><h2>MinkowskiEngine.Common module<a class="headerlink" href="#module-MinkowskiEngine.Common" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.Common.GlobalPoolingMode">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">GlobalPoolingMode</code><a class="headerlink" href="#MinkowskiEngine.Common.GlobalPoolingMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Define the global pooling mode</p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.Common.GlobalPoolingMode.AUTO">
+<code class="sig-name descname">AUTO</code><em class="property"> = 0</em><a class="headerlink" href="#MinkowskiEngine.Common.GlobalPoolingMode.AUTO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.Common.GlobalPoolingMode.INDEX_SELECT">
+<code class="sig-name descname">INDEX_SELECT</code><em class="property"> = 1</em><a class="headerlink" href="#MinkowskiEngine.Common.GlobalPoolingMode.INDEX_SELECT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.Common.GlobalPoolingMode.SPARSE">
+<code class="sig-name descname">SPARSE</code><em class="property"> = 2</em><a class="headerlink" href="#MinkowskiEngine.Common.GlobalPoolingMode.SPARSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="MinkowskiEngine.Common.KernelGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">KernelGenerator</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em class="sig-param">region_offsets=None</em>, <em class="sig-param">axis_types=None</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.KernelGenerator" title="Permalink to this definition">¶</a></dt>
@@ -255,7 +288,7 @@
 
 <dl class="function">
 <dt id="MinkowskiEngine.Common.convert_region_type">
-<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">convert_region_type</code><span class="sig-paren">(</span><em class="sig-param">region_type</em>, <em class="sig-param">tensor_stride</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">up_stride</em>, <em class="sig-param">dilation</em>, <em class="sig-param">region_offset</em>, <em class="sig-param">axis_types</em>, <em class="sig-param">dimension</em>, <em class="sig-param">center=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_region_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">convert_region_type</code><span class="sig-paren">(</span><em class="sig-param">region_type: MinkowskiEngine.Common.RegionType, tensor_stride: Union[collections.abc.Sequence, numpy.ndarray, torch.IntTensor], kernel_size: Union[collections.abc.Sequence, numpy.ndarray, torch.IntTensor], up_stride: Union[collections.abc.Sequence, numpy.ndarray, torch.IntTensor], dilation: Union[collections.abc.Sequence, numpy.ndarray, torch.IntTensor], region_offset: Union[collections.abc.Sequence, numpy.ndarray, torch.IntTensor], axis_types: Union[collections.abc.Sequence, numpy.ndarray, torch.IntTensor], dimension: int, center: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_region_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>when center is True, the custom region_offset will be centered at the
 origin. Currently, for HYPERCUBE, HYPERCROSS with odd kernel sizes cannot
 use center=False.</p>
@@ -264,12 +297,12 @@ use center=False.</p>
 
 <dl class="function">
 <dt id="MinkowskiEngine.Common.convert_to_int_list">
-<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">convert_to_int_list</code><span class="sig-paren">(</span><em class="sig-param">arg</em>, <em class="sig-param">dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_to_int_list" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">convert_to_int_list</code><span class="sig-paren">(</span><em class="sig-param">arg: Union[int, collections.abc.Sequence, numpy.ndarray, torch.Tensor], dimension: int</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_to_int_list" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="MinkowskiEngine.Common.convert_to_int_tensor">
-<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">convert_to_int_tensor</code><span class="sig-paren">(</span><em class="sig-param">arg</em>, <em class="sig-param">dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_to_int_tensor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">convert_to_int_tensor</code><span class="sig-paren">(</span><em class="sig-param">arg: Union[int, collections.abc.Sequence, numpy.ndarray, torch.IntTensor], dimension: int</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.convert_to_int_tensor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -282,17 +315,12 @@ use center=False.</p>
 
 <dl class="function">
 <dt id="MinkowskiEngine.Common.get_postfix">
-<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">get_postfix</code><span class="sig-paren">(</span><em class="sig-param">tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.get_postfix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">get_postfix</code><span class="sig-paren">(</span><em class="sig-param">tensor: torch.Tensor</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.get_postfix" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="MinkowskiEngine.Common.prep_args">
-<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">prep_args</code><span class="sig-paren">(</span><em class="sig-param">tensor_stride</em>, <em class="sig-param">stride</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">dilation</em>, <em class="sig-param">region_type</em>, <em class="sig-param">D=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.prep_args" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="MinkowskiEngine.Common.save_ctx">
-<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">save_ctx</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">tensor_stride</em>, <em class="sig-param">stride</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">dilation</em>, <em class="sig-param">region_type</em>, <em class="sig-param">in_coords_key</em>, <em class="sig-param">out_coords_key</em>, <em class="sig-param">coords_man</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.save_ctx" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.Common.</code><code class="sig-name descname">prep_args</code><span class="sig-paren">(</span><em class="sig-param">tensor_stride: Union[int, collections.abc.Sequence, numpy.ndarray, torch.IntTensor], stride: Union[int, collections.abc.Sequence, numpy.ndarray, torch.IntTensor], kernel_size: Union[int, collections.abc.Sequence, numpy.ndarray, torch.IntTensor], dilation: Union[int, collections.abc.Sequence, numpy.ndarray, torch.IntTensor], region_type: Union[int, MinkowskiEngine.Common.RegionType], D=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.Common.prep_args" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -300,7 +328,7 @@ use center=False.</p>
 <span id="minkowskiengine-minkowskibroadcast-module"></span><h2>MinkowskiEngine.MinkowskiBroadcast module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiBroadcast" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">AbstractMinkowskiBroadcast</code><span class="sig-paren">(</span><em class="sig-param">operation_type</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">AbstractMinkowskiBroadcast</code><span class="sig-paren">(</span><em class="sig-param">operation_type</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast.forward">
@@ -320,7 +348,7 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcast</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcast</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <p>Broadcast reduced features to all input coordinates.</p>
 <div class="math notranslate nohighlight">
@@ -355,7 +383,7 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcastAddition</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcastAddition</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast" title="MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast</span></code></a></p>
 <p>Broadcast the reduced features to all input coordinates.</p>
 <div class="math notranslate nohighlight">
@@ -374,7 +402,7 @@ the global reduction such as the <code class="xref py py-attr docutils literal n
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcastConcatenation</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcastConcatenation</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast</span></code></a></p>
 <p>Broadcast reduced features to all input coordinates and concatenate to the input.</p>
 <div class="math notranslate nohighlight">
@@ -416,15 +444,15 @@ registered hooks while the latter silently ignores them.</p>
 <dd><p>Defines a formula for differentiating the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+as many outputs did <a class="reference internal" href="../broadcast.html#MinkowskiEngine.MinkowskiBroadcast.forward" title="MinkowskiEngine.MinkowskiBroadcast.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="../broadcast.html#MinkowskiEngine.MinkowskiBroadcast.forward" title="MinkowskiEngine.MinkowskiBroadcast.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
 gradient w.r.t the given output, and each returned value should be the
 gradient w.r.t. the corresponding input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
 <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.backward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
-first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward" title="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+first input to <a class="reference internal" href="../broadcast.html#MinkowskiEngine.MinkowskiBroadcast.forward" title="MinkowskiEngine.MinkowskiBroadcast.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
 output.</p>
 </dd></dl>
 
@@ -443,7 +471,7 @@ during the backward pass.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcastMultiplication</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiBroadcast.</code><code class="sig-name descname">MinkowskiBroadcastMultiplication</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast" title="MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiBroadcast.AbstractMinkowskiBroadcast</span></code></a></p>
 <p>Broadcast reduced features to all input coordinates.</p>
 <div class="math notranslate nohighlight">
@@ -483,13 +511,136 @@ the global reduction such as the <code class="xref py py-attr docutils literal n
 <dd></dd></dl>
 
 </div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiChannelwiseConvolution">
+<span id="minkowskiengine-minkowskichannelwiseconvolution-module"></span><h2>MinkowskiEngine.MinkowskiChannelwiseConvolution module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiChannelwiseConvolution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiChannelwiseConvolution.</code><code class="sig-name descname">MinkowskiChannelwiseConvolutionFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.backward">
+<em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.backward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward">
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">kernel</em>, <em class="sig-param">tensor_stride=1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">region_offset=None</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolutionFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>region_type=0 HyperCube</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolution">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiChannelwiseConvolution.</code><code class="sig-name descname">MinkowskiConvolution</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase</span></code></a></p>
+<p>Convolution layer for a sparse tensor.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, K,
+\mathcal{C}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
+\mathbf{u}} \;\text{for} \; \mathbf{u} \in \mathcal{C}^\text{out}\]</div>
+<p>where <span class="math notranslate nohighlight">\(K\)</span> is the kernel size and <span class="math notranslate nohighlight">\(\mathcal{N}^D(\mathbf{u}, K,
+\mathcal{C}^\text{in})\)</span> is the set of offsets that are at most <span class="math notranslate nohighlight">\(\left
+\lceil{\frac{1}{2}(K - 1)} \right \rceil\)</span> away from <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>
+definied in <span class="math notranslate nohighlight">\(\mathcal{S}^\text{in}\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For even <span class="math notranslate nohighlight">\(K\)</span>, the kernel offset <span class="math notranslate nohighlight">\(\mathcal{N}^D\)</span>
+implementation is different from the above definition. The offsets
+range from <span class="math notranslate nohighlight">\(\mathbf{i} \in [0, K)^D, \; \mathbf{i} \in
+\mathbb{Z}_+^D\)</span>.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiChannelwiseConvolution.</code><code class="sig-name descname">MinkowskiConvolutionBase</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase.reset_parameters">
+<code class="sig-name descname">reset_parameters</code><span class="sig-paren">(</span><em class="sig-param">is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase.reset_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTranspose">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiChannelwiseConvolution.</code><code class="sig-name descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionBase</span></code></a></p>
+<p>A generalized sparse transposed convolution or deconvolution layer.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTranspose.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiChannelwiseConvolution.</code><code class="sig-name descname">MinkowskiConvolutionTransposeFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.backward">
+<em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.backward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward">
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">kernel</em>, <em class="sig-param">tensor_stride=1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">region_offset=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiConvolutionTransposeFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>region_type=0 HyperCube</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-MinkowskiEngine.MinkowskiConvolution">
 <span id="minkowskiengine-minkowskiconvolution-module"></span><h2>MinkowskiEngine.MinkowskiConvolution module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiConvolution" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolution</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolution</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase</span></code></a></p>
-<p>The generalized sparse convolution layer.</p>
+<p>Convolution layer for a sparse tensor.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{x}_\mathbf{u} = \sum_{\mathbf{i} \in \mathcal{N}^D(\mathbf{u}, K,
 \mathcal{C}^\text{in})} W_\mathbf{i} \mathbf{x}_{\mathbf{i} +
@@ -509,20 +660,16 @@ range from <span class="math notranslate nohighlight">\(\mathbf{i} \in [0, K)^D,
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolutionBase</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolutionBase</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
 </dd></dl>
 
 <dl class="method">
@@ -542,15 +689,15 @@ registered hooks while the latter silently ignores them.</p>
 <dd><p>Defines a formula for differentiating the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+as many outputs did <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution.forward" title="MinkowskiEngine.MinkowskiConvolution.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution.forward" title="MinkowskiEngine.MinkowskiConvolution.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
 gradient w.r.t the given output, and each returned value should be the
 gradient w.r.t. the corresponding input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
 <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.backward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
-first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+first input to <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution.forward" title="MinkowskiEngine.MinkowskiConvolution.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
 output.</p>
 </dd></dl>
 
@@ -564,21 +711,17 @@ output.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiConvolution.</code><code class="sig-name descname">MinkowskiConvolutionTranspose</code><span class="sig-paren">(</span><em class="sig-param">in_channels</em>, <em class="sig-param">out_channels</em>, <em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">has_bias=False</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">generate_new_coords=False</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase</span></code></a></p>
 <p>A generalized sparse transposed convolution or deconvolution layer.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
 </dd></dl>
 
 </dd></dl>
@@ -593,15 +736,15 @@ registered hooks while the latter silently ignores them.</p>
 <dd><p>Defines a formula for differentiating the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+as many outputs did <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution.forward" title="MinkowskiEngine.MinkowskiConvolution.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution.forward" title="MinkowskiEngine.MinkowskiConvolution.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
 gradient w.r.t the given output, and each returned value should be the
 gradient w.r.t. the corresponding input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
 <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.backward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
-first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward" title="MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+first input to <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution.forward" title="MinkowskiEngine.MinkowskiConvolution.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
 output.</p>
 </dd></dl>
 
@@ -631,6 +774,11 @@ output.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsKey.isKeySet">
+<code class="sig-name descname">isKeySet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsKey.isKeySet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsKey.setKey">
 <code class="sig-name descname">setKey</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsKey.setKey" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -644,22 +792,44 @@ output.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiCoords.</code><code class="sig-name descname">CoordsManager</code><span class="sig-paren">(</span><em class="sig-param">D=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiCoords.</code><code class="sig-name descname">CoordsManager</code><span class="sig-paren">(</span><em class="sig-param">num_threads: int = -1</em>, <em class="sig-param">D: int = -1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="method">
-<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coo_broadcast_coords">
-<code class="sig-name descname">get_coo_broadcast_coords</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coo_broadcast_coords" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.create_coords_key">
+<code class="sig-name descname">create_coords_key</code><span class="sig-paren">(</span><em class="sig-param">coords: torch.IntTensor</em>, <em class="sig-param">tensor_stride: int = 1</em>, <em class="sig-param">force_creation: bool = False</em>, <em class="sig-param">force_remap: bool = False</em>, <em class="sig-param">allow_duplicate_coords: bool = False</em><span class="sig-paren">)</span> &#x2192; MinkowskiEngine.MinkowskiCoords.CoordsKey<a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.create_coords_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_batch_indices">
+<code class="sig-name descname">get_batch_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_batch_indices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_batch_size">
+<code class="sig-name descname">get_batch_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_batch_size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords">
-<code class="sig-name descname">get_coords</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_coords</code><span class="sig-paren">(</span><em class="sig-param">coords_key_or_tensor_strides</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_key">
-<code class="sig-name descname">get_coords_key</code><span class="sig-paren">(</span><em class="sig-param">tensor_strides</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_key" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_map">
+<code class="sig-name descname">get_coords_map</code><span class="sig-paren">(</span><em class="sig-param">in_key_or_tensor_strides</em>, <em class="sig-param">out_key_or_tensor_strides</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract input coords indices that maps to output coords indices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+<span class="n">out_sp_tensor</span> <span class="o">=</span> <span class="n">stride_2_conv</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">)</span>
+
+<span class="n">cm</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span>
+<span class="c1"># cm = out_sp_tensor.coords_man  # doesn&#39;t matter which tensor you pick</span>
+<span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_coords_map</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># in stride</span>
+                              <span class="mi">2</span><span class="p">)</span>  <span class="c1"># out stride</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
+   <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_coords_size_by_coords_key">
@@ -668,13 +838,9 @@ output.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map">
-<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param">in_tensor_strides</em>, <em class="sig-param">out_tensor_strides</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map_by_key">
-<code class="sig-name descname">get_kernel_map_by_key</code><span class="sig-paren">(</span><em class="sig-param">in_coords_key</em>, <em class="sig-param">out_coords_key</em>, <em class="sig-param">tensor_strides=1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">is_transpose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map_by_key" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param">in_key_or_tensor_strides</em>, <em class="sig-param">out_key_or_tensor_strides</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=0</em>, <em class="sig-param">region_offset=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">is_pool=False</em>, <em class="sig-param">on_gpu=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get kernel in-out maps for the specified coords keys or tensor strides.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_mapping_by_tensor_strides">
@@ -682,23 +848,46 @@ output.</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_per_batch">
-<code class="sig-name descname">get_row_indices_per_batch</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_per_batch" title="Permalink to this definition">¶</a></dt>
-<dd><p>return a list of unique batch indices, and a list of lists of row indices per batch.</p>
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_at">
+<code class="sig-name descname">get_row_indices_at</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">batch_index</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an torch.LongTensor of row indices for the specified batch index</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
-<span class="n">batch_indices</span><span class="p">,</span> <span class="n">list_of_row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_per_batch</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">)</span>
+<span class="n">row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_at</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">batch_index</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_per_batch">
+<code class="sig-name descname">get_row_indices_per_batch</code><span class="sig-paren">(</span><em class="sig-param">coords_key</em>, <em class="sig-param">out_coords_key=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_row_indices_per_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of lists of row indices per batch.</p>
+<p>The corresponding batch indices are accessible by <cite>get_batch_indices</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+<span class="n">row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_per_batch</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.get_union_map">
+<code class="sig-name descname">get_union_map</code><span class="sig-paren">(</span><em class="sig-param">in_keys</em>, <em class="sig-param">out_key: MinkowskiEngine.MinkowskiCoords.CoordsKey</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.get_union_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract input coords indices that maps to output coords indices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+<span class="n">out_sp_tensor</span> <span class="o">=</span> <span class="n">stride_2_conv</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">)</span>
+
+<span class="n">cm</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span>
+<span class="c1"># cm = out_sp_tensor.coords_man  # doesn&#39;t matter which tensor you pick</span>
+<span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_coords_map</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># in stride</span>
+                              <span class="mi">2</span><span class="p">)</span>  <span class="c1"># out stride</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
+   <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em>, <em class="sig-param">enforce_creation=False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize_enforce">
-<code class="sig-name descname">initialize_enforce</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">coords_key</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize_enforce" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords: torch.IntTensor</em>, <em class="sig-param">coords_key: MinkowskiEngine.MinkowskiCoords.CoordsKey</em>, <em class="sig-param">force_creation: bool = False</em>, <em class="sig-param">force_remap: bool = False</em>, <em class="sig-param">allow_duplicate_coords: bool = False</em><span class="sig-paren">)</span> &#x2192; torch.LongTensor<a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -706,7 +895,37 @@ output.</p>
 <code class="sig-name descname">permute_label</code><span class="sig-paren">(</span><em class="sig-param">label</em>, <em class="sig-param">max_label</em>, <em class="sig-param">target_tensor_stride</em>, <em class="sig-param">label_tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.permute_label" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.print_diagnostics">
+<code class="sig-name descname">print_diagnostics</code><span class="sig-paren">(</span><em class="sig-param">coords_key: MinkowskiEngine.MinkowskiCoords.CoordsKey</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.print_diagnostics" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.reduce">
+<code class="sig-name descname">reduce</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.reduce" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.set_origin_coords_key">
+<code class="sig-name descname">set_origin_coords_key</code><span class="sig-paren">(</span><em class="sig-param">coords_key: MinkowskiEngine.MinkowskiCoords.CoordsKey</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.set_origin_coords_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.stride">
+<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param">coords_key: MinkowskiEngine.MinkowskiCoords.CoordsKey, stride: Union[int, collections.abc.Sequence, numpy.ndarray, torch.Tensor], force_creation: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.stride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiCoords.CoordsManager.transposed_stride">
+<code class="sig-name descname">transposed_stride</code><span class="sig-paren">(</span><em class="sig-param">coords_key: MinkowskiEngine.MinkowskiCoords.CoordsKey, stride: Union[int, collections.abc.Sequence, numpy.ndarray, torch.Tensor], kernel_size: Union[int, collections.abc.Sequence, numpy.ndarray, torch.Tensor], dilation: Union[int, collections.abc.Sequence, numpy.ndarray, torch.Tensor], force_creation: bool = False</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.CoordsManager.transposed_stride" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.MinkowskiCoords.save_ctx">
+<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiCoords.</code><code class="sig-name descname">save_ctx</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">tensor_stride: torch.IntTensor</em>, <em class="sig-param">stride: torch.IntTensor</em>, <em class="sig-param">kernel_size: torch.IntTensor</em>, <em class="sig-param">dilation: torch.IntTensor</em>, <em class="sig-param">region_type: int</em>, <em class="sig-param">in_coords_key: MinkowskiEngine.MinkowskiCoords.CoordsKey</em>, <em class="sig-param">out_coords_key: MinkowskiEngine.MinkowskiCoords.CoordsKey</em>, <em class="sig-param">coords_man: MinkowskiEngine.MinkowskiCoords.CoordsManager</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.save_ctx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="module-MinkowskiEngine.MinkowskiFunctional">
@@ -880,6 +1099,18 @@ registered hooks while the latter silently ignores them.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="sig-name descname">MinkowskiELU</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase</span></code></a></p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU.MODULE">
+<code class="sig-name descname">MODULE</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU.MODULE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.activation.ELU</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNonlinearity.</code><code class="sig-name descname">MinkowskiModuleBase</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiModuleBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
@@ -1015,7 +1246,7 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <p>A instance normalization layer for a sparse tensor.</p>
 <dl class="method">
@@ -1063,7 +1294,7 @@ output.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward">
-<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">in_feat</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">glob_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">in_feat</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">glob_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context ctx as the first argument, followed by any
@@ -1076,7 +1307,7 @@ during the backward pass.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiStableInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiStableInstanceNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.forward">
@@ -1096,6 +1327,56 @@ registered hooks while the latter silently ignores them.</p>
 <dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.reset_parameters">
 <code class="sig-name descname">reset_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.reset_parameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiNormalization.</code><code class="sig-name descname">MinkowskiSyncBatchNorm</code><span class="sig-paren">(</span><em class="sig-param">num_features</em>, <em class="sig-param">eps=1e-05</em>, <em class="sig-param">momentum=0.1</em>, <em class="sig-param">affine=True</em>, <em class="sig-param">track_running_stats=True</em>, <em class="sig-param">process_group=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm" title="MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm</span></code></a></p>
+<p>A batch normalization layer with multi GPU synchronization.</p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm.convert_sync_batchnorm">
+<em class="property">classmethod </em><code class="sig-name descname">convert_sync_batchnorm</code><span class="sig-paren">(</span><em class="sig-param">module</em>, <em class="sig-param">process_group=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm.convert_sync_batchnorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to convert
+<a class="reference internal" href="../normalization.html#MinkowskiEngine.MinkowskiBatchNorm" title="MinkowskiEngine.MinkowskiBatchNorm"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiBatchNorm</span></code></a> layer in the model to
+<a class="reference internal" href="../normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm" title="MinkowskiEngine.MinkowskiSyncBatchNorm"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiSyncBatchNorm</span></code></a> layer.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>module (nn.Module): containing module
+process_group (optional): process group to scope synchronization,
+default is the whole world</p>
+</dd>
+<dt>Returns:</dt><dd><p>The original module with the converted
+<a class="reference internal" href="../normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm" title="MinkowskiEngine.MinkowskiSyncBatchNorm"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiSyncBatchNorm</span></code></a> layer</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Network with nn.BatchNorm layer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">module</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>           <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>         <span class="p">)</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># creating process group (optional)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># process_ids is a list of int identifying rank ids.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process_group</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">new_group</span><span class="p">(</span><span class="n">process_ids</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sync_bn_module</span> <span class="o">=</span> <span class="n">convert_sync_batchnorm</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">process_group</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
 
 </dd></dl>
 
@@ -1124,9 +1405,20 @@ registered hooks while the latter silently ignores them.</p>
 
 <dl class="function">
 <dt id="MinkowskiEngine.MinkowskiOps.cat">
-<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiOps.</code><code class="sig-name descname">cat</code><span class="sig-paren">(</span><em class="sig-param">sparse_tensors</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.cat" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a tuple of sparse tensors, concatenate them.</p>
-<p>Ex) cat((a, b, c))</p>
+<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiOps.</code><code class="sig-name descname">cat</code><span class="sig-paren">(</span><em class="sig-param">*sparse_tensors</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.cat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Concatenate sparse tensors</p>
+<p>Concatenate sparse tensor features. All sparse tensors must have the same
+<cite>coords_key</cite> (the same coordinates). To concatenate sparse tensors with
+different sparsity patterns, use SparseTensor binary operations, or
+<a class="reference internal" href="../union.html#MinkowskiEngine.MinkowskiUnion" title="MinkowskiEngine.MinkowskiUnion"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiUnion</span></code></a>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats2</span><span class="p">,</span> <span class="n">coords_key</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">coords_man</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coords_man</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sout</span> <span class="o">=</span> <span class="n">UNet</span><span class="p">(</span><span class="n">sin</span><span class="p">)</span>  <span class="c1"># Returns an output sparse tensor on the same coordinates</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sout2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="n">sin2</span><span class="p">,</span> <span class="n">sout</span><span class="p">)</span>  <span class="c1"># Can concatenate multiple sparse tensors</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -1134,7 +1426,7 @@ registered hooks while the latter silently ignores them.</p>
 <span id="minkowskiengine-minkowskipooling-module"></span><h2>MinkowskiEngine.MinkowskiPooling module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiPooling" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiAvgPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiAvgPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
 <p>Average input features within a kernel.</p>
 <div class="math notranslate nohighlight">
@@ -1154,6 +1446,16 @@ cardinality varies depending on the number of input features per output.
 Thus, the average pooling for a sparse tensor is not equivalent to the
 conventional average pooling layer for a dense tensor. Please refer to
 the <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling" title="MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiSumPooling</span></code></a> for the equivalent layer.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The engine will generate the in-out mapping corresponding to a
+pooling function faster if the kernel sizes is equal to the stride
+sizes, e.g. <cite>kernel_size = [2, 1], stride = [2, 1]</cite>.</p>
+<p>If you use a U-network architecture, use the transposed version of
+the same function for up-sampling. e.g. <cite>pool =
+MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
+<cite>unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)</cite>.</p>
 </div>
 </dd></dl>
 
@@ -1198,8 +1500,73 @@ during the backward pass.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalAvgPooling">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalAvgPooling</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalAvgPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalMaxPooling</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
+<p>Max pool all input features to one output feature at the origin.</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \max_{\mathbf{i} \in
+\mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}\]</div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalMaxPoolingFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.backward">
+<em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.backward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward">
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
 <p>Pool all input features to one output.</p>
 <div class="math notranslate nohighlight">
@@ -1245,7 +1612,7 @@ output.</p>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward">
-<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">average=True</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">input_features</em>, <em class="sig-param">average=True</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em>, <em class="sig-param">in_coords_key=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">coords_manager=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context ctx as the first argument, followed by any
@@ -1257,8 +1624,14 @@ during the backward pass.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalSumPooling">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiGlobalSumPooling</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalSumPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiMaxPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiMaxPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
 <p>A max pooling layer for a sparse tensor.</p>
 <div class="math notranslate nohighlight">
@@ -1267,18 +1640,24 @@ during the backward pass.</p>
 \mathbf{u} \in \mathcal{C}^\text{out}\]</div>
 <p>where <span class="math notranslate nohighlight">\(y^c_\mathbf{u}\)</span> is a feature at channel <span class="math notranslate nohighlight">\(c\)</span> and a
 coordinate <span class="math notranslate nohighlight">\(\mathbf{u}\)</span>.</p>
-<dl class="method">
-<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
+<p>The engine will generate the in-out mapping corresponding to a
+pooling function faster if the kernel sizes is equal to the stride
+sizes, e.g. <cite>kernel_size = [2, 1], stride = [2, 1]</cite>.</p>
+<p>If you use a U-network architecture, use the transposed version of
+the same function for up-sampling. e.g. <cite>pool =
+MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
+<cite>unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)</cite>.</p>
 </div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1320,43 +1699,35 @@ during the backward pass.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiPoolingBase</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">average=True</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiPoolingBase</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">average=True</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Common.MinkowskiModuleBase</span></code></p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
 <p>A pooling transpose layer for a sparse tensor.</p>
 <p>Unpool the features and divide it by the number of non zero elements that
 contributed.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input: SparseTensor.SparseTensor</em>, <em class="sig-param">coords: Union[torch.IntTensor</em>, <em class="sig-param">MinkowskiCoords.CoordsKey</em>, <em class="sig-param">SparseTensor.SparseTensor] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
+convolution on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
+results on the provided coordinates. None by default.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1398,7 +1769,7 @@ during the backward pass.</p>
 
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiSumPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">out_coords_key=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPooling.</code><code class="sig-name descname">MinkowskiSumPooling</code><span class="sig-paren">(</span><em class="sig-param">kernel_size</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">kernel_generator=None</em>, <em class="sig-param">dimension=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase" title="MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase</span></code></a></p>
 <p>Sum all input features within a kernel.</p>
 <div class="math notranslate nohighlight">
@@ -1419,6 +1790,16 @@ equivalent to the conventional average pooling for a dense tensor.
 This layer provides an alternative that does not divide the sum by the
 cardinality.</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The engine will generate the in-out mapping corresponding to a
+pooling function faster if the kernel sizes is equal to the stride
+sizes, e.g. <cite>kernel_size = [2, 1], stride = [2, 1]</cite>.</p>
+<p>If you use a U-network architecture, use the transposed version of
+the same function for up-sampling. e.g. <cite>pool =
+MinkowskiSumPooling(kernel_size=2, stride=2, D=D)</cite>, then use the
+<cite>unpool = MinkowskiPoolingTranspose(kernel_size=2, stride=2, D=D)</cite>.</p>
+</div>
 </dd></dl>
 
 </div>
@@ -1426,19 +1807,31 @@ cardinality.</p>
 <span id="minkowskiengine-minkowskipruning-module"></span><h2>MinkowskiEngine.MinkowskiPruning module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiPruning" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruning">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPruning.</code><code class="sig-name descname">MinkowskiPruning</code><span class="sig-paren">(</span><em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiPruning.</code><code class="sig-name descname">MinkowskiPruning</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Remove specified coordinates from a <a class="reference internal" href="#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>.</p>
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruning.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">use_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning.forward" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEnigne.SparseTensor</span></code>): a sparse tensor
+to remove coordinates from.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mask</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.BoolTensor</span></code>): mask vector that specifies
+which one to keep. Coordinates with False will be removed.</p>
+</dd>
+<dt>Returns:</dt><dd><p>A <a class="reference internal" href="#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> with C = coordinates
+corresponding to <cite>mask == True</cite> F = copy of the features from <cite>mask ==
+True</cite>.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define inputs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Any boolean tensor can be used as the filter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">feats</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pruning</span> <span class="o">=</span> <span class="n">MinkowskiPruning</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">pruning</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+</pre></div>
 </div>
 </dd></dl>
 
@@ -1454,21 +1847,102 @@ registered hooks while the latter silently ignores them.</p>
 <dd><p>Defines a formula for differentiating the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+as many outputs did <a class="reference internal" href="../pruning.html#MinkowskiEngine.MinkowskiPruning.forward" title="MinkowskiEngine.MinkowskiPruning.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="../pruning.html#MinkowskiEngine.MinkowskiPruning.forward" title="MinkowskiEngine.MinkowskiPruning.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
 gradient w.r.t the given output, and each returned value should be the
 gradient w.r.t. the corresponding input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
 <a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.backward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
-first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+first input to <a class="reference internal" href="../pruning.html#MinkowskiEngine.MinkowskiPruning.forward" title="MinkowskiEngine.MinkowskiPruning.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
 output.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward">
-<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">in_feat</em>, <em class="sig-param">use_feat</em>, <em class="sig-param">in_coords_key</em>, <em class="sig-param">out_coords_key</em>, <em class="sig-param">coords_manager</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">in_feat</em>, <em class="sig-param">mask</em>, <em class="sig-param">in_coords_key</em>, <em class="sig-param">out_coords_key</em>, <em class="sig-param">coords_manager</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context ctx as the first argument, followed by any
+number of arguments (tensors or other types).</p>
+<p>The context can be used to store tensors that can be then retrieved
+during the backward pass.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-MinkowskiEngine.MinkowskiUnion">
+<span id="minkowskiengine-minkowskiunion-module"></span><h2>MinkowskiEngine.MinkowskiUnion module<a class="headerlink" href="#module-MinkowskiEngine.MinkowskiUnion" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiUnion.MinkowskiUnion">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiUnion.</code><code class="sig-name descname">MinkowskiUnion</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Create a union of all sparse tensors and add overlapping features.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>None</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function is experimental and the usage can be changed in the future updates.</p>
+</div>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiUnion.MinkowskiUnion.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">*inputs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion.forward" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p>A variable number of <a class="reference internal" href="#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>’s.</p>
+</dd>
+<dt>Returns:</dt><dd><p>A <a class="reference internal" href="#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> with coordinates = union of all
+input coordinates, and features = sum of all features corresponding to the
+coordinate.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define inputs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input1</span> <span class="o">=</span> <span class="n">SparseTensor</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">double</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># All inputs must share the same coordinate manager</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input2</span> <span class="o">=</span> <span class="n">SparseTensor</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">double</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">coords</span><span class="o">=</span><span class="n">coords</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">coords_manager</span><span class="o">=</span><span class="n">input1</span><span class="o">.</span><span class="n">coords_man</span><span class="p">,</span>  <span class="c1"># Must use same coords manager</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">force_creation</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># The tensor stride [1, 1] already exists.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">union</span> <span class="o">=</span> <span class="n">MinkowskiUnion</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">union</span><span class="p">(</span><span class="n">input1</span><span class="p">,</span> <span class="n">iput2</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiUnion.</code><code class="sig-name descname">MinkowskiUnionFunction</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.backward">
+<em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_out_feat</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a formula for differentiating the operation.</p>
+<p>This function is to be overridden by all subclasses.</p>
+<p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
+as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+gradient w.r.t the given output, and each returned value should be the
+gradient w.r.t. the corresponding input.</p>
+<p>The context can be used to retrieve tensors saved during the forward
+pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
+of booleans representing whether each input needs gradient. E.g.,
+<a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.backward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
+first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+output.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward">
+<em class="property">static </em><code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">in_coords_keys</em>, <em class="sig-param">out_coords_key</em>, <em class="sig-param">coords_manager</em>, <em class="sig-param">*in_feats</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context ctx as the first argument, followed by any
@@ -1484,44 +1958,52 @@ during the backward pass.</p>
 <span id="minkowskiengine-sparsetensor-module"></span><h2>MinkowskiEngine.SparseTensor module<a class="headerlink" href="#module-MinkowskiEngine.SparseTensor" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">allow_duplicate_coords=False</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A sparse tensor class. Can be accessed via
 <a class="reference internal" href="#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>.</p>
-<p>The <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. We
-use the COOrdinate (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
+<p>The <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. For
+the definition of a sparse tensor, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/terminology.html#sparse-tensor">the terminology page</a>.
+We use the COOrdinate (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
 representation is simply a concatenation of coordinates in a matrix
 <span class="math notranslate nohighlight">\(C\)</span> and associated features <span class="math notranslate nohighlight">\(F\)</span>.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\mathbf{C} = \begin{bmatrix}
-x_1^1   &amp; x_1^2  &amp; \cdots &amp; x_1^D  &amp; b_1    \\
- \vdots &amp; \vdots &amp; \ddots &amp; \vdots &amp; \vdots \\
-x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D  &amp; b_N
+b_1    &amp; x_1^1  &amp; x_1^2  &amp; \cdots &amp; x_1^D  \\
+\vdots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+b_N    &amp; x_N^1  &amp; x_N^2  &amp; \cdots &amp; x_N^D
 \end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
 \mathbf{f}_1^T\\
 \vdots\\
 \mathbf{f}_N^T
 \end{bmatrix}\end{split}\]</div>
-<p>In the above equation, we use a <span class="math notranslate nohighlight">\(D\)</span>-dimensional space and <span class="math notranslate nohighlight">\(N\)</span>
-number of points, each with the coordinate <span class="math notranslate nohighlight">\((x_i^1, x_i^1, \cdots,
-x_i^D)\)</span>, and the associated feature <span class="math notranslate nohighlight">\(\mathbf{f}_i\)</span>. <span class="math notranslate nohighlight">\(b_i\)</span>
-indicates the mini-batch index to disassociate instances within the same
-batch.  Internally, we handle the batch index as an additional spatial
-dimension.</p>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{x}_i \in \mathcal{Z}^D\)</span> is a <span class="math notranslate nohighlight">\(D\)</span>-dimensional
+coordinate and <span class="math notranslate nohighlight">\(b_i \in \mathcal{Z}_+\)</span> denotes the corresponding
+batch index. <span class="math notranslate nohighlight">\(N\)</span> is the number of non-zero elements in the sparse
+tensor, each with the coordinate <span class="math notranslate nohighlight">\((b_i, x_i^1, x_i^1, \cdots,
+x_i^D)\)</span>, and the associated feature <span class="math notranslate nohighlight">\(\mathbf{f}_i\)</span>. Internally, we
+handle the batch index as an additional spatial dimension.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>From the version 0.3, we will put the batch indices on the first column
-to be consistent with the standard neural network packages.</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\mathbf{C} = \begin{bmatrix}
-b_1    &amp; x_1^1   &amp; x_1^2  &amp; \cdots &amp; x_1^D    \\
-\vdots &amp;    \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-b_N    &amp; x_N^1   &amp; x_N^2  &amp; \cdots &amp; x_N^D
-\end{bmatrix}, \; \mathbf{F} = \begin{bmatrix}
-\mathbf{f}_1^T\\
-\vdots\\
-\mathbf{f}_N^T
-\end{bmatrix}\end{split}\]</div>
+<p>Before MinkowskiEngine version 0.4, we put the batch indices on the last
+column. Thus, direct manipulation of coordinates will be incompatible
+with the latest versions. Instead, please use
+<a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> or
+<a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> to create batched
+coordinates.</p>
+<p>Also, to access coordinates or features batch-wise, use the functions
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates_at(batch_index</span> <span class="pre">:</span> <span class="pre">int)</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">features_at(batch_index</span> <span class="pre">:</span> <span class="pre">int)</span></code> of
+a sparse tensor. Or to access all batch-wise coordinates and features,
+<cite>decomposed_coordinates</cite>, <cite>decomposed_features</cite>,
+<cite>decomposed_coordinates_and_features</cite> of a sparse tensor.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">([</span><span class="n">coords_batch0</span><span class="p">,</span> <span class="n">coords_batch1</span><span class="p">],</span> <span class="p">[</span><span class="n">feats_batch0</span><span class="p">,</span> <span class="n">feats_batch1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords_batch0</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">coordinates_at</span><span class="p">(</span><span class="n">batch_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feats_batch1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">features_at</span><span class="p">(</span><span class="n">batch_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">list_of_coords</span><span class="p">,</span> <span class="n">list_of_featurs</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">decomposed_coordinates_and_features</span>
+</pre></div>
+</div>
 </div>
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.C">
@@ -1543,6 +2025,15 @@ of columns of <a class="reference internal" href="../sparse_tensor.html#Minkowsk
 </dd></dl>
 
 <dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.coordinates_at">
+<code class="sig-name descname">coordinates_at</code><span class="sig-paren">(</span><em class="sig-param">batch_index</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coordinates_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return coordinates at the specified batch index.</p>
+<p>Returns a torch.IntTensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N_i
+\times D}\)</span> coordinates at the specified batch index where <span class="math notranslate nohighlight">\(N_i\)</span>
+is the number of non zero elements in the <span class="math notranslate nohighlight">\(i\)</span> dimensional space.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.coords">
 <em class="property">property </em><code class="sig-name descname">coords</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="Permalink to this definition">¶</a></dt>
 <dd><p>The coordinates of the current sparse tensor. The coordinates are
@@ -1560,16 +2051,75 @@ different instances in a batch.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates">
+<em class="property">property </em><code class="sig-name descname">decomposed_coordinates</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of coordinates per batch.</p>
+<p>Returns a list of torch.IntTensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N_i
+\times D}\)</span> coordinates per batch where <span class="math notranslate nohighlight">\(N_i\)</span> is the number of non
+zero elements in the <span class="math notranslate nohighlight">\(i\)</span> dimensional
+space.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates_and_features">
+<em class="property">property </em><code class="sig-name descname">decomposed_coordinates_and_features</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates_and_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of coordinates and a list of features per batch.abs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.decomposed_features">
+<em class="property">property </em><code class="sig-name descname">decomposed_features</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.decomposed_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of features per batch.</p>
+<p>Returns a list of torch.Tensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N_i
+\times N_F}\)</span> features per batch where <span class="math notranslate nohighlight">\(N_i\)</span> is the number of non
+zero elements in the <span class="math notranslate nohighlight">\(i\)</span> dimensional
+space.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.dense">
-<code class="sig-name descname">dense</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.dense" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dense</code><span class="sig-paren">(</span><em class="sig-param">min_coords=None</em>, <em class="sig-param">max_coords=None</em>, <em class="sig-param">contract_coords=True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.dense" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the <a class="reference internal" href="#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> to a torch dense
 tensor.</p>
-<p>Please refer to the <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.sparse" title="MinkowskiEngine.SparseTensor.SparseTensor.sparse"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sparse</span></code></a> for input arguments and outputs.</p>
+<dl>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> (torch.IntTensor, optional): The min
+coordinates of the output sparse tensor. Must be divisible by the
+current <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_coords</span></code> (torch.IntTensor, optional): The max coordinates
+of the output sparse tensor (inclusive). Must be divisible by the
+current <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">contract_coords</span></code> (bool, optional): Given True, the output
+coordinates will be divided by the tensor stride to make features
+contiguous.</p>
+</dd>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">spare_tensor</span></code> (torch.sparse.Tensor): the torch sparse tensor
+representation of the self in <cite>[Batch Dim, Spatial Dims…, Feature
+Dim]</cite>. The coordinate of each feature can be accessed via
+<cite>min_coord + tensor_stride * [the coordinate of the dense tensor]</cite>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> (torch.IntTensor): the D-dimensional vector
+defining the minimum coordinate of the output sparse tensor. If
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">contract_coords</span></code> is True, the <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> will also
+be contracted.</p>
+<p><a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a> (torch.IntTensor): the D-dimensional vector
+defining the stride between tensor elements.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.device">
 <em class="property">property </em><code class="sig-name descname">device</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.device" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.dimension">
+<em class="property">property </em><code class="sig-name descname">dimension</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias of attr:<cite>D</cite></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.double">
+<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.double" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1587,13 +2137,38 @@ tensor.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.getKey">
-<code class="sig-name descname">getKey</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.getKey" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.features_at">
+<code class="sig-name descname">features_at</code><span class="sig-paren">(</span><em class="sig-param">batch_index</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.features_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a feature matrix at the specified batch index.</p>
+<p>Returns a list of torch.IntTensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N_i
+\times D}\)</span> coordinates per batch where <span class="math notranslate nohighlight">\(N_i\)</span> is the number of non
+zero elements in the <span class="math notranslate nohighlight">\(i\)</span> dimensional
+space.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.float">
+<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.float" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.get_device">
 <code class="sig-name descname">get_device</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.get_device" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.requires_grad">
+<em class="property">property </em><code class="sig-name descname">requires_grad</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.requires_grad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.requires_grad_">
+<code class="sig-name descname">requires_grad_</code><span class="sig-paren">(</span><em class="sig-param">requires_grad: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.requires_grad_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensor.set_tensor_stride">
+<code class="sig-name descname">set_tensor_stride</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.set_tensor_stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1637,11 +2212,6 @@ defining the stride between tensor elements.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.stride">
-<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.stride" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride">
 <em class="property">property </em><code class="sig-name descname">tensor_stride</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1651,19 +2221,43 @@ defining the stride between tensor elements.</p>
 <code class="sig-name descname">to</code><span class="sig-paren">(</span><em class="sig-param">device</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.to" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.to_dense">
-<code class="sig-name descname">to_dense</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.to_dense" title="Permalink to this definition">¶</a></dt>
-<dd><p>An alias of <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.dense" title="MinkowskiEngine.SparseTensor.SparseTensor.dense"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dense</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.to_sparse">
-<code class="sig-name descname">to_sparse</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.to_sparse" title="Permalink to this definition">¶</a></dt>
-<dd><p>An alias of <a class="reference internal" href="../sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor.sparse" title="MinkowskiEngine.SparseTensor.SparseTensor.sparse"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sparse</span></code></a>.</p>
-</dd></dl>
+<dl class="class">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensorOperationMode">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensorOperationMode</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensorOperationMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>SEPARATE_COORDS_MANAGER: always create a new coordinate manager.
+SHARE_COORDS_MANAGER: always use the globally defined coordinate manager.</p>
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SEPARATE_COORDS_MANAGER">
+<code class="sig-name descname">SEPARATE_COORDS_MANAGER</code><em class="property"> = 0</em><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SEPARATE_COORDS_MANAGER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER">
+<code class="sig-name descname">SHARE_COORDS_MANAGER</code><em class="property"> = 1</em><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.SparseTensor.clear_global_coords_man">
+<code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">clear_global_coords_man</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.clear_global_coords_man" title="Permalink to this definition">¶</a></dt>
+<dd><p>When using the operation mode:
+<cite>SparseTensorOperationMode.SHARE_COORDS_MANAGER</cite>, you must explicitly clear
+the coordinate manager when done using it.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.SparseTensor.set_sparse_tensor_operation_mode">
+<code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">set_sparse_tensor_operation_mode</code><span class="sig-paren">(</span><em class="sig-param">operation_mode: MinkowskiEngine.SparseTensor.SparseTensorOperationMode</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.set_sparse_tensor_operation_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MinkowskiEngine.SparseTensor.sparse_tensor_operation_mode">
+<code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">sparse_tensor_operation_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.sparse_tensor_operation_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="module-MinkowskiEngine">

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Sparse Tensor Networks &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Sparse Tensor Networks &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -210,7 +210,7 @@ only save information on the non-empty region of the space similar to how we sav
 This representation is an N-dimensional extension of a sparse matrix; thus it is known as a sparse tensor.</p>
 <p>In Minkowski Engine, we adopt the sparse tensor as the basic data
 representation and the class is provided as
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>. Fore more information on sparse tensors
+<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>. Fore more information on sparse tensors
 please refer to the <a class="reference external" href="terminology.html">terminology page</a>.</p>
 </div>
 <div class="section" id="sparse-tensor-network">
@@ -228,10 +228,16 @@ tensor. The generalized convolution incorporates all discrete convolutions as sp
 We use the generalized convolution not only on the 3D
 spatial axes, but on any arbitrary dimensions, or also on the temporal axis, which is proven to be more
 effective than recurrent neural networks (RNN) in some applications.</p>
-<p>Specifically, we the generalize convolution for generic input and
-output coordinates, and for arbitrary kernel shapes. The generalized convolution
+<p>Specifically, we generalize convolution for generic input and output coordinates, and for arbitrary kernel shapes. It allows extending a sparse tensor network to extremely high-dimensional spaces and dynamically generate coordinates for generative tasks.
+Also, the generalized convolution
 encompasses not only all sparse convolutions but also the
-conventional dense convolutions. Let <span class="math notranslate nohighlight">\(x^{\text{in}}_\mathbf{u} \in
+conventional dense convolutions. We list some of characteristics and applications of generalized convolution below.</p>
+<ul class="simple">
+<li><p>Sparse tensors for convolution kernels allow high-dimensional convolutions with specialized kernels <a class="reference external" href="https://arxiv.org/abs/1904.08755">[3]</a></p></li>
+<li><p>Arbitrary input coordinates generalized convolution encompasses all discrete convolutions</p></li>
+<li><p>Arbitrary output coordinates allows dynamic coordinate generation and generative networks <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine#example-networks">[reconstruction and completion networks]</a></p></li>
+</ul>
+<p>Let <span class="math notranslate nohighlight">\(x^{\text{in}}_\mathbf{u} \in
 \mathbb{R}^{N^\text{in}}\)</span> be an <span class="math notranslate nohighlight">\(N^\text{in}\)</span>-dimensional input feature
 vector in a <span class="math notranslate nohighlight">\(D\)</span>-dimensional space at <span class="math notranslate nohighlight">\(\mathbf{u} \in \mathbb{R}^D\)</span>
 (a D-dimensional coordinate), and convolution kernel weights be

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Sparse Tensor Basics &mdash; MinkowskiEngine 0.4.1 documentation</title>
+  <title>Sparse Tensor Basics &mdash; MinkowskiEngine 0.4.2 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.4.1
+                0.4.2
               </div>
             
           
@@ -227,14 +227,14 @@
 </div>
 <div class="section" id="sparse-tensor-initialization">
 <h2>Sparse Tensor Initialization<a class="headerlink" href="#sparse-tensor-initialization" title="Permalink to this headline">¶</a></h2>
-<p>The next step in the pipeline is initializing a sparse tensor. A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> requires coordinates with batch indices; this results in a sparse tensor with <span class="math notranslate nohighlight">\(D+1\)</span> spatial dimensions if the original coordinates have <span class="math notranslate nohighlight">\(D\)</span> dimensions.</p>
+<p>The next step in the pipeline is initializing a sparse tensor. A <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> requires coordinates with batch indices; this results in a sparse tensor with <span class="math notranslate nohighlight">\(D+1\)</span> spatial dimensions if the original coordinates have <span class="math notranslate nohighlight">\(D\)</span> dimensions.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coords0</span><span class="p">,</span> <span class="n">feats0</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_0</span><span class="p">)</span>
 <span class="n">coords1</span><span class="p">,</span> <span class="n">feats1</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_1</span><span class="p">)</span>
 <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span>
     <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">coords0</span><span class="p">,</span> <span class="n">coords1</span><span class="p">],</span> <span class="n">feats</span><span class="o">=</span><span class="p">[</span><span class="n">feats0</span><span class="p">,</span> <span class="n">feats1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Here, we used <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> function, but you can use <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> to convert a list of coordinates to <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> compatible coordinates.</p>
+<p>Here, we used <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> function, but you can use <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> to convert a list of coordinates to <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> compatible coordinates.</p>
 </div>
 <div class="section" id="sparse-tensor-arithmetics">
 <h2>Sparse Tensor Arithmetics<a class="headerlink" href="#sparse-tensor-arithmetics" title="Permalink to this headline">¶</a></h2>
@@ -245,7 +245,7 @@
     <span class="n">coords</span><span class="o">=</span><span class="n">new_coords</span><span class="p">,</span>
     <span class="n">feats</span><span class="o">=</span><span class="n">new_feats</span><span class="p">,</span>
     <span class="n">coords_manager</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coords_man</span><span class="p">,</span>  <span class="c1"># must share the same coordinate manager</span>
-    <span class="n">force_creation</span><span class="o">=</span><span class="bp">True</span>  <span class="c1"># must force creation since tensor stride [1] exists</span>
+    <span class="n">force_creation</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># must force creation since tensor stride [1] exists</span>
 <span class="p">)</span>
 
 <span class="n">C</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span>
