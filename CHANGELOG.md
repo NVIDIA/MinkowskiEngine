@@ -1,11 +1,11 @@
 # Change Log
 
-## [master] - 2020-03-05
+## [0.4.2a1] - 2020-03-13
 
 ### Added
 
+- Completion and VAE examples
 - GPU version of getKernelMap: getKernelMapGPU
-
 
 ### Changed
 
@@ -14,13 +14,14 @@
 - Kernel map generation has tensor stride > 0 check
 - Fix `SparseTensor.set_tensor_stride`
 - Track whether the batch indices are set first when initializing coords, The initial batch indices will be used throughout the lifetime of a sparse tensor
-- Add warning on ModelNet40 training (Issue #86)
+- Add a memory warning on ModelNet40 training example (Issue #86)
 - Update the readme, definition
 - Fix an error in examples.convolution
 - Changed `features_at`, `coordinates_at` to take a batch index not the index of the unique batch indices. (Issue #100)
 - Fix an error torch.range --> torch.arange in `sparse_quantize` (Issue #101)
 - Fix BLAS installation link error (Issue #94)
 - Fix `MinkowskiBroadcast` and `MinkowskiBroadcastConcatenation` to use arbitrary channel sizes
+- Fix `pointnet.py` example (Issue #103)
 
 
 ## [0.4.1] - 2020-01-28
