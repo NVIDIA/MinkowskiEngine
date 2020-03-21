@@ -66,7 +66,8 @@ libraries = ['minkowski']
 # extra_compile_args+=['-g']  # Uncomment for debugging
 if CPU_ONLY:
     print('\nCPU_ONLY build')
-    argv.remove('--cpu_only')
+    if '--cpu_only' in argv:
+        argv.remove('--cpu_only')
     compile_args += ['CPU_ONLY=1']
     extra_compile_args += ['-DCPU_ONLY']
     Extension = CppExtension
