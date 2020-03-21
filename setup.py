@@ -49,7 +49,7 @@ def run_command(*args):
 
 
 # For cpu only build
-CPU_ONLY = '--cpu_only' in argv
+CPU_ONLY = '--cpu_only' in argv or not torch.cuda.is_available()
 KEEP_OBJS = '--keep_objs' in argv
 BLAS = [arg for arg in argv if '--blas' in arg]
 
