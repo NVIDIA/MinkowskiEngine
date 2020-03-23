@@ -1,5 +1,14 @@
 # Change Log
 
+## [master] - 2020-03-22
+
+### Changed
+
+- Use `CPU_ONLY` compile when `torch` fails to detect a GPU (Issue #105)
+- Fix `get_kernel_map` for `CPU_ONLY` (Issue #107)
+- Update `get_union_map` doc (Issue #108)
+
+
 ## [0.4.2] - 2020-03-13
 
 ### Added

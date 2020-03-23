@@ -24,7 +24,7 @@
 import os
 import numpy as np
 from collections import Sequence
-from typing import Union
+from typing import Union, List
 
 import torch
 from Common import convert_to_int_list, convert_to_int_tensor, prep_args
@@ -136,13 +136,15 @@ class CoordsManager():
         origin_key.setKey(self.CPPCoordsManager.createOriginCoords(self.D))
         return origin_key
 
-    def transposed_stride(
-            self,
-            coords_key: CoordsKey,
-            stride: Union[int, Sequence, np.ndarray, torch.Tensor],
-            kernel_size: Union[int, Sequence, np.ndarray, torch.Tensor],
-            dilation: Union[int, Sequence, np.ndarray, torch.Tensor],
-            force_creation: bool = False):
+    def transposed_stride(self,
+                          coords_key: CoordsKey,
+                          stride: Union[int, Sequence, np.ndarray,
+                                        torch.Tensor],
+                          kernel_size: Union[int, Sequence, np.ndarray,
+                                             torch.Tensor],
+                          dilation: Union[int, Sequence, np.ndarray,
+                                          torch.Tensor],
+                          force_creation: bool = False):
         assert isinstance(coords_key, CoordsKey)
         stride = convert_to_int_list(stride, self.D)
         kernel_size = convert_to_int_list(kernel_size, self.D)
@@ -259,8 +261,8 @@ class CoordsManager():
         D = in_coords_key.D
         tensor_strides, strides, kernel_sizes, dilations, region_type = prep_args(
             tensor_strides, strides, kernel_sizes, dilations, region_type, D)
-        kernel_map_fn = self.CPPCoordsManager.getKernelMapGPU \
-            if on_gpu else self.CPPCoordsManager.getKernelMapGPU
+        kernel_map_fn = getattr(self.CPPCoordsManager, 'getKernelMapGPU') \
+            if on_gpu else self.CPPCoordsManager.getKernelMap
         kernel_map = kernel_map_fn(
             convert_to_int_list(tensor_strides, D),  #
             convert_to_int_list(strides, D),  #
@@ -298,20 +300,29 @@ class CoordsManager():
         return self.CPPCoordsManager.getCoordsMap(in_coords_key.CPPCoordsKey,
                                                   out_coords_key.CPPCoordsKey)
 
-    def get_union_map(self, in_keys, out_key: CoordsKey):
-        r"""Extract input coords indices that maps to output coords indices.
+    def get_union_map(self, in_keys: List[CoordsKey], out_key: CoordsKey):
+        r"""Generates a union of coordinate sets and returns the mapping from input sets to the new output coordinates.
 
-        .. code-block:: python
+        Args:
+            :attr:`in_keys` (List[CoordsKey]): A list of coordinate keys to
+            create a union on.
 
-           sp_tensor = ME.SparseTensor(features, coords=coordinates)
-           out_sp_tensor = stride_2_conv(sp_tensor)
+            :attr:`out_key` (CoordsKey): the placeholder for the coords key of
+            the generated union coords hash map.
 
-           cm = sp_tensor.coords_man
-           # cm = out_sp_tensor.coords_man  # doesn't matter which tensor you pick
-           ins, outs = cm.get_coords_map(1,  # in stride
-                                         2)  # out stride
-           for i, o in zip(ins, outs):
-              print(f"{i} -> {o}")
+        Returns:
+            :attr:`in_maps` (List[Tensor[int]]): A list of long tensors that contain mapping from inputs to the union output. Please see the example for more details.
+            :attr:`out_maps` (List[Tensor[int]]): A list of long tensors that contain a mapping from input to the union output. Please see the example for more details.
+
+        Example::
+
+            >>> # Adding two sparse tensors: A, B
+            >>> out_key = CoordsKey(coords_man.D)
+            >>> ins, outs = coords_man.get_union_map((A.coords_key, B.coords_key), out_key)
+            >>> N = coords_man.get_coords_size_by_coords_key(out_key)
+            >>> out_F = torch.zeros((N, A.F.size(1)), dtype=A.dtype)
+            >>> out_F[outs[0]] = A.F[ins[0]]
+            >>> out_F[outs[1]] += B.F[ins[1]]
 
         """
         return self.CPPCoordsManager.getUnionMap(
@@ -358,15 +369,15 @@ class CoordsManager():
 
 
 def save_ctx(
-        ctx,  # function object context
-        tensor_stride: torch.IntTensor,
-        stride: torch.IntTensor,
-        kernel_size: torch.IntTensor,
-        dilation: torch.IntTensor,
-        region_type: int,
-        in_coords_key: CoordsKey,
-        out_coords_key: CoordsKey,
-        coords_man: CoordsManager):
+    ctx,  # function object context
+    tensor_stride: torch.IntTensor,
+    stride: torch.IntTensor,
+    kernel_size: torch.IntTensor,
+    dilation: torch.IntTensor,
+    region_type: int,
+    in_coords_key: CoordsKey,
+    out_coords_key: CoordsKey,
+    coords_man: CoordsManager):
     ctx.tensor_stride = tensor_stride
     ctx.stride = stride
     ctx.kernel_size = kernel_size
