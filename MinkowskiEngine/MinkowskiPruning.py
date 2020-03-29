@@ -26,9 +26,8 @@ from torch.nn import Module
 from torch.autograd import Function
 
 from MinkowskiCoords import CoordsKey
-import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import get_postfix
+from Common import get_minkowski_function
 
 
 class MinkowskiPruningFunction(Function):
@@ -49,7 +48,7 @@ class MinkowskiPruningFunction(Function):
 
         out_feat = in_feat.new()
 
-        fw_fn = getattr(MEB, 'PruningForward' + get_postfix(in_feat))
+        fw_fn = get_minkowski_function('PruningForward', in_feat)
         fw_fn(in_feat, out_feat, mask, ctx.in_coords_key.CPPCoordsKey,
               ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)
@@ -61,7 +60,7 @@ class MinkowskiPruningFunction(Function):
             grad_out_feat = grad_out_feat.contiguous()
 
         grad_in_feat = grad_out_feat.new()
-        bw_fn = getattr(MEB, 'PruningBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('PruningBackward', grad_out_feat)
         bw_fn(grad_in_feat, grad_out_feat, ctx.in_coords_key.CPPCoordsKey,
               ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)

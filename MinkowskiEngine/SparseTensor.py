@@ -413,7 +413,8 @@ class SparseTensor():
             + '  Feats=' + str(self.F) + os.linesep \
             + '  coords_key=' + str(self.coords_key) \
             + '  tensor_stride=' + str(self.coords_key.getTensorStride()) + os.linesep \
-            + '  coords_man=' + str(self.coords_man) + ')'
+            + '  coords_man=' + str(self.coords_man) \
+            + '  spatial dimension=' + str(self.D) + ')'
 
     def __len__(self):
         return len(self._F)

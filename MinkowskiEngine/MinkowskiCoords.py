@@ -136,15 +136,13 @@ class CoordsManager():
         origin_key.setKey(self.CPPCoordsManager.createOriginCoords(self.D))
         return origin_key
 
-    def transposed_stride(self,
-                          coords_key: CoordsKey,
-                          stride: Union[int, Sequence, np.ndarray,
-                                        torch.Tensor],
-                          kernel_size: Union[int, Sequence, np.ndarray,
-                                             torch.Tensor],
-                          dilation: Union[int, Sequence, np.ndarray,
-                                          torch.Tensor],
-                          force_creation: bool = False):
+    def transposed_stride(
+            self,
+            coords_key: CoordsKey,
+            stride: Union[int, Sequence, np.ndarray, torch.Tensor],
+            kernel_size: Union[int, Sequence, np.ndarray, torch.Tensor],
+            dilation: Union[int, Sequence, np.ndarray, torch.Tensor],
+            force_creation: bool = False):
         assert isinstance(coords_key, CoordsKey)
         stride = convert_to_int_list(stride, self.D)
         kernel_size = convert_to_int_list(kernel_size, self.D)
@@ -261,8 +259,13 @@ class CoordsManager():
         D = in_coords_key.D
         tensor_strides, strides, kernel_sizes, dilations, region_type = prep_args(
             tensor_strides, strides, kernel_sizes, dilations, region_type, D)
-        kernel_map_fn = getattr(self.CPPCoordsManager, 'getKernelMapGPU') \
-            if on_gpu else self.CPPCoordsManager.getKernelMap
+        if on_gpu:
+            assert hasattr(
+                self.CPPCoordsManager, 'getKernelMapGPU'
+            ), f"Function getKernelMapGPU not available. Please compile MinkowskiEngine where `torch.cuda.is_available()` is `True`."
+            kernel_map_fn = getattr(self.CPPCoordsManager, 'getKernelMapGPU')
+        else:
+            kernel_map_fn = self.CPPCoordsManager.getKernelMap
         kernel_map = kernel_map_fn(
             convert_to_int_list(tensor_strides, D),  #
             convert_to_int_list(strides, D),  #
@@ -369,15 +372,15 @@ class CoordsManager():
 
 
 def save_ctx(
-    ctx,  # function object context
-    tensor_stride: torch.IntTensor,
-    stride: torch.IntTensor,
-    kernel_size: torch.IntTensor,
-    dilation: torch.IntTensor,
-    region_type: int,
-    in_coords_key: CoordsKey,
-    out_coords_key: CoordsKey,
-    coords_man: CoordsManager):
+        ctx,  # function object context
+        tensor_stride: torch.IntTensor,
+        stride: torch.IntTensor,
+        kernel_size: torch.IntTensor,
+        dilation: torch.IntTensor,
+        region_type: int,
+        in_coords_key: CoordsKey,
+        out_coords_key: CoordsKey,
+        coords_man: CoordsManager):
     ctx.tensor_stride = tensor_stride
     ctx.stride = stride
     ctx.kernel_size = kernel_size

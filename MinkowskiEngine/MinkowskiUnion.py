@@ -21,14 +21,12 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-import torch
 from torch.nn import Module
 from torch.autograd import Function
 
 from MinkowskiCoords import CoordsKey
-import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import get_postfix
+from Common import get_minkowski_function
 
 
 class MinkowskiUnionFunction(Function):
@@ -46,7 +44,7 @@ class MinkowskiUnionFunction(Function):
         ctx.out_coords_key = out_coords_key
         ctx.coords_manager = coords_manager
 
-        fw_fn = getattr(MEB, 'UnionForward' + get_postfix(in_feats[0]))
+        fw_fn = get_minkowski_function('UnionForward', in_feats[0])
         return fw_fn(in_feats, [key.CPPCoordsKey for key in ctx.in_coords_keys],
                      ctx.out_coords_key.CPPCoordsKey,
                      ctx.coords_manager.CPPCoordsManager)
@@ -56,7 +54,7 @@ class MinkowskiUnionFunction(Function):
         if not grad_out_feat.is_contiguous():
             grad_out_feat = grad_out_feat.contiguous()
 
-        bw_fn = getattr(MEB, 'UnionBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('UnionBackward', grad_out_feat)
         grad_in_feats = bw_fn(grad_out_feat,
                               [key.CPPCoordsKey for key in ctx.in_coords_keys],
                               ctx.out_coords_key.CPPCoordsKey,

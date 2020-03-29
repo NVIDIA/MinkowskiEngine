@@ -28,11 +28,10 @@ import torch
 from torch.autograd import Function
 from torch.nn import Parameter
 
-import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor, _get_coords_key
 from Common import RegionType, MinkowskiModuleBase, KernelGenerator, \
     prep_args, convert_to_int_list, convert_to_int_tensor, \
-    get_postfix
+    get_minkowski_function
 from MinkowskiCoords import CoordsKey, save_ctx
 
 
@@ -83,7 +82,7 @@ class MinkowskiConvolutionFunction(Function):
         D = in_coords_key.D
         out_feat = input_features.new()
 
-        fw_fn = getattr(MEB, 'ConvolutionForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('ConvolutionForward', input_features)
         fw_fn(ctx.in_feat, out_feat, kernel,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -101,7 +100,7 @@ class MinkowskiConvolutionFunction(Function):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(MEB, 'ConvolutionBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('ConvolutionBackward', grad_out_feat)
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel, grad_kernel,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -160,8 +159,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         D = in_coords_key.D
         out_feat = input_features.new()
 
-        fw_fn = getattr(
-            MEB, 'ConvolutionTransposeForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('ConvolutionTransposeForward',
+                                       input_features)
         fw_fn(ctx.in_feat, out_feat, kernel,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -179,8 +178,8 @@ class MinkowskiConvolutionTransposeFunction(Function):
         grad_in_feat = grad_out_feat.new()
         grad_kernel = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(
-            MEB, 'ConvolutionTransposeBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('ConvolutionTransposeBackward',
+                                       grad_out_feat)
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel, grad_kernel,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),

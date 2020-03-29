@@ -32,6 +32,8 @@ import torch
 
 from torch.nn import Module
 
+import MinkowskiEngineBackend as MEB
+
 
 class GlobalPoolingMode(Enum):
     """
@@ -352,3 +354,16 @@ class KernelGenerator:
 
 class MinkowskiModuleBase(Module):
     pass
+
+
+def get_minkowski_function(name, variable):
+    fn_name = name + get_postfix(variable)
+    if hasattr(MEB, fn_name):
+        return getattr(MEB, fn_name)
+    else:
+        if variable.is_cuda:
+            raise ValueError(
+                f"Function {fn_name} not available. Please compile MinkowskiEngine where `torch.cuda.is_available()` is `True`."
+            )
+        else:
+            raise ValueError(f"Function {fn_name} not available.")

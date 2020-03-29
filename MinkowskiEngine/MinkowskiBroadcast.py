@@ -27,9 +27,8 @@ import torch
 from torch.nn import Module
 from torch.autograd import Function
 
-import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor
-from Common import get_postfix
+from Common import get_minkowski_function
 
 
 class OperationType(Enum):
@@ -66,7 +65,7 @@ class MinkowskiBroadcastFunction(Function):
         ctx.glob_coords_key = glob_coords_key
         ctx.coords_manager = coords_manager
 
-        fw_fn = getattr(MEB, 'BroadcastForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('BroadcastForward', input_features)
         out_feat = fw_fn(ctx.in_feat, ctx.in_feat_glob, ctx.op,
                          ctx.in_coords_key.CPPCoordsKey,
                          ctx.glob_coords_key.CPPCoordsKey,
@@ -80,7 +79,7 @@ class MinkowskiBroadcastFunction(Function):
 
         grad_in_feat = grad_out_feat.new()
         grad_in_feat_glob = grad_out_feat.new()
-        bw_fn = getattr(MEB, 'BroadcastBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('BroadcastBackward', grad_out_feat)
         bw_fn(ctx.in_feat, grad_in_feat, ctx.in_feat_glob, grad_in_feat_glob,
               grad_out_feat, ctx.op, ctx.in_coords_key.CPPCoordsKey,
               ctx.glob_coords_key.CPPCoordsKey,
