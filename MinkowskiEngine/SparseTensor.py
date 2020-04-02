@@ -357,14 +357,29 @@ class SparseTensor():
     def features_at(self, batch_index):
         r"""Returns a feature matrix at the specified batch index.
 
-        Returns a list of torch.IntTensor :math:`C \in \mathcal{R}^{N_i
-        \times D}` coordinates per batch where :math:`N_i` is the number of non
-        zero elements in the :math:`i`th batch index in :math:`D` dimensional
-        space.
+        Returns a torch.Tensor :math:`C \in \mathcal{R}^{N
+        \times N_F}` feature matrix :math:`N` is the number of non
+        zero elements in the specified batch index and :math:`N_F` is the
+        number of channels.
         """
         row_inds = self.coords_man.get_row_indices_at(self.coords_key,
                                                       batch_index)
         return self._F[row_inds]
+
+    def coordinates_and_features_at(self, batch_index):
+        r"""Returns a coordinate and feature matrix at the specified batch index.
+
+        Returns a coordinate and feature matrix at the specified `batch_index`.
+        The coordinate matrix is a torch.IntTensor :math:`C \in \mathcal{R}^{N
+        \times D}` where :math:`N` is the number of non zero elements in the
+        specified batch index in :math:`D` dimensional space. The feature
+        matrix is a torch.Tensor :math:`C \in \mathcal{R}^{N \times N_F}`
+        matrix :math:`N` is the number of non zero elements in the specified
+        batch index and :math:`N_F` is the number of channels.
+        """
+        row_inds = self.coords_man.get_row_indices_at(self.coords_key,
+                                                      batch_index)
+        return self.C[row_inds, 1:], self._F[row_inds]
 
     @property
     def decomposed_coordinates_and_features(self):

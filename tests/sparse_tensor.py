@@ -24,7 +24,7 @@
 import unittest
 import torch
 
-from MinkowskiEngine import SparseTensor, MinkowskiConvolution, SparseTensorOperationMode, set_sparse_tensor_operation_mode
+from MinkowskiEngine import SparseTensor, SparseTensorOperationMode, set_sparse_tensor_operation_mode
 
 from tests.common import data_loader
 
@@ -59,6 +59,29 @@ class Test(unittest.TestCase):
         self.assertTrue(len(input) == len(coords) - 2)
         print(coords)
         print(input)
+
+    def test_extraction(self):
+        coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
+        feats = torch.FloatTensor([1.1, 2.1, 3.1, 4.1, 5.1])
+        X = SparseTensor(feats, coords)
+        C0 = X.coordinates_at(0)
+        F0 = X.features_at(0)
+        self.assertTrue(0 in C0)
+        self.assertTrue(1 in C0)
+        self.assertTrue(2 in C0)
+
+        self.assertTrue(1.1 in F0)
+        self.assertTrue(2.1 in F0)
+        self.assertTrue(3.1 in F0)
+
+        CC0, FC0 = X.coordinates_and_features_at(0)
+        self.assertTrue((C0 == CC0).all())
+        self.assertEqual((F0 == FC0).all())
+
+        coords, feats = X.decomposed_coordinates_and_features
+        for c, f in zip(coords, feats):
+            self.assertEqual(c.numel(), f.numel())
+            print(c, f)
 
     def test_operation_mode(self):
         # Set to use the global sparse tensor coords manager by default

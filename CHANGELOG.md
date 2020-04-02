@@ -8,6 +8,7 @@
 - Fix `get_kernel_map` for `CPU_ONLY` (Issue #107)
 - Update `get_union_map` doc (Issue #108)
 - Abstract getattr minkowski backend functions
+- Add `coordinates_and_features_at(batch_index)` function in the SparseTensor class.
 
 
 ## [0.4.2] - 2020-03-13
