@@ -33,6 +33,27 @@ from tests.common import data_loader
 
 class TestPruning(unittest.TestCase):
 
+    def test_empty(self):
+        in_channels = 2
+        coords, feats, labels = data_loader(in_channels, batch_size=1)
+        feats = feats.double()
+        feats.requires_grad_()
+        import ipdb; ipdb.set_trace()
+        input = SparseTensor(feats, coords=coords)
+        use_feat = torch.BoolTensor(len(input))
+        use_feat.zero_()
+        pruning = MinkowskiPruning()
+        output = pruning(input, use_feat)
+        print(input)
+        print(use_feat)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiPruningFunction()
+        self.assertTrue(
+            gradcheck(fn, (input.F, use_feat, input.coords_key,
+                           output.coords_key, input.coords_man)))
+
     def test_pruning(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels, batch_size=1)

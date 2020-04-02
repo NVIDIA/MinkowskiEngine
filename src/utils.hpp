@@ -102,10 +102,10 @@ private:
 
 #define WARNING(condition, ...)                                                \
   {                                                                            \
-    if (!(condition)) {                                                        \
+    if (condition) {                                                        \
       Formatter formatter;                                                     \
       formatter << __FILE__ << ":" << __LINE__ << ",";                         \
-      formatter << " assertion (" #condition << ") faild. ";                   \
+      formatter << " (" #condition << ") ";                   \
       formatter.append(__VA_ARGS__);                                           \
       std::cerr << formatter.str() << std::endl;                               \
     }                                                                          \

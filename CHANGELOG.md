@@ -9,7 +9,8 @@
 - Update `get_union_map` doc (Issue #108)
 - Abstract getattr minkowski backend functions
 - Add `coordinates_and_features_at(batch_index)` function in the SparseTensor class.
-- Add `MinkowskiChannelwiseConvolution`
+- Add `MinkowskiChannelwiseConvolution` (Issue #92)
+- Update `MinkowskiPruning` to generate an empty sparse tensor as output (Issue #102)
 
 
 ## [0.4.2] - 2020-03-13

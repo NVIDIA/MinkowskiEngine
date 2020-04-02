@@ -37,6 +37,13 @@ class Test(unittest.TestCase):
         input = SparseTensor(feats, coords=coords)
         print(input)
 
+    def test_empty(self):
+        print(f"{self.__class__.__name__}: test_empty SparseTensor")
+        feats = torch.FloatTensor(0, 16)
+        coords = torch.IntTensor(0, 4)
+        input = SparseTensor(feats, coords=coords)
+        print(input)
+
     def test_force_creation(self):
         print(f"{self.__class__.__name__}: test_force_creation")
         coords, feats, labels = data_loader(nchannel=2)
@@ -76,7 +83,7 @@ class Test(unittest.TestCase):
 
         CC0, FC0 = X.coordinates_and_features_at(0)
         self.assertTrue((C0 == CC0).all())
-        self.assertEqual((F0 == FC0).all())
+        self.assertTrue((F0 == FC0).all())
 
         coords, feats = X.decomposed_coordinates_and_features
         for c, f in zip(coords, feats):

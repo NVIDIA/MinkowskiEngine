@@ -38,21 +38,23 @@ void PruningForwardCPU(at::Tensor in_feat,  // CPU feat
                        py::object py_out_coords_key,
                        py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  const auto &in_out = p_coords_manager->getPruningInOutMaps(
+      use_feat, py_in_coords_key, py_out_coords_key);
 
   // Get the total number of coords
   at::Tensor sum = use_feat.sum();
   const int64_t tot_n = sum.item<int64_t>();
-  ASSERT(tot_n > 0, "Invalid total number of features", to_string(tot_n));
+  if (tot_n == 0) {
+    WARNING(true, "MinkowskiPruning: Generating an empty SparseTensor");
+    out_feat.resize_({0, in_feat.size(1)});
+  } else {
+    out_feat.resize_({tot_n, in_feat.size(1)});
+    out_feat.zero_();
 
-  out_feat.resize_({tot_n, in_feat.size(1)});
-  out_feat.zero_();
-
-  const auto &in_out = p_coords_manager->getPruningInOutMaps(
-      use_feat, py_in_coords_key, py_out_coords_key);
-
-  PruningForwardKernelCPU<Dtype, int>(in_feat.data<Dtype>(),
-                                      out_feat.data<Dtype>(), in_feat.size(1),
-                                      get<0>(in_out), get<1>(in_out));
+    PruningForwardKernelCPU<Dtype, int>(in_feat.data<Dtype>(),
+                                        out_feat.data<Dtype>(), in_feat.size(1),
+                                        get<0>(in_out), get<1>(in_out));
+  }
 }
 
 template <typename Dtype>
@@ -76,9 +78,12 @@ void PruningBackwardCPU(at::Tensor grad_in_feat,  // CPU feat
   grad_in_feat.resize_({in_nrows, nchannel});
   grad_in_feat.zero_();
 
-  PruningBackwardKernelCPU<Dtype, int>(
-      grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
-      p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
+  if (grad_out_feat.size(0) > 0)
+    PruningBackwardKernelCPU<Dtype, int>(
+        grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
+        p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
+  else
+    WARNING(true, "MinkowskiPruning: Backprop from a size-0 sparse tensor.");
 }
 
 #ifndef CPU_ONLY
@@ -90,21 +95,23 @@ void PruningForwardGPU(at::Tensor in_feat,  // GPU feat
                        py::object py_out_coords_key,
                        py::object py_coords_manager) {
   CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  const auto &in_out = p_coords_manager->getPruningInOutMapsGPU(
+      use_feat, py_in_coords_key, py_out_coords_key);
 
   // Get the total number of coords
   at::Tensor sum = use_feat.sum();
   const int64_t tot_n = sum.item<int64_t>();
-  ASSERT(tot_n > 0, "Invalid total number of features", to_string(tot_n));
+  if (tot_n == 0) {
+    WARNING(true, "MinkowskiPruning: Generating an empty SparseTensor");
+    out_feat.resize_({0, in_feat.size(1)});
+  } else {
+    out_feat.resize_({tot_n, in_feat.size(1)});
+    out_feat.zero_();
 
-  out_feat.resize_({tot_n, in_feat.size(1)});
-  out_feat.zero_();
-
-  const auto &in_out = p_coords_manager->getPruningInOutMapsGPU(
-      use_feat, py_in_coords_key, py_out_coords_key);
-
-  PruningForwardKernelGPU<Dtype, int>(
-      in_feat.data<Dtype>(), out_feat.data<Dtype>(), in_feat.size(1),
-      get<0>(in_out), get<1>(in_out), at::cuda::getCurrentCUDAStream());
+    PruningForwardKernelGPU<Dtype, int>(
+        in_feat.data<Dtype>(), out_feat.data<Dtype>(), in_feat.size(1),
+        get<0>(in_out), get<1>(in_out), at::cuda::getCurrentCUDAStream());
+  }
 }
 
 template <typename Dtype>
@@ -127,10 +134,13 @@ void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
   grad_in_feat.resize_({in_nrows, nchannel});
   grad_in_feat.zero_();
 
-  PruningBackwardKernelGPU<Dtype, int>(
-      grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
-      p_coords_manager->d_in_maps[map_key],
-      p_coords_manager->d_out_maps[map_key], at::cuda::getCurrentCUDAStream());
+  if (grad_out_feat.size(0) > 0)
+    PruningBackwardKernelGPU<Dtype, int>(
+        grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
+        p_coords_manager->d_in_maps[map_key],
+        p_coords_manager->d_out_maps[map_key], at::cuda::getCurrentCUDAStream());
+  else
+    WARNING(true, "MinkowskiPruning: Backprop from a size-0 sparse tensor.");
 }
 #endif
 
