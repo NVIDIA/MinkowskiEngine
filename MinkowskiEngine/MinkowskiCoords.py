@@ -124,6 +124,7 @@ class CoordsManager():
         strided_key.setTensorStride(
             [t * s for t, s in zip(tensor_stride, stride)])
 
+        # Identity stride will return the same coords key.
         strided_key.setKey(
             self.CPPCoordsManager.createStridedCoords(coords_key.getKey(),
                                                       tensor_stride, stride,
@@ -238,9 +239,14 @@ class CoordsManager():
 
         """
         # region type 1 iteration with kernel_size 1 is invalid
-        assert kernel_size > 0, "Invalid kernel size."
-        if kernel_size == 1:
-            region_type = 0
+        if isinstance(kernel_size, torch.Tensor):
+            assert (kernel_size > 0).all(), f"Invalid kernel size: {kernel_size}"
+            if (kernel_size == 1).all() == 1:
+                region_type = 0
+        elif isinstance(kernel_size, int):
+            assert kernel_size > 0, f"Invalid kernel size: {kernel_size}"
+            if kernel_size == 1:
+                region_type = 0
 
         if isinstance(in_key_or_tensor_strides, CoordsKey):
             in_tensor_strides = in_key_or_tensor_strides.getTensorStride()
