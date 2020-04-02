@@ -52,11 +52,17 @@ class TestQuantization(unittest.TestCase):
     def test_mapping(self):
         N = 16575
         coords = (np.random.rand(N, 3) * 100).astype(np.int32)
-        mapping = MEB.quantize_np(coords)
+        mapping, inverse_mapping = MEB.quantize_np(coords)
         print('N unique:', len(mapping), 'N:', N)
+        self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
-        mapping = MEB.quantize_th(torch.from_numpy(coords))
+        coords = torch.from_numpy(coords)
+        mapping, inverse_mapping = MEB.quantize_th(coords)
         print('N unique:', len(mapping), 'N:', N)
+        self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
+
+        index, reverse_index = sparse_quantize(coords, return_index=True, return_inverse=True)
+        self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
     def test_label(self):
         N = 16575

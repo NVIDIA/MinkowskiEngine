@@ -28,6 +28,7 @@
 #include <cmath>
 #include <memory>
 #include <set>
+#include <tuple>
 
 #include "3rdparty/robin_hood.h"
 
@@ -38,6 +39,7 @@ namespace minkowski {
 
 using std::reference_wrapper;
 using std::set;
+using std::tuple;
 using std::vector;
 
 template <typename Itype> struct byte_hash_vec {
@@ -89,6 +91,10 @@ public:
                                                const int nrows_,
                                                const int ncols_,
                                                const bool force_remap = false);
+
+  tuple<vector<int>, vector<int>, set<int>>
+  initialize_batch_with_inverse(const int *p_coords_, const int nrows_,
+                                const int ncols_);
 
   // Generate strided version of the input coordinate map.
   // returns mapping: out_coord row index to in_coord row index

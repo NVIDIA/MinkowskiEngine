@@ -104,6 +104,47 @@ CoordsMap::initialize_batch(const int *p_coords, const int nrows_,
   return make_pair(mapping, batch_indices);
 }
 
+// index, inverse_index = initialize_with_inverse(coords)
+// unique_coords = coords[index]
+// coords == unique_coords[inverse_index]
+// coords == coords[index[inverse_index]]
+tuple<vector<int>, vector<int>, set<int>>
+CoordsMap::initialize_batch_with_inverse(const int *p_coords, const int nrows_,
+                                         const int ncols_) {
+  nrows = nrows_;
+  ncols = ncols_;
+
+  vector<int> mapping, inverse_mapping;
+  set<int> batch_indices;
+
+  mapping.reserve(nrows);
+  inverse_mapping.reserve(nrows);
+
+  int c = 0;
+  for (int i = 0; i < nrows; i++) {
+    vector<int> coord(ncols);
+    std::copy_n(p_coords + i * ncols, ncols, coord.data());
+
+    auto iter = map.find(coord);
+    if (iter == map.end()) {
+      mapping.push_back(i);
+      inverse_mapping.push_back(c);
+
+#ifdef BATCH_FIRST
+      batch_indices.insert(coord[0]);
+#else
+      batch_indices.insert(coord[ncols - 1]);
+#endif
+      map[move(coord)] = c++;
+    } else {
+      inverse_mapping.push_back(iter->second);
+    }
+  }
+
+  return std::make_tuple(move(mapping), move(inverse_mapping),
+                         move(batch_indices));
+}
+
 CoordsMap CoordsMap::stride(const vector<int> &tensor_strides) const {
   ASSERT(tensor_strides.size() == ncols - 1, "Invalid tensor strides");
 
@@ -175,7 +216,7 @@ CoordsMap::union_coords(const vector<reference_wrapper<CoordsMap>> &maps) {
   const auto max_index = std::distance(maps.begin(), max_iter);
 
   // Initialize with the largest coords map.
-  const CoordsMap& max_map = maps[max_index];
+  const CoordsMap &max_map = maps[max_index];
   CoordsMap out_map(max_map);
   out_map.reserve(num_tot);
   size_t c = max_map.size();

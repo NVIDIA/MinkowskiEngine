@@ -380,7 +380,7 @@ UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
 /*************************************
  * Quantization
  *************************************/
-vector<int>
+vector<py::array>
 quantize_np(py::array_t<int, py::array::c_style | py::array::forcecast> coords);
 
 vector<py::array> quantize_label_np(
@@ -388,7 +388,7 @@ vector<py::array> quantize_label_np(
     py::array_t<int, py::array::c_style | py::array::forcecast> labels,
     int invalid_label);
 
-at::Tensor quantize_th(at::Tensor coords);
+vector<at::Tensor> quantize_th(at::Tensor coords);
 
 vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
                                      int invalid_label);

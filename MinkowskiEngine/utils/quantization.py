@@ -63,6 +63,30 @@ def ravel_hash_vec(arr):
 
 
 def quantize(coords):
+    r"""Returns a unique index map and an inverse index map.
+
+    Args:
+        :attr:`coords` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`): a
+        matrix of size :math:`N \times D` where :math:`N` is the number of
+        points in the :math:`D` dimensional space.
+
+    Returns:
+        :attr:`unique_map` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`): a
+        list of indices that defines unique coordinates.
+        :attr:`coords[unique_map]` is the unique coordinates.
+
+        :attr:`inverse_map` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`): a
+        list of indices that defines the inverse map that recovers the original
+        coordinates.  :attr:`coords[unique_map[inverse_map]] == coords`
+
+    Example::
+
+       >>> unique_map, inverse_map = quantize(coords)
+       >>> unique_coords = coords[unique_map]
+       >>> print(unique_coords[inverse_map] == coords)  # True, ..., True
+       >>> print(coords[unique_map[inverse_map]] == coords)  # True, ..., True
+
+    """
     assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
         "Invalid coords type"
     if isinstance(coords, np.ndarray):
@@ -92,6 +116,7 @@ def sparse_quantize(coords,
                     labels=None,
                     ignore_label=-100,
                     return_index=False,
+                    return_inverse=False,
                     quantization_size=None):
     r"""Given coordinates, and features (optionally labels), the function
     generates quantized (voxelized) coordinates.
@@ -117,8 +142,18 @@ def sparse_quantize(coords,
         IGNORE LABEL.
         :attr:`torch.nn.CrossEntropyLoss(ignore_index=ignore_label)`
 
-        :attr:`return_index` (:attr:`bool`, optional): True if you want the indices of the
-        quantized coordinates. False by default.
+        :attr:`return_index` (:attr:`bool`, optional): set True if you want the
+        indices of the quantized coordinates. False by default.
+
+        :attr:`return_inverse` (:attr:`bool`, optional): set True if you want
+        the indices that can recover the discretized original coordinates.
+        False by default. `return_index` must be True when `return_reverse` is True.
+
+        Example::
+
+           >>> unique_map, inverse_map = sparse_quantize(discrete_coords, return_index=True, return_inverse=True)
+           >>> unique_coords = discrete_coords[unique_map]
+           >>> print(unique_coords[inverse_map] == discrete_coords)  # True
 
         :attr:`quantization_size` (:attr:`float`, :attr:`list`, or
         :attr:`numpy.ndarray`, optional): the length of the each side of the
@@ -149,6 +184,9 @@ def sparse_quantize(coords,
 
     assert coords.ndim == 2, \
         "The coordinates must be a 2D matrix. The shape of the input is " + str(coords.shape)
+
+    if return_inverse:
+        assert return_index, "return_reverse must be set with return_index"
 
     if use_feat:
         assert feats.ndim == 2
@@ -202,24 +240,14 @@ def sparse_quantize(coords,
                 return discrete_coords[mapping], colabels
 
     else:
-        mapping = quantize(discrete_coords)
-        if len(mapping) > 0:
-            if return_index:
-                return mapping
+        unique_map, inverse_map = quantize(discrete_coords)
+        if return_index:
+            if return_inverse:
+                return unique_map, inverse_map
             else:
-                if use_feat:
-                    return discrete_coords[mapping], feats[mapping]
-                else:
-                    return discrete_coords[mapping]
-
+                return unique_map
         else:
-            if return_index:
-                if isinstance(discrete_coords, np.ndarray):
-                    return np.arange(len(discrete_coords))
-                else:
-                    return torch.arange(len(discrete_coords), dtype=torch.long)
+            if use_feat:
+                return discrete_coords[unique_map], feats[unique_map]
             else:
-                if use_feat:
-                    return discrete_coords, feats
-                else:
-                    return discrete_coords
+                return discrete_coords[unique_map]

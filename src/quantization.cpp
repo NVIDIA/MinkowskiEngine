@@ -45,7 +45,7 @@ struct IndexLabel {
 using CoordsLabelMap =
     robin_hood::unordered_flat_map<vector<int>, IndexLabel, byte_hash_vec<int>>;
 
-vector<int> quantize_np(
+vector<py::array> quantize_np(
     py::array_t<int, py::array::c_style | py::array::forcecast> coords) {
   py::buffer_info coords_info = coords.request();
   auto &shape = coords_info.shape;
@@ -58,13 +58,29 @@ vector<int> quantize_np(
 
   // Create coords map
   CoordsMap map;
-  vector<int> mapping = map.initialize(p_coords, nrows, ncols, false);
+  auto results = map.initialize_batch_with_inverse(p_coords, nrows, ncols);
+  auto &mapping = std::get<0>(results);
+  auto &inverse_mapping = std::get<1>(results);
+
+  // Copy the concurrent vector to std vector
+  py::array_t<int> py_mapping = py::array_t<int>(mapping.size());
+  py::array_t<int> py_inverse_mapping =
+      py::array_t<int>(inverse_mapping.size());
+
+  py::buffer_info py_mapping_info = py_mapping.request();
+  py::buffer_info py_inverse_mapping_info = py_inverse_mapping.request();
+  int *p_py_mapping = (int *)py_mapping_info.ptr;
+  int *p_py_inverse_mapping = (int *)py_inverse_mapping_info.ptr;
+
+  std::copy_n(mapping.data(), mapping.size(), p_py_mapping);
+  std::copy_n(inverse_mapping.data(), inverse_mapping.size(),
+              p_py_inverse_mapping);
 
   // mapping is empty when coords are all unique
-  return mapping;
+  return {py_mapping, py_inverse_mapping};
 }
 
-at::Tensor quantize_th(at::Tensor coords) {
+vector<at::Tensor> quantize_th(at::Tensor coords) {
   ASSERT(coords.dtype() == torch::kInt32,
          "Coordinates must be an int type tensor.");
   ASSERT(coords.dim() == 2,
@@ -72,20 +88,28 @@ at::Tensor quantize_th(at::Tensor coords) {
          coords.dim(), "!= 2.");
 
   CoordsMap map;
-  vector<int> mapping =
-      map.initialize(coords.data<int>(), coords.size(0), coords.size(1), false);
+  auto results = map.initialize_batch_with_inverse(
+      coords.data<int>(), coords.size(0), coords.size(1));
+  auto mapping = std::get<0>(results);
+  auto inverse_mapping = std::get<1>(results);
 
   // Long tensor for for easier indexing
   auto th_mapping = torch::empty({(long)mapping.size()},
                                  torch::TensorOptions().dtype(torch::kInt64));
+  auto th_inverse_mapping =
+      torch::empty({(long)inverse_mapping.size()},
+                   torch::TensorOptions().dtype(torch::kInt64));
   auto a_th_mapping = th_mapping.accessor<long int, 1>();
+  auto a_th_inverse_mapping = th_inverse_mapping.accessor<long int, 1>();
 
   // Copy the output
   for (size_t i = 0; i < mapping.size(); ++i)
     a_th_mapping[i] = mapping[i];
+  for (size_t i = 0; i < inverse_mapping.size(); ++i)
+    a_th_inverse_mapping[i] = inverse_mapping[i];
 
   // mapping is empty when coords are all unique
-  return th_mapping;
+  return {th_mapping, th_inverse_mapping};
 }
 
 vector<py::array> quantize_label_np(
