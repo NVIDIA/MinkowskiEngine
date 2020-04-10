@@ -30,14 +30,15 @@
 
 namespace minkowski {
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void PruningForwardCPU(at::Tensor in_feat,  // CPU feat
                        at::Tensor out_feat, // CPU out feat
                        at::Tensor use_feat, // uint8 CPU data
                        py::object py_in_coords_key,
                        py::object py_out_coords_key,
                        py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const auto &in_out = p_coords_manager->getPruningInOutMaps(
       use_feat, py_in_coords_key, py_out_coords_key);
 
@@ -51,19 +52,20 @@ void PruningForwardCPU(at::Tensor in_feat,  // CPU feat
     out_feat.resize_({tot_n, in_feat.size(1)});
     out_feat.zero_();
 
-    PruningForwardKernelCPU<Dtype, int>(in_feat.data<Dtype>(),
-                                        out_feat.data<Dtype>(), in_feat.size(1),
-                                        get<0>(in_out), get<1>(in_out));
+    PruningForwardKernelCPU<Dtype, int>(
+        in_feat.template data<Dtype>(), out_feat.template data<Dtype>(),
+        in_feat.size(1), get<0>(in_out), get<1>(in_out));
   }
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void PruningBackwardCPU(at::Tensor grad_in_feat,  // CPU feat
                         at::Tensor grad_out_feat, // CPU out feat
                         py::object py_in_coords_key,
                         py::object py_out_coords_key,
                         py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
 
   const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
@@ -79,22 +81,25 @@ void PruningBackwardCPU(at::Tensor grad_in_feat,  // CPU feat
   grad_in_feat.zero_();
 
   if (grad_out_feat.size(0) > 0)
-    PruningBackwardKernelCPU<Dtype, int>(
-        grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
-        p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
+    PruningBackwardKernelCPU<Dtype, int>(grad_in_feat.template data<Dtype>(),
+                                         grad_out_feat.template data<Dtype>(),
+                                         nchannel,
+                                         p_coords_manager->in_maps[map_key],
+                                         p_coords_manager->out_maps[map_key]);
   else
     WARNING(true, "MinkowskiPruning: Backprop from a size-0 sparse tensor.");
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void PruningForwardGPU(at::Tensor in_feat,  // GPU feat
                        at::Tensor out_feat, // GPU out feat
                        at::Tensor use_feat, // uint8 CPU data
                        py::object py_in_coords_key,
                        py::object py_out_coords_key,
                        py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const auto &in_out = p_coords_manager->getPruningInOutMapsGPU(
       use_feat, py_in_coords_key, py_out_coords_key);
 
@@ -109,18 +114,20 @@ void PruningForwardGPU(at::Tensor in_feat,  // GPU feat
     out_feat.zero_();
 
     PruningForwardKernelGPU<Dtype, int>(
-        in_feat.data<Dtype>(), out_feat.data<Dtype>(), in_feat.size(1),
-        get<0>(in_out), get<1>(in_out), at::cuda::getCurrentCUDAStream());
+        in_feat.template data<Dtype>(), out_feat.template data<Dtype>(),
+        in_feat.size(1), get<0>(in_out), get<1>(in_out),
+        at::cuda::getCurrentCUDAStream());
   }
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
                         at::Tensor grad_out_feat, // GPU out feat
                         py::object py_in_coords_key,
                         py::object py_out_coords_key,
                         py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
 
   const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
@@ -135,63 +142,57 @@ void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
   grad_in_feat.zero_();
 
   if (grad_out_feat.size(0) > 0)
-    PruningBackwardKernelGPU<Dtype, int>(
-        grad_in_feat.data<Dtype>(), grad_out_feat.data<Dtype>(), nchannel,
-        p_coords_manager->d_in_maps[map_key],
-        p_coords_manager->d_out_maps[map_key], at::cuda::getCurrentCUDAStream());
+    PruningBackwardKernelGPU<Dtype, int>(grad_in_feat.template data<Dtype>(),
+                                         grad_out_feat.template data<Dtype>(),
+                                         nchannel,
+                                         p_coords_manager->d_in_maps[map_key],
+                                         p_coords_manager->d_out_maps[map_key],
+                                         at::cuda::getCurrentCUDAStream());
   else
     WARNING(true, "MinkowskiPruning: Backprop from a size-0 sparse tensor.");
 }
 #endif
 
-template void PruningForwardCPU<float>(at::Tensor in_feat, at::Tensor out_feat,
-                                       at::Tensor use_feat,
-                                       py::object py_in_coords_key,
-                                       py::object py_out_coords_key,
-                                       py::object py_coords_manager);
+template void PruningForwardCPU<CoordsToIndexMap, float>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void PruningForwardCPU<double>(at::Tensor in_feat, at::Tensor out_feat,
-                                        at::Tensor use_feat,
-                                        py::object py_in_coords_key,
-                                        py::object py_out_coords_key,
-                                        py::object py_coords_manager);
+template void PruningForwardCPU<CoordsToIndexMap, double>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void PruningBackwardCPU<float>(at::Tensor grad_in_feat,
-                                        at::Tensor grad_out_feat,
-                                        py::object py_in_coords_key,
-                                        py::object py_out_coords_key,
-                                        py::object py_coords_manager);
+template void PruningBackwardCPU<CoordsToIndexMap, float>(
+    at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void PruningBackwardCPU<double>(at::Tensor grad_in_feat,
-                                         at::Tensor grad_out_feat,
-                                         py::object py_in_coords_key,
-                                         py::object py_out_coords_key,
-                                         py::object py_coords_manager);
+template void PruningBackwardCPU<CoordsToIndexMap, double>(
+    at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template void PruningForwardGPU<float>(at::Tensor in_feat, at::Tensor out_feat,
-                                       at::Tensor use_feat,
-                                       py::object py_in_coords_key,
-                                       py::object py_out_coords_key,
-                                       py::object py_coords_manager);
+template void PruningForwardGPU<CoordsToIndexMap, float>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void PruningForwardGPU<double>(at::Tensor in_feat, at::Tensor out_feat,
-                                        at::Tensor use_feat,
-                                        py::object py_in_coords_key,
-                                        py::object py_out_coords_key,
-                                        py::object py_coords_manager);
+template void PruningForwardGPU<CoordsToIndexMap, double>(
+    at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void PruningBackwardGPU<float>(at::Tensor grad_in_feat,
-                                        at::Tensor grad_out_feat,
-                                        py::object py_in_coords_key,
-                                        py::object py_out_coords_key,
-                                        py::object py_coords_manager);
+template void PruningBackwardGPU<CoordsToIndexMap, float>(
+    at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void PruningBackwardGPU<double>(at::Tensor grad_in_feat,
-                                         at::Tensor grad_out_feat,
-                                         py::object py_in_coords_key,
-                                         py::object py_out_coords_key,
-                                         py::object py_coords_manager);
+template void PruningBackwardGPU<CoordsToIndexMap, double>(
+    at::Tensor grad_in_feat, at::Tensor grad_out_feat,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 #endif // not CPU_ONLY
 
 } // end namespace minkowski

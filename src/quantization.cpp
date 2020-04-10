@@ -28,6 +28,11 @@
 #include <torch/extension.h>
 
 #include "coordsmap.hpp"
+#include "pooling_avg.hpp"
+#ifndef CPU_ONLY
+#include "pooling_avg.cuh"
+#include <ATen/cuda/CUDAContext.h>
+#endif
 #include "utils.hpp"
 
 namespace py = pybind11;
@@ -45,6 +50,7 @@ struct IndexLabel {
 using CoordsLabelMap =
     robin_hood::unordered_flat_map<vector<int>, IndexLabel, byte_hash_vec<int>>;
 
+template <typename MapType>
 vector<py::array> quantize_np(
     py::array_t<int, py::array::c_style | py::array::forcecast> coords) {
   py::buffer_info coords_info = coords.request();
@@ -57,8 +63,8 @@ vector<py::array> quantize_np(
   int nrows = shape[0], ncols = shape[1];
 
   // Create coords map
-  CoordsMap map;
-  auto results = map.initialize_batch_with_inverse(p_coords, nrows, ncols);
+  CoordsMap<MapType> map;
+  auto results = map.initialize_batch(p_coords, nrows, ncols, true, true);
   auto &mapping = std::get<0>(results);
   auto &inverse_mapping = std::get<1>(results);
 
@@ -80,16 +86,16 @@ vector<py::array> quantize_np(
   return {py_mapping, py_inverse_mapping};
 }
 
-vector<at::Tensor> quantize_th(at::Tensor coords) {
+template <typename MapType> vector<at::Tensor> quantize_th(at::Tensor coords) {
   ASSERT(coords.dtype() == torch::kInt32,
          "Coordinates must be an int type tensor.");
   ASSERT(coords.dim() == 2,
          "Coordinates must be represnted as a matrix. Dimensions: ",
          coords.dim(), "!= 2.");
 
-  CoordsMap map;
-  auto results = map.initialize_batch_with_inverse(
-      coords.data<int>(), coords.size(0), coords.size(1));
+  CoordsMap<MapType> map;
+  auto results = map.initialize_batch(
+      coords.template data<int>(), coords.size(0), coords.size(1), true, true);
   auto mapping = std::get<0>(results);
   auto inverse_mapping = std::get<1>(results);
 
@@ -174,8 +180,8 @@ vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
   ASSERT(coords.size(0) == labels.size(0),
          "Coords nrows must be equal to label size.");
 
-  int *p_coords = coords.data<int>();
-  int *p_labels = labels.data<int>();
+  int *p_coords = coords.template data<int>();
+  int *p_labels = labels.template data<int>();
   int nrows = coords.size(0), ncols = coords.size(1);
 
   // Create coords map
@@ -210,6 +216,160 @@ vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
   }
 
   return {th_mapping, th_colabels};
+}
+
+template vector<py::array> quantize_np<CoordsToIndexMap>(
+    py::array_t<int, py::array::c_style | py::array::forcecast> coords);
+
+template vector<at::Tensor> quantize_th<CoordsToIndexMap>(at::Tensor coords);
+
+template <typename Dtype> InOutMaps<Dtype> CopyToInOutMap(at::Tensor th_map) {
+  InOutMaps<Dtype> vec_map(1);
+  vec_map[0].resize(th_map.size(0));
+  std::copy_n(th_map.data<Dtype>(), th_map.size(0), vec_map[0].begin());
+  return vec_map;
+}
+
+#ifndef CPU_ONLY
+template <typename Dtype>
+pInOutMaps<Dtype> CopyToInOutMapGPU(at::Tensor th_map) {
+  pInOutMaps<Dtype> vec_map;
+
+  Dtype *d_scr;
+  CUDA_CHECK(cudaMalloc(&d_scr, th_map.size(0) * sizeof(Dtype)));
+  CUDA_CHECK(cudaMemcpy(d_scr, th_map.template data<Dtype>(),
+                        th_map.size(0) * sizeof(Dtype),
+                        cudaMemcpyHostToDevice));
+  vec_map.push_back(pVector<Dtype>(d_scr, th_map.size(0)));
+  return vec_map;
+}
+#endif
+
+/**
+ * A collection of feature averaging methods
+ * mode == 0: non-weighted average
+ * mode == 1: non-weighted sum
+ * mode == k: TODO
+ *
+ * in_feat[in_map[i], j] --> out_feat[out_map[i], j]
+ */
+at::Tensor quantization_average_features(
+    at::Tensor th_in_feat /* feature matrix */,
+    at::Tensor th_in_map /* inverse_map from the quantization functions */,
+    at::Tensor th_out_map /* range(N) */, int out_nrows,
+    int mode /* average types */) {
+  ASSERT(th_in_feat.dim() == 2, " The feature tensor should be a matrix.");
+  ASSERT(th_in_feat.size(0) == th_in_map.size(0),
+         "The size of the input feature and the input map must match.");
+  ASSERT(th_in_feat.size(0) == th_out_map.size(0),
+         "The size of the input map and the output map must match.");
+  auto nchannel = th_in_feat.size(1);
+  at::Tensor th_out_feat =
+      torch::zeros({out_nrows, nchannel}, th_in_feat.options());
+
+  at::Tensor th_num_nonzero = torch::zeros(
+      {out_nrows}, torch::TensorOptions().dtype(th_in_feat.dtype()));
+
+#ifndef CPU_ONLY
+  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+  cusparseSetStream(handle, at::cuda::getCurrentCUDAStream());
+#endif
+
+  if (th_in_map.dtype() == torch::kInt64) {
+    if (th_in_feat.is_cuda()) {
+#ifndef CPU_ONLY
+      auto vec_in_map = CopyToInOutMapGPU<int>(th_in_map);
+      auto vec_out_map = CopyToInOutMapGPU<int>(th_out_map);
+
+      if (th_in_feat.dtype() == torch::kFloat32) {
+        NonzeroAvgPoolingForwardKernelGPU<float, int>(
+            th_in_feat.template data<float>(), th_in_feat.size(0),
+            th_out_feat.template data<float>(), out_nrows,
+            th_num_nonzero.template data<float>(), th_in_feat.size(1),
+            vec_in_map, vec_out_map, true, handle,
+            at::cuda::getCurrentCUDAStream());
+      } else if (th_in_feat.dtype() == torch::kFloat64) {
+        NonzeroAvgPoolingForwardKernelGPU<float, int>(
+            th_in_feat.template data<float>(), th_in_feat.size(0),
+            th_out_feat.template data<float>(), out_nrows,
+            th_num_nonzero.template data<float>(), th_in_feat.size(1),
+            vec_in_map, vec_out_map, true, handle,
+            at::cuda::getCurrentCUDAStream());
+      } else {
+        throw std::runtime_error("Dtype not supported.");
+      }
+#else
+      throw std::runtime_error(
+          "Minkowski Engine not compiled with GPU support. Please reinstall.");
+#endif
+    } else {
+      auto vec_in_map = CopyToInOutMap<long>(th_in_map);
+      auto vec_out_map = CopyToInOutMap<long>(th_out_map);
+      if (th_in_feat.dtype() == torch::kFloat32) {
+        NonzeroAvgPoolingForwardKernelCPU<float, long>(
+            th_in_feat.template data<float>(),
+            th_out_feat.template data<float>(),
+            th_num_nonzero.template data<float>(), nchannel, vec_in_map,
+            vec_out_map, out_nrows, true);
+      } else if (th_in_feat.dtype() == torch::kFloat64) {
+        NonzeroAvgPoolingForwardKernelCPU<double, long>(
+            th_in_feat.template data<double>(),
+            th_out_feat.template data<double>(),
+            th_num_nonzero.template data<double>(), nchannel, vec_in_map,
+            vec_out_map, out_nrows, true);
+      } else {
+        throw std::runtime_error("Dtype not supported.");
+      }
+    }
+  } else if (th_in_map.dtype() == torch::kInt32) {
+    if (th_in_feat.is_cuda()) {
+#ifndef CPU_ONLY
+      auto vec_in_map = CopyToInOutMapGPU<int>(th_in_map);
+      auto vec_out_map = CopyToInOutMapGPU<int>(th_out_map);
+
+      if (th_in_feat.dtype() == torch::kFloat32) {
+        NonzeroAvgPoolingForwardKernelGPU<float, int>(
+            th_in_feat.template data<float>(), th_in_feat.size(0),
+            th_out_feat.template data<float>(), out_nrows,
+            th_num_nonzero.template data<float>(), th_in_feat.size(1),
+            vec_in_map, vec_out_map, true, handle,
+            at::cuda::getCurrentCUDAStream());
+      } else if (th_in_feat.dtype() == torch::kFloat64) {
+        NonzeroAvgPoolingForwardKernelGPU<float, int>(
+            th_in_feat.template data<float>(), th_in_feat.size(0),
+            th_out_feat.template data<float>(), out_nrows,
+            th_num_nonzero.template data<float>(), th_in_feat.size(1),
+            vec_in_map, vec_out_map, true, handle,
+            at::cuda::getCurrentCUDAStream());
+      } else {
+        throw std::runtime_error("Dtype not supported.");
+      }
+#else
+      throw std::runtime_error(
+          "Minkowski Engine not compiled with GPU support. Please reinstall.");
+#endif
+    } else {
+      auto vec_in_map = CopyToInOutMap<int>(th_in_map);
+      auto vec_out_map = CopyToInOutMap<int>(th_out_map);
+      if (th_in_feat.dtype() == torch::kFloat32) {
+        NonzeroAvgPoolingForwardKernelCPU<float, int>(
+            th_in_feat.template data<float>(),
+            th_out_feat.template data<float>(),
+            th_num_nonzero.template data<float>(), nchannel, vec_in_map,
+            vec_out_map, out_nrows, true);
+      } else if (th_in_feat.dtype() == torch::kFloat64) {
+        NonzeroAvgPoolingForwardKernelCPU<double, int>(
+            th_in_feat.template data<double>(),
+            th_out_feat.template data<double>(),
+            th_num_nonzero.template data<double>(), nchannel, vec_in_map,
+            vec_out_map, out_nrows, true);
+      } else {
+        throw std::runtime_error("Dtype not supported.");
+      }
+    }
+  }
+
+  return th_out_feat;
 }
 
 } // end namespace minkowski

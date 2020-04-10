@@ -31,6 +31,7 @@
 #include <tuple>
 
 #include "3rdparty/robin_hood.h"
+#include "primitives/small_vector.hpp"
 
 #include "region.hpp"
 #include "types.hpp"
@@ -68,14 +69,17 @@ inline vector<int> stride_copy(const vector<Itype> &src,
   return dst;
 }
 
-using CoordsInnerMap =
+using CoordsMapVectorVType = small_vector<int, 4>;
+using CoordsToIndexMap =
     robin_hood::unordered_flat_map<vector<int>, int, byte_hash_vec<int>>;
+using CoordsToVectorMap =
+    robin_hood::unordered_flat_map<vector<int>, CoordsMapVectorVType,
+                                   byte_hash_vec<int>>;
 
-class CoordsMap {
-private:
-  CoordsInnerMap map;
-
-public:
+template <typename MapType = CoordsToIndexMap> struct CoordsMap {
+  MapType map;
+  using key_type = typename MapType::key_type;
+  using value_type = typename MapType::mapped_type;
   int nrows, ncols;
 
   // Constructors
@@ -87,31 +91,30 @@ public:
   vector<int> initialize(const int *p_coords_, const int nrows_,
                          const int ncols_, const bool force_remap = false);
 
-  pair<vector<int>, set<int>> initialize_batch(const int *p_coords_,
-                                               const int nrows_,
-                                               const int ncols_,
-                                               const bool force_remap = false);
-
   tuple<vector<int>, vector<int>, set<int>>
-  initialize_batch_with_inverse(const int *p_coords_, const int nrows_,
-                                const int ncols_);
+  initialize_batch(const int *p_coords_, const int nrows_, const int ncols_,
+                   const bool force_remap = false,
+                   const bool return_inverse = false);
 
   // Generate strided version of the input coordinate map.
   // returns mapping: out_coord row index to in_coord row index
-  CoordsMap stride(const vector<int> &tensor_strides) const;
-  CoordsMap stride_region(const Region &region) const;
-  CoordsMap prune(const bool *p_keep, int n) const;
+  CoordsMap<MapType> stride(const vector<int> &tensor_strides) const;
+  CoordsMap<MapType> stride_region(const Region &region) const;
+  CoordsMap<MapType> prune(const bool *p_keep, int n) const;
 
   // class method
-  static CoordsMap
-  union_coords(const vector<reference_wrapper<CoordsMap>> &maps);
+  static CoordsMap<MapType>
+  union_coords(const vector<reference_wrapper<CoordsMap<MapType>>> &maps);
 
   // Generate in-out kernel maps
-  InOutMapsPair<int> kernel_map(const CoordsMap &out_coords_map,
-                                const Region &region) const;
-  InOutMapsPair<int> pruned_kernel_map(const CoordsMap &out_coords_map) const;
-  InOutMapsPair<int> global_reduction_map(const CoordsMap &gout_coords_map,
-                                          bool return_per_batch = true) const;
+  InOutMapsPair<int>
+  kernel_map(const CoordsMap<CoordsToIndexMap> &out_coords_map,
+             const Region &region) const;
+  InOutMapsPair<int>
+  pruned_kernel_map(const CoordsMap<MapType> &out_coords_map) const;
+  InOutMapsPair<int>
+  global_reduction_map(const CoordsMap<MapType> &gout_coords_map,
+                       bool return_per_batch = true) const;
   InOutMapsPair<int> stride_map(const CoordsMap &out_coords_map,
                                 const vector<int> &tensor_strides) const;
   static InOutMapsPair<int>
@@ -119,21 +122,21 @@ public:
             const CoordsMap &out_map);
 
   // Iterators
-  CoordsInnerMap::iterator begin() { return map.begin(); }
-  CoordsInnerMap::const_iterator begin() const { return map.begin(); }
-  CoordsInnerMap::iterator end() { return map.end(); }
-  CoordsInnerMap::const_iterator end() const { return map.end(); }
-  CoordsInnerMap::iterator find(const vector<int> &key) {
+  typename MapType::iterator begin() { return map.begin(); }
+  typename MapType::const_iterator begin() const { return map.begin(); }
+  typename MapType::iterator end() { return map.end(); }
+  typename MapType::const_iterator end() const { return map.end(); }
+  typename MapType::iterator find(const vector<int> &key) {
     return map.find(key);
   }
-  CoordsInnerMap::const_iterator find(const vector<int> &key) const {
+  typename MapType::const_iterator find(const vector<int> &key) const {
     return map.find(key);
   }
 
   size_t size() const { return map.size(); }
   void reserve(size_t size) { map.reserve(size); }
 
-  int &operator[](const vector<int> &coord) { return map[coord]; }
+  value_type &operator[](const vector<int> &coord) { return map[coord]; }
 
   void print() const;
 };

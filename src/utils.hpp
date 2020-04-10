@@ -24,20 +24,34 @@
  */
 #ifndef UTILS
 #define UTILS
+#include <vector>
 #include <sstream>
 
-template <typename T> std::string ArrToString(T arr) {
+template <typename T>
+std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
+  if (!v.empty()) {
+    auto actual_delim = ", ";
+    auto delim = "";
+    out << '[';
+    for (const auto &elem : v) {
+      out << delim << elem;
+      delim = actual_delim;
+    }
+    out << "]\n";
+  }
+  return out;
+}
+
+template <typename T> std::string ArrToString(const T &arr) {
   std::string buf = "[";
-  for (const auto& a : arr) {
+  for (const auto &a : arr) {
     buf += std::to_string(a) + ", ";
   }
-  buf.pop_back();
-  buf.pop_back();
-  buf += "]";
+  buf += arr.empty() ? "]" : "\b\b]";
   return buf;
 }
 
-template <typename T> std::string PtrToString(T *ptr, int size) {
+template <typename T> std::string PtrToString(const T *ptr, int size) {
   std::string buf = "[";
   for (int i = 0; i < size; i++) {
     buf += (i ? ", " : "") + std::to_string(ptr[i]);
@@ -102,10 +116,10 @@ private:
 
 #define WARNING(condition, ...)                                                \
   {                                                                            \
-    if (condition) {                                                        \
+    if (condition) {                                                           \
       Formatter formatter;                                                     \
       formatter << __FILE__ << ":" << __LINE__ << ",";                         \
-      formatter << " (" #condition << ") ";                   \
+      formatter << " (" #condition << ") ";                                    \
       formatter.append(__VA_ARGS__);                                           \
       std::cerr << formatter.str() << std::endl;                               \
     }                                                                          \

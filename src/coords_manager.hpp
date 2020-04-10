@@ -43,8 +43,8 @@
 #include "utils.hpp"
 
 #ifndef CPU_ONLY
-#include <ATen/cuda/CUDAContext.h>
 #include "gpu_memory_manager.hpp"
+#include <ATen/cuda/CUDAContext.h>
 #endif // CPU_ONLY
 
 namespace minkowski {
@@ -106,12 +106,12 @@ inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
   return out_tensor_strides;
 }
 
-class CoordsManager {
+template <typename MapType = CoordsToIndexMap> class CoordsManager {
 public:
   // Variables
   //
   // Coordinate hash key to coordinate hash map
-  unordered_map<uint64_t, CoordsMap> coords_maps;
+  unordered_map<uint64_t, CoordsMap<MapType>> coords_maps;
 
   // Track whether the batch indices are set
   bool is_batch_indices_set = false;
@@ -167,13 +167,18 @@ public:
 
   // New coords map initialzation entry
   uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
+                            at::Tensor inverse_mapping,
                             const vector<int> &tensor_strides,
-                            bool force_creation, bool force_remap,
-                            bool allow_duplicate_coords);
+                            const bool force_creation, const bool force_remap,
+                            const bool allow_duplicate_coords,
+                            const bool return_inverse);
 
   uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
-                            py::object py_coords_key, bool force_creation,
-                            bool force_remap, bool allow_duplicate_coords);
+                            at::Tensor inverse_mapping,
+                            py::object py_coords_key, const bool force_creation,
+                            const bool force_remap,
+                            const bool allow_duplicate_coords,
+                            const bool return_inverse);
 
   // New coords map given an input
   uint64_t createStridedCoords(uint64_t coords_key,

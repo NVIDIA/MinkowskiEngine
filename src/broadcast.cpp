@@ -33,12 +33,13 @@
 
 namespace minkowski {
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 at::Tensor BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
                                int op, py::object py_in_coords_key,
                                py::object py_glob_coords_key,
                                py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const auto &in_out = p_coords_manager->getOriginInOutMaps(py_in_coords_key,
                                                             py_glob_coords_key);
 
@@ -53,14 +54,15 @@ at::Tensor BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   return out_feat;
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                           at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
                           at::Tensor grad_out_feat, int op,
                           py::object py_in_coords_key,
                           py::object py_glob_coords_key,
                           py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_glob_coords_key);
 
@@ -81,12 +83,13 @@ void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 at::Tensor BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
                                int op, py::object py_in_coords_key,
                                py::object py_glob_coords_key,
                                py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   // Both coords must exist
   // Use the global pooling mapping
   const auto &in_out = p_coords_manager->getOriginInOutMapsGPU(
@@ -106,14 +109,15 @@ at::Tensor BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   return out_feat;
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                           at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
                           at::Tensor grad_out_feat, int op,
                           py::object py_in_coords_key,
                           py::object py_glob_coords_key,
                           py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_glob_coords_key);
 
@@ -139,54 +143,50 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
 }
 #endif
 
-template at::Tensor BroadcastForwardCPU<float>(at::Tensor in_feat,
-                                               at::Tensor in_feat_glob, int op,
-                                               py::object py_in_coords_key,
-                                               py::object py_out_coords_key,
-                                               py::object py_coords_manager);
+template at::Tensor BroadcastForwardCPU<CoordsToIndexMap, float>(
+    at::Tensor in_feat, at::Tensor in_feat_glob, int op,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template at::Tensor BroadcastForwardCPU<double>(at::Tensor in_feat,
-                                                at::Tensor in_feat_glob, int op,
-                                                py::object py_in_coords_key,
-                                                py::object py_out_coords_key,
-                                                py::object py_coords_manager);
+template at::Tensor BroadcastForwardCPU<CoordsToIndexMap, double>(
+    at::Tensor in_feat, at::Tensor in_feat_glob, int op,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void BroadcastBackwardCPU<float>(
+template void BroadcastBackwardCPU<CoordsToIndexMap, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void BroadcastBackwardCPU<double>(
+template void BroadcastBackwardCPU<CoordsToIndexMap, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template at::Tensor BroadcastForwardGPU<float>(at::Tensor in_feat,
-                                               at::Tensor in_feat_glob, int op,
-                                               py::object py_in_coords_key,
-                                               py::object py_out_coords_key,
-                                               py::object py_coords_manager);
+template at::Tensor BroadcastForwardGPU<CoordsToIndexMap, float>(
+    at::Tensor in_feat, at::Tensor in_feat_glob, int op,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template at::Tensor BroadcastForwardGPU<double>(at::Tensor in_feat,
-                                                at::Tensor in_feat_glob, int op,
-                                                py::object py_in_coords_key,
-                                                py::object py_out_coords_key,
-                                                py::object py_coords_manager);
+template at::Tensor BroadcastForwardGPU<CoordsToIndexMap, double>(
+    at::Tensor in_feat, at::Tensor in_feat_glob, int op,
+    py::object py_in_coords_key, py::object py_out_coords_key,
+    py::object py_coords_manager);
 
-template void BroadcastBackwardGPU<float>(
+template void BroadcastBackwardGPU<CoordsToIndexMap, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void BroadcastBackwardGPU<double>(
+template void BroadcastBackwardGPU<CoordsToIndexMap, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 #endif // CPU_ONLY
 
-} // namespace me
+} // namespace minkowski

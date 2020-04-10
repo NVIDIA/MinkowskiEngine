@@ -32,6 +32,7 @@ import numpy as np
 
 from Common import convert_to_int_list
 from MinkowskiCoords import CoordsKey, CoordsManager
+import MinkowskiEngineBackend as MEB
 
 
 class SparseTensorOperationMode(Enum):
@@ -43,6 +44,15 @@ class SparseTensorOperationMode(Enum):
     SHARE_COORDS_MANAGER = 1
 
 
+class SparseTensorQuantizationMode(Enum):
+    """
+    RANDOM_SUBSAMPLE: Subsample one coordinate per each quantization block randomly.
+    UNWEIGHTED_AVERAGE: average all features within a quantization block equally.
+    """
+    RANDOM_SUBSAMPLE = 0
+    UNWEIGHTED_AVERAGE = 1
+
+
 _sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDS_MANAGER
 _global_coords_man = None
 COORDS_MAN_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
@@ -51,7 +61,7 @@ COORDS_KEY_DIFFERENT_ERROR = "SparseTensors must have the same coords_key."
 
 def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
     assert isinstance(operation_mode, SparseTensorOperationMode), \
-      f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
+        f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
     global _sparse_tensor_operation_mode
     _sparse_tensor_operation_mode = operation_mode
 
@@ -127,14 +137,16 @@ class SparseTensor():
 
     """
 
-    def __init__(self,
-                 feats,
-                 coords=None,
-                 coords_key=None,
-                 coords_manager=None,
-                 force_creation=False,
-                 allow_duplicate_coords=False,
-                 tensor_stride=1):
+    def __init__(
+            self,
+            feats,
+            coords=None,
+            coords_key=None,
+            coords_manager=None,
+            force_creation=False,
+            allow_duplicate_coords=False,
+            quantization_mode=SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
+            tensor_stride=1):
         r"""
 
         Args:
@@ -150,8 +162,8 @@ class SparseTensor():
             :attr:`coords_key` (:attr:`MinkowskiEngine.CoordsKey`): When the
             coordinates are already cached in the MinkowskiEngine, we could
             reuse the same coordinates by simply providing the coordinate hash
-            key. In most case, this process is done automatically. If you
-            provide one, make sure you understand what you are doing.
+            key. In most case, this process is done automatically. When you
+            provide a `coords_key`, all other arguments will be be ignored.
 
             :attr:`coords_manager` (:attr:`MinkowskiEngine.CoordsManager`): The
             MinkowskiEngine creates a dynamic computation graph and all
@@ -176,6 +188,11 @@ class SparseTensor():
             refer to the quantization and data loading tutorial on `here
             <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_
             for more details.
+
+            :attr:`quantizatino_mode`
+            (:attr:`MinkowskiEngine.SparseTensorQuantizationMode`): Defines the
+            quantization method and how to define features of a sparse tensor.
+            Please refer to :attr:`SparseTensorQuantizationMode` for details.
 
             :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
             :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
@@ -219,10 +236,13 @@ class SparseTensor():
                 coords = coords.cpu()
 
             assert feats.shape[0] == coords.shape[0], \
-                "Number of rows in features and coordinates do not match."
+                "The number of rows in features and coordinates do not match."
 
             coords = coords.contiguous()
 
+        ##########################
+        # Setup CoordsManager
+        ##########################
         if coords_manager is None:
             # If set to share the coords man, use the global coords man
             global _sparse_tensor_operation_mode, _global_coords_man
@@ -234,30 +254,53 @@ class SparseTensor():
                 assert coords is not None, "Initial coordinates must be given"
                 coords_manager = CoordsManager(D=coords.size(1) - 1)
 
-            if not coords_key.isKeySet():
-                self.mapping = coords_manager.initialize(
-                    coords,
-                    coords_key,
-                    force_creation=force_creation,
-                    force_remap=allow_duplicate_coords,
-                    allow_duplicate_coords=allow_duplicate_coords)
-                if len(self.mapping) > 0:
-                    coords = coords[self.mapping]
-                    feats = feats[self.mapping]
         else:
             assert isinstance(coords_manager, CoordsManager)
 
-            if not coords_key.isKeySet():
-                assert coords is not None
-                self.mapping = coords_manager.initialize(
-                    coords,
-                    coords_key,
-                    force_creation=force_creation,
-                    force_remap=allow_duplicate_coords,
-                    allow_duplicate_coords=allow_duplicate_coords)
-                if len(self.mapping) > 0:
-                    coords = coords[self.mapping]
-                    feats = feats[self.mapping]
+        ##########################
+        # Initialize coords
+        ##########################
+        if not coords_key.isKeySet() and coords is not None and len(coords) > 0:
+            assert isinstance(quantization_mode, SparseTensorQuantizationMode)
+
+            if quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
+                force_remap = True
+                return_inverse = False
+            elif quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+                force_remap = True
+                return_inverse = True
+
+            self.unique_index, self.inverse_mapping = coords_manager.initialize(
+                coords,
+                coords_key,
+                force_creation=force_creation,
+                force_remap=force_remap,
+                allow_duplicate_coords=allow_duplicate_coords,
+                return_inverse=return_inverse)
+
+            if quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+                feats = MEB.quantization_average_features(
+                    feats, torch.arange(len(feats)), self.inverse_mapping,
+                    len(self.unique_index), 0)
+            elif force_remap:
+                assert len(self.unique_index) > 0
+                self._CC = coords
+                self._CF = feats
+                coords = coords[self.unique_index]
+                feats = feats[self.unique_index]
+
+        elif coords is not None:  # empty / invalid coords
+            assert isinstance(coords, torch.IntTensor)
+            assert coords.ndim == 2
+            coords_manager.initialize(
+                coords,
+                coords_key,
+                force_creation=force_creation,
+                force_remap=False,
+                allow_duplicate_coords=False,
+                return_inverse=False)
+        elif coords_key is not None:
+            assert coords_key.isKeySet()
 
         self._F = feats.contiguous()
         self._C = coords

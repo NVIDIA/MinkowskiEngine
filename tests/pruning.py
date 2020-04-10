@@ -38,7 +38,6 @@ class TestPruning(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels, batch_size=1)
         feats = feats.double()
         feats.requires_grad_()
-        import ipdb; ipdb.set_trace()
         input = SparseTensor(feats, coords=coords)
         use_feat = torch.BoolTensor(len(input))
         use_feat.zero_()

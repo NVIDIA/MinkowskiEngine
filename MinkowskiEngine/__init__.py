@@ -32,7 +32,7 @@ sys.path.append(file_dir)
 # Must be imported first to load all required shared libs
 import torch
 
-from SparseTensor import SparseTensor, SparseTensorOperationMode, \
+from SparseTensor import SparseTensor, SparseTensorOperationMode, SparseTensorQuantizationMode, \
     set_sparse_tensor_operation_mode, sparse_tensor_operation_mode, clear_global_coords_man
 
 from Common import RegionType, convert_to_int_tensor, convert_region_type, \

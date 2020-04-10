@@ -1,6 +1,6 @@
 # Change Log
 
-## [master] - 2020-04-01
+## [master] - 2020-04-08
 
 ### Changed
 
@@ -11,6 +11,10 @@
 - Add `coordinates_and_features_at(batch_index)` function in the SparseTensor class.
 - Add `MinkowskiChannelwiseConvolution` (Issue #92)
 - Update `MinkowskiPruning` to generate an empty sparse tensor as output (Issue #102)
+- Add `return_index` for `sparse_quantize`
+- Templated CoordsManager for coords to int and coords to vector classes
+- Sparse tensor quantization mode
+    - Features at duplicated coordinates will be averaged automatically with `quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE`
 
 
 ## [0.4.2] - 2020-03-13

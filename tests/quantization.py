@@ -61,7 +61,8 @@ class TestQuantization(unittest.TestCase):
         print('N unique:', len(mapping), 'N:', N)
         self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
-        index, reverse_index = sparse_quantize(coords, return_index=True, return_inverse=True)
+        index, reverse_index = sparse_quantize(
+            coords, return_index=True, return_inverse=True)
         self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
     def test_label(self):
@@ -97,23 +98,40 @@ class TestQuantization(unittest.TestCase):
         coords = np.array([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=np.int32)
         labels = np.array([0, 1, 2, 3], dtype=np.int32)
 
-        mapping, colabels = sparse_quantize(
+        unique_coords, colabels = sparse_quantize(
             coords, labels=labels, ignore_label=255)
-        print(mapping)
-        print(colabels)
+        self.assertTrue(len(unique_coords) == 2)
+        self.assertTrue([0, 0] in unique_coords)
+        self.assertTrue([0, 1] in unique_coords)
+        self.assertTrue(len(colabels) == 2)
+        self.assertTrue(255 in colabels)
 
         coords = np.array([[0, 0], [0, 1]], dtype=np.int32)
         discrete_coords = sparse_quantize(coords)
-        print(discrete_coords)
+        self.assertTrue((discrete_coords == unique_coords).all())
         discrete_coords = sparse_quantize(torch.from_numpy(coords))
-        print(discrete_coords)
+        self.assertTrue(
+            (discrete_coords == torch.from_numpy(unique_coords)).all())
+
+    def test_feature_average(self):
+        coords = torch.IntTensor([[0, 0], [0, 0], [0, 0], [0, 1]])
+        feats = torch.FloatTensor([[0, 1, 2, 3]]).t()
+        mapping, inverse_mapping = MEB.quantize_th(coords)
+        # inverse_mapping is the output map , range is the out map
+        avg_feat = MEB.quantization_average_features(feats,
+                                                     torch.arange(len(feats)),
+                                                     inverse_mapping,
+                                                     len(mapping), 0)
+        self.assertTrue(1 in avg_feat)
+        self.assertTrue(3 in avg_feat)
 
     def test_quantization_size(self):
         coords = torch.randn((1000, 3), dtype=torch.float)
         feats = torch.randn((1000, 10), dtype=torch.float)
         res = sparse_quantize(coords, feats, quantization_size=0.1)
         print(res[0].shape, res[1].shape)
-        res = sparse_quantize(coords.numpy(), feats.numpy(), quantization_size=0.1)
+        res = sparse_quantize(
+            coords.numpy(), feats.numpy(), quantization_size=0.1)
         print(res[0].shape, res[1].shape)
 
 

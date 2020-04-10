@@ -30,12 +30,13 @@
 
 namespace minkowski {
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 at::Tensor UnionForwardCPU(vector<at::Tensor> in_feats,
                            vector<py::object> py_in_coords_keys,
                            py::object py_out_coords_key,
                            py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   // Basic assertions
   ASSERT(in_feats.size() > 1, "The number of input tensors must be > 1.");
   const size_t n_in = in_feats.size();
@@ -66,20 +67,21 @@ at::Tensor UnionForwardCPU(vector<at::Tensor> in_feats,
   vector<Dtype *> p_in_feats;
   p_in_feats.reserve(n_in);
   for (auto &in_feat : in_feats)
-    p_in_feats.push_back(in_feat.data<Dtype>());
+    p_in_feats.push_back(in_feat.template data<Dtype>());
 
-  UnionForwardKernelCPU<Dtype, int>(p_in_feats, out_feat.data<Dtype>(),
+  UnionForwardKernelCPU<Dtype, int>(p_in_feats, out_feat.template data<Dtype>(),
                                     in_feats[0].size(1), get<0>(in_out),
                                     get<1>(in_out));
 
   return out_feat;
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 vector<at::Tensor>
 UnionBackwardCPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
                  py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const int nchannel = grad_out_feat.size(1);
   const size_t n_in = py_in_coords_keys.size();
 
@@ -101,23 +103,24 @@ UnionBackwardCPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
     auto grad_in_feat =
         torch::zeros({in_nrows, nchannel}, grad_out_feat.options());
     grad_in_feats.push_back(grad_in_feat);
-    p_grad_in_feats.push_back(grad_in_feat.data<Dtype>());
+    p_grad_in_feats.push_back(grad_in_feat.template data<Dtype>());
   }
 
   UnionBackwardKernelCPU<Dtype, int>(
-      p_grad_in_feats, grad_out_feat.data<Dtype>(), nchannel,
+      p_grad_in_feats, grad_out_feat.template data<Dtype>(), nchannel,
       p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
 
   return grad_in_feats;
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 at::Tensor UnionForwardGPU(vector<at::Tensor> in_feats,
                            vector<py::object> py_in_coords_keys,
                            py::object py_out_coords_key,
                            py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   // Basic assertions
   ASSERT(in_feats.size() > 1, "The number of input tensors must be > 1.");
   const size_t n_in = in_feats.size();
@@ -136,8 +139,8 @@ at::Tensor UnionForwardGPU(vector<at::Tensor> in_feats,
   }
 
   // Create new out map and get the in-out map
-  const auto in_out = p_coords_manager->getUnionInOutMapsGPU(
-      py_in_coords_keys, py_out_coords_key);
+  const auto in_out = p_coords_manager->getUnionInOutMapsGPU(py_in_coords_keys,
+                                                             py_out_coords_key);
 
   // Out feat memory alloc
   const long out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
@@ -148,20 +151,21 @@ at::Tensor UnionForwardGPU(vector<at::Tensor> in_feats,
   vector<Dtype *> p_in_feats;
   p_in_feats.reserve(n_in);
   for (auto &in_feat : in_feats)
-    p_in_feats.push_back(in_feat.data<Dtype>());
+    p_in_feats.push_back(in_feat.template data<Dtype>());
 
   UnionForwardKernelGPU<Dtype, int>(
-      p_in_feats, out_feat.data<Dtype>(), in_feats[0].size(1), in_out.first,
-      in_out.second, at::cuda::getCurrentCUDAStream());
+      p_in_feats, out_feat.template data<Dtype>(), in_feats[0].size(1),
+      in_out.first, in_out.second, at::cuda::getCurrentCUDAStream());
 
   return out_feat;
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 vector<at::Tensor>
 UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
                  py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const int nchannel = grad_out_feat.size(1);
   const size_t n_in = py_in_coords_keys.size();
 
@@ -183,11 +187,11 @@ UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
     auto grad_in_feat =
         torch::zeros({in_nrows, nchannel}, grad_out_feat.options());
     grad_in_feats.push_back(grad_in_feat);
-    p_grad_in_feats.push_back(grad_in_feat.data<Dtype>());
+    p_grad_in_feats.push_back(grad_in_feat.template data<Dtype>());
   }
 
   UnionBackwardKernelGPU<Dtype, int>(
-      p_grad_in_feats, grad_out_feat.data<Dtype>(), nchannel,
+      p_grad_in_feats, grad_out_feat.template data<Dtype>(), nchannel,
       p_coords_manager->d_in_maps[map_key],
       p_coords_manager->d_out_maps[map_key], at::cuda::getCurrentCUDAStream());
 
@@ -195,38 +199,36 @@ UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
 }
 #endif
 
-template at::Tensor UnionForwardCPU<float>(vector<at::Tensor> in_feats,
-                                           vector<py::object> py_in_coords_keys,
-                                           py::object py_out_coords_key,
-                                           py::object py_coords_manager);
-
-template at::Tensor UnionForwardCPU<double>(
+template at::Tensor UnionForwardCPU<CoordsToIndexMap, float>(
     vector<at::Tensor> in_feats, vector<py::object> py_in_coords_keys,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template vector<at::Tensor> UnionBackwardCPU<float>(
+template at::Tensor UnionForwardCPU<CoordsToIndexMap, double>(
+    vector<at::Tensor> in_feats, vector<py::object> py_in_coords_keys,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
+template vector<at::Tensor> UnionBackwardCPU<CoordsToIndexMap, float>(
     at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template vector<at::Tensor> UnionBackwardCPU<double>(
+template vector<at::Tensor> UnionBackwardCPU<CoordsToIndexMap, double>(
     at::Tensor grad_out_feat, vector<py::object> py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template at::Tensor UnionForwardGPU<float>(vector<at::Tensor> in_feats,
-                                           vector<py::object> py_in_coords_keys,
-                                           py::object py_out_coords_key,
-                                           py::object py_coords_manager);
-
-template at::Tensor UnionForwardGPU<double>(
+template at::Tensor UnionForwardGPU<CoordsToIndexMap, float>(
     vector<at::Tensor> in_feats, vector<py::object> py_in_coords_keys,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template vector<at::Tensor> UnionBackwardGPU<float>(
+template at::Tensor UnionForwardGPU<CoordsToIndexMap, double>(
+    vector<at::Tensor> in_feats, vector<py::object> py_in_coords_keys,
+    py::object py_out_coords_key, py::object py_coords_manager);
+
+template vector<at::Tensor> UnionBackwardGPU<CoordsToIndexMap, float>(
     at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template vector<at::Tensor> UnionBackwardGPU<double>(
+template vector<at::Tensor> UnionBackwardGPU<CoordsToIndexMap, double>(
     at::Tensor grad_out_feat, vector<py::object> py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 

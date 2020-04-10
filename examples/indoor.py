@@ -45,6 +45,7 @@ if not os.path.isfile('weights.pth'):
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_name', type=str, default='1.ply')
 parser.add_argument('--weights', type=str, default='weights.pth')
+parser.add_argument('--use_cpu', action='store_true')
 
 CLASS_LABELS = ('wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
                 'door', 'window', 'bookshelf', 'picture', 'counter', 'desk',
@@ -102,11 +103,8 @@ def load_file(file_name, voxel_size):
     pcd = o3d.io.read_point_cloud(file_name)
     coords = np.array(pcd.points)
     feats = np.array(pcd.colors)
-
     quantized_coords = np.floor(coords / voxel_size)
-    inds = ME.utils.sparse_quantize(quantized_coords, return_index=True)
-
-    return quantized_coords[inds], feats[inds], pcd
+    return quantized_coords, feats, pcd
 
 
 def generate_input_sparse_tensor(file_name, voxel_size=0.05):
@@ -121,8 +119,9 @@ def generate_input_sparse_tensor(file_name, voxel_size=0.05):
 
 if __name__ == '__main__':
     config = parser.parse_args()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+    device = torch.device('cuda' if (
+        torch.cuda.is_available() and not config.use_cpu) else 'cpu')
+    print(f"Using {device}")
     # Define a model and load the weights
     model = MinkUNet34C(3, 20).to(device)
     model_dict = torch.load(config.weights)
@@ -137,7 +136,10 @@ if __name__ == '__main__':
 
         # Feed-forward pass and get the prediction
         sinput = ME.SparseTensor(
-            features, coords=coordinates).to(device)
+            features,
+            coords=coordinates,
+            quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+        ).to(device)
         soutput = model(sinput)
 
     # Feed-forward pass and get the prediction
@@ -151,7 +153,8 @@ if __name__ == '__main__':
     pred_pcd = o3d.geometry.PointCloud()
     # Map color
     colors = np.array([SCANNET_COLOR_MAP[VALID_CLASS_IDS[l]] for l in pred])
-    pred_pcd.points = o3d.utility.Vector3dVector(coordinates[batch_index] * 0.02)
+    pred_pcd.points = o3d.utility.Vector3dVector(coordinates[batch_index] *
+                                                 0.02)
     pred_pcd.colors = o3d.utility.Vector3dVector(colors / 255)
 
     # Move the original point cloud

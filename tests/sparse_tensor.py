@@ -24,7 +24,9 @@
 import unittest
 import torch
 
-from MinkowskiEngine import SparseTensor, SparseTensorOperationMode, set_sparse_tensor_operation_mode
+from MinkowskiEngine import (SparseTensor, SparseTensorOperationMode,
+                             SparseTensorQuantizationMode,
+                             set_sparse_tensor_operation_mode)
 
 from tests.common import data_loader
 
@@ -66,6 +68,13 @@ class Test(unittest.TestCase):
         self.assertTrue(len(input) == len(coords) - 2)
         print(coords)
         print(input)
+        input = SparseTensor(
+            feats,
+            coords=coords,
+            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+        )
+        self.assertTrue(len(coords) == 16)
+        self.assertTrue(len(input) == 14)
 
     def test_extraction(self):
         coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
