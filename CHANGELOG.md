@@ -15,6 +15,7 @@
 - Templated CoordsManager for coords to int and coords to vector classes
 - Sparse tensor quantization mode
     - Features at duplicated coordinates will be averaged automatically with `quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE`
+- `SparseTensor.slice()` slicing features on discrete coordinates to continuous coordinates
 
 
 ## [0.4.2] - 2020-03-13

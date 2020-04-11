@@ -201,6 +201,8 @@ class SparseTensor():
         """
         assert isinstance(feats,
                           torch.Tensor), "Features must be a torch.Tensor"
+        assert isinstance(quantization_mode, SparseTensorQuantizationMode)
+        self.quantization_mode = quantization_mode
 
         if coords is None and coords_key is None:
             raise ValueError('Either coords or coords_key must be provided')
@@ -261,8 +263,6 @@ class SparseTensor():
         # Initialize coords
         ##########################
         if not coords_key.isKeySet() and coords is not None and len(coords) > 0:
-            assert isinstance(quantization_mode, SparseTensorQuantizationMode)
-
             if quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
                 force_remap = True
                 return_inverse = False
@@ -279,9 +279,12 @@ class SparseTensor():
                 return_inverse=return_inverse)
 
             if quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+                self._CF = feats
+                self._CC = coords
                 feats = MEB.quantization_average_features(
                     feats, torch.arange(len(feats)), self.inverse_mapping,
                     len(self.unique_index), 0)
+                coords = coords[self.unique_index]
             elif force_remap:
                 assert len(self.unique_index) > 0
                 self._CC = coords
@@ -890,6 +893,35 @@ class SparseTensor():
 
         tensor_stride = torch.IntTensor(self.tensor_stride)
         return dense_F, min_coords, tensor_stride
+
+    def slice(self, X, slicing_mode=0):
+        r"""
+
+        Args:
+           :attr:`X` (:attr:`MinkowskiEngine.SparseTensor`): a sparse tensor
+           that discretized the original input.
+
+           :attr:`slicing_mode`: For future updates.
+
+        Returns:
+           :attr:`sliced_feats` (:attr:`torch.Tensor`): the resulting feature
+           matrix that slices features on the discretized coordinates to the
+           original continuous coordinates that generated the input X.
+
+        Example::
+
+           >>> # coords, feats from a data loader
+           >>> print(len(coords))  # 227742
+           >>> sinput = ME.SparseTensor(coords=coords, feats=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+           >>> print(len(sinput))  # 161890 quantization results in fewer voxels
+           >>> soutput = network(sinput)
+           >>> print(len(soutput))  # 161890 Output with the same resolution
+           >>> outputs = soutput.slice(sinput)
+           >>> assert(outputs, torch.Tensor)  # regular differentiable pytorch tensor
+           >>> len(outputs) == len(coords)  # recovers the original ordering and length
+        """
+        # Currently only supports unweighted slice.
+        return self.feats[X.inverse_mapping]
 
 
 def _get_coords_key(

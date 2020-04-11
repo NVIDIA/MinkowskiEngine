@@ -71,10 +71,25 @@ class Test(unittest.TestCase):
         input = SparseTensor(
             feats,
             coords=coords,
-            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
-        )
+            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
         self.assertTrue(len(coords) == 16)
         self.assertTrue(len(input) == 14)
+
+        # 1D
+        coords = torch.IntTensor([[0, 1], [0, 1], [0, 2], [0, 2], [1, 0],
+                                  [1, 0], [1, 1]])
+        feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T
+        # 0.5, 2.5, 5.5, 7
+        sinput = SparseTensor(
+            coords=coords,
+            feats=feats,
+            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+        self.assertTrue(len(sinput) == 4)
+        self.assertTrue(0.5 in sinput.feats)
+        self.assertTrue(2.5 in sinput.feats)
+        self.assertTrue(5.5 in sinput.feats)
+        self.assertTrue(7 in sinput.feats)
+        self.assertTrue(len(sinput.slice(sinput)) == len(coords))
 
     def test_extraction(self):
         coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
