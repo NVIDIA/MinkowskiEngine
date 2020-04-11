@@ -228,7 +228,7 @@ class SparseTensor():
                     'Coords implicitly converted to torch.IntTensor. ' +
                     'To remove this warning, use `.int()` to convert the ' +
                     'coords into an torch.IntTensor')
-                coords = coords.int()
+                coords = torch.floor(coords).int()
 
             if coords.device.type != 'cpu':
                 warnings.warn(
