@@ -51,7 +51,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 - CUDA 10.1 or higher
 - pytorch 1.3 or higher
 - python 3.6 or higher
-- GCC 6 or higher
+- GCC 7 or higher
 
 
 ## Installation

@@ -30,6 +30,15 @@ namespace py = pybind11;
 
 namespace minkowski {
 
+namespace detail {
+
+template <typename SrcType, typename DstType>
+__global__ void dtypeCopy(SrcType const *src, DstType *dst, size_t n) {
+  CUDA_KERNEL_LOOP(index, n) { dst[index] = src[index]; }
+}
+
+} // namespace detail
+
 template <typename MapType>
 const pInOutMaps<int>
 CoordsManager<MapType>::copyInOutMapToGPU(const InOutMaps<int> &map) {
@@ -155,7 +164,7 @@ vector<vector<at::Tensor>> CoordsManager<MapType>::getKernelMapGPU(
   // CUDA_CHECK(cudaGetDevice(&device_id));
   torch::TensorOptions options =
       torch::TensorOptions()
-          .dtype(torch::kInt32)
+          .dtype(torch::kInt64)
           // .device(torch::kCUDA)
           .device(torch::kCUDA, gpu_memory_manager.device_id)
           .requires_grad(false);
@@ -174,16 +183,15 @@ vector<vector<at::Tensor>> CoordsManager<MapType>::getKernelMapGPU(
     at::Tensor out_kernel_map =
         torch::empty({(long)curr_volume}, options).contiguous();
 
-    // Wait until memory is allocated
+    // Wait until both memory chunks are allocated
     CUDA_CHECK(cudaStreamSynchronize(stream));
 
-    int *p_in_kernel_map = in_kernel_map.data<int>();
-    int *p_out_kernel_map = out_kernel_map.data<int>();
-
-    CUDA_CHECK(cudaMemcpy(p_in_kernel_map, in_maps[k].data(),
-                          curr_volume * sizeof(int), cudaMemcpyDeviceToDevice));
-    CUDA_CHECK(cudaMemcpy(p_out_kernel_map, out_maps[k].data(),
-                          curr_volume * sizeof(int), cudaMemcpyDeviceToDevice));
+    detail::dtypeCopy<int, long>
+        <<<GET_BLOCKS(curr_volume), CUDA_NUM_THREADS, 0, stream>>>(
+            in_maps[k].data(), in_kernel_map.data<long>(), curr_volume);
+    detail::dtypeCopy<int, long>
+        <<<GET_BLOCKS(curr_volume), CUDA_NUM_THREADS, 0, stream>>>(
+            out_maps[k].data(), out_kernel_map.data<long>(), curr_volume);
 
     in_tensors.push_back(move(in_kernel_map));
     out_tensors.push_back(move(out_kernel_map));

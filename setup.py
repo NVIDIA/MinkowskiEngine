@@ -1,7 +1,7 @@
 import sys
 if sys.version_info < (3, 6):
     sys.stdout.write(
-        "Minkowski Engine requires Python 3.6 or higher. Please use anaconda https://www.anaconda.com/distribution/ for isolated python environment.\n"
+        "Minkowski Engine requires Python 3.6 or higher. Please use anaconda https://www.anaconda.com/distribution/ for an isolated python environment.\n"
     )
     sys.exit(1)
 
@@ -45,7 +45,7 @@ def find_version(*file_paths):
 
 
 def run_command(*args):
-    subprocess.call(args)
+    subprocess.check_call(args)
 
 
 # For cpu only build

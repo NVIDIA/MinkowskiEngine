@@ -56,9 +56,6 @@ class TestConvolution(unittest.TestCase):
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        print(input.mapping)
-        cm = input.coords_man
-        print(cm._get_coords_key(1))
 
         conv = MinkowskiChannelwiseConvolution(
             in_channels,
@@ -73,6 +70,32 @@ class TestConvolution(unittest.TestCase):
 
         output.F.sum().backward()
         print(input.F.grad)
+
+    def test_gpu(self):
+        print(f"{self.__class__.__name__}: test_gpu")
+        if not torch.cuda.is_available():
+            return
+
+        device = torch.device('cuda')
+        in_channels, D = 3, 2
+        coords, feats, labels = data_loader(in_channels, batch_size=2)
+
+        # Create random coordinates with tensor stride == 2
+        out_coords, tensor_stride = get_random_coords()
+
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords=coords).to(device)
+        conv = MinkowskiChannelwiseConvolution(
+            in_channels,
+            kernel_size=3,
+            stride=1,
+            has_bias=False,
+            dimension=D).double().to(device)
+
+        print('Initial input: ', input)
+        output = conv(input)
+        print('Conv output: ', output)
 
 
 if __name__ == '__main__':
