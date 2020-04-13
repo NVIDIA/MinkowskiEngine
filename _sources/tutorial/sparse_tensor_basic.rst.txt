@@ -49,6 +49,27 @@ The next step in the pipeline is initializing a sparse tensor. A :attr:`Minkowsk
 Here, we used :attr:`MinkowskiEngine.utils.sparse_collate` function, but you can use :attr:`MinkowskiEngine.utils.batched_coordinates` to convert a list of coordinates to :attr:`MinkowskiEngine.SparseTensor` compatible coordinates.
 
 
+Sparse Tensor for Continuous Coordinates
+----------------------------------------
+
+In many cases, coordinates used in neural networks are continuous.
+However, sparse tensors used in sparse tensor networks are defined in a discrete coordinate system.
+To convert the features in continuous coordinates to discrete coordinates, we provide feature averaging functions that convert features in continuous coordinates to discrete coordinates.
+You can simply use the sparse tensor initialization for this. For example,
+
+.. code-block:: python
+
+   sinput = ME.SparseTensor(
+       feats=torch.from_numpy(colors), # Convert to a tensor
+       coords=ME.utils.batched_coordinates([coordinates / voxel_size]),  # coordinates must be defined in a integer grid. If the scale
+       quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE  # when used with continuous coordinates, average features in the same coordinate
+   )
+   logits = model(sinput).slice(sinput)
+
+
+Please refer to `indoor semantic segmentation <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/indoor.py>`_ for more detail.
+
+
 Sparse Tensor Arithmetics
 -------------------------
 

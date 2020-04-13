@@ -289,7 +289,7 @@ This is useful if you have an unconventional input.</p>
         <span class="c1"># Quantize the input</span>
         <span class="n">mapping</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span>
             <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span>
-            <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">return_index</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">coords</span><span class="p">[</span><span class="n">mapping</span><span class="p">],</span> <span class="n">feats</span><span class="p">[</span><span class="n">mapping</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">mapping</span><span class="p">]</span>
 </pre></div>
@@ -393,8 +393,8 @@ maps, cannot be referenced outside the process that generated it.</p>
         <span class="n">tot_iter</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="k">if</span> <span class="n">tot_iter</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">tot_iter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;Iter: </span><span class="si">{</span><span class="n">tot_iter</span><span class="si">}</span><span class="s1">, Epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s1">, Loss: </span><span class="si">{</span><span class="n">accum_loss</span> <span class="o">/</span> <span class="n">accum_iter</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="k">print</span><span class="p">(</span>
+                <span class="n">f</span><span class="s1">&#39;Iter: {tot_iter}, Epoch: {epoch}, Loss: {accum_loss / accum_iter}&#39;</span>
             <span class="p">)</span>
             <span class="n">accum_loss</span><span class="p">,</span> <span class="n">accum_iter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 </pre></div>

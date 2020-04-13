@@ -208,7 +208,7 @@
 <h2>sparse_quantize<a class="headerlink" href="#sparse-quantize" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="MinkowskiEngine.utils.sparse_quantize">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=-100</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">quantization_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=-100</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">return_inverse=False</em>, <em class="sig-param">quantization_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given coordinates, and features (optionally labels), the function
 generates quantized (voxelized) coordinates.</p>
 <dl>
@@ -229,8 +229,17 @@ of points are mapped to one label, do not feed the labels.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">ignore_label</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, optional): the int value of the
 IGNORE LABEL.
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.nn.CrossEntropyLoss(ignore_index=ignore_label)</span></code></p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_index</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): True if you want the indices of the
-quantized coordinates. False by default.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_index</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): set True if you want the
+indices of the quantized coordinates. False by default.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_inverse</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>, optional): set True if you want
+the indices that can recover the discretized original coordinates.
+False by default. <cite>return_index</cite> must be True when <cite>return_reverse</cite> is True.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">unique_map</span><span class="p">,</span> <span class="n">inverse_map</span> <span class="o">=</span> <span class="n">sparse_quantize</span><span class="p">(</span><span class="n">discrete_coords</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unique_coords</span> <span class="o">=</span> <span class="n">discrete_coords</span><span class="p">[</span><span class="n">unique_map</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">unique_coords</span><span class="p">[</span><span class="n">inverse_map</span><span class="p">]</span> <span class="o">==</span> <span class="n">discrete_coords</span><span class="p">)</span>  <span class="c1"># True</span>
+</pre></div>
+</div>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">quantization_size</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>, or
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.ndarray</span></code>, optional): the length of the each side of the
 hyperrectangle of of the grid cell.</p>
@@ -369,7 +378,7 @@ corresponds to the returned indices of x.</p>
 
    <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">get_coords_map</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">,</span> <span class="n">out_sp_tensor</span><span class="p">)</span>
    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
-      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{i}</span><span class="s2"> -&gt; </span><span class="si">{o}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

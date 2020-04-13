@@ -279,7 +279,7 @@
 <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_coords_map</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># in stride</span>
                               <span class="mi">2</span><span class="p">)</span>  <span class="c1"># out stride</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
-   <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+   <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{i} -&gt; {o}&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -323,24 +323,33 @@
 
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.get_union_map">
-<code class="sig-name descname">get_union_map</code><span class="sig-paren">(</span><em class="sig-param">in_keys</em>, <em class="sig-param">out_key: MinkowskiCoords.CoordsKey</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_union_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract input coords indices that maps to output coords indices.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
-<span class="n">out_sp_tensor</span> <span class="o">=</span> <span class="n">stride_2_conv</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">)</span>
-
-<span class="n">cm</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span>
-<span class="c1"># cm = out_sp_tensor.coords_man  # doesn&#39;t matter which tensor you pick</span>
-<span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_coords_map</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># in stride</span>
-                              <span class="mi">2</span><span class="p">)</span>  <span class="c1"># out stride</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
-   <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<code class="sig-name descname">get_union_map</code><span class="sig-paren">(</span><em class="sig-param">in_keys: List[MinkowskiCoords.CoordsKey], out_key: MinkowskiCoords.CoordsKey</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_union_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a union of coordinate sets and returns the mapping from input sets to the new output coordinates.</p>
+<dl>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_keys</span></code> (List[CoordsKey]): A list of coordinate keys to
+create a union on.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_key</span></code> (CoordsKey): the placeholder for the coords key of
+the generated union coords hash map.</p>
+</dd>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_maps</span></code> (List[Tensor[int]]): A list of long tensors that contain mapping from inputs to the union output. Please see the example for more details.
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">out_maps</span></code> (List[Tensor[int]]): A list of long tensors that contain a mapping from input to the union output. Please see the example for more details.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Adding two sparse tensors: A, B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out_key</span> <span class="o">=</span> <span class="n">CoordsKey</span><span class="p">(</span><span class="n">coords_man</span><span class="o">.</span><span class="n">D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">coords_man</span><span class="o">.</span><span class="n">get_union_map</span><span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">coords_key</span><span class="p">),</span> <span class="n">out_key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">coords_man</span><span class="o">.</span><span class="n">get_coords_size_by_coords_key</span><span class="p">(</span><span class="n">out_key</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out_F</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out_F</span><span class="p">[</span><span class="n">outs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">ins</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out_F</span><span class="p">[</span><span class="n">outs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">B</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">ins</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="method">
 <dt id="MinkowskiEngine.CoordsManager.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords: torch.IntTensor</em>, <em class="sig-param">coords_key: MinkowskiCoords.CoordsKey</em>, <em class="sig-param">force_creation: bool = False</em>, <em class="sig-param">force_remap: bool = False</em>, <em class="sig-param">allow_duplicate_coords: bool = False</em><span class="sig-paren">)</span> &#x2192; torch.LongTensor<a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param">coords: torch.IntTensor</em>, <em class="sig-param">coords_key: MinkowskiCoords.CoordsKey</em>, <em class="sig-param">force_creation: bool = False</em>, <em class="sig-param">force_remap: bool = False</em>, <em class="sig-param">allow_duplicate_coords: bool = False</em>, <em class="sig-param">return_inverse: bool = False</em><span class="sig-paren">)</span> &#x2192; torch.LongTensor<a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

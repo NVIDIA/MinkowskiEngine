@@ -371,8 +371,8 @@ sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
 function (<code class="docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code>).</p>
 <div class="section" id="creating-a-network">
 <h3>Creating a Network<a class="headerlink" href="#creating-a-network" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="kn">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
 
 <span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiNetwork</span><span class="p">):</span>
 
@@ -385,7 +385,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
                 <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                 <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                 <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
                 <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">())</span>
@@ -414,7 +414,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># loss and network</span>
     <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
     <span class="n">net</span> <span class="o">=</span> <span class="n">ExampleNetwork</span><span class="p">(</span><span class="n">in_feat</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">out_feat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
 
     <span class="c1"># a data loader must return a tuple of coords, features, and labels.</span>
     <span class="n">coords</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">data_loader</span><span class="p">()</span>
