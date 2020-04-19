@@ -982,9 +982,7 @@ CoordsManager<MapType>::getRowIndicesPerBatch(py::object py_in_coords_key,
   return out_inds;
 }
 
-
 template class CoordsManager<CoordsToIndexMap>;
 // template class CoordsManager<CoordsToVectorMap>;
-
 
 } // end namespace minkowski

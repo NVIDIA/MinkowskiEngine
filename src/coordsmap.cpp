@@ -296,6 +296,7 @@ vector<int> CoordsMap<MapType>::initialize(const int *p_coords,
     }
   }
 
+  nrows = map.size();
   return mapping;
 }
 
@@ -357,6 +358,7 @@ CoordsMap<MapType>::initialize_batch(const int *p_coords, const int nrows_,
     }
   }
 
+  nrows = map.size();
   return make_tuple(mapping, inverse_mapping, batch_indices);
 }
 
