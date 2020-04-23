@@ -17,6 +17,7 @@
     - Features at duplicated coordinates will be averaged automatically with `quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE`
 - `SparseTensor.slice()` slicing features on discrete coordinates to continuous coordinates
 - CoordsManager.getKernelMapGPU returns long type tensors (Issue #125)
+- SyncBatchNorm error fix (Issue #129)
 
 
 ## [0.4.2] - 2020-03-13
