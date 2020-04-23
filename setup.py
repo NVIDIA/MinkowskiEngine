@@ -131,7 +131,7 @@ setup(
     ext_modules=[
         Extension(
             name='MinkowskiEngineBackend',
-            include_dirs=['./', get_python_inc() + "/.."],
+            include_dirs=[here, get_python_inc() + "/.."],
             library_dirs=['objs'],
             sources=[
                 'pybind/minkowski.cpp',
