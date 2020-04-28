@@ -208,6 +208,17 @@ For issues not listed on the API and feature requests, feel free to submit
 an issue on the [github issue
 page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
+## Known Issues
+
+### Running the MinkowskiEngine on nodes with a large number of CPUs
+
+The MinkowskiEngine uses OpenMP to parallelize the kernel map generation. However, when the number of threads used for parallelization is too large (e.g. OMP_NUM_THREADS=80), the efficiency drops rapidly as all threads simply wait for multithread locks to be released.
+
+In such cases, set the number of threads used for OpenMP. Usually, any number below 24 would be fine, but search for the optimal setup on your system.
+
+```
+export OMP_NUM_THREADS=<number of threads to use>; python <your_program.py>
+```
 
 ## Citing Minkowski Engine
 

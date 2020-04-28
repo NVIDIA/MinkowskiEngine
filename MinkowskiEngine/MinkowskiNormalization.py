@@ -88,8 +88,7 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
             process_group=process_group)
 
     def forward(self, input):
-        # Weird requirement for the input to have > 2 dimensions which is unnecessary.
-        output = self.bn(input.F.unsqueeze(2)).squeeze(2)
+        output = self.bn(input.F)
         return SparseTensor(
             output,
             coords_key=input.coords_key,
