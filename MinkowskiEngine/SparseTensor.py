@@ -817,9 +817,10 @@ class SparseTensor():
 
         Returns:
             :attr:`spare_tensor` (torch.sparse.Tensor): the torch sparse tensor
-            representation of the self in `[Batch Dim, Spatial Dims..., Feature
-            Dim]`. The coordinate of each feature can be accessed via
-            `min_coord + tensor_stride * [the coordinate of the dense tensor]`.
+            representation of the self in `[Batch Dim, Feature Dim, Spatial
+            Dim..., Spatial Dim]`. The coordinate of each feature can be
+            accessed via `min_coord + tensor_stride * [the coordinate of the
+            dense tensor]`.
 
             :attr:`min_coords` (torch.IntTensor): the D-dimensional vector
             defining the minimum coordinate of the output sparse tensor. If

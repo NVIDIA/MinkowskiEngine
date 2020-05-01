@@ -1,6 +1,6 @@
 # Change Log
 
-## [master] - 2020-04-08
+## [master] - 2020-05-01
 
 ### Changed
 
@@ -18,6 +18,7 @@
 - `SparseTensor.slice()` slicing features on discrete coordinates to continuous coordinates
 - CoordsManager.getKernelMapGPU returns long type tensors (Issue #125)
 - SyncBatchNorm error fix (Issue #129)
+- Sparse Tensor `dense()` doc update (Issue #126)
 
 
 ## [0.4.2] - 2020-03-13

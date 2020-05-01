@@ -240,4 +240,6 @@ If you use the Minkowski Engine, please cite:
 
 - [3D and 4D Spatio-Temporal Semantic Segmentation, CVPR'19](https://github.com/chrischoy/SpatioTemporalSegmentation)
 - [Fully Convolutional Geometric Features, ICCV'19](https://github.com/chrischoy/FCGF)
-- [Learning multiview 3D point cloud registration](https://arxiv.org/abs/2001.05119)
+- [Learning multiview 3D point cloud registration, CVPR'20](https://arxiv.org/abs/2001.05119)
+- [Deep Global Registration, CVPR'20](https://arxiv.org/abs/2004.11540)
+- High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR'20
