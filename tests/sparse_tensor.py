@@ -93,7 +93,7 @@ class Test(unittest.TestCase):
 
     def test_extraction(self):
         coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
-        feats = torch.FloatTensor([1.1, 2.1, 3.1, 4.1, 5.1])
+        feats = torch.FloatTensor([[1.1, 2.1, 3.1, 4.1, 5.1]]).t()
         X = SparseTensor(feats, coords)
         C0 = X.coordinates_at(0)
         F0 = X.features_at(0)
@@ -113,6 +113,12 @@ class Test(unittest.TestCase):
         for c, f in zip(coords, feats):
             self.assertEqual(c.numel(), f.numel())
             print(c, f)
+
+        feats, valid_inds = X.features_at_coords(torch.IntTensor([[0, 0], [2, 2], [-1, -1]]))
+        self.assertTrue(feats[0, 0] == 1.1)
+        self.assertTrue(feats[1, 0] == 5.1)
+        self.assertTrue(feats[2, 0] == 0)
+        self.assertTrue(len(valid_inds) == 2)
 
     def test_operation_mode(self):
         # Set to use the global sparse tensor coords manager by default

@@ -57,7 +57,6 @@ class TestConvolution(unittest.TestCase):
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        print(input.mapping)
         cm = input.coords_man
         print(cm._get_coords_key(1))
 
@@ -96,7 +95,6 @@ class TestConvolution(unittest.TestCase):
         feats.requires_grad_()
 
         input = SparseTensor(feats, coords=coords, tensor_stride=2)
-        print(input.mapping)
         cm = input.coords_man
         print(cm._get_coords_key(2))
 
