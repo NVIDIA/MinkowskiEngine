@@ -238,6 +238,10 @@ If you use the Minkowski Engine, please cite:
 
 ## Projects using Minkowski Engine
 
+Please feel free to update [the wiki page](https://github.com/StanfordVL/MinkowskiEngine/wiki/Usage) to add your projects!
+
+- [A full list of projects using MinkowskiEngine](https://github.com/StanfordVL/MinkowskiEngine/wiki/Usage)
+
 - [3D and 4D Spatio-Temporal Semantic Segmentation, CVPR'19](https://github.com/chrischoy/SpatioTemporalSegmentation)
 - [Fully Convolutional Geometric Features, ICCV'19](https://github.com/chrischoy/FCGF)
 - [Learning multiview 3D point cloud registration, CVPR'20](https://arxiv.org/abs/2001.05119)

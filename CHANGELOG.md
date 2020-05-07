@@ -1,6 +1,6 @@
 # Change Log
 
-## [master] - 2020-05-01
+## [master] - 2020-05-07
 
 ### Changed
 
@@ -19,6 +19,7 @@
 - CoordsManager.getKernelMapGPU returns long type tensors (Issue #125)
 - SyncBatchNorm error fix (Issue #129)
 - Sparse Tensor `dense()` doc update (Issue #126)
+- Installation arguments `--cuda_home=<value>`, `--force_cuda`, `--blas_include_dirs=<comma_separated_values>`, and '--blas_library_dirs=<comma_separated_values>`. (Issue #135)
 
 
 ## [0.4.2] - 2020-03-13

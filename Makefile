@@ -18,6 +18,7 @@ EXTENSION_NAME := minkowski
 # mkl for MKL. For conda, conda install -c intel mkl mkl-include
 # openblas for OpenBlas (default)
 BLAS ?= openblas
+CUDA_HOME ?= $(shell $(PYTHON) -c 'from torch.utils.cpp_extension import _find_cuda_home; print(_find_cuda_home())')
 
 # Custom (MKL/ATLAS/OpenBLAS) include and lib directories.
 # Leave commented to accept the defaults for your choice of BLAS
@@ -57,11 +58,11 @@ endif
 
 ifneq ($(CPU_ONLY), 1)
 	# CUDA ROOT DIR that contains bin/ lib64/ and include/
-	# CUDA_DIR := /usr/local/cuda
-	CUDA_DIR := $(shell $(PYTHON) -c 'from torch.utils.cpp_extension import _find_cuda_home; print(_find_cuda_home())')
+	# CUDA_HOME := /usr/local/cuda
 	
-	INCLUDE_DIRS += ./ $(CUDA_DIR)/include
-	LIBRARY_DIRS += $(CUDA_DIR)/lib64
+	NVCC ?= $(CUDA_HOME)/bin/nvcc
+	INCLUDE_DIRS += ./ $(CUDA_HOME)/include
+	LIBRARY_DIRS += $(CUDA_HOME)/lib64
 endif
 
 SRC_DIR := ./src
@@ -163,9 +164,9 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 
 $(OBJ_DIR)/cuda/%.o: $(SRC_DIR)/%.cu | $(OBJ_DIR)
 	@ echo NVCC $<
-	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+	$(Q)$(NVCC) $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
 		-odir $(@D)
-	$(Q)nvcc $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+	$(Q)$(NVCC) $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 
 $(STATIC_LIB): $(ALL_OBJS) | $(OBJ_DIR)
 	$(RM) -f $(STATIC_LIB)
