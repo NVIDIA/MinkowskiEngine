@@ -268,9 +268,13 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
             outfeat = input.F.mm(self.kernel)
             out_coords_key = input.coords_key
         else:
+            if self.is_transpose:
+                conv = MinkowskiConvolutionTransposeFunction()
+            else:
+                conv = MinkowskiConvolutionFunction()
             # Get a new coords key or extract one from the coords
             out_coords_key = _get_coords_key(input, coords)
-            outfeat = self.conv.apply(input.F, self.kernel, input.tensor_stride,
+            outfeat = conv.apply(input.F, self.kernel, input.tensor_stride,
                                       self.stride, self.kernel_size,
                                       self.dilation, self.region_type_,
                                       self.region_offset_, input.coords_key,
@@ -384,7 +388,6 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             is_transpose=False,
             dimension=dimension)
         self.reset_parameters()
-        self.conv = MinkowskiConvolutionFunction()
 
 
 class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
@@ -458,7 +461,6 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             dimension=dimension)
         self.reset_parameters(True)
         self.generate_new_coords = generate_new_coords
-        self.conv = MinkowskiConvolutionTransposeFunction()
 
     def forward(self,
                 input: SparseTensor,
@@ -487,7 +489,7 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
         else:
             # Get a new coords key or extract one from the coords
             out_coords_key = _get_coords_key(input, coords, tensor_stride=1)
-            outfeat = self.conv.apply(
+            outfeat = MinkowskiConvolutionTransposeFunction().apply(
                 input.F, self.kernel, input.tensor_stride, self.stride,
                 self.kernel_size, self.dilation, self.region_type_,
                 self.region_offset_, self.generate_new_coords, input.coords_key,
