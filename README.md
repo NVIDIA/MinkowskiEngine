@@ -246,4 +246,4 @@ Please feel free to update [the wiki page](https://github.com/StanfordVL/Minkows
 - [Fully Convolutional Geometric Features, ICCV'19](https://github.com/chrischoy/FCGF)
 - [Learning multiview 3D point cloud registration, CVPR'20](https://arxiv.org/abs/2001.05119)
 - [Deep Global Registration, CVPR'20](https://arxiv.org/abs/2004.11540)
-- High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR'20
+- [High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR'20](https://arxiv.org/abs/2005.08144)

@@ -35,10 +35,31 @@ CPU_COUNT = os.cpu_count()
 if 'OMP_NUM_THREADS' in os.environ:
     CPU_COUNT = int(os.environ['OMP_NUM_THREADS'])
 
-_memory_manager_backend = MemoryManagerBackend.CUDA
+_memory_manager_backend = MemoryManagerBackend.PYTORCH
 
 
 def set_memory_manager_backend(backend: MemoryManagerBackend):
+    r"""Set the GPU memory manager backend
+
+    By default, the Minkowski Engine will use the pytorch memory pool to
+    allocate temporary GPU memory slots. This allows the pytorch backend to
+    effectively reuse the memory pool shared between the pytorch backend and
+    the Minkowski Engine. It tends to allow training with larger batch sizes
+    given a fixed GPU memory. However, pytorch memory manager tend to be slower
+    than allocating GPU directly using raw CUDA calls.
+
+    By default, the Minkowski Engine uses
+    :attr:`ME.MemoryManagerBackend.PYTORCH` for memory management.
+
+    Example::
+
+       >>> import MinkowskiEngine as ME
+       >>> # Set the GPU memory manager backend to raw CUDA calls
+       >>> ME.set_memory_manager_backend(ME.MemoryManagerBackend.CUDA)
+       >>> # Set the GPU memory manager backend to the pytorch memory pool
+       >>> ME.set_memory_manager_backend(ME.MemoryManagerBackend.PYTORCH)
+
+    """
     assert isinstance(backend, MemoryManagerBackend), \
         f"Input must be an instance of MemoryManagerBackend not {backend}"
     global _memory_manager_backend

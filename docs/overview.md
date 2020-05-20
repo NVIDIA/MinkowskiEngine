@@ -49,14 +49,15 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 - Ubuntu 14.04 or higher
 - CUDA 10.1 or higher
-- pytorch 1.3 or higher
+- pytorch 1.5 or higher
 - python 3.6 or higher
-- GCC 6 or higher
+- GCC 7 or higher
 
 
 ## Installation
 
-You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly.
+You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly. If you experience issues installing the package, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) or [the installation wiki page](https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation).
+If you cannot find a relevant problem, please report the issue on [the github issue page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
 ### Pip
 
@@ -79,7 +80,7 @@ pip3 install -U -I git+https://github.com/StanfordVL/MinkowskiEngine
 
 ### Anaconda
 
-We recommend `python>=3.6` for installation. If you have compilation issues, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) first.
+We recommend `python>=3.6` for installation.
 
 
 #### 1. Create a conda virtual environment and install requirements.
@@ -207,6 +208,17 @@ For issues not listed on the API and feature requests, feel free to submit
 an issue on the [github issue
 page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
+## Known Issues
+
+### Running the MinkowskiEngine on nodes with a large number of CPUs
+
+The MinkowskiEngine uses OpenMP to parallelize the kernel map generation. However, when the number of threads used for parallelization is too large (e.g. OMP_NUM_THREADS=80), the efficiency drops rapidly as all threads simply wait for multithread locks to be released.
+
+In such cases, set the number of threads used for OpenMP. Usually, any number below 24 would be fine, but search for the optimal setup on your system.
+
+```
+export OMP_NUM_THREADS=<number of threads to use>; python <your_program.py>
+```
 
 ## Citing Minkowski Engine
 
@@ -226,6 +238,12 @@ If you use the Minkowski Engine, please cite:
 
 ## Projects using Minkowski Engine
 
+Please feel free to update [the wiki page](https://github.com/StanfordVL/MinkowskiEngine/wiki/Usage) to add your projects!
+
+- [A full list of projects using MinkowskiEngine](https://github.com/StanfordVL/MinkowskiEngine/wiki/Usage)
+
 - [3D and 4D Spatio-Temporal Semantic Segmentation, CVPR'19](https://github.com/chrischoy/SpatioTemporalSegmentation)
 - [Fully Convolutional Geometric Features, ICCV'19](https://github.com/chrischoy/FCGF)
-- [Learning multiview 3D point cloud registration](https://arxiv.org/abs/2001.05119)
+- [Learning multiview 3D point cloud registration, CVPR'20](https://arxiv.org/abs/2001.05119)
+- [Deep Global Registration, CVPR'20](https://arxiv.org/abs/2004.11540)
+- [High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR'20](https://arxiv.org/abs/2005.08144)

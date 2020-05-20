@@ -21,3 +21,12 @@ CoordsManager
     :exclude-members: __repr__
 
     .. automethod:: __init__
+
+
+Coordinate GPU Memory Manager
+-----------------------------
+
+.. autoclass:: MinkowskiEngine.MemoryManagerBackend
+    :members:
+
+.. autofunction:: MinkowskiEngine.MinkowskiCoords.set_memory_manager_backend

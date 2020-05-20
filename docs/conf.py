@@ -4,8 +4,6 @@ import sys
 # pkg_resources.require('MinkowskiEngine==0.4.2a1')
 import MinkowskiEngine as ME
 
-from recommonmark.parser import CommonMarkParser
-
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -28,7 +26,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'MinkowskiEngine'
-copyright = '2019, Chris Choy'
+copyright = '2020, Chris Choy'
 author = 'Chris Choy'
 
 # The short X.Y version
@@ -50,19 +48,16 @@ extensions = [
     'sphinx_markdown_tables',
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
+    'recommonmark',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-source_parsers = {
-    '.md': CommonMarkParser,
-}
-
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst', '.md']
+# source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'

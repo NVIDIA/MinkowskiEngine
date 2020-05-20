@@ -38,8 +38,8 @@ from MinkowskiEngineBackend import MemoryManagerBackend
 
 class SparseTensorOperationMode(Enum):
     """
-    SEPARATE_COORDS_MANAGER: always create a new coordinate manager.
-    SHARE_COORDS_MANAGER: always use the globally defined coordinate manager.
+    `SEPARATE_COORDS_MANAGER`: always create a new coordinate manager.
+    `SHARE_COORDS_MANAGER`: always use the globally defined coordinate manager. Must clear the coordinate manager manually by :attr:`MinkowskiEngine.SparseTensor.clear_global_coords_man`
     """
     SEPARATE_COORDS_MANAGER = 0
     SHARE_COORDS_MANAGER = 1
@@ -47,8 +47,8 @@ class SparseTensorOperationMode(Enum):
 
 class SparseTensorQuantizationMode(Enum):
     """
-    RANDOM_SUBSAMPLE: Subsample one coordinate per each quantization block randomly.
-    UNWEIGHTED_AVERAGE: average all features within a quantization block equally.
+    `RANDOM_SUBSAMPLE`: Subsample one coordinate per each quantization block randomly.
+    `UNWEIGHTED_AVERAGE`: average all features within a quantization block equally.
     """
     RANDOM_SUBSAMPLE = 0
     UNWEIGHTED_AVERAGE = 1
@@ -61,6 +61,33 @@ COORDS_KEY_DIFFERENT_ERROR = "SparseTensors must have the same coords_key."
 
 
 def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
+    r"""Define the sparse tensor coordinate manager operation mode.
+
+    By default, a :attr:`MinkowskiEngine.SparseTensor.SparseTensor`
+    instantiation creates a new coordinate manager that is not shared with
+    other sparse tensors. By setting this function with
+    :attr:`MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDS_MANAGER`, you
+    can share the coordinate manager globally with other sparse tensors.
+    However, you must explicitly clear the coordinate manger after use. Please
+    refer to :attr:`MinkowskiEngine.clear_global_coords_man`.
+
+    Args:
+        :attr:`operation_mode`
+        (:attr:`MinkowskiEngine.SparseTensorOperationMode`): The operation mode
+        for the sparse tensor coordinate manager. By default
+        :attr:`MinkowskiEngine.SparseTensorOperationMode.SEPARATE_COORDS_MANAGER`.
+
+    Example:
+
+        >>> import MinkowskiEngine as ME
+        >>> ME.set_sparse_tensor_operation_mode(ME.SparseTensorOperationMode.SHARE_COORDS_MANAGER)
+        >>> ...
+        >>> a = ME.SparseTensor(coords=A_C, feats=A_F)
+        >>> b = ME.SparseTensor(coords=B_C, feats=B_C)  # coords_man shared
+        >>> ...  # one feed forward and backward
+        >>> ME.clear_global_coords_man()  # Must use to clear the coordinates after one forward/backward
+
+    """
     assert isinstance(operation_mode, SparseTensorOperationMode), \
         f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
     global _sparse_tensor_operation_mode
@@ -73,10 +100,11 @@ def sparse_tensor_operation_mode():
 
 
 def clear_global_coords_man():
-    r"""
-    When using the operation mode:
-    `SparseTensorOperationMode.SHARE_COORDS_MANAGER`, you must explicitly clear
-    the coordinate manager when done using it.
+    r"""Clear the global coordinate manager cache.
+
+    When you use the operation mode:
+    :attr:`MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER`,
+    you must explicitly clear the coordinate manager after each feed forward/backward.
     """
     global _global_coords_man
     _global_coords_man = None
