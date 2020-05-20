@@ -110,6 +110,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#discussion-and-documentation">Discussion and Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#known-issues">Known Issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-the-minkowskiengine-on-nodes-with-a-large-number-of-cpus">Running the MinkowskiEngine on nodes with a large number of CPUs</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#citing-minkowski-engine">Citing Minkowski Engine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#projects-using-minkowski-engine">Projects using Minkowski Engine</a></li>
 </ul>
@@ -288,14 +292,15 @@
 <ul class="simple">
 <li><p>Ubuntu 14.04 or higher</p></li>
 <li><p>CUDA 10.1 or higher</p></li>
-<li><p>pytorch 1.3 or higher</p></li>
+<li><p>pytorch 1.5 or higher</p></li>
 <li><p>python 3.6 or higher</p></li>
-<li><p>GCC 6 or higher</p></li>
+<li><p>GCC 7 or higher</p></li>
 </ul>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>You can install the Minkowski Engine with <code class="docutils literal notranslate"><span class="pre">pip</span></code>, with anaconda, or on the system directly.</p>
+<p>You can install the Minkowski Engine with <code class="docutils literal notranslate"><span class="pre">pip</span></code>, with anaconda, or on the system directly. If you experience issues installing the package, please checkout the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/issues.html">common compilation issues page</a> or <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation">the installation wiki page</a>.
+If you cannot find a relevant problem, please report the issue on <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/issues">the github issue page</a>.</p>
 <div class="section" id="pip">
 <h3>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h3>
 <p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.
@@ -316,7 +321,7 @@ First, install pytorch following the <a class="reference external" href="https:/
 </div>
 <div class="section" id="anaconda">
 <h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h3>
-<p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation. If you have compilation issues, please checkout the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/issues.html">common compilation issues page</a> first.</p>
+<p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation.</p>
 <div class="section" id="create-a-conda-virtual-environment-and-install-requirements">
 <h4>1. Create a conda virtual environment and install requirements.<a class="headerlink" href="#create-a-conda-virtual-environment-and-install-requirements" title="Permalink to this headline">¶</a></h4>
 <p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
@@ -371,8 +376,8 @@ sparse tensor.  Fortunately, the Minkowski Engine provides the quantization
 function (<code class="docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code>).</p>
 <div class="section" id="creating-a-network">
 <h3>Creating a Network<a class="headerlink" href="#creating-a-network" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="kn">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 
 <span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiNetwork</span><span class="p">):</span>
 
@@ -385,7 +390,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
                 <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                 <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                 <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">())</span>
@@ -414,7 +419,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># loss and network</span>
     <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
     <span class="n">net</span> <span class="o">=</span> <span class="n">ExampleNetwork</span><span class="p">(</span><span class="n">in_feat</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">out_feat</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">net</span><span class="p">)</span>
 
     <span class="c1"># a data loader must return a tuple of coords, features, and labels.</span>
     <span class="n">coords</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">data_loader</span><span class="p">()</span>
@@ -437,6 +442,17 @@ page</a> for more detail.</p>
 an issue on the <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/issues">github issue
 page</a>.</p>
 </div>
+<div class="section" id="known-issues">
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="running-the-minkowskiengine-on-nodes-with-a-large-number-of-cpus">
+<h3>Running the MinkowskiEngine on nodes with a large number of CPUs<a class="headerlink" href="#running-the-minkowskiengine-on-nodes-with-a-large-number-of-cpus" title="Permalink to this headline">¶</a></h3>
+<p>The MinkowskiEngine uses OpenMP to parallelize the kernel map generation. However, when the number of threads used for parallelization is too large (e.g. OMP_NUM_THREADS=80), the efficiency drops rapidly as all threads simply wait for multithread locks to be released.</p>
+<p>In such cases, set the number of threads used for OpenMP. Usually, any number below 24 would be fine, but search for the optimal setup on your system.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">OMP_NUM_THREADS</span><span class="o">=&lt;</span><span class="n">number</span> <span class="n">of</span> <span class="n">threads</span> <span class="n">to</span> <span class="n">use</span><span class="o">&gt;</span><span class="p">;</span> <span class="n">python</span> <span class="o">&lt;</span><span class="n">your_program</span><span class="o">.</span><span class="n">py</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="citing-minkowski-engine">
 <h2>Citing Minkowski Engine<a class="headerlink" href="#citing-minkowski-engine" title="Permalink to this headline">¶</a></h2>
 <p>If you use the Minkowski Engine, please cite:</p>
@@ -455,10 +471,14 @@ page</a>.</p>
 </div>
 <div class="section" id="projects-using-minkowski-engine">
 <h2>Projects using Minkowski Engine<a class="headerlink" href="#projects-using-minkowski-engine" title="Permalink to this headline">¶</a></h2>
+<p>Please feel free to update <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/wiki/Usage">the wiki page</a> to add your projects!</p>
 <ul class="simple">
+<li><p><a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/wiki/Usage">A full list of projects using MinkowskiEngine</a></p></li>
 <li><p><a class="reference external" href="https://github.com/chrischoy/SpatioTemporalSegmentation">3D and 4D Spatio-Temporal Semantic Segmentation, CVPR’19</a></p></li>
 <li><p><a class="reference external" href="https://github.com/chrischoy/FCGF">Fully Convolutional Geometric Features, ICCV’19</a></p></li>
-<li><p><a class="reference external" href="https://arxiv.org/abs/2001.05119">Learning multiview 3D point cloud registration</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/2001.05119">Learning multiview 3D point cloud registration, CVPR’20</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/2004.11540">Deep Global Registration, CVPR’20</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/2005.08144">High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR’20</a></p></li>
 </ul>
 </div>
 </div>
@@ -497,7 +517,7 @@ page</a>.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Chris Choy
+        &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>

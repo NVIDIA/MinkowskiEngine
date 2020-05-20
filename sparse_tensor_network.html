@@ -216,7 +216,7 @@ please refer to the <a class="reference external" href="terminology.html">termin
 <div class="section" id="sparse-tensor-network">
 <h2>Sparse Tensor Network<a class="headerlink" href="#sparse-tensor-network" title="Permalink to this headline">¶</a></h2>
 <p>Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in a convnet, is also known as a <em>sparse convolutional networks</em> <a class="reference external" href="https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf">[1]</a>. Such parameter-space sparsity used for model compression still operates on dense tensors and all intermediate activations are also dense tensors.</p>
-<p>However, in this work, we focus on <em>spatially</em> sparse data, in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs <em>sparse tensor networks</em>  and these sparse tensor networks processes and generates sparse tensors. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define on a dense tensor and implemented in the Minkowski Engine.</p>
+<p>However, in this work, we focus on <em>spatially</em> sparse data, in particular, spatially sparse high-dimensional inputs and convolutional networks for sparse tensors <a class="reference external" href="https://arxiv.org/abs/1711.10275">[2]</a>. We can also represent these data as sparse tensors, and are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs <em>sparse tensor networks</em>  and these sparse tensor networks processes and generates sparse tensors <a class="reference external" href="https://purl.stanford.edu/fg022dx0979">[4]</a>. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define on a dense tensor and implemented in the Minkowski Engine.</p>
 </div>
 <div class="section" id="generalized-convolution">
 <h2>Generalized Convolution<a class="headerlink" href="#generalized-convolution" title="Permalink to this headline">¶</a></h2>
@@ -328,6 +328,7 @@ Also, when we use a hyper-cross shaped kernel <a class="reference external" href
 <li><p><a class="reference external" href="https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf">[1] Sparse Convolutional Neural Networks, CVPR’15</a></p></li>
 <li><p><a class="reference external" href="https://arxiv.org/abs/1711.10275">[2] 3D Semantic Segmentation with Submanifold Sparse Convolutional Neural Networks, CVPR’18</a></p></li>
 <li><p><a class="reference external" href="https://arxiv.org/abs/1904.08755">[3] 4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural Networks, CVPR’19</a></p></li>
+<li><p><a class="reference external" href="https://purl.stanford.edu/fg022dx0979">[4] High-dimensional Convolutional Neural Networks for 3D Perception, Stanford University</a> <a class="reference external" href="https://node1.chrischoy.org/data/publications/thesis/ch4_sparse_tensor_network.pdf">Chapter 4. Sparse Tensor Networks</a></p></li>
 </ul>
 </div>
 </div>
@@ -366,7 +367,7 @@ Also, when we use a hyper-cross shaped kernel <a class="reference external" href
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Chris Choy
+        &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>

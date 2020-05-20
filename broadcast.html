@@ -201,7 +201,7 @@
 <h1>MinkowskiBroadcast<a class="headerlink" href="#minkowskibroadcast" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="minkowskibroadcastaddition">
 <h2>MinkowskiBroadcastAddition<a class="headerlink" href="#minkowskibroadcastaddition" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiBroadcastAddition">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiBroadcastAddition</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastAddition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Broadcast the reduced features to all input coordinates.</p>
@@ -217,15 +217,15 @@ output coordinates will be the same as the input coordinates
 features that are reduced to the origin. This can be typically done with
 the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
 </div>
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcastAddition.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastAddition.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcastAddition.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">input_glob</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastAddition.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em>, <em class="sig-param"><span class="n">input_glob</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastAddition.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -242,7 +242,7 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 <div class="section" id="minkowskibroadcastmultiplication">
 <h2>MinkowskiBroadcastMultiplication<a class="headerlink" href="#minkowskibroadcastmultiplication" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiBroadcastMultiplication">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiBroadcastMultiplication</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication" title="Permalink to this definition">¶</a></dt>
 <dd><p>Broadcast reduced features to all input coordinates.</p>
@@ -258,15 +258,15 @@ coordinates <span class="math notranslate nohighlight">\(\mathcal{C}^\text{in} =
 features that are reduced to the origin. This can be typically done with
 the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
 </div>
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcastMultiplication.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcastMultiplication.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">input_glob</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em>, <em class="sig-param"><span class="n">input_glob</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastMultiplication.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -283,7 +283,7 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 <div class="section" id="minkowskibroadcastconcatenation">
 <h2>MinkowskiBroadcastConcatenation<a class="headerlink" href="#minkowskibroadcastconcatenation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiBroadcastConcatenation">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiBroadcastConcatenation</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastConcatenation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Broadcast reduced features to all input coordinates and concatenate to the input.</p>
@@ -300,15 +300,15 @@ The output coordinates will be the same as the input coordinates
 features that are reduced to the origin. This can be typically done with
 the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
 </div>
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcastConcatenation.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastConcatenation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcastConcatenation.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">input_glob</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastConcatenation.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em>, <em class="sig-param"><span class="n">input_glob</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcastConcatenation.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -325,7 +325,7 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 <div class="section" id="id1">
 <h2>MinkowskiBroadcast<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiBroadcast">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiBroadcast</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast" title="Permalink to this definition">¶</a></dt>
 <dd><p>Broadcast reduced features to all input coordinates.</p>
@@ -343,15 +343,15 @@ coordinates.</p>
 features that are reduced to the origin. This can be typically done with
 the global reduction such as the <a class="reference internal" href="pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiGlobalPooling</span></code></a>.</p>
 </div>
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiBroadcast.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">input_glob</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em>, <em class="sig-param"><span class="n">input_glob</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiBroadcast.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -402,7 +402,7 @@ registered hooks while the latter silently ignores them.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Chris Choy
+        &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>

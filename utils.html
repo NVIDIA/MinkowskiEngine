@@ -206,9 +206,9 @@
 <h1>Utility Functions and Classes<a class="headerlink" href="#utility-functions-and-classes" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="sparse-quantize">
 <h2>sparse_quantize<a class="headerlink" href="#sparse-quantize" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="MinkowskiEngine.utils.sparse_quantize">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats=None</em>, <em class="sig-param">labels=None</em>, <em class="sig-param">ignore_label=-100</em>, <em class="sig-param">return_index=False</em>, <em class="sig-param">return_inverse=False</em>, <em class="sig-param">quantization_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_quantize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">feats</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">labels</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ignore_label</span><span class="o">=</span><span class="default_value">- 100</span></em>, <em class="sig-param"><span class="n">return_index</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_inverse</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">quantization_size</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_quantize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given coordinates, and features (optionally labels), the function
 generates quantized (voxelized) coordinates.</p>
 <dl>
@@ -266,9 +266,9 @@ hyperrectangle of of the grid cell.</p>
 </div>
 <div class="section" id="batched-coordinates">
 <h2>batched_coordinates<a class="headerlink" href="#batched-coordinates" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="MinkowskiEngine.utils.batched_coordinates">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">batched_coordinates</code><span class="sig-paren">(</span><em class="sig-param">coords</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.batched_coordinates" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">batched_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.batched_coordinates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <cite>ME.SparseTensor</cite> coordinates from a sequence of coordinates</p>
 <p>Given a list of either numpy or pytorch tensor coordinates, return the
 batched coordinates suitable for <cite>ME.SparseTensor</cite>.</p>
@@ -288,9 +288,9 @@ list of coordinates.</p>
 </div>
 <div class="section" id="sparse-collate">
 <h2>sparse_collate<a class="headerlink" href="#sparse-collate" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="MinkowskiEngine.utils.sparse_collate">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_collate</code><span class="sig-paren">(</span><em class="sig-param">coords</em>, <em class="sig-param">feats</em>, <em class="sig-param">labels=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_collate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">sparse_collate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">feats</span></em>, <em class="sig-param"><span class="n">labels</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.sparse_collate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create input arguments for a sparse tensor <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html">the documentation</a>.</p>
 <p>Convert a set of coordinates and features into the batch coordinates and
 batch features.</p>
@@ -306,9 +306,9 @@ associated to the inputs.</p>
 </div>
 <div class="section" id="batch-sparse-collate">
 <h2>batch_sparse_collate<a class="headerlink" href="#batch-sparse-collate" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="MinkowskiEngine.utils.batch_sparse_collate">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">batch_sparse_collate</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.batch_sparse_collate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">batch_sparse_collate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.batch_sparse_collate" title="Permalink to this definition">¶</a></dt>
 <dd><p>The wrapper function that can be used in in conjunction with
 <cite>torch.utils.data.DataLoader</cite> to generate inputs for a sparse tensor.</p>
 <p>Please refer to <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">the training example</a> for the
@@ -322,9 +322,9 @@ usage.</p>
 </div>
 <div class="section" id="sparsecollation">
 <h2>SparseCollation<a class="headerlink" href="#sparsecollation" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="MinkowskiEngine.utils.SparseCollation">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">SparseCollation</code><span class="sig-paren">(</span><em class="sig-param">limit_numpoints=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">SparseCollation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">limit_numpoints</span><span class="o">=</span><span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates collate function for coords, feats, labels.</p>
 <p>Please refer to <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">the training example</a> for the
 usage.</p>
@@ -343,9 +343,9 @@ or False, concatenate all points. -1 by default.</p>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.utils.SparseCollation.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">limit_numpoints=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">limit_numpoints</span><span class="o">=</span><span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.SparseCollation.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -354,9 +354,9 @@ or False, concatenate all points. -1 by default.</p>
 </div>
 <div class="section" id="get-coords-map">
 <h2>get_coords_map<a class="headerlink" href="#get-coords-map" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="MinkowskiEngine.utils.get_coords_map">
-<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">get_coords_map</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.get_coords_map" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.utils.</code><code class="sig-name descname">get_coords_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.utils.get_coords_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get mapping between sparse tensor 1 and sparse tensor 2.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x</span></code> (<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>): a sparse tensor with
@@ -378,16 +378,16 @@ corresponds to the returned indices of x.</p>
 
    <span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">get_coords_map</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">,</span> <span class="n">out_sp_tensor</span><span class="p">)</span>
    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
-      <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{i}</span><span class="s2"> -&gt; </span><span class="si">{o}</span><span class="s2">&quot;</span><span class="p">)</span>
+      <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <div class="section" id="cat">
 <h3>cat<a class="headerlink" href="#cat" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
+<dl class="py function">
 <dt id="MinkowskiEngine.cat">
-<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">cat</code><span class="sig-paren">(</span><em class="sig-param">*sparse_tensors</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.cat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">cat</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">sparse_tensors</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.cat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Concatenate sparse tensors</p>
 <p>Concatenate sparse tensor features. All sparse tensors must have the same
 <cite>coords_key</cite> (the same coordinates). To concatenate sparse tensors with
@@ -441,7 +441,7 @@ different sparsity patterns, use SparseTensor binary operations, or
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Chris Choy
+        &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>

@@ -12,6 +12,14 @@ tests.broadcast module
    :undoc-members:
    :show-inheritance:
 
+tests.chwise\_conv module
+-------------------------
+
+.. automodule:: tests.chwise_conv
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 tests.common module
 -------------------
 
@@ -112,6 +120,14 @@ tests.strided\_conv module
 --------------------------
 
 .. automodule:: tests.strided_conv
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+tests.strided\_pool module
+--------------------------
+
+.. automodule:: tests.strided_pool
    :members:
    :undoc-members:
    :show-inheritance:

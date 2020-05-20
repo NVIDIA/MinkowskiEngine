@@ -203,7 +203,7 @@
 <h1>Multi-GPU Training<a class="headerlink" href="#multi-gpu-training" title="Permalink to this headline">¶</a></h1>
 <p>Currently, the MinkowskiEngine supports Multi-GPU training through data parallelization. In data parallelization, we have a set of mini batches that will be fed into a set of replicas of a network.</p>
 <p>Let’s define a network first.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 <span class="kn">from</span> <span class="nn">examples.minkunet</span> <span class="kn">import</span> <span class="n">MinkUNet34C</span>
 
 <span class="c1"># Copy the network to GPU</span>
@@ -219,7 +219,7 @@
 </pre></div>
 </div>
 <p>Next, we need to create replicas of the network and the final loss layer (if you use one).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn.parallel</span> <span class="kn">as</span> <span class="nn">parallel</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn.parallel</span> <span class="k">as</span> <span class="nn">parallel</span>
 
 <span class="n">criterion</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
 <span class="n">criterions</span> <span class="o">=</span> <span class="n">parallel</span><span class="o">.</span><span class="n">replicate</span><span class="p">(</span><span class="n">criterion</span><span class="p">,</span> <span class="n">devices</span><span class="p">)</span>
@@ -508,7 +508,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Chris Choy
+        &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>

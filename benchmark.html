@@ -202,7 +202,7 @@
 <div class="section" id="experiment-setup">
 <h2>Experiment setup<a class="headerlink" href="#experiment-setup" title="Permalink to this headline">¶</a></h2>
 <p>For a single-convolution-layer experiment, we use the following setup.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="kn">as</span> <span class="nn">ME</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 
 <span class="n">conv</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
     <span class="n">in_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
@@ -210,7 +210,7 @@
     <span class="n">kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
     <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+    <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -279,7 +279,7 @@
         <span class="n">kernel_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
         <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
         <span class="n">in_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
@@ -287,7 +287,7 @@
         <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
     <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolutionTranspose</span>
         <span class="n">in_channels</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
@@ -295,7 +295,7 @@
         <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
         <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">has_bias</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -375,7 +375,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Chris Choy
+        &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>

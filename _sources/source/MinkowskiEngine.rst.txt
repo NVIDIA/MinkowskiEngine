@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 4
 
    MinkowskiEngine.modules
    MinkowskiEngine.utils

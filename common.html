@@ -199,10 +199,10 @@
 <h1>Miscellaneous Classes<a class="headerlink" href="#miscellaneous-classes" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="kernel-generator">
 <h2>Kernel Generator<a class="headerlink" href="#kernel-generator" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="MinkowskiEngine.KernelGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">KernelGenerator</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em class="sig-param">region_offsets=None</em>, <em class="sig-param">axis_types=None</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><dl class="py method">
 <dt id="MinkowskiEngine.KernelGenerator.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">region_type=&lt;RegionType.HYPERCUBE: 0&gt;</em>, <em class="sig-param">region_offsets=None</em>, <em class="sig-param">axis_types=None</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">region_type</span></code> (RegionType, optional): defines the kernel
@@ -220,9 +220,9 @@ RegionType.HYPERCROSS]</cite>, the kernel would be rectangular for the
 first two dimensions and cross shaped for the thrid dimension.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="MinkowskiEngine.KernelGenerator.get_kernel">
-<code class="sig-name descname">get_kernel</code><span class="sig-paren">(</span><em class="sig-param">tensor_stride</em>, <em class="sig-param">is_transpose</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.get_kernel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_kernel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tensor_stride</span></em>, <em class="sig-param"><span class="n">is_transpose</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.get_kernel" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -230,26 +230,26 @@ first two dimensions and cross shaped for the thrid dimension.</p>
 </div>
 <div class="section" id="regiontype">
 <h2>RegionType<a class="headerlink" href="#regiontype" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="MinkowskiEngine.RegionType">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">RegionType</code><a class="headerlink" href="#MinkowskiEngine.RegionType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define the kernel region type</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="MinkowskiEngine.RegionType.CUSTOM">
 <code class="sig-name descname">CUSTOM</code><em class="property"> = 2</em><a class="headerlink" href="#MinkowskiEngine.RegionType.CUSTOM" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="MinkowskiEngine.RegionType.HYBRID">
 <code class="sig-name descname">HYBRID</code><em class="property"> = 3</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYBRID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="MinkowskiEngine.RegionType.HYPERCROSS">
 <code class="sig-name descname">HYPERCROSS</code><em class="property"> = 1</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPERCROSS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="MinkowskiEngine.RegionType.HYPERCUBE">
 <code class="sig-name descname">HYPERCUBE</code><em class="property"> = 0</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPERCUBE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -293,7 +293,7 @@ first two dimensions and cross shaped for the thrid dimension.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Chris Choy
+        &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>
