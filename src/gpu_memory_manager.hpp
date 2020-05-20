@@ -41,8 +41,6 @@ namespace minkowski {
 
 using std::vector;
 
-enum MemoryManagerBackend { CUDA = 0, PYTORCH = 1 };
-
 class GPUMemoryManager {
 private:
   int initial_size = 256;

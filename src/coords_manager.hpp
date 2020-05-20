@@ -122,18 +122,18 @@ public:
   unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
   unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
 
-  CoordsManager(){
-    gpu_memory_manager = std::make_shared<GPUMemoryManager>();
-  };
-  CoordsManager(int num_threads) {
-    omp_set_dynamic(0);
-    omp_set_num_threads(num_threads);
-  }
   CoordsManager(int num_threads, MemoryManagerBackend backend) {
-    omp_set_dynamic(0);
-    omp_set_num_threads(num_threads);
+    if (num_threads > 0) {
+      omp_set_dynamic(0);
+      omp_set_num_threads(num_threads);
+    }
+#ifndef CPU_ONLY
     gpu_memory_manager = std::make_shared<GPUMemoryManager>(backend);
+#endif
   }
+  CoordsManager(int num_threads): CoordsManager(num_threads, PYTORCH) {}
+  CoordsManager(): CoordsManager(-1, PYTORCH) {}
+
   ~CoordsManager() { clear(); }
 
   void printDiagnostics(py::object py_coords_key) const;

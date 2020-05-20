@@ -169,11 +169,14 @@ class Test(unittest.TestCase):
         self.assertTrue(cm.get_batch_size() == 2)
 
     def test_memory_manager_backend(self):
-        CoordsManager(memory_manager_backend=MemoryManagerBackend.CUDA, D=2)
-        CoordsManager(memory_manager_backend=MemoryManagerBackend.PYTORCH, D=2)
-
+        # Set the global GPU memory manager backend. By default PYTORCH.
         ME.set_memory_manager_backend(MemoryManagerBackend.PYTORCH)
-        CoordsManager(D=2)
+        ME.set_memory_manager_backend(MemoryManagerBackend.CUDA)
+
+        # Create a coords man with the specified GPU memory manager backend.
+        # No effect with CPU_ONLY build
+        cm = CoordsManager(memory_manager_backend=MemoryManagerBackend.CUDA, D=2)
+        cm = CoordsManager(memory_manager_backend=MemoryManagerBackend.PYTORCH, D=2)
 
 
 if __name__ == '__main__':

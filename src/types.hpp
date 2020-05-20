@@ -97,6 +97,9 @@ using InOutMapsRefPair = pair<InOutMaps<Itype> &, InOutMaps<Itype> &>;
 template <typename Itype>
 using pInOutMapsRefPair = pair<pInOutMaps<Itype> &, pInOutMaps<Itype> &>;
 
+// GPU memory manager backend. No effect with CPU_ONLY build
+enum MemoryManagerBackend { CUDA = 0, PYTORCH = 1 };
+
 // FNV64-1a
 // uint64_t for unsigned long, must use CXX -m64
 template <typename T> uint64_t hash_vec(T p) {

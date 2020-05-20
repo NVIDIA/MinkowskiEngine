@@ -131,7 +131,9 @@ libraries = ["minkowski"]
 
 # extra_compile_args+=['-g']  # Uncomment for debugging
 if CPU_ONLY and not FORCE_CUDA:
-    print("\nCPU_ONLY build set")
+    print("--------------------------------")
+    print("| WARNING: CPU_ONLY build set  |")
+    print("--------------------------------")
     compile_args += ["CPU_ONLY=1"]
     extra_compile_args += ["-DCPU_ONLY"]
     Extension = CppExtension
