@@ -189,11 +189,11 @@ void instantiate_func(py::module &m, const std::string &dtypestr) {
 #endif
 }
 
-template <typename MapType>
-void instantiate_coordsman(py::module &m) {
+template <typename MapType> void instantiate_coordsman(py::module &m) {
   std::string coords_name = std::string("CoordsManager");
   py::class_<mink::CoordsManager<MapType>>(m, coords_name.c_str())
       .def(py::init<int>())
+      .def(py::init<int, mink::MemoryManagerBackend>())
       .def("existsCoordsKey",
            (bool (mink::CoordsManager<MapType>::*)(py::object) const) &
                mink::CoordsManager<MapType>::existsCoordsKey)
@@ -204,40 +204,44 @@ void instantiate_coordsman(py::module &m) {
 #endif
       .def("getCoordsMap", &mink::CoordsManager<MapType>::getCoordsMap)
       .def("getUnionMap", &mink::CoordsManager<MapType>::getUnionMap)
-      .def("getCoordsSize", (int (mink::CoordsManager<MapType>::*)(py::object) const) &
-                                mink::CoordsManager<MapType>::getCoordsSize)
+      .def("getCoordsSize",
+           (int (mink::CoordsManager<MapType>::*)(py::object) const) &
+               mink::CoordsManager<MapType>::getCoordsSize)
       .def("getCoords", &mink::CoordsManager<MapType>::getCoords)
       .def("getBatchSize", &mink::CoordsManager<MapType>::getBatchSize)
       .def("getBatchIndices", &mink::CoordsManager<MapType>::getBatchIndices)
       .def("getRowIndicesAtBatchIndex",
            &mink::CoordsManager<MapType>::getRowIndicesAtBatchIndex)
-      .def("getRowIndicesPerBatch", &mink::CoordsManager<MapType>::getRowIndicesPerBatch)
-      .def("setOriginCoordsKey", &mink::CoordsManager<MapType>::setOriginCoordsKey)
+      .def("getRowIndicesPerBatch",
+           &mink::CoordsManager<MapType>::getRowIndicesPerBatch)
+      .def("setOriginCoordsKey",
+           &mink::CoordsManager<MapType>::setOriginCoordsKey)
       .def("initializeCoords",
-           (uint64_t(mink::CoordsManager<MapType>::*)(at::Tensor, at::Tensor, at::Tensor,
-                                             py::object, const bool, const bool,
-                                             const bool, const bool)) &
+           (uint64_t(mink::CoordsManager<MapType>::*)(
+               at::Tensor, at::Tensor, at::Tensor, py::object, const bool,
+               const bool, const bool, const bool)) &
                mink::CoordsManager<MapType>::initializeCoords,
            py::call_guard<py::gil_scoped_release>())
-      .def("createStridedCoords", &mink::CoordsManager<MapType>::createStridedCoords)
+      .def("createStridedCoords",
+           &mink::CoordsManager<MapType>::createStridedCoords)
       .def("createTransposedStridedRegionCoords",
            &mink::CoordsManager<MapType>::createTransposedStridedRegionCoords)
-      .def("createPrunedCoords", &mink::CoordsManager<MapType>::createPrunedCoords)
-      .def("createOriginCoords", &mink::CoordsManager<MapType>::createOriginCoords)
+      .def("createPrunedCoords",
+           &mink::CoordsManager<MapType>::createPrunedCoords)
+      .def("createOriginCoords",
+           &mink::CoordsManager<MapType>::createOriginCoords)
       .def("printDiagnostics", &mink::CoordsManager<MapType>::printDiagnostics)
       .def("__repr__",
            [](const mink::CoordsManager<MapType> &a) { return a.toString(); });
 }
 
-template <typename MapType>
-void instantiate(py::module &m) {
+template <typename MapType> void instantiate(py::module &m) {
   instantiate_coordsman<MapType>(m);
   instantiate_func<MapType, float>(m, std::string("f"));
   instantiate_func<MapType, double>(m, std::string("d"));
 }
 
-template <typename MapType>
-void bind_native(py::module &m) {
+template <typename MapType> void bind_native(py::module &m) {
   std::string name = std::string("CoordsKey");
   py::class_<mink::CoordsKey>(m, name.c_str())
       .def(py::init<>())
@@ -260,6 +264,11 @@ void bind_native(py::module &m) {
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  py::enum_<mink::MemoryManagerBackend>(m, "MemoryManagerBackend")
+      .value("CUDA", mink::MemoryManagerBackend::CUDA)
+      .value("PYTORCH", mink::MemoryManagerBackend::PYTORCH)
+      .export_values();
+
   bind_native<mink::CoordsToIndexMap>(m);
   instantiate<mink::CoordsToIndexMap>(m);
 }

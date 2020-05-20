@@ -33,6 +33,7 @@ import numpy as np
 from Common import convert_to_int_list
 from MinkowskiCoords import CoordsKey, CoordsManager
 import MinkowskiEngineBackend as MEB
+from MinkowskiEngineBackend import MemoryManagerBackend
 
 
 class SparseTensorOperationMode(Enum):
@@ -146,6 +147,7 @@ class SparseTensor():
             force_creation=False,
             allow_duplicate_coords=False,
             quantization_mode=SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
+            memory_manager_backend: MemoryManagerBackend = None,
             tensor_stride=1):
         r"""
 
@@ -251,7 +253,9 @@ class SparseTensor():
             global _sparse_tensor_operation_mode, _global_coords_man
             if _sparse_tensor_operation_mode == SparseTensorOperationMode.SHARE_COORDS_MANAGER:
                 if _global_coords_man is None:
-                    _global_coords_man = CoordsManager(D=coords.size(1) - 1)
+                    _global_coords_man = CoordsManager(
+                        memory_manager_backend=memory_manager_backend,
+                        D=coords.size(1) - 1)
                 coords_manager = _global_coords_man
             else:
                 assert coords is not None, "Initial coordinates must be given"

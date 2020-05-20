@@ -20,6 +20,8 @@
 - SyncBatchNorm error fix (Issue #129)
 - Sparse Tensor `dense()` doc update (Issue #126)
 - Installation arguments `--cuda_home=<value>`, `--force_cuda`, `--blas_include_dirs=<comma_separated_values>`, and '--blas_library_dirs=<comma_separated_values>`. (Issue #135)
+- SparseTensor query by coordinates `features_at_coords` (Issue #137)
+- Memory manager control. CUDA | Pytorch memory manager for cuda malloc
 
 
 ## [0.4.2] - 2020-03-13

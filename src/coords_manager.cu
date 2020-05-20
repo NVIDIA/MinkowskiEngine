@@ -45,7 +45,7 @@ CoordsManager<MapType>::copyInOutMapToGPU(const InOutMaps<int> &map) {
   pInOutMaps<int> d_map;
 
   const int n = getInOutMapsSize(map);
-  int *d_scr = (int *)gpu_memory_manager.gpuMalloc(n * sizeof(int));
+  int *d_scr = (int *)gpu_memory_manager.get()->gpuMalloc(n * sizeof(int));
 
   for (const auto &cmap : map) {
     // Copy (*p_in_maps)[k] to GPU
@@ -166,7 +166,7 @@ vector<vector<at::Tensor>> CoordsManager<MapType>::getKernelMapGPU(
       torch::TensorOptions()
           .dtype(torch::kInt64)
           // .device(torch::kCUDA)
-          .device(torch::kCUDA, gpu_memory_manager.device_id)
+          .device(torch::kCUDA, gpu_memory_manager.get()->get_device_id())
           .requires_grad(false);
 
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();

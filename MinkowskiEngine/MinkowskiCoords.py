@@ -29,10 +29,20 @@ from typing import Union, List
 import torch
 from Common import convert_to_int_list, convert_to_int_tensor, prep_args
 import MinkowskiEngineBackend as MEB
+from MinkowskiEngineBackend import MemoryManagerBackend
 
 CPU_COUNT = os.cpu_count()
 if 'OMP_NUM_THREADS' in os.environ:
     CPU_COUNT = int(os.environ['OMP_NUM_THREADS'])
+
+_memory_manager_backend = MemoryManagerBackend.CUDA
+
+
+def set_memory_manager_backend(backend: MemoryManagerBackend):
+    assert isinstance(backend, MemoryManagerBackend), \
+        f"Input must be an instance of MemoryManagerBackend not {backend}"
+    global _memory_manager_backend
+    _memory_manager_backend = backend
 
 
 class CoordsKey():
@@ -68,14 +78,19 @@ class CoordsKey():
 
 class CoordsManager():
 
-    def __init__(self, num_threads: int = -1, D: int = -1):
+    def __init__(self,
+                 num_threads: int = -1,
+                 memory_manager_backend: MemoryManagerBackend = None,
+                 D: int = -1):
         if D < 1:
             raise ValueError(f"Invalid dimension {D}")
         self.D = D
-        CPPCoordsManager = MEB.CoordsManager
         if num_threads < 0:
-            num_threads = CPU_COUNT
-        coords_man = CPPCoordsManager(num_threads)
+            num_threads = min(CPU_COUNT, 20)
+        if memory_manager_backend is None:
+            global _memory_manager_backend
+            memory_manager_backend = _memory_manager_backend
+        coords_man = MEB.CoordsManager(num_threads, memory_manager_backend)
         self.CPPCoordsManager = coords_man
 
     def initialize(self,
@@ -88,10 +103,9 @@ class CoordsManager():
         assert isinstance(coords_key, CoordsKey)
         unique_index = torch.LongTensor()
         inverse_mapping = torch.LongTensor()
-        self.CPPCoordsManager.initializeCoords(coords, unique_index, inverse_mapping,
-                                               coords_key.CPPCoordsKey,
-                                               force_creation, force_remap,
-                                               allow_duplicate_coords, return_inverse)
+        self.CPPCoordsManager.initializeCoords(
+            coords, unique_index, inverse_mapping, coords_key.CPPCoordsKey,
+            force_creation, force_remap, allow_duplicate_coords, return_inverse)
         return unique_index, inverse_mapping
 
     def create_coords_key(self,
@@ -242,7 +256,8 @@ class CoordsManager():
         """
         # region type 1 iteration with kernel_size 1 is invalid
         if isinstance(kernel_size, torch.Tensor):
-            assert (kernel_size > 0).all(), f"Invalid kernel size: {kernel_size}"
+            assert (kernel_size >
+                    0).all(), f"Invalid kernel size: {kernel_size}"
             if (kernel_size == 1).all() == 1:
                 region_type = 0
         elif isinstance(kernel_size, int):

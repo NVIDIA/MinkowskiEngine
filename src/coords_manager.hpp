@@ -122,10 +122,17 @@ public:
   unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
   unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
 
-  CoordsManager(){};
+  CoordsManager(){
+    gpu_memory_manager = std::make_shared<GPUMemoryManager>();
+  };
   CoordsManager(int num_threads) {
     omp_set_dynamic(0);
     omp_set_num_threads(num_threads);
+  }
+  CoordsManager(int num_threads, MemoryManagerBackend backend) {
+    omp_set_dynamic(0);
+    omp_set_num_threads(num_threads);
+    gpu_memory_manager = std::make_shared<GPUMemoryManager>(backend);
   }
   ~CoordsManager() { clear(); }
 
@@ -263,7 +270,7 @@ public:
 
 #ifndef CPU_ONLY
   // GPU memory manager
-  GPUMemoryManager gpu_memory_manager;
+  std::shared_ptr<GPUMemoryManager> gpu_memory_manager;
 
   // Keep all in out maps throughout the lifecycle of the coords manager
   //
@@ -294,10 +301,10 @@ public:
                        py::object py_out_coords_key);
 
   void *getScratchGPUMemory(size_t size) {
-    return gpu_memory_manager.tmp_data(size);
+    return gpu_memory_manager.get()->tmp_data(size);
   }
 
-  void clearScratchGPUMemory() { gpu_memory_manager.clear_tmp(); }
+  void clearScratchGPUMemory() { gpu_memory_manager.get()->clear_tmp(); }
 
 #endif // CPU_ONLY
 };     // coordsmanager

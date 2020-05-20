@@ -275,10 +275,10 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
             # Get a new coords key or extract one from the coords
             out_coords_key = _get_coords_key(input, coords)
             outfeat = conv.apply(input.F, self.kernel, input.tensor_stride,
-                                      self.stride, self.kernel_size,
-                                      self.dilation, self.region_type_,
-                                      self.region_offset_, input.coords_key,
-                                      out_coords_key, input.coords_man)
+                                 self.stride, self.kernel_size, self.dilation,
+                                 self.region_type_, self.region_offset_,
+                                 input.coords_key, out_coords_key,
+                                 input.coords_man)
         if self.has_bias:
             outfeat += self.bias
 
