@@ -32,20 +32,16 @@
 
 #include <robin_hood.h>
 
-#include "primitives/small_vector.hpp"
-
+#include "coordinate.hpp"
 #include "region.hpp"
 #include "types.hpp"
 
 namespace minkowski {
 
-using std::reference_wrapper;
-using std::set;
-using std::tuple;
-using std::vector;
+namespace detail {
 
 template <typename Itype> struct byte_hash_vec {
-  std::size_t operator()(vector<Itype> const &vec) const noexcept {
+  std::size_t operator()(std::vector<Itype> const &vec) const noexcept {
     return robin_hood::hash_bytes(vec.data(), sizeof(Itype) * vec.size());
   }
 };
@@ -70,42 +66,40 @@ inline vector<Itype> stride_copy(const vector<Itype> &src,
   return dst;
 }
 
-// clang-format off
+} // namespace detail
 
 // Coord specific types
-using coordinate_type      = int32_t;
-using CoordsMapVectorVType = small_vector<coordinate_type, 4>;
-using CoordsToIndexMap     = robin_hood::unordered_flat_map<vector<coordinate_type>,
-                                                            int32_t,
-                                                            byte_hash_vec<coordinate_type>>;
-using CoordsToVectorMap    = robin_hood::unordered_flat_map<vector<coordinate_type>,
-                                                            CoordsMapVectorVType,
-                                                            byte_hash_vec<coordinate_type>>;
+template <typename coordinate_type>
+using CoordinateUnorderedMap = robin_hood::unordered_flat_map<coordinate<coordinate_type>,
+      default_types::index_type,
+      detail::byte_hash_vec<default_types::coordinate_type>>;
 /*
  * A wrapper for an unordered_map for coordinate management
  *
  * @note
  */
-template <typename MapType = CoordsToIndexMap>
-struct CoordsMap {
-  using key_type   = typename MapType::key_type;
-  using value_type = typename MapType::mapped_type;
-  using map_type   = typename MapType;
+template <typename coordinate_type,
+          typename MapType = CoordinateUnorderedMap<coordinate_type>,
+          typename Allocator = std::allocator<coordinate_type>>
+class CoordinateMap {
+
+public:
+  // clang-format off
+  using key_type       = typename MapType::key_type;
+  using value_type     = typename MapType::mapped_type;
+  using map_type       = typename MapType;
+  using allocator_type = typename Allocator;
+  using size_type      = default_types::size_type;
+  // clang-format on
 
   // Empty Constructors
   CoordsMap() {}
-  CoordsMap(std::size_t ncols_, set<int> const &batch_indices);
 
   // Initializations
-  vector<int> initialize(coordinate_type const *p_coords_,
-                         std::size_t nrows_,
-                         std::size_t ncols_,
-                         bool force_remap = false);
-
+  //
+  // returns: unique_index, reverse_index, batch indices
   tuple<vector<int>, vector<int>, set<int>>
-  initialize_batch(const int *p_coords_,
-                   const int nrows_,
-                   const int ncols_,
+  initialize_batch(const int *p_coords_, const int nrows_, const int ncols_,
                    const bool force_remap = false,
                    const bool return_inverse = false);
 
@@ -141,8 +135,12 @@ struct CoordsMap {
   typename map_type::iterator end() { return map.end(); }
   typename map_type::const_iterator end() const { return map.end(); }
 
-  typename map_type::iterator find(key_type const &key) { return map.find(key); }
-  typename map_type::const_iterator find(key_type const &key) const { return map.find(key); }
+  typename map_type::iterator find(key_type const &key) {
+    return map.find(key);
+  }
+  typename map_type::const_iterator find(key_type const &key) const {
+    return map.find(key);
+  }
 
   std::size_t size() const { return map.size(); }
   void reserve(std::size_t size) { map.reserve(size); }
@@ -151,11 +149,12 @@ struct CoordsMap {
 
   void print() const;
 
+private:
   // members
-  map_type map;
-  int nrows, ncols;
+  allocator_type m_allocator;
+  map_type *m_map;
+  size_type m_number_of_coordinates, m_coordinate_size;
 };
-// clang-format on
 
 } // end namespace minkowski
 

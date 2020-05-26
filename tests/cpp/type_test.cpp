@@ -1,4 +1,4 @@
-/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/* Copyright (c) 2020 NVIDIA Corporation.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,35 +22,25 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
-#ifndef COMMON
-#define COMMON
-#include <array>
-#include <iostream>
-#include <string>
-#include <vector>
+#include "types.hpp"
 
 #include <torch/extension.h>
 
-#include "types.hpp"
-#include "utils.hpp"
+namespace minkowski {
 
-#include "coords_key.hpp"
-#include "coords_manager.hpp"
+void type_test() {
+  // Check basic type compilation
+  constexpr default_types::tensor_order_type D = 3;
+  constexpr default_types::dcoordinate_type a  = 3;
 
-#ifndef CPU_ONLY
-#include <cublas_v2.h>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <curand.h>
-#include <cusparse_v2.h>
-#include <driver_types.h> // cuda driver types
+  const cpuInMap in_map     = std::vector<default_types::index_type>{3, 4, 5};
+  const cpuOutMap out_map   = std::vector<default_types::index_type>{3, 4, 5};
+  const cpuInMaps in_maps   = {in_map};
+  const cpuOutMaps out_maps = {out_map};
+}
 
-#include <ATen/cuda/CUDAContext.h>
-#include <thrust/device_vector.h>
+} // namespace minkowski
 
-#include "gpu.cuh"
-#include "types.cuh"
-#include "gpu_memory_manager.hpp"
-#endif
-
-#endif // COMMON
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  m.def("type_test", &minkowski::type_test, "Minkowski Engine type test");
+}

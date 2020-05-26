@@ -67,6 +67,8 @@ def set_memory_manager_backend(backend: MemoryManagerBackend):
 
 
 class CoordsKey():
+    r"""TODO: replace with the CPP CoordinateMapKey
+    """
 
     def __init__(self, D):
         self.D = D

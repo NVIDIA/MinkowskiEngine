@@ -1,5 +1,4 @@
-/*
- *  Copyright 2020 NVIDIA Corporation.
+/* Copyright (c) NVIDIA CORPORATION.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -18,20 +17,39 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
+ * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
+ * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
+ * of the code.
  */
-#ifndef COORDS_FUNCTORS_CUH
-#define COORDS_FUNCTORS_CUH
+#ifndef COORDINATE_HPP
+#define COORDINATE_HPP
+
+#include "utils.hpp"
 
 namespace minkowski {
 
-extern template <typename coordinate_type> struct coordinate;
+// The size of a coordinate is defined in the equality functor, and the hash
+// functor.
+template <typename coordinate_type> struct coordinate {
+  coordinate() {}
+  MINK_CUDA_HOST_DEVICE inline coordinate(coordinate_type const *_ptr)
+      : ptr{_ptr} {}
+
+  coordinate_type const *data() { return ptr; }
+  MINK_CUDA_HOST_DEVICE inline coordinate_type operator[](uint32_t i) const {
+    return ptr[i];
+  }
+
+  coordinate_type const *ptr;
+};
 
 namespace detail {
 
 template <typename coordinate_type> struct coordinate_equal_to {
   coordinate_equal_to(size_t _coordinate_size)
       : coordinate_size(_coordinate_size) {}
-  __host__ __device__ bool
+  MINK_CUDA_HOST_DEVICE inline bool
   operator()(coordinate<coordinate_type> const &lhs,
              coordinate<coordinate_type> const &rhs) const {
     if ((lhs.ptr == nullptr) and (rhs.ptr == nullptr))
@@ -46,57 +64,6 @@ template <typename coordinate_type> struct coordinate_equal_to {
   }
 
   size_t const coordinate_size;
-};
-
-// clang-format off
-template <typename map_type, typename pair_type, typename coordinate_type>
-struct insert_coordinate {
-  insert_coordinate(map_type &_map, coordinate_type *_d_ptr, size_t _size)
-      : map{_map}, d_ptr{_d_ptr}, size{_size} {}
-
-  insert_coordinate(map_type &_map,
-                    thrust::device_vector<coordinate_type> &coords_vec,
-                    size_t _size)
-      : map{_map}, d_ptr{thrust::raw_pointer_cast(coords_vec.data())}, size{_size} {}
-
-  /*
-   * @brief insert a <coordinate, row index> pair into the unordered_map
-   *
-   * @return thrust::pair<bool, uint32_t> of a success flag and the current
-   * index.
-   */
-  __device__ thrust::pair<bool, uint32_t> operator()(uint32_t i) {
-    auto coord = coordinate<coordinate_type>{&d_ptr[i * size]};
-    pair_type pair = thrust::make_pair(coord, i);
-    // Returns pair<iterator, (bool)insert_success>
-    auto result = map.insert(pair);
-    return thrust::make_pair<bool, uint32_t>(
-        result.first != map.end() and result.second, i);
-  }
-
-  map_type &map;
-  coordinate_type const *d_ptr;
-  size_t const size;
-};
-
-template <typename map_type, typename pair_type, typename coordinate_type>
-struct find_coordinate {
-  using value_type = typename pair_type::second_type;
-  find_coordinate(map_type const &_map, coordinate_type const *_d_ptr, size_t _size)
-      : map{_map}, d_ptr{_d_ptr}, size{_size} {}
-
-  __device__ value_type operator()(uint32_t i) {
-    auto coord = coordinate<coordinate_type>{&d_ptr[i * size]};
-    auto result = map.find(coord);
-    if (result == map.end()) {
-      return std::numeric_limits<value_type>::max();
-    }
-    return result->second;
-  }
-
-  map_type const &map;
-  coordinate_type const *d_ptr;
-  size_t const size;
 };
 
 /*******************************************************************************
@@ -135,15 +102,15 @@ struct find_coordinate {
 template <typename coordinate_type> struct coordinate_murmur3 {
   using result_type = uint32_t;
 
-  __host__ __device__ coordinate_murmur3(uint32_t _coordinate_size)
+  MINK_CUDA_HOST_DEVICE inline coordinate_murmur3(uint32_t _coordinate_size)
       : m_seed(0), coordinate_size(_coordinate_size),
         len(_coordinate_size * sizeof(coordinate_type)) {}
 
-  __host__ __device__ uint32_t rotl32(uint32_t x, int8_t r) const {
+  MINK_CUDA_HOST_DEVICE inline uint32_t rotl32(uint32_t x, int8_t r) const {
     return (x << r) | (x >> (32 - r));
   }
 
-  __host__ __device__ uint32_t fmix32(uint32_t h) const {
+  MINK_CUDA_HOST_DEVICE inline uint32_t fmix32(uint32_t h) const {
     h ^= h >> 16;
     h *= 0x85ebca6b;
     h ^= h >> 13;
@@ -152,7 +119,7 @@ template <typename coordinate_type> struct coordinate_murmur3 {
     return h;
   }
 
-  __device__ result_type
+  MINK_CUDA_HOST_DEVICE result_type
   operator()(coordinate<coordinate_type> const &key) const {
     uint8_t const *data   = reinterpret_cast<uint8_t const *>(key.ptr);
     size_t const nblocks  = len / 4;
@@ -160,14 +127,10 @@ template <typename coordinate_type> struct coordinate_murmur3 {
     constexpr uint32_t c1 = 0xcc9e2d51;
     constexpr uint32_t c2 = 0x1b873593;
 
-    auto getblock32 = [] __host__ __device__(const uint32_t *p, int i) -> uint32_t {
+    auto getblock32 = [] MINK_CUDA_HOST_DEVICE (const uint32_t *p, int i) -> uint32_t {
     // Individual byte reads for unaligned accesses (very likely)
-#ifndef __CUDA_ARCH__
-      CUDF_FAIL("Hashing in host code is not supported.");
-#else
       auto q = (uint8_t const *)(p + i);
       return q[0] | (q[1] << 8) | (q[2] << 16) | (q[3] << 24);
-#endif
     };
 
     //----------
@@ -215,4 +178,4 @@ private:
 
 } // end namespace minkowski
 
-#endif // COORDS_FUNCTORS_CUH
+#endif // end COORDINATE_HPP

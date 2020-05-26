@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 NVIDIA Corporation.
+/* Copyright (c) 2020 NVIDIA CORPORATION.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,33 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
-#include "types.hpp"
+#include "coordinate_map_key.hpp"
 
 #include <torch/extension.h>
+#include <vector>
 
 namespace minkowski {
 
-void type_test() {
+void coordinate_map_key_test() {
   // Check basic type compilation
-  constexpr default_types::tensor_order_type D = 3;
-  constexpr default_types::dcoordinate_type a = 3;
-  constexpr default_types::ccoordinate_type b = 3.4;
-  const cpuInMap in_map = std::vector<default_types::index_type>{3, 4, 5};
-  const cpuOutMap out_map = std::vector<default_types::index_type>{3, 4, 5};
-  const cpuInMaps in_maps = {in_map};
-  const cpuOutMaps out_maps = {out_map};
+  CoordinateMapKey key{3};
+  CoordinateMapKey key2{default_types::stride_type{2, 3, 4}, 3};
 }
 
 } // namespace minkowski
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("type_test", &minkowski::type_test, "Minkowski Engine type test");
+  py::class_<minkowski::CoordinateMapKey>(m, "CoordinateMapKey")
+      .def(py::init<minkowski::default_types::tensor_order_type>())
+      .def(py::init<minkowski::default_types::stride_type,
+                    minkowski::default_types::tensor_order_type>())
+      .def("__repr__", &minkowski::CoordinateMapKey::to_string)
+      .def("set_dimension", &minkowski::CoordinateMapKey::set_dimension)
+      .def("stride", &minkowski::CoordinateMapKey::stride)
+      .def("up_stride", &minkowski::CoordinateMapKey::up_stride)
+      .def("set_tensor_stride", &minkowski::CoordinateMapKey::set_tensor_stride)
+      .def("get_tensor_stride", &minkowski::CoordinateMapKey::get_tensor_stride);
+
+  m.def("coordinate_map_key_test", &minkowski::coordinate_map_key_test,
+        "Minkowski Engine coordinate map key test");
 }

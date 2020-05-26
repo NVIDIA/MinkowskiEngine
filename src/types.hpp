@@ -24,12 +24,14 @@
  *  Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  *  of the code.
  */
-#ifndef TYPES
-#define TYPES
+#ifndef TYPES_HPP
+#define TYPES_HPP
 
 #include <array>
 #include <functional>
+#include <tuple>
 #include <vector>
+#include <pybind11/pybind11.h>
 
 #ifndef CPU_ONLY
 #include <thrust/host_vector.h>
@@ -37,29 +39,26 @@
 
 namespace minkowski {
 
+namespace py = pybind11;
+
 // clang-format off
 template <typename uint_type, typename int_type, typename float_type>
 struct type_wrapper {
-  using tensor_order_type = uint_type;
-  using index_type        = uint_type;
-  using stride_type       = uint_type;
-  using size_type         = uint_type;
-  using dcoordinate_type  = int_type;
-  using ccoordinate_type  = float_type;
+  using tensor_order_type        = uint_type;
+  using index_type               = uint_type;
+  using stride_type              = std::vector<uint_type>;
+  using size_type                = uint_type;
+  using dcoordinate_type         = int_type;
+  using coordinate_map_hash_type = uint64_t;
 #ifndef CPU_ONLY
-  using index_vector_type = thrust::host_vector<index_type>;
+  using index_vector_type        = thrust::host_vector<index_type>;
 #else
-  using index_vector_type = std::vector<index_type>;
+  using index_vector_type        = std::vector<index_type>;
 #endif // CPU_ONLY
 };
+// clang-format on
 
 using default_types = type_wrapper<uint32_t, int32_t, float>;
-
-// Vector backend
-
-// D-Dimensional coordinate + batch dimension = D + 1
-template <typename int_type = default_types::stride_type>
-using strides = std::vector<int_type>;
 
 // For hashing kernel sizes, strides, nd dilations.
 template <default_types::tensor_order_type D,
@@ -79,11 +78,29 @@ struct ptr_vector {
   default_types::size_type size_;
 };
 
-// Key for InOutMap
-// (in_coords_key, out_coords_key, stride hash, kernel size, dilation,
-// is_transpose, is_pool)
-using InOutMapKey = std::array<uint64_t, 8>;
+/* Key for KernelMap
+ *
+ * A tuple of (CoordinateMapKey (input),
+ *             CoordinateMapKey (output),
+ *             kernel stride,
+ *             kernel size,
+ *             kernel dilation,
+ *             kernel region type,
+ *             is_transpose,
+ *             is_pool)
+ */
+using KernelMapKey =
+    std::tuple<default_types::coordinate_map_hash_type, // input
+               default_types::coordinate_map_hash_type, // output
+               default_types::stride_type,              // kernel strides
+               default_types::stride_type,              // kernel size
+               default_types::stride_type,              // kernel dilation
+               int32_t,                                 // region_type
+               bool,                                    // is_transpose,
+               bool                                     // is_pool
+               >;
 
+// clang-format off
 /*
  * Kernel map specific types
  */
@@ -95,8 +112,9 @@ using cpuInMaps  = std::vector<cpuInMap>;
 using cpuOutMaps = std::vector<cpuOutMap>;
 // clang-format on
 
-using cpuInOutMapsPair    = std::pair<cpuInMaps, cpuOutMaps>;
+using cpuInOutMapsPair = std::pair<cpuInMaps, cpuOutMaps>;
 using cpuInOutMapsRefPair = std::pair<cpuInMaps &, cpuOutMaps &>;
+// clang-format on
 
 // GPU memory manager backend. No effect with CPU_ONLY build
 enum GPUMemoryManagerBackend { CUDA = 0, PYTORCH = 1 };
@@ -112,9 +130,9 @@ template <typename T> uint64_t hash_vec(T p) {
   return hash;
 }
 
-struct InOutMapKeyHash {
-  uint64_t operator()(InOutMapKey const &p) const {
-    return hash_vec<InOutMapKey>(p);
+/*
+struct KernelMapKeyHash {
+  uint64_t operator()(KernelMapKey const &key) const {
   }
 };
 
@@ -123,7 +141,8 @@ template <uint32_t D, typename Itype> struct ArrHash {
     return hash_vec<dim_array<D, Itype>>(p);
   }
 };
+*/
 
 } // end namespace minkowski
 
-#endif // TYPES
+#endif // TYPES_HPP

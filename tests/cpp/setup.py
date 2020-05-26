@@ -1,7 +1,12 @@
 import sys
+from sys import argv, platform
 import torch.cuda
 import os
+import subprocess
 from setuptools import setup
+import unittest
+from pathlib import Path
+
 from torch.utils.cpp_extension import BuildExtension, CppExtension, CUDAExtension
 from torch.utils.cpp_extension import CUDA_HOME, ROCM_HOME
 
@@ -14,14 +19,55 @@ if sys.platform == "win32":
 else:
     CXX_FLAGS = ["-g"]
 
+
+def run_command(*args):
+    subprocess.check_call(args)
+
+
+def _argparse(pattern, argv, is_flag=True):
+    if is_flag:
+        found = pattern in argv
+        if found:
+            argv.remove(pattern)
+        return found, argv
+    else:
+        arr = [arg for arg in argv if pattern in arg]
+        if len(arr) == 0:  # not found
+            return False, argv
+        else:
+            assert "=" in arr[0], f"{arr[0]} requires a value."
+            argv.remove(arr[0])
+            return arr[0].split("=")[1], argv
+
+
+SOURCE_SETS = {
+    "coordinate_map_key": [["coordinate_map_key_test.cpp"], ["coordinate_map_key.cpp"]],
+    "coordinate": [["coordinate_test.cpp"], []],
+    "type": [["type_test.cpp"], []],
+}
+
+test_target, argv = _argparse("--test", argv, False)
+assert test_target in SOURCE_SETS.keys()
+
 USE_NINJA = os.getenv("USE_NINJA") == "0"
-HERE = os.path.abspath(os.path.dirname(__file__))
+HERE = Path(os.path.dirname(__file__)).absolute()
+SRC_PATH = HERE.parent.parent / "src"
+OBJ_DIR = HERE / "objs"
+ME_OBJ_DIR = OBJ_DIR / "ME"
+
+CURR_TEST_FILES = SOURCE_SETS[test_target]
 
 ext_modules = [
     CppExtension(
-        "torch_test",
-        ["coords_types.cpp"],
+        name="MinkowskiEngineTest._C",
+        # ["type_test.cpp", "],
+        sources=[
+            *[str(HERE / test_file) for test_file in CURR_TEST_FILES[0]],
+            *[str(SRC_PATH / src_file) for src_file in CURR_TEST_FILES[1]],
+        ],
         extra_compile_args=CXX_FLAGS,
+        # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
+        # libraries=["coordinate_map_key"],
     ),
 ]
 
@@ -36,15 +82,16 @@ ext_modules = [
 #                             'nvcc': ['-O2']})
 #     ext_modules.append(extension)
 
+
 setup(
-    name="torch_test",
-    packages=["torch_test"],
+    name="MinkowskiEngineTest",
+    packages=[],
     ext_modules=ext_modules,
     include_dirs=[
-        os.path.join(HERE, "../../src"),
-        os.path.join(HERE, "../../src/3rdparty"),
+        str(SRC_PATH),
+        str(SRC_PATH / "3rdparty"),
         os.path.join(CUDA_HOME, "include"),
     ],
-    test_suite="tests",
+    test_suite="setup.suite",
     cmdclass={"build_ext": BuildExtension},
 )

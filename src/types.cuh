@@ -47,25 +47,6 @@ template <typename coordinate_type> struct coordinate {
   coordinate_type const *ptr;
 };
 
-/**
- * Wrapper for a long vector. Used for InOutMap and to save a device pointer.
- *
- * TODO: replace it with thrust::device_vector<Itype, Alloc>
- * https://github.com/thrust/thrust/blob/master/examples/cuda/custom_temporary_allocation.cu
- **/
-template <typename Itype> struct pVector {
-  pVector(Itype *ptr, size_t size) : ptr_(ptr), size_(size) {}
-
-  size_t size() const { return size_; };
-
-  Itype const *data() const { return ptr_; };
-  Itype *data() { return ptr_; };
-
-  // members
-  Itype *ptr_;
-  size_t size_;
-};
-
 // all coordinate-map type definitions
 template <typename coordinate_type, typename V> struct ckey_value_types {
   using ctype = coordinate_type;
