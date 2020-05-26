@@ -125,4 +125,12 @@ private:
     }                                                                          \
   }
 
+#ifdef __CUDACC__
+#define MINK_CUDA_HOST_DEVICE __host__ __device__
+#define MINK_CUDA_DEVICE __device__
+#else
+#define MINK_CUDA_HOST_DEVICE
+#define MINK_CUDA_DEVICE
+#endif
+
 #endif // UTILS
