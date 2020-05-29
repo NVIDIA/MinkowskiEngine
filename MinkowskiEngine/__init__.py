@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -21,7 +22,7 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 import os
 import sys

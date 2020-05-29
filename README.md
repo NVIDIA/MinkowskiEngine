@@ -48,7 +48,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 ## Requirements
 
 - Ubuntu 14.04 or higher
-- CUDA 10.1 or higher
+- CUDA 10.1.243 or higher
 - pytorch 1.5 or higher
 - python 3.6 or higher
 - GCC 7 or higher
@@ -56,7 +56,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 ## Installation
 
-You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly. If you experience issues installing the package, please checkout the [common compilation issues page](https://stanfordvl.github.io/MinkowskiEngine/issues.html) or [the installation wiki page](https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation).
+You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly. If you experience issues installing the package, please checkout the [the installation wiki page](https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation).
 If you cannot find a relevant problem, please report the issue on [the github issue page](https://github.com/StanfordVL/MinkowskiEngine/issues).
 
 ### Pip
@@ -67,7 +67,7 @@ First, install pytorch following the [instruction](https://pytorch.org). Next, i
 ```
 sudo apt install libopenblas-dev
 pip3 install torch
-pip3 install -U MinkowskiEngine
+pip3 install -U MinkowskiEngine -v
 ```
 
 ### Pip from the latest source
@@ -75,7 +75,7 @@ pip3 install -U MinkowskiEngine
 ```
 sudo apt install libopenblas-dev
 pip3 install torch
-pip3 install -U -I git+https://github.com/StanfordVL/MinkowskiEngine
+pip3 install -U -I git+https://github.com/StanfordVL/MinkowskiEngine -v
 ```
 
 ### Anaconda
