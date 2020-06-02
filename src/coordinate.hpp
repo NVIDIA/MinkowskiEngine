@@ -1,4 +1,6 @@
-/* Copyright (c) NVIDIA CORPORATION.
+/*
+ * Copyright (c) 2020 NVIDIA CORPORATION.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,17 +33,28 @@ namespace minkowski {
 
 // The size of a coordinate is defined in the equality functor, and the hash
 // functor.
-template <typename coordinate_type> struct coordinate {
-  MINK_CUDA_HOST_DEVICE inline coordinate() {}
-  MINK_CUDA_HOST_DEVICE inline coordinate(coordinate_type const *_ptr)
-      : ptr{_ptr} {}
+template <typename coordinate_type> class coordinate {
+  using self_type = coordinate<coordinate_type>;
 
-  coordinate_type const *data() { return ptr; }
+public:
+  coordinate() = delete;
+
+  MINK_CUDA_HOST_DEVICE inline coordinate(self_type &other)
+      : m_ptr(other.m_ptr) {}
+  MINK_CUDA_HOST_DEVICE inline coordinate(self_type const &other)
+      : m_ptr(other.m_ptr) {}
+  MINK_CUDA_HOST_DEVICE inline coordinate(coordinate_type const *ptr)
+      : m_ptr{ptr} {}
+
+  MINK_CUDA_HOST_DEVICE inline coordinate_type const *data() const {
+    return m_ptr;
+  }
   MINK_CUDA_HOST_DEVICE inline coordinate_type operator[](uint32_t i) const {
-    return ptr[i];
+    return m_ptr[i];
   }
 
-  coordinate_type const *ptr;
+private:
+  coordinate_type const *m_ptr;
 };
 
 template <typename T> struct coordinate_print_functor {
@@ -64,7 +77,93 @@ template <typename T> struct coordinate_print_functor {
   size_t const m_coordinate_size;
 };
 
+/*
+ * @brief iterator wrapper for a coordinate pointer
+ */
+template <typename coordinate_type> class coordinate_iterator {
+public:
+  using self_type = coordinate_iterator<coordinate_type>;
+  using size_type = int32_t;
+  using difference_type = int32_t;
+
+public:
+  coordinate_iterator() = delete;
+  coordinate_iterator(coordinate_type const *ptr,
+                      size_type const coordinate_size, size_type steps = 0)
+      : m_ptr(ptr), m_coordinate_size(coordinate_size), m_steps(steps) {}
+
+  self_type &operator++() noexcept {
+    m_steps++;
+    return *this;
+  }
+
+  self_type &operator+=(size_type steps) {
+    m_steps += steps;
+    return *this;
+  }
+
+  coordinate<coordinate_type> const operator*() const noexcept {
+    return coordinate<coordinate_type>{m_ptr + m_coordinate_size * m_steps};
+  }
+
+  coordinate_type const *reference() const noexcept {
+    return m_ptr + m_coordinate_size * m_steps;
+  }
+
+  size_type coordinate_size() const noexcept { return m_coordinate_size; }
+
+  difference_type operator-(self_type const &other) const noexcept {
+    return m_steps - other.m_steps;
+  }
+
+  bool operator==(self_type const &other) const noexcept {
+    return reference() == other.reference();
+  }
+
+  bool operator!=(self_type const &other) const noexcept {
+    return reference() != other.reference();
+  }
+
+private:
+  coordinate_type const *m_ptr{nullptr};
+  uint32_t const m_coordinate_size = 0;
+  uint32_t m_steps = 0;
+};
+
+/*
+ * @brief range wrapper for coordinates
+ */
+template <typename coordinate_type> class coordinate_range {
+  using iterator = coordinate_iterator<coordinate_type>;
+  using size_type = typename coordinate_iterator<coordinate_type>::size_type;
+
+public:
+  coordinate_range() = delete;
+  coordinate_range(coordinate_type const *ptr, size_type coordinate_size,
+                   size_type number_of_coordinates)
+      : m_ptr(ptr), m_coordinate_size(coordinate_size),
+        m_number_of_coordinates(number_of_coordinates) {}
+
+  iterator begin() const { return iterator(m_ptr, m_coordinate_size); }
+  iterator end() const {
+    return iterator(m_ptr, m_coordinate_size, m_number_of_coordinates);
+  }
+  size_type size() { return m_number_of_coordinates; }
+
+private:
+  coordinate_type const *m_ptr{nullptr};
+  size_type const m_coordinate_size = 0;
+  size_type const m_number_of_coordinates = 0;
+  size_type m_steps = 0;
+};
+
 namespace detail {
+
+template <typename coordinate_type>
+inline int32_t distance(coordinate_iterator<coordinate_type> first,
+                        coordinate_iterator<coordinate_type> last) {
+  return (last.reference() - first.reference()) / first.coordinate_size();
+}
 
 template <typename coordinate_type> struct coordinate_equal_to {
   MINK_CUDA_HOST_DEVICE inline coordinate_equal_to(size_t _coordinate_size)
@@ -72,9 +171,9 @@ template <typename coordinate_type> struct coordinate_equal_to {
   MINK_CUDA_HOST_DEVICE inline bool
   operator()(coordinate<coordinate_type> const &lhs,
              coordinate<coordinate_type> const &rhs) const {
-    if ((lhs.ptr == nullptr) and (rhs.ptr == nullptr))
+    if ((lhs.data() == nullptr) and (rhs.data() == nullptr))
       return true;
-    if ((lhs.ptr == nullptr) xor (rhs.ptr == nullptr))
+    if ((lhs.data() == nullptr) xor (rhs.data() == nullptr))
       return false;
     for (size_t i = 0; i < coordinate_size; i++) {
       if (lhs[i] != rhs[i])
@@ -141,7 +240,7 @@ template <typename coordinate_type> struct coordinate_murmur3 {
 
   MINK_CUDA_HOST_DEVICE result_type
   operator()(coordinate<coordinate_type> const &key) const {
-    uint8_t const *data   = reinterpret_cast<uint8_t const *>(key.ptr);
+    uint8_t const *data   = reinterpret_cast<uint8_t const *>(key.data());
     size_t const nblocks  = len / 4;
     result_type h1        = m_seed;
     constexpr uint32_t c1 = 0xcc9e2d51;

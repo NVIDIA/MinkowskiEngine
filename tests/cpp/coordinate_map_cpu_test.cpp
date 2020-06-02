@@ -100,7 +100,8 @@ size_type coordinate_map_insert_test(const torch::Tensor &coordinates) {
   auto const D = (index_type)coordinates.size(1);
   coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
 
-  CoordinateMapCPU<coordinate_type> map{N, D};
+  CoordinateMapCPU<coordinate_type> map{D};
+  map.reserve(N);
 
   ::simple_range iter{N};
   std::for_each(
@@ -113,6 +114,34 @@ size_type coordinate_map_insert_test(const torch::Tensor &coordinates) {
   //   std::cout << coordinate_print(kv.first) << ", " << kv.first.ptr << ": "
   //   << kv.second << "\n";
   // }
+  return map.size();
+}
+
+size_type coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
+  // Create TensorArgs. These record the names and positions of each tensor as a
+  // parameter.
+  torch::TensorArg arg_coordinates(coordinates, "coordinates", 0);
+
+  torch::CheckedFrom c = "coordinate_test";
+  torch::checkContiguous(c, arg_coordinates);
+  // must match coordinate_type
+  torch::checkScalarType(c, arg_coordinates, torch::kInt);
+  torch::checkBackend(c, arg_coordinates.tensor, torch::Backend::CPU);
+  torch::checkDim(c, arg_coordinates, 2);
+
+  auto const N = (index_type)coordinates.size(0);
+  auto const D = (index_type)coordinates.size(1);
+  coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
+
+  CoordinateMapCPU<coordinate_type> map{D};
+
+  auto input_coordinates = coordinate_range<coordinate_type>(ptr, D, N);
+  ::simple_range iter{N};
+  map.insert(input_coordinates.begin(), // key begin
+             input_coordinates.end(),   // key end
+             iter.begin(),              // value begin
+             iter.end());               // value end
+
   return map.size();
 }
 
@@ -145,19 +174,22 @@ coordinate_map_find_test(const torch::Tensor &coordinates,
   coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
   coordinate_type const *query_ptr = queries.data_ptr<coordinate_type>();
 
-  CoordinateMapCPU<coordinate_type> map{N, D};
+  CoordinateMapCPU<coordinate_type> map{D};
   map.reserve(N);
 
+  auto input_coordinates = coordinate_range<coordinate_type>(ptr, D, N);
   ::simple_range iter{N};
-  std::for_each(
-      iter.begin(), iter.end(),
-      insert_coordinate<CoordinateMapCPU<coordinate_type>, coordinate_type>{
-          map, ptr, D});
+  map.insert(input_coordinates.begin(), // key begin
+             input_coordinates.end(),   // key end
+             iter.begin(),              // value begin
+             iter.end());               // value end
 
   ::simple_range iter2{NQ};
   std::vector<index_type> query_results;
   std::transform(
-      iter2.begin(), iter2.end(), std::back_inserter(query_results),
+      iter2.begin(),                     // row index begin
+      iter2.end(),                       // row index end
+      std::back_inserter(query_results), // return result
       find_coordinate<CoordinateMapCPU<coordinate_type>, coordinate_type>{
           map, query_ptr, D});
 
@@ -169,49 +201,67 @@ coordinate_map_find_test(const torch::Tensor &coordinates,
   return query_results;
 }
 
-size_type coordinate_map_insert_batch_test(const torch::Tensor &coordinates) {
+std::pair<std::vector<index_type>, std::vector<index_type>>
+coordinate_map_batch_find_test(const torch::Tensor &coordinates,
+                               const torch::Tensor &queries) {
   // Create TensorArgs. These record the names and positions of each tensor as a
   // parameter.
   torch::TensorArg arg_coordinates(coordinates, "coordinates", 0);
+  torch::TensorArg arg_queries(queries, "queries", 1);
 
   torch::CheckedFrom c = "coordinate_test";
   torch::checkContiguous(c, arg_coordinates);
+  torch::checkContiguous(c, arg_queries);
+
   // must match coordinate_type
   torch::checkScalarType(c, arg_coordinates, torch::kInt);
+  torch::checkScalarType(c, arg_queries, torch::kInt);
   torch::checkBackend(c, arg_coordinates.tensor, torch::Backend::CPU);
+  torch::checkBackend(c, arg_queries.tensor, torch::Backend::CPU);
   torch::checkDim(c, arg_coordinates, 2);
+  torch::checkDim(c, arg_queries, 2);
 
   auto const N = (index_type)coordinates.size(0);
   auto const D = (index_type)coordinates.size(1);
-  coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
+  auto const NQ = (index_type)queries.size(0);
+  auto const DQ = (index_type)queries.size(1);
 
-  CoordinateMapCPU<coordinate_type> map{N, D};
+  ASSERT(D == DQ, "Coordinates and queries must have the same size.");
+  coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
+  coordinate_type const *query_ptr = queries.data_ptr<coordinate_type>();
+
+  CoordinateMapCPU<coordinate_type> map{D};
   map.reserve(N);
 
+  auto input_coordinates = coordinate_range<coordinate_type>(ptr, D, N);
   ::simple_range iter{N};
-  std::for_each(
-      iter.begin(), iter.end(),
-      insert_coordinate<CoordinateMapCPU<coordinate_type>, coordinate_type>{
-          map, ptr, D});
+  map.insert(input_coordinates.begin(), // key begin
+             input_coordinates.end(),   // key end
+             iter.begin(),              // value begin
+             iter.end());               // value end
 
-  // auto coordinate_print = coordinate_print_functor<coordinate_type>{D};
-  // for (auto kv : map) {
-  //   std::cout << coordinate_print(kv.first) << ", " << kv.first.ptr << ": "
-  //   << kv.second << "\n";
-  // }
-  return map.size();
+  auto query_coordinates = coordinate_range<coordinate_type>(query_ptr, D, N);
+  ::simple_range iter2{NQ};
+
+  auto query_results =
+      map.find(query_coordinates.begin(), query_coordinates.end());
+
+  return query_results;
 }
-
 } // namespace minkowski
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("coordinate_map_insert_test", &minkowski::coordinate_map_insert_test,
         "Minkowski Engine coordinate map insert test");
 
+  m.def("coordinate_map_batch_insert_test",
+        &minkowski::coordinate_map_batch_insert_test,
+        "Minkowski Engine coordinate map batch insert test");
+
   m.def("coordinate_map_find_test", &minkowski::coordinate_map_find_test,
         "Minkowski Engine coordinate map find test");
 
-  m.def("coordinate_map_insert_batch_test",
-        &minkowski::coordinate_map_insert_batch_test,
-        "Minkowski Engine coordinate map insert batch test");
+  m.def("coordinate_map_batch_find_test",
+        &minkowski::coordinate_map_batch_find_test,
+        "Minkowski Engine coordinate map batch find test");
 }
