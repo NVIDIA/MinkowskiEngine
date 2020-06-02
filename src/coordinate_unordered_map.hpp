@@ -61,12 +61,11 @@ struct CoordinateUnorderedMap {
   using iterator       = typename map_type::iterator;
   using const_iterator = typename map_type::const_iterator;
 
-  CoordinateUnorderedMap(size_type const number_of_coordinates,
-                         size_type const coordinate_size,
+  // Constructors
+  CoordinateUnorderedMap() = delete;
+  CoordinateUnorderedMap(size_type const coordinate_size,
                          allocator_type alloc = allocator_type())
-      : m_map(map_type{0, hasher{coordinate_size}, key_equal{coordinate_size}}) {
-    m_map.reserve(number_of_coordinates);
-  }
+      : m_map(map_type{0, hasher{coordinate_size}, key_equal{coordinate_size}}) {}
   // clang-format on
 
   // Iterators

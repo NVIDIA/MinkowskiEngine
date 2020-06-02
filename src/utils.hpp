@@ -171,8 +171,9 @@ public:
       ++(*this);
       return retval;
     }
-    bool operator==(iterator &other) const { return m_num == other.m_num; }
-    bool operator!=(iterator &other) const { return !(*this == other); }
+    int32_t operator-(iterator const &other) const { return m_num - other.m_num; }
+    bool operator==(iterator const &other) const { return m_num == other.m_num; }
+    bool operator!=(iterator const &other) const { return !(*this == other); }
     bool operator!=(iterator &&other) const { return !(*this == other); }
     reference operator*() const { return m_num; }
   };

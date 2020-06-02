@@ -33,6 +33,7 @@
 
 #include <cmath>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <set>
 #include <tuple>
@@ -89,22 +90,40 @@ public:
   using allocator_type    = CoordinateAllocator;
   using index_type        = default_types::index_type;
   using size_type         = default_types::size_type;
-  using Self              = CoordinateMap<coordinate_type, map_type, allocator_type>;
+  using self_type         = CoordinateMap<coordinate_type, map_type, allocator_type>;
 
   // return types
   using index_vector_type = std::vector<default_types::index_type>;
   using index_set_type    = std::set<default_types::index_type>;
   using iterator          = typename map_type::iterator;
   using const_iterator    = typename map_type::const_iterator;
+
   // clang-format on
 
   // Constructors
-  CoordinateMap(size_type const number_of_coordinates,
-                size_type const coordinate_size)
-      : m_map(MapType{number_of_coordinates, coordinate_size}),
-        m_coordinate_size(coordinate_size), m_capacity(0) {
-    allocate(number_of_coordinates, m_coordinate_size);
+  CoordinateMap() = delete;
+  CoordinateMap(size_type const coordinate_size)
+      : m_map(MapType{coordinate_size}), m_coordinate_size(coordinate_size), m_capacity(0) {}
+
+  /*
+   * @brief given a key iterator begin-end pair and a value iterator begin-end
+   * pair, insert all elements.
+   */
+  template <typename key_iterator, typename mapped_iterator>
+  void insert(key_iterator key_first, key_iterator key_last,
+              mapped_iterator value_first, mapped_iterator value_last) {
+    ASSERT(false, "Not implemented");
   }
+
+  // /*
+  //  * @brief given a key iterator begin-end pair and a value iterator
+  //  begin-end
+  //  * pair, insert all elements.
+  //  */
+  // template <key_iterator, mapped_iterator>
+  // virtual std::pair(index_vector_type, index_vector_type)
+  //     insert(key_iterator key_first, key_iterator key_last,
+  //            mapped_iterator value_first, mapped_iterator value_last);
 
   /*
   // returns: unique_index, reverse_index, batch indices
@@ -122,8 +141,6 @@ public:
   CoordinateMap<MapType> stride_region(Region const &region) const;
   CoordinateMap<MapType> prune(bool const *p_keep,
                                size_type num_keep_coordinates) const;
-  */
-  /*
   // class method
   static CoordinateMap<MapType>
   union_coords(const vector<reference_wrapper<CoordsMap<MapType>>> &maps);
@@ -158,7 +175,7 @@ public:
 
   void reserve(size_type size) {
     if (m_capacity < size) {
-      allocate(size, m_coordinate_size);
+      allocate(size);
       m_map.reserve(size);
     }
   }
@@ -171,8 +188,8 @@ public:
 
 protected:
   // clang-format off
-  void allocate(size_type const number_of_coordinates, size_type const coordinate_size) {
-    auto const size = number_of_coordinates * coordinate_size;
+  void allocate(size_type const number_of_coordinates) {
+    auto const size = number_of_coordinates * m_coordinate_size;
     coordinate_type *ptr = m_allocator.allocate(size);
 
     auto deleter = [](coordinate_type *p, CoordinateMap::allocator_type alloc, CoordinateMap::size_type size) {
