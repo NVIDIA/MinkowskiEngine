@@ -32,10 +32,14 @@ namespace minkowski {
 /*
  * Inherit from the CoordinateMap for a specific map type.
  */
-template <typename coordinate_type>
-class CoordinateMapCPU : public CoordinateMap<coordinate_type> {
+// clang-format off
+template <typename coordinate_type,
+          typename CoordinateAllocator = std::allocator<coordinate_type>>
+class CoordinateMapCPU
+    : public CoordinateMap<coordinate_type,
+                           CoordinateUnorderedMap<coordinate_type>,
+                           CoordinateAllocator> {
 public:
-  // clang-format off
   using base_type         = CoordinateMap<coordinate_type>;
   using size_type         = typename base_type::size_type;
   using key_type          = typename base_type::key_type;
@@ -79,6 +83,7 @@ public:
     ASSERT(key_last - key_first == value_last - value_first,
            "The number of items mismatch. # of keys:", key_last - key_first,
            ", # of values:", value_last - value_first);
+    // TODO: Batch coordinate copy
     base_type::allocate(key_last - key_first);
     for (; key_first != key_last; ++key_first, ++value_first) {
       // value_type ctor needed because this might be called with std::pair's
@@ -95,7 +100,7 @@ public:
    * @brief given a key iterator begin-end pair find all valid keys and its
    * index.
    *
-   * @return a vector of (valid index, query value) pairs.
+   * @return a pair of (valid index, query value) vectors.
    */
   template <typename key_iterator>
   std::pair<index_vector_type, index_vector_type> find(key_iterator key_first,

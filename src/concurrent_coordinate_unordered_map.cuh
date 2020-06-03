@@ -33,8 +33,6 @@
 
 namespace minkowski {
 
-namespace detail {} // namespace detail
-
 // unordered_map wrapper
 // clang-format off
 template <typename coordinate_type,
@@ -50,61 +48,82 @@ public:
   using hasher         = Hash;
   using key_equal      = KeyEqual;
   using allocator_type = Allocator;
-  using map_type = concurrent_unordered_map<key_type,        // key
-                                            mapped_type,     // mapped_type
-                                            hasher,          // hasher
-                                            key_equal,       // equality
-                                            allocator_type>; // allocator
+  using map_type       = concurrent_unordered_map<key_type,        // key
+                                                  mapped_type,     // mapped_type
+                                                  hasher,          // hasher
+                                                  key_equal,       // equality
+                                                  allocator_type>; // allocator
   using iterator       = typename map_type::iterator;
   using const_iterator = typename map_type::const_iterator;
   using is_used_type   = detail::is_used<key_type, mapped_type, coordinate_equal_to<coordinate_type>>;
+  // clang-format on
 
 public:
+  ConcurrentCoordinateUnorderedMap() = delete;
+  ConcurrentCoordinateUnorderedMap(ConcurrentCoordinateUnorderedMap const &) =
+      default;
+  ConcurrentCoordinateUnorderedMap(ConcurrentCoordinateUnorderedMap &&) =
+      default;
   ConcurrentCoordinateUnorderedMap(size_type const number_of_coordinates,
                                    size_type const coordinate_size,
                                    allocator_type &allocator = allocator_type())
-      : m_hasher(detail::coordinate_murmur3<coordinate_type>{coordinate_size}),
+      : m_capacity(number_of_coordinates),
+        m_hasher(detail::coordinate_murmur3<coordinate_type>{coordinate_size}),
         m_equal(detail::coordinate_equal_to<coordinate_type>{coordinate_size}),
         m_unused_key(coordinate<coordinate_type>{nullptr}),
-        m_unused_element(std::numeric_limits<coordinate_type>::max()) {
+        m_unused_element(std::numeric_limits<coordinate_type>::max()),
+        m_allocator(allocator),
+        m_map(map_type(compute_hash_table_size(number_of_coordinates),
+                       m_unused_element, m_unused_key, m_hasher, m_equal,
+                       m_allocator)) {}
 
-    m_map =
-        map_type(compute_hash_table_size(number_of_coordinates),
-                 m_unused_element, m_unused_key, m_hasher, m_equal, allocator);
-  }
   ~ConcurrentCoordinateUnorderedMap() { m_map.destroy(); }
 
   // Iterators
-  __device__ iterator begin() { return m_map.begin(); }
-  __device__ const_iterator begin() const { return m_map.begin(); }
+  __device__ inline iterator begin() { return m_map.begin(); }
+  __device__ inline const_iterator begin() const { return m_map.begin(); }
 
-  __device__ iterator end() { return m_map.end(); }
-  __device__ const_iterator end() const { return m_map.end(); }
+  __device__ inline iterator end() { return m_map.end(); }
+  __device__ inline const_iterator end() const { return m_map.end(); }
 
-  __device__ iterator find(key_type const &key) { return m_map.find(key); }
-  __device__ const_iterator find(key_type const &key) const { return m_map.find(key); }
+  __device__ inline iterator find(key_type const &key) {
+    return m_map.find(key);
+  }
+  __device__ inline const_iterator find(key_type const &key) const {
+    return m_map.find(key);
+  }
 
-  __device__ thrust::pair<iterator, bool> insert(value_type const &insert_pair) {
+  __device__ inline thrust::pair<iterator, bool>
+  insert(value_type const &insert_pair) {
     return m_map.insert(keyval);
   }
 
-  size_type size() {
+  inline void reserve(size_type size) {
+    if (size > m_size_type) {
+      m_map.destroy();
+      m_map = map_type(compute_hash_table_size(number_of_coordinates),
+                       m_unused_element, m_unused_key, m_hasher, m_equal,
+                       m_allocator);
+      m_capacity = size;
+    }
+  }
+
+  inline size_type size() {
     return thrust::count_if(thrust::device,
                             cmap.data(),                   // begin
                             cmap.data() + cmap.capacity(), // end
                             is_used_type(m_unused_key, m_equal));
   }
 
-  ConcurrentCoordinateUnorderedMap()                                         = delete;
-  ConcurrentCoordinateUnorderedMap(ConcurrentCoordinateUnorderedMap const &) = default;
-  ConcurrentCoordinateUnorderedMap(ConcurrentCoordinateUnorderedMap &&)      = default;
   // clang-format on
 
 private:
+  size_type m_capacity;
   hasher const m_hasher;
   key_equal const m_equal;
   key_type const m_unused_key;
   mapped_type const m_unused_element;
+  allocator_type m_allocator;
   map_type m_map;
 };
 

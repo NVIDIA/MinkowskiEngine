@@ -82,52 +82,103 @@ template <typename T> struct coordinate_print_functor {
  */
 template <typename coordinate_type> class coordinate_iterator {
 public:
-  using self_type = coordinate_iterator<coordinate_type>;
-  using size_type = int32_t;
-  using difference_type = int32_t;
+  // clang-format off
+  using self_type         = coordinate_iterator<coordinate_type>;
+  using size_type         = int32_t;
+
+  // iterator traits
+  using iterator_category = std::random_access_iterator_tag;
+  using value_type        = coordinate<coordinate_type>;
+  using difference_type   = int32_t;
+  using pointer           = coordinate<coordinate_type>*;
+  using reference         = coordinate<coordinate_type>&;
+  // clang-format on
 
 public:
   coordinate_iterator() = delete;
   coordinate_iterator(coordinate_type const *ptr,
-                      size_type const coordinate_size, size_type steps = 0)
-      : m_ptr(ptr), m_coordinate_size(coordinate_size), m_steps(steps) {}
+                      size_type const coordinate_size,
+                      difference_type const steps = 0)
+      : m_ptr{ptr}, m_coordinate_size{coordinate_size},
+        m_coordinate{m_ptr}, m_steps{steps} {}
 
-  self_type &operator++() noexcept {
-    m_steps++;
+  // reference operator*();
+  // pointer   operator->();
+  inline reference operator*() noexcept {
+    m_coordinate = value_type{m_ptr + m_coordinate_size * m_steps};
+    return m_coordinate;
+  }
+  inline pointer operator->() noexcept {
+    m_coordinate = value_type{m_ptr + m_coordinate_size * m_steps};
+    return &m_coordinate;
+  }
+
+  // this_type& operator++();
+  // this_type  operator++(int);
+  inline self_type &operator++() noexcept {
+    ++m_steps;
+    return *this;
+  }
+  inline self_type operator++(int) noexcept {
+    return self_type{m_ptr, m_coordinate_size, m_steps + 1};
+  }
+
+  // this_type& operator--();
+  // this_type  operator--(int);
+  inline self_type &operator--() noexcept {
+    --m_steps;
+    return *this;
+  }
+  inline self_type operator--(int) noexcept {
+    return self_type{m_ptr, m_coordinate_size, m_steps - 1};
+  }
+
+  // this_type &operator+=(difference_type n);
+  // this_type &operator-=(difference_type n);
+  inline self_type &operator+=(difference_type n) noexcept {
+    m_steps += n;
+    return *this;
+  }
+  inline self_type &operator-=(difference_type n) noexcept {
+    m_steps -= n;
     return *this;
   }
 
-  self_type &operator+=(size_type steps) {
-    m_steps += steps;
-    return *this;
+  // this_type operator+(difference_type n) const;
+  // this_type operator-(difference_type n) const;
+  inline self_type operator+(difference_type n) const noexcept {
+    return self_type{m_ptr, m_coordinate_size, m_steps + n};
+  }
+  inline self_type operator-(difference_type n) const noexcept {
+    return self_type{m_ptr, m_coordinate_size, m_steps - n};
   }
 
-  coordinate<coordinate_type> const operator*() const noexcept {
-    return coordinate<coordinate_type>{m_ptr + m_coordinate_size * m_steps};
+  inline size_type coordinate_size() const noexcept {
+    return m_coordinate_size;
   }
 
-  coordinate_type const *reference() const noexcept {
-    return m_ptr + m_coordinate_size * m_steps;
-  }
-
-  size_type coordinate_size() const noexcept { return m_coordinate_size; }
-
-  difference_type operator-(self_type const &other) const noexcept {
+  inline difference_type operator-(self_type const &other) const noexcept {
     return m_steps - other.m_steps;
   }
 
-  bool operator==(self_type const &other) const noexcept {
-    return reference() == other.reference();
+  inline bool operator==(self_type const &other) const noexcept {
+    return current_position() == other.current_position();
   }
 
-  bool operator!=(self_type const &other) const noexcept {
-    return reference() != other.reference();
+  inline bool operator!=(self_type const &other) const noexcept {
+    return current_position() != other.current_position();
+  }
+
+private:
+  inline coordinate_type const *current_position() const noexcept {
+    return m_ptr + m_coordinate_size * m_steps;
   }
 
 private:
   coordinate_type const *m_ptr{nullptr};
-  uint32_t const m_coordinate_size = 0;
-  uint32_t m_steps = 0;
+  size_type const m_coordinate_size = 0;
+  value_type m_coordinate;
+  difference_type m_steps = 0;
 };
 
 /*
@@ -158,12 +209,6 @@ private:
 };
 
 namespace detail {
-
-template <typename coordinate_type>
-inline int32_t distance(coordinate_iterator<coordinate_type> first,
-                        coordinate_iterator<coordinate_type> last) {
-  return (last.reference() - first.reference()) / first.coordinate_size();
-}
 
 template <typename coordinate_type> struct coordinate_equal_to {
   MINK_CUDA_HOST_DEVICE inline coordinate_equal_to(size_t _coordinate_size)
