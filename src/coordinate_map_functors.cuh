@@ -19,8 +19,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#ifndef COORDS_FUNCTORS_CUH
-#define COORDS_FUNCTORS_CUH
+#ifndef COORDINATE_FUNCTORS_CUH
+#define COORDINATE_FUNCTORS_CUH
 
 namespace minkowski {
 
@@ -45,36 +45,18 @@ template <typename Key, typename Element, typename Equality> struct is_used {
   Equality const m_equal;
 };
 
-template <typename coordinate_type> struct coordinate_equal_to {
-  coordinate_equal_to(size_t _coordinate_size)
-      : coordinate_size(_coordinate_size) {}
-  __host__ __device__ bool
-  operator()(coordinate<coordinate_type> const &lhs,
-             coordinate<coordinate_type> const &rhs) const {
-    if ((lhs.ptr == nullptr) and (rhs.ptr == nullptr))
-      return true;
-    if ((lhs.ptr == nullptr) xor (rhs.ptr == nullptr))
-      return false;
-    for (size_t i = 0; i < coordinate_size; i++) {
-      if (lhs[i] != rhs[i])
-        return false;
-    }
-    return true;
-  }
-
-  size_t const coordinate_size;
-};
-
-// clang-format off
-template <typename map_type, typename pair_type, typename coordinate_type>
+template <typename coordinate_type, typename map_type>
 struct insert_coordinate {
-  insert_coordinate(map_type &_map, coordinate_type *_d_ptr, size_t _size)
-      : map{_map}, d_ptr{_d_ptr}, size{_size} {}
+  using value_type = typename map_type::value_type;
+  using mapped_type = typename map_type::mapped_type;
 
-  insert_coordinate(map_type &_map,
-                    thrust::device_vector<coordinate_type> &coords_vec,
-                    size_t _size)
-      : map{_map}, d_ptr{thrust::raw_pointer_cast(coords_vec.data())}, size{_size} {}
+  insert_coordinate(
+      map_type &map /* underlying map */,
+      coordinate_type const *const p_coordinate /* key coordinate begin */,
+      mapped_type const *const p_value /* value begin */,
+      uint32_t const coordinate_size /* coordinate size */)
+      : m_coordinate_size{coordinate_size},
+        m_coordinate{p_coordinate}, m_value{p_value}, m_map{map} {}
 
   /*
    * @brief insert a <coordinate, row index> pair into the unordered_map
@@ -83,19 +65,21 @@ struct insert_coordinate {
    * index.
    */
   __device__ thrust::pair<bool, uint32_t> operator()(uint32_t i) {
-    auto coord = coordinate<coordinate_type>{&d_ptr[i * size]};
-    pair_type pair = thrust::make_pair(coord, i);
+    value_type pair = thrust::make_pair(
+        coordinate<coordinate_type>{&d_ptr[i * m_coordinate_size]}, p_value[i]);
     // Returns pair<iterator, (bool)insert_success>
     auto result = map.insert(pair);
     return thrust::make_pair<bool, uint32_t>(
         result.first != map.end() and result.second, i);
   }
 
-  map_type &map;
-  coordinate_type const *d_ptr;
-  size_t const size;
+  size_t const m_coordinate_size;
+  coordinate_type const *m_coordinate;
+  mapped_type const *m_value;
+  map_type &m_map;
 };
 
+// clang-format off
 template <typename map_type, typename pair_type, typename coordinate_type>
 struct find_coordinate {
   using value_type = typename pair_type::second_type;

@@ -76,21 +76,21 @@ stride_copy(const vector<Itype> &src,
  *
  * @note
  */
+// clang-format off
 template <typename coordinate_type,
-          typename MapType = CoordinateUnorderedMap<coordinate_type>,
+          typename MapType             = CoordinateUnorderedMap<coordinate_type>,
           typename CoordinateAllocator = std::allocator<coordinate_type>>
 class CoordinateMap {
 
 public:
-  // clang-format off
-  using key_type          = typename MapType::key_type;
-  using mapped_type       = typename MapType::mapped_type;
-  using value_type        = typename MapType::value_type;
-  using map_type          = MapType;
-  using allocator_type    = CoordinateAllocator;
-  using index_type        = default_types::index_type;
-  using size_type         = default_types::size_type;
-  using self_type         = CoordinateMap<coordinate_type, map_type, allocator_type>;
+  using key_type       = typename MapType::key_type;
+  using mapped_type    = typename MapType::mapped_type;
+  using value_type     = typename MapType::value_type;
+  using map_type       = MapType;
+  using index_type     = default_types::index_type;
+  using size_type      = default_types::size_type;
+  using allocator_type = CoordinateAllocator;
+  using self_type      = CoordinateMap<coordinate_type, map_type, allocator_type>;
 
   // return types
   using index_vector_type = std::vector<default_types::index_type>;
@@ -102,8 +102,10 @@ public:
 
   // Constructors
   CoordinateMap() = delete;
-  CoordinateMap(size_type const coordinate_size)
-      : m_map(MapType{coordinate_size}), m_coordinate_size(coordinate_size), m_capacity(0) {}
+  CoordinateMap(size_type const coordinate_size,
+                allocator_type alloc = allocator_type())
+      : m_coordinate_size(coordinate_size), m_capacity(0), m_allocator(alloc),
+        m_map(map_type{coordinate_size}) {}
 
   /*
    * @brief given a key iterator begin-end pair and a value iterator begin-end
@@ -192,7 +194,7 @@ protected:
     auto const size = number_of_coordinates * m_coordinate_size;
     coordinate_type *ptr = m_allocator.allocate(size);
 
-    auto deleter = [](coordinate_type *p, CoordinateMap::allocator_type alloc, CoordinateMap::size_type size) {
+    auto deleter = [](coordinate_type *p, allocator_type alloc, size_type size) {
       alloc.deallocate(p, size);
     };
 
@@ -202,12 +204,13 @@ protected:
   }
 
   // members
-  allocator_type m_allocator;
-  map_type m_map;
-  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>> m_coordinates;
   size_type m_number_of_coordinates;
   size_type m_coordinate_size;
   size_type m_capacity;
+
+  allocator_type m_allocator;
+  map_type m_map;
+  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>> m_coordinates;
   // clang-format on
 };
 

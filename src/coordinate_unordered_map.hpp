@@ -41,55 +41,61 @@ namespace minkowski {
 // unordered_map wrapper
 // clang-format off
 template <typename coordinate_type,
-          typename Allocator = std::allocator<coordinate_type>,
           typename Hash      = detail::coordinate_murmur3<coordinate_type>,
           typename KeyEqual  = detail::coordinate_equal_to<coordinate_type>>
-struct CoordinateUnorderedMap {
-  using size_type   = default_types::size_type;
-  using key_type    = coordinate<coordinate_type>;
-  using mapped_type = default_types::index_type;
-  using hasher      = Hash;
-  using key_equal   = KeyEqual;
-  using map_type    =
+class CoordinateUnorderedMap {
+public:
+  using size_type      = default_types::size_type;
+  using key_type       = coordinate<coordinate_type>;
+  using mapped_type    = default_types::index_type;
+  using hasher         = Hash;
+  using key_equal      = KeyEqual;
+  using map_type       =
       robin_hood::unordered_flat_map<key_type,    // key
                                      mapped_type, // mapped_type
                                      hasher,      // hasher
                                      key_equal    // equality
                                      >;
-  using allocator_type = Allocator;
   using value_type     = typename map_type::value_type;
   using iterator       = typename map_type::iterator;
   using const_iterator = typename map_type::const_iterator;
-
-  // Constructors
-  CoordinateUnorderedMap() = delete;
-  CoordinateUnorderedMap(size_type const coordinate_size,
-                         allocator_type alloc = allocator_type())
-      : m_map(map_type{0, hasher{coordinate_size}, key_equal{coordinate_size}}) {}
   // clang-format on
 
+public:
+  // Constructors
+  CoordinateUnorderedMap() = delete;
+  CoordinateUnorderedMap(size_type const coordinate_size)
+      : m_map(
+            map_type{0, hasher{coordinate_size}, key_equal{coordinate_size}}) {}
+  CoordinateUnorderedMap(size_type const number_of_coordinates,
+                         size_type const coordinate_size)
+      : CoordinateUnorderedMap{coordinate_size} {
+    m_map.reserve(number_of_coordinates);
+  }
+
   // Iterators
-  iterator begin() { return m_map.begin(); }
-  const_iterator begin() const { return m_map.begin(); }
+  inline iterator begin() { return m_map.begin(); }
+  inline const_iterator begin() const { return m_map.begin(); }
 
-  iterator end() { return m_map.end(); }
-  const_iterator end() const { return m_map.end(); }
+  inline iterator end() { return m_map.end(); }
+  inline const_iterator end() const { return m_map.end(); }
 
-  iterator find(key_type const &key) { return m_map.find(key); }
-  const_iterator find(key_type const &key) const { return m_map.find(key); }
+  inline iterator find(key_type const &key) { return m_map.find(key); }
+  inline const_iterator find(key_type const &key) const { return m_map.find(key); }
 
-  std::pair<iterator, bool> insert(value_type const &keyval) {
+  inline std::pair<iterator, bool> insert(value_type const &keyval) {
     return m_map.insert(keyval);
   }
-  std::pair<iterator, bool> insert(value_type &&keyval) {
+  inline std::pair<iterator, bool> insert(value_type &&keyval) {
     return m_map.insert(keyval);
   }
 
   // mapped_type &operator[](key_type const &key) { return m_map[key]; }
 
-  size_type size() const noexcept { return m_map.size(); }
-  void reserve(size_type c) { m_map.reserve(c); }
+  inline size_type size() const noexcept { return m_map.size(); }
+  inline void reserve(size_type c) { m_map.reserve(c); }
 
+private:
   map_type m_map;
 };
 
