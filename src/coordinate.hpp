@@ -33,7 +33,7 @@ namespace minkowski {
 
 // The size of a coordinate is defined in the equality functor, and the hash
 // functor.
-template <typename coordinate_type> class coordinate {
+template <typename coordinate_type> struct coordinate {
   using self_type = coordinate<coordinate_type>;
 
 public:
@@ -53,7 +53,6 @@ public:
     return m_ptr[i];
   }
 
-private:
   coordinate_type const *m_ptr;
 };
 
@@ -96,76 +95,83 @@ public:
 
 public:
   coordinate_iterator() = delete;
-  coordinate_iterator(coordinate_type const *ptr,
-                      size_type const coordinate_size,
-                      difference_type const steps = 0)
+  MINK_CUDA_HOST_DEVICE coordinate_iterator(coordinate_type const *ptr,
+                                            size_type const coordinate_size,
+                                            difference_type const steps = 0)
       : m_ptr{ptr}, m_coordinate_size{coordinate_size},
         m_coordinate{m_ptr}, m_steps{steps} {}
 
   // reference operator*();
   // pointer   operator->();
-  inline reference operator*() noexcept {
+  MINK_CUDA_HOST_DEVICE inline reference operator*() noexcept {
     m_coordinate = value_type{m_ptr + m_coordinate_size * m_steps};
     return m_coordinate;
   }
-  inline pointer operator->() noexcept {
+  MINK_CUDA_HOST_DEVICE inline pointer operator->() noexcept {
     m_coordinate = value_type{m_ptr + m_coordinate_size * m_steps};
     return &m_coordinate;
   }
 
   // this_type& operator++();
   // this_type  operator++(int);
-  inline self_type &operator++() noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type &operator++() noexcept {
     ++m_steps;
     return *this;
   }
-  inline self_type operator++(int) noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type operator++(int) noexcept {
     return self_type{m_ptr, m_coordinate_size, m_steps + 1};
   }
 
   // this_type& operator--();
   // this_type  operator--(int);
-  inline self_type &operator--() noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type &operator--() noexcept {
     --m_steps;
     return *this;
   }
-  inline self_type operator--(int) noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type operator--(int) noexcept {
     return self_type{m_ptr, m_coordinate_size, m_steps - 1};
   }
 
   // this_type &operator+=(difference_type n);
   // this_type &operator-=(difference_type n);
-  inline self_type &operator+=(difference_type n) noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type &
+  operator+=(difference_type n) noexcept {
     m_steps += n;
     return *this;
   }
-  inline self_type &operator-=(difference_type n) noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type &
+  operator-=(difference_type n) noexcept {
     m_steps -= n;
     return *this;
   }
 
   // this_type operator+(difference_type n) const;
   // this_type operator-(difference_type n) const;
-  inline self_type operator+(difference_type n) const noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type operator+(difference_type n) const
+      noexcept {
     return self_type{m_ptr, m_coordinate_size, m_steps + n};
   }
-  inline self_type operator-(difference_type n) const noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type operator-(difference_type n) const
+      noexcept {
     return self_type{m_ptr, m_coordinate_size, m_steps - n};
   }
 
-  inline size_type coordinate_size() const noexcept {
+  MINK_CUDA_HOST_DEVICE inline size_type coordinate_size() const noexcept {
     return m_coordinate_size;
   }
 
-  inline difference_type operator-(self_type const &other) const noexcept {
+  MINK_CUDA_HOST_DEVICE inline difference_type
+  operator-(self_type const &other) const noexcept {
     return m_steps - other.m_steps;
   }
 
-  inline bool operator==(self_type const &other) const noexcept {
+  MINK_CUDA_HOST_DEVICE inline bool operator==(self_type const &other) const
+      noexcept {
     return current_position() == other.current_position();
   }
 
-  inline bool operator!=(self_type const &other) const noexcept {
+  MINK_CUDA_HOST_DEVICE inline bool operator!=(self_type const &other) const
+      noexcept {
     return current_position() != other.current_position();
   }
 
@@ -190,8 +196,8 @@ template <typename coordinate_type> class coordinate_range {
 
 public:
   coordinate_range() = delete;
-  coordinate_range(coordinate_type const *ptr, size_type coordinate_size,
-                   size_type number_of_coordinates)
+  coordinate_range(size_type const number_of_coordinates,
+                   size_type const coordinate_size, coordinate_type const *ptr)
       : m_ptr(ptr), m_coordinate_size(coordinate_size),
         m_number_of_coordinates(number_of_coordinates) {}
 
@@ -227,7 +233,7 @@ template <typename coordinate_type> struct coordinate_equal_to {
     return true;
   }
 
-  size_t const coordinate_size;
+  size_t coordinate_size;
 };
 
 /*******************************************************************************

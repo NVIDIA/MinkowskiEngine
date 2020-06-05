@@ -16,7 +16,6 @@
 
 #pragma once
 
-// #include <cudf/strings/string_view.cuh>
 #include <cudf/utilities/legacy/wrapper_types.hpp>
 
 using hash_value_type = uint32_t;

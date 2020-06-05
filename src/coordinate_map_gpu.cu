@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 NVIDIA CORPORATION.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,37 +40,39 @@ namespace minkowski {
  */
 template <typename coordinate_type, typename MapAllocator,
           typename CoordinateAllocator>
-template <typename key_iterator, typename mapped_iterator>
-void CoordinateMapGPU<coordinate_type, MapAllocator,
-                      CoordinateAllocator>::insert(key_iterator key_first,
-                                                   key_iterator key_last,
-                                                   mapped_iterator value_first,
-                                                   mapped_iterator value_last) {
+template <typename mapped_iterator>
+void CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::
+    insert(coordinate_iterator<coordinate_type> key_first,
+           coordinate_iterator<coordinate_type> key_last,
+           mapped_iterator value_first, mapped_iterator value_last) {
   using self_type =
       CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>;
+  using base_type = self_type::base_type;
 
-  self_type::size_type N = key_last - key_first;
+  self_type::size_type const N = key_last - key_first;
+  LOG_DEBUG("key iterator length", N);
   ASSERT(N == value_last - value_first,
          "The number of items mismatch. # of keys:", N,
          ", # of values:", value_last - value_first);
 
   // Copy the coordinates to m_coordinate
-  self_type::base_type::reserve(N);
-  CUDA_CHECK(
-      cudaMemcpy(self_type::base_type::m_coordinate.get() /* dst */,
-                 &key_first[0] /* src */,
-                 sizeof(coordinate_type) * std::is_pointer<key_iterator>::value
-                     ? N * m_coordinate_size
-                     : N /* n */,
-                 cudaMemcpyDeviceToDevice));
-  // CUDA_CHECK(cudaStreamSynchronize(0));
+  base_type::reserve(N);
+  CUDA_CHECK(cudaMemcpy(base_type::m_coordinates.get(), // dst
+                        key_first->data(), // first element of the dereferenced iter.
+                        sizeof(coordinate_type) * N *
+                            base_type::m_coordinate_size, // bytes
+                        cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaStreamSynchronize(0));
 
   thrust::counting_iterator<uint32_t> count{0};
-  thrust::for_each(count, count + N,
-                   insert_coordinate<coordinate_type, self_type::map_type>{
-                       self_type::base_type::m_map,
-                       self::base_type::m_coordinate.get(), value_first,
-                       self_type::base_type::m_coordinate_size});
+  thrust::for_each(
+      count, count + N,
+      detail::insert_coordinate<coordinate_type, typename base_type::map_type,
+                                thrust::counting_iterator<uint32_t>>{
+          base_type::m_map,               // map
+          base_type::m_coordinates.get(), // coordinates,
+          value_first,                    // iter begin
+          base_type::m_coordinate_size});
 }
 
 /*
@@ -88,12 +91,12 @@ void CoordinateMapGPU<coordinate_type, MapAllocator,
 //   ASSERT(N <= base_type::m_capacity,
 //          "Invalid search range. Current capacity:", base_type::m_capacity,
 //          ", search range:", N);
-// 
+//
 //   // reserve the result slots
 //   index_vector_type valid_query_index, query_result;
 //   valid_query_index.reserve(N);
 //   query_result.reserve(N);
-// 
+//
 //   key_iterator key_curr{key_first};
 //   for (; key_curr != key_last; ++key_curr) {
 //     auto const query_iter = base_type::find(*key_curr);
@@ -108,7 +111,11 @@ void CoordinateMapGPU<coordinate_type, MapAllocator,
 
 // Template instantiation
 template class CoordinateMapGPU<int32_t>;
-template<> CoordinateMapGPU<int32_t>::insert<int32_t*, uint32_t*>;
-} // namespace minkowski
+// Insert arg templates
+using citer32 = coordinate_iterator<int32_t>;
+template void
+    CoordinateMapGPU<int32_t>::insert<thrust::counting_iterator<uint32_t>>(
+        citer32, citer32, thrust::counting_iterator<uint32_t>,
+        thrust::counting_iterator<uint32_t>);
 
-#endif // COORDINATE_MAP_CPU
+} // namespace minkowski
