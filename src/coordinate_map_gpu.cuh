@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 NVIDIA CORPORATION.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,12 +31,12 @@
 
 namespace minkowski {
 
+// clang-format off
 /*
  * Inherit from the CoordinateMap for a concurrent coordinate unordered map.
  */
-// clang-format off
 template <typename coordinate_type,
-          typename MapAllocator        = default_allocator<thrust::pair<coordinate<coordinate_type>, default_types::index_type>>,
+          typename MapAllocator = default_allocator<thrust::pair<coordinate<coordinate_type>, default_types::index_type>>,
           typename CoordinateAllocator = default_allocator<coordinate_type>>
 class CoordinateMapGPU
     : public CoordinateMap<
@@ -43,7 +44,10 @@ class CoordinateMapGPU
           ConcurrentCoordinateUnorderedMap<coordinate_type, MapAllocator>,
           CoordinateAllocator> {
 public:
-  using base_type      = CoordinateMap<coordinate_type>;
+  using base_type      = CoordinateMap<
+      coordinate_type,
+      ConcurrentCoordinateUnorderedMap<coordinate_type, MapAllocator>,
+      CoordinateAllocator>;
   using size_type      = typename base_type::size_type;
   using key_type       = typename base_type::key_type;
   using mapped_type    = default_types::index_type; // MapAllocator uses default_types
@@ -65,8 +69,11 @@ public:
 
   // Insert GPU values to the map. key_iterator and mapped_iterator must be GPU
   // iterators.
-  template <typename key_iterator, typename mapped_iterator>
-  void insert(key_iterator key_first, key_iterator key_last,
+  using base_type::insert;
+
+  template <typename mapped_iterator>
+  void insert(coordinate_iterator<coordinate_type> key_first,
+              coordinate_iterator<coordinate_type> key_last,
               mapped_iterator value_first, mapped_iterator value_last);
 
   // Find GPU values in the map. key_iterator must be a GPU iterator.

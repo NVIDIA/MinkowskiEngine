@@ -44,7 +44,7 @@ public:
   using size_type      = default_types::size_type;
   using key_type       = coordinate<coordinate_type>;
   using mapped_type    = default_types::index_type;
-  using value_type     = std::pair<key_type, mapped_type>;
+  using value_type     = thrust::pair<key_type, mapped_type>;
   using hasher         = Hash;
   using key_equal      = KeyEqual;
   using allocator_type = Allocator;
@@ -55,7 +55,8 @@ public:
                                                   allocator_type>; // allocator
   using iterator       = typename map_type::iterator;
   using const_iterator = typename map_type::const_iterator;
-  using is_used_type   = detail::is_used<key_type, mapped_type, coordinate_equal_to<coordinate_type>>;
+  using is_used_type   =
+      detail::is_used<key_type, mapped_type, detail::coordinate_equal_to<coordinate_type>>;
   // clang-format on
 
 public:
@@ -64,9 +65,9 @@ public:
       default;
   ConcurrentCoordinateUnorderedMap(ConcurrentCoordinateUnorderedMap &&) =
       default;
-  ConcurrentCoordinateUnorderedMap(size_type const number_of_coordinates,
-                                   size_type const coordinate_size,
-                                   allocator_type &allocator = allocator_type())
+  ConcurrentCoordinateUnorderedMap(
+      size_type const number_of_coordinates, size_type const coordinate_size,
+      allocator_type const &allocator = allocator_type())
       : m_capacity(number_of_coordinates),
         m_hasher(detail::coordinate_murmur3<coordinate_type>{coordinate_size}),
         m_equal(detail::coordinate_equal_to<coordinate_type>{coordinate_size}),
@@ -95,23 +96,22 @@ public:
 
   __device__ inline thrust::pair<iterator, bool>
   insert(value_type const &insert_pair) {
-    return m_map.insert(keyval);
+    return m_map.insert(insert_pair);
   }
 
   inline void reserve(size_type size) {
-    if (size > m_size_type) {
-      m_map.destroy();
-      m_map = map_type(compute_hash_table_size(number_of_coordinates),
-                       m_unused_element, m_unused_key, m_hasher, m_equal,
-                       m_allocator);
+    if (size > m_capacity) {
+      m_map =
+          std::move(map_type(compute_hash_table_size(size), m_unused_element,
+                             m_unused_key, m_hasher, m_equal, m_allocator));
       m_capacity = size;
     }
   }
 
-  inline size_type size() {
+  inline size_type size() const {
     return thrust::count_if(thrust::device,
-                            cmap.data(),                   // begin
-                            cmap.data() + cmap.capacity(), // end
+                            m_map.data(),                   // begin
+                            m_map.data() + m_map.capacity(), // end
                             is_used_type(m_unused_key, m_equal));
   }
 

@@ -23,10 +23,7 @@
  *
  * ---------------------------------------------------------------------------**/
 
-// #include <cudf/scalar/scalar.hpp>
-// #include <cudf/types.hpp>
-// #include <cudf/utilities/error.hpp>
-// #include <cudf/utilities/traits.hpp>
+#include <cudf/types.hpp>
 #include <type_traits>
 
 namespace cudf {

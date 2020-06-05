@@ -46,15 +46,11 @@ SOURCE_SETS = {
         ["coordinate_map_key_test.cpp"],
         ["coordinate_map_key.cpp"],
     ],
-    "concurrent_coordinate_map": [
+    "coordinate_map_cpu": [CppExtension, ["coordinate_map_cpu_test.cpp"], [],],
+    "coordinate_map_gpu": [
         CUDAExtension,
-        ["concurrent_coordinate_map_test.cpp"],
-        ["concurrent_coordinate_map.cu"],
-    ],
-    "coordinate_map_cpu": [
-        CppExtension,
-        ["coordinate_map_cpu_test.cpp"],
-        [],
+        ["coordinate_map_gpu_test.cu"],
+        ["coordinate_map_gpu.cu"],
     ],
     "coordinate": [CppExtension, ["coordinate_test.cpp"], []],
     "type": [CppExtension, ["type_test.cpp"], []],
@@ -68,9 +64,12 @@ HERE = Path(os.path.dirname(__file__)).absolute()
 SRC_PATH = HERE.parent.parent / "src"
 OBJ_DIR = HERE / "objs"
 ME_OBJ_DIR = OBJ_DIR / "ME"
+CXX = os.environ["CXX"]
 
 CURR_TEST_FILES = SOURCE_SETS[test_target][1:]
 Extension = SOURCE_SETS[test_target][0]
+
+CXX_FLAGS += ["-DDEBUG"]
 
 ext_modules = [
     Extension(
@@ -80,7 +79,10 @@ ext_modules = [
             *[str(HERE / test_file) for test_file in CURR_TEST_FILES[0]],
             *[str(SRC_PATH / src_file) for src_file in CURR_TEST_FILES[1]],
         ],
-        extra_compile_args={"cxx": CXX_FLAGS, "nvcc": ["-O2"]},
+        extra_compile_args={
+            "cxx": CXX_FLAGS,
+            "nvcc": ["-O2", f"-ccbin={CXX}", "--extended-lambda", "-DDEBUG"],
+        },
         # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
         # libraries=["coordinate_map_key"],
     ),

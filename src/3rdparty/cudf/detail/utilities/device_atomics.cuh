@@ -32,12 +32,8 @@
  * with the given binary operator.
  * ---------------------------------------------------------------------------**/
 
+#include <cudf/utilities/legacy/wrapper_types.hpp>
 #include <cudf/detail/utilities/device_operators.cuh>
-// #include <cudf/types.hpp>
-// #include <cudf/utilities/error.hpp>
-// #include <cudf/utilities/legacy/wrapper_types.hpp>
-// #include <cudf/utilities/traits.hpp>
-// #include <cudf/wrappers/timestamps.hpp>
 #include <type_traits>
 
 namespace cudf {

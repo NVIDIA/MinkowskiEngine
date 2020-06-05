@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 NVIDIA CORPORATION.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -100,8 +101,7 @@ size_type coordinate_map_insert_test(const torch::Tensor &coordinates) {
   auto const D = (index_type)coordinates.size(1);
   coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
 
-  CoordinateMapCPU<coordinate_type> map{D};
-  map.reserve(N);
+  CoordinateMapCPU<coordinate_type> map{N, D};
 
   ::simple_range iter{N};
   std::for_each(
@@ -133,9 +133,9 @@ size_type coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
   auto const D = (index_type)coordinates.size(1);
   coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
 
-  CoordinateMapCPU<coordinate_type> map{D};
+  CoordinateMapCPU<coordinate_type> map{N, D};
 
-  auto input_coordinates = coordinate_range<coordinate_type>(ptr, D, N);
+  auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
   ::simple_range iter{N};
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
@@ -174,10 +174,9 @@ coordinate_map_find_test(const torch::Tensor &coordinates,
   coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
   coordinate_type const *query_ptr = queries.data_ptr<coordinate_type>();
 
-  CoordinateMapCPU<coordinate_type> map{D};
-  map.reserve(N);
+  CoordinateMapCPU<coordinate_type> map{N, D};
 
-  auto input_coordinates = coordinate_range<coordinate_type>(ptr, D, N);
+  auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
   ::simple_range iter{N};
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
@@ -230,17 +229,16 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
   coordinate_type const *query_ptr = queries.data_ptr<coordinate_type>();
 
-  CoordinateMapCPU<coordinate_type> map{D};
-  map.reserve(N);
+  CoordinateMapCPU<coordinate_type> map{N, D};
 
-  auto input_coordinates = coordinate_range<coordinate_type>(ptr, D, N);
+  auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
   ::simple_range iter{N};
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
              iter.begin(),              // value begin
              iter.end());               // value end
 
-  auto query_coordinates = coordinate_range<coordinate_type>(query_ptr, D, N);
+  auto query_coordinates = coordinate_range<coordinate_type>(N, D, query_ptr);
   ::simple_range iter2{NQ};
 
   auto query_results =

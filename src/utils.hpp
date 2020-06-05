@@ -139,8 +139,16 @@ private:
 #ifdef DEBUG
 #define COLOR "\033[31;1m"
 #define RESET "\033[0m"
-#define __DEBUG(msg, ...) fprintf(stderr, COLOR msg "%c" RESET, __VA_ARGS__);
-#define LOG_DEBUG(...) __DEBUG(__VA_ARGS__, '\n')
+#define __DEBUG(...)                                                           \
+  {                                                                            \
+    Formatter formatter;                                                       \
+    formatter << COLOR << __FILE__ << ":" << __LINE__ << RESET << " ";         \
+    formatter.append(__VA_ARGS__);                                             \
+    std::cerr << formatter.str() << "\n";                                      \
+  }
+// #define __DEBUG(msg, ...) fprintf(stderr, COLOR msg "%c" RESET, __VA_ARGS__);
+// #define LOG_DEBUG(...) __DEBUG(__VA_ARGS__, '\n')
+#define LOG_DEBUG(...) __DEBUG(__VA_ARGS__)
 #else
 #define LOG_DEBUG(...) (void)0
 #endif
