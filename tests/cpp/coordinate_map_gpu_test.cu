@@ -28,6 +28,10 @@
 #include "types.hpp"
 #include "utils.hpp"
 
+#include <thrust/device_vector.h>
+#include <thrust/for_each.h>
+#include <thrust/host_vector.h>
+
 #include <torch/extension.h>
 
 namespace minkowski {
@@ -52,32 +56,21 @@ size_type coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
   auto const D = (index_type)coordinates.size(1);
   coordinate_type const *d_ptr = coordinates.data_ptr<coordinate_type>();
 
-  std::cout << "N: " << N << ", D: " << D << ", address: " << d_ptr << "\n";
-
+  LOG_DEBUG("Initialize a GPU map.");
   CoordinateMapGPU<coordinate_type> map{N, D};
-
-  std::cout << "Map initializaed \n";
 
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, d_ptr);
   thrust::counting_iterator<uint32_t> iter{0};
 
-  std::cout << "Coordinate iterators initialized \n";
-
-  thrust::for_each(
-      iter, iter + N,
-      detail::insert_coordinate<coordinate_type,
-                                CoordinateMapGPU<coordinate_type>,
-                                thrust::counting_iterator<uint32_t>>(map, d_ptr,
-                                                                     iter, D));
-  // map.insert(input_coordinates.begin(), // key begin
-  //            input_coordinates.end(),   // key end
-  //            iter,                      // value begin
-  //            iter + N);                 // value end
+  LOG_DEBUG("Insert coordinates");
+  map.insert(input_coordinates.begin(), // key begin
+             input_coordinates.end(),   // key end
+             iter,                      // value begin
+             iter + N);                 // value end
 
   return map.size();
 }
 
-/*
 std::pair<std::vector<index_type>, std::vector<index_type>>
 coordinate_map_batch_find_test(const torch::Tensor &coordinates,
                                const torch::Tensor &queries) {
@@ -93,8 +86,8 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   // must match coordinate_type
   torch::checkScalarType(c, arg_coordinates, torch::kInt);
   torch::checkScalarType(c, arg_queries, torch::kInt);
-  torch::checkBackend(c, arg_coordinates.tensor, torch::Backend::CPU);
-  torch::checkBackend(c, arg_queries.tensor, torch::Backend::CPU);
+  torch::checkBackend(c, arg_coordinates.tensor, torch::Backend::CUDA);
+  torch::checkBackend(c, arg_queries.tensor, torch::Backend::CUDA);
   torch::checkDim(c, arg_coordinates, 2);
   torch::checkDim(c, arg_queries, 2);
 
@@ -107,25 +100,34 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
   coordinate_type const *query_ptr = queries.data_ptr<coordinate_type>();
 
-  CoordinateMapCPU<coordinate_type> map{D};
-  map.reserve(N);
+  CoordinateMapGPU<coordinate_type> map{N, D};
 
-  auto input_coordinates = coordinate_range<coordinate_type>(ptr, D, N);
-  ::simple_range iter{N};
+  auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
+  thrust::counting_iterator<uint32_t> iter{0};
+
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
-             iter.begin(),              // value begin
-             iter.end());               // value end
+             iter,                      // value begin
+             iter + N);                 // value end
 
-  auto query_coordinates = coordinate_range<coordinate_type>(query_ptr, D, N);
-  ::simple_range iter2{NQ};
+  LOG_DEBUG("Map size", map.size());
+  auto query_coordinates = coordinate_range<coordinate_type>(NQ, D, query_ptr);
 
-  auto query_results =
+  LOG_DEBUG("Find coordinates.");
+  auto const query_results =
       map.find(query_coordinates.begin(), query_coordinates.end());
+  auto const &firsts(query_results.first);
+  auto const &seconds(query_results.second);
+  index_type NR = firsts.size();
+  LOG_DEBUG(NR, "keys found.");
 
-  return query_results;
+  std::vector<index_type> cpu_firsts(NR);
+  std::vector<index_type> cpu_seconds(NR);
+
+  thrust::copy(firsts.begin(), firsts.end(), cpu_firsts.begin());
+  thrust::copy(seconds.begin(), seconds.end(), cpu_seconds.begin());
+  return std::make_pair(cpu_firsts, cpu_seconds);
 }
-*/
 
 } // namespace minkowski
 
@@ -134,7 +136,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         &minkowski::coordinate_map_batch_insert_test,
         "Minkowski Engine coordinate map batch insert test");
 
-  // m.def("coordinate_map_batch_find_test",
-  //       &minkowski::coordinate_map_batch_find_test,
-  //       "Minkowski Engine coordinate map batch find test");
+  m.def("coordinate_map_batch_find_test",
+        &minkowski::coordinate_map_batch_find_test,
+        "Minkowski Engine coordinate map batch find test");
 }
