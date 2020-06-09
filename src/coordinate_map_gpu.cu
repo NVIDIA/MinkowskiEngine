@@ -27,6 +27,12 @@
 #include "coordinate_map_gpu.cuh"
 #include "gpu.cuh"
 
+#include <thrust/copy.h>
+#include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/iterator/transform_iterator.h>
+
 namespace minkowski {
 
 /*
@@ -39,17 +45,15 @@ namespace minkowski {
  * @return none
  */
 template <typename coordinate_type, typename MapAllocator,
-          typename CoordinateAllocator>
+          typename CoordinateAllocator, typename IndexAllocator>
 template <typename mapped_iterator>
-void CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::
-    insert(coordinate_iterator<coordinate_type> key_first,
-           coordinate_iterator<coordinate_type> key_last,
-           mapped_iterator value_first, mapped_iterator value_last) {
-  using self_type =
-      CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>;
-  using base_type = self_type::base_type;
-
-  self_type::size_type const N = key_last - key_first;
+void CoordinateMapGPU<
+    coordinate_type, MapAllocator, CoordinateAllocator,
+    IndexAllocator>::insert(coordinate_iterator<coordinate_type> key_first,
+                            coordinate_iterator<coordinate_type> key_last,
+                            mapped_iterator value_first,
+                            mapped_iterator value_last) {
+  size_type const N = key_last - key_first;
   LOG_DEBUG("key iterator length", N);
   ASSERT(N == value_last - value_first,
          "The number of items mismatch. # of keys:", N,
@@ -57,22 +61,23 @@ void CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::
 
   // Copy the coordinates to m_coordinate
   base_type::reserve(N);
-  CUDA_CHECK(cudaMemcpy(base_type::m_coordinates.get(), // dst
-                        key_first->data(), // first element of the dereferenced iter.
-                        sizeof(coordinate_type) * N *
-                            base_type::m_coordinate_size, // bytes
-                        cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(
+      cudaMemcpy(coordinate_data(), // dst
+                 key_first->data(), // first element of the dereferenced iter.
+                 sizeof(coordinate_type) * N * m_coordinate_size, // bytes
+                 cudaMemcpyDeviceToDevice));
   CUDA_CHECK(cudaStreamSynchronize(0));
+  LOG_DEBUG("Reserved and copied", N, "x", m_coordinate_size);
 
+  // Insert coordinates
   thrust::counting_iterator<uint32_t> count{0};
-  thrust::for_each(
-      count, count + N,
-      detail::insert_coordinate<coordinate_type, typename base_type::map_type,
-                                thrust::counting_iterator<uint32_t>>{
-          base_type::m_map,               // map
-          base_type::m_coordinates.get(), // coordinates,
-          value_first,                    // iter begin
-          base_type::m_coordinate_size});
+  auto insert = detail::insert_coordinate<coordinate_type, map_type,
+                                          thrust::counting_iterator<uint32_t>>{
+      *m_map,            // map
+      coordinate_data(), // coordinates,
+      value_first,       // iter begin
+      m_coordinate_size};
+  thrust::for_each(count, count + N, insert);
 }
 
 /*
@@ -81,33 +86,48 @@ void CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::
  *
  * @return a pair of (valid index, query value) vectors.
  */
-// template <typename coordinate_type, typename MapAllocator,
-//           typename CoordinateAllocator>
-// template <typename key_iterator>
-// std::pair<device_index_vector_type, device_index_vector_type>
-// CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::find(
-//     key_iterator key_first, key_iterator key_last) {
-//   size_type N = key_last - key_first;
-//   ASSERT(N <= base_type::m_capacity,
-//          "Invalid search range. Current capacity:", base_type::m_capacity,
-//          ", search range:", N);
-//
-//   // reserve the result slots
-//   index_vector_type valid_query_index, query_result;
-//   valid_query_index.reserve(N);
-//   query_result.reserve(N);
-//
-//   key_iterator key_curr{key_first};
-//   for (; key_curr != key_last; ++key_curr) {
-//     auto const query_iter = base_type::find(*key_curr);
-//     // If valid query
-//     if (query_iter != base_type::end()) {
-//       valid_query_index.push_back(key_curr - key_first);
-//       query_result.push_back(query_iter->second);
-//     }
-//   }
-//   return std::make_pair(valid_query_index, query_result);
-// }
+template <typename coordinate_type, typename MapAllocator,
+          typename CoordinateAllocator, typename IndexAllocator>
+thrust::pair<thrust::device_vector<uint32_t>, thrust::device_vector<uint32_t>>
+CoordinateMapGPU<
+    coordinate_type, MapAllocator, CoordinateAllocator,
+    IndexAllocator>::find(coordinate_iterator<coordinate_type> key_first,
+                          coordinate_iterator<coordinate_type> key_last) const {
+  size_type N = key_last - key_first;
+
+  // reserve the result slots
+  index_vector_type valid_query_index, query_result;
+  valid_query_index.reserve(N);
+  query_result.reserve(N);
+
+  LOG_DEBUG(N, "queries for find.")
+  auto const find_functor = detail::find_coordinate<coordinate_type, map_type>(
+      *m_map, key_first->data(), m_unused_element, m_coordinate_size);
+  LOG_DEBUG("Find functor initialized.")
+  auto const invalid_functor =
+      detail::is_invalid_pair<coordinate_type, mapped_type>(m_unused_element);
+  LOG_DEBUG("Valid functor initialized.")
+
+  thrust::counting_iterator<index_type> index{0};
+  query_result_type input_index(N);
+  query_result_type results(N);
+  LOG_DEBUG("Initialized functors.")
+  thrust::sequence(input_index.begin(), input_index.end());
+  thrust::transform(thrust::device, index, index + N, results.begin(),
+                    find_functor);
+
+  size_type const number_of_valid =
+      thrust::remove_if(thrust::device,
+                        thrust::make_zip_iterator(thrust::make_tuple(input_index.begin(), results.begin())),
+                        thrust::make_zip_iterator(thrust::make_tuple(input_index.end(), results.end())),
+                        invalid_functor) -
+      thrust::make_zip_iterator(thrust::make_tuple(input_index.begin(), results.begin()));
+  LOG_DEBUG("Number of valid", number_of_valid);
+  input_index.resize(number_of_valid);
+  results.resize(number_of_valid);
+
+  return thrust::make_pair(input_index, results);
+}
 
 // Template instantiation
 template class CoordinateMapGPU<int32_t>;

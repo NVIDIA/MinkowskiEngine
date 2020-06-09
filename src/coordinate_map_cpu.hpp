@@ -62,6 +62,19 @@ public:
       : base_type(number_of_coordinates, coordinate_size),
         m_map(number_of_coordinates, coordinate_size) {}
 
+  inline iterator begin() { return m_map.begin(); }
+  inline const_iterator begin() const { return m_map.begin(); }
+
+  inline iterator end() { return m_map.end(); }
+  inline const_iterator end() const { return m_map.end(); }
+
+  inline std::pair<iterator, bool> insert(value_type const &keyval) {
+    return m_map.insert(keyval);
+  }
+  inline std::pair<iterator, bool> insert(value_type &&keyval) {
+    return m_map.insert(keyval);
+  }
+
   bool insert(key_type const &key, mapped_type const &val) {
 
     ASSERT(val < base_type::m_capacity, "Invalid mapped value: ", val,
@@ -76,19 +89,6 @@ public:
     } else {
       return false;
     }
-  }
-
-  inline iterator begin() { return m_map.begin(); }
-  inline const_iterator begin() const { return m_map.begin(); }
-
-  inline iterator end() { return m_map.end(); }
-  inline const_iterator end() const { return m_map.end(); }
-
-  inline std::pair<iterator, bool> insert(value_type const &keyval) {
-    return m_map.insert(keyval);
-  }
-  inline std::pair<iterator, bool> insert(value_type &&keyval) {
-    return m_map.insert(keyval);
   }
 
   /*

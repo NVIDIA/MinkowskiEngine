@@ -24,9 +24,26 @@
 
 #include "coordinate.hpp"
 
+#include <thrust/functional.h>
+#include <thrust/host_vector.h>
 #include <thrust/pair.h>
 
 namespace minkowski {
+
+template <typename T>
+std::ostream &operator<<(std::ostream &out, const thrust::host_vector<T> &v) {
+  if (!v.empty()) {
+    auto actual_delim = ", ";
+    auto delim = "";
+    out << '[';
+    for (const auto &elem : v) {
+      out << delim << elem;
+      delim = actual_delim;
+    }
+    out << "]\n";
+  }
+  return out;
+}
 
 namespace detail {
 
@@ -47,6 +64,16 @@ template <typename Key, typename Element, typename Equality> struct is_used {
   Equality const m_equal;
 };
 
+template <typename coordinate_type, typename map_type> struct get_element {
+  using value_type = thrust::pair<coordinate<coordinate_type>, uint32_t>;
+
+  get_element(map_type map) : m_map(map) {}
+
+  __device__ uint32_t operator()(value_type const &x) { return x.second; }
+
+  map_type const m_map;
+};
+
 template <typename coordinate_type, typename map_type, typename mapped_iterator>
 struct insert_coordinate {
   using value_type = typename map_type::value_type;
@@ -60,11 +87,11 @@ struct insert_coordinate {
    * a pointer or an iterator that supports operat+(int) and operator*().
    * @param coordinate_size
    */
-  insert_coordinate(map_type &map,                       // underlying map
+  insert_coordinate(map_type map,                        // underlying map
                     coordinate_type const *p_coordinate, // key coordinate begin
-                    mapped_iterator &value_iter,
+                    mapped_iterator value_iter,
                     uint32_t const coordinate_size) // coordinate size
-      : m_coordinate_size{coordinate_size}, m_coordinate{p_coordinate},
+      : m_coordinate_size{coordinate_size}, m_coordinates{p_coordinate},
         m_value_iter{value_iter}, m_map{map} {}
 
   /*
@@ -74,40 +101,78 @@ struct insert_coordinate {
    * index.
    */
   __device__ void operator()(uint32_t i) {
-    value_type pair = thrust::make_pair(
-        coordinate<coordinate_type>{&m_coordinate[i * m_coordinate_size]},
-        *(m_value_iter + i));
+    auto coord =
+        coordinate<coordinate_type>{&m_coordinates[i * m_coordinate_size]};
+    value_type pair = thrust::make_pair(coord, *(m_value_iter + i));
+    m_map.insert(pair);
     // Returns pair<iterator, (bool)insert_success>
-    auto result = m_map.insert(pair);
+    // auto result = m_map.insert(pair);
     // return thrust::make_pair<bool, uint32_t>(
     //     result.first != m_map.end() and result.second, i);
   }
 
   size_t const m_coordinate_size;
-  coordinate_type const *m_coordinate;
-  mapped_iterator const &m_value_iter;
-  map_type &m_map;
+  coordinate_type const *m_coordinates;
+  mapped_iterator m_value_iter;
+  map_type m_map;
 };
 
-// clang-format off
-template <typename map_type, typename pair_type, typename coordinate_type>
-struct find_coordinate {
-  using value_type = typename pair_type::second_type;
-  find_coordinate(map_type const &_map, coordinate_type const *_d_ptr, size_t _size)
-      : map{_map}, d_ptr{_d_ptr}, size{_size} {}
+template <typename coordinate_type, typename map_type>
+struct find_coordinate
+    : public thrust::unary_function<uint32_t,
+                                    thrust::pair<uint32_t, uint32_t>> {
+  using mapped_type = typename map_type::mapped_type;
+  using return_type = thrust::pair<mapped_type, mapped_type>;
 
-  __device__ value_type operator()(uint32_t i) {
-    auto coord = coordinate<coordinate_type>{&d_ptr[i * size]};
-    auto result = map.find(coord);
-    if (result == map.end()) {
-      return std::numeric_limits<value_type>::max();
+  find_coordinate(map_type const _map, coordinate_type const *_d_ptr,
+                  mapped_type const unused_element, size_t const _size)
+      : m_coordinate_size{_size},
+        m_unused_element(unused_element), m_coordinates{_d_ptr}, m_map{_map} {}
+
+  __device__ mapped_type operator()(uint32_t i) {
+    auto coord =
+        coordinate<coordinate_type>{&m_coordinates[i * m_coordinate_size]};
+    auto result = m_map.find(coord);
+    if (result == m_map.end()) {
+      return m_unused_element;
     }
     return result->second;
   }
 
-  map_type const &map;
-  coordinate_type const *d_ptr;
-  size_t const size;
+  size_t const m_coordinate_size;
+  mapped_type const m_unused_element;
+  coordinate_type const *m_coordinates;
+  map_type const m_map;
+};
+
+template <typename coordinate_type, typename mapped_type> struct is_invalid_pair {
+
+  is_invalid_pair(mapped_type const unused_element)
+      : m_unused_element(unused_element) {}
+
+  template <typename Tuple>
+  inline __device__ bool operator()(Tuple const &item) const {
+    return thrust::get<1>(item) == m_unused_element;
+  }
+
+  mapped_type const m_unused_element;
+};
+
+template <typename T, typename pair_type, typename pair_iterator>
+struct split_functor {
+
+  split_functor(pair_iterator begin, T *firsts, T *seconds)
+      : m_begin(begin), m_firsts(firsts), m_seconds(seconds) {}
+
+  __device__ void operator()(uint32_t i) {
+    pair_type const item = *(m_begin + i);
+    m_firsts[i] = item.first;
+    m_seconds[i] = item.second;
+  }
+
+  pair_iterator m_begin;
+  T *m_firsts;
+  T *m_seconds;
 };
 
 } // end namespace detail

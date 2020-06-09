@@ -159,9 +159,11 @@ public:
 
   */
 
+  coordinate_type *coordinate_data() { return m_coordinates.get(); }
+
   void reserve(size_type size) {
     if (m_capacity < size) {
-      LOG_DEBUG("Reserve:", size, "current capacity:", m_capacity);
+      LOG_DEBUG("Reserve coordinates:", size, "current capacity:", m_capacity);
       allocate(size);
     }
   }

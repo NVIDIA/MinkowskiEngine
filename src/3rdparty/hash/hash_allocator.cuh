@@ -18,6 +18,7 @@
 #define HASH_ALLOCATOR_CUH
 
 #include <new>
+#include <thrust/device_reference.h>
 
 template <class T>
 struct managed_allocator {
@@ -63,6 +64,8 @@ struct default_allocator {
   // rmm::mr::device_memory_resource* mr = rmm::mr::get_default_resource();
 
   default_allocator() = default;
+  typedef thrust::device_reference<T> reference;
+  typedef thrust::device_reference<const T> const_reference;
 
   template <class U>
   constexpr default_allocator(const default_allocator<U>&) noexcept
