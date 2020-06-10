@@ -38,58 +38,32 @@ template <typename coordinate_type,
 class CoordinateMapCPU
     : public CoordinateMap<coordinate_type, CoordinateAllocator> {
 public:
-  using base_type         = CoordinateMap<coordinate_type, CoordinateAllocator>;
-  using size_type         = typename base_type::size_type;
-  using index_type        = typename base_type::index_type;
-  using map_type          = CoordinateUnorderedMap<coordinate_type>;
-  using allocator_type    = CoordinateAllocator;
+  using base_type                 = CoordinateMap<coordinate_type, CoordinateAllocator>;
+  using self_type                 = CoordinateMapCPU<coordinate_type, CoordinateAllocator>;
+  using size_type                 = typename base_type::size_type;
+  using index_type                = typename base_type::index_type;
+  using map_type                  = CoordinateUnorderedMap<coordinate_type>;
+  using stride_type               = default_types::stride_type;
 
-  using key_type          = typename map_type::key_type;
-  using mapped_type       = typename map_type::mapped_type;
-  using value_type        = typename map_type::value_type;
+  using key_type                  = typename map_type::key_type;
+  using mapped_type               = typename map_type::mapped_type;
+  using value_type                = typename map_type::value_type;
 
-  using iterator          = typename map_type::iterator;
-  using const_iterator    = typename map_type::const_iterator;
+  using iterator                  = typename map_type::iterator;
+  using const_iterator            = typename map_type::const_iterator;
 
-  using index_vector_type = typename base_type::index_vector_type;
+  using index_vector_type         = typename base_type::index_vector_type;
+  using coordinate_allocator_type = CoordinateAllocator;
   // clang-format on
 
 public:
   CoordinateMapCPU() = delete;
-  CoordinateMapCPU(size_type const number_of_coordinates,
-                   size_type const coordinate_size,
-                   allocator_type alloc = allocator_type())
-      : base_type(number_of_coordinates, coordinate_size),
+  CoordinateMapCPU(
+      size_type const number_of_coordinates, size_type const coordinate_size,
+      stride_type const &stride = {1},
+      coordinate_allocator_type alloc = coordinate_allocator_type())
+      : base_type(number_of_coordinates, coordinate_size, stride, alloc),
         m_map(number_of_coordinates, coordinate_size) {}
-
-  inline iterator begin() { return m_map.begin(); }
-  inline const_iterator begin() const { return m_map.begin(); }
-
-  inline iterator end() { return m_map.end(); }
-  inline const_iterator end() const { return m_map.end(); }
-
-  inline std::pair<iterator, bool> insert(value_type const &keyval) {
-    return m_map.insert(keyval);
-  }
-  inline std::pair<iterator, bool> insert(value_type &&keyval) {
-    return m_map.insert(keyval);
-  }
-
-  bool insert(key_type const &key, mapped_type const &val) {
-
-    ASSERT(val < base_type::m_capacity, "Invalid mapped value: ", val,
-           ", current capacity: ", base_type::m_capacity);
-    coordinate_type *ptr =
-        &base_type::m_coordinates[val * base_type::m_coordinate_size];
-    std::copy_n(key.data(), base_type::m_coordinate_size, ptr);
-    auto insert_result =
-        m_map.insert(value_type(coordinate<coordinate_type>{ptr}, val));
-    if (insert_result.second) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
   /*
    * @brief given a key iterator begin-end pair and a value iterator begin-end
@@ -109,11 +83,6 @@ public:
       // value_type ctor needed because this might be called with std::pair's
       insert(*key_first, *value_first);
     }
-  }
-
-  inline iterator find(key_type const &key) { return m_map.find(key); }
-  inline const_iterator find(key_type const &key) const {
-    return m_map.find(key);
   }
 
   /*
@@ -147,11 +116,63 @@ public:
     return std::make_pair(valid_query_index, query_result);
   }
 
-  //
+  // Functions for network specific functions.
+
+  /*
+   * @brief strided coordinate map.
+   */
+  self_type stride(stride_type const &stride) const {
+    ASSERT(stride.size() == base_type::m_coordinate_size - 1, "Invalid stride",
+           stride);
+    // Over estimate the reserve size to be size();
+    self_type stride_map(
+        size(), base_type::m_coordinate_size,
+        detail::stride_tensor_stride(base_type::m_tensor_stride, stride),
+        base_type::m_allocator);
+
+    index_type c = 0;
+    std::vector<coordinate_type> dst(base_type::m_coordinate_size);
+    coordinate<coordinate_type> strided_coordinate(&dst[0]);
+    for (auto const &kv : m_map) {
+      detail::stride_coordinate<coordinate_type>(kv.first, dst,
+                                                 stride_map.m_tensor_stride);
+      bool success = stride_map.insert(strided_coordinate, c);
+      LOG_DEBUG("Adding coordinate", dst, ":", c, "success:", (int)success);
+      c += success;
+    }
+
+    return stride_map;
+  }
+
   inline size_type size() const noexcept { return m_map.size(); }
+
+  using base_type::capacity;
+  using base_type::get_tensor_stride;
+
   inline void reserve(size_type c) {
     base_type::reserve(c);
     m_map.reserve(c);
+  }
+
+private:
+  bool insert(key_type const &key, mapped_type const &val) {
+    ASSERT(val < base_type::m_capacity, "Invalid mapped value: ", val,
+           ", current capacity: ", base_type::m_capacity);
+    coordinate_type *ptr =
+        &base_type::m_coordinates[val * base_type::m_coordinate_size];
+    std::copy_n(key.data(), base_type::m_coordinate_size, ptr);
+    auto insert_result =
+        m_map.insert(value_type(coordinate<coordinate_type>{ptr}, val));
+    if (insert_result.second) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  inline iterator find(key_type const &key) { return m_map.find(key); }
+  inline const_iterator find(key_type const &key) const {
+    return m_map.find(key);
   }
 
 private:

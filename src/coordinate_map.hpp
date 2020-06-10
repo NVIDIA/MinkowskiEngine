@@ -53,20 +53,27 @@ template <typename Itype> struct byte_hash_vec {
 };
 */
 
+/*
+ * @note assume that `src`, `dst`, and `stride` are initialized correctly.
+ */
 template <typename Itype>
-inline std::vector<Itype>
-stride_copy(const vector<Itype> &src,
-            const vector<Itype> &tensor_strides) noexcept {
-  vector<Itype> dst{src.size()};
-  const std::size_t size = tensor_strides.size();
-  constexpr int COORD_START = 1;
+inline void
+stride_coordinate(const coordinate<Itype> &src,
+                  std::vector<Itype> &dst,
+                  const default_types::stride_type &stride) noexcept {
   dst[0] = src[0];
-  for (std::size_t i = 0; i < size; i++) {
-    dst[i + COORD_START] =
-        std::floor((float)src[i + COORD_START] / tensor_strides[i]) *
-        tensor_strides[i];
+  for (default_types::index_type i = 0; i < stride.size(); ++i) {
+    dst[i + 1] = std::floor((float)src[i + 1] / stride[i]) * stride[i];
   }
-  return dst;
+}
+
+inline default_types::stride_type
+stride_tensor_stride(const default_types::stride_type &tensor_stride,
+                     const default_types::stride_type &stride) noexcept {
+  default_types::stride_type strided_tensor_stride{tensor_stride};
+  for (default_types::size_type i = 0; i < tensor_stride.size(); ++i)
+    strided_tensor_stride[i] *= stride[i];
+  return strided_tensor_stride;
 }
 
 } // namespace detail
@@ -81,25 +88,27 @@ template <typename coordinate_type, typename CoordinateAllocator>
 class CoordinateMap {
 
 public:
-  using index_type     = default_types::index_type;
-  using size_type      = default_types::size_type;
-  using allocator_type = CoordinateAllocator;
+  using self_type                 = CoordinateMap<coordinate_type, CoordinateAllocator>;
+  using index_type                = default_types::index_type;
+  using size_type                 = default_types::size_type;
+  using stride_type               = default_types::stride_type;
+  using coordinate_allocator_type = CoordinateAllocator;
 
   // return types
   using index_vector_type = std::vector<default_types::index_type>;
   using index_set_type    = std::set<default_types::index_type>;
 
-  // clang-format on
-
   // Constructors
   CoordinateMap() = delete;
   CoordinateMap(size_type const number_of_coordinates,
                 size_type const coordinate_size,
-                allocator_type alloc = allocator_type())
-      : m_coordinate_size(coordinate_size), m_capacity(0),
-        m_allocator(alloc) /* m_capacity is updated in the allocate function */
-  {
+                stride_type const &stride = {1},
+                coordinate_allocator_type alloc = coordinate_allocator_type())
+      : m_coordinate_size(coordinate_size),
+        m_capacity(0), /* m_capacity is updated in the allocate function */
+        m_tensor_stride(stride), m_allocator(alloc) {
     allocate(number_of_coordinates);
+    expand_tensor_stride();
   }
 
   /*
@@ -109,26 +118,20 @@ public:
   template <typename key_iterator, typename mapped_iterator>
   void insert(key_iterator key_first, key_iterator key_last,
               mapped_iterator value_first, mapped_iterator value_last) {
-    ASSERT(false, "Not implemented");
+    ASSERT(false, "Not implemented"); // no virtual members for a templated class
   }
-
-  // /*
-  //  * @brief given a key iterator begin-end pair and a value iterator
-  //  begin-end
-  //  * pair, insert all elements.
-  //  */
-  // template <key_iterator, mapped_iterator>
-  // virtual std::pair(index_vector_type, index_vector_type)
-  //     insert(key_iterator key_first, key_iterator key_last,
-  //            mapped_iterator value_first, mapped_iterator value_last);
 
   /*
-  // Generate strided version of the input coordinate map.
-  // returns mapping: out_coord row index to in_coord row index
-  CoordinateMap<MapType>
-  stride(default_types::stride_type const &tensor_strides) const {
-    ASSERT(false, "Not implemented");
+   * @brief Generate a new set of coordinates with the provided strides.
+   *
+   * @return a coordinate map with specified tensor strides * current tensor
+   * stride.
+   */
+  self_type stride(stride_type const &tensor_strides) const {
+    ASSERT(false, "Not implemented"); // no virtual members for a templated class
   }
+
+  /*
   CoordinateMap<MapType> stride_region(Region const &region) const {
     ASSERT(false, "Not implemented");
   }
@@ -159,6 +162,8 @@ public:
 
   */
 
+  // clang-format on
+
   coordinate_type *coordinate_data() { return m_coordinates.get(); }
 
   void reserve(size_type size) {
@@ -170,7 +175,9 @@ public:
 
   std::string to_string() const;
 
-  size_type capacity() const { return m_capacity; }
+  stride_type get_tensor_stride() const noexcept { return m_tensor_stride; }
+
+  inline size_type capacity() const noexcept { return m_capacity; }
 
 protected:
   // clang-format off
@@ -180,7 +187,7 @@ protected:
       auto const size = number_of_coordinates * m_coordinate_size;
       coordinate_type *ptr = m_allocator.allocate(size);
 
-      auto deleter = [](coordinate_type *p, allocator_type alloc, size_type size) {
+      auto deleter = [](coordinate_type *p, coordinate_allocator_type alloc, size_type size) {
         alloc.deallocate(p, size);
       };
 
@@ -190,14 +197,30 @@ protected:
     }
   }
 
+private:
+  /*
+   * @brief expand the m_tensor_stride to m_coordinate_size - 1 if it has 1.
+   */
+  void expand_tensor_stride() {
+    if (m_tensor_stride.size() == 1) {
+      for (size_type i = 0; i < m_coordinate_size - 2; ++i) {
+        m_tensor_stride.push_back(m_tensor_stride[0]);
+      }
+    }
+    ASSERT(m_tensor_stride.size() == m_coordinate_size - 1,
+           "Invalid tensor stride", m_tensor_stride);
+  }
+
 protected:
   // members
   size_type m_number_of_coordinates;
   size_type m_coordinate_size;
   size_type m_capacity;
+  stride_type m_tensor_stride;
 
-  allocator_type m_allocator;
-  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>> m_coordinates;
+  coordinate_allocator_type m_allocator;
+  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>
+      m_coordinates;
   // clang-format on
 };
 
