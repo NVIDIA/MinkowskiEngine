@@ -373,6 +373,36 @@ class concurrent_unordered_map {
   /**
    * @brief Searches the map for the specified key.
    *
+   * @note `find` is not threadsafe with `insert`. I.e., it is not safe to
+   *do concurrent `insert` and `find` operations.
+   *
+   * @param k The key to search for
+   * @return An iterator to the key if it exists, else map.end()
+   **/
+  __device__ iterator find(key_type const& k)
+  {
+    size_type const key_hash = m_hf(k);
+    size_type index          = key_hash % m_capacity;
+
+    value_type* current_bucket = &m_hashtbl_values[index];
+
+    while (true) {
+      key_type const existing_key = current_bucket->first;
+
+      if (m_equal(m_unused_key, existing_key)) { return this->end(); }
+
+      if (m_equal(k, existing_key)) {
+        return iterator(m_hashtbl_values, m_hashtbl_values + m_capacity, current_bucket);
+      }
+
+      index          = (index + 1) % m_capacity;
+      current_bucket = &m_hashtbl_values[index];
+    }
+  }
+
+  /**
+   * @brief Searches the map for the specified key.
+   *
    * This version of the find function specifies a hashing function and an
    * equality comparison.  This allows the caller to use different functions
    * for insert and find (for example, when you want to insert keys from

@@ -54,7 +54,7 @@ size_type coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
   CoordinateMapCPU<coordinate_type> map{N, D};
 
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
-  ::simple_range iter{N};
+  simple_range iter{N};
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
              iter.begin(),              // value begin
@@ -95,14 +95,14 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   CoordinateMapCPU<coordinate_type> map{N, D};
 
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
-  ::simple_range iter{N};
+  simple_range iter{N};
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
              iter.begin(),              // value begin
              iter.end());               // value end
 
   auto query_coordinates = coordinate_range<coordinate_type>(N, D, query_ptr);
-  ::simple_range iter2{NQ};
+  simple_range iter2{NQ};
 
   auto query_results =
       map.find(query_coordinates.begin(), query_coordinates.end());
@@ -145,7 +145,7 @@ coordinate_map_stride_test(const torch::Tensor &coordinates,
   CoordinateMapCPU<coordinate_type> map{N, D};
 
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
-  ::simple_range iter{N};
+  simple_range iter{N};
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
              iter.begin(),              // value begin

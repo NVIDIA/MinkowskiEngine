@@ -27,3 +27,65 @@ class CoordinateMapTestCase(unittest.TestCase):
         self.assertEqual(query_value[0], 1)
         self.assertEqual(query_value[1], 2)
         self.assertEqual(query_value[2], 2)
+
+    def test_stride(self):
+        coordinates = torch.IntTensor([[0, 1], [0, 2], [0, 3], [0, 3]]).to(0)
+        stride = [1]
+        with self.assertRaises(TypeError):
+            MinkowskiEngineTest._C.coordinate_map_stride_test(coordinates, stride)
+
+        stride = torch.IntTensor([-1])
+        with self.assertRaises(RuntimeError):
+            MinkowskiEngineTest._C.coordinate_map_stride_test(coordinates, stride)
+
+        stride = torch.IntTensor([1, 1])
+        with self.assertRaises(RuntimeError):
+            MinkowskiEngineTest._C.coordinate_map_stride_test(coordinates, stride)
+
+        stride = torch.IntTensor([2])
+        map_size, tensor_stride = MinkowskiEngineTest._C.coordinate_map_stride_test(
+            coordinates, stride
+        )
+        self.assertEqual(map_size, 2)
+        self.assertEqual(tensor_stride, [2])
+
+        coordinates = torch.IntTensor(
+            [[0, 1, 1], [0, 2, 1], [0, 1, 0], [1, 0, 3], [1, 0, 2]]
+        )
+        stride = torch.IntTensor([1])
+        with self.assertRaises(RuntimeError):
+            MinkowskiEngineTest._C.coordinate_map_stride_test(coordinates, stride)
+
+        coordinates = torch.IntTensor(
+            [[0, 1, 1], [0, 2, 1], [0, 1, 0], [1, 0, 3], [1, 0, 2]]
+        ).to(0)
+        stride = torch.IntTensor([1, 1])
+        map_size, tensor_stride = MinkowskiEngineTest._C.coordinate_map_stride_test(
+            coordinates, stride
+        )
+        self.assertEqual(map_size, 5)
+        self.assertEqual(tensor_stride, [1, 1])
+
+        stride = torch.IntTensor([2, 1])
+        map_size, tensor_stride = MinkowskiEngineTest._C.coordinate_map_stride_test(
+            coordinates, stride
+        )
+        self.assertEqual(map_size, 5)
+        self.assertEqual(tensor_stride, [2, 1])
+
+        stride = torch.IntTensor([4, 4])
+        map_size, tensor_stride = MinkowskiEngineTest._C.coordinate_map_stride_test(
+            coordinates, stride
+        )
+        self.assertEqual(map_size, 2)
+        self.assertEqual(tensor_stride, [4, 4])
+
+        coordinates = torch.IntTensor(
+            [[0, -1], [0, -2], [0, 1], [0, 0]]
+        ).to(0)
+        stride = torch.IntTensor([2])
+        map_size, tensor_stride = MinkowskiEngineTest._C.coordinate_map_stride_test(
+            coordinates, stride
+        )
+        self.assertEqual(map_size, 2)
+        self.assertEqual(tensor_stride, [2])

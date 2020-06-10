@@ -42,9 +42,9 @@ public:
   using self_type                 = CoordinateMapCPU<coordinate_type, CoordinateAllocator>;
   using size_type                 = typename base_type::size_type;
   using index_type                = typename base_type::index_type;
-  using map_type                  = CoordinateUnorderedMap<coordinate_type>;
-  using stride_type               = default_types::stride_type;
+  using stride_type               = typename base_type::stride_type;
 
+  using map_type                  = CoordinateUnorderedMap<coordinate_type>;
   using key_type                  = typename map_type::key_type;
   using mapped_type               = typename map_type::mapped_type;
   using value_type                = typename map_type::value_type;
@@ -116,22 +116,21 @@ public:
     return std::make_pair(valid_query_index, query_result);
   }
 
-  // Functions for network specific functions.
+  // Network specific functions.
 
   /*
    * @brief strided coordinate map.
    */
   self_type stride(stride_type const &stride) const {
-    ASSERT(stride.size() == base_type::m_coordinate_size - 1, "Invalid stride",
-           stride);
+    ASSERT(stride.size() == m_coordinate_size - 1, "Invalid stride", stride);
     // Over estimate the reserve size to be size();
     self_type stride_map(
-        size(), base_type::m_coordinate_size,
+        size(), m_coordinate_size,
         detail::stride_tensor_stride(base_type::m_tensor_stride, stride),
         base_type::m_allocator);
 
     index_type c = 0;
-    std::vector<coordinate_type> dst(base_type::m_coordinate_size);
+    std::vector<coordinate_type> dst(m_coordinate_size);
     coordinate<coordinate_type> strided_coordinate(&dst[0]);
     for (auto const &kv : m_map) {
       detail::stride_coordinate<coordinate_type>(kv.first, dst,
@@ -158,9 +157,8 @@ private:
   bool insert(key_type const &key, mapped_type const &val) {
     ASSERT(val < base_type::m_capacity, "Invalid mapped value: ", val,
            ", current capacity: ", base_type::m_capacity);
-    coordinate_type *ptr =
-        &base_type::m_coordinates[val * base_type::m_coordinate_size];
-    std::copy_n(key.data(), base_type::m_coordinate_size, ptr);
+    coordinate_type *ptr = &base_type::m_coordinates[val * m_coordinate_size];
+    std::copy_n(key.data(), m_coordinate_size, ptr);
     auto insert_result =
         m_map.insert(value_type(coordinate<coordinate_type>{ptr}, val));
     if (insert_result.second) {
@@ -176,6 +174,7 @@ private:
   }
 
 private:
+  using base_type::m_coordinate_size;
   map_type m_map;
 };
 
