@@ -40,7 +40,7 @@ std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
       out << delim << elem;
       delim = actual_delim;
     }
-    out << "]\n";
+    out << "]";
   }
   return out;
 }
