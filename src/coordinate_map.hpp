@@ -58,8 +58,7 @@ template <typename Itype> struct byte_hash_vec {
  */
 template <typename Itype>
 inline void
-stride_coordinate(const coordinate<Itype> &src,
-                  std::vector<Itype> &dst,
+stride_coordinate(const coordinate<Itype> &src, std::vector<Itype> &dst,
                   const default_types::stride_type &stride) noexcept {
   dst[0] = src[0];
   for (default_types::index_type i = 0; i < stride.size(); ++i) {
@@ -88,15 +87,17 @@ template <typename coordinate_type, typename CoordinateAllocator>
 class CoordinateMap {
 
 public:
-  using self_type                 = CoordinateMap<coordinate_type, CoordinateAllocator>;
-  using index_type                = default_types::index_type;
-  using size_type                 = default_types::size_type;
-  using stride_type               = default_types::stride_type;
-  using coordinate_allocator_type = CoordinateAllocator;
+  using self_type   = CoordinateMap<coordinate_type, CoordinateAllocator>;
+  using index_type  = default_types::index_type;
+  using size_type   = default_types::size_type;
+  using stride_type = default_types::stride_type;
 
   // return types
   using index_vector_type = std::vector<default_types::index_type>;
   using index_set_type    = std::set<default_types::index_type>;
+
+  using coordinate_allocator_type = CoordinateAllocator;
+
 
   // Constructors
   CoordinateMap() = delete;
@@ -109,6 +110,7 @@ public:
         m_tensor_stride(stride), m_allocator(alloc) {
     allocate(number_of_coordinates);
     expand_tensor_stride();
+    LOG_DEBUG("tensor stride:", m_tensor_stride);
   }
 
   /*
@@ -165,6 +167,9 @@ public:
   // clang-format on
 
   coordinate_type *coordinate_data() { return m_coordinates.get(); }
+  coordinate_type const *const_coordinate_data() const {
+    return m_coordinates.get();
+  }
 
   void reserve(size_type size) {
     if (m_capacity < size) {
@@ -185,16 +190,22 @@ protected:
     if (m_capacity < number_of_coordinates) {
       LOG_DEBUG("Allocate", number_of_coordinates, "coordinates.");
       auto const size = number_of_coordinates * m_coordinate_size;
-      coordinate_type *ptr = m_allocator.allocate(size);
-
-      auto deleter = [](coordinate_type *p, coordinate_allocator_type alloc, size_type size) {
-        alloc.deallocate(p, size);
-      };
-
-      m_coordinates = std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>{
-          ptr, std::bind(deleter, std::placeholders::_1, m_allocator, size)};
+      m_coordinates = allocate_unique_ptr(size);
       m_capacity = number_of_coordinates;
     }
+  }
+
+  // clang-format on
+  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>
+  allocate_unique_ptr(size_type const size) {
+    coordinate_type *ptr = m_allocator.allocate(size);
+
+    auto deleter = [](coordinate_type *p, coordinate_allocator_type alloc,
+                      size_type size) { alloc.deallocate(p, size); };
+
+    return std::unique_ptr<coordinate_type[],
+                           std::function<void(coordinate_type *)>>{
+        ptr, std::bind(deleter, std::placeholders::_1, m_allocator, size)};
   }
 
 private:
@@ -221,7 +232,6 @@ protected:
   coordinate_allocator_type m_allocator;
   std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>
       m_coordinates;
-  // clang-format on
 };
 
 } // end namespace minkowski

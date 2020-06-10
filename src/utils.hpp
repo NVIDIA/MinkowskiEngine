@@ -30,8 +30,15 @@
 #include <string>
 #include <vector>
 
+#ifndef CPU_ONLY
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+#endif
+
+namespace minkowski {
+
 template <typename T>
-std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
+std::ostream &print_vector(std::ostream &out, const T &v) {
   if (!v.empty()) {
     auto actual_delim = ", ";
     auto delim = "";
@@ -43,6 +50,23 @@ std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
     out << "]";
   }
   return out;
+}
+
+#ifndef CPU_ONLY
+template <typename T>
+std::ostream &operator<<(std::ostream &out, const thrust::host_vector<T> &v) {
+  return print_vector(out, v);
+}
+
+template <typename T>
+std::ostream &operator<<(std::ostream &out, const thrust::device_vector<T> &v) {
+  return print_vector(out, v);
+}
+#endif
+
+template <typename T>
+std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
+  return print_vector(out, v);
 }
 
 template <typename T> std::string ArrToString(const T &arr) {
@@ -179,8 +203,12 @@ public:
       ++(*this);
       return retval;
     }
-    int32_t operator-(iterator const &other) const { return m_num - other.m_num; }
-    bool operator==(iterator const &other) const { return m_num == other.m_num; }
+    int32_t operator-(iterator const &other) const {
+      return m_num - other.m_num;
+    }
+    bool operator==(iterator const &other) const {
+      return m_num == other.m_num;
+    }
     bool operator!=(iterator const &other) const { return !(*this == other); }
     bool operator!=(iterator &&other) const { return !(*this == other); }
     reference operator*() const { return m_num; }
@@ -201,14 +229,12 @@ public:
     return formatter.str();
   }
 
-  iterator begin() {
-    return iterator(m_from);
-  }
-  iterator end() {
-    return iterator(m_to);
-  }
+  iterator begin() { return iterator(m_from); }
+  iterator end() { return iterator(m_to); }
 
   index_type const m_from, m_to;
 };
+
+} // end namespace minkowski
 
 #endif // UTILS

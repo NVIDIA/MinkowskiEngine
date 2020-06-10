@@ -79,3 +79,13 @@ class CoordinateMapTestCase(unittest.TestCase):
         )
         self.assertEqual(map_size, 2)
         self.assertEqual(tensor_stride, [4, 4])
+
+        coordinates = torch.IntTensor(
+            [[0, -1], [0, -2], [0, 1], [0, 0]]
+        )
+        stride = torch.IntTensor([2])
+        map_size, tensor_stride = MinkowskiEngineTest._C.coordinate_map_stride_test(
+            coordinates, stride
+        )
+        self.assertEqual(map_size, 2)
+        self.assertEqual(tensor_stride, [2])

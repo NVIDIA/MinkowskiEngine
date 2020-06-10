@@ -129,6 +129,59 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   return std::make_pair(cpu_firsts, cpu_seconds);
 }
 
+/******************************************************************************
+ * New coordinate map generation tests
+ ******************************************************************************/
+
+std::pair<size_type, std::vector<size_type>>
+coordinate_map_stride_test(const torch::Tensor &coordinates,
+                           const torch::Tensor &stride) {
+  // Create TensorArgs. These record the names and positions of each tensor as a
+  // parameter.
+  torch::TensorArg arg_coordinates(coordinates, "coordinates", 0);
+  torch::TensorArg arg_stride(stride, "stride", 1);
+
+  torch::CheckedFrom c = "coordinate_map_stride_test";
+  torch::checkContiguous(c, arg_coordinates);
+  // must match coordinate_type
+  torch::checkScalarType(c, arg_coordinates, torch::kInt);
+  torch::checkBackend(c, arg_coordinates.tensor, torch::Backend::CUDA);
+  torch::checkDim(c, arg_coordinates, 2);
+
+  // must match coordinate_type
+  torch::checkScalarType(c, arg_stride, torch::kInt);
+  torch::checkBackend(c, arg_stride.tensor, torch::Backend::CPU);
+  torch::checkDim(c, arg_stride, 1);
+
+  auto const N = (index_type)coordinates.size(0);
+  auto const D = (index_type)coordinates.size(1);
+
+  auto const NS = (index_type)stride.size(0);
+  ASSERT(NS == D - 1, "Invalid stride size", NS);
+
+  coordinate_type const *ptr = coordinates.data_ptr<coordinate_type>();
+
+  CoordinateMapGPU<coordinate_type> map{N, D};
+
+  auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
+  thrust::counting_iterator<uint32_t> iter{0};
+  map.insert(input_coordinates.begin(), // key begin
+             input_coordinates.end(),   // key end
+             iter,                      // value begin
+             iter + N);                 // value end
+
+  // Stride
+  default_types::stride_type stride_vec(NS);
+  int32_t const *stride_ptr = stride.data_ptr<int32_t>();
+  for (uint32_t i = 0; i < NS; ++i) {
+    stride_vec[i] = stride_ptr[i];
+    ASSERT(stride_ptr[i] > 0, "Invalid stride. All strides must be positive.");
+  }
+
+  auto const stride_map = map.stride(stride_vec);
+  return std::make_pair(stride_map.size(), stride_map.get_tensor_stride());
+}
+
 } // namespace minkowski
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -139,4 +192,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("coordinate_map_batch_find_test",
         &minkowski::coordinate_map_batch_find_test,
         "Minkowski Engine coordinate map batch find test");
+
+  m.def("coordinate_map_stride_test", &minkowski::coordinate_map_stride_test,
+        "Minkowski Engine coordinate map stride test");
 }

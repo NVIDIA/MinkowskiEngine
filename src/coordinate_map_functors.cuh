@@ -22,6 +22,7 @@
 #ifndef COORDINATE_FUNCTORS_CUH
 #define COORDINATE_FUNCTORS_CUH
 
+#include "types.hpp"
 #include "coordinate.hpp"
 
 #include <thrust/functional.h>
@@ -29,21 +30,6 @@
 #include <thrust/pair.h>
 
 namespace minkowski {
-
-template <typename T>
-std::ostream &operator<<(std::ostream &out, const thrust::host_vector<T> &v) {
-  if (!v.empty()) {
-    auto actual_delim = ", ";
-    auto delim = "";
-    out << '[';
-    for (const auto &elem : v) {
-      out << delim << elem;
-      delim = actual_delim;
-    }
-    out << "]\n";
-  }
-  return out;
-}
 
 namespace detail {
 
@@ -100,15 +86,14 @@ struct insert_coordinate {
    * @return thrust::pair<bool, uint32_t> of a success flag and the current
    * index.
    */
-  __device__ void operator()(uint32_t i) {
+  __device__ bool operator()(uint32_t i) {
     auto coord =
         coordinate<coordinate_type>{&m_coordinates[i * m_coordinate_size]};
     value_type pair = thrust::make_pair(coord, *(m_value_iter + i));
-    m_map.insert(pair);
+    // m_map.insert(pair);
     // Returns pair<iterator, (bool)insert_success>
-    // auto result = m_map.insert(pair);
-    // return thrust::make_pair<bool, uint32_t>(
-    //     result.first != m_map.end() and result.second, i);
+    auto result = m_map.insert(pair);
+    return result.second;
   }
 
   size_t const m_coordinate_size;
@@ -145,9 +130,38 @@ struct find_coordinate
   map_type const m_map;
 };
 
-template <typename coordinate_type, typename mapped_type> struct is_invalid_pair {
+template <typename coordinate_type, typename map_type> struct update_value {
+  using mapped_type = typename map_type::mapped_type;
 
-  is_invalid_pair(mapped_type const unused_element)
+  update_value(map_type _map, coordinate_type const *coordinates,
+                    uint32_t const *valid_index, size_t const _size)
+      : m_coordinate_size{_size}, m_coordinates{coordinates},
+        m_valid_index(valid_index), m_map{_map} {}
+
+  __device__ void operator()(uint32_t i) {
+    auto coord = coordinate<coordinate_type>{
+        &m_coordinates[m_valid_index[i] * m_coordinate_size]};
+    auto result = m_map.find(coord);
+    result->second = i;
+  }
+
+  size_t const m_coordinate_size;
+  coordinate_type const *m_coordinates;
+  uint32_t const *m_valid_index;
+  map_type m_map;
+};
+
+template <bool value> struct is_first {
+  template <typename Tuple>
+  inline __device__ bool operator()(Tuple const &item) const {
+    return thrust::get<0>(item) == value;
+  }
+};
+
+template <typename coordinate_type, typename mapped_type>
+struct is_unused_pair {
+
+  is_unused_pair(mapped_type const unused_element)
       : m_unused_element(unused_element) {}
 
   template <typename Tuple>
@@ -173,6 +187,31 @@ struct split_functor {
   pair_iterator m_begin;
   T *m_firsts;
   T *m_seconds;
+};
+
+template <typename coordinate_type, index_type> struct stride_copy {
+
+  stride_copy(size_t const coordinate_size, index_type const *stride,
+              index_type const *valid_src_index, coordinate_type const *src,
+              coordinate_type *dst)
+      : m_coordinate_size(coordinate_size), m_stride(stride),
+        m_valid_src_index(valid_src_index), m_src(src), m_dst(dst) {}
+
+  __device__ void operator()(uint32_t const i) {
+    const auto start = m_valid_src_index[i] * m_coordinate_size;
+    m_dst[start] = m_src[start];
+    for (auto j = 1; j < m_coordinate_size; j++) {
+      m_dst[start + j] = ((coordinate_type)floorf(
+                             __fdiv_rd(m_src[start + j], m_stride[j - 1]))) *
+                         m_stride[j - 1];
+    }
+  }
+
+  size_t const m_coordinate_size;
+  index_type const *m_stride;
+  index_type const *m_valid_src_index;
+  coordinate_type const *m_src;
+  coordinate_type *m_dst;
 };
 
 } // end namespace detail
