@@ -36,7 +36,7 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <typename Dtype, typename Itype, int BLOCK_SIZE>
+template <typename Dtype, typename Itype, int BLOCK_SIZE, int NumILP>
 __global__ void matmul(const Dtype *A, const int wA, const int hA,
                        const Dtype *B, const int wB, const int hB, Dtype *C,
                        const Itype *in_map, const Itype *out_map) {
@@ -54,12 +54,21 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
   const int x = BLOCK_SIZE * bx + tx;
   const int y = BLOCK_SIZE * by + ty;
 
+  const int step = blockDim.x / NumILP;
+
   // Csub is used to store the element of the block sub-matrix
   // that is computed by the thread
-  Dtype Csub = 0;
+  Dtype Csub[NumILP];
+  Itype in_row[NumILP];
+  Itype out_row[NumILP];
 
-  const Itype in_row = y < hA ? in_map[y] : 0;
-  const Itype out_row = y < hA ? out_map[y] : 0;
+#pragma unroll
+  for (int ilp = 0; ilp < NumILP; ++ilp) {
+    int ilp_y = ilp * step + y;
+    in_row[ilp] = y < hA ? in_map[ilp_y] : 0;
+    out_row[ilp] = y < hA ? out_map[ilp_y] : 0;
+    Csub[ilp] = 0;
+  }
 
   // Loop over all the sub-matrices of A and B
   // required to compute the block sub-matrix
@@ -75,8 +84,12 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
     // Load the matrices from device memory
     // to shared memory; each thread loads
     // one element of each matrix
-    As[ty][tx] = ((s + tx) < wA && y < hA) ? A[wA * in_row + s + tx] : 0;
-    Bs[ty][tx] = ((s + ty) < hB && x < wB) ? B[wB * (s + ty) + x] : 0;
+#pragma unroll
+    for (int ilp = 0; ilp < NumILP; ++ilp) {
+      const int ilp_ty = ilp * step + ty;
+      As[ilp_ty][tx] = ((s + tx) < wA && y < hA) ? A[wA * in_row[ilp] + s + tx] : 0;
+      Bs[ilp_ty][tx] = ((s + ilp_ty) < hB && x < wB) ? B[wB * (s + ilp_ty) + x] : 0;
+    }
 
     // Synchronize to make sure the matrices are loaded
     __syncthreads();
@@ -86,7 +99,10 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
     // of the block sub-matrix
 #pragma unroll
     for (int k = 0; k < BLOCK_SIZE; ++k) {
-      Csub += As[ty][k] * Bs[k][tx];
+#pragma unroll
+      for (int ilp = 0; ilp < NumILP; ++ilp) {
+        Csub[ilp] += As[ilp * step + ty][k] * Bs[k][tx];
+      }
     }
 
     // Synchronize to make sure that the preceding
@@ -97,9 +113,14 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
 
   // Write the block sub-matrix to device memory;
   // each thread writes one element
-  if (y < hA && x < wB)
-    atomicAdd(&C[wB * out_row + x], Csub);
+  //if (y < hA && x < wB)
+  //  atomicAdd(&C[wB * out_row + x], Csub);
   // C[wB * out_row + x] += Csub;
+#pragma unroll
+  for (int ilp = 0; ilp < NumILP; ++ilp) {
+    if (ilp * step + y < hA && x < wB)
+      C[wB * out_row[ilp] + x] = Csub[ilp];
+  }
 }
 
 /**
@@ -236,7 +257,9 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
   else
     shared_mem_size = 8;
 
-  dim3 threads(shared_mem_size, shared_mem_size);
+  // NumILP can be further tune
+  int NumILP = shared_mem_size / 4;
+  dim3 threads(shared_mem_size, shared_mem_size / NumILP);
 
   // Iterate through each spatial kernel and get indices for in_map and out_map
   for (int k = 0; k < in_maps.size(); k++) {
@@ -255,25 +278,25 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
                 (curr_num_active + threads.y - 1) / threads.y);
       switch (shared_mem_size) {
       case 32:
-        matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
+        matmul<Dtype, Itype, 32, NumILP><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
             in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
         break;
       case 24:
-        matmul<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
+        matmul<Dtype, Itype, 24, NumILP><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
             in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
         break;
       case 16:
-        matmul<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
+        matmul<Dtype, Itype, 16, NumILP><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
             in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
         break;
       case 8:
-        matmul<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
+        matmul<Dtype, Itype, 8, NumILP><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
             in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
