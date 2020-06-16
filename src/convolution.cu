@@ -113,13 +113,10 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
 
   // Write the block sub-matrix to device memory;
   // each thread writes one element
-  //if (y < hA && x < wB)
-  //  atomicAdd(&C[wB * out_row + x], Csub);
-  // C[wB * out_row + x] += Csub;
 #pragma unroll
   for (int ilp = 0; ilp < NumILP; ++ilp) {
     if (ilp * step + y < hA && x < wB)
-      C[wB * out_row[ilp] + x] = Csub[ilp];
+      atomicAdd(&C[wB * out_row[ilp] + x], Csub[ilp]);
   }
 }
 
