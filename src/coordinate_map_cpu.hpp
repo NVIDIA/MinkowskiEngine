@@ -143,6 +143,44 @@ public:
     return stride_map;
   }
 
+  /*
+   * @brief strided coordinate map for region.
+   */
+  /*
+  self_type stride_region(Region const &region) const {
+    ASSERT(stride.size() == m_coordinate_size - 1, "Invalid stride", stride);
+    // Over estimate the reserve size to be size();
+    self_type stride_map(
+        size() * region.volume(), m_coordinate_size,
+        detail::stride_tensor_stride(base_type::m_tensor_stride, stride),
+        base_type::m_allocator);
+
+    index_type c = 0;
+    std::vector<coordinate_type> dst(m_coordinate_size);
+    coordinate<coordinate_type> strided_coordinate(&dst[0]);
+    for (auto const &kv : m_map) {
+      detail::stride_coordinate<coordinate_type>(kv.first, dst,
+                                                 stride_map.m_tensor_stride);
+      bool success = stride_map.insert(strided_coordinate, c);
+      LOG_DEBUG("Adding coordinate", dst, ":", c, "success:", (int)success);
+      c += success;
+    }
+
+    Region cregion(region);
+    int c = 0;
+    for (const auto &kv : map) {
+      cregion.set_bounds(kv.first);
+      for (const auto &point : cregion) {
+        if (stride_map.find(point) == stride_map.end()) {
+          detail::Assign(stride_map, point, c++);
+        }
+      }
+    }
+
+    return stride_map;
+  }
+  */
+
   inline size_type size() const noexcept { return m_map.size(); }
 
   using base_type::capacity;

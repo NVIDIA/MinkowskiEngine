@@ -33,10 +33,11 @@ namespace minkowski {
 
 // The size of a coordinate is defined in the equality functor, and the hash
 // functor.
-template <typename coordinate_type> struct coordinate {
+template <typename coordinate_type> class coordinate {
   using self_type = coordinate<coordinate_type>;
 
 public:
+  // Constructors
   coordinate() = delete;
 
   MINK_CUDA_HOST_DEVICE inline coordinate(self_type &other)
@@ -46,14 +47,17 @@ public:
   MINK_CUDA_HOST_DEVICE inline coordinate(coordinate_type const *ptr)
       : m_ptr{ptr} {}
 
+  // helper functions
   MINK_CUDA_HOST_DEVICE inline coordinate_type const *data() const {
     return m_ptr;
   }
   MINK_CUDA_HOST_DEVICE inline coordinate_type operator[](uint32_t i) const {
     return m_ptr[i];
   }
+  MINK_CUDA_HOST_DEVICE inline void data(coordinate_type *ptr) { m_ptr = ptr; }
 
-  coordinate_type const *m_ptr;
+private:
+  coordinate_type const *m_ptr {nullptr};
 };
 
 template <typename T> struct coordinate_print_functor {
@@ -147,12 +151,12 @@ public:
 
   // this_type operator+(difference_type n) const;
   // this_type operator-(difference_type n) const;
-  MINK_CUDA_HOST_DEVICE inline self_type operator+(difference_type n) const
-      noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type
+  operator+(difference_type n) const noexcept {
     return self_type{m_ptr, m_coordinate_size, m_steps + n};
   }
-  MINK_CUDA_HOST_DEVICE inline self_type operator-(difference_type n) const
-      noexcept {
+  MINK_CUDA_HOST_DEVICE inline self_type
+  operator-(difference_type n) const noexcept {
     return self_type{m_ptr, m_coordinate_size, m_steps - n};
   }
 
@@ -165,13 +169,13 @@ public:
     return m_steps - other.m_steps;
   }
 
-  MINK_CUDA_HOST_DEVICE inline bool operator==(self_type const &other) const
-      noexcept {
+  MINK_CUDA_HOST_DEVICE inline bool
+  operator==(self_type const &other) const noexcept {
     return current_position() == other.current_position();
   }
 
-  MINK_CUDA_HOST_DEVICE inline bool operator!=(self_type const &other) const
-      noexcept {
+  MINK_CUDA_HOST_DEVICE inline bool
+  operator!=(self_type const &other) const noexcept {
     return current_position() != other.current_position();
   }
 

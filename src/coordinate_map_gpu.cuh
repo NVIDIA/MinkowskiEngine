@@ -133,8 +133,8 @@ public:
   inline size_type size() const { return m_valid_index.size(); }
 
   // access the coordinate data pointer
-  using base_type::coordinate_data;
   using base_type::const_coordinate_data;
+  using base_type::coordinate_data;
 
   // Find GPU values in the map. key_iterator must be a GPU iterator.
   // template <typename key_iterator>

@@ -28,7 +28,7 @@
 
 #include "coordinate.hpp"
 #include "coordinate_unordered_map.hpp"
-#include "region.hpp"
+#include "kernel_region.hpp"
 #include "types.hpp"
 
 #include <cmath>
@@ -133,10 +133,11 @@ public:
     ASSERT(false, "Not implemented"); // no virtual members for a templated class
   }
 
+  // self_type stride_region(Region const &region) const {
+  //   ASSERT(false, "Not implemented");
+  // }
+
   /*
-  CoordinateMap<MapType> stride_region(Region const &region) const {
-    ASSERT(false, "Not implemented");
-  }
   CoordinateMap<MapType> prune(bool const *p_keep,
                                size_type num_keep_coordinates) const {
     ASSERT(false, "Not implemented");
