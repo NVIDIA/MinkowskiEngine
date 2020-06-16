@@ -65,8 +65,8 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
 #pragma unroll
   for (int ilp = 0; ilp < NumILP; ++ilp) {
     int ilp_y = ilp * step + y;
-    in_row[ilp] = y < hA ? in_map[ilp_y] : 0;
-    out_row[ilp] = y < hA ? out_map[ilp_y] : 0;
+    in_row[ilp] = ilp_y < hA ? in_map[ilp_y] : 0;
+    out_row[ilp] = ilp_y < hA ? out_map[ilp_y] : 0;
     Csub[ilp] = 0;
   }
 
@@ -87,7 +87,7 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
 #pragma unroll
     for (int ilp = 0; ilp < NumILP; ++ilp) {
       const int ilp_ty = ilp * step + ty;
-      As[ilp_ty][tx] = ((s + tx) < wA && y < hA) ? A[wA * in_row[ilp] + s + tx] : 0;
+      As[ilp_ty][tx] = ((s + tx) < wA && ilp_y < hA) ? A[wA * in_row[ilp] + s + tx] : 0;
       Bs[ilp_ty][tx] = ((s + ilp_ty) < hB && x < wB) ? B[wB * (s + ilp_ty) + x] : 0;
     }
 
