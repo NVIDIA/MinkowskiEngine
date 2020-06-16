@@ -135,7 +135,7 @@ private:
     if (!(condition)) {                                                        \
       Formatter formatter;                                                     \
       formatter << __FILE__ << ":" << __LINE__ << ",";                         \
-      formatter << " assertion (" #condition << ") faild. ";                   \
+      formatter << " assertion (" #condition << ") failed. ";                  \
       formatter.append(__VA_ARGS__);                                           \
       throw std::runtime_error(formatter.str());                               \
     }                                                                          \

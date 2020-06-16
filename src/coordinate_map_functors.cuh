@@ -22,8 +22,8 @@
 #ifndef COORDINATE_FUNCTORS_CUH
 #define COORDINATE_FUNCTORS_CUH
 
-#include "types.hpp"
 #include "coordinate.hpp"
+#include "types.hpp"
 
 #include <thrust/functional.h>
 #include <thrust/host_vector.h>
@@ -53,7 +53,7 @@ template <typename Key, typename Element, typename Equality> struct is_used {
 template <typename coordinate_type, typename map_type> struct get_element {
   using value_type = thrust::pair<coordinate<coordinate_type>, uint32_t>;
 
-  get_element(map_type map) : m_map(map) {}
+  get_element(map_type &map) : m_map(map) {}
 
   __device__ uint32_t operator()(value_type const &x) { return x.second; }
 
@@ -73,7 +73,7 @@ struct insert_coordinate {
    * a pointer or an iterator that supports operat+(int) and operator*().
    * @param coordinate_size
    */
-  insert_coordinate(map_type map,                        // underlying map
+  insert_coordinate(map_type &map,                       // underlying map
                     coordinate_type const *p_coordinate, // key coordinate begin
                     mapped_iterator value_iter,
                     uint32_t const coordinate_size) // coordinate size
@@ -109,7 +109,7 @@ struct find_coordinate
   using mapped_type = typename map_type::mapped_type;
   using return_type = thrust::pair<mapped_type, mapped_type>;
 
-  find_coordinate(map_type const _map, coordinate_type const *_d_ptr,
+  find_coordinate(map_type const &_map, coordinate_type const *_d_ptr,
                   mapped_type const unused_element, size_t const _size)
       : m_coordinate_size{_size},
         m_unused_element(unused_element), m_coordinates{_d_ptr}, m_map{_map} {}
@@ -133,8 +133,8 @@ struct find_coordinate
 template <typename coordinate_type, typename map_type> struct update_value {
   using mapped_type = typename map_type::mapped_type;
 
-  update_value(map_type _map, coordinate_type const *coordinates,
-                    uint32_t const *valid_index, size_t const _size)
+  update_value(map_type &_map, coordinate_type const *coordinates,
+               uint32_t const *valid_index, size_t const _size)
       : m_coordinate_size{_size}, m_coordinates{coordinates},
         m_valid_index(valid_index), m_map{_map} {}
 
@@ -189,7 +189,7 @@ struct split_functor {
   T *m_seconds;
 };
 
-template <typename coordinate_type, index_type> struct stride_copy {
+template <typename coordinate_type, typename index_type> struct stride_copy {
 
   stride_copy(size_t const coordinate_size, index_type const *stride,
               index_type const *valid_src_index, coordinate_type const *src,
