@@ -147,14 +147,14 @@ const char *cublasGetErrorString(cublasStatus_t error);
 // CUSparse error reporting.
 const char *cusparseGetErrorString(cusparseStatus_t error);
 
-constexpr int CUDA_NUM_THREADS = 256;
+constexpr uint32_t CUDA_NUM_THREADS = 256;
 
-constexpr int SHARED_BLOCK_SIZE = 32;
+constexpr uint32_t SHARED_BLOCK_SIZE = 32;
 
-constexpr int MAX_GRID = 65535;
+constexpr uint32_t MAX_GRID = 65535;
 
-inline int GET_BLOCKS(const int N) {
-  return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
+inline int GET_BLOCKS(const uint32_t N, const uint32_t THREADS) {
+  return max((N + THREADS - 1) / THREADS, 1);
 }
 
 template <typename Dtype> void print(const thrust::device_vector<Dtype> &v);

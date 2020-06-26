@@ -28,11 +28,16 @@
 #define REGION
 
 #include <algorithm>
+#include <cstdlib>
 #include <vector>
 
 #include "coordinate.hpp"
 #include "types.hpp"
 #include "utils.hpp"
+
+#ifndef CPU_ONLY
+#include "gpu.cuh"
+#endif
 
 namespace minkowski {
 
@@ -134,22 +139,23 @@ public:
   // clang-format on
 
 public:
+  kernel_region() = delete;
   MINK_CUDA_HOST_DEVICE kernel_region(
       REGION_TYPE::region_type type,
       size_type coordinate_size,      // Dimension of the coordinate
       size_type const *tensor_stride, // stride size between points
       size_type const *kernel_size,   // size of the kernel or region
       size_type const *dilation,      // stride / dilation within kernel,
+      size_type const volume = 0,     // kernel volume
       coordinate_type const *p_offset = nullptr, // m_coordinate_size * n_offset
       uint32_t n_offset = 0)
       : m_region_type(type), m_coordinate_size{coordinate_size},
         m_num_offset{n_offset}, m_tensor_stride{tensor_stride},
-        m_kernel_size{kernel_size}, m_dilation{dilation}, m_offset{p_offset} {
-    set_volume();
-    // set the memory space
+        m_kernel_size{kernel_size},
+        m_dilation{dilation}, m_volume{volume}, m_offset{p_offset} {
+    if (m_volume == 0)
+      set_volume();
   }
-
-  MINK_CUDA_HOST_DEVICE inline size_type volume() const { return m_volume; }
 
   /*
    * initialize memory and set the bounds
@@ -200,9 +206,29 @@ public:
   MINK_CUDA_HOST_DEVICE REGION_TYPE::region_type region_type() const {
     return m_region_type;
   }
+  MINK_CUDA_HOST_DEVICE inline size_type volume() const { return m_volume; }
+  MINK_CUDA_HOST_DEVICE inline size_type coordinate_size() const {
+    return m_coordinate_size;
+  }
+  MINK_CUDA_HOST_DEVICE inline size_type num_offset() const {
+    return m_num_offset;
+  }
+  MINK_CUDA_HOST_DEVICE inline coordinate_type const *offset() const {
+    return m_offset;
+  }
+  MINK_CUDA_HOST_DEVICE inline size_type const *tensor_stride() const {
+    return m_tensor_stride;
+  }
+  MINK_CUDA_HOST_DEVICE inline size_type const *kernel_size() const {
+    return m_kernel_size;
+  }
+  MINK_CUDA_HOST_DEVICE inline size_type const *dilation() const {
+    return m_dilation;
+  }
 
 private:
   MINK_CUDA_HOST_DEVICE void set_volume() {
+#ifndef __CUDA_ARCH__
     switch (m_region_type) {
     case REGION_TYPE::HYPER_CUBE:
       m_volume = 1;
@@ -218,13 +244,17 @@ private:
       m_volume = m_num_offset;
       break;
     };
+#else
+    // m_volume must be initialized when copied from cpu to gpu
+#endif
   }
 
-private:
+protected:
+  // flag indicating tensor_stride, kernel_size, dilation are on gpu
   REGION_TYPE::region_type const m_region_type;
   size_type const m_coordinate_size;
-  size_type m_num_offset, m_volume;
-  // all needs to be loaded on the shared memory for GPU.
+  size_type m_num_offset, m_volume{0};
+
   size_type const *m_tensor_stride;
   size_type const *m_kernel_size;
   size_type const *m_dilation;
@@ -235,11 +265,167 @@ private:
   coordinate_type *m_tmp;
 };
 
-// Only to be used for checking the end point of range based for loops.
-// inline bool operator!=(const RegionIterator &lhs, const RegionIterator &rhs)
-// {
-//   return !lhs.done;
-// }
+template <typename coordinate_type = default_types::dcoordinate_type>
+class cpu_kernel_region : kernel_region<coordinate_type> {
+public:
+  using base_type = kernel_region<coordinate_type>;
+  using self_type = cpu_kernel_region<coordinate_type>;
+  using size_type = typename base_type::size_type;
+
+public:
+  cpu_kernel_region() = delete;
+  cpu_kernel_region(
+      REGION_TYPE::region_type type,
+      size_type coordinate_size,      // Dimension of the coordinate
+      size_type const *tensor_stride, // stride size between points
+      size_type const *kernel_size,   // size of the kernel or region
+      size_type const *dilation,      // stride / dilation within kernel,
+      size_type const volume = 0,     // volume
+      coordinate_type const *p_offset = nullptr, // m_coordinate_size * n_offset
+      uint32_t n_offset = 0)
+      : base_type{type,     coordinate_size, tensor_stride, kernel_size,
+                  dilation, volume,          p_offset,      n_offset} {}
+
+  using base_type::begin;
+  using base_type::cbegin;
+  using base_type::end;
+
+  using base_type::coordinate_size;
+  using base_type::num_offset;
+  using base_type::offset;
+  using base_type::region_type;
+  using base_type::set_bounds;
+  using base_type::volume;
+
+#ifndef CPU_ONLY
+  inline size_type const *device_tensor_stride() const {
+    return m_d_tensor_stride;
+  }
+  inline size_type const *device_kernel_size() const { return m_d_kernel_size; }
+  inline size_type const *device_dilation() const { return m_d_dilation; }
+  inline coordinate_type const *device_offset() const { return m_d_offset; }
+
+  self_type const to_gpu() {
+    // move the kernel_region to GPU
+    size_type num_bytes = (m_coordinate_size - 1) * 3 * sizeof(size_type);
+    if (m_region_type == REGION_TYPE::CUSTOM)
+      num_bytes +=
+          (m_coordinate_size - 1) * m_num_offset * sizeof(coordinate_type);
+
+    void *p_tmp = std::malloc(num_bytes);
+    size_type *p_size_type = reinterpret_cast<size_type *>(p_tmp);
+    coordinate_type *p_coordinate_type = reinterpret_cast<coordinate_type *>(
+        p_size_type + 3 * (m_coordinate_size - 1));
+
+    std::copy_n(m_tensor_stride, m_coordinate_size - 1, &p_size_type[0]);
+    std::copy_n(m_kernel_size, m_coordinate_size - 1,
+                &p_size_type[m_coordinate_size - 1]);
+    std::copy_n(m_dilation, m_coordinate_size - 1,
+                &p_size_type[2 * (m_coordinate_size - 1)]);
+
+    if (m_region_type == REGION_TYPE::CUSTOM) {
+      std::copy_n(m_offset, m_num_offset * (m_coordinate_size - 1),
+                  p_coordinate_type);
+    }
+
+    LOG_DEBUG("Copied", num_bytes, "bytes to contiguous memory.");
+    size_type *d_tmp;
+    CUDA_CHECK(cudaMalloc((void **)&d_tmp, num_bytes));
+    CUDA_CHECK(cudaMemcpy(d_tmp, p_tmp, num_bytes, cudaMemcpyHostToDevice));
+    // clang-format off
+    m_d_tensor_stride = d_tmp + 0 * (m_coordinate_size - 1);
+    m_d_kernel_size   = d_tmp + 1 * (m_coordinate_size - 1);
+    m_d_dilation      = d_tmp + 2 * (m_coordinate_size - 1);
+    m_d_offset        = reinterpret_cast<coordinate_type*>(d_tmp + 3 * (m_coordinate_size - 1));
+    // clang-format on
+
+    m_on_gpu = true;
+
+    std::free(p_tmp);
+
+    return *this;
+  }
+
+  inline bool on_gpu() const { return m_on_gpu; }
+
+  void clean() {
+    if (m_on_gpu)
+      CUDA_CHECK(cudaFree(m_d_tensor_stride));
+  }
+#endif
+
+protected:
+  using base_type::m_coordinate_size;
+  using base_type::m_num_offset;
+  using base_type::m_region_type;
+  using base_type::m_volume;
+
+  using base_type::m_dilation;
+  using base_type::m_kernel_size;
+  using base_type::m_tensor_stride;
+
+  using base_type::m_lb;
+  using base_type::m_offset;
+  using base_type::m_tmp;
+  using base_type::m_ub;
+
+  bool m_on_gpu{false};
+
+  // To move these to GPU, must move to gpu first
+  size_type *m_d_tensor_stride;
+  size_type *m_d_kernel_size;
+  size_type *m_d_dilation;
+  coordinate_type *m_d_offset;
+};
+
+/*
+ * Kernel map that can be instantiated from CPU or purely on GPU.
+ */
+template <typename coordinate_type = default_types::dcoordinate_type>
+class gpu_kernel_region : kernel_region<coordinate_type> {
+public:
+  using base_type = kernel_region<coordinate_type>;
+
+public:
+  // The input kernel_region should have initialized the m_d_tensor_stride ...
+  gpu_kernel_region() = delete;
+  MINK_CUDA_HOST_DEVICE
+  gpu_kernel_region(cpu_kernel_region<coordinate_type> const &other)
+      : base_type{other.region_type(),          other.coordinate_size(),
+                  other.device_tensor_stride(), other.device_kernel_size(),
+                  other.device_dilation(),      other.volume(),
+                  other.device_offset(),        other.num_offset()} {}
+
+  using base_type::begin;
+  using base_type::cbegin;
+  using base_type::end;
+
+  using base_type::coordinate_size;
+  using base_type::num_offset;
+  using base_type::offset;
+  using base_type::region_type;
+  using base_type::set_bounds;
+  using base_type::volume;
+
+  using base_type::dilation;
+  using base_type::kernel_size;
+  using base_type::tensor_stride;
+
+protected:
+  using base_type::m_coordinate_size;
+  using base_type::m_num_offset;
+  using base_type::m_region_type;
+  using base_type::m_volume;
+
+  using base_type::m_dilation;
+  using base_type::m_kernel_size;
+  using base_type::m_tensor_stride;
+
+  using base_type::m_lb;
+  using base_type::m_offset;
+  using base_type::m_tmp;
+  using base_type::m_ub;
+};
 
 } // end namespace minkowski
 

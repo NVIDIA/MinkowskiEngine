@@ -53,3 +53,29 @@ class KernelRegionTestCase(unittest.TestCase):
         self.assertEqual(regions[9], [0, 0, 0, 4])
         self.assertEqual(regions[10], [0, 1, 0, 4])
         self.assertEqual(regions[11], [0, 2, 0, 4])
+
+    def test_kernel_map(self):
+        in_coordinates = torch.IntTensor([[0, 1, -1], [0, 2, 1]]).cuda()
+        out_coordinates = torch.IntTensor([[0, 1, 0], [0, 1, 2], [1, 2, 1]]).cuda()
+        kernel_size = torch.IntTensor([3, 3])
+
+        in_maps, out_maps = MinkowskiEngineTest._C.kernel_map_test(
+            in_coordinates, out_coordinates, kernel_size
+        )
+
+        self.assertEqual(len(in_maps), torch.prod(kernel_size).item())
+        print(in_maps)
+        print(out_maps)
+
+    def test_kernel_map2(self):
+        in_coordinates = torch.IntTensor([[0, 1], [0, 2], [0, 3], [0, 4]]).cuda()
+        out_coordinates = torch.IntTensor([[0, 1], [0, 2], [0, 3], [0, 4]]).cuda()
+        kernel_size = torch.IntTensor([3])
+
+        in_maps, out_maps = MinkowskiEngineTest._C.kernel_map_test(
+            in_coordinates, out_coordinates, kernel_size
+        )
+
+        print(in_maps)
+        print(out_maps)
+        self.assertEqual(len(in_maps), torch.prod(kernel_size).item())

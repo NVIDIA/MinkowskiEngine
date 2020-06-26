@@ -231,13 +231,15 @@ class concurrent_unordered_map {
     return const_iterator(
       m_hashtbl_values, m_hashtbl_values + m_capacity, m_hashtbl_values + m_capacity);
   }
-  __host__ __device__ value_type* data() const { return m_hashtbl_values; }
+  __host__ __device__ inline value_type* data() const { return m_hashtbl_values; }
 
-  __host__ __device__ key_type get_unused_key() const { return m_unused_key; }
+  __host__ __device__ inline key_type get_unused_key() const { return m_unused_key; }
 
-  __host__ __device__ mapped_type get_unused_element() const { return m_unused_element; }
+  __host__ __device__ inline mapped_type get_unused_element() const { return m_unused_element; }
 
-  __host__ __device__ size_type capacity() const { return m_capacity; }
+  __host__ __device__ inline key_equal get_key_equal() const { return m_equal; }
+
+  __host__ __device__ inline size_type capacity() const { return m_capacity; }
 
  private:
   /**

@@ -70,7 +70,7 @@ region_iterator_test(const torch::Tensor &coordinates,
     dilation.push_back(1);
   }
 
-  auto region = kernel_region<coordinate_type>(
+  auto region = cpu_kernel_region<coordinate_type>(
       REGION_TYPE::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
       dilation.data());
 
@@ -159,7 +159,7 @@ cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
   }
 
   LOG_DEBUG("kernel_region initialization");
-  auto region = kernel_region<coordinate_type>(
+  auto region = cpu_kernel_region<coordinate_type>(
       REGION_TYPE::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
       dilation.data());
 

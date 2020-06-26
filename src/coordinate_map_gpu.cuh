@@ -30,6 +30,7 @@
 #include "3rdparty/hash/helper_functions.cuh"
 #include "coordinate_map.hpp"
 #include "coordinate_map_functors.cuh"
+#include "kernel_map.cuh"
 
 #include <thrust/device_vector.h>
 
@@ -42,13 +43,14 @@ namespace minkowski {
 template <
     typename coordinate_type,
     typename MapAllocator = default_allocator<thrust::pair<coordinate<coordinate_type>, default_types::index_type>>,
-    typename CoordinateAllocator = default_allocator<coordinate_type>>
+    typename CoordinateAllocator = default_allocator<coordinate_type>,
+    typename KernelMapAllocator = default_allocator<default_types::index_type>>
 class CoordinateMapGPU
     : public CoordinateMap<coordinate_type, CoordinateAllocator> {
 public:
   // clang-format off
   using base_type         = CoordinateMap<coordinate_type, CoordinateAllocator>;
-  using self_type         = CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>;
+  using self_type         = CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator, KernelMapAllocator>;
   using size_type         = typename base_type::size_type;
   using index_type        = typename base_type::index_type;
   using stride_type       = typename base_type::stride_type;
@@ -65,6 +67,9 @@ public:
                                                      MapAllocator>;   // allocator
   using value_type        = typename map_type::value_type;
 
+  // return types
+  using kernel_map_type   = gpu_kernel_map<index_type, KernelMapAllocator>;
+
   // iterator
   using iterator          = typename map_type::iterator;
   using const_iterator    = typename map_type::const_iterator;
@@ -74,7 +79,8 @@ public:
 
   // allocators
   using coordinate_allocator_type = CoordinateAllocator;
-  using map_allocator_type        = MapAllocator;
+  using hash_map_allocator_type   = MapAllocator;
+  using kernel_map_allocator_type = KernelMapAllocator;
   // clang-format on
 
   // return types
@@ -87,17 +93,26 @@ public:
       size_type const number_of_coordinates, size_type const coordinate_size,
       stride_type const stride = {1},
       coordinate_allocator_type coord_alloc = coordinate_allocator_type(),
-      map_allocator_type map_alloc = map_allocator_type())
+      hash_map_allocator_type map_alloc = hash_map_allocator_type(),
+      kernel_map_allocator_type kernel_map_allocator =
+          kernel_map_allocator_type())
       : base_type(number_of_coordinates, coordinate_size, stride, coord_alloc),
         m_capacity(0), // should be updated in the reserve
         m_hasher(hasher_type{coordinate_size}),
         m_equal(key_equal_type{coordinate_size}),
         m_unused_key(coordinate<coordinate_type>{nullptr}),
-        m_unused_element(std::numeric_limits<coordinate_type>::max()) {
+        m_unused_element(std::numeric_limits<coordinate_type>::max()),
+        m_kernel_map_allocator(kernel_map_allocator) {
     reserve(number_of_coordinates);
     // copy the tensor_stride
     m_device_tensor_stride = base_type::m_tensor_stride;
     LOG_DEBUG("device tensor_stride:", m_device_tensor_stride);
+    static_assert(
+        sizeof(index_type) == sizeof(size_type),
+        "kernel_map shared memory requires the type sizes to be the same");
+    static_assert(
+        sizeof(coordinate_type) == sizeof(size_type),
+        "kernel_map shared memory requires the type sizes to be the same");
   }
 
   template <typename mapped_iterator>
@@ -114,7 +129,8 @@ public:
       // reserve coordinate
       base_type::reserve(size);
       // reserve map
-      LOG_DEBUG("Reserve map of", size, "for concurrent_unordered_map.");
+      LOG_DEBUG("Reserve map of", compute_hash_table_size(size),
+                "for concurrent_unordered_map of size", size);
       m_map = std::move(map_type::create(compute_hash_table_size(size),
                                          m_unused_element, m_unused_key,
                                          m_hasher, m_equal, m_map_allocator));
@@ -129,6 +145,10 @@ public:
    * @brief strided coordinate map.
    */
   self_type stride(stride_type const &stride) const;
+  kernel_map_type kernel_map(self_type const &out_coordinate_map,
+                             gpu_kernel_region<coordinate_type> const &kernel,
+                             uint32_t num_map_values_per_thread = 16,
+                             uint32_t thread_dim = CUDA_NUM_THREADS) const;
 
   inline size_type size() const { return m_valid_index.size(); }
 
@@ -151,8 +171,8 @@ private:
   device_index_vector_type m_valid_index;
 
   thrust::device_vector<size_type> m_device_tensor_stride;
-  map_allocator_type m_map_allocator;
-  coordinate_allocator_type m_coordinate_allocator;
+  hash_map_allocator_type m_map_allocator;
+  kernel_map_allocator_type m_kernel_map_allocator;
   std::unique_ptr<map_type, std::function<void(map_type *)>> m_map;
 };
 

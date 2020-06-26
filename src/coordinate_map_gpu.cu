@@ -26,6 +26,7 @@
 #include "coordinate_map_functors.cuh"
 #include "coordinate_map_gpu.cuh"
 #include "gpu.cuh"
+#include "kernel_map.cuh"
 
 #include <thrust/copy.h>
 #include <thrust/device_vector.h>
@@ -45,12 +46,14 @@ namespace minkowski {
  * @return none
  */
 template <typename coordinate_type, typename MapAllocator,
-          typename CoordinateAllocator>
+          typename CoordinateAllocator, typename KernelMapAllocator>
 template <typename mapped_iterator>
-void CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::
-    insert(coordinate_iterator<coordinate_type> key_first,
-           coordinate_iterator<coordinate_type> key_last,
-           mapped_iterator value_first, mapped_iterator value_last) {
+void CoordinateMapGPU<
+    coordinate_type, MapAllocator, CoordinateAllocator,
+    KernelMapAllocator>::insert(coordinate_iterator<coordinate_type> key_first,
+                                coordinate_iterator<coordinate_type> key_last,
+                                mapped_iterator value_first,
+                                mapped_iterator value_last) {
   size_type const N = key_last - key_first;
   LOG_DEBUG("key iterator length", N);
   ASSERT(N == value_last - value_first,
@@ -102,11 +105,13 @@ void CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::
  * @return a pair of (valid index, query value) vectors.
  */
 template <typename coordinate_type, typename MapAllocator,
-          typename CoordinateAllocator>
+          typename CoordinateAllocator, typename KernelMapAllocator>
 std::pair<thrust::device_vector<uint32_t>, thrust::device_vector<uint32_t>>
-CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::find(
-    coordinate_iterator<coordinate_type> key_first,
-    coordinate_iterator<coordinate_type> key_last) const {
+CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator,
+                 KernelMapAllocator>::find(coordinate_iterator<coordinate_type>
+                                               key_first,
+                                           coordinate_iterator<coordinate_type>
+                                               key_last) const {
   size_type N = key_last - key_first;
 
   LOG_DEBUG(N, "queries for find.")
@@ -148,10 +153,11 @@ CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::find(
  * @return a pair of (valid index, query value) vectors.
  */
 template <typename coordinate_type, typename MapAllocator,
-          typename CoordinateAllocator>
-CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>
-CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::stride(
-    stride_type const &stride) const {
+          typename CoordinateAllocator, typename KernelMapAllocator>
+CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator,
+                 KernelMapAllocator>
+CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator,
+                 KernelMapAllocator>::stride(stride_type const &stride) const {
 
   // Over estimate the reserve size to be size();
   size_type const N = size();
@@ -205,6 +211,234 @@ CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator>::stride(
                        m_coordinate_size});
 
   return stride_map;
+}
+
+namespace detail {
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void count_kernel(map_type const __restrict__ in_map,        //
+                             map_type const __restrict__ out_map,       //
+                             size_type const num_map_values_per_thread, //
+                             size_type const num_threads,               //
+                             gpu_kernel_region<coordinate_type> kernel, //
+                             index_type *__restrict__ p_count_per_thread) {
+  extern __shared__ coordinate_type sh_all[];
+
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  size_type coordinate_size = kernel.coordinate_size();
+  size_type volume = kernel.volume();
+
+  // clang-format off
+  size_type *sh_size = reinterpret_cast<size_type *>(sh_all);
+
+  size_type *sh_tensor_stride = sh_size;
+  size_type *sh_kernel_size   = sh_tensor_stride + coordinate_size;
+  size_type *sh_dilation      = sh_kernel_size   + coordinate_size;
+
+  coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_dilation + coordinate_size);
+  coordinate_type *sh_tmp = sh_coordinate +                   tx  * coordinate_size;
+  coordinate_type *sh_lb  = sh_coordinate + (1 * blockDim.x + tx) * coordinate_size;
+  coordinate_type *sh_ub  = sh_coordinate + (2 * blockDim.x + tx) * coordinate_size;
+  // clang-format on
+
+  auto const equal = out_map.get_key_equal();
+
+  // kernel_maps
+  for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x) {
+    sh_tensor_stride[i] = kernel.tensor_stride()[i];
+    sh_kernel_size[i] = kernel.kernel_size()[i];
+    sh_dilation[i] = kernel.dilation()[i];
+  }
+
+  __syncthreads();
+
+  // clang-format off
+  auto const unused_key = out_map.get_unused_key();
+  auto const max_index = umin((x + 1) * num_map_values_per_thread, out_map.capacity());
+  // iterate over values
+  size_type count = 0;
+  for (index_type value_index = x * num_map_values_per_thread;
+       value_index < max_index;
+       ++value_index) {
+    // clang-format on
+    typename map_type::value_type const &out_value =
+        out_map.data()[value_index];
+    if (!equal(out_value.first, unused_key)) {
+      // set bounds for the valid keys
+      kernel.set_bounds(out_value.first.data(), sh_lb, sh_ub, sh_tmp);
+      for (auto const &coordinate : kernel) {
+        if (in_map.find(coordinate) != in_map.end()) {
+          ++count;
+        }
+      }
+    }
+  }
+
+  if (x < num_threads)
+    p_count_per_thread[x] = count;
+}
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void preallocated_kernel_map_iteration(
+    map_type const __restrict__ in_map,                  //
+    map_type const __restrict__ out_map,                 //
+    size_type const num_map_values_per_thread,           //
+    gpu_kernel_region<coordinate_type> kernel,           //
+    index_type const *inclusive_count_cumsum_per_thread, //
+    index_type *__restrict__ p_kernels, index_type *__restrict__ p_in_maps,
+    index_type *__restrict__ p_out_maps) {
+  extern __shared__ coordinate_type sh_all[];
+
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  size_type coordinate_size = kernel.coordinate_size();
+  size_type volume = kernel.volume();
+
+  // clang-format off
+  size_type *sh_size = reinterpret_cast<size_type *>(sh_all);
+
+  size_type *sh_tensor_stride = sh_size;
+  size_type *sh_kernel_size   = sh_tensor_stride + coordinate_size;
+  size_type *sh_dilation      = sh_kernel_size   + coordinate_size;
+
+  coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_dilation + coordinate_size);
+  coordinate_type *sh_tmp = sh_coordinate +                   tx  * coordinate_size;
+  coordinate_type *sh_lb  = sh_coordinate + (1 * blockDim.x + tx) * coordinate_size;
+  coordinate_type *sh_ub  = sh_coordinate + (2 * blockDim.x + tx) * coordinate_size;
+  // clang-format on
+
+  auto const equal = out_map.get_key_equal();
+
+  for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x) {
+    sh_tensor_stride[i] = kernel.tensor_stride()[i];
+    sh_kernel_size[i] = kernel.kernel_size()[i];
+    sh_dilation[i] = kernel.dilation()[i];
+  }
+
+  __syncthreads();
+
+  // clang-format off
+  auto const unused_key = out_map.get_unused_key();
+  auto const max_index = umin((x + 1) * num_map_values_per_thread, out_map.capacity());
+
+  // iterate over values
+  auto kernel_map_index = (x < 1) ? 0 : inclusive_count_cumsum_per_thread[x - 1];
+  index_type kernel_index = 0;
+  for (index_type value_index = x * num_map_values_per_thread;
+       value_index < max_index;
+       ++value_index) {
+    typename map_type::value_type const &out_value = out_map.data()[value_index];
+    // clang-format on
+    if (!equal(out_value.first, unused_key)) {
+      // set bounds for the valid keys
+      kernel.set_bounds(out_value.first.data(), sh_lb, sh_ub, sh_tmp);
+      kernel_index = 0;
+      for (auto const &coordinate : kernel) {
+        auto const &in_result = in_map.find(coordinate);
+        if (in_result != in_map.end()) {
+          // insert to
+          p_kernels[kernel_map_index] = kernel_index;
+          p_in_maps[kernel_map_index] = (*in_result).second;
+          p_out_maps[kernel_map_index] = out_value.second;
+          ++kernel_map_index;
+        }
+        ++kernel_index;
+      }
+    }
+  }
+}
+
+} // namespace detail
+
+template <typename coordinate_type, typename MapAllocator,
+          typename CoordinateAllocator, typename KernelMapAllocator>
+CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator,
+                 KernelMapAllocator>::kernel_map_type
+CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator,
+                 KernelMapAllocator>::
+    kernel_map(self_type const &out_coordinate_map,
+               gpu_kernel_region<coordinate_type> const &kernel,
+               uint32_t num_map_values_per_thread, uint32_t thread_dim) const {
+  // Over estimate the reserve size to be size();
+  size_type out_capacity = out_coordinate_map.m_map->capacity();
+  size_type kernel_volume = kernel.volume();
+
+  // clang-format off
+  // (THREAD * 3 * D +  3 * D + 2 * K) * 4
+  uint32_t shared_memory_size_in_bytes =
+      3 * m_coordinate_size * sizeof(index_type) + // stride, kernel, dilation
+      3 * thread_dim * m_coordinate_size * sizeof(coordinate_type); // tmp, lb, ub
+  // clang-format on
+  auto const block_dim = GET_BLOCKS(
+      out_coordinate_map.capacity() / num_map_values_per_thread, thread_dim);
+  size_type const num_threads =
+      (out_coordinate_map.capacity() + num_map_values_per_thread - 1) /
+      num_map_values_per_thread;
+
+  LOG_DEBUG("block dim", block_dim);
+  LOG_DEBUG("out_coordinate_map capacity", out_coordinate_map.capacity());
+  LOG_DEBUG("shared_memory size", shared_memory_size_in_bytes);
+  LOG_DEBUG("threads dim", thread_dim);
+  LOG_DEBUG("num threads", num_threads);
+
+  index_type *d_p_count_per_thread =
+      m_kernel_map_allocator.allocate(num_threads);
+
+  // clang-format off
+  // Initialize count per thread
+  detail::count_kernel<coordinate_type, size_type, index_type, map_type>
+      <<<block_dim, thread_dim, shared_memory_size_in_bytes>>>(
+          *m_map,                    //
+          *out_coordinate_map.m_map, //
+          num_map_values_per_thread, //
+          num_threads,               //
+          kernel,                    //
+          d_p_count_per_thread);
+  // clang-format on
+
+  LOG_DEBUG("count_kernel finished");
+  thrust::inclusive_scan(thrust::device, d_p_count_per_thread,
+                         d_p_count_per_thread + num_threads,
+                         d_p_count_per_thread);
+  index_type num_kernel_map; // type following the kernel map allocator
+  CUDA_CHECK(cudaMemcpy(&num_kernel_map, d_p_count_per_thread + num_threads - 1,
+                        sizeof(index_type), cudaMemcpyDeviceToHost));
+
+  // set kernel map
+  LOG_DEBUG("Found", num_kernel_map, "kernel map elements.");
+
+  kernel_map_type kernel_map(num_kernel_map);
+  detail::preallocated_kernel_map_iteration<coordinate_type, size_type,
+                                            index_type, map_type>
+      <<<block_dim, thread_dim, shared_memory_size_in_bytes>>>(
+          *m_map,                     //
+          *out_coordinate_map.m_map,  //
+          num_map_values_per_thread,  //
+          kernel,                     //
+          d_p_count_per_thread,       //
+          kernel_map.kernels.begin(), //
+          kernel_map.in_maps.begin(), //
+          kernel_map.out_maps.begin());
+
+  CUDA_CHECK(cudaStreamSynchronize(0));
+  LOG_DEBUG("Preallocated kernel map done");
+
+  kernel_map.decompose();
+  m_kernel_map_allocator.deallocate(d_p_count_per_thread, num_threads);
+  LOG_DEBUG("cudaFree");
+
+  return kernel_map;
 }
 
 // Template instantiation

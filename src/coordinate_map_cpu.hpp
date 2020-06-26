@@ -185,7 +185,7 @@ public:
 
   cpu_kernel_map
   kernel_map(self_type const &out_coordinate_map,
-             kernel_region<coordinate_type> const &kernel) const {
+             cpu_kernel_region<coordinate_type> const &kernel) const {
     // Over estimate the reserve size to be size();
     size_type out_size = out_coordinate_map.size();
     size_type kernel_volume = kernel.volume();
@@ -238,7 +238,7 @@ public:
     } else {
 #pragma omp parallel for
       for (index_type n = 0; n < N; n++) {
-        auto ckernel = kernel_region<coordinate_type>(kernel);
+        auto ckernel = cpu_kernel_region<coordinate_type>(kernel);
         // temporary variables for each thread
         std::vector<coordinate_type> lb(m_coordinate_size),
             ub(m_coordinate_size), tmp(m_coordinate_size);
