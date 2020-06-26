@@ -177,6 +177,17 @@ private:
 #define LOG_DEBUG(...) (void)0
 #endif
 
+#define __WARN(...)                                                            \
+  {                                                                            \
+    Formatter formatter;                                                       \
+    formatter << COLOR << "WARNING:" << __FILE__ << ":" << __LINE__ << RESET   \
+              << " ";                                                          \
+    formatter.append(__VA_ARGS__);                                             \
+    std::cerr << formatter.str() << "\n";                                      \
+  }
+
+#define LOG_WARN(...) __WARN(__VA_ARGS__)
+
 class simple_range {
   using index_type = uint32_t;
 

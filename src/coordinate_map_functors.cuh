@@ -214,6 +214,15 @@ template <typename coordinate_type, typename index_type> struct stride_copy {
   coordinate_type *m_dst;
 };
 
+template <typename T> struct min_size_functor {
+  using min_size_type = thrust::tuple<T, T>;
+
+  __host__ __device__ min_size_type operator()(const min_size_type &lhs,
+                                               const min_size_type &rhs) {
+    return thrust::make_tuple(min(thrust::get<0>(lhs), thrust::get<0>(rhs)),
+                              thrust::get<1>(lhs) + thrust::get<1>(rhs));
+  }
+};
 } // end namespace detail
 
 } // end namespace minkowski

@@ -48,10 +48,8 @@ using size_type = default_types::size_type;
  */
 __global__ void kernel_region_iterator_test(
     coordinate_type const *__restrict__ p_coordinate,
-    size_type number_of_coordinates,
-    index_type const *__restrict__ tensor_stride,
-    index_type const *__restrict__ kernel_size,
-    index_type const *__restrict__ dilation, index_type coordinate_size,
+    size_type number_of_coordinates, //
+    gpu_kernel_region<coordinate_type> kernel,
     coordinate_type *__restrict__ p_return_coordinates) {
   extern __shared__ coordinate_type sh_coordinate[];
 
@@ -59,36 +57,34 @@ __global__ void kernel_region_iterator_test(
   auto const bx = blockIdx.x;
   auto const x = blockDim.x * bx + tx;
 
-  coordinate_type *sh_tmp = sh_coordinate;
-  coordinate_type *sh_lb = sh_coordinate + CUDA_NUM_THREADS * coordinate_size;
-  coordinate_type *sh_ub = sh_lb + coordinate_size;
+  size_type coordinate_size = kernel.coordinate_size();
+  size_type volume = kernel.volume();
 
-  index_type *sh_index =
-      reinterpret_cast<index_type *>(sh_ub + coordinate_size);
+  coordinate_type *sh_tmp = sh_coordinate + tx * coordinate_size;
+  coordinate_type *sh_lb =
+      sh_coordinate + (CUDA_NUM_THREADS + tx) * coordinate_size;
+  coordinate_type *sh_ub =
+      sh_coordinate + (2 * CUDA_NUM_THREADS + tx) * coordinate_size;
+
+  index_type *sh_index = reinterpret_cast<index_type *>(
+      sh_coordinate + 3 * CUDA_NUM_THREADS * coordinate_size);
   index_type *sh_tensor_stride = sh_index;
   index_type *sh_kernel_size = sh_index + coordinate_size;
   index_type *sh_dilation = sh_index + 2 * coordinate_size;
 
-  index_type a;
   if (tx < coordinate_size - 1) {
-    sh_tensor_stride[tx] = tensor_stride[tx];
-    sh_kernel_size[tx] = kernel_size[tx];
-    sh_dilation[tx] = dilation[tx];
+    sh_tensor_stride[tx] = kernel.tensor_stride()[tx];
+    sh_kernel_size[tx] = kernel.kernel_size()[tx];
+    sh_dilation[tx] = kernel.dilation()[tx];
   }
   __syncthreads();
   if (x >= number_of_coordinates)
     return;
 
-  auto region = kernel_region<coordinate_type>(
-      REGION_TYPE::HYPER_CUBE, coordinate_size, sh_tensor_stride,
-      sh_kernel_size, sh_dilation);
-  index_type kernel_volume = region.volume();
-
   // iterate and copy
-  index_type out_index = x * kernel_volume;
-  region.set_bounds(&p_coordinate[x * coordinate_size], sh_lb, sh_ub,
-                    &sh_tmp[tx * coordinate_size]);
-  for (auto const &coordinate : region) {
+  index_type out_index = x * kernel.volume();
+  kernel.set_bounds(&p_coordinate[x * coordinate_size], sh_lb, sh_ub, sh_tmp);
+  for (auto const &coordinate : kernel) {
     for (index_type i = 0; i < coordinate_size; ++i) {
       p_return_coordinates[out_index * coordinate_size + i] = coordinate[i];
     }
@@ -97,11 +93,11 @@ __global__ void kernel_region_iterator_test(
 }
 
 at::Tensor region_iterator_test(const torch::Tensor &coordinates,
-                                const torch::Tensor &kernel_size) {
+                                const torch::Tensor &th_kernel_size) {
   // Create TensorArgs. These record the names and positions of each tensor as
   // parameters.
   torch::TensorArg arg_coordinates(coordinates, "coordinates", 0);
-  torch::TensorArg arg_kernel_size(kernel_size, "kernel_size", 1);
+  torch::TensorArg arg_kernel_size(th_kernel_size, "kernel_size", 1);
 
   torch::CheckedFrom c = "region_iterator_test";
   torch::checkContiguous(c, arg_coordinates);
@@ -117,42 +113,38 @@ at::Tensor region_iterator_test(const torch::Tensor &coordinates,
   auto const N = (index_type)coordinates.size(0);
   auto const coordinate_size = (index_type)coordinates.size(1);
   coordinate_type *p_coordinate = coordinates.data_ptr<coordinate_type>();
-  coordinate_type *p_kernel_size = kernel_size.data_ptr<coordinate_type>();
+  coordinate_type *p_kernel_size = th_kernel_size.data_ptr<coordinate_type>();
 
-  thrust::device_vector<index_type> thrust_tensor_stride(coordinate_size - 1);
-  thrust::device_vector<index_type> thrust_kernel_size(coordinate_size - 1);
-  thrust::device_vector<index_type> thrust_dilation(coordinate_size - 1);
+  default_types::stride_type tensor_stride(coordinate_size - 1);
+  default_types::stride_type kernel_size(coordinate_size - 1);
+  default_types::stride_type dilation(coordinate_size - 1);
 
-  index_type kernel_volume = 1;
   for (index_type i = 0; i < coordinate_size - 1; ++i) {
-    kernel_volume *= p_kernel_size[i];
+    tensor_stride[i] = 1;
+    kernel_size[i] = p_kernel_size[i];
+    dilation[i] = 1;
   }
 
-  LOG_DEBUG("kernel_volume", kernel_volume);
-  for (index_type i = 0; i < coordinate_size - 1; ++i) {
-    thrust_tensor_stride[i] = 1;
-    thrust_kernel_size[i] = p_kernel_size[i];
-    thrust_dilation[i] = 1;
-  }
-  CUDA_CHECK(cudaStreamSynchronize(0));
+  auto cpu_kernel = cpu_kernel_region<coordinate_type>(
+      REGION_TYPE::HYPER_CUBE, coordinate_size, tensor_stride.data(),
+      kernel_size.data(), dilation.data());
+  auto kernel = gpu_kernel_region<coordinate_type>(cpu_kernel.to_gpu());
 
   LOG_DEBUG("initialize vectors");
 
-  torch::Tensor out_coordinates =
-      torch::empty({N * kernel_volume, coordinate_size}, coordinates.options());
+  torch::Tensor out_coordinates = torch::empty(
+      {N * kernel.volume(), coordinate_size}, coordinates.options());
 
   uint32_t shared_memory_size_in_bytes =
-      (2 + CUDA_NUM_THREADS) * coordinate_size * sizeof(coordinate_type) +
+      3 * CUDA_NUM_THREADS * coordinate_size * sizeof(coordinate_type) +
       3 * coordinate_size * sizeof(index_type);
 
-  kernel_region_iterator_test<<<GET_BLOCKS(N), CUDA_NUM_THREADS,
+  kernel_region_iterator_test<<<GET_BLOCKS(N, CUDA_NUM_THREADS),
+                                CUDA_NUM_THREADS,
                                 shared_memory_size_in_bytes>>>(
       p_coordinate, //
       N,            //
-      thrust::raw_pointer_cast(thrust_tensor_stride.data()),
-      thrust::raw_pointer_cast(thrust_kernel_size.data()),
-      thrust::raw_pointer_cast(thrust_dilation.data()), //
-      coordinate_size,                                  //
+      kernel,       //
       out_coordinates.data_ptr<coordinate_type>());
 
   LOG_DEBUG("End call");
@@ -161,9 +153,111 @@ at::Tensor region_iterator_test(const torch::Tensor &coordinates,
   return out_coordinates;
 }
 
+cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
+                               const torch::Tensor &out_coordinates,
+                               const torch::Tensor &kernel_size) {
+  // Create TensorArgs. These record the names and positions of each tensor as
+  // parameters.
+  torch::TensorArg arg_in_coordinates(in_coordinates, "coordinates", 0);
+  torch::TensorArg arg_out_coordinates(out_coordinates, "coordinates", 1);
+  torch::TensorArg arg_kernel_size(kernel_size, "kernel_size", 2);
+
+  torch::CheckedFrom c = "region_iterator_test";
+  torch::checkContiguous(c, arg_in_coordinates);
+  torch::checkContiguous(c, arg_out_coordinates);
+  torch::checkContiguous(c, arg_kernel_size);
+  // must match coordinate_type
+  torch::checkScalarType(c, arg_in_coordinates, torch::kInt);
+  torch::checkScalarType(c, arg_out_coordinates, torch::kInt);
+  torch::checkScalarType(c, arg_kernel_size, torch::kInt);
+  torch::checkBackend(c, arg_in_coordinates.tensor, torch::Backend::CUDA);
+  torch::checkBackend(c, arg_out_coordinates.tensor, torch::Backend::CUDA);
+  torch::checkBackend(c, arg_kernel_size.tensor, torch::Backend::CPU);
+  torch::checkDim(c, arg_in_coordinates, 2);
+  torch::checkDim(c, arg_out_coordinates, 2);
+  torch::checkDim(c, arg_kernel_size, 1);
+
+  auto const N_in = (index_type)in_coordinates.size(0);
+  auto const D = (index_type)in_coordinates.size(1);
+
+  auto const N_out = (index_type)out_coordinates.size(0);
+  auto const D_out = (index_type)out_coordinates.size(1);
+
+  ASSERT(D == D_out, "dimension mismatch");
+
+  coordinate_type const *ptr_in = in_coordinates.data_ptr<coordinate_type>();
+  coordinate_type const *ptr_out = out_coordinates.data_ptr<coordinate_type>();
+
+  CoordinateMapGPU<coordinate_type> in_map{N_in, D};
+  CoordinateMapGPU<coordinate_type> out_map{N_out, D};
+
+  auto in_coordinate_range = coordinate_range<coordinate_type>(N_in, D, ptr_in);
+  thrust::counting_iterator<uint32_t> iter{0};
+  in_map.insert(in_coordinate_range.begin(), // key begin
+                in_coordinate_range.end(),   // key end
+                iter,                        // value begin
+                iter + N_in);                // value end
+
+  auto out_coordinate_range =
+      coordinate_range<coordinate_type>(N_out, D, ptr_out);
+  out_map.insert(out_coordinate_range.begin(), // key begin
+                 out_coordinate_range.end(),   // key end
+                 iter,                         // value begin
+                 iter + N_out);                // value end
+
+  LOG_DEBUG("coordinate initialization");
+
+  // Kernel region
+  coordinate_type *p_kernel_size = kernel_size.data_ptr<coordinate_type>();
+  default_types::stride_type tensor_stride;
+  default_types::stride_type s_kernel_size;
+  default_types::stride_type dilation;
+  for (index_type i = 0; i < D - 1; ++i) {
+    tensor_stride.push_back(1);
+    s_kernel_size.push_back(p_kernel_size[i]);
+    dilation.push_back(1);
+  }
+
+  auto region = cpu_kernel_region<coordinate_type>(
+      REGION_TYPE::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
+      dilation.data());
+  LOG_DEBUG("cpu_kernel_region initialized with volume", region.volume());
+  region.to_gpu();
+  auto gpu_region = gpu_kernel_region<coordinate_type>(region);
+  LOG_DEBUG("gpu_kernel_region initialization");
+
+  auto kernel_map = in_map.kernel_map(out_map, gpu_region, 16, 16);
+  const auto volume = region.volume();
+  LOG_DEBUG("kernel_map done");
+
+  cpu_in_maps in_maps(volume);
+  cpu_in_maps out_maps(volume);
+  for (index_type i = 0; i < volume; ++i) {
+    size_type size = kernel_map.kernels.size(i);
+    LOG_DEBUG("kernel index", i, "/", volume, "with size", size);
+    in_maps[i].resize(size);
+    out_maps[i].resize(size);
+
+    if (size > 0) {
+      cudaMemcpy(in_maps[i].data(), //
+                 kernel_map.in_maps.begin(i), sizeof(index_type) * size,
+                 cudaMemcpyDeviceToHost);
+      cudaMemcpy(out_maps[i].data(), //
+                 kernel_map.out_maps.begin(i), sizeof(index_type) * size,
+                 cudaMemcpyDeviceToHost);
+    }
+  }
+  CUDA_CHECK(cudaStreamSynchronize(0));
+
+  return std::make_pair(in_maps, out_maps);
+}
+
 } // namespace minkowski
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("region_iterator_test", &minkowski::region_iterator_test,
         "Minkowski Engine region iterator test");
+
+  m.def("kernel_map_test", &minkowski::kernel_map_test,
+        "Minkowski Engine kernel map test");
 }

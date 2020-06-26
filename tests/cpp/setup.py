@@ -54,7 +54,11 @@ SOURCE_SETS = {
     ],
     "coordinate": [CppExtension, ["coordinate_test.cpp"], []],
     "kernel_region_cpu": [CppExtension, ["kernel_region_cpu_test.cpp"], []],
-    "kernel_region_gpu": [CUDAExtension, ["kernel_region_gpu_test.cu"], []],
+    "kernel_region_gpu": [
+        CUDAExtension,
+        ["kernel_region_gpu_test.cu"],
+        ["coordinate_map_gpu.cu"],
+    ],
     "type": [CppExtension, ["type_test.cpp"], []],
 }
 
