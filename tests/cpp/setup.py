@@ -17,7 +17,7 @@ if sys.platform == "win32":
     else:
         CXX_FLAGS = ["/sdl", "/permissive-"]
 else:
-    CXX_FLAGS = ["-g"]
+    CXX_FLAGS = ["-g", "-fopenmp"]
 
 
 def run_command(*args):

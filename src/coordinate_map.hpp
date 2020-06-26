@@ -148,10 +148,15 @@ public:
     ASSERT(false, "Not implemented");
   }
 
+  */
   // Generate in-out kernel maps
-  InOutMapsPair<int>
-  kernel_map(const CoordsMap<CoordsToIndexMap> &out_coords_map,
-             const Region &region) const;
+  // std::pair<index_vector_type, index_vector_type>
+  // kernel_map(self_type const &out_coords_map,
+  //            kernel_region const &region) const{
+  //   ASSERT(false, "Not implemented"); // no virtual members for a templated class
+  // }
+
+  /*
   InOutMapsPair<int>
   pruned_kernel_map(const CoordsMap<MapType> &out_coords_map) const;
   InOutMapsPair<int>

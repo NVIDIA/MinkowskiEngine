@@ -79,8 +79,9 @@ __global__ void kernel_region_iterator_test(
   if (x >= number_of_coordinates)
     return;
 
-  auto region = kernel_region<coordinate_type, HYPER_CUBE>(
-      coordinate_size, sh_tensor_stride, sh_kernel_size, sh_dilation);
+  auto region = kernel_region<coordinate_type>(
+      REGION_TYPE::HYPER_CUBE, coordinate_size, sh_tensor_stride,
+      sh_kernel_size, sh_dilation);
   index_type kernel_volume = region.volume();
 
   // iterate and copy
