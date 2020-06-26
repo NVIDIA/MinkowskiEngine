@@ -36,11 +36,14 @@
 
 namespace minkowski {
 
+namespace REGION_TYPE {
+
 enum region_type { HYPER_CUBE, HYPER_CROSS, CUSTOM };
 
+}
+
 // A wrapper for a convolution kernel or a pooling kernel.
-template <typename coordinate_type = default_types::dcoordinate_type,
-          region_type REGION_TYPE = HYPER_CUBE>
+template <typename coordinate_type = default_types::dcoordinate_type>
 class kernel_region {
 public:
   using index_type = default_types::index_type;
@@ -132,24 +135,30 @@ public:
 
 public:
   MINK_CUDA_HOST_DEVICE kernel_region(
-      index_type coordinate_size,      // Dimension of the coordinate
-      index_type const *tensor_stride, // stride size between points
-      index_type const *kernel_size,   // size of the kernel or region
-      index_type const *dilation,      // stride / dilation within kernel,
+      REGION_TYPE::region_type type,
+      size_type coordinate_size,      // Dimension of the coordinate
+      size_type const *tensor_stride, // stride size between points
+      size_type const *kernel_size,   // size of the kernel or region
+      size_type const *dilation,      // stride / dilation within kernel,
       coordinate_type const *p_offset = nullptr, // m_coordinate_size * n_offset
       uint32_t n_offset = 0)
-      : m_coordinate_size{coordinate_size}, m_num_offset{n_offset},
-        m_tensor_stride{tensor_stride}, m_kernel_size{kernel_size},
-        m_dilation{dilation}, m_offset{p_offset} {
+      : m_region_type(type), m_coordinate_size{coordinate_size},
+        m_num_offset{n_offset}, m_tensor_stride{tensor_stride},
+        m_kernel_size{kernel_size}, m_dilation{dilation}, m_offset{p_offset} {
     set_volume();
     // set the memory space
   }
 
   MINK_CUDA_HOST_DEVICE inline size_type volume() const { return m_volume; }
-  MINK_CUDA_HOST_DEVICE void set_bounds(coordinate_type const *p_center,
-                  coordinate_type *p_lb, // lower bound temporary memory space.
-                                         // Management should be done outside.
-                  coordinate_type *p_ub, coordinate_type *p_tmp) {
+
+  /*
+   * initialize memory and set the bounds
+   */
+  MINK_CUDA_HOST_DEVICE void
+  set_bounds(coordinate_type const *p_center,
+             coordinate_type *p_lb, // lower bound temporary memory space.
+                                    // Management should be done outside.
+             coordinate_type *p_ub, coordinate_type *p_tmp) {
     m_tmp = p_tmp;
     m_lb = p_lb;
     m_ub = p_ub;
@@ -179,46 +188,46 @@ public:
     //           PtrToString(m_ub, m_coordinate_size));
   }
 
-  MINK_CUDA_HOST_DEVICE iterator begin() {
-    return kernel_region_iterator(m_tmp, *this);
+  MINK_CUDA_HOST_DEVICE iterator begin() { return iterator(m_tmp, *this); }
+  MINK_CUDA_HOST_DEVICE const_iterator cbegin() const {
+    return const_iterator(m_tmp, *this);
   }
-  MINK_CUDA_HOST_DEVICE iterator end() {
-    return kernel_region_iterator(nullptr, *this);
+  MINK_CUDA_HOST_DEVICE iterator end() { return iterator(nullptr, *this); }
+  MINK_CUDA_HOST_DEVICE kernel_region_iterator end() const {
+    return const_iterator(nullptr, *this);
+  }
+
+  MINK_CUDA_HOST_DEVICE REGION_TYPE::region_type region_type() const {
+    return m_region_type;
   }
 
 private:
   MINK_CUDA_HOST_DEVICE void set_volume() {
-    switch (REGION_TYPE) {
-    case HYPER_CUBE:
+    switch (m_region_type) {
+    case REGION_TYPE::HYPER_CUBE:
       m_volume = 1;
       for (index_type i = 0; i < m_coordinate_size - 1; ++i)
         m_volume *= m_kernel_size[i];
       break;
-    case HYPER_CROSS:
+    case REGION_TYPE::HYPER_CROSS:
       m_volume = 1;
       for (index_type i = 0; i < m_coordinate_size - 1; ++i)
         m_volume += (m_kernel_size[i] - 1);
       break;
-    case CUSTOM:
+    case REGION_TYPE::CUSTOM:
       m_volume = m_num_offset;
       break;
     };
   }
 
-  MINK_CUDA_HOST_DEVICE kernel_region_iterator begin() const {
-    return kernel_region_iterator(*this);
-  }
-  MINK_CUDA_HOST_DEVICE kernel_region_iterator end() const {
-    return kernel_region_iterator(*this, m_volume);
-  }
-
 private:
+  REGION_TYPE::region_type const m_region_type;
   size_type const m_coordinate_size;
   size_type m_num_offset, m_volume;
   // all needs to be loaded on the shared memory for GPU.
-  index_type const *m_tensor_stride;
-  index_type const *m_kernel_size;
-  index_type const *m_dilation;
+  size_type const *m_tensor_stride;
+  size_type const *m_kernel_size;
+  size_type const *m_dilation;
 
   coordinate_type const *m_offset;
   coordinate_type *m_lb;

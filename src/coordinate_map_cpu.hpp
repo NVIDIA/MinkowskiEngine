@@ -26,6 +26,8 @@
 #define COORDINATE_MAP_CPU_HPP
 
 #include "coordinate_map.hpp"
+#include "kernel_region.hpp"
+#include <omp.h>
 
 namespace minkowski {
 
@@ -180,6 +182,116 @@ public:
     return stride_map;
   }
   */
+
+  cpu_kernel_map
+  kernel_map(self_type const &out_coordinate_map,
+             kernel_region<coordinate_type> const &kernel) const {
+    // Over estimate the reserve size to be size();
+    size_type out_size = out_coordinate_map.size();
+    size_type kernel_volume = kernel.volume();
+
+    cpu_in_maps in_maps = initialize_maps<cpu_in_map>(kernel_volume, out_size);
+    cpu_out_maps out_maps =
+        initialize_maps<cpu_out_map>(kernel_volume, out_size);
+    std::vector<size_type> num_used(kernel_volume);
+
+    // OMP
+    const auto &out_mmap = out_coordinate_map.m_map;
+    const size_t out_map_num_elements = out_mmap.capacity();
+
+    // size_t stride = max((size_t)100, numElements / (2 *
+    // omp_get_max_threads())); size_t N = (numElements + stride - 1) /
+    // stride;
+
+    // compute the chunk size per thread.
+    // There's a trade-off between the thread initialization overhead and the
+    // job sizes. If some jobs finish earlier than others due to imbalance in
+    // hash distribution, these threads will be idle.
+    size_t N = 2 * omp_get_max_threads();
+    const size_t stride = (out_map_num_elements + N - 1) / N;
+    N = (out_map_num_elements + stride - 1) / stride;
+
+    // When no need to iterate through the region
+    // Put if outside the loop for speed
+    if (kernel.region_type() != REGION_TYPE::CUSTOM && kernel_volume == 1) {
+#pragma omp parallel for
+      for (index_type n = 0; n < N; ++n) {
+        index_type curr_index_begin;
+        for (auto iter_out = out_mmap.begin(stride * n);
+             iter_out.num_steps() <
+             std::min(stride, out_map_num_elements - n * stride);
+             ++iter_out) {
+
+          const auto iter_in = m_map.find(iter_out->first);
+          if (iter_in != m_map.end()) {
+#pragma omp atomic capture
+            {
+              curr_index_begin = num_used[0];
+              num_used[0] += 1;
+            }
+
+            in_maps[0][curr_index_begin] = iter_in->second;
+            out_maps[0][curr_index_begin] = iter_out->second;
+          }
+        }
+      }
+    } else {
+#pragma omp parallel for
+      for (index_type n = 0; n < N; n++) {
+        auto ckernel = kernel_region<coordinate_type>(kernel);
+        // temporary variables for each thread
+        std::vector<coordinate_type> lb(m_coordinate_size),
+            ub(m_coordinate_size), tmp(m_coordinate_size);
+
+        index_type kernel_ind, curr_index_begin;
+        for (auto iter_out = out_mmap.begin(stride * n);
+             iter_out.num_steps() <
+             std::min(stride, out_map_num_elements - n * stride);
+             ++iter_out) {
+
+          // set the bounds for the current region
+          ckernel.set_bounds(iter_out->first.data(), lb.data(), ub.data(),
+                             tmp.data());
+
+          // For elements in the current region
+          kernel_ind = 0;
+          for (const auto &point : ckernel) {
+            // If the input coord exists
+            const auto iter_in = m_map.find(point);
+            // LOG_DEBUG(kernel_ind, ":",
+            //           PtrToString(iter_out->first.data(), m_coordinate_size),
+            //           "->", PtrToString(point.data(), m_coordinate_size));
+            if (iter_in != m_map.end()) {
+#pragma omp atomic capture
+              {
+                curr_index_begin = num_used[kernel_ind];
+                num_used[kernel_ind] += 1;
+              }
+              // Ensure that in_maps and out_maps are resized accordingly
+              in_maps[kernel_ind][curr_index_begin] = iter_in->second;
+              out_maps[kernel_ind][curr_index_begin] = iter_out->second;
+              // LOG_DEBUG(kernel_ind, ":",
+              //           PtrToString(iter_in->first.data(),
+              //           m_coordinate_size),
+              //           "->",
+              //           PtrToString(iter_out->first.data(),
+              //           m_coordinate_size));
+            }
+            // Post processings
+            kernel_ind++;
+          }
+        }
+      }
+    }
+
+    for (index_type i = 0; i < kernel_volume; ++i) {
+      index_type max_num = num_used[i];
+      in_maps[i].resize(max_num);
+      out_maps[i].resize(max_num);
+    }
+
+    return std::make_pair(in_maps, out_maps);
+  }
 
   inline size_type size() const noexcept { return m_map.size(); }
 

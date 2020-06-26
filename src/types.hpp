@@ -29,9 +29,9 @@
 
 #include <array>
 #include <functional>
+#include <pybind11/pybind11.h>
 #include <tuple>
 #include <vector>
-#include <pybind11/pybind11.h>
 
 #ifndef CPU_ONLY
 #include <thrust/host_vector.h>
@@ -50,11 +50,7 @@ struct type_wrapper {
   using size_type                = uint_type;
   using dcoordinate_type         = int_type;
   using coordinate_map_hash_type = uint64_t;
-#ifndef CPU_ONLY
-  using index_vector_type        = thrust::host_vector<index_type>;
-#else
   using index_vector_type        = std::vector<index_type>;
-#endif // CPU_ONLY
 };
 // clang-format on
 
@@ -89,7 +85,7 @@ struct ptr_vector {
  *             is_transpose,
  *             is_pool)
  */
-using KernelMapKey =
+using kernel_map_key =
     std::tuple<default_types::coordinate_map_hash_type, // input
                default_types::coordinate_map_hash_type, // output
                default_types::stride_type,              // kernel strides
@@ -104,17 +100,28 @@ using KernelMapKey =
 /*
  * Kernel map specific types
  */
-using cpuInMap  = default_types::index_vector_type;
-using cpuOutMap = default_types::index_vector_type;
+using cpu_in_map  = default_types::index_vector_type;
+using cpu_out_map = default_types::index_vector_type;
 
 // Input index to output index mapping for each spatial kernel
-using cpuInMaps  = std::vector<cpuInMap>;
-using cpuOutMaps = std::vector<cpuOutMap>;
+using cpu_in_maps  = std::vector<cpu_in_map>;
+using cpu_out_maps = std::vector<cpu_out_map>;
+
+using cpu_kernel_map           = std::pair<cpu_in_maps, cpu_out_maps>;
+using cpu_reference_kernel_map = std::pair<cpu_in_maps &, cpu_out_maps &>;
 // clang-format on
 
-using cpuInOutMapsPair = std::pair<cpuInMaps, cpuOutMaps>;
-using cpuInOutMapsRefPair = std::pair<cpuInMaps &, cpuOutMaps &>;
-// clang-format on
+template <typename vector_type>
+std::vector<vector_type>
+initialize_maps(default_types::size_type number_of_vectors,
+                default_types::size_type vector_size) {
+  auto vectors = std::vector<vector_type>();
+  for (default_types::size_type i = 0; i < number_of_vectors; ++i) {
+    auto vector = vector_type(vector_size);
+    vectors.push_back(std::move(vector));
+  }
+  return vectors;
+}
 
 // GPU memory manager backend. No effect with CPU_ONLY build
 enum GPUMemoryManagerBackend { CUDA = 0, PYTORCH = 1 };

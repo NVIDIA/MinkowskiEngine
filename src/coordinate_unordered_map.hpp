@@ -75,13 +75,18 @@ public:
 
   // Iterators
   inline iterator begin() { return m_map.begin(); }
+  inline const_iterator begin(const size_t idx) const {
+    return m_map.begin(idx);
+  }
   inline const_iterator begin() const { return m_map.begin(); }
 
   inline iterator end() { return m_map.end(); }
   inline const_iterator end() const { return m_map.end(); }
 
   inline iterator find(key_type const &key) { return m_map.find(key); }
-  inline const_iterator find(key_type const &key) const { return m_map.find(key); }
+  inline const_iterator find(key_type const &key) const {
+    return m_map.find(key);
+  }
 
   inline std::pair<iterator, bool> insert(value_type const &keyval) {
     return m_map.insert(keyval);
@@ -93,6 +98,7 @@ public:
   // mapped_type &operator[](key_type const &key) { return m_map[key]; }
 
   inline size_type size() const noexcept { return m_map.size(); }
+  inline size_type capacity() const noexcept { return m_map.capacity(); }
   inline void reserve(size_type c) { m_map.reserve(c); }
 
 private:
