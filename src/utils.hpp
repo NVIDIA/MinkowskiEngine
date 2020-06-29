@@ -25,6 +25,7 @@
 #ifndef UTILS
 #define UTILS
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -36,6 +37,19 @@
 #endif
 
 namespace minkowski {
+
+struct timer {
+
+  void tic() { m_start = std::chrono::high_resolution_clock::now(); }
+
+  double toc() {
+    return std::chrono::duration<double>(
+               std::chrono::high_resolution_clock::now() - m_start)
+        .count();
+  }
+
+  std::chrono::system_clock::time_point m_start;
+};
 
 template <typename T>
 std::ostream &print_vector(std::ostream &out, const T &v) {
@@ -160,9 +174,10 @@ private:
 #define MINK_CUDA_DEVICE
 #endif
 
-#ifdef DEBUG
 #define COLOR "\033[31;1m"
 #define RESET "\033[0m"
+
+#ifdef DEBUG
 #define __DEBUG(...)                                                           \
   {                                                                            \
     Formatter formatter;                                                       \

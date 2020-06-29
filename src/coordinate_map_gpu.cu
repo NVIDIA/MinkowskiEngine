@@ -114,18 +114,18 @@ CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator,
                                                key_last) const {
   size_type N = key_last - key_first;
 
-  LOG_DEBUG(N, "queries for find.")
+  LOG_DEBUG(N, "queries for find.");
   auto const find_functor = detail::find_coordinate<coordinate_type, map_type>(
       *m_map, key_first->data(), m_unused_element, m_coordinate_size);
-  LOG_DEBUG("Find functor initialized.")
+  LOG_DEBUG("Find functor initialized.");
   auto const invalid_functor =
       detail::is_unused_pair<coordinate_type, mapped_type>(m_unused_element);
-  LOG_DEBUG("Valid functor initialized.")
+  LOG_DEBUG("Valid functor initialized.");
 
   thrust::counting_iterator<index_type> index{0};
   device_index_vector_type input_index(N);
   device_index_vector_type results(N);
-  LOG_DEBUG("Initialized functors.")
+  LOG_DEBUG("Initialized functors.");
   thrust::sequence(thrust::device, input_index.begin(), input_index.end());
   thrust::transform(thrust::device, index, index + N, results.begin(),
                     find_functor);
