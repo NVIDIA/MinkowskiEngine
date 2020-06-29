@@ -154,7 +154,7 @@ constexpr uint32_t SHARED_BLOCK_SIZE = 32;
 constexpr uint32_t MAX_GRID = 65535;
 
 inline int GET_BLOCKS(const uint32_t N, const uint32_t THREADS) {
-  return max((N + THREADS - 1) / THREADS, 1);
+  return std::max((N + THREADS - 1) / THREADS, uint32_t(1));
 }
 
 template <typename Dtype> void print(const thrust::device_vector<Dtype> &v);

@@ -10,15 +10,6 @@ from pathlib import Path
 from torch.utils.cpp_extension import BuildExtension, CppExtension, CUDAExtension
 from torch.utils.cpp_extension import CUDA_HOME, ROCM_HOME
 
-if sys.platform == "win32":
-    vc_version = os.getenv("VCToolsVersion", "")
-    if vc_version.startswith("14.16."):
-        CXX_FLAGS = ["/sdl"]
-    else:
-        CXX_FLAGS = ["/sdl", "/permissive-"]
-else:
-    CXX_FLAGS = ["-g", "-fopenmp"]
-
 
 def run_command(*args):
     subprocess.check_call(args)
@@ -63,7 +54,7 @@ SOURCE_SETS = {
 }
 
 test_target, argv = _argparse("--test", argv, False)
-assert test_target in SOURCE_SETS.keys()
+no_debug, argv = _argparse("--nodebug", argv)
 
 USE_NINJA = os.getenv("USE_NINJA") == "0"
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -72,10 +63,28 @@ OBJ_DIR = HERE / "objs"
 ME_OBJ_DIR = OBJ_DIR / "ME"
 CXX = os.environ["CXX"]
 
+assert test_target in SOURCE_SETS.keys()
+
+if sys.platform == "win32":
+    vc_version = os.getenv("VCToolsVersion", "")
+    if vc_version.startswith("14.16."):
+        CXX_FLAGS = ["/sdl"]
+    else:
+        CXX_FLAGS = ["/sdl", "/permissive-"]
+else:
+    CXX_FLAGS = ["-fopenmp"]
+
+NVCC_FLAGS = [f"-ccbin={CXX}", "--extended-lambda"]
+
+if not no_debug:
+    CXX_FLAGS += ["-g", "-DDEBUG"]
+    NVCC_FLAGS += ["-g", "-DDEBUG"]
+else:
+    CXX_FLAGS += ["-O3"]
+    NVCC_FLAGS += ["-O3"]
+
 CURR_TEST_FILES = SOURCE_SETS[test_target][1:]
 Extension = SOURCE_SETS[test_target][0]
-
-CXX_FLAGS += ["-DDEBUG"]
 
 ext_modules = [
     Extension(
@@ -87,7 +96,7 @@ ext_modules = [
         ],
         extra_compile_args={
             "cxx": CXX_FLAGS,
-            "nvcc": ["-O2", f"-ccbin={CXX}", "--extended-lambda", "-DDEBUG"],
+            "nvcc": NVCC_FLAGS,
         },
         # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
         # libraries=["coordinate_map_key"],

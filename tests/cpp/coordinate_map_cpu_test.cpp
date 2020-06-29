@@ -35,7 +35,8 @@ using coordinate_type = int32_t;
 using index_type = default_types::index_type;
 using size_type = default_types::size_type;
 
-size_type coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
+std::pair<size_type, double>
+coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
   // Create TensorArgs. These record the names and positions of each tensor as a
   // parameter.
   torch::TensorArg arg_coordinates(coordinates, "coordinates", 0);
@@ -55,12 +56,16 @@ size_type coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
 
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
   simple_range iter{N};
+
+  timer t;
+
+  t.tic();
   map.insert(input_coordinates.begin(), // key begin
              input_coordinates.end(),   // key end
              iter.begin(),              // value begin
              iter.end());               // value end
 
-  return map.size();
+  return std::make_pair<size_type, double>(map.size(), t.toc());
 }
 
 std::pair<std::vector<index_type>, std::vector<index_type>>

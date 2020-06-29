@@ -1,14 +1,39 @@
+import numpy as np
 import unittest
+import time
+
 import torch
 import MinkowskiEngineTest._C
+
+from utils import load_file, batched_coordinates
 
 
 class CoordinateMapTestCase(unittest.TestCase):
     def test_batch_insert(self):
         coordinates = torch.IntTensor([[0, 1], [1, 2], [2, 3], [2, 3]])
-        self.assertEqual(
-            MinkowskiEngineTest._C.coordinate_map_batch_insert_test(coordinates), 3
-        )
+        num, _ = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(coordinates)
+        self.assertEqual(num, 3)
+
+    def test_pcd_insert(self):
+        coords, colors, pcd = load_file("1.ply")
+        BATCH_SIZE = 1
+        voxel_size = 0.02
+        bcoords = [np.floor(coords / voxel_size) for i in range(BATCH_SIZE)]
+        bcoords = batched_coordinates(bcoords)
+        num, t = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(bcoords)
+        self.assertEqual(num, 161890)
+        for batch_size in [1, 5, 10, 20, 40]:
+            for voxel_size in [0.05, 0.02, 0.01]:
+                min_time = 1000
+                dcoords = torch.from_numpy(np.floor(coords / voxel_size)).int()
+                bcoords = batched_coordinates([dcoords for i in range(batch_size)])
+                for i in range(10):
+                    s = time.time()
+                    num, t = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(
+                        bcoords
+                    )
+                    min_time = min(time.time() - s, min_time)
+                print(f"{len(bcoords)}\t{num}\t{min_time}\t{t}")
 
     def test_batch_find(self):
         coordinates = torch.IntTensor([[0, 1], [1, 2], [2, 3], [2, 3]])
@@ -80,9 +105,7 @@ class CoordinateMapTestCase(unittest.TestCase):
         self.assertEqual(map_size, 2)
         self.assertEqual(tensor_stride, [4, 4])
 
-        coordinates = torch.IntTensor(
-            [[0, -1], [0, -2], [0, 1], [0, 0]]
-        )
+        coordinates = torch.IntTensor([[0, -1], [0, -2], [0, 1], [0, 0]])
         stride = torch.IntTensor([2])
         map_size, tensor_stride = MinkowskiEngineTest._C.coordinate_map_stride_test(
             coordinates, stride
