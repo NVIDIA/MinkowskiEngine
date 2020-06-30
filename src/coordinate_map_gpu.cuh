@@ -91,12 +91,14 @@ public:
   CoordinateMapGPU() = delete;
   CoordinateMapGPU(
       size_type const number_of_coordinates, size_type const coordinate_size,
+      size_type const hashtable_occupancy = 50,
       stride_type const stride = {1},
       coordinate_allocator_type coord_alloc = coordinate_allocator_type(),
       hash_map_allocator_type map_alloc = hash_map_allocator_type(),
       kernel_map_allocator_type kernel_map_allocator =
           kernel_map_allocator_type())
       : base_type(number_of_coordinates, coordinate_size, stride, coord_alloc),
+        m_hashtable_occupancy{hashtable_occupancy},
         m_capacity(0), // should be updated in the reserve
         m_hasher(hasher_type{coordinate_size}),
         m_equal(key_equal_type{coordinate_size}),
@@ -129,13 +131,15 @@ public:
       // reserve coordinate
       base_type::reserve(size);
       // reserve map
-      LOG_DEBUG("Reserve map of", compute_hash_table_size(size),
+      LOG_DEBUG("Reserve map of",
+                compute_hash_table_size(size, m_hashtable_occupancy),
                 "for concurrent_unordered_map of size", size);
-      m_map = std::move(map_type::create(compute_hash_table_size(size),
-                                         m_unused_element, m_unused_key,
-                                         m_hasher, m_equal, m_map_allocator));
+      m_map = map_type::create(
+          compute_hash_table_size(size, m_hashtable_occupancy),
+          m_unused_element, m_unused_key, m_hasher, m_equal, m_map_allocator);
       CUDA_TRY(cudaStreamSynchronize(0));
       m_capacity = size;
+      LOG_DEBUG("Reserved concurrent_unordered_map");
     }
   }
 
@@ -163,6 +167,7 @@ public:
 
 private:
   using base_type::m_coordinate_size;
+  size_type m_hashtable_occupancy;
   size_type m_capacity;
   hasher_type const m_hasher;
   key_equal_type const m_equal;

@@ -125,7 +125,7 @@ public:
     CUDA_CHECK(cudaMemcpy(p_kernel_map, data(),
                           m_memory_size * sizeof(index_type),
                           cudaMemcpyDeviceToHost));
-    for (index_type i = 0; i < m_capacity; ++i) {
+    for (index_type i = 0; i < min(m_capacity, 100); ++i) {
       std::cout << p_kernel_map[i + 0 * m_capacity] << ":"
                 << p_kernel_map[i + 1 * m_capacity] << "->"
                 << p_kernel_map[i + 2 * m_capacity] << "\n";

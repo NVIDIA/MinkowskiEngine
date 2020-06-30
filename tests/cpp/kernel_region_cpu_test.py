@@ -1,6 +1,11 @@
+import numpy as np
 import unittest
+import time
+
 import torch
 import MinkowskiEngineTest._C
+
+from utils import load_file, batched_coordinates
 
 
 class KernelRegionTestCase(unittest.TestCase):
@@ -75,10 +80,12 @@ class KernelRegionTestCase(unittest.TestCase):
         out_coordinates = torch.IntTensor([[0, 1, 0], [0, 1, 2], [1, 2, 1]])
         kernel_size = torch.IntTensor([3, 3])
 
-        in_maps, out_maps = MinkowskiEngineTest._C.kernel_map_test(
+        kernel_map, num, t = MinkowskiEngineTest._C.kernel_map_test(
             in_coordinates, out_coordinates, kernel_size
         )
 
+        in_maps = kernel_map[0]
+        out_maps = kernel_map[1]
         self.assertEqual(len(in_maps), torch.prod(kernel_size).item())
         print(in_maps)
         print(out_maps)
@@ -87,3 +94,20 @@ class KernelRegionTestCase(unittest.TestCase):
         self.assertEqual(out_maps[1], [0])
         self.assertEqual(in_maps[2], [1])
         self.assertEqual(out_maps[2], [1])
+
+    def test_pcd(self):
+        coords, colors, pcd = load_file("1.ply")
+        kernel_size = torch.IntTensor([3, 3, 3])
+        for batch_size in [1, 5, 10]:
+            for voxel_size in [0.05, 0.035, 0.02]:
+                min_time = 100000
+                dcoords = torch.from_numpy(np.floor(coords / voxel_size)).int()
+                bcoords = batched_coordinates([dcoords for i in range(batch_size)])
+                for i in range(10):
+                    kernel_map, num, t = MinkowskiEngineTest._C.kernel_map_test(
+                        bcoords, bcoords, kernel_size
+                    )
+                    min_time = min(t, min_time)
+
+                    num_kernels = np.sum([len(a) for a in kernel_map[0]])
+                print(f"{batch_size}\t{voxel_size}\t{num}\t{num_kernels}\t{min_time}")
