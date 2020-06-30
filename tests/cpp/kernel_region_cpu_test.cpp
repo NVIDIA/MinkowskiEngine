@@ -92,9 +92,10 @@ region_iterator_test(const torch::Tensor &coordinates,
   return all_regions;
 }
 
-cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
-                               const torch::Tensor &out_coordinates,
-                               const torch::Tensor &kernel_size) {
+std::tuple<cpu_kernel_map, size_type, double>
+kernel_map_test(const torch::Tensor &in_coordinates,
+                const torch::Tensor &out_coordinates,
+                const torch::Tensor &kernel_size) {
   // Create TensorArgs. These record the names and positions of each tensor as
   // parameters.
   torch::TensorArg arg_in_coordinates(in_coordinates, "coordinates", 0);
@@ -163,7 +164,11 @@ cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
       REGION_TYPE::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
       dilation.data());
 
-  return in_map.kernel_map(out_map, region);
+  timer t;
+  t.tic();
+  auto result = in_map.kernel_map(out_map, region);
+
+  return std::make_tuple(result, out_map.size(), t.toc());
 }
 
 } // namespace minkowski

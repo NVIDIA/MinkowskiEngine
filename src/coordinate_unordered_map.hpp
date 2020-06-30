@@ -38,6 +38,23 @@
 
 namespace minkowski {
 
+namespace detail {
+
+template <typename coordinate_type> struct byte_hash_vec {
+
+  byte_hash_vec(default_types::size_type coordinate_size)
+      : m_coordinate_size(coordinate_size) {}
+
+  template <typename T> size_t operator()(T const &vec) const noexcept {
+    return robin_hood::hash_bytes(vec.data(),
+                                  sizeof(coordinate_type) * m_coordinate_size);
+  }
+
+  default_types::size_type m_coordinate_size;
+};
+
+} // namespace detail
+
 // unordered_map wrapper
 // clang-format off
 template <typename coordinate_type,

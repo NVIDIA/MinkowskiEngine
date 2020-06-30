@@ -153,9 +153,13 @@ at::Tensor region_iterator_test(const torch::Tensor &coordinates,
   return out_coordinates;
 }
 
-cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
-                               const torch::Tensor &out_coordinates,
-                               const torch::Tensor &kernel_size) {
+std::tuple<cpu_kernel_map, size_type, double>
+kernel_map_test(const torch::Tensor &in_coordinates,
+                const torch::Tensor &out_coordinates,
+                const torch::Tensor &kernel_size,
+                uint64_t occupancy,                 //
+                uint32_t num_map_values_per_thread, //
+                uint32_t thread_dim) {
   // Create TensorArgs. These record the names and positions of each tensor as
   // parameters.
   torch::TensorArg arg_in_coordinates(in_coordinates, "coordinates", 0);
@@ -188,8 +192,8 @@ cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
   coordinate_type const *ptr_in = in_coordinates.data_ptr<coordinate_type>();
   coordinate_type const *ptr_out = out_coordinates.data_ptr<coordinate_type>();
 
-  CoordinateMapGPU<coordinate_type> in_map{N_in, D};
-  CoordinateMapGPU<coordinate_type> out_map{N_out, D};
+  CoordinateMapGPU<coordinate_type> in_map{N_in, D, occupancy};
+  CoordinateMapGPU<coordinate_type> out_map{N_out, D, occupancy};
 
   auto in_coordinate_range = coordinate_range<coordinate_type>(N_in, D, ptr_in);
   thrust::counting_iterator<uint32_t> iter{0};
@@ -226,7 +230,12 @@ cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
   auto gpu_region = gpu_kernel_region<coordinate_type>(region);
   LOG_DEBUG("gpu_kernel_region initialization");
 
-  auto kernel_map = in_map.kernel_map(out_map, gpu_region, 16, 16);
+  timer t;
+  t.tic();
+  auto kernel_map = in_map.kernel_map(out_map, gpu_region,
+                                      num_map_values_per_thread, thread_dim);
+  double k_time = t.toc();
+
   const auto volume = region.volume();
   LOG_DEBUG("kernel_map done");
 
@@ -249,7 +258,8 @@ cpu_kernel_map kernel_map_test(const torch::Tensor &in_coordinates,
   }
   CUDA_CHECK(cudaStreamSynchronize(0));
 
-  return std::make_pair(in_maps, out_maps);
+  return std::make_tuple(std::make_pair(in_maps, out_maps), out_map.size(),
+                         k_time);
 }
 
 } // namespace minkowski
