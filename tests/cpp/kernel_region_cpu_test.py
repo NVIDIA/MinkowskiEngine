@@ -98,7 +98,7 @@ class KernelRegionTestCase(unittest.TestCase):
     def test_pcd(self):
         coords, colors, pcd = load_file("1.ply")
         kernel_size = torch.IntTensor([3, 3, 3])
-        for batch_size in [1, 5, 10]:
+        for batch_size in [1, 5, 10, 20, 40]:
             for voxel_size in [0.05, 0.035, 0.02]:
                 min_time = 100000
                 dcoords = torch.from_numpy(np.floor(coords / voxel_size)).int()

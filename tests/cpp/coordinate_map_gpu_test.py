@@ -23,8 +23,8 @@ class CoordinateMapTestCase(unittest.TestCase):
         bcoords = batched_coordinates(bcoords).to(0)
         num, _ = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(bcoords)
         self.assertEqual(num, 161890)
-        for batch_size in [1, 5, 10, 20, 40]:
-            for voxel_size in [0.05, 0.02, 0.01]:
+        for batch_size in [1, 2, 4, 8, 16, 20, 40, 80, 160, 320]:
+            for voxel_size in [0.02]:
                 py_min_time = 1000
                 dcoords = torch.from_numpy(np.floor(coords / voxel_size)).int()
                 bcoords = batched_coordinates([dcoords for i in range(batch_size)])

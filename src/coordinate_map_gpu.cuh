@@ -28,6 +28,7 @@
 
 #include "3rdparty/concurrent_unordered_map.cuh"
 #include "3rdparty/hash/helper_functions.cuh"
+#include "allocators.cuh"
 #include "coordinate_map.hpp"
 #include "coordinate_map_functors.cuh"
 #include "kernel_map.cuh"
@@ -40,47 +41,42 @@ namespace minkowski {
 /*
  * Inherit from the CoordinateMap for a concurrent coordinate unordered map.
  */
-template <
-    typename coordinate_type,
-    typename MapAllocator = default_allocator<thrust::pair<coordinate<coordinate_type>, default_types::index_type>>,
-    typename CoordinateAllocator = default_allocator<coordinate_type>,
-    typename KernelMapAllocator = default_allocator<default_types::index_type>>
+template <typename coordinate_type,
+          typename MapAllocatorType = detail::c10_allocator<thrust::pair<coordinate<coordinate_type>, default_types::index_type>>,
+          typename ByteAllocatorType = detail::c10_allocator<char>>
 class CoordinateMapGPU
-    : public CoordinateMap<coordinate_type, CoordinateAllocator> {
+    : public CoordinateMap<coordinate_type, ByteAllocatorType> {
 public:
   // clang-format off
-  using base_type         = CoordinateMap<coordinate_type, CoordinateAllocator>;
-  using self_type         = CoordinateMapGPU<coordinate_type, MapAllocator, CoordinateAllocator, KernelMapAllocator>;
-  using size_type         = typename base_type::size_type;
-  using index_type        = typename base_type::index_type;
-  using stride_type       = typename base_type::stride_type;
+  using base_type           = CoordinateMap<coordinate_type, ByteAllocatorType>;
+  using self_type           = CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>;
+  using size_type           = typename base_type::size_type;
+  using index_type          = typename base_type::index_type;
+  using stride_type         = typename base_type::stride_type;
 
   // Map types
-  using key_type          = coordinate<coordinate_type>;
-  using mapped_type       = index_type;
-  using hasher_type       = detail::coordinate_murmur3<coordinate_type>;
-  using key_equal_type    = detail::coordinate_equal_to<coordinate_type>;
-  using map_type          = concurrent_unordered_map<key_type,        // key
-                                                     mapped_type,     // mapped_type
-                                                     hasher_type,     // hasher
-                                                     key_equal_type,  // equality
-                                                     MapAllocator>;   // allocator
-  using value_type        = typename map_type::value_type;
+  using key_type            = coordinate<coordinate_type>;
+  using mapped_type         = index_type;
+  using hasher_type         = detail::coordinate_murmur3<coordinate_type>;
+  using key_equal_type      = detail::coordinate_equal_to<coordinate_type>;
+  using map_allocator_type  = MapAllocatorType;
+  using byte_allocator_type = ByteAllocatorType;
+  using map_type            = concurrent_unordered_map<key_type,          // key
+                                                       mapped_type,        // mapped_type
+                                                       hasher_type,        // hasher
+                                                       key_equal_type,     // equality
+                                                       map_allocator_type>;// allocator
+  using value_type          = typename map_type::value_type;
 
   // return types
-  using kernel_map_type   = gpu_kernel_map<index_type, KernelMapAllocator>;
+  using kernel_map_type     = gpu_kernel_map<index_type, byte_allocator_type>;
 
   // iterator
-  using iterator          = typename map_type::iterator;
-  using const_iterator    = typename map_type::const_iterator;
+  using iterator            = typename map_type::iterator;
+  using const_iterator      = typename map_type::const_iterator;
 
   // index vectors
-  using index_vector_type = typename base_type::index_vector_type;
-
-  // allocators
-  using coordinate_allocator_type = CoordinateAllocator;
-  using hash_map_allocator_type   = MapAllocator;
-  using kernel_map_allocator_type = KernelMapAllocator;
+  using index_vector_type   = typename base_type::index_vector_type;
   // clang-format on
 
   // return types
@@ -89,22 +85,21 @@ public:
 
 public:
   CoordinateMapGPU() = delete;
-  CoordinateMapGPU(
-      size_type const number_of_coordinates, size_type const coordinate_size,
-      size_type const hashtable_occupancy = 50,
-      stride_type const stride = {1},
-      coordinate_allocator_type coord_alloc = coordinate_allocator_type(),
-      hash_map_allocator_type map_alloc = hash_map_allocator_type(),
-      kernel_map_allocator_type kernel_map_allocator =
-          kernel_map_allocator_type())
-      : base_type(number_of_coordinates, coordinate_size, stride, coord_alloc),
+  CoordinateMapGPU(size_type const number_of_coordinates,
+                   size_type const coordinate_size,
+                   size_type const hashtable_occupancy = 50,
+                   stride_type const stride = {1},
+                   map_allocator_type map_alloc = map_allocator_type(),
+                   byte_allocator_type byte_alloc = byte_allocator_type())
+      : base_type(number_of_coordinates, coordinate_size, stride, byte_alloc),
         m_hashtable_occupancy{hashtable_occupancy},
         m_capacity(0), // should be updated in the reserve
         m_hasher(hasher_type{coordinate_size}),
         m_equal(key_equal_type{coordinate_size}),
         m_unused_key(coordinate<coordinate_type>{nullptr}),
         m_unused_element(std::numeric_limits<coordinate_type>::max()),
-        m_kernel_map_allocator(kernel_map_allocator) {
+        m_map_allocator(map_alloc) {
+    // reserve coordinates
     reserve(number_of_coordinates);
     // copy the tensor_stride
     m_device_tensor_stride = base_type::m_tensor_stride;
@@ -176,8 +171,7 @@ private:
   device_index_vector_type m_valid_index;
 
   thrust::device_vector<size_type> m_device_tensor_stride;
-  hash_map_allocator_type m_map_allocator;
-  kernel_map_allocator_type m_kernel_map_allocator;
+  map_allocator_type m_map_allocator;
   std::unique_ptr<map_type, std::function<void(map_type *)>> m_map;
 };
 

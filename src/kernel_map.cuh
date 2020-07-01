@@ -37,13 +37,10 @@
 #include <thrust/iterator/counting_iterator.h>
 
 namespace minkowski {
-template <typename index_type = default_types::index_type,
-          typename KernelMapAllocator =
-              default_allocator<default_types::index_type>>
-class gpu_kernel_map {
+template <typename index_type, typename ByteAllocator> class gpu_kernel_map {
 public:
   using size_type = default_types::size_type;
-  using allocator_type = KernelMapAllocator;
+  using byte_allocator_type = ByteAllocator;
 
   class contiguous_memory {
   public:
@@ -92,15 +89,21 @@ public:
   }; // end contiguous_memory
 
 public:
-  gpu_kernel_map(size_type capacity, allocator_type alloc = allocator_type())
-      : m_memory_size(3 * capacity), m_capacity{capacity}, m_memory{nullptr},
+  gpu_kernel_map(size_type capacity,
+                 byte_allocator_type alloc = byte_allocator_type())
+      : m_memory_size_byte(3 * capacity * sizeof(index_type)),
+        m_capacity{capacity}, m_memory{nullptr},
         m_allocator{alloc}, kernels{*this}, in_maps{*this}, out_maps{*this} {
-    m_memory = m_allocator.allocate(m_memory_size);
+    m_memory = reinterpret_cast<index_type *>(
+        m_allocator.allocate(m_memory_size_byte));
     kernels.data(m_memory);
     in_maps.data(m_memory + m_capacity);
     out_maps.data(m_memory + 2 * m_capacity);
   }
-  ~gpu_kernel_map() { m_allocator.deallocate(m_memory, m_memory_size); }
+  ~gpu_kernel_map() {
+    m_allocator.deallocate(reinterpret_cast<char *>(m_memory),
+                           m_memory_size_byte);
+  }
 
   // functions
   inline index_type *data() { return m_memory; }
@@ -122,8 +125,7 @@ public:
 #ifdef DEBUG
     index_type *p_kernel_map =
         (index_type *)std::malloc(m_capacity * 3 * sizeof(index_type));
-    CUDA_CHECK(cudaMemcpy(p_kernel_map, data(),
-                          m_memory_size * sizeof(index_type),
+    CUDA_CHECK(cudaMemcpy(p_kernel_map, data(), m_memory_size_byte,
                           cudaMemcpyDeviceToHost));
     for (index_type i = 0; i < min(m_capacity, 100); ++i) {
       std::cout << p_kernel_map[i + 0 * m_capacity] << ":"
@@ -142,9 +144,9 @@ public:
     thrust::device_vector<index_type> out_key_size(m_capacity);
 
     auto end = thrust::reduce_by_key(
-        thrust::device, // policy
+        thrust::device,  // policy
         kernels.begin(), // key begin
-        kernels.end(),    // key end
+        kernels.end(),   // key end
         thrust::make_zip_iterator(
             thrust::make_tuple(min_begin, size_begin)), // value begin
         out_key.begin(),                                // key out begin
@@ -182,9 +184,9 @@ public:
 
 private:
   bool m_decomposed{false};
-  size_type m_memory_size, m_capacity;
+  size_type m_memory_size_byte, m_capacity;
   index_type *m_memory;
-  allocator_type m_allocator;
+  byte_allocator_type m_allocator;
 
   std::unordered_map<index_type, index_type> m_kernel_size_map;
   std::unordered_map<index_type, index_type> m_kernel_offset_map;
