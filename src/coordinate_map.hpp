@@ -83,20 +83,20 @@ stride_tensor_stride(const default_types::stride_type &tensor_stride,
  * @note
  */
 // clang-format off
-template <typename coordinate_type, typename CoordinateAllocator>
+template <typename coordinate_type, typename ByteAllocator>
 class CoordinateMap {
 
 public:
-  using self_type   = CoordinateMap<coordinate_type, CoordinateAllocator>;
+  using self_type   = CoordinateMap<coordinate_type, ByteAllocator>;
   using index_type  = default_types::index_type;
   using size_type   = default_types::size_type;
   using stride_type = default_types::stride_type;
 
   // return types
-  using index_vector_type = std::vector<default_types::index_type>;
-  using index_set_type    = std::set<default_types::index_type>;
+  using index_vector_type   = std::vector<default_types::index_type>;
+  using index_set_type      = std::set<default_types::index_type>;
 
-  using coordinate_allocator_type = CoordinateAllocator;
+  using byte_allocator_type = ByteAllocator;
 
 
   // Constructors
@@ -104,10 +104,10 @@ public:
   CoordinateMap(size_type const number_of_coordinates,
                 size_type const coordinate_size,
                 stride_type const &stride = {1},
-                coordinate_allocator_type alloc = coordinate_allocator_type())
+                byte_allocator_type alloc = byte_allocator_type())
       : m_coordinate_size(coordinate_size),
         m_capacity(0), /* m_capacity is updated in the allocate function */
-        m_tensor_stride(stride), m_allocator(alloc) {
+        m_tensor_stride(stride), m_byte_allocator(alloc) {
     allocate(number_of_coordinates);
     expand_tensor_stride();
     LOG_DEBUG("tensor stride:", m_tensor_stride);
@@ -204,14 +204,18 @@ protected:
   // clang-format on
   std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>
   allocate_unique_ptr(size_type const size) {
-    coordinate_type *ptr = m_allocator.allocate(size);
+    coordinate_type *ptr = reinterpret_cast<coordinate_type *>(
+        m_byte_allocator.allocate(size * sizeof(coordinate_type)));
 
-    auto deleter = [](coordinate_type *p, coordinate_allocator_type alloc,
-                      size_type size) { alloc.deallocate(p, size); };
+    auto deleter = [](coordinate_type *p, byte_allocator_type alloc,
+                      size_type size) {
+      alloc.deallocate(reinterpret_cast<char *>(p), size);
+    };
 
     return std::unique_ptr<coordinate_type[],
                            std::function<void(coordinate_type *)>>{
-        ptr, std::bind(deleter, std::placeholders::_1, m_allocator, size)};
+        ptr, std::bind(deleter, std::placeholders::_1, m_byte_allocator,
+                       size * sizeof(coordinate_type))};
   }
 
 private:
@@ -235,7 +239,7 @@ protected:
   size_type m_capacity;
   stride_type m_tensor_stride;
 
-  coordinate_allocator_type m_allocator;
+  byte_allocator_type m_byte_allocator;
   std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>
       m_coordinates;
 };

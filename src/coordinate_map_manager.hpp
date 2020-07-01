@@ -1,4 +1,6 @@
-/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/*
+ * Copyright (c) 2020 NVIDIA CORPORATION.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +24,8 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
-#ifndef COORDS_MAN
-#define COORDS_MAN
+#ifndef COORDINATE_MAP_MANAGER
+#define COORDINATE_MAP_MANAGER
 
 #include <algorithm>
 #include <array>
@@ -50,15 +52,6 @@
 
 namespace minkowski {
 
-using std::begin;
-using std::end;
-using std::get;
-using std::move;
-using std::ref;
-using std::string;
-using std::to_string;
-using std::unordered_map;
-
 template <typename VType> int getInOutMapsSize(const VType &map) {
   // can't use ::accumulate as pVector template instantiation requires a bit
   // dirty syntax
@@ -66,26 +59,6 @@ template <typename VType> int getInOutMapsSize(const VType &map) {
   for (auto cmap = begin(map); cmap != end(map); ++cmap)
     n += cmap->size();
   return n;
-}
-
-inline long computeKernelVolume(int region_type,
-                                const vector<int> &kernel_size,
-                                int n_offset) {
-  int kernel_volume;
-  if (region_type == 0) { // Hypercube
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume *= k;
-  } else if (region_type == 1) { // Hypercross
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume += k - 1;
-  } else if (region_type == 2) {
-    kernel_volume = n_offset;
-  } else {
-    throw std::invalid_argument("Invalid region type");
-  }
-  return kernel_volume;
 }
 
 inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
@@ -109,22 +82,8 @@ inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
 }
 
 template <typename MapType = CoordsToIndexMap>
-class CoordsManager {
+class CoordinateMapManager {
 public:
-  // Variables
-  //
-  // Coordinate hash key to coordinate hash map
-  unordered_map<uint64_t, CoordsMap<MapType>> coords_maps;
-
-  // Track whether the batch indices are set
-  bool is_batch_indices_set = false;
-  set<int> batch_indices;
-  vector<int> vec_batch_indices;
-
-  // In to out index mapping for each kernel, pooling
-  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
-  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
-
   CoordsManager(int num_threads, MemoryManagerBackend backend) {
     if (num_threads > 0) {
       omp_set_dynamic(0);
@@ -309,8 +268,24 @@ public:
   void clearScratchGPUMemory() { gpu_memory_manager.get()->clear_tmp(); }
 
 #endif // CPU_ONLY
+
+public:
+  // Variables
+  //
+  // Coordinate hash key to coordinate hash map
+  unordered_map<uint64_t, CoordsMap<MapType>> coords_maps;
+
+  // Track whether the batch indices are set
+  bool is_batch_indices_set = false;
+  set<int> batch_indices;
+  vector<int> vec_batch_indices;
+
+  // In to out index mapping for each kernel, pooling
+  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
+  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
+
 };     // coordsmanager
 
 } // namespace minkowski
 
-#endif // COORDS_MAN
+#endif // COORDINATE_MAP_MANAGER
