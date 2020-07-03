@@ -37,6 +37,75 @@
 
 namespace minkowski {
 
+namespace detail {
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void
+insert_kernel(map_type __restrict__ map,                       //
+              coordinate_type const *__restrict__ coordinates, //
+              uint32_t *__restrict__ success,                  //
+              size_type const num_threads,                     //
+              size_type const coordinate_size                  //
+) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    // m_map.insert(pair);
+    // Returns pair<iterator, (bool)insert_success>
+    auto const result = map.insert(thrust::make_pair(
+        coordinate<coordinate_type>{&coordinates[x * coordinate_size]}, x));
+
+    // for unique_mapping. remove failed valid_row_index with success
+    success[x] = result.second;
+  }
+}
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void
+insert_and_map_kernel(map_type __restrict__ map,                       //
+                      coordinate_type const *__restrict__ coordinates, //
+                      index_type *__restrict__ valid_map_index,        //
+                      index_type *__restrict__ inverse_row_index,      //
+                      index_type *__restrict__ valid_row_index,        //
+                      bool *__restrict__ success,                      //
+                      size_type const num_threads,                     //
+                      size_type const coordinate_size                  //
+) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    // m_map.insert(pair);
+    // Returns pair<iterator, (bool)insert_success>
+    auto const result = map.insert(thrust::make_pair(
+        coordinate<coordinate_type>{&coordinates[x * coordinate_size]}, x));
+
+    // for unique_mapping. remove failed valid_row_index with success
+    success[x] = result.second;
+    valid_row_index[x] = x;
+    // for inverse_mapping.
+    if (result.second)
+      inverse_row_index[x] = x;
+    else {
+      auto it = result.first;
+      inverse_row_index[x] = it->second;
+    }
+    // success map index. remove failed insertion with success.
+    valid_map_index[x] = result.first.offset();
+  }
+}
+
+} // namespace detail
+
 /*
  * @brief Given a key iterator begin-end pair and a value iterator begin-end
  * pair, insert all elements.
@@ -48,16 +117,11 @@ namespace minkowski {
  */
 template <typename coordinate_type, typename MapAllocatorType,
           typename ByteAllocatorType>
-template <typename mapped_iterator>
 void CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
     insert(coordinate_iterator<coordinate_type> key_first,
-           coordinate_iterator<coordinate_type> key_last, //
-           mapped_iterator value_first, mapped_iterator value_last) {
+           coordinate_iterator<coordinate_type> key_last) {
   size_type const N = key_last - key_first;
   LOG_DEBUG("key iterator length", N);
-  ASSERT(N == value_last - value_first,
-         "The number of items mismatch. # of keys:", N,
-         ", # of values:", value_last - value_first);
 
   // Copy the coordinates to m_coordinate
   base_type::reserve(N);
@@ -69,32 +133,52 @@ void CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("Reserved and copied", N, "x", m_coordinate_size, "coordinates");
 
-  // Insert coordinates
-  thrust::counting_iterator<uint32_t> count{0};
-  auto insert = detail::insert_coordinate<coordinate_type, map_type,
-                                          thrust::counting_iterator<uint32_t>>{
-      *m_map,                  // map
-      const_coordinate_data(), // coordinates,
-      value_first,             // iter begin
-      m_coordinate_size};
-
+  //
   thrust::device_vector<bool> success(N);
-  m_valid_index.resize(N);
-  thrust::sequence(thrust::device, m_valid_index.begin(), m_valid_index.end());
+  m_valid_row_index.resize(N);
+  m_valid_map_index.resize(N);
+  m_inverse_row_index.resize(N);
 
-  // Insert coordinates
-  thrust::transform(count, count + N, success.begin(), insert);
+  // compute cuda kernel call params
+  size_type const num_threads = N;
+  size_type const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
+
+  detail::insert_and_map_kernel<coordinate_type, size_type, index_type,
+                                map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
+      *m_map, const_coordinate_data(),
+      thrust::raw_pointer_cast(m_valid_map_index.data()),
+      thrust::raw_pointer_cast(m_inverse_row_index.data()),
+      thrust::raw_pointer_cast(m_valid_row_index.data()),
+      thrust::raw_pointer_cast(success.data()), num_threads, m_coordinate_size);
+  CUDA_CHECK(cudaStreamSynchronize(0));
 
   // Valid row index
-  auto valid_begin = thrust::make_zip_iterator(
-      thrust::make_tuple(success.begin(), m_valid_index.begin()));
+  auto valid_begin = thrust::make_zip_iterator(thrust::make_tuple(
+      success.begin(), m_valid_row_index.begin(), m_valid_map_index.begin()));
+
   size_type const number_of_valid =
-      thrust::remove_if(thrust::device, valid_begin,
-                        thrust::make_zip_iterator(thrust::make_tuple(
-                            success.end(), m_valid_index.end())),
-                        detail::is_first<false>()) -
+      thrust::remove_if(
+          thrust::device, valid_begin,
+          thrust::make_zip_iterator(thrust::make_tuple(
+              success.end(), m_valid_row_index.end(), m_valid_map_index.end())),
+          detail::is_first<false>()) -
       valid_begin;
-  m_valid_index.resize(number_of_valid);
+
+  m_valid_row_index.resize(number_of_valid);
+  m_valid_map_index.resize(number_of_valid);
+  m_size = number_of_valid;
+  LOG_DEBUG("Number of successful insertion", m_size);
+}
+
+using return_vector_type = thrust::device_vector<default_types::index_type>;
+template <typename coordinate_type, typename MapAllocatorType,
+          typename ByteAllocatorType>
+std::pair<return_vector_type, return_vector_type>
+CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
+    insert_and_map(coordinate_iterator<coordinate_type> key_first,
+                   coordinate_iterator<coordinate_type> key_last) {
+  insert(key_first, key_last);
+  return std::make_pair(m_valid_row_index, m_inverse_row_index);
 }
 
 /*
@@ -105,7 +189,7 @@ void CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
  */
 template <typename coordinate_type, typename MapAllocatorType,
           typename ByteAllocatorType>
-std::pair<thrust::device_vector<uint32_t>, thrust::device_vector<uint32_t>>
+std::pair<return_vector_type, return_vector_type>
 CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::find(
     coordinate_iterator<coordinate_type> key_first,
     coordinate_iterator<coordinate_type> key_last) const {
@@ -170,12 +254,12 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::stride(
       detail::stride_copy<coordinate_type, index_type>(
           m_coordinate_size,
           thrust::raw_pointer_cast(stride_map.m_device_tensor_stride.data()),
-          thrust::raw_pointer_cast(m_valid_index.data()),
+          thrust::raw_pointer_cast(m_valid_row_index.data()),
           const_coordinate_data(), //
           stride_map.coordinate_data()));
 
   thrust::device_vector<bool> success(N);
-  auto &stride_valid_index = stride_map.m_valid_index;
+  auto &stride_valid_index = stride_map.m_valid_row_index;
   stride_valid_index.resize(N);
   thrust::sequence(thrust::device, stride_valid_index.begin(),
                    stride_valid_index.end());
@@ -199,7 +283,9 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::stride(
                         detail::is_first<false>()) -
       valid_begin;
   stride_valid_index.resize(number_of_valid);
+  stride_map.m_size = number_of_valid;
 
+  // remap values
   thrust::for_each(count_begin, count_begin + number_of_valid,
                    detail::update_value<coordinate_type, map_type>{
                        *stride_map.m_map, stride_map.const_coordinate_data(),
@@ -215,12 +301,13 @@ template <typename coordinate_type, //
           typename size_type,       //
           typename index_type,      //
           typename map_type>
-__global__ void count_kernel(map_type const __restrict__ in_map,        //
-                             map_type const __restrict__ out_map,       //
-                             size_type const num_map_values_per_thread, //
-                             size_type const num_threads,               //
-                             gpu_kernel_region<coordinate_type> kernel, //
-                             index_type *__restrict__ p_count_per_thread) {
+__global__ void
+count_kernel(map_type const __restrict__ in_map,                       //
+             map_type const __restrict__ out_map,                      //
+             index_type const *const __restrict__ out_valid_map_index, //
+             size_type const num_threads,                              //
+             gpu_kernel_region<coordinate_type> kernel,                //
+             index_type *__restrict__ p_count_per_thread) {
   extern __shared__ coordinate_type sh_all[];
 
   auto const tx = threadIdx.x;
@@ -254,16 +341,12 @@ __global__ void count_kernel(map_type const __restrict__ in_map,        //
 
   __syncthreads();
 
-  // clang-format off
   auto const unused_key = out_map.get_unused_key();
-  auto const max_index = umin((x + 1) * num_map_values_per_thread, out_map.capacity());
-  // iterate over values
-  size_type count = 0;
-  for (index_type value_index = x * num_map_values_per_thread;
-       value_index < max_index;
-       ++value_index) {
-    typename map_type::value_type const &out_value = out_map.data()[value_index];
-    // clang-format on
+  if (x < num_threads) {
+    size_type count = 0;
+    typename map_type::value_type const &out_value =
+        out_map.data()[out_valid_map_index[x]];
+    // valid_index guarantees that it contains a valid value
     if (!equal(out_value.first, unused_key)) {
       // set bounds for the valid keys
       kernel.set_bounds(out_value.first.data(), sh_lb, sh_ub, sh_tmp);
@@ -273,10 +356,8 @@ __global__ void count_kernel(map_type const __restrict__ in_map,        //
         }
       }
     }
-  }
-
-  if (x < num_threads)
     p_count_per_thread[x] = count;
+  }
 }
 
 template <typename coordinate_type, //
@@ -284,14 +365,14 @@ template <typename coordinate_type, //
           typename index_type,      //
           typename map_type>
 __global__ void preallocated_kernel_map_iteration(
-    map_type const __restrict__ in_map,                  //
-    map_type const __restrict__ out_map,                 //
-    size_type const num_map_values_per_thread,           //
-    size_type const num_threads,                         //
-    gpu_kernel_region<coordinate_type> kernel,           //
-    index_type const *inclusive_count_cumsum_per_thread, //
-    index_type *__restrict__ p_kernels,                  //
-    index_type *__restrict__ p_in_maps,                  //
+    map_type const __restrict__ in_map,                                     //
+    map_type const __restrict__ out_map,                                    //
+    index_type const *const __restrict__ out_valid_map_index,               //
+    size_type const num_threads,                                            //
+    gpu_kernel_region<coordinate_type> kernel,                              //
+    index_type const *const __restrict__ inclusive_count_cumsum_per_thread, //
+    index_type *__restrict__ p_kernels,                                     //
+    index_type *__restrict__ p_in_maps,                                     //
     index_type *__restrict__ p_out_maps) {
   extern __shared__ coordinate_type sh_all[];
 
@@ -328,18 +409,14 @@ __global__ void preallocated_kernel_map_iteration(
   if (x >= num_threads)
     return;
 
-  // clang-format off
   auto const unused_key = out_map.get_unused_key();
-  auto const max_index = umin((x + 1) * num_map_values_per_thread, out_map.capacity());
-
-  // iterate over values
-  auto kernel_map_index = (x < 1) ? 0 : inclusive_count_cumsum_per_thread[x - 1];
-  index_type kernel_index = 0;
-  for (index_type value_index = x * num_map_values_per_thread;
-       value_index < max_index;
-       ++value_index) {
-    typename map_type::value_type const &out_value = out_map.data()[value_index];
-    // clang-format on
+  if (x < num_threads) {
+    // iterate over values
+    auto kernel_map_index =
+        (x < 1) ? 0 : inclusive_count_cumsum_per_thread[x - 1];
+    index_type kernel_index = 0;
+    typename map_type::value_type const &out_value =
+        out_map.data()[out_valid_map_index[x]];
     if (!equal(out_value.first, unused_key)) {
       // set bounds for the valid keys
       kernel.set_bounds(out_value.first.data(), sh_lb, sh_ub, sh_tmp);
@@ -368,23 +445,22 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType,
 CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
     kernel_map(self_type const &out_coordinate_map,
                gpu_kernel_region<coordinate_type> const &kernel,
-               uint32_t num_map_values_per_thread, uint32_t thread_dim) const {
+               uint32_t thread_dim) const {
   // Over estimate the reserve size to be size();
-  size_type out_capacity = out_coordinate_map.m_map->capacity();
-  size_type kernel_volume = kernel.volume();
+  size_type const out_size = out_coordinate_map.size();
+  size_type const kernel_volume = kernel.volume();
 
   // clang-format off
   // (THREAD * 3 * D +  3 * D) * 4
-  uint32_t shared_memory_size_in_bytes =
+  uint32_t const shared_memory_size_in_bytes =
       3 * m_coordinate_size * sizeof(index_type) + // stride, kernel, dilation
       3 * thread_dim * m_coordinate_size * sizeof(coordinate_type); // tmp, lb, ub
   // clang-format on
-  size_type const num_threads = (out_capacity + num_map_values_per_thread - 1) /
-                                num_map_values_per_thread;
-  auto const block_dim = GET_BLOCKS(num_threads, thread_dim);
+  size_type const num_threads = out_size;
+  auto const num_blocks = GET_BLOCKS(num_threads, thread_dim);
 
-  LOG_DEBUG("block dim", block_dim);
-  LOG_DEBUG("out_coordinate_map capacity", out_coordinate_map.capacity());
+  LOG_DEBUG("num block", num_blocks);
+  LOG_DEBUG("out_coordinate_map size", out_coordinate_map.size());
   LOG_DEBUG("shared_memory size", shared_memory_size_in_bytes);
   LOG_DEBUG("threads dim", thread_dim);
   LOG_DEBUG("num threads", num_threads);
@@ -392,17 +468,15 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
   index_type *d_p_count_per_thread = reinterpret_cast<index_type *>(
       base_type::m_byte_allocator.allocate(num_threads * sizeof(index_type)));
 
-  // clang-format off
   // Initialize count per thread
   detail::count_kernel<coordinate_type, size_type, index_type, map_type>
-      <<<block_dim, thread_dim, shared_memory_size_in_bytes>>>(
-          *m_map,                    //
-          *out_coordinate_map.m_map, //
-          num_map_values_per_thread, //
-          num_threads,               //
-          kernel,                    //
+      <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
+          *m_map,                                             //
+          *out_coordinate_map.m_map,                          //
+          thrust::raw_pointer_cast(m_valid_map_index.data()), //
+          num_threads,                                        //
+          kernel,                                             //
           d_p_count_per_thread);
-  // clang-format on
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("count_kernel finished");
 
@@ -423,15 +497,15 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
 
   detail::preallocated_kernel_map_iteration<coordinate_type, size_type,
                                             index_type, map_type>
-      <<<block_dim, thread_dim, shared_memory_size_in_bytes>>>(
-          *m_map,                     //
-          *out_coordinate_map.m_map,  //
-          num_map_values_per_thread,  //
-          num_threads,                //
-          kernel,                     //
-          d_p_count_per_thread,       //
-          kernel_map.kernels.begin(), //
-          kernel_map.in_maps.begin(), //
+      <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
+          *m_map,                                             //
+          *out_coordinate_map.m_map,                          //
+          thrust::raw_pointer_cast(m_valid_map_index.data()), //
+          num_threads,                                        //
+          kernel,                                             //
+          d_p_count_per_thread,                               //
+          kernel_map.kernels.begin(),                         //
+          kernel_map.in_maps.begin(),                         //
           kernel_map.out_maps.begin());
 
   CUDA_CHECK(cudaStreamSynchronize(0));
@@ -449,13 +523,13 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
 // Template instantiation
 template class CoordinateMapGPU<default_types::dcoordinate_type>;
 // Insert arg templates
-using citer32 = coordinate_iterator<default_types::dcoordinate_type>;
-template void CoordinateMapGPU<default_types::dcoordinate_type>::insert<
-    thrust::counting_iterator<default_types::index_type>>(
-    citer32,                                              // key bein
-    citer32,                                              // key end
-    thrust::counting_iterator<default_types::index_type>, // value begin
-    thrust::counting_iterator<default_types::index_type>  // value end
-);
+// using citer32 = coordinate_iterator<default_types::dcoordinate_type>;
+// template void CoordinateMapGPU<default_types::dcoordinate_type>::insert<
+//     thrust::counting_iterator<default_types::index_type>>(
+//     citer32,                                              // key bein
+//     citer32,                                              // key end
+//     thrust::counting_iterator<default_types::index_type>, // value begin
+//     thrust::counting_iterator<default_types::index_type>  // value end
+// );
 
 } // namespace minkowski

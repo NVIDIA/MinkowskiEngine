@@ -69,11 +69,63 @@ coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
 
   t.tic();
   map.insert(input_coordinates.begin(), // key begin
-             input_coordinates.end(),   // key end
-             iter,                      // value begin
-             iter + N);                 // value end
+             input_coordinates.end());  // key end
 
   return std::make_pair<size_type, double>(map.size(), t.toc());
+}
+
+std::pair<at::Tensor, at::Tensor>
+coordinate_map_inverse_map_test(const torch::Tensor &coordinates) {
+  // Create TensorArgs. These record the names and positions of each tensor as a
+  // parameter.
+  torch::TensorArg arg_coordinates(coordinates, "coordinates", 0);
+
+  torch::CheckedFrom c = "coordinate_test";
+  torch::checkContiguous(c, arg_coordinates);
+  // must match coordinate_type
+  torch::checkScalarType(c, arg_coordinates, torch::kInt);
+  torch::checkBackend(c, arg_coordinates.tensor, torch::Backend::CUDA);
+  torch::checkDim(c, arg_coordinates, 2);
+
+  auto const N = (index_type)coordinates.size(0);
+  auto const D = (index_type)coordinates.size(1);
+  coordinate_type const *d_ptr = coordinates.data_ptr<coordinate_type>();
+
+  LOG_DEBUG("Initialize a GPU map.");
+  CoordinateMapGPU<coordinate_type> map{N, D};
+
+  auto input_coordinates = coordinate_range<coordinate_type>(N, D, d_ptr);
+  thrust::counting_iterator<uint32_t> iter{0};
+
+  LOG_DEBUG("Insert coordinates");
+
+  std::pair<thrust::device_vector<uint32_t>, thrust::device_vector<uint32_t>>
+      mapping_inverse_mapping =
+          map.insert_and_map(input_coordinates.begin(), // key begin
+                             input_coordinates.end());  // key end
+  auto const &mapping = mapping_inverse_mapping.first;
+  auto const &inverse_mapping = mapping_inverse_mapping.second;
+  long const NM = mapping.size();
+  long const NI = inverse_mapping.size();
+  auto options = torch::TensorOptions()
+                     .dtype(torch::kInt)
+                     .device(torch::kCUDA, 0)
+                     .layout(torch::kStrided)
+                     .requires_grad(false);
+  torch::Tensor th_mapping = torch::empty({NM}, options);
+  torch::Tensor th_inverse_mapping = torch::empty({NI}, options);
+
+  // IMPORTANT: assuming int32_t overflow does not occur.
+  CUDA_CHECK(cudaMemcpy(th_mapping.data_ptr<int32_t>(),
+                        thrust::raw_pointer_cast(mapping.data()),
+                        NM * sizeof(int32_t), cudaMemcpyDeviceToDevice));
+
+  CUDA_CHECK(cudaMemcpy(th_inverse_mapping.data_ptr<int32_t>(),
+                        thrust::raw_pointer_cast(inverse_mapping.data()),
+                        NI * sizeof(int32_t), cudaMemcpyDeviceToDevice));
+
+  return std::make_pair<at::Tensor, at::Tensor>(std::move(th_mapping),
+                                                std::move(th_inverse_mapping));
 }
 
 std::pair<std::vector<index_type>, std::vector<index_type>>
@@ -111,9 +163,7 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   thrust::counting_iterator<uint32_t> iter{0};
 
   map.insert(input_coordinates.begin(), // key begin
-             input_coordinates.end(),   // key end
-             iter,                      // value begin
-             iter + N);                 // value end
+             input_coordinates.end());  // key end
 
   LOG_DEBUG("Map size", map.size());
   auto query_coordinates = coordinate_range<coordinate_type>(NQ, D, query_ptr);
@@ -171,9 +221,7 @@ coordinate_map_stride_test(const torch::Tensor &coordinates,
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
   thrust::counting_iterator<uint32_t> iter{0};
   map.insert(input_coordinates.begin(), // key begin
-             input_coordinates.end(),   // key end
-             iter,                      // value begin
-             iter + N);                 // value end
+             input_coordinates.end());  // key end
 
   // Stride
   default_types::stride_type stride_vec(NS);
@@ -193,6 +241,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("coordinate_map_batch_insert_test",
         &minkowski::coordinate_map_batch_insert_test,
         "Minkowski Engine coordinate map batch insert test");
+
+  m.def("coordinate_map_inverse_map_test",
+        &minkowski::coordinate_map_inverse_map_test,
+        "Minkowski Engine coordinate map inverse map test");
 
   m.def("coordinate_map_batch_find_test",
         &minkowski::coordinate_map_batch_find_test,

@@ -112,12 +112,16 @@ public:
         "kernel_map shared memory requires the type sizes to be the same");
   }
 
-  template <typename mapped_iterator>
   void insert(coordinate_iterator<coordinate_type> key_first,
-              coordinate_iterator<coordinate_type> key_last,
-              mapped_iterator value_first, mapped_iterator value_last);
+              coordinate_iterator<coordinate_type> key_last);
 
-  std::pair<thrust::device_vector<uint32_t>, thrust::device_vector<uint32_t>>
+  std::pair<thrust::device_vector<default_types::index_type>,
+            thrust::device_vector<default_types::index_type>>
+  insert_and_map(coordinate_iterator<coordinate_type> key_first,
+                 coordinate_iterator<coordinate_type> key_last);
+
+  std::pair<thrust::device_vector<default_types::index_type>,
+            thrust::device_vector<default_types::index_type>>
   find(coordinate_iterator<coordinate_type> key_first,
        coordinate_iterator<coordinate_type> key_last) const;
 
@@ -146,10 +150,9 @@ public:
   self_type stride(stride_type const &stride) const;
   kernel_map_type kernel_map(self_type const &out_coordinate_map,
                              gpu_kernel_region<coordinate_type> const &kernel,
-                             uint32_t num_map_values_per_thread = 16,
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
 
-  inline size_type size() const { return m_valid_index.size(); }
+  inline size_type size() const { return m_size; }
 
   // access the coordinate data pointer
   using base_type::const_coordinate_data;
@@ -164,11 +167,14 @@ private:
   using base_type::m_coordinate_size;
   size_type m_hashtable_occupancy;
   size_type m_capacity;
+  size_type m_size;
   hasher_type const m_hasher;
   key_equal_type const m_equal;
   key_type const m_unused_key;
   mapped_type const m_unused_element;
-  device_index_vector_type m_valid_index;
+  device_index_vector_type m_valid_row_index;
+  device_index_vector_type m_valid_map_index;
+  device_index_vector_type m_inverse_row_index;
 
   thrust::device_vector<size_type> m_device_tensor_stride;
   map_allocator_type m_map_allocator;

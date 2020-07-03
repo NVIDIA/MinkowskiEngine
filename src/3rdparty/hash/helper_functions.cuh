@@ -224,6 +224,8 @@ class cycle_iterator_adapter {
 
   __host__ __device__ pointer operator->() { return m_current; }
 
+  __host__ __device__ difference_type offset() const { return m_current - m_begin; }
+
  private:
   iterator_type m_current;
   iterator_type m_begin;

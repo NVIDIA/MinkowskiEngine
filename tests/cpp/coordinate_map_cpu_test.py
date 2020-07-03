@@ -14,6 +14,17 @@ class CoordinateMapTestCase(unittest.TestCase):
         num, _ = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(coordinates)
         self.assertEqual(num, 3)
 
+    def test_inverse_map(self):
+        coordinates = torch.IntTensor([[0, 1], [1, 2], [2, 3], [2, 3]])
+        (
+            mapping_inverse_mapping,
+            time,
+        ) = MinkowskiEngineTest._C.coordinate_map_inverse_test(coordinates)
+        mapping, inverse_mapping = mapping_inverse_mapping
+        self.assertTrue(
+            torch.all(coordinates == coordinates[mapping][inverse_mapping])
+        )
+
     def test_pcd_insert(self):
         coords, colors, pcd = load_file("1.ply")
         BATCH_SIZE = 1
