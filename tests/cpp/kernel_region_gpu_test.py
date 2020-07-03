@@ -80,7 +80,7 @@ class KernelRegionTestCase(unittest.TestCase):
         kernel_size = torch.IntTensor([3])
 
         kernel_map, num, t = MinkowskiEngineTest._C.kernel_map_test(
-            in_coordinates, out_coordinates, kernel_size, 50, 16, 16
+            in_coordinates, out_coordinates, kernel_size, 50, 16
         )
         in_maps = kernel_map[0]
         out_maps = kernel_map[1]
@@ -91,6 +91,23 @@ class KernelRegionTestCase(unittest.TestCase):
         self.assertEqual(len(in_maps), torch.prod(kernel_size).item())
 
     def test_pcd(self):
+        coords, colors, pcd = load_file("1.ply")
+        kernel_size = torch.IntTensor([3, 3, 3])
+        dcoords = torch.from_numpy(np.floor(coords / 0.02)).int()
+        bcoords = batched_coordinates([dcoords]).to(0)
+        kernel_map, num, t = MinkowskiEngineTest._C.kernel_map_test(
+            bcoords,
+            bcoords,
+            kernel_size,
+            50,
+            128,
+        )
+        num_kernels = np.sum([len(a) for a in kernel_map[0]])
+        print(
+            f"{num}\t{num_kernels}\t{t}"
+        )
+
+    def test_pcd2(self):
         coords, colors, pcd = load_file("1.ply")
         kernel_size = torch.IntTensor([3, 3, 3])
         for occupancy in [50]:
@@ -107,7 +124,6 @@ class KernelRegionTestCase(unittest.TestCase):
                             bcoords,
                             kernel_size,
                             occupancy,
-                            int(100 / occupancy),
                             128,
                         )
                         min_time = min(t, min_time)

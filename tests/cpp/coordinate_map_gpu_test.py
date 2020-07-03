@@ -15,6 +15,22 @@ class CoordinateMapTestCase(unittest.TestCase):
         num, _ = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(coordinates)
         self.assertEqual(num, 3)
 
+    def test_mapping(self):
+        assert torch.cuda.is_available()
+        coordinates = torch.IntTensor([[0, 1], [1, 2], [2, 3], [2, 3]]).to(0)
+        (
+            mapping,
+            inverse_mapping,
+        ) = MinkowskiEngineTest._C.coordinate_map_inverse_map_test(coordinates)
+        print(mapping)
+        print(inverse_mapping)
+        self.assertEqual(len(mapping), 3)
+        self.assertTrue(
+            torch.all(
+                coordinates[mapping.long()][inverse_mapping.long()] == coordinates
+            )
+        )
+
     def test_pcd_insert(self):
         coords, colors, pcd = load_file("1.ply")
         BATCH_SIZE = 1
@@ -31,9 +47,10 @@ class CoordinateMapTestCase(unittest.TestCase):
                 for i in range(10):
                     s = time.time()
                     bcoords = bcoords.to(0)
-                    num, cpp_time = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(
-                        bcoords
-                    )
+                    (
+                        num,
+                        cpp_time,
+                    ) = MinkowskiEngineTest._C.coordinate_map_batch_insert_test(bcoords)
                     py_min_time = min(time.time() - s, py_min_time)
                 print(f"{len(bcoords)}\t{num}\t{py_min_time}\t{cpp_time}")
 

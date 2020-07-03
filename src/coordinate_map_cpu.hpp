@@ -36,12 +36,12 @@ namespace minkowski {
  */
 // clang-format off
 template <typename coordinate_type,
-          typename CoordinateAllocator = std::allocator<coordinate_type>>
+          typename ByteAllocator = std::allocator<char>>
 class CoordinateMapCPU
-    : public CoordinateMap<coordinate_type, CoordinateAllocator> {
+    : public CoordinateMap<coordinate_type, ByteAllocator> {
 public:
-  using base_type                 = CoordinateMap<coordinate_type, CoordinateAllocator>;
-  using self_type                 = CoordinateMapCPU<coordinate_type, CoordinateAllocator>;
+  using base_type                 = CoordinateMap<coordinate_type, ByteAllocator>;
+  using self_type                 = CoordinateMapCPU<coordinate_type, ByteAllocator>;
   using size_type                 = typename base_type::size_type;
   using index_type                = typename base_type::index_type;
   using stride_type               = typename base_type::stride_type;
@@ -55,15 +55,15 @@ public:
   using const_iterator            = typename map_type::const_iterator;
 
   using index_vector_type         = typename base_type::index_vector_type;
-  using coordinate_allocator_type = CoordinateAllocator;
+  using byte_allocator_type       = ByteAllocator;
   // clang-format on
 
 public:
   CoordinateMapCPU() = delete;
-  CoordinateMapCPU(
-      size_type const number_of_coordinates, size_type const coordinate_size,
-      stride_type const &stride = {1},
-      coordinate_allocator_type alloc = coordinate_allocator_type())
+  CoordinateMapCPU(size_type const number_of_coordinates,
+                   size_type const coordinate_size,
+                   stride_type const &stride = {1},
+                   byte_allocator_type alloc = byte_allocator_type())
       : base_type(number_of_coordinates, coordinate_size, stride, alloc),
         m_map(number_of_coordinates, coordinate_size) {}
 
@@ -73,18 +73,51 @@ public:
    *
    * @return none
    */
-  template <typename key_iterator, typename mapped_iterator>
-  void insert(key_iterator key_first, key_iterator key_last,
-              mapped_iterator value_first, mapped_iterator value_last) {
-    ASSERT(key_last - key_first == value_last - value_first,
-           "The number of items mismatch. # of keys:", key_last - key_first,
-           ", # of values:", value_last - value_first);
-    // TODO: Batch coordinate copy
-    base_type::allocate(key_last - key_first);
-    for (; key_first != key_last; ++key_first, ++value_first) {
+  void insert(coordinate_type const *coordinate_begin,
+              coordinate_type const *coordinate_end) {
+    size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
+    base_type::allocate(N);
+    index_type value = 0;
+    for (coordinate_type const *key = coordinate_begin; key != coordinate_end;
+         key += m_coordinate_size, ++value) {
       // value_type ctor needed because this might be called with std::pair's
-      insert(*key_first, *value_first);
+      insert(key_type(key), value);
     }
+  }
+
+  /*
+   * @brief given a key iterator begin-end pair and a value iterator begin-end
+   * pair, insert all elements.
+   *
+   * @return pair<vector<long>, vector<long>> if return_unique_inverse_map.
+   * mapping is a vector of unique indices and inverse_mapping is a vector of
+   * indices that reconstructs the original coordinate from the list of unique
+   * coordinates.
+   *
+   * >>> unique_coordinates = input_coordinates[mapping]
+   * >>> reconstructed_coordinates = unique_coordinates[inverse_mapping]
+   * >>> torch.all(reconstructed_coordinates == input_coordinates)
+   */
+  std::pair<std::vector<int64_t>, std::vector<int64_t>> // return maps
+  insert_and_map(coordinate_type const *coordinate_begin,
+                 coordinate_type const *coordinate_end) {
+    size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
+    base_type::allocate(N);
+    index_type value = 0;
+    std::vector<int64_t> mapping, inverse_mapping;
+    for (coordinate_type const *key = coordinate_begin; key != coordinate_end;
+         key += m_coordinate_size, ++value) {
+      // value_type ctor needed because this might be called with std::pair's
+      auto const result = insert(key_type(key), value);
+      if (result.second) {
+        mapping.push_back(value);
+        inverse_mapping.push_back(value);
+      } else {
+        // result.first is an iterator of pair<key, mapped_type>
+        inverse_mapping.push_back(result.first->second);
+      }
+    }
+    return std::make_pair(std::move(mapping), std::move(inverse_mapping));
   }
 
   /*
@@ -129,7 +162,7 @@ public:
     self_type stride_map(
         size(), m_coordinate_size,
         detail::stride_tensor_stride(base_type::m_tensor_stride, stride),
-        base_type::m_allocator);
+        base_type::m_byte_allocator);
 
     index_type c = 0;
     std::vector<coordinate_type> dst(m_coordinate_size);
@@ -137,9 +170,10 @@ public:
     for (auto const &kv : m_map) {
       detail::stride_coordinate<coordinate_type>(kv.first, dst,
                                                  stride_map.m_tensor_stride);
-      bool success = stride_map.insert(strided_coordinate, c);
-      LOG_DEBUG("Adding coordinate", dst, ":", c, "success:", (int)success);
-      c += success;
+      auto result = stride_map.insert(strided_coordinate, c);
+      LOG_DEBUG("Adding coordinate", dst, ":", c,
+                "success:", (int)result.second);
+      c += result.second;
     }
 
     return stride_map;
@@ -155,7 +189,7 @@ public:
     self_type stride_map(
         size() * region.volume(), m_coordinate_size,
         detail::stride_tensor_stride(base_type::m_tensor_stride, stride),
-        base_type::m_allocator);
+        base_type::m_byte_allocator);
 
     index_type c = 0;
     std::vector<coordinate_type> dst(m_coordinate_size);
@@ -304,18 +338,13 @@ public:
   }
 
 private:
-  bool insert(key_type const &key, mapped_type const &val) {
+  std::pair<iterator, bool> insert(key_type const &key,
+                                   mapped_type const &val) {
     ASSERT(val < base_type::m_capacity, "Invalid mapped value: ", val,
            ", current capacity: ", base_type::m_capacity);
     coordinate_type *ptr = &base_type::m_coordinates[val * m_coordinate_size];
     std::copy_n(key.data(), m_coordinate_size, ptr);
-    auto insert_result =
-        m_map.insert(value_type(coordinate<coordinate_type>{ptr}, val));
-    if (insert_result.second) {
-      return true;
-    } else {
-      return false;
-    }
+    return m_map.insert(value_type(coordinate<coordinate_type>{ptr}, val));
   }
 
   inline iterator find(key_type const &key) { return m_map.find(key); }
@@ -326,7 +355,7 @@ private:
 private:
   using base_type::m_coordinate_size;
   map_type m_map;
-};
+}; // namespace minkowski
 
 } // namespace minkowski
 

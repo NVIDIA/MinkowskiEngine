@@ -157,8 +157,7 @@ std::tuple<cpu_kernel_map, size_type, double>
 kernel_map_test(const torch::Tensor &in_coordinates,
                 const torch::Tensor &out_coordinates,
                 const torch::Tensor &kernel_size,
-                uint64_t occupancy,                 //
-                uint32_t num_map_values_per_thread, //
+                uint32_t occupancy, //
                 uint32_t thread_dim) {
   // Create TensorArgs. These record the names and positions of each tensor as
   // parameters.
@@ -232,8 +231,7 @@ kernel_map_test(const torch::Tensor &in_coordinates,
 
   timer t;
   t.tic();
-  auto kernel_map = in_map.kernel_map(out_map, gpu_region,
-                                      num_map_values_per_thread, thread_dim);
+  auto kernel_map = in_map.kernel_map(out_map, gpu_region, thread_dim);
   double k_time = t.toc();
 
   const auto volume = region.volume();
