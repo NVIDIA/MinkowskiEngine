@@ -36,12 +36,11 @@ namespace minkowski {
  */
 // clang-format off
 template <typename coordinate_type,
-          typename ByteAllocator = std::allocator<char>>
-class CoordinateMapCPU
-    : public CoordinateMap<coordinate_type, ByteAllocator> {
+          template <typename T> class TemplatedAllocator = std::allocator>
+class CoordinateMapCPU : public CoordinateMap<coordinate_type, TemplatedAllocator> {
 public:
-  using base_type                 = CoordinateMap<coordinate_type, ByteAllocator>;
-  using self_type                 = CoordinateMapCPU<coordinate_type, ByteAllocator>;
+  using base_type                 = CoordinateMap<coordinate_type, TemplatedAllocator>;
+  using self_type                 = CoordinateMapCPU<coordinate_type, TemplatedAllocator>;
   using size_type                 = typename base_type::size_type;
   using index_type                = typename base_type::index_type;
   using stride_type               = typename base_type::stride_type;
@@ -55,7 +54,7 @@ public:
   using const_iterator            = typename map_type::const_iterator;
 
   using index_vector_type         = typename base_type::index_vector_type;
-  using byte_allocator_type       = ByteAllocator;
+  using byte_allocator_type       = TemplatedAllocator<char>;
   // clang-format on
 
 public:

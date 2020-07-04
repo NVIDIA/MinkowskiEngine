@@ -83,11 +83,11 @@ stride_tensor_stride(const default_types::stride_type &tensor_stride,
  * @note
  */
 // clang-format off
-template <typename coordinate_type, typename ByteAllocator>
+template <typename coordinate_type, template <typename T> class TemplatedAllocator>
 class CoordinateMap {
 
 public:
-  using self_type   = CoordinateMap<coordinate_type, ByteAllocator>;
+  using self_type   = CoordinateMap<coordinate_type, TemplatedAllocator>;
   using index_type  = default_types::index_type;
   using size_type   = default_types::size_type;
   using stride_type = default_types::stride_type;
@@ -96,7 +96,7 @@ public:
   using index_vector_type   = std::vector<default_types::index_type>;
   using index_set_type      = std::set<default_types::index_type>;
 
-  using byte_allocator_type = ByteAllocator;
+  using byte_allocator_type = TemplatedAllocator<char>;
 
 
   // Constructors

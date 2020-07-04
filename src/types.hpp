@@ -32,6 +32,7 @@
 #include <pybind11/pybind11.h>
 #include <tuple>
 #include <vector>
+#include <string>
 
 namespace minkowski {
 
@@ -107,6 +108,8 @@ using cpu_kernel_map           = std::pair<cpu_in_maps, cpu_out_maps>;
 using cpu_reference_kernel_map = std::pair<cpu_in_maps &, cpu_out_maps &>;
 // clang-format on
 
+using coordinate_map_key_type = std::pair<default_types::stride_type, std::string>;
+
 template <typename vector_type>
 std::vector<vector_type>
 initialize_maps(default_types::size_type number_of_vectors,
@@ -120,7 +123,13 @@ initialize_maps(default_types::size_type number_of_vectors,
 }
 
 // GPU memory manager backend. No effect with CPU_ONLY build
-enum GPUMemoryManagerBackend { CUDA = 0, PYTORCH = 1 };
+namespace GPUMemoryAllocatorBackend {
+enum Type { CUDA = 0, PYTORCH = 1 };
+}
+
+namespace CoordinateMapBackend {
+enum Type { CPU = 0, CUDA_MAP = 1 };
+}
 
 // FNV64-1a
 // uint64_t for unsigned long, must use CXX -m64
