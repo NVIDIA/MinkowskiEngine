@@ -115,11 +115,11 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
  *
  * @return none
  */
-template <typename coordinate_type, typename MapAllocatorType,
-          typename ByteAllocatorType>
-void CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
-    insert(coordinate_iterator<coordinate_type> key_first,
-           coordinate_iterator<coordinate_type> key_last) {
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
+    coordinate_iterator<coordinate_type> key_first,
+    coordinate_iterator<coordinate_type> key_last) {
   size_type const N = key_last - key_first;
   LOG_DEBUG("key iterator length", N);
 
@@ -171,12 +171,12 @@ void CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
 }
 
 using return_vector_type = thrust::device_vector<default_types::index_type>;
-template <typename coordinate_type, typename MapAllocatorType,
-          typename ByteAllocatorType>
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
 std::pair<return_vector_type, return_vector_type>
-CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
-    insert_and_map(coordinate_iterator<coordinate_type> key_first,
-                   coordinate_iterator<coordinate_type> key_last) {
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert_and_map(
+    coordinate_iterator<coordinate_type> key_first,
+    coordinate_iterator<coordinate_type> key_last) {
   insert(key_first, key_last);
   return std::make_pair(m_valid_row_index, m_inverse_row_index);
 }
@@ -187,10 +187,10 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
  *
  * @return a pair of (valid index, query value) vectors.
  */
-template <typename coordinate_type, typename MapAllocatorType,
-          typename ByteAllocatorType>
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
 std::pair<return_vector_type, return_vector_type>
-CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::find(
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::find(
     coordinate_iterator<coordinate_type> key_first,
     coordinate_iterator<coordinate_type> key_last) const {
   size_type N = key_last - key_first;
@@ -233,10 +233,10 @@ CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::find(
  *
  * @return a pair of (valid index, query value) vectors.
  */
-template <typename coordinate_type, typename MapAllocatorType,
-          typename ByteAllocatorType>
-CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>
-CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::stride(
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
     stride_type const &stride) const {
 
   // Over estimate the reserve size to be size();
@@ -438,14 +438,13 @@ __global__ void preallocated_kernel_map_iteration(
 
 } // namespace detail
 
-template <typename coordinate_type, typename MapAllocatorType,
-          typename ByteAllocatorType>
-CoordinateMapGPU<coordinate_type, MapAllocatorType,
-                 ByteAllocatorType>::kernel_map_type
-CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>::
-    kernel_map(self_type const &out_coordinate_map,
-               gpu_kernel_region<coordinate_type> const &kernel,
-               uint32_t thread_dim) const {
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map_type
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map(
+    self_type const &out_coordinate_map,
+    gpu_kernel_region<coordinate_type> const &kernel,
+    uint32_t thread_dim) const {
   // Over estimate the reserve size to be size();
   size_type const out_size = out_coordinate_map.size();
   size_type const kernel_volume = kernel.volume();

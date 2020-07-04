@@ -42,25 +42,25 @@ namespace minkowski {
  * Inherit from the CoordinateMap for a concurrent coordinate unordered map.
  */
 template <typename coordinate_type,
-          typename MapAllocatorType = detail::c10_allocator<thrust::pair<coordinate<coordinate_type>, default_types::index_type>>,
-          typename ByteAllocatorType = detail::c10_allocator<char>>
-class CoordinateMapGPU
-    : public CoordinateMap<coordinate_type, ByteAllocatorType> {
+          template <typename T> class TemplatedAllocator = detail::c10_allocator>
+class CoordinateMapGPU : public CoordinateMap<coordinate_type, TemplatedAllocator> {
 public:
+
   // clang-format off
-  using base_type           = CoordinateMap<coordinate_type, ByteAllocatorType>;
-  using self_type           = CoordinateMapGPU<coordinate_type, MapAllocatorType, ByteAllocatorType>;
+  using base_type           = CoordinateMap<coordinate_type, TemplatedAllocator>;
+  using self_type           = CoordinateMapGPU<coordinate_type, TemplatedAllocator>;
   using size_type           = typename base_type::size_type;
   using index_type          = typename base_type::index_type;
   using stride_type         = typename base_type::stride_type;
+
+  using map_allocator_type  = TemplatedAllocator<thrust::pair<coordinate<coordinate_type>, index_type>>;
+  using byte_allocator_type = TemplatedAllocator<char>;
 
   // Map types
   using key_type            = coordinate<coordinate_type>;
   using mapped_type         = index_type;
   using hasher_type         = detail::coordinate_murmur3<coordinate_type>;
   using key_equal_type      = detail::coordinate_equal_to<coordinate_type>;
-  using map_allocator_type  = MapAllocatorType;
-  using byte_allocator_type = ByteAllocatorType;
   using map_type            = concurrent_unordered_map<key_type,          // key
                                                        mapped_type,        // mapped_type
                                                        hasher_type,        // hasher
