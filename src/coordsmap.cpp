@@ -574,8 +574,8 @@ InOutMapsPair<int> CoordsMap<MapType>::pruned_kernel_map(
   InOutMaps<int> in_maps(1);
   InOutMaps<int> out_maps(1);
 
-  in_maps.reserve(out_coords_map.size());
-  out_maps.reserve(out_coords_map.size());
+  in_maps[0].reserve(out_coords_map.size());
+  out_maps[0].reserve(out_coords_map.size());
 
   for (const auto &out_kv : out_coords_map) {
     const auto &iter_map = map.find(out_kv.first);
@@ -602,8 +602,8 @@ InOutMapsPair<int> CoordsMap<MapType>::global_reduction_map(
     InOutMaps<int> out_maps(1);
 
     // TODO: map size should be map.size() * CoordsMapVectorVType size.
-    in_maps.reserve(map.size());
-    out_maps.reserve(map.size());
+    in_maps[0].reserve(map.size());
+    out_maps[0].reserve(map.size());
 
     vector<int> coord(ncols, 0);
     for (const auto &kv : map) {
@@ -651,8 +651,8 @@ CoordsMap<MapType>::stride_map(const CoordsMap<MapType> &out_coords_map,
   InOutMaps<int> in_maps(1);
   InOutMaps<int> out_maps(1);
 
-  in_maps.reserve(map.size());
-  out_maps.reserve(map.size());
+  in_maps[0].reserve(map.size());
+  out_maps[0].reserve(map.size());
 
   for (const auto &kv : map) {
     const auto strided_coord = stride_copy<int>(kv.first, tensor_strides);
