@@ -291,13 +291,15 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
   // generate the map_key
   coordinate_map_key_type map_key = std::make_pair(tensor_stride, string_id);
   if (m_coordinate_maps.find(map_key) != m_coordinate_maps.end()) {
+    WARNING(true, "CoordinateMapKey collision detected:", map_key,
+            "generating new string id.");
     map_key = get_random_string_id(tensor_stride, string_id);
   }
 
   LOG_DEBUG("initializing a map with tensor stride:", map_key.first,
             "string id:", map_key.second);
   // Create the concurrent coords map
-  auto map_inverse_map =
+  auto const map_inverse_map =
       detail::insert_and_map_functor<coordinate_type, TemplatedAllocator,
                                      CoordinateMapType>()(map_key, coordinate,
                                                           *this);
@@ -305,73 +307,110 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
 
   py::object py_key = py::cast(new CoordinateMapKey(coordinate_size, map_key));
 
-  return std::make_pair(py_key, map_inverse_map);
+  return std::make_pair(py_key, std::move(map_inverse_map));
 }
+
+namespace detail {
+
+template <typename coordinate_type>
+struct kernel_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
+                          cpu_kernel_map> {
+
+  cpu_kernel_map
+  operator()(CoordinateMapCPU<coordinate_type, std::allocator> const &in_map,
+             CoordinateMapCPU<coordinate_type, std::allocator> const &out_map,
+             cpu_kernel_region<coordinate_type> &kernel) {
+    return in_map.kernel_map(out_map, kernel);
+  }
+};
+
+} // namespace detail
 
 /*
  * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps
  * and return the indices of the coord_map_ind in coord_map_dst
  */
-/*
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
           class CoordinateMapType>
-std::pair<std::vector<at::Tensor>, std::vector<at::Tensor>>
+typename CoordinateMapManager<coordinate_type, TemplatedAllocator,
+                              CoordinateMapType>::kernel_map_type const &
 CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
-    kernel_map(py::object py_in_coords_key, py::object py_out_coords_key,
-               vector<int> tensor_strides, vector<int> strides,
-               vector<int> kernel_sizes, vector<int> dilations, int region_type,
-               at::Tensor offsets, bool is_transpose, bool is_pool) {
-  // WARNING: This function will not work properly with custon region types.
-  ASSERT(region_type != 2,
-         "Currently, it does not support the custom region type.");
-  const InOutMapKey map_key = getMapHashKey(
-      tensor_strides, strides, kernel_sizes, dilations, region_type,
-      py_in_coords_key, py_out_coords_key, is_transpose, is_pool);
+    kernel_map(py::object const &py_in_coords_key,
+               py::object const &py_out_coords_key,
+               stride_type const &kernel_size, //
+               stride_type const &kernel_stride,
+               stride_type const &kernel_dilation,
+               RegionType::region_type const region_type,
+               at::Tensor const &offset, bool is_transpose, bool is_pool) {
+  ASSERT(region_type != RegionType::CUSTOM, "Not implemented yet.");
+  ASSERT(offset.is_cuda() ==
+             !detail::is_cpu_coordinate_map<CoordinateMapType>::value,
+         "Invalid device for offset");
 
-  const auto &in_map_iter = in_maps.find(map_key);
+  CoordinateMapKey *p_in_map_key = py_in_coords_key.cast<CoordinateMapKey *>();
+  CoordinateMapKey *p_out_map_key =
+      py_out_coords_key.cast<CoordinateMapKey *>();
 
-  if (in_map_iter == in_maps.end()) {
-    getInOutMaps(tensor_strides, strides, kernel_sizes, dilations, region_type,
-                 offsets, py_in_coords_key, py_out_coords_key, false);
-    ASSERT(in_maps.find(map_key) != in_maps.end(), "Kernel map not found.");
+  size_type kernel_dim = kernel_size.size();
+
+  ASSERT(kernel_dim == kernel_stride.size(), "kernel size mismatch");
+  ASSERT(kernel_dim == kernel_dilation.size(), "kernel size mismatch");
+
+  // in_coords_key->tensor_stride * kernel_stride ==
+  // out_coords_key->tensor_stride
+
+  kernel_map_key_type const kernel_map_key =
+      std::make_tuple(p_in_map_key->get_key(), p_out_map_key->get_key(), // maps
+                      kernel_size, kernel_stride, kernel_dilation, // kernels
+                      region_type, is_transpose, is_pool);
+
+  const auto &kernel_map_iter = m_kernel_maps.find(kernel_map_key);
+  LOG_DEBUG("kernel map key set");
+
+  if (kernel_map_iter == m_kernel_maps.end()) {
+    // create a kernel map if it exists
+    auto const in_map_it = m_coordinate_maps.find(p_in_map_key->get_key());
+    auto const out_map_it = m_coordinate_maps.find(p_out_map_key->get_key());
+
+    ASSERT(in_map_it != m_coordinate_maps.end(),
+           "Input coordinate map not found.");
+    ASSERT(out_map_it != m_coordinate_maps.end(),
+           "Output coordinate map not found.");
+
+    auto const &in_map = in_map_it->second;
+    auto const &out_map = out_map_it->second;
+
+    auto const D = in_map.coordinate_size();
+    LOG_DEBUG("coordinate_size:", D,
+              "tensor_stride:", in_map.get_tensor_stride());
+
+    // +1 for batch index
+    ASSERT(kernel_dim + 1 == in_map.coordinate_size(), "kernel size mismatch");
+    ASSERT(kernel_dim + 1 == out_map.coordinate_size(), "kernel size mismatch");
+
+    auto kernel_region = cpu_kernel_region<coordinate_type>(
+        region_type,                       //
+        in_map.coordinate_size(),          //
+        in_map.get_tensor_stride().data(), //
+        kernel_size.data(),                //
+        kernel_dilation.data(),            //
+        0, offset.data_ptr<coordinate_type>(), offset.size(0));
+    LOG_DEBUG("cpu_kernel_region set");
+
+    auto const kernel_map =
+        detail::kernel_map_functor<coordinate_type, TemplatedAllocator,
+                                   CoordinateMapType, kernel_map_type>()(
+            in_map, out_map, kernel_region);
+
+    LOG_DEBUG("kernel_map size", kernel_map.first.size());
+    m_kernel_maps[kernel_map_key] = std::move(kernel_map);
   }
 
-  const InOutMaps<int> &in_map = in_maps[map_key];
-  const InOutMaps<int> &out_map = out_maps[map_key];
-
-  int all_volume = 0, kernel_volume = in_map.size();
-  for (int k = 0; k < kernel_volume; k++)
-    all_volume += in_map[k].size();
-
-  vector<at::Tensor> in_tensors, out_tensors;
-
-  for (int k = 0; k < kernel_volume; k++) {
-    auto curr_volume = in_map[k].size();
-    if (curr_volume <= 0)
-      continue;
-
-    at::Tensor in_kernel_map = torch::empty(
-        {(long)curr_volume}, torch::TensorOptions().dtype(torch::kInt64));
-    at::Tensor out_kernel_map = torch::empty(
-        {(long)curr_volume}, torch::TensorOptions().dtype(torch::kInt64));
-
-    long *p_in_kernel_map = in_kernel_map.data<long>();
-    long *p_out_kernel_map = out_kernel_map.data<long>();
-
-    for (int i = 0; i < curr_volume; i++) {
-      p_in_kernel_map[i] = in_map[k][i];
-      p_out_kernel_map[i] = out_map[k][i];
-    }
-
-    in_tensors.push_back(move(in_kernel_map));
-    out_tensors.push_back(move(out_kernel_map));
-  }
-
-  return {in_tensors, out_tensors};
+  // TODO check if it copies or moves the internal data
+  return m_kernel_maps[kernel_map_key];
 }
-
 
 /*********************************/
 /*

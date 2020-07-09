@@ -243,10 +243,11 @@ public:
     size_t N = 2 * omp_get_max_threads();
     const size_t stride = (out_map_num_elements + N - 1) / N;
     N = (out_map_num_elements + stride - 1) / stride;
+    LOG_DEBUG("kernel map with", N, "chunks.");
 
     // When no need to iterate through the region
     // Put if outside the loop for speed
-    if (kernel.region_type() != REGION_TYPE::CUSTOM && kernel_volume == 1) {
+    if (kernel.region_type() != RegionType::CUSTOM && kernel_volume == 1) {
 #pragma omp parallel for
       for (index_type n = 0; n < N; ++n) {
         index_type curr_index_begin;
@@ -319,6 +320,7 @@ public:
 
     for (index_type i = 0; i < kernel_volume; ++i) {
       index_type max_num = num_used[i];
+      LOG_DEBUG("kernel index", i, "size:", max_num);
       in_maps[i].resize(max_num);
       out_maps[i].resize(max_num);
     }
@@ -330,6 +332,7 @@ public:
 
   using base_type::capacity;
   using base_type::get_tensor_stride;
+  using base_type::coordinate_size;
 
   inline void reserve(size_type c) {
     base_type::reserve(c);

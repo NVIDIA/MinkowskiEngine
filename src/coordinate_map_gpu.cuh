@@ -152,11 +152,13 @@ public:
                              gpu_kernel_region<coordinate_type> const &kernel,
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
 
+  // Returns the number of elements in the coordinate map
   inline size_type size() const { return m_size; }
 
   // access the coordinate data pointer
   using base_type::const_coordinate_data;
   using base_type::coordinate_data;
+  using base_type::coordinate_size;
 
   // Find GPU values in the map. key_iterator must be a GPU iterator.
   // template <typename key_iterator>

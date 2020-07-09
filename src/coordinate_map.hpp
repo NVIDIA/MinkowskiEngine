@@ -186,9 +186,15 @@ public:
 
   std::string to_string() const;
 
-  stride_type get_tensor_stride() const noexcept { return m_tensor_stride; }
+  stride_type const &get_tensor_stride() const noexcept {
+    return m_tensor_stride;
+  }
 
   inline size_type capacity() const noexcept { return m_capacity; }
+
+  inline size_type coordinate_size() const noexcept {
+    return m_coordinate_size;
+  }
 
 protected:
   // clang-format off
@@ -196,14 +202,13 @@ protected:
     if (m_capacity < number_of_coordinates) {
       LOG_DEBUG("Allocate", number_of_coordinates, "coordinates.");
       auto const size = number_of_coordinates * m_coordinate_size;
-      m_coordinates = allocate_unique_ptr(size);
+      m_coordinates = allocate_ptr(size);
       m_capacity = number_of_coordinates;
     }
   }
 
   // clang-format on
-  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>
-  allocate_unique_ptr(size_type const size) {
+  std::shared_ptr<coordinate_type[]> allocate_ptr(size_type const size) {
     coordinate_type *ptr = reinterpret_cast<coordinate_type *>(
         m_byte_allocator.allocate(size * sizeof(coordinate_type)));
 
@@ -212,8 +217,7 @@ protected:
       alloc.deallocate(reinterpret_cast<char *>(p), size);
     };
 
-    return std::unique_ptr<coordinate_type[],
-                           std::function<void(coordinate_type *)>>{
+    return std::shared_ptr<coordinate_type[]>{
         ptr, std::bind(deleter, std::placeholders::_1, m_byte_allocator,
                        size * sizeof(coordinate_type))};
   }
@@ -240,8 +244,7 @@ protected:
   stride_type m_tensor_stride;
 
   byte_allocator_type m_byte_allocator;
-  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>
-      m_coordinates;
+  std::shared_ptr<coordinate_type[]> m_coordinates;
 };
 
 } // end namespace minkowski

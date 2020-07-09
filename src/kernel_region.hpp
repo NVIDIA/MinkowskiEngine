@@ -41,12 +41,6 @@
 
 namespace minkowski {
 
-namespace REGION_TYPE {
-
-enum region_type { HYPER_CUBE, HYPER_CROSS, CUSTOM };
-
-}
-
 // A wrapper for a convolution kernel or a pooling kernel.
 template <typename coordinate_type = default_types::dcoordinate_type>
 class kernel_region {
@@ -141,7 +135,7 @@ public:
 public:
   kernel_region() = delete;
   MINK_CUDA_HOST_DEVICE kernel_region(
-      REGION_TYPE::region_type type,
+      RegionType::region_type type,
       size_type coordinate_size,      // Dimension of the coordinate
       size_type const *tensor_stride, // stride size between points
       size_type const *kernel_size,   // size of the kernel or region
@@ -203,7 +197,7 @@ public:
     return const_iterator(nullptr, *this);
   }
 
-  MINK_CUDA_HOST_DEVICE REGION_TYPE::region_type region_type() const {
+  MINK_CUDA_HOST_DEVICE RegionType::region_type region_type() const {
     return m_region_type;
   }
   MINK_CUDA_HOST_DEVICE inline size_type volume() const { return m_volume; }
@@ -230,17 +224,17 @@ private:
   MINK_CUDA_HOST_DEVICE void set_volume() {
 #ifndef __CUDA_ARCH__
     switch (m_region_type) {
-    case REGION_TYPE::HYPER_CUBE:
+    case RegionType::HYPER_CUBE:
       m_volume = 1;
       for (index_type i = 0; i < m_coordinate_size - 1; ++i)
         m_volume *= m_kernel_size[i];
       break;
-    case REGION_TYPE::HYPER_CROSS:
+    case RegionType::HYPER_CROSS:
       m_volume = 1;
       for (index_type i = 0; i < m_coordinate_size - 1; ++i)
         m_volume += (m_kernel_size[i] - 1);
       break;
-    case REGION_TYPE::CUSTOM:
+    case RegionType::CUSTOM:
       m_volume = m_num_offset;
       break;
     };
@@ -251,7 +245,7 @@ private:
 
 protected:
   // flag indicating tensor_stride, kernel_size, dilation are on gpu
-  REGION_TYPE::region_type const m_region_type;
+  RegionType::region_type const m_region_type;
   size_type const m_coordinate_size;
   size_type m_num_offset, m_volume{0};
 
@@ -275,7 +269,7 @@ public:
 public:
   cpu_kernel_region() = delete;
   cpu_kernel_region(
-      REGION_TYPE::region_type type,
+      RegionType::region_type type,
       size_type coordinate_size,      // Dimension of the coordinate
       size_type const *tensor_stride, // stride size between points
       size_type const *kernel_size,   // size of the kernel or region
@@ -308,7 +302,7 @@ public:
   self_type const to_gpu() {
     // move the kernel_region to GPU
     size_type num_bytes = (m_coordinate_size - 1) * 3 * sizeof(size_type);
-    if (m_region_type == REGION_TYPE::CUSTOM)
+    if (m_region_type == RegionType::CUSTOM)
       num_bytes +=
           (m_coordinate_size - 1) * m_num_offset * sizeof(coordinate_type);
 
@@ -323,7 +317,7 @@ public:
     std::copy_n(m_dilation, m_coordinate_size - 1,
                 &p_size_type[2 * (m_coordinate_size - 1)]);
 
-    if (m_region_type == REGION_TYPE::CUSTOM) {
+    if (m_region_type == RegionType::CUSTOM) {
       std::copy_n(m_offset, m_num_offset * (m_coordinate_size - 1),
                   p_coordinate_type);
     }
