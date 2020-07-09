@@ -32,6 +32,10 @@
 #include "types.hpp"
 #include "utils.hpp"
 
+#ifndef CPU_ONLY
+#include "kernel_map.cuh"
+#endif
+
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -56,8 +60,7 @@ template <template <typename T, template <typename Q> class A>
           class CoordinateMapType>
 struct is_cpu_coordinate_map : std::false_type {};
 
-template <>
-struct is_cpu_coordinate_map<CoordinateMapCPU> : std::true_type {};
+template <> struct is_cpu_coordinate_map<CoordinateMapCPU> : std::true_type {};
 
 template <typename T1, typename T2> void copy_types(const T1 &src, T2 &dst) {
   size_t curr_it = 0;
@@ -77,14 +80,11 @@ struct coordinate_map_key_hasher {
 };
 */
 
-template <typename index_type, typename stride_type>
 struct coordinate_map_key_comparator {
   bool operator()(coordinate_map_key_type const &lhs,
                   coordinate_map_key_type const &rhs) {
-    auto vec_less = std::lexicographical_compare(
-        lhs.first.begin(), lhs.first.end(), rhs.first.begin(), rhs.first.end());
-    if (!vec_less & std::equal(lhs.first.begin(), lhs.first.end(),
-                               rhs.first.begin(), rhs.first.end())) {
+    auto vec_less = lhs.first < rhs.first;
+    if (!vec_less && (lhs.first == rhs.first)) {
       return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(),
                                           rhs.second.begin(), rhs.second.end());
     }
@@ -92,10 +92,47 @@ struct coordinate_map_key_comparator {
   }
 };
 
+struct kernel_map_key_comparator {
+  using stride_type = default_types::stride_type;
+
+  bool operator()(kernel_map_key_type const &lhs,
+                  kernel_map_key_type const &rhs) {
+    coordinate_map_key_type const &lin_map_key = std::get<0>(lhs);
+    coordinate_map_key_type const &lout_map_key = std::get<1>(lhs);
+    stride_type const &lkernel_size = std::get<2>(lhs);
+    // stride_type const &lkernel_stride = std::get<3>(lhs);
+    stride_type const &lkernel_dilation = std::get<3>(lhs);
+    // RegionType::region_type const &lregion_type = std::get<4>(lhs);
+    // bool const &lis_transpose = std::get<5>(lhs);
+    // bool const &lis_pool = std::get<6>(lhs);
+
+    coordinate_map_key_type const &rin_map_key = std::get<0>(rhs);
+    coordinate_map_key_type const &rout_map_key = std::get<1>(rhs);
+    stride_type const &rkernel_size = std::get<2>(rhs);
+    // stride_type const &rkernel_stride = std::get<3>(rhs);
+    stride_type const &rkernel_dilation = std::get<3>(rhs);
+    // RegionType::region_type const &rregion_type = std::get<4>(rhs);
+    // bool const &ris_transpose = std::get<5>(rhs);
+    // bool const &ris_pool = std::get<6>(rhs);
+
+    bool const map_less =
+        coordinate_map_key_comparator()(lin_map_key, rin_map_key);
+    if (!map_less && lin_map_key == rin_map_key) {
+      bool const kernel_size_less = lkernel_size < rkernel_size;
+      if (!kernel_size_less && lkernel_size == rkernel_size) {
+        return lkernel_dilation < rkernel_dilation;
+      } else {
+        return kernel_size_less;
+      }
+    } else {
+      return map_less;
+    }
+  }
+};
+
 } // namespace detail
 
-using std::vector;
-
+/*
 template <typename VType> int getInOutMapsSize(const VType &map) {
   // can't use ::accumulate as pVector template instantiation requires a bit
   // dirty syntax
@@ -105,9 +142,9 @@ template <typename VType> int getInOutMapsSize(const VType &map) {
   return n;
 }
 
-inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
-                                          const vector<int> &strides,
-                                          bool is_transpose) {
+inline std::vector<int>
+computeOutTensorStride(const vector<int> &tensor_strides,
+                       const vector<int> &strides, bool is_transpose) {
   vector<int> out_tensor_strides;
   ASSERT(tensor_strides.size() == strides.size(),
          "The dimension of tensor_stride: ", ArrToString(tensor_strides),
@@ -124,6 +161,7 @@ inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
   }
   return out_tensor_strides;
 }
+*/
 
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator,
@@ -137,9 +175,15 @@ public:
   using map_type = CoordinateMapType<coordinate_type, TemplatedAllocator>;
   using self_type = CoordinateMapManager<coordinate_type, TemplatedAllocator,
                                          CoordinateMapType>;
-  using map_collection_type =
-      std::map<coordinate_map_key_type, map_type,
-               detail::coordinate_map_key_comparator<index_type, stride_type>>;
+  using map_collection_type = std::map<coordinate_map_key_type, map_type,
+                                       detail::coordinate_map_key_comparator>;
+  using kernel_map_type =
+#ifndef CPU_ONLY
+      std::conditional<detail::is_cpu_coordinate_map<CoordinateMapType>::value,
+                       cpu_kernel_map, gpu_kernel_map>::type;
+#else
+      cpu_kernel_map;
+#endif
 
 public:
   // allocator backend will be ignored when coordinate map backend is CPU
@@ -163,12 +207,16 @@ public:
                  stride_type const tensor_stride,
                  std::string const string_id = "");
 
-  // return kernel map
-  // std::pair<std::vector<at::Tensor>, std::vector<at::Tensor>>
-  // kernel_map(py::object py_in_coords_key, py::object py_out_coords_key,
-  //            stride_type strides, stride_type kernel_sizes,
-  //            stride_type dilations, REGION_TYPE:: region_type, at::Tensor
-  //            offsets);
+  // return kernel map. for cpu it is {in maps, out maps}.
+  // For gpu it could be {in maps, out maps}, or {kernel index, in map, out map}
+  kernel_map_type const &
+  kernel_map(py::object const &py_in_coords_key,        //
+             py::object const &py_out_coords_key,       //
+             stride_type const &kernel_size,            //
+             stride_type const &kernel_stride,          //
+             stride_type const &kernel_dilation,        //
+             RegionType::region_type const region_type, //
+             at::Tensor const &offsets, bool is_transpose, bool is_pool);
 
   /*
   void printDiagnostics(py::object py_coords_key) const;
@@ -186,9 +234,9 @@ public:
   void getCoords(at::Tensor coords, py::object py_coords_key) const;
   vector<vector<at::Tensor>>
   getKernelMap(vector<int> tensor_strides, vector<int> strides,
-               vector<int> kernel_sizes, vector<int> dilations, int region_type,
-               at::Tensor offsets, py::object py_in_coords_key,
-               py::object py_out_coords_key, bool is_transpose, bool is_pool);
+               vector<int> kernel_sizes, vector<int> dilations, int
+region_type, at::Tensor offsets, py::object py_in_coords_key, py::object
+py_out_coords_key, bool is_transpose, bool is_pool);
 
 #ifndef CPU_ONLY
   vector<vector<at::Tensor>>
@@ -212,45 +260,40 @@ public:
   // New coords map given an input
   uint64_t createStridedCoords(uint64_t coords_key,
                                const vector<int> &tensor_strides,
-                               const vector<int> &strides, bool force_creation);
-  uint64_t createTransposedStridedRegionCoords(
-      uint64_t coords_key, const vector<int> &tensor_strides,
-      const vector<int> &strides, vector<int> kernel_sizes,
-      vector<int> dilations, int region_type, at::Tensor offsets,
-      bool force_creation);
-  uint64_t createPrunedCoords(at::Tensor use_feat, py::object py_in_coords_key,
-                              py::object py_out_coords_key);
+                               const vector<int> &strides, bool
+force_creation); uint64_t createTransposedStridedRegionCoords( uint64_t
+coords_key, const vector<int> &tensor_strides, const vector<int> &strides,
+vector<int> kernel_sizes, vector<int> dilations, int region_type, at::Tensor
+offsets, bool force_creation); uint64_t createPrunedCoords(at::Tensor
+use_feat, py::object py_in_coords_key, py::object py_out_coords_key);
   uint64_t createOriginCoords(const int D);
   uint64_t createUnionCoords(vector<py::object> py_in_coords_keys,
                              py::object py_out_coords_key);
 
   // Mappings
   const InOutMapKey getMapHashKey(vector<int> tensor_strides,
-                                  vector<int> strides, vector<int> kernel_sizes,
-                                  vector<int> dilations, int region_type,
-                                  py::object py_in_coords_key,
-                                  py::object py_out_coords_key,
-                                  bool is_transpose, bool is_pool) const;
-  const InOutMapKey getOriginMapHashKey(py::object py_in_coords_key,
-                                        py::object py_out_coords_key) const;
-  const InOutMapKey getUnionMapHashKey(vector<py::object> py_in_coords_keys,
-                                       py::object py_out_coords_key) const;
+                                  vector<int> strides, vector<int>
+kernel_sizes, vector<int> dilations, int region_type, py::object
+py_in_coords_key, py::object py_out_coords_key, bool is_transpose, bool
+is_pool) const; const InOutMapKey getOriginMapHashKey(py::object
+py_in_coords_key, py::object py_out_coords_key) const; const InOutMapKey
+getUnionMapHashKey(vector<py::object> py_in_coords_keys, py::object
+py_out_coords_key) const;
 
   // Wrapper functions for setting up coords and returning maps
   const InOutMapsRefPair<int>
-  getInOutMaps(const vector<int> &tensor_strides, const vector<int> &strides,
-               const vector<int> &kernel_sizes, const vector<int> &dilations,
-               int region_type, const at::Tensor &offsets,
-               py::object py_in_coords_key, py::object py_out_coords_key,
-               bool is_transpose, bool is_pool = false,
-               bool generate_new_coords = false);
+  getInOutMaps(const vector<int> &tensor_strides, const vector<int>
+&strides, const vector<int> &kernel_sizes, const vector<int> &dilations, int
+region_type, const at::Tensor &offsets, py::object py_in_coords_key,
+py::object py_out_coords_key, bool is_transpose, bool is_pool = false, bool
+generate_new_coords = false);
 
-  const InOutMapsRefPair<int> getOriginInOutMaps(py::object py_in_coords_key,
-                                                 py::object py_out_coords_key);
+  const InOutMapsRefPair<int> getOriginInOutMaps(py::object
+py_in_coords_key, py::object py_out_coords_key);
 
   const InOutMapsRefPair<int> getPruningInOutMaps(at::Tensor use_feat,
-                                                  py::object py_in_coords_key,
-                                                  py::object py_out_coords_key);
+                                                  py::object
+py_in_coords_key, py::object py_out_coords_key);
 
   const InOutMapsRefPair<int>
   getUnionInOutMaps(vector<py::object> py_in_coords_keys,
@@ -271,8 +314,8 @@ public:
     return max_n_active;
   }
 
-  int getMaxMapSize(const pair<InOutMaps<int> &, InOutMaps<int> &> &in_out) {
-    return getMaxMapSize(in_out.first);
+  int getMaxMapSize(const pair<InOutMaps<int> &, InOutMaps<int> &> &in_out)
+{ return getMaxMapSize(in_out.first);
   }
 
   uint64_t getRandomCoordsKey();
@@ -298,12 +341,11 @@ public:
   void copyInOutMapsToGPU(const InOutMapKey &map_key);
 
   const pInOutMapsRefPair<int>
-  getInOutMapsGPU(const vector<int> &tensor_strides, const vector<int> &strides,
-                  const vector<int> &kernel_sizes, const vector<int> &dilations,
-                  int region_type, const at::Tensor &offsets,
-                  py::object py_in_coords_key, py::object py_out_coords_key,
-                  bool is_transpose, bool is_pool = false,
-                  bool force_creation = false);
+  getInOutMapsGPU(const vector<int> &tensor_strides, const vector<int>
+&strides, const vector<int> &kernel_sizes, const vector<int> &dilations, int
+region_type, const at::Tensor &offsets, py::object py_in_coords_key,
+py::object py_out_coords_key, bool is_transpose, bool is_pool = false, bool
+force_creation = false);
 
   const pInOutMapsRefPair<int>
   getOriginInOutMapsGPU(py::object py_in_coords_key,
@@ -367,9 +409,16 @@ private:
   }
 
 private:
+  // CoordinateMapManager owns the coordinate maps
   std::map<coordinate_map_key_type, map_type,
-           detail::coordinate_map_key_comparator<index_type, stride_type>>
+           detail::coordinate_map_key_comparator>
       m_coordinate_maps;
+
+  // CoordinateMapManager owns the tensors
+  std::map<kernel_map_key_type, kernel_map_type,
+           detail::kernel_map_key_comparator>
+      m_kernel_maps;
+
 #ifndef CPU_ONLY
   TemplatedAllocator<char> m_allocator;
 #endif
@@ -394,6 +443,20 @@ struct insert_and_map_functor {
   operator()(coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
              CoordinateMapManager<coordinate_type, TemplatedAllocator,
                                   CoordinateMapType> &manager);
+};
+
+// a partial specialization functor for insertion
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType,
+          typename kernel_map_type>
+struct kernel_map_functor {
+
+  kernel_map_type operator()(
+      CoordinateMapType<coordinate_type, TemplatedAllocator> const &in_map,
+      CoordinateMapType<coordinate_type, TemplatedAllocator> const &out_map,
+      cpu_kernel_region<coordinate_type> &kernel);
 };
 
 } // namespace detail
