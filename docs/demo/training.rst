@@ -263,4 +263,4 @@ Finally, once you assemble all the codes, you can train your network.
    ...
 
 The original code can be found at `examples/training.py
-<https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/training.py>`_.
+<https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/training.py>`_.

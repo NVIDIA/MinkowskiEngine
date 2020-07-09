@@ -33,7 +33,7 @@ author = 'Chris Choy'
 version = ME.__version__
 # The full version, including alpha/beta/rc tags
 release = ME.__version__
-github_doc_root = 'https://github.com/StanfordVL/MinkowskiEngine'
+github_doc_root = 'https://github.com/NVIDIA/MinkowskiEngine'
 
 # -- General configuration ---------------------------------------------------
 
@@ -90,7 +90,7 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 #
 # html_theme_options = {
-#     'github_user': 'StanfordVL',
+#     'github_user': 'NVIDIA',
 #     'github_repo': 'MinkowskiEngine',
 #     'github_banner': True
 # }

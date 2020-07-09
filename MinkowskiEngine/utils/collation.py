@@ -77,7 +77,7 @@ def batched_coordinates(coords):
 
 def sparse_collate(coords, feats, labels=None):
     r"""Create input arguments for a sparse tensor `the documentation
-    <https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html>`_.
+    <https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html>`_.
 
     Convert a set of coordinates and features into the batch coordinates and
     batch features.
@@ -160,7 +160,7 @@ def batch_sparse_collate(data):
     `torch.utils.data.DataLoader` to generate inputs for a sparse tensor.
 
     Please refer to `the training example
-    <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ for the
+    <https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_ for the
     usage.
 
     Args:
@@ -174,7 +174,7 @@ class SparseCollation:
     r"""Generates collate function for coords, feats, labels.
 
     Please refer to `the training example
-    <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ for the
+    <https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_ for the
     usage.
 
     Args:

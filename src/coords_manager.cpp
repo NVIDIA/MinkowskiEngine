@@ -309,7 +309,7 @@ uint64_t CoordsManager<MapType>::initializeCoords(
              "tensor_stride: ", ArrToString(tensor_strides),
              "For more information, please refer to the SparseTensor creation "
              "documentation available at:"
-             "https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html");
+             "https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html");
     }
   }
 
@@ -333,7 +333,7 @@ uint64_t CoordsManager<MapType>::initializeCoords(
            "If the duplication was intentional, set force_remap to true."
            "For more information, please refer to the SparseTensor creation "
            "documentation available at: "
-           "https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html");
+           "https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html");
   }
 
   // When remapping, return the mapping to pytorch.

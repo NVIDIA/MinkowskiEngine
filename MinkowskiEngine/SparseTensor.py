@@ -56,7 +56,7 @@ class SparseTensorQuantizationMode(Enum):
 
 _sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDS_MANAGER
 _global_coords_man = None
-COORDS_MAN_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
+COORDS_MAN_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
 COORDS_KEY_DIFFERENT_ERROR = "SparseTensors must have the same coords_key."
 
 
@@ -116,7 +116,7 @@ class SparseTensor():
 
     The :attr:`SparseTensor` class is the basic tensor in MinkowskiEngine. For
     the definition of a sparse tensor, please visit `the terminology page
-    <https://stanfordvl.github.io/MinkowskiEngine/terminology.html#sparse-tensor>`_.
+    <https://nvidia.github.io/MinkowskiEngine/terminology.html#sparse-tensor>`_.
     We use the COOrdinate (COO) format to save a sparse tensor `[1]
     <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This
     representation is simply a concatenation of coordinates in a matrix
@@ -216,7 +216,7 @@ class SparseTensor():
             `allow_duplicate_coords=True` is not recommended as it could hide
             obvious errors in your data loading and preprocessing steps. Please
             refer to the quantization and data loading tutorial on `here
-            <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_
+            <https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_
             for more details.
 
             :attr:`quantizatino_mode`

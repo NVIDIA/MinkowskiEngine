@@ -23,7 +23,7 @@ The MinkowskiEngine is distributed via [PyPI MinkowskiEngine](https://pypi.org/p
 pip3 install -U MinkowskiEngine
 ```
 
-To install the latest version, use `pip3 install -U git+https://github.com/StanfordVL/MinkowskiEngine`.
+To install the latest version, use `pip3 install -U git+https://github.com/NVIDIA/MinkowskiEngine`.
 
 
 ## Running a segmentation network
@@ -31,7 +31,7 @@ To install the latest version, use `pip3 install -U git+https://github.com/Stanf
 Download the MinkowskiEngine and run the example code.
 
 ```
-git clone https://github.com/StanfordVL/MinkowskiEngine.git
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
 cd MinkowskiEngine
 python -m examples.indoor
 ```
@@ -44,7 +44,7 @@ Minkowski network and will visualize the semantic segmentation results of a 3D s
 
 
 ```
-git clone https://github.com/StanfordVL/MinkowskiEngine.git
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
 cd MinkowskiEngine
 python setup.py install --cpu_only
 ```

@@ -172,7 +172,7 @@ else:
             ' \
 \nBLAS not found from numpy.distutils.system_info.get_info. \
 \nPlease specify BLAS with: python setup.py install --blas=openblas" \
-\nfor more information, please visit https://github.com/StanfordVL/MinkowskiEngine/wiki/Installation'
+\nfor more information, please visit https://github.com/NVIDIA/MinkowskiEngine/wiki/Installation'
         )
 
 print(f"\nUsing BLAS={BLAS}")
@@ -211,7 +211,7 @@ setup(
     description="a convolutional neural network library for sparse tensors",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    url="https://github.com/StanfordVL/MinkowskiEngine",
+    url="https://github.com/NVIDIA/MinkowskiEngine",
     keywords=[
         "pytorch",
         "Minkowski Engine",

@@ -77,5 +77,5 @@ accessing the features of the sparse tensor
        loss = criterion(out_feats, label)
 
 Please refer to `examples/example.py
-<https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/example.py>`_
+<https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/example.py>`_
 for the complete demo.
