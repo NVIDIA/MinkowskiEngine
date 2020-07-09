@@ -180,7 +180,7 @@ private:
 
   thrust::device_vector<size_type> m_device_tensor_stride;
   map_allocator_type m_map_allocator;
-  std::unique_ptr<map_type, std::function<void(map_type *)>> m_map;
+  std::shared_ptr<map_type> m_map;
 };
 
 } // namespace minkowski

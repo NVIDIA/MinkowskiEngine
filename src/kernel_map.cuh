@@ -31,21 +31,44 @@
 #include "coordinate_map_functors.cuh"
 #include "types.hpp"
 
+#include <functional>
+#include <memory>
+
 #include <thrust/copy.h>
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/counting_iterator.h>
 
 namespace minkowski {
+
 template <typename index_type, typename ByteAllocator> class gpu_kernel_map {
 public:
   using size_type = default_types::size_type;
   using byte_allocator_type = ByteAllocator;
+  using self_type = gpu_kernel_map<index_type, ByteAllocator>;
 
   class contiguous_memory {
   public:
+    using self_type = contiguous_memory;
+
+  public:
     contiguous_memory() = delete;
     contiguous_memory(gpu_kernel_map &kernel_map) : m_kernel_map{kernel_map} {}
+
+    self_type &operator=(self_type const &other) {
+      m_data = other.m_data;
+      m_kernel_map = other.m_kernel_map;
+      return *this;
+    }
+
+    inline typename std::unordered_map<index_type, index_type>::const_iterator
+    key_cbegin() const {
+      return m_kernel_map.m_kernel_offset_map.cbegin();
+    }
+    inline typename std::unordered_map<index_type, index_type>::const_iterator
+    key_cend() const {
+      return m_kernel_map.m_kernel_offset_map.cend();
+    }
 
     inline index_type *data() { return m_data; }
     inline void data(index_type *p_data) { m_data = p_data; }
@@ -89,24 +112,67 @@ public:
   }; // end contiguous_memory
 
 public:
+  gpu_kernel_map() : kernels{*this}, in_maps{*this}, out_maps{*this} {
+    LOG_DEBUG("Initialized gpu_kernel_map");
+  }
+  gpu_kernel_map(self_type const &other)
+      : m_decomposed(other.m_decomposed),
+        m_memory_size_byte(other.m_memory_size_byte),
+        m_capacity{other.m_capacity}, m_memory{other.m_memory},
+        m_allocator{other.m_allocator},
+        m_kernel_size_map{other.m_kernel_size_map},
+        m_kernel_offset_map{other.m_kernel_offset_map}, kernels{*this},
+        in_maps{*this}, out_maps{*this} {
+    LOG_DEBUG("gpu_kernel_map copy constructor");
+    kernels.data(m_memory.get());
+    in_maps.data(m_memory.get() + m_capacity);
+    out_maps.data(m_memory.get() + 2 * m_capacity);
+  }
+
   gpu_kernel_map(size_type capacity,
                  byte_allocator_type alloc = byte_allocator_type())
       : m_memory_size_byte(3 * capacity * sizeof(index_type)),
-        m_capacity{capacity}, m_memory{nullptr},
+        m_capacity{capacity},
         m_allocator{alloc}, kernels{*this}, in_maps{*this}, out_maps{*this} {
-    m_memory = reinterpret_cast<index_type *>(
+
+    index_type *ptr = reinterpret_cast<index_type *>(
         m_allocator.allocate(m_memory_size_byte));
-    kernels.data(m_memory);
-    in_maps.data(m_memory + m_capacity);
-    out_maps.data(m_memory + 2 * m_capacity);
+
+    auto deleter = [](index_type *p, byte_allocator_type alloc,
+                      size_type size) {
+      alloc.deallocate(reinterpret_cast<char *>(p), size);
+      LOG_DEBUG("Deallocate kernel map");
+    };
+
+    m_memory = std::shared_ptr<index_type[]>{
+        ptr, std::bind(deleter, std::placeholders::_1, m_allocator,
+                       m_memory_size_byte)};
+
+    kernels.data(m_memory.get());
+    in_maps.data(m_memory.get() + m_capacity);
+    out_maps.data(m_memory.get() + 2 * m_capacity);
   }
-  ~gpu_kernel_map() {
-    m_allocator.deallocate(reinterpret_cast<char *>(m_memory),
-                           m_memory_size_byte);
+
+  self_type &operator=(self_type const &other) {
+    m_decomposed = other.m_decomposed;
+    m_memory_size_byte = other.m_memory_size_byte;
+    m_capacity = other.m_capacity;
+
+    m_memory = other.m_memory;
+    m_allocator = other.m_allocator;
+
+    m_kernel_size_map = other.m_kernel_size_map;
+    m_kernel_offset_map = other.m_kernel_offset_map;
+
+    kernels.data(m_memory.get());
+    in_maps.data(m_memory.get() + m_capacity);
+    out_maps.data(m_memory.get() + 2 * m_capacity);
+
+    return *this;
   }
 
   // functions
-  inline index_type *data() { return m_memory; }
+  inline index_type *data() { return m_memory.get(); }
 
   void decompose() {
     // the memory space must be initialized first!
@@ -185,7 +251,7 @@ public:
 private:
   bool m_decomposed{false};
   size_type m_memory_size_byte, m_capacity;
-  index_type *m_memory;
+  std::shared_ptr<index_type[]> m_memory;
   byte_allocator_type m_allocator;
 
   std::unordered_map<index_type, index_type> m_kernel_size_map;

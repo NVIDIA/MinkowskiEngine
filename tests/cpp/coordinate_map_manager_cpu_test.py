@@ -12,7 +12,7 @@ class CoordinateMapManagerTestCase(unittest.TestCase):
             torch.all(coordinates[unique_map.long()][inverse_map.long()] == coordinates)
         )
 
-    def direct_test(self):
+    def test_kernel_map(self):
         coordinates = torch.IntTensor([[0, 1], [0, 2], [1, 2], [1, 3]])
         manager = _C.CoordinateMapManager()
         key, (unique_map, inverse_map) = manager.insert_and_map(coordinates, [1], "1")
