@@ -94,6 +94,26 @@ struct insert_and_map_functor<coordinate_type, TemplatedAllocator,
   }
 };
 
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+struct kernel_map_functor<
+    coordinate_type, TemplatedAllocator, CoordinateMapGPU,
+    gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>>> {
+
+  gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>>
+  operator()(
+      CoordinateMapGPU<coordinate_type, TemplatedAllocator> const &in_map,
+      CoordinateMapGPU<coordinate_type, TemplatedAllocator> const &out_map,
+      cpu_kernel_region<coordinate_type> &kernel) {
+    LOG_DEBUG("cpu_kernel_region initialized with volume", kernel.volume());
+    kernel.to_gpu();
+    auto gpu_kernel = gpu_kernel_region<coordinate_type>(kernel);
+    LOG_DEBUG("gpu_kernel_region initialization");
+
+    return in_map.kernel_map(out_map, gpu_kernel, CUDA_NUM_THREADS);
+  }
+};
+
 } // namespace detail
 
 template class CoordinateMapManager<int32_t, detail::default_allocator,

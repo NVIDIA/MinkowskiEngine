@@ -126,7 +126,7 @@ at::Tensor region_iterator_test(const torch::Tensor &coordinates,
   }
 
   auto cpu_kernel = cpu_kernel_region<coordinate_type>(
-      REGION_TYPE::HYPER_CUBE, coordinate_size, tensor_stride.data(),
+      RegionType::HYPER_CUBE, coordinate_size, tensor_stride.data(),
       kernel_size.data(), dilation.data());
   auto kernel = gpu_kernel_region<coordinate_type>(cpu_kernel.to_gpu());
 
@@ -195,18 +195,13 @@ kernel_map_test(const torch::Tensor &in_coordinates,
   CoordinateMapGPU<coordinate_type> out_map{N_out, D, occupancy};
 
   auto in_coordinate_range = coordinate_range<coordinate_type>(N_in, D, ptr_in);
-  thrust::counting_iterator<uint32_t> iter{0};
   in_map.insert(in_coordinate_range.begin(), // key begin
-                in_coordinate_range.end(),   // key end
-                iter,                        // value begin
-                iter + N_in);                // value end
+                in_coordinate_range.end());  // key end
 
   auto out_coordinate_range =
       coordinate_range<coordinate_type>(N_out, D, ptr_out);
   out_map.insert(out_coordinate_range.begin(), // key begin
-                 out_coordinate_range.end(),   // key end
-                 iter,                         // value begin
-                 iter + N_out);                // value end
+                 out_coordinate_range.end());  // key end
 
   LOG_DEBUG("coordinate initialization");
 
@@ -222,7 +217,7 @@ kernel_map_test(const torch::Tensor &in_coordinates,
   }
 
   auto region = cpu_kernel_region<coordinate_type>(
-      REGION_TYPE::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
+      RegionType::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
       dilation.data());
   LOG_DEBUG("cpu_kernel_region initialized with volume", region.volume());
   region.to_gpu();

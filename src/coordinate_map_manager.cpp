@@ -404,8 +404,9 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
                                    CoordinateMapType, kernel_map_type>()(
             in_map, out_map, kernel_region);
 
-    LOG_DEBUG("kernel_map size", kernel_map.first.size());
+    LOG_DEBUG("kernel_map done");
     m_kernel_maps[kernel_map_key] = std::move(kernel_map);
+    LOG_DEBUG("kernel_map saved");
   }
 
   // TODO check if it copies or moves the internal data

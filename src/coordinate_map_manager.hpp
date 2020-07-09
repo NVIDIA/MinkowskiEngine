@@ -179,8 +179,10 @@ public:
                                        detail::coordinate_map_key_comparator>;
   using kernel_map_type =
 #ifndef CPU_ONLY
-      std::conditional<detail::is_cpu_coordinate_map<CoordinateMapType>::value,
-                       cpu_kernel_map, gpu_kernel_map>::type;
+      typename std::conditional<
+          detail::is_cpu_coordinate_map<CoordinateMapType>::value,
+          cpu_kernel_map,
+          gpu_kernel_map<index_type, TemplatedAllocator<char>>>::type;
 #else
       cpu_kernel_map;
 #endif
