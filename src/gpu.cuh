@@ -147,7 +147,7 @@ const char *cublasGetErrorString(cublasStatus_t error);
 // CUSparse error reporting.
 const char *cusparseGetErrorString(cusparseStatus_t error);
 
-constexpr uint32_t CUDA_NUM_THREADS = 256;
+constexpr uint32_t CUDA_NUM_THREADS = 128;
 
 constexpr uint32_t SHARED_BLOCK_SIZE = 32;
 

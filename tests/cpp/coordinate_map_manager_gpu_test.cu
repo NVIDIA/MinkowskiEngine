@@ -70,6 +70,10 @@ std::vector<at::Tensor> to_torch(container_type const &maps) {
 
 } // namespace detail
 
+using manager_type =
+    CoordinateMapManager<coordinate_type, detail::c10_allocator,
+                         CoordinateMapGPU>;
+
 std::tuple<py::object, py::object, std::pair<at::Tensor, at::Tensor>>
 coordinate_map_manager_test(const torch::Tensor &coordinates,
                             std::string string_id) {
@@ -85,9 +89,6 @@ coordinate_map_manager_test(const torch::Tensor &coordinates,
   torch::checkDim(c, arg_coordinates, 2);
 
   auto const D = (index_type)coordinates.size(1);
-  using manager_type =
-      CoordinateMapManager<coordinate_type, detail::c10_allocator,
-                           CoordinateMapGPU>;
   manager_type *p_manager = new manager_type();
   py::object py_manager = py::cast(p_manager);
   stride_type tensor_stride;
@@ -102,13 +103,20 @@ coordinate_map_manager_test(const torch::Tensor &coordinates,
                          std::get<1>(key_and_map));
 }
 
+py::object coordinate_map_manager_stride(manager_type *p_manager,
+                                         CoordinateMapKey const *p_map_key,
+                                         stride_type const &stride_size) {
+  auto key_bool = p_manager->stride(p_map_key->get_key(), stride_size);
+
+  auto key = CoordinateMapKey(stride_size.size() + 1, std::get<0>(key_bool));
+  return py::cast(key);
+}
+
 std::pair<std::vector<at::Tensor>, std::vector<at::Tensor>>
-coordinate_map_manager_kernel_map(py::object manager, py::object in_map_key,
-                                  py::object out_map_key,
+coordinate_map_manager_kernel_map(py::object manager,
+                                  CoordinateMapKey const *p_in_map_key,
+                                  CoordinateMapKey const *p_out_map_key,
                                   stride_type const &kernel_size) {
-  using manager_type =
-      CoordinateMapManager<coordinate_type, detail::c10_allocator,
-                           CoordinateMapGPU>;
   manager_type *p_manager = py::cast<manager_type *>(manager);
 
   stride_type kernel_stride;
@@ -122,7 +130,7 @@ coordinate_map_manager_kernel_map(py::object manager, py::object in_map_key,
       {0}, torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0));
 
   auto const &kernel_map = p_manager->kernel_map(
-      in_map_key, out_map_key, kernel_size, kernel_stride, kernel_dilation,
+      p_in_map_key, p_out_map_key, kernel_size, kernel_stride, kernel_dilation,
       RegionType::HYPER_CUBE, offset, false, false);
   LOG_DEBUG("kernel_map generated");
 
@@ -168,6 +176,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   m.def("coordinate_map_manager_test", &minkowski::coordinate_map_manager_test,
         "Minkowski Engine coordinate map manager test");
+
+  m.def("coordinate_map_manager_stride",
+        &minkowski::coordinate_map_manager_stride,
+        "Minkowski Engine coordinate map manager stride test");
+
   m.def("coordinate_map_manager_kernel_map",
         &minkowski::coordinate_map_manager_kernel_map,
         "Minkowski Engine coordinate map manager test");

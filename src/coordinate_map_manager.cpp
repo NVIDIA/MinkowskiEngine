@@ -28,6 +28,7 @@
 #include "coordinate_map_key.hpp"
 #include "kernel_region.hpp"
 #include "utils.hpp"
+#include "errors.hpp"
 
 #include <pybind11/pybind11.h>
 #include <string>
@@ -130,32 +131,6 @@ CoordsManager<MapType>::getCoordsKey(const vector<int> &tensor_strides) const {
          "The coord map doesn't exist for the given tensor strides ",
          "tensor_stride: ", ArrToString(tensor_strides));
   return tensor_stride_hash;
-}
-
-template <typename MapType>
-bool CoordsManager<MapType>::existsCoordsKey(const uint64_t coords_key) const {
-  return coords_maps.find(coords_key) != coords_maps.end();
-}
-
-template <typename MapType>
-bool CoordsManager<MapType>::existsCoordsKey(py::object py_coords_key) const {
-  CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
-  return existsCoordsKey(p_coords_key->getKey());
-}
-
-template <typename MapType>
-int CoordsManager<MapType>::getCoordsSize(const uint64_t coords_key) const {
-  const auto &coords_map_iter = coords_maps.find(coords_key);
-  ASSERT(coords_map_iter != coords_maps.end(),
-         "The coord map doesn't exist for the given coords_key: ",
-         to_string(coords_key), ".");
-  return coords_map_iter->second.size();
-}
-
-template <typename MapType>
-int CoordsManager<MapType>::getCoordsSize(py::object py_coords_key) const {
-  CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
-  return getCoordsSize(p_coords_key->getKey());
 }
 
 template <typename MapType>
@@ -310,6 +285,32 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
   return std::make_pair(py_key, std::move(map_inverse_map));
 }
 
+// stride
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<coordinate_map_key_type, bool>
+CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
+    stride(coordinate_map_key_type const &in_map_key,
+           stride_type const &kernel_stride) {
+  ASSERT(exists(in_map_key), ERROR_MAP_NOT_FOUND);
+  // check if the key exists.
+  coordinate_map_key_type out_map_key = std::make_pair(
+      detail::stride_tensor_stride(in_map_key.first, kernel_stride), "");
+  bool const exists_out_map = exists(out_map_key);
+  if (!exists_out_map) {
+    // operator[] required mapped_type(), which is not defined.
+    // ASSERTION already checked that in_map_key exists.
+    map_type const &in_map = m_coordinate_maps.find(in_map_key)->second;
+    map_type out_map = in_map.stride(kernel_stride);
+    insert(out_map_key, out_map);
+  }
+  return std::make_pair(out_map_key, !exists_out_map);
+}
+
+// Kernel map
+
 namespace detail {
 
 template <typename coordinate_type>
@@ -319,6 +320,7 @@ struct kernel_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
   cpu_kernel_map
   operator()(CoordinateMapCPU<coordinate_type, std::allocator> const &in_map,
              CoordinateMapCPU<coordinate_type, std::allocator> const &out_map,
+             CUDAKernelMapMode::Mode kernel_map_mode,
              cpu_kernel_region<coordinate_type> &kernel) {
     return in_map.kernel_map(out_map, kernel);
   }
@@ -337,8 +339,8 @@ template <typename coordinate_type,
 typename CoordinateMapManager<coordinate_type, TemplatedAllocator,
                               CoordinateMapType>::kernel_map_type const &
 CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
-    kernel_map(py::object const &py_in_coords_key,
-               py::object const &py_out_coords_key,
+    kernel_map(CoordinateMapKey const *p_in_map_key,
+               CoordinateMapKey const *p_out_map_key,
                stride_type const &kernel_size, //
                stride_type const &kernel_stride,
                stride_type const &kernel_dilation,
@@ -348,10 +350,6 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
   ASSERT(offset.is_cuda() ==
              !detail::is_cpu_coordinate_map<CoordinateMapType>::value,
          "Invalid device for offset");
-
-  CoordinateMapKey *p_in_map_key = py_in_coords_key.cast<CoordinateMapKey *>();
-  CoordinateMapKey *p_out_map_key =
-      py_out_coords_key.cast<CoordinateMapKey *>();
 
   size_type kernel_dim = kernel_size.size();
 
@@ -402,7 +400,7 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     auto const kernel_map =
         detail::kernel_map_functor<coordinate_type, TemplatedAllocator,
                                    CoordinateMapType, kernel_map_type>()(
-            in_map, out_map, kernel_region);
+            in_map, out_map, m_kernel_map_mode, kernel_region);
 
     LOG_DEBUG("kernel_map done");
     m_kernel_maps[kernel_map_key] = std::move(kernel_map);
@@ -944,6 +942,7 @@ void CoordsManager<MapType>::printDiagnostics(py::object py_coords_key) const {
   map_iter->second.print();
 }
 */
+
 /*
  * Return row indices for each batch index
  */

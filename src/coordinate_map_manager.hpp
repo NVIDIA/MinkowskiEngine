@@ -29,6 +29,7 @@
 
 #include "coordinate_map.hpp"
 #include "coordinate_map_cpu.hpp"
+#include "coordinate_map_key.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 
@@ -82,7 +83,7 @@ struct coordinate_map_key_hasher {
 
 struct coordinate_map_key_comparator {
   bool operator()(coordinate_map_key_type const &lhs,
-                  coordinate_map_key_type const &rhs) {
+                  coordinate_map_key_type const &rhs) const {
     auto vec_less = lhs.first < rhs.first;
     if (!vec_less && (lhs.first == rhs.first)) {
       return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(),
@@ -189,7 +190,10 @@ public:
 
 public:
   // allocator backend will be ignored when coordinate map backend is CPU
-  CoordinateMapManager(size_type num_threads = 0) {
+  CoordinateMapManager(CUDAKernelMapMode::Mode kernel_map_mode =
+                           CUDAKernelMapMode::SPEED_OPTIMIZED,
+                       size_type num_threads = 0)
+      : m_kernel_map_mode(kernel_map_mode) {
     if (num_threads > 0) {
       // Doesn't seem to work. use `export OMP_NUM_THREADS=N;` in bash.
       omp_set_dynamic(0);
@@ -198,6 +202,10 @@ public:
   }
   ~CoordinateMapManager() { // clear();
   }
+
+  /****************************************************************************
+   * Coordinate generation, modification, and initialization entry functions
+   ****************************************************************************/
 
   /*
    * New coordinate map initialzation function.
@@ -209,17 +217,60 @@ public:
                  stride_type const tensor_stride,
                  std::string const string_id = "");
 
+  /*
+   * Generate a new coordinate_map if it doesn't exists
+   */
+  // returns out_map_key and flag which is true if a new map is created
+  std::pair<coordinate_map_key_type, bool>
+  stride(coordinate_map_key_type const &in_map_key,
+         stride_type const &kernel_stride);
+
+  /****************************************************************************
+   * Coordinate management helper functions
+   ****************************************************************************/
+  bool insert(coordinate_map_key_type map_key, map_type &map) {
+    LOG_DEBUG("insert map with tensor_stride", map_key.first);
+    auto result = m_coordinate_maps.insert(
+        std::make_pair<coordinate_map_key_type, map_type>(std::move(map_key),
+                                                          std::move(map)));
+    LOG_DEBUG("map insertion", result.second);
+    return result.second;
+  }
+
+  inline bool exists(coordinate_map_key_type const &key) const noexcept {
+    return m_coordinate_maps.find(key) != m_coordinate_maps.end();
+  }
+
+  // when the key is the python coordinate map key
+  inline bool exists(CoordinateMapKey const *p_key) const {
+    // key set exception
+    return exists(p_key->get_key());
+  }
+
+  inline size_type size(coordinate_map_key_type const &key) const {
+    auto it = m_coordinate_maps.find(key);
+    ASSERT(it != m_coordinate_maps.end(), "key not found");
+    return it->second.size();
+  }
+
+  inline size_type size(CoordinateMapKey const *p_key) const {
+    return size(p_key->get_key());
+  }
+
+  /****************************************************************************
+   * Kernel map related functions
+   ****************************************************************************/
+
   // return kernel map. for cpu it is {in maps, out maps}.
   // For gpu it could be {in maps, out maps}, or {kernel index, in map, out map}
   kernel_map_type const &
-  kernel_map(py::object const &py_in_coords_key,        //
-             py::object const &py_out_coords_key,       //
+  kernel_map(CoordinateMapKey const *py_in_coords_key,  //
+             CoordinateMapKey const *py_out_coords_key, //
              stride_type const &kernel_size,            //
              stride_type const &kernel_stride,          //
              stride_type const &kernel_dilation,        //
              RegionType::region_type const region_type, //
              at::Tensor const &offsets, bool is_transpose, bool is_pool);
-
   /*
   void printDiagnostics(py::object py_coords_key) const;
 
@@ -371,31 +422,13 @@ force_creation = false);
 #endif // CPU_ONLY
   */
 
-  coordinate_map_key_type get_random_string_id(stride_type const &tensor_stride,
-                                               std::string string_id) {
-    coordinate_map_key_type key =
-        std::make_pair(tensor_stride, string_id + '-' + random_string(5));
-    while (m_coordinate_maps.find(key) != m_coordinate_maps.end()) {
-      key = std::make_pair(tensor_stride, string_id + '-' + random_string(5));
-    }
-    return key;
-  }
-
-  bool insert(coordinate_map_key_type map_key, map_type &map) {
-    LOG_DEBUG("insert map with tensor_stride", map_key.first);
-    auto result = m_coordinate_maps.insert(
-        std::make_pair<coordinate_map_key_type, map_type>(std::move(map_key),
-                                                          std::move(map)));
-    LOG_DEBUG("map insertion", result.second);
-    return result.second;
-  }
-
-  typename map_collection_type::iterator
-  find(coordinate_map_key_type const &map_key) {
-    return m_coordinate_maps.find(map_key);
-  }
-
 private:
+  void coordinate_map_key_check(CoordinateMapKey const *p_map_key) const {
+    ASSERT(p_map_key != nullptr, "Input coordinate map key not defined.");
+    ASSERT(p_map_key->is_key_set(), "Key not defined.");
+    ASSERT(exists(p_map_key->get_key()), "Key does not exist.");
+  }
+
   // random string generator
   std::string random_string(size_t length) {
     auto randchar = []() -> char {
@@ -408,6 +441,21 @@ private:
     std::string str(length, 0);
     std::generate_n(str.begin(), length, randchar);
     return str;
+  }
+
+  coordinate_map_key_type get_random_string_id(stride_type const &tensor_stride,
+                                               std::string string_id) {
+    coordinate_map_key_type key =
+        std::make_pair(tensor_stride, string_id + '-' + random_string(5));
+    while (m_coordinate_maps.find(key) != m_coordinate_maps.end()) {
+      key = std::make_pair(tensor_stride, string_id + '-' + random_string(5));
+    }
+    return key;
+  }
+
+  typename map_collection_type::iterator
+  find(coordinate_map_key_type const &map_key) {
+    return m_coordinate_maps.find(map_key);
   }
 
 private:
@@ -426,6 +474,9 @@ private:
 #endif
   // Track whether the batch indices are set
   bool is_batch_indices_set = false;
+
+  // kernel map mode
+  CUDAKernelMapMode::Mode m_kernel_map_mode;
 
   // In to out index mapping for each kernel, pooling
   // unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
@@ -454,10 +505,10 @@ template <typename coordinate_type,
           class CoordinateMapType,
           typename kernel_map_type>
 struct kernel_map_functor {
-
   kernel_map_type operator()(
       CoordinateMapType<coordinate_type, TemplatedAllocator> const &in_map,
       CoordinateMapType<coordinate_type, TemplatedAllocator> const &out_map,
+      CUDAKernelMapMode::Mode kernel_map_mode,
       cpu_kernel_region<coordinate_type> &kernel);
 };
 

@@ -104,13 +104,15 @@ struct kernel_map_functor<
   operator()(
       CoordinateMapGPU<coordinate_type, TemplatedAllocator> const &in_map,
       CoordinateMapGPU<coordinate_type, TemplatedAllocator> const &out_map,
+      CUDAKernelMapMode::Mode kernel_map_mode,
       cpu_kernel_region<coordinate_type> &kernel) {
     LOG_DEBUG("cpu_kernel_region initialized with volume", kernel.volume());
     kernel.to_gpu();
     auto gpu_kernel = gpu_kernel_region<coordinate_type>(kernel);
     LOG_DEBUG("gpu_kernel_region initialization");
 
-    return in_map.kernel_map(out_map, gpu_kernel, CUDA_NUM_THREADS);
+    return in_map.kernel_map(out_map, gpu_kernel, kernel_map_mode,
+                             CUDA_NUM_THREADS);
   }
 };
 

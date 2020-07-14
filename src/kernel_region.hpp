@@ -65,8 +65,11 @@ public:
     kernel_region_iterator() = delete;
     // Take the temporary memory space `p_coordinate` for dereference.
     MINK_CUDA_HOST_DEVICE
-    kernel_region_iterator(coordinate_type *tmp, kernel_region const &region)
-        : done(false), m_region{region}, m_tmp{tmp}, m_coordinate(m_tmp) {
+    kernel_region_iterator(coordinate_type *tmp, kernel_region const &region,
+                           index_type kernel_index = 0)
+        : done(false),
+          m_kernel_index(kernel_index), m_region{region}, m_tmp{tmp},
+          m_coordinate(m_tmp) {
       if (m_tmp != nullptr) {
         for (index_type i = 0; i < m_region.m_coordinate_size; ++i) {
           m_tmp[i] = m_region.m_lb[i];
@@ -119,6 +122,7 @@ public:
 
   private:
     bool done;
+    index_type m_kernel_index;
     kernel_region const &m_region;
     coordinate_type *m_tmp;
     coordinate<coordinate_type> m_coordinate;

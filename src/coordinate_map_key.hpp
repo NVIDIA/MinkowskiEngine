@@ -58,8 +58,8 @@ public:
   CoordinateMapKey(size_type dim, coordinate_map_key_type &key)
       : m_key_set(true), m_dimension{dim}, m_key(key) {
     ASSERT(dim > 0, "Invalid dimension");
-    ASSERT(dim - 1 == m_key.first.size(),
-           "Invalid tensor_stride:", m_key.first, "dimension:", dim);
+    ASSERT(dim - 1 == m_key.first.size(), "Invalid tensor_stride:", m_key.first,
+           "dimension:", dim);
   }
 
   CoordinateMapKey(stride_type tensor_stride, std::string string_id = "")
@@ -89,8 +89,12 @@ public:
     m_key_set = true;
   }
 
-  coordinate_map_key_type get_key() const { return m_key; }
-  bool is_key_set() const { return m_key_set; }
+  coordinate_map_key_type get_key() const {
+    ASSERT(is_key_set(), "Key not set");
+    return m_key;
+  }
+
+  bool is_key_set() const noexcept { return m_key_set; }
 
   /*
   void stride(stride_type const &strides) {
@@ -123,7 +127,7 @@ public:
   // misc functions
   std::string to_string() const {
     Formatter out;
-    out << "key:" << m_key.first << m_key.second;
+    out << "coordinate map key:" << m_key.first << ":" << m_key.second;
     return out;
   }
 

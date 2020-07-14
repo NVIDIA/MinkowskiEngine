@@ -1,4 +1,6 @@
-/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/*
+ * Copyright (c) 2020 NVIDIA Corporation.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,22 +35,35 @@
 
 namespace minkowski {
 
-template <typename MapType, typename Dtype>
-void ConvolutionForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                           at::Tensor kernel, vector<int> tensor_strides,
-                           vector<int> strides, vector<int> kernel_sizes,
-                           vector<int> dilations, int region_type,
-                           at::Tensor offsets, py::object py_in_coords_key,
-                           py::object py_out_coords_key,
-                           py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const auto &in_out = p_coords_manager->getInOutMaps(
-      tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
-      py_in_coords_key, py_out_coords_key, false);
+template <typename coordinate_type>
+at::Tensor
+ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
+                      at::Tensor const &kernel,                          //
+                      default_types::stride_type const &kernel_size,     //
+                      default_types::stride_type const &kernel_stride,   //
+                      default_types::stride_type const &kernel_dilation, //
+                      RegionType::Type const region_type,                //
+                      at::Tensor const &offsets,                         //
+                      CoordinateMapKey *p_in_map_key,                    //
+                      CoordinateMapKey *p_out_map_key,                   //
+                      py::object py_map_manager) {
+  using manager_type =
+      CoordinateMapManager<coordinate_type, std::allocator, CoordinateMapCPU>;
 
   ASSERT(in_feat.size(1) == kernel.size(1),
          "Input feature size and kernel size mismatch");
+
+  manager_type *p_map_manager = py_map_manager.cast<manager_type *>();
+
+  // create out coordinate map
+  // TODO: custom upsampling
+  p_map_manager->stride(py_in_map_key, py_out_map_key, kernel_stride);
+
+  cpu_kernel_map const &in_out = p_map_manager->kernel_map(
+      py_in_map_key, py_out_map_key, kernel_size, kernel_stride,
+      kernel_dilation, region_type, offsets, false, false);
+
+  at::Tensor out_feat = 
 
   int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
   out_feat.resize_({out_nrows, kernel.size(2)});

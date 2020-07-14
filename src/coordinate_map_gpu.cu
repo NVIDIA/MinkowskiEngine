@@ -444,7 +444,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map_type
 CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map(
     self_type const &out_coordinate_map,
     gpu_kernel_region<coordinate_type> const &kernel,
-    uint32_t thread_dim) const {
+    CUDAKernelMapMode::Mode kernel_map_mode, uint32_t thread_dim) const {
   // Over estimate the reserve size to be size();
   size_type const out_size = out_coordinate_map.size();
   size_type const kernel_volume = kernel.volume();

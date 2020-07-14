@@ -106,6 +106,14 @@ namespace GPUMemoryAllocatorBackend {
 enum Type { PYTORCH = 0, CUDA = 1 };
 }
 
+namespace MapManagerType {
+enum Type { CPU = 0, CUDA = 1, C10 = 2 };
+}
+
+namespace CUDAKernelMapMode {
+enum Mode { MEMORY_EFFICIENT = 0, SPEED_OPTIMIZED = 1 };
+}
+
 namespace CoordinateMapBackend {
 enum Type { CPU = 0, CUDA = 1 };
 }

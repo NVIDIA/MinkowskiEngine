@@ -150,6 +150,7 @@ public:
   self_type stride(stride_type const &stride) const;
   kernel_map_type kernel_map(self_type const &out_coordinate_map,
                              gpu_kernel_region<coordinate_type> const &kernel,
+                             CUDAKernelMapMode::Mode kernel_map_mode,
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
 
   // Returns the number of elements in the coordinate map
