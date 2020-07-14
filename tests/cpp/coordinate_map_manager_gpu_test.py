@@ -12,6 +12,14 @@ class CoordinateMapManagerTestCase(unittest.TestCase):
             torch.all(coordinates[unique_map.long()][inverse_map.long()] == coordinates)
         )
 
+    def test_stride(self):
+        coordinates = torch.IntTensor([[0, 1], [1, 2], [2, 3], [2, 3]]).to(0)
+        key, manager, map_inverse_map = _C.coordinate_map_manager_test(coordinates, "")
+        unique_map, inverse_map = map_inverse_map
+        stride = [2]
+        key = _C.coordinate_map_manager_stride(manager, key, stride)
+        print(key)
+
     def test_kernel_map(self):
         coordinates = torch.IntTensor([[0, 1], [0, 2], [1, 2], [1, 3]]).to(0)
         manager = _C.CoordinateMapManager()

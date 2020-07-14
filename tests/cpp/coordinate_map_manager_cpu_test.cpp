@@ -92,9 +92,23 @@ coordinate_map_manager_test(const torch::Tensor &coordinates,
                          std::get<1>(key_and_map));
 }
 
+py::object coordinate_map_manager_stride(py::object manager,
+                                         CoordinateMapKey const *p_map_key,
+                                         stride_type const &stride_size) {
+  using manager_type =
+      CoordinateMapManager<coordinate_type, std::allocator, CoordinateMapCPU>;
+  manager_type *p_manager = py::cast<manager_type *>(manager);
+
+  auto key_bool = p_manager->stride(p_map_key->get_key(), stride_size);
+
+  auto key = CoordinateMapKey(stride_size.size() + 1, std::get<0>(key_bool));
+  return py::cast(key);
+}
+
 std::pair<std::vector<at::Tensor>, std::vector<at::Tensor>>
-coordinate_map_manager_kernel_map(py::object manager, py::object in_map_key,
-                                  py::object out_map_key,
+coordinate_map_manager_kernel_map(py::object manager,
+                                  CoordinateMapKey const *p_in_map_key,
+                                  CoordinateMapKey const *p_out_map_key,
                                   stride_type const &kernel_size) {
   using manager_type =
       CoordinateMapManager<coordinate_type, std::allocator, CoordinateMapCPU>;
@@ -110,7 +124,7 @@ coordinate_map_manager_kernel_map(py::object manager, py::object in_map_key,
   auto offset = torch::empty({0}, torch::TensorOptions().dtype(torch::kInt32));
 
   cpu_kernel_map const &kernel_map = p_manager->kernel_map(
-      in_map_key, out_map_key, kernel_size, kernel_stride, kernel_dilation,
+      p_in_map_key, p_out_map_key, kernel_size, kernel_stride, kernel_dilation,
       RegionType::HYPER_CUBE, offset, false, false);
   LOG_DEBUG("kernel_map generated");
 
@@ -147,6 +161,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
                                              minkowski::CoordinateMapCPU>>(
       m, "CoordinateMapManager")
       .def(py::init<>())
+      .def(
+          "stride",
+          &minkowski::CoordinateMapManager<int32_t, std::allocator,
+                                           minkowski::CoordinateMapCPU>::stride)
       .def("insert_and_map", &minkowski::CoordinateMapManager<
                                  int32_t, std::allocator,
                                  minkowski::CoordinateMapCPU>::insert_and_map)
@@ -156,6 +174,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   m.def("coordinate_map_manager_test", &minkowski::coordinate_map_manager_test,
         "Minkowski Engine coordinate map manager test");
+
+  m.def("coordinate_map_manager_stride",
+        &minkowski::coordinate_map_manager_stride,
+        "Minkowski Engine coordinate map manager stride");
+
   m.def("coordinate_map_manager_kernel_map",
         &minkowski::coordinate_map_manager_kernel_map,
         "Minkowski Engine coordinate map manager test");
