@@ -119,7 +119,7 @@ enum Type { CPU = 0, CUDA = 1 };
 }
 
 namespace RegionType {
-enum region_type { HYPER_CUBE, HYPER_CROSS, CUSTOM };
+enum Type { HYPER_CUBE, HYPER_CROSS, CUSTOM };
 }
 
 /* Key for KernelMap
@@ -139,7 +139,7 @@ using kernel_map_key_type =
                default_types::stride_type, // kernel size
                default_types::stride_type, // kernel stride
                default_types::stride_type, // kernel dilation
-               RegionType::region_type,    // kernel region type
+               RegionType::Type,           // kernel region type
                bool,                       // is transpose
                bool                        // is pool
                >;

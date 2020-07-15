@@ -32,6 +32,12 @@ def _argparse(pattern, argv, is_flag=True):
 
 
 SOURCE_SETS = {
+    "convolution": [
+        CppExtension,
+        ["convolution_test.cpp"],
+        ["math_functions.cpp", "coordinate_map_manager.cpp", "convolution.cpp"],
+        ["-DCPU_ONLY"],
+    ],
     "coordinate_map_manager_cpu": [
         CppExtension,
         ["coordinate_map_manager_cpu_test.cpp"],
@@ -109,7 +115,7 @@ ext_modules = [
         ],
         extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS,},
         # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
-        # libraries=["coordinate_map_key"],
+        libraries=["openblas"],
     ),
 ]
 

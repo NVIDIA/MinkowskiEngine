@@ -86,7 +86,7 @@ coordinate_map_manager_test(const torch::Tensor &coordinates,
   }
 
   auto key_and_map =
-      p_manager->insert_and_map(coordinates, tensor_stride, string_id);
+      p_manager->insert_and_map<false>(coordinates, tensor_stride, string_id);
 
   return std::make_tuple(std::get<0>(key_and_map), py_manager,
                          std::get<1>(key_and_map));
@@ -165,9 +165,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
           "stride",
           &minkowski::CoordinateMapManager<int32_t, std::allocator,
                                            minkowski::CoordinateMapCPU>::stride)
-      .def("insert_and_map", &minkowski::CoordinateMapManager<
-                                 int32_t, std::allocator,
-                                 minkowski::CoordinateMapCPU>::insert_and_map)
+      .def("insert_and_map",
+           &minkowski::CoordinateMapManager<
+               int32_t, std::allocator,
+               minkowski::CoordinateMapCPU>::insert_and_map<false>)
       .def("kernel_map", &minkowski::CoordinateMapManager<
                              int32_t, std::allocator,
                              minkowski::CoordinateMapCPU>::kernel_map);

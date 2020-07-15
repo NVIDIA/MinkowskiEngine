@@ -139,7 +139,7 @@ public:
 public:
   kernel_region() = delete;
   MINK_CUDA_HOST_DEVICE kernel_region(
-      RegionType::region_type type,
+      RegionType::Type region_type,
       size_type coordinate_size,      // Dimension of the coordinate
       size_type const *tensor_stride, // stride size between points
       size_type const *kernel_size,   // size of the kernel or region
@@ -147,7 +147,7 @@ public:
       size_type const volume = 0,     // kernel volume
       coordinate_type const *p_offset = nullptr, // m_coordinate_size * n_offset
       uint32_t n_offset = 0)
-      : m_region_type(type), m_coordinate_size{coordinate_size},
+      : m_region_type(region_type), m_coordinate_size{coordinate_size},
         m_num_offset{n_offset}, m_tensor_stride{tensor_stride},
         m_kernel_size{kernel_size},
         m_dilation{dilation}, m_volume{volume}, m_offset{p_offset} {
@@ -201,7 +201,7 @@ public:
     return const_iterator(nullptr, *this);
   }
 
-  MINK_CUDA_HOST_DEVICE RegionType::region_type region_type() const {
+  MINK_CUDA_HOST_DEVICE RegionType::Type region_type() const {
     return m_region_type;
   }
   MINK_CUDA_HOST_DEVICE inline size_type volume() const { return m_volume; }
@@ -249,7 +249,7 @@ private:
 
 protected:
   // flag indicating tensor_stride, kernel_size, dilation are on gpu
-  RegionType::region_type const m_region_type;
+  RegionType::Type const m_region_type;
   size_type const m_coordinate_size;
   size_type m_num_offset, m_volume{0};
 
@@ -273,7 +273,7 @@ public:
 public:
   cpu_kernel_region() = delete;
   cpu_kernel_region(
-      RegionType::region_type type,
+      RegionType::Type type,
       size_type coordinate_size,      // Dimension of the coordinate
       size_type const *tensor_stride, // stride size between points
       size_type const *kernel_size,   // size of the kernel or region

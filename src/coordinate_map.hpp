@@ -27,7 +27,6 @@
 #define COORDINATE_MAP_HPP
 
 #include "coordinate.hpp"
-#include "coordinate_unordered_map.hpp"
 #include "kernel_region.hpp"
 #include "types.hpp"
 

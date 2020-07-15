@@ -25,8 +25,8 @@
 #ifndef CPU_CONVOLUTION
 #define CPU_CONVOLUTION
 
-#include "common.hpp"
 #include "math_functions.hpp"
+#include "types.hpp"
 
 namespace minkowski {
 
@@ -34,18 +34,18 @@ template <typename Dtype, typename Itype>
 void ConvolutionForwardKernelCPU(const Dtype *p_in_feat, int in_nchannel,
                                  Dtype *p_out_feat, int out_nchannel,
                                  const Dtype *p_kernel,
-                                 const InOutMaps<Itype> &in_map,
-                                 const InOutMaps<Itype> &out_map) {
+                                 const cpu_in_maps &in_maps,
+                                 const cpu_out_maps &out_maps) {
   int kernel_volume, n_active_in_volume, row;
   std::vector<Dtype> input_buffer, output_buffer;
 
   // Number of weights
-  kernel_volume = in_map.size();
+  kernel_volume = in_maps.size();
 
   // Iterate through each spatial kernel out of filter_volume spatial kernels
   // for (auto &current_in2out : in2out) {
   for (int k = 0; k < kernel_volume; k++) {
-    n_active_in_volume = in_map[k].size();
+    n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
       continue;
 
@@ -55,7 +55,7 @@ void ConvolutionForwardKernelCPU(const Dtype *p_in_feat, int in_nchannel,
     // Gather all features (im2col)
     for (row = 0; row < n_active_in_volume; row++)
       std::memcpy(&input_buffer[row * in_nchannel],
-                  p_in_feat + in_map[k][row] * in_nchannel,
+                  p_in_feat + in_maps[k][row] * in_nchannel,
                   sizeof(Dtype) * in_nchannel);
 
     // C := alpha*op(A)*op(B) + beta*C
@@ -71,7 +71,7 @@ void ConvolutionForwardKernelCPU(const Dtype *p_in_feat, int in_nchannel,
 
     // Put it back to the correct index
     for (row = 0; row < n_active_in_volume; row++) {
-      Dtype *dst = &p_out_feat[out_map[k][row] * out_nchannel];
+      Dtype *dst = &p_out_feat[out_maps[k][row] * out_nchannel];
       Dtype *src = &output_buffer[row * out_nchannel];
       cpu_add<Dtype>(out_nchannel, src, dst, dst);
     }
@@ -83,17 +83,17 @@ void ConvolutionBackwardKernelCPU(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
                                   int in_nchannel, const Dtype *p_grad_out_feat,
                                   int out_nchannel, const Dtype *p_kernel,
                                   Dtype *p_grad_kernel,
-                                  const InOutMaps<Itype> &in_map,
-                                  const InOutMaps<Itype> &out_map) {
+                                  const cpu_in_maps &in_maps,
+                                  const cpu_out_maps &out_maps) {
   int kernel_volume, n_active_in_volume, row;
   std::vector<Dtype> input_buffer, output_buffer;
 
   // Number of weights
-  kernel_volume = in_map.size();
+  kernel_volume = in_maps.size();
 
   // for (auto &current_in2out : in2out) {
   for (int k = 0; k < kernel_volume; k++) {
-    n_active_in_volume = in_map[k].size();
+    n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
       continue;
 
@@ -103,7 +103,7 @@ void ConvolutionBackwardKernelCPU(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
     // Gather all features for a matrix multiplication (im2col)
     for (row = 0; row < n_active_in_volume; row++)
       std::memcpy(&output_buffer[row * out_nchannel],
-                  &p_grad_out_feat[out_map[k][row] * out_nchannel],
+                  &p_grad_out_feat[out_maps[k][row] * out_nchannel],
                   sizeof(Dtype) * out_nchannel);
 
     cpu_gemm<Dtype>(CblasColMajor, CblasTrans, CblasNoTrans,
@@ -120,14 +120,14 @@ void ConvolutionBackwardKernelCPU(const Dtype *p_in_feat, Dtype *p_grad_in_feat,
     // Accumulate gradients back to the input grad feat
     for (row = 0; row < n_active_in_volume; row++) {
       Dtype *src = &input_buffer[row * in_nchannel];
-      Dtype *dst = &p_grad_in_feat[in_map[k][row] * in_nchannel];
+      Dtype *dst = &p_grad_in_feat[in_maps[k][row] * in_nchannel];
       cpu_add<Dtype>(in_nchannel, src, dst, dst);
     }
 
     // Compute gradient for kernel
     for (row = 0; row < n_active_in_volume; row++)
       std::memcpy(&input_buffer[row * in_nchannel],
-                  p_in_feat + in_map[k][row] * in_nchannel,
+                  p_in_feat + in_maps[k][row] * in_nchannel,
                   sizeof(Dtype) * in_nchannel);
 
     cpu_gemm<Dtype>(CblasColMajor, CblasNoTrans, CblasTrans,

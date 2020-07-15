@@ -84,7 +84,7 @@ coordinate_map_inverse_test(const torch::Tensor &coordinates) {
   timer t;
   t.tic();
   std::pair<std::vector<int64_t>, std::vector<int64_t>> unique_inverse_map =
-      map.insert_and_map(ptr, ptr + N * D);
+      map.insert_and_map<false>(ptr, ptr + N * D);
   return std::make_pair<std::pair<std::vector<int64_t>, std::vector<int64_t>>,
                         double>(std::move(unique_inverse_map), t.toc());
 }
