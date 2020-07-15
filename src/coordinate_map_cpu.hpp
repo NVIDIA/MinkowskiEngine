@@ -45,11 +45,18 @@ public:
   using index_type                = typename base_type::index_type;
   using stride_type               = typename base_type::stride_type;
 
-  using map_type                  = CoordinateUnorderedMap<coordinate_type>;
-  using key_type                  = typename map_type::key_type;
-  using mapped_type               = typename map_type::mapped_type;
-  using value_type                = typename map_type::value_type;
+  using key_type       = coordinate<coordinate_type>;
+  using mapped_type    = default_types::index_type;
+  using hasher         = detail::coordinate_murmur3<coordinate_type>;
+  using key_equal      = detail::coordinate_equal_to<coordinate_type>;
+  using map_type       =
+      robin_hood::unordered_flat_map<key_type,    // key
+                                     mapped_type, // mapped_type
+                                     hasher,      // hasher
+                                     key_equal    // equality
+                                     >;
 
+  using value_type                = typename map_type::value_type;
   using iterator                  = typename map_type::iterator;
   using const_iterator            = typename map_type::const_iterator;
 
@@ -64,7 +71,10 @@ public:
                    stride_type const &stride = {1},
                    byte_allocator_type alloc = byte_allocator_type())
       : base_type(number_of_coordinates, coordinate_size, stride, alloc),
-        m_map(number_of_coordinates, coordinate_size) {}
+        m_map(
+            map_type{0, hasher{coordinate_size}, key_equal{coordinate_size}}) {
+    m_map.reserve(number_of_coordinates);
+  }
 
   /*
    * @brief given a key iterator begin-end pair and a value iterator begin-end
@@ -97,15 +107,20 @@ public:
    * >>> reconstructed_coordinates = unique_coordinates[inverse_mapping]
    * >>> torch.all(reconstructed_coordinates == input_coordinates)
    */
+  template <bool remap>
   std::pair<std::vector<int64_t>, std::vector<int64_t>> // return maps
   insert_and_map(coordinate_type const *coordinate_begin,
                  coordinate_type const *coordinate_end) {
     size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
-    base_type::allocate(N);
-    index_type value = 0;
+
     std::vector<int64_t> mapping, inverse_mapping;
+    base_type::allocate(N);
+    mapping.reserve(N);
+    inverse_mapping.reserve(N);
+
+    index_type value = 0;
     for (coordinate_type const *key = coordinate_begin; key != coordinate_end;
-         key += m_coordinate_size, ++value) {
+         key += m_coordinate_size) {
       // value_type ctor needed because this might be called with std::pair's
       auto const result = insert(key_type(key), value);
       if (result.second) {
@@ -115,7 +130,9 @@ public:
         // result.first is an iterator of pair<key, mapped_type>
         inverse_mapping.push_back(result.first->second);
       }
+      value += remap ? result.second : 1;
     }
+
     return std::make_pair(std::move(mapping), std::move(inverse_mapping));
   }
 
@@ -331,8 +348,8 @@ public:
   inline size_type size() const noexcept { return m_map.size(); }
 
   using base_type::capacity;
-  using base_type::get_tensor_stride;
   using base_type::coordinate_size;
+  using base_type::get_tensor_stride;
 
   inline void reserve(size_type c) {
     base_type::reserve(c);

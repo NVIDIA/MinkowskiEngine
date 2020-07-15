@@ -26,9 +26,9 @@
  */
 #include "coordinate_map_manager.hpp"
 #include "coordinate_map_key.hpp"
+#include "errors.hpp"
 #include "kernel_region.hpp"
 #include "utils.hpp"
-#include "errors.hpp"
 
 #include <pybind11/pybind11.h>
 #include <string>
@@ -197,8 +197,8 @@ struct insert_and_map_functor<coordinate_type, std::allocator,
     coordinate_type *p_coordinate = th_coordinate.data_ptr<coordinate_type>();
     auto map = CoordinateMapCPU<coordinate_type, std::allocator>(
         N, coordinate_size, map_key.first);
-    auto map_inverse_map =
-        map.insert_and_map(p_coordinate, p_coordinate + N * coordinate_size);
+    auto map_inverse_map = map.template insert_and_map<true>(
+        p_coordinate, p_coordinate + N * coordinate_size);
     LOG_DEBUG("mapping size:", map_inverse_map.first.size());
 
     // insert moves map
@@ -344,8 +344,8 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
                stride_type const &kernel_size, //
                stride_type const &kernel_stride,
                stride_type const &kernel_dilation,
-               RegionType::region_type const region_type,
-               at::Tensor const &offset, bool is_transpose, bool is_pool) {
+               RegionType::Type const region_type, at::Tensor const &offset,
+               bool is_transpose, bool is_pool) {
   ASSERT(region_type != RegionType::CUSTOM, "Not implemented yet.");
   ASSERT(offset.is_cuda() ==
              !detail::is_cpu_coordinate_map<CoordinateMapType>::value,
@@ -1026,6 +1026,7 @@ CoordsManager<MapType>::getRowIndicesPerBatch(py::object py_in_coords_key,
 }
 */
 
-template class CoordinateMapManager<int32_t, std::allocator, CoordinateMapCPU>;
+template class CoordinateMapManager<default_types::dcoordinate_type,
+                                    std::allocator, CoordinateMapCPU>;
 
 } // end namespace minkowski

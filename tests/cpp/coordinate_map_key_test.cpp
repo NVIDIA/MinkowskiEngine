@@ -41,6 +41,12 @@ py::object coordinate_map_key_return(default_types::stride_type tensor_stride,
   return py::cast(new CoordinateMapKey(tensor_stride, string_id));
 }
 
+void coordinate_map_key_update(CoordinateMapKey *map_key,
+                               default_types::stride_type tensor_stride,
+                               std::string string_id) {
+  map_key->set_key(tensor_stride, string_id);
+}
+
 } // namespace minkowski
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -61,4 +67,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   m.def("coordinate_map_key_test", &minkowski::coordinate_map_key_test,
         "Minkowski Engine coordinate map key test");
+
+  m.def("coordinate_map_key_update", &minkowski::coordinate_map_key_update,
+        "Minkowski Engine coordinate map key update test");
 }

@@ -103,7 +103,7 @@ struct kernel_map_key_comparator {
     stride_type const &lkernel_size = std::get<2>(lhs);
     // stride_type const &lkernel_stride = std::get<3>(lhs);
     stride_type const &lkernel_dilation = std::get<3>(lhs);
-    // RegionType::region_type const &lregion_type = std::get<4>(lhs);
+    // RegionType::Type const &lregion_type = std::get<4>(lhs);
     // bool const &lis_transpose = std::get<5>(lhs);
     // bool const &lis_pool = std::get<6>(lhs);
 
@@ -112,7 +112,7 @@ struct kernel_map_key_comparator {
     stride_type const &rkernel_size = std::get<2>(rhs);
     // stride_type const &rkernel_stride = std::get<3>(rhs);
     stride_type const &rkernel_dilation = std::get<3>(rhs);
-    // RegionType::region_type const &rregion_type = std::get<4>(rhs);
+    // RegionType::Type const &rregion_type = std::get<4>(rhs);
     // bool const &ris_transpose = std::get<5>(rhs);
     // bool const &ris_pool = std::get<6>(rhs);
 
@@ -225,6 +225,13 @@ public:
   stride(coordinate_map_key_type const &in_map_key,
          stride_type const &kernel_stride);
 
+  // python-side stride function
+  py::object stride(CoordinateMapKey const *in_map_key,
+                    stride_type const &kernel_stride) {
+    auto key = std::get<0>(stride(in_map_key->get_key(), kernel_stride));
+    return py::cast(new CoordinateMapKey(key.first.size() + 1, key));
+  }
+
   /****************************************************************************
    * Coordinate management helper functions
    ****************************************************************************/
@@ -257,6 +264,12 @@ public:
     return size(p_key->get_key());
   }
 
+  inline size_type capacity(coordinate_map_key_type const &key) const {
+    auto it = m_coordinate_maps.find(key);
+    ASSERT(it != m_coordinate_maps.end(), "key not found");
+    return it->second.capacity();
+  }
+
   /****************************************************************************
    * Kernel map related functions
    ****************************************************************************/
@@ -269,7 +282,7 @@ public:
              stride_type const &kernel_size,            //
              stride_type const &kernel_stride,          //
              stride_type const &kernel_dilation,        //
-             RegionType::region_type const region_type, //
+             RegionType::Type const region_type,        //
              at::Tensor const &offsets, bool is_transpose, bool is_pool);
   /*
   void printDiagnostics(py::object py_coords_key) const;
@@ -513,6 +526,23 @@ struct kernel_map_functor {
 };
 
 } // namespace detail
+
+// type defs
+template <typename coordinate_type>
+using cpu_manager_type =
+    CoordinateMapManager<coordinate_type, std::allocator, CoordinateMapCPU>;
+
+#ifndef CPU_ONLY
+template <typename coordinate_type>
+using gpu_default_manager_type =
+    CoordinateMapManager<coordinate_type, detail::default_allocator,
+                         CoordinateMapGPU>;
+
+template <typename coordinate_type>
+using gpu_c10_manager_type =
+    CoordinateMapManager<coordinate_type, detail::c10_allocator,
+                         CoordinateMapGPU>;
+#endif
 
 } // namespace minkowski
 
