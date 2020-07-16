@@ -10,6 +10,7 @@ rm -rf build; CXX=g++; python setup.py install <test_name>
 
 ```
 python -m unittest <test_name>
+python -m unittest <test_name> --nodebug # to remove deub flags
 ```
 
 e.g.

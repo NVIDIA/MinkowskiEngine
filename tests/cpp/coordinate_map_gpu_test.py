@@ -17,14 +17,16 @@ class CoordinateMapTestCase(unittest.TestCase):
 
     def test_mapping(self):
         assert torch.cuda.is_available()
-        coordinates = torch.IntTensor([[0, 1], [1, 2], [2, 3], [2, 3]]).to(0)
+        coordinates = torch.IntTensor(
+            [[0, 1], [1, 2], [2, 3], [2, 3], [3, 2], [3, 2]]
+        ).to(0)
         (
             mapping,
             inverse_mapping,
         ) = MinkowskiEngineTest._C.coordinate_map_inverse_map_test(coordinates)
         print(mapping)
         print(inverse_mapping)
-        self.assertEqual(len(mapping), 3)
+        self.assertEqual(len(mapping), 4)
         self.assertTrue(
             torch.all(
                 coordinates[mapping.long()][inverse_mapping.long()] == coordinates

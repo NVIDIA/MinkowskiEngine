@@ -30,7 +30,8 @@
 // Use the torch for GPU memory management. Thrust resize gives segfulat during
 // debugging -g #include <torch/extension.h>
 
-#include "convolution.cuh"
+#include "convolution_kernel.cuh"
+#include "allocators.cuh"
 
 /**
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
@@ -209,19 +210,21 @@ __global__ void matmul2(const Dtype *A, const int wA, const int hA,
 
 namespace minkowski {
 
-template <typename Dtype, typename Itype>
-void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
-                                 Dtype *d_out_feat, int out_nchannel,
-                                 const Dtype *d_kernel,
-                                 const pInOutMaps<Itype> &in_maps,
-                                 const pInOutMaps<Itype> &out_maps,
-                                 int out_nrows, cublasHandle_t cuhandle,
-                                 cudaStream_t stream) {
+template <typename Dtype, typename Itype, typename ByteAllocator>
+void ConvolutionForwardKernelGPU(
+    Dtype const *d_in_feat,                      //
+    default_types::size_type const in_nchannel,   //
+    Dtype *d_out_feat,                           //
+    default_types::size_type const out_nchannel, //
+    Dtype const *d_kernel,
+    gpu_kernel_map<Itype, ByteAllocator> const &kernel_map,
+    default_types::size_type const out_nrows, //
+    cublasHandle_t cuhandle, cudaStream_t stream) {
 
   CUDA_CHECK_ARGS(cudaDeviceSynchronize(),
                   ". Error triggered from a previous kernel call.");
 
-  int n_active_in_volume, shared_mem_size = -1;
+  size_t n_active_in_volume, shared_mem_size = -1;
 
   // Define the shared memory size
   if ((in_nchannel > 16 && out_nchannel > 16 &&
@@ -239,18 +242,20 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
   dim3 threads(shared_mem_size, shared_mem_size);
 
   // Iterate through each spatial kernel and get indices for in_map and out_map
-  for (int k = 0; k < in_maps.size(); k++) {
-    n_active_in_volume = in_maps[k].size();
+  for (auto it = kernel_map.key_cbegin(); it != kernel_map.key_cend(); ++it) {
+    auto const k = it->first;
+    n_active_in_volume = kernel_map.size(k);
     if (n_active_in_volume == 0)
       continue;
 
-    int num_grid = (n_active_in_volume + shared_mem_size - 1) / shared_mem_size;
-    int num_div = (num_grid + MAX_GRID - 1) / MAX_GRID;
-    int step = (n_active_in_volume + num_div - 1) / num_div;
+    size_t num_grid =
+        (n_active_in_volume + shared_mem_size - 1) / shared_mem_size;
+    size_t num_div = (num_grid + MAX_GRID - 1) / MAX_GRID;
+    size_t step = (n_active_in_volume + num_div - 1) / num_div;
 
-    for (int s = 0; s < num_div; s++) {
-      int remainder = n_active_in_volume - step * s;
-      int curr_num_active = remainder < step ? remainder : step;
+    for (size_t s = 0; s < num_div; s++) {
+      size_t remainder = n_active_in_volume - step * s;
+      size_t curr_num_active = remainder < step ? remainder : step;
       dim3 grid((out_nchannel + threads.x - 1) / threads.x,
                 (curr_num_active + threads.y - 1) / threads.y);
       switch (shared_mem_size) {
@@ -258,25 +263,29 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
         matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, kernel_map.in_maps.begin(k),
+            kernel_map.out_maps.begin(k));
         break;
       case 24:
         matmul<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, kernel_map.in_maps.begin(k),
+            kernel_map.out_maps.begin(k));
         break;
       case 16:
         matmul<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, kernel_map.in_maps.begin(k),
+            kernel_map.out_maps.begin(k));
         break;
       case 8:
         matmul<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, kernel_map.in_maps.begin(k),
+            kernel_map.out_maps.begin(k));
         break;
       }
     }
@@ -285,32 +294,60 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
   CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-template void ConvolutionForwardKernelGPU<float, int32_t>(
-    const float *d_in_feat, int in_nchannel, float *d_out_feat,
-    int out_nchannel, const float *d_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+// default_allocator
+template void
+ConvolutionForwardKernelGPU<float, uint32_t, detail::default_allocator<char>>(
+    float const *d_in_feat, default_types::size_type const in_nchannel,
+    float *d_out_feat, default_types::size_type const out_nchannel,
+    float const *d_kernel,
+    gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map,
+    default_types::size_type const out_nrows, cublasHandle_t cuhandle,
     cudaStream_t stream);
 
-template void ConvolutionForwardKernelGPU<double, int32_t>(
-    const double *d_in_feat, int in_nchannel, double *d_out_feat,
-    int out_nchannel, const double *d_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+template void
+ConvolutionForwardKernelGPU<double, uint32_t, detail::default_allocator<char>>(
+    double const *d_in_feat, default_types::size_type const in_nchannel,
+    double *d_out_feat, default_types::size_type const out_nchannel,
+    double const *d_kernel,
+    gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map,
+    default_types::size_type const out_nrows, cublasHandle_t cuhandle,
     cudaStream_t stream);
 
-template <typename Dtype, typename Itype>
-void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
-                                  int in_nchannel, const Dtype *d_grad_out_feat,
-                                  int out_nchannel, const Dtype *d_kernel,
-                                  Dtype *d_grad_kernel,
-                                  const pInOutMaps<Itype> &in_maps,
-                                  const pInOutMaps<Itype> &out_maps,
-                                  int out_nrows, cublasHandle_t cuhandle,
-                                  cudaStream_t stream) {
+// c10_allocator
+template void
+ConvolutionForwardKernelGPU<float, uint32_t, detail::c10_allocator<char>>(
+    float const *d_in_feat, default_types::size_type const in_nchannel,
+    float *d_out_feat, default_types::size_type const out_nchannel,
+    float const *d_kernel,
+    gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map,
+    default_types::size_type const out_nrows, cublasHandle_t cuhandle,
+    cudaStream_t stream);
+
+template void
+ConvolutionForwardKernelGPU<double, uint32_t, detail::c10_allocator<char>>(
+    double const *d_in_feat, default_types::size_type const in_nchannel,
+    double *d_out_feat, default_types::size_type const out_nchannel,
+    double const *d_kernel,
+    gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map,
+    default_types::size_type const out_nrows, cublasHandle_t cuhandle,
+    cudaStream_t stream);
+
+// Backward
+template <typename Dtype, typename Itype, typename ByteAllocator>
+void ConvolutionBackwardKernelGPU(
+    Dtype const *d_in_feat,                                            //
+    Dtype *d_grad_in_feat, default_types::size_type const in_nchannel, //
+    Dtype const *d_grad_out_feat,
+    default_types::size_type const out_nchannel,            //
+    Dtype const *d_kernel, Dtype *d_grad_kernel,            //
+    gpu_kernel_map<Itype, ByteAllocator> const &kernel_map, //
+    default_types::size_type const out_nrows,               //
+    cublasHandle_t cuhandle, cudaStream_t stream) {
 
   CUDA_CHECK_ARGS(cudaDeviceSynchronize(),
-                  ". Error triggered from a previous kernel call.");
+                  "Error triggered from a previous kernel call.");
 
-  int n_active_in_volume, shared_mem_size = -1;
+  size_t n_active_in_volume, shared_mem_size = -1;
 
   // Define the shared memory size
   if ((in_nchannel > 16 && out_nchannel > 16 &&
@@ -327,8 +364,9 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
 
   dim3 threads(shared_mem_size, shared_mem_size);
 
-  for (int k = 0; k < in_maps.size(); k++) {
-    n_active_in_volume = in_maps[k].size();
+  for (auto it = kernel_map.key_cbegin(); it != kernel_map.key_cend(); ++it) {
+    auto const k = it->first;
+    n_active_in_volume = kernel_map.size(k);
     if (n_active_in_volume == 0)
       continue;
 
@@ -350,7 +388,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            kernel_map.in_maps.begin(k), kernel_map.out_maps.begin(k));
         break;
       case 24:
         matmul2<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
@@ -360,7 +398,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            kernel_map.in_maps.begin(k), kernel_map.out_maps.begin(k));
         break;
       case 16:
         matmul2<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
@@ -370,7 +408,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            kernel_map.in_maps.begin(k), kernel_map.out_maps.begin(k));
         break;
       case 8:
         matmul2<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
@@ -380,7 +418,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            kernel_map.in_maps.begin(k), kernel_map.out_maps.begin(k));
         break;
       }
     }
@@ -389,19 +427,51 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
   CUDA_CHECK(cudaDeviceSynchronize());
 }
 
-template void ConvolutionBackwardKernelGPU<float, int32_t>(
-    const float *d_in_feat, float *d_grad_in_feat, int in_nchannel,
-    const float *d_grad_out_feat, int out_nchannel, const float *d_kernel,
-    float *p_grad_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
-    cudaStream_t stream);
+// default_allocator
+template void
+ConvolutionBackwardKernelGPU<float, uint32_t, detail::default_allocator<char>>(
+    float const *d_in_feat, float *d_grad_in_feat,
+    default_types::size_type const in_nchannel, //
+    float const *d_grad_out_feat,
+    default_types::size_type const out_nchannel,                             //
+    float const *d_kernel, float *p_grad_kernel,                             //
+    gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map, //
+    default_types::size_type const out_nrows,                                //
+    cublasHandle_t cuhandle, cudaStream_t stream);
 
-template void ConvolutionBackwardKernelGPU<double, int32_t>(
-    const double *d_in_feat, double *d_grad_in_feat, int in_nchannel,
-    const double *d_grad_out_feat, int out_nchannel, const double *d_kernel,
-    double *p_grad_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
-    cudaStream_t stream);
+template void
+ConvolutionBackwardKernelGPU<double, uint32_t, detail::default_allocator<char>>(
+    double const *d_in_feat, double *d_grad_in_feat,
+    default_types::size_type const in_nchannel, //
+    double const *d_grad_out_feat,
+    default_types::size_type const out_nchannel,                             //
+    double const *d_kernel, double *p_grad_kernel,                           //
+    gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map, //
+    default_types::size_type const out_nrows,                                //
+    cublasHandle_t cuhandle, cudaStream_t stream);
+
+// c10_allocator
+template void
+ConvolutionBackwardKernelGPU<float, uint32_t, detail::c10_allocator<char>>(
+    float const *d_in_feat, float *d_grad_in_feat,
+    default_types::size_type const in_nchannel, //
+    float const *d_grad_out_feat,
+    default_types::size_type const out_nchannel,                             //
+    float const *d_kernel, float *p_grad_kernel,                             //
+    gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map, //
+    default_types::size_type const out_nrows,                                //
+    cublasHandle_t cuhandle, cudaStream_t stream);
+
+template void
+ConvolutionBackwardKernelGPU<double, uint32_t, detail::c10_allocator<char>>(
+    double const *d_in_feat, double *d_grad_in_feat,
+    default_types::size_type const in_nchannel, //
+    double const *d_grad_out_feat,
+    default_types::size_type const out_nchannel,                             //
+    double const *d_kernel, double *p_grad_kernel,                           //
+    gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map, //
+    default_types::size_type const out_nrows,                                //
+    cublasHandle_t cuhandle, cudaStream_t stream);
 
 } // end namespace minkowski
 

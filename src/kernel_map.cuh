@@ -35,9 +35,11 @@
 #include <memory>
 
 #include <thrust/copy.h>
+#include <thrust/sort.h>
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/counting_iterator.h>
+#include <thrust/iterator/constant_iterator.h>
 
 namespace minkowski {
 
@@ -174,6 +176,23 @@ public:
   // functions
   inline index_type *data() { return m_memory.get(); }
 
+  inline typename std::unordered_map<index_type, index_type>::const_iterator
+  key_cbegin() const {
+    return m_kernel_offset_map.cbegin();
+  }
+
+  inline typename std::unordered_map<index_type, index_type>::const_iterator
+  key_cend() const {
+    return m_kernel_offset_map.cend();
+  }
+
+  size_type size(index_type const kernel_index) const {
+    auto const iter = m_kernel_size_map.find(kernel_index);
+    if (iter == m_kernel_size_map.end())
+      return 0;
+    return iter->second;
+  }
+
   void decompose() {
     // the memory space must be initialized first!
 
@@ -193,7 +212,7 @@ public:
         (index_type *)std::malloc(m_capacity * 3 * sizeof(index_type));
     CUDA_CHECK(cudaMemcpy(p_kernel_map, data(), m_memory_size_byte,
                           cudaMemcpyDeviceToHost));
-    for (index_type i = 0; i < min(m_capacity, 100); ++i) {
+    for (index_type i = 0; i < std::min<size_type>(m_capacity, 100); ++i) {
       std::cout << p_kernel_map[i + 0 * m_capacity] << ":"
                 << p_kernel_map[i + 1 * m_capacity] << "->"
                 << p_kernel_map[i + 2 * m_capacity] << "\n";
