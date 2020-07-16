@@ -32,11 +32,22 @@ def _argparse(pattern, argv, is_flag=True):
 
 
 SOURCE_SETS = {
-    "convolution": [
+    "convolution_cpu": [
         CppExtension,
         ["convolution_test.cpp"],
-        ["math_functions.cpp", "coordinate_map_manager.cpp", "convolution.cpp"],
+        ["math_functions.cpp", "coordinate_map_manager.cpp", "convolution_cpu.cpp"],
         ["-DCPU_ONLY"],
+    ],
+    "convolution_gpu": [
+        CUDAExtension,
+        ["convolution_test.cu"],
+        [
+            "coordinate_map_manager.cu",
+            "convolution_gpu.cu",
+            "coordinate_map_gpu.cu",
+            "convolution_kernel.cu",
+        ],
+        [],
     ],
     "coordinate_map_manager_cpu": [
         CppExtension,

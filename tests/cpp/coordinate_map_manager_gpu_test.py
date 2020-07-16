@@ -20,6 +20,21 @@ class CoordinateMapManagerTestCase(unittest.TestCase):
         key = _C.coordinate_map_manager_stride(manager, key, stride)
         print(key)
 
+    def test_collision(self):
+        coordinates = torch.IntTensor([[0, 1], [0, 1], [1, 2], [1, 2]]).to(0)
+        manager = _C.CoordinateMapManager()
+        key, (unique_map, inverse_map) = manager.insert_and_map(coordinates, [1], "1")
+        key2, (unique_map2, inverse_map2) = manager.insert_and_map(
+            coordinates, [1], "2"
+        )
+        print(unique_map, inverse_map)
+        in_maps, out_maps = _C.coordinate_map_manager_kernel_map(
+            manager, key, key2, [3]
+        )
+
+        print(in_maps)
+        print(out_maps)
+
     def test_kernel_map(self):
         coordinates = torch.IntTensor([[0, 1], [0, 2], [1, 2], [1, 3]]).to(0)
         manager = _C.CoordinateMapManager()

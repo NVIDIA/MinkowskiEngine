@@ -68,8 +68,8 @@ coordinate_map_batch_insert_test(const torch::Tensor &coordinates) {
   timer t;
 
   t.tic();
-  map.insert(input_coordinates.begin(), // key begin
-             input_coordinates.end());  // key end
+  map.insert<false>(input_coordinates.begin(), // key begin
+                    input_coordinates.end());  // key end
 
   return std::make_pair<size_type, double>(map.size(), t.toc());
 }
@@ -101,8 +101,8 @@ coordinate_map_inverse_map_test(const torch::Tensor &coordinates) {
 
   std::pair<thrust::device_vector<uint32_t>, thrust::device_vector<uint32_t>>
       mapping_inverse_mapping =
-          map.insert_and_map(input_coordinates.begin(), // key begin
-                             input_coordinates.end());  // key end
+          map.insert_and_map<true>(input_coordinates.begin(), // key begin
+                                   input_coordinates.end());  // key end
   auto const &mapping = mapping_inverse_mapping.first;
   auto const &inverse_mapping = mapping_inverse_mapping.second;
   long const NM = mapping.size();
@@ -162,8 +162,8 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
   thrust::counting_iterator<uint32_t> iter{0};
 
-  map.insert(input_coordinates.begin(), // key begin
-             input_coordinates.end());  // key end
+  map.insert<false>(input_coordinates.begin(), // key begin
+                    input_coordinates.end());  // key end
 
   LOG_DEBUG("Map size", map.size());
   auto query_coordinates = coordinate_range<coordinate_type>(NQ, D, query_ptr);
@@ -220,8 +220,8 @@ coordinate_map_stride_test(const torch::Tensor &coordinates,
 
   auto input_coordinates = coordinate_range<coordinate_type>(N, D, ptr);
   thrust::counting_iterator<uint32_t> iter{0};
-  map.insert(input_coordinates.begin(), // key begin
-             input_coordinates.end());  // key end
+  map.insert<false>(input_coordinates.begin(), // key begin
+                    input_coordinates.end());  // key end
 
   // Stride
   default_types::stride_type stride_vec(NS);

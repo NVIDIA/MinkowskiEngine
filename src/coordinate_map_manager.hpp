@@ -35,6 +35,7 @@
 
 #ifndef CPU_ONLY
 #include "kernel_map.cuh"
+#include "coordinate_map_gpu.cuh"
 #endif
 
 #include <algorithm>
@@ -199,9 +200,13 @@ public:
       omp_set_dynamic(0);
       omp_set_num_threads(num_threads);
     }
+    if (kernel_map_mode == CUDAKernelMapMode::SPEED_OPTIMIZED) {
+      m_gpu_default_occupancy = 25;
+    } else {
+      m_gpu_default_occupancy = 50;
+    }
   }
-  ~CoordinateMapManager() { // clear();
-  }
+  ~CoordinateMapManager() {}
 
   /****************************************************************************
    * Coordinate generation, modification, and initialization entry functions
@@ -471,6 +476,8 @@ private:
     return m_coordinate_maps.find(map_key);
   }
 
+public:
+  size_t m_gpu_default_occupancy;
 private:
   // CoordinateMapManager owns the coordinate maps
   std::map<coordinate_map_key_type, map_type,
@@ -533,15 +540,19 @@ using cpu_manager_type =
     CoordinateMapManager<coordinate_type, std::allocator, CoordinateMapCPU>;
 
 #ifndef CPU_ONLY
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+using gpu_manager_type =
+    CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapGPU>;
+
 template <typename coordinate_type>
 using gpu_default_manager_type =
-    CoordinateMapManager<coordinate_type, detail::default_allocator,
-                         CoordinateMapGPU>;
+    gpu_manager_type<coordinate_type, detail::default_allocator>;
 
 template <typename coordinate_type>
 using gpu_c10_manager_type =
-    CoordinateMapManager<coordinate_type, detail::c10_allocator,
-                         CoordinateMapGPU>;
+    gpu_manager_type<coordinate_type, detail::c10_allocator>;
+
 #endif
 
 } // namespace minkowski

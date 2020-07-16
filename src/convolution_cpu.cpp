@@ -32,11 +32,7 @@
 #include "types.hpp"
 #include "utils.hpp"
 
-#include "convolution.hpp"
-#ifndef CPU_ONLY
-#include "convolution.cuh"
-#include "kernel_map.cuh"
-#endif
+#include "convolution_kernel.hpp"
 
 #include <pybind11/pybind11.h>
 #include <torch/extension.h>
@@ -67,7 +63,6 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
 
   torch::checkBackend(c, arg_in_feat.tensor, torch::Backend::CPU);
   torch::checkBackend(c, arg_kernel.tensor, torch::Backend::CPU);
-  torch::checkBackend(c, arg_offset.tensor, torch::Backend::CPU);
 
   torch::checkScalarType(c, arg_in_feat,
                          std::is_same<feature_type, float>::value
@@ -88,9 +83,8 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
   coordinate_map_key_type in_key = p_in_map_key->get_key();
   ASSERT(p_map_manager->exists(in_key), ERROR_MAP_NOT_FOUND);
 
-  ASSERT(in_feat.size(0) == p_map_manager->capacity(in_key),
-         "Invalid in_feat size", in_feat.size(0),
-         "!=", p_map_manager->capacity(in_key));
+  ASSERT(in_feat.size(0) == p_map_manager->size(in_key), "Invalid in_feat size",
+         in_feat.size(0), "!=", p_map_manager->size(in_key));
 
   if (!p_out_map_key->is_key_set()) {
     coordinate_map_key_type out_key =
@@ -112,7 +106,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
       torch::zeros({out_nrows, kernel.size(2)}, in_feat.options());
   LOG_DEBUG("Allocated", out_nrows, "x", kernel.size(2), "out_features.");
 
-  ConvolutionForwardKernelCPU<feature_type, coordinate_type>(
+  ConvolutionForwardKernelCPU<feature_type, default_types::index_type>(
       in_feat.template data_ptr<feature_type>(), in_feat.size(1),
       out_feat.template data_ptr<feature_type>(), out_feat.size(1),
       kernel.template data_ptr<feature_type>(), in_out.first, in_out.second);
@@ -148,7 +142,6 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
   torch::checkBackend(c, arg_in_feat.tensor, torch::Backend::CPU);
   torch::checkBackend(c, arg_grad_out_feat.tensor, torch::Backend::CPU);
   torch::checkBackend(c, arg_kernel.tensor, torch::Backend::CPU);
-  torch::checkBackend(c, arg_offset.tensor, torch::Backend::CPU);
 
   torch::checkScalarType(c, arg_in_feat,
                          std::is_same<feature_type, float>::value
@@ -185,7 +178,7 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
   at::Tensor grad_kernel = torch::zeros(
       {kernel.size(0), kernel.size(1), kernel.size(2)}, kernel.options());
 
-  ConvolutionBackwardKernelCPU<feature_type, coordinate_type>(
+  ConvolutionBackwardKernelCPU<feature_type, default_types::index_type>(
       in_feat.template data_ptr<feature_type>(),
       grad_in_feat.template data_ptr<feature_type>(), in_feat.size(1),
       grad_out_feat.template data_ptr<feature_type>(), grad_out_feat.size(1),
@@ -195,78 +188,6 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
 
   return std::make_pair(grad_in_feat, grad_kernel);
 }
-
-/*
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void ConvolutionForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
-                           at::Tensor kernel, vector<int> tensor_strides,
-                           vector<int> strides, vector<int> kernel_sizes,
-                           vector<int> dilations, int region_type,
-                           at::Tensor offsets, py::object py_in_coords_key,
-                           py::object py_out_coords_key,
-                           py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const auto &in_out = p_coords_manager->getInOutMapsGPU(
-      tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
-      py_in_coords_key, py_out_coords_key, false);
-
-  ASSERT(in_feat.size(1) == kernel.size(1),
-         "Input feature size and kernel size mismatch");
-
-  const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
-  out_feat.resize_({out_nrows, kernel.size(2)});
-  out_feat.zero_();
-
-  cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
-  cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
-
-  ConvolutionForwardKernelGPU<Dtype, int>(
-      in_feat.template data<Dtype>(), in_feat.size(1),
-      out_feat.template data<Dtype>(), out_feat.size(1),
-      kernel.template data<Dtype>(), in_out.first, in_out.second, out_nrows,
-      handle, at::cuda::getCurrentCUDAStream());
-}
-
-template <typename MapType, typename Dtype>
-void ConvolutionBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                            at::Tensor grad_out_feat, at::Tensor kernel,
-                            at::Tensor grad_kernel, vector<int> tensor_strides,
-                            vector<int> strides, vector<int> kernel_sizes,
-                            vector<int> dilations, int region_type,
-                            py::object py_in_coords_key,
-                            py::object py_out_coords_key,
-                            py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const InOutMapKey map_key = p_coords_manager->getMapHashKey(
-      tensor_strides, strides, kernel_sizes, dilations, region_type,
-      py_in_coords_key, py_out_coords_key, false, false);
-
-  ASSERT(p_coords_manager->d_in_maps.find(map_key) !=
-             p_coords_manager->d_in_maps.end(),
-         "The in-out map doesn't exist for backward. Did you run forward pass?")
-
-  grad_in_feat.resize_as_(in_feat);
-  grad_in_feat.zero_();
-  grad_kernel.resize_as_(kernel);
-  grad_kernel.zero_();
-
-  cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
-  cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
-
-  ConvolutionBackwardKernelGPU<Dtype, int>(
-      in_feat.template data<Dtype>(), grad_in_feat.template data<Dtype>(),
-      in_feat.size(1), grad_out_feat.template data<Dtype>(),
-      grad_out_feat.size(1), kernel.template data<Dtype>(),
-      grad_kernel.template data<Dtype>(), p_coords_manager->d_in_maps[map_key],
-      p_coords_manager->d_out_maps[map_key], grad_out_feat.size(0), handle,
-      at::cuda::getCurrentCUDAStream());
-}
-#endif // end CPU_ONLY
-
-*/
 
 template at::Tensor
 ConvolutionForwardCPU<default_types::dcoordinate_type, float>(
@@ -321,36 +242,5 @@ ConvolutionBackwardCPU<default_types::dcoordinate_type, double>(
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
-
-/*
-#ifndef CPU_ONLY
-template void ConvolutionBackwardGPU<CoordsToIndexMap, float>(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, vector<int> tensor_strides,
-    vector<int> strides, vector<int> kernel_sizes, vector<int> dilations,
-    int region_type, py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void ConvolutionBackwardGPU<CoordsToIndexMap, double>(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, vector<int> tensor_strides,
-    vector<int> strides, vector<int> kernel_sizes, vector<int> dilations,
-    int region_type, py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-template void ConvolutionForwardGPU<CoordsToIndexMap, float>(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
-    vector<int> dilations, int region_type, at::Tensor offsets,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-
-template void ConvolutionForwardGPU<CoordsToIndexMap, double>(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
-    vector<int> dilations, int region_type, at::Tensor offsets,
-    py::object py_in_coords_key, py::object py_out_coords_key,
-    py::object py_coords_manager);
-#endif // end CPU_ONLY
-*/
 
 } // end namespace minkowski

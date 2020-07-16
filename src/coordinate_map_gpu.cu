@@ -44,24 +44,20 @@ template <typename coordinate_type, //
           typename index_type,      //
           typename map_type>
 __global__ void
-insert_kernel(map_type __restrict__ map,                       //
-              coordinate_type const *__restrict__ coordinates, //
-              uint32_t *__restrict__ success,                  //
-              size_type const num_threads,                     //
-              size_type const coordinate_size                  //
+remap_inverse_map(map_type __restrict__ map,                       //
+                  coordinate_type const *__restrict__ coordinates, //
+                  index_type *__restrict__ inverse_map,            //
+                  size_type const num_threads,                     //
+                  size_type const coordinate_size                  //
 ) {
   auto const tx = threadIdx.x;
   auto const bx = blockIdx.x;
   auto const x = blockDim.x * bx + tx;
 
   if (x < num_threads) {
-    // m_map.insert(pair);
-    // Returns pair<iterator, (bool)insert_success>
-    auto const result = map.insert(thrust::make_pair(
-        coordinate<coordinate_type>{&coordinates[x * coordinate_size]}, x));
-
-    // for unique_mapping. remove failed valid_row_index with success
-    success[x] = result.second;
+    auto result = map.find(
+        coordinate<coordinate_type>{&coordinates[x * coordinate_size]});
+    inverse_map[x] = result->second;
   }
 }
 
@@ -73,11 +69,11 @@ __global__ void
 insert_and_map_kernel(map_type __restrict__ map,                       //
                       coordinate_type const *__restrict__ coordinates, //
                       index_type *__restrict__ valid_map_index,        //
-                      index_type *__restrict__ inverse_row_index,      //
-                      index_type *__restrict__ valid_row_index,        //
-                      bool *__restrict__ success,                      //
-                      size_type const num_threads,                     //
-                      size_type const coordinate_size                  //
+                      // index_type *__restrict__ inverse_row_index,      //
+                      index_type *__restrict__ valid_row_index, //
+                      bool *__restrict__ success,               //
+                      size_type const num_threads,              //
+                      size_type const coordinate_size           //
 ) {
   auto const tx = threadIdx.x;
   auto const bx = blockIdx.x;
@@ -93,12 +89,12 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
     success[x] = result.second;
     valid_row_index[x] = x;
     // for inverse_mapping.
-    if (result.second)
-      inverse_row_index[x] = x;
-    else {
-      auto it = result.first;
-      inverse_row_index[x] = it->second;
-    }
+    // if (result.second)
+    //   inverse_row_index[x] = x;
+    // else {
+    //   auto it = result.first;
+    //   inverse_row_index[x] = it->second;
+    // }
     // success map index. remove failed insertion with success.
     valid_map_index[x] = result.first.offset();
   }
@@ -117,6 +113,7 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
  */
 template <typename coordinate_type,
           template <typename T> class TemplatedAllocator>
+template <bool remap>
 void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
     coordinate_iterator<coordinate_type> key_first,
     coordinate_iterator<coordinate_type> key_last) {
@@ -147,7 +144,7 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
                                 map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
       *m_map, const_coordinate_data(),
       thrust::raw_pointer_cast(m_valid_map_index.data()),
-      thrust::raw_pointer_cast(m_inverse_row_index.data()),
+      // thrust::raw_pointer_cast(m_inverse_row_index.data()),
       thrust::raw_pointer_cast(m_valid_row_index.data()),
       thrust::raw_pointer_cast(success.data()), num_threads, m_coordinate_size);
   CUDA_CHECK(cudaStreamSynchronize(0));
@@ -168,16 +165,39 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
   m_valid_map_index.resize(number_of_valid);
   m_size = number_of_valid;
   LOG_DEBUG("Number of successful insertion", m_size);
+
+  if (remap) {
+    // remap values
+    thrust::counting_iterator<uint32_t> count_begin{0};
+    thrust::for_each(count_begin, count_begin + number_of_valid,
+                     detail::update_value<coordinate_type, map_type>{
+                         *m_map, const_coordinate_data(),
+                         thrust::raw_pointer_cast(m_valid_row_index.data()),
+                         m_coordinate_size});
+
+    size_type const num_threads = N;
+    auto const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
+
+    detail::remap_inverse_map<coordinate_type, size_type, index_type, map_type>
+        <<<num_blocks, CUDA_NUM_THREADS>>>(
+            *m_map,                                               //
+            const_coordinate_data(),                              //
+            thrust::raw_pointer_cast(m_inverse_row_index.data()), //
+            num_threads, m_coordinate_size);
+
+    LOG_DEBUG("Remapping finished");
+  }
 }
 
 using return_vector_type = thrust::device_vector<default_types::index_type>;
 template <typename coordinate_type,
           template <typename T> class TemplatedAllocator>
+template <bool remap>
 std::pair<return_vector_type, return_vector_type>
 CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert_and_map(
     coordinate_iterator<coordinate_type> key_first,
     coordinate_iterator<coordinate_type> key_last) {
-  insert(key_first, key_last);
+  insert<remap>(key_first, key_last);
   return std::make_pair(m_valid_row_index, m_inverse_row_index);
 }
 
@@ -524,6 +544,31 @@ template class CoordinateMapGPU<default_types::dcoordinate_type,
                                 detail::default_allocator>;
 template class CoordinateMapGPU<default_types::dcoordinate_type,
                                 detail::c10_allocator>;
+
+template std::pair<return_vector_type, return_vector_type>
+CoordinateMapGPU<default_types::dcoordinate_type, detail::default_allocator>::
+    insert_and_map<true>(
+        coordinate_iterator<default_types::dcoordinate_type> key_first,
+        coordinate_iterator<default_types::dcoordinate_type> key_last);
+
+template std::pair<return_vector_type, return_vector_type>
+CoordinateMapGPU<default_types::dcoordinate_type, detail::default_allocator>::
+    insert_and_map<false>(
+        coordinate_iterator<default_types::dcoordinate_type> key_first,
+        coordinate_iterator<default_types::dcoordinate_type> key_last);
+
+template std::pair<return_vector_type, return_vector_type>
+CoordinateMapGPU<default_types::dcoordinate_type, detail::c10_allocator>::
+    insert_and_map<true>(
+        coordinate_iterator<default_types::dcoordinate_type> key_first,
+        coordinate_iterator<default_types::dcoordinate_type> key_last);
+
+template std::pair<return_vector_type, return_vector_type>
+CoordinateMapGPU<default_types::dcoordinate_type, detail::c10_allocator>::
+    insert_and_map<false>(
+        coordinate_iterator<default_types::dcoordinate_type> key_first,
+        coordinate_iterator<default_types::dcoordinate_type> key_last);
+
 // Insert arg templates
 // using citer32 = coordinate_iterator<default_types::dcoordinate_type>;
 // template void CoordinateMapGPU<default_types::dcoordinate_type>::insert<

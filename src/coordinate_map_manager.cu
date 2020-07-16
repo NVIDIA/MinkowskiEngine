@@ -56,12 +56,12 @@ struct insert_and_map_functor<coordinate_type, TemplatedAllocator,
     coordinate_type *p_coordinate = th_coordinate.data_ptr<coordinate_type>();
 
     auto coordinate_map = CoordinateMapGPU<coordinate_type, TemplatedAllocator>(
-        N, coordinate_size, DEFAULT_HASH_TABLE_OCCUPANCY, map_key.first);
+        N, coordinate_size, manager.m_gpu_default_occupancy, map_key.first);
 
     auto input_coordinate_range =
         coordinate_range<coordinate_type>(N, coordinate_size, p_coordinate);
 
-    auto map_inverse_map = coordinate_map.insert_and_map(
+    auto map_inverse_map = coordinate_map.template insert_and_map<true>(
         input_coordinate_range.begin(), input_coordinate_range.end());
     LOG_DEBUG("mapping size:", map_inverse_map.first.size());
 

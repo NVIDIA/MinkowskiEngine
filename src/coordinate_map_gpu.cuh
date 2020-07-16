@@ -112,9 +112,11 @@ public:
         "kernel_map shared memory requires the type sizes to be the same");
   }
 
+  template <bool remap>
   void insert(coordinate_iterator<coordinate_type> key_first,
               coordinate_iterator<coordinate_type> key_last);
 
+  template <bool remap>
   std::pair<thrust::device_vector<default_types::index_type>,
             thrust::device_vector<default_types::index_type>>
   insert_and_map(coordinate_iterator<coordinate_type> key_first,
