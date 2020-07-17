@@ -92,7 +92,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def(py::init<minkowski::default_types::size_type>())
       .def(py::init<minkowski::default_types::stride_type, std::string>())
       .def("__repr__", &minkowski::CoordinateMapKey::to_string)
-      .def("get_dimension", &minkowski::CoordinateMapKey::get_dimension)
+      .def("get_coordinate_size",
+           &minkowski::CoordinateMapKey::get_coordinate_size)
       .def("get_key", &minkowski::CoordinateMapKey::get_key)
       .def("set_key", (void (minkowski::CoordinateMapKey::*)(
                           minkowski::default_types::stride_type, std::string)) &
@@ -102,7 +103,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   py::class_<minkowski::gpu_c10_manager_type<int>>(m, "CoordinateMapManager")
       .def(py::init<>())
-      .def("insert_and_map", &minkowski::gpu_c10_manager_type<int>::insert_and_map)
+      .def("insert_and_map",
+           &minkowski::gpu_c10_manager_type<int>::insert_and_map)
       .def("stride",
            (typename py::object //
             (minkowski::gpu_c10_manager_type<int>::*)(

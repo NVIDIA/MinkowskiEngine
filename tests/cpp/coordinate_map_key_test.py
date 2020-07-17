@@ -9,7 +9,7 @@ class CoordinateMapKeyTestCase(unittest.TestCase):
         key = MinkowskiEngineTest._C.CoordinateMapKey([3, 4, 5], "")
         print(key.__repr__())
         self.assertEqual([3, 4, 5], key.get_tensor_stride())
-        self.assertEqual(4, key.get_dimension())
+        self.assertEqual(4, key.get_coordinate_size())
         self.assertEqual(([3, 4, 5], ''), key.get_key())
 
     def test(self):
