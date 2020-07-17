@@ -193,31 +193,6 @@ struct split_functor {
   T *m_seconds;
 };
 
-template <typename coordinate_type, typename index_type> struct stride_copy {
-
-  stride_copy(size_t const coordinate_size, index_type const *stride,
-              index_type const *valid_src_index, coordinate_type const *src,
-              coordinate_type *dst)
-      : m_coordinate_size(coordinate_size), m_stride(stride),
-        m_valid_src_index(valid_src_index), m_src(src), m_dst(dst) {}
-
-  __device__ void operator()(uint32_t const i) {
-    const auto start = m_valid_src_index[i] * m_coordinate_size;
-    m_dst[start] = m_src[start];
-    for (auto j = 1; j < m_coordinate_size; j++) {
-      m_dst[start + j] = ((coordinate_type)floorf(
-                             __fdiv_rd(m_src[start + j], m_stride[j - 1]))) *
-                         m_stride[j - 1];
-    }
-  }
-
-  size_t const m_coordinate_size;
-  index_type const *m_stride;
-  index_type const *m_valid_src_index;
-  coordinate_type const *m_src;
-  coordinate_type *m_dst;
-};
-
 template <typename T> struct min_size_functor {
   using min_size_type = thrust::tuple<T, T>;
 

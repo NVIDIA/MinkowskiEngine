@@ -82,6 +82,8 @@ at::Tensor ConvolutionForwardGPU(
   ASSERT(in_feat.size(1) == kernel.size(1),
          "Input feature size and kernel size mismatch");
 
+  // TODO kernel volume assertion.
+
   // create out coordinate map
   // TODO: custom upsampling
   coordinate_map_key_type in_key = p_in_map_key->get_key();

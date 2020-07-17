@@ -89,13 +89,13 @@ class ConvolutionTestCase(unittest.TestCase):
         IC, OC = 3, 16
         coords, colors, pcd = load_file("1.ply")
         kernel_size = [3, 3, 3]
-        kernel_stride = [1, 1, 1]
+        kernel_stride = [2, 2, 2]
         kernel_dilation = [1, 1, 1]
 
         # size, in, out
-        kernel = torch.rand(27, IC, OC).to(0)
+        kernel = torch.rand(np.prod(kernel_size), IC, OC).to(0)
 
-        for batch_size in [2, 5, 10, 20, 40]:
+        for batch_size in [1, 5, 10, 20, 40]:
             for voxel_size in [0.05, 0.035, 0.02]:
                 min_time = 100000
 
@@ -113,7 +113,7 @@ class ConvolutionTestCase(unittest.TestCase):
                         bcoords.to(0), [1, 1, 1], ""
                     )
                     ucolors = bcolors[unique_map.long()]
-                    out_key = in_key
+                    out_key = _C.CoordinateMapKey(4)
 
                     stime = time.time()
                     out_features = _C.ConvolutionForwardGPUf(

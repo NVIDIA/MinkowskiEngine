@@ -42,6 +42,7 @@ SOURCE_SETS = {
         CUDAExtension,
         ["convolution_test.cu"],
         [
+            "math_functions.cpp",
             "coordinate_map_manager.cu",
             "convolution_gpu.cu",
             "coordinate_map_gpu.cu",
