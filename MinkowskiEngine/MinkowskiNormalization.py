@@ -29,9 +29,8 @@ from torch.autograd import Function
 from SparseTensor import SparseTensor
 from MinkowskiPooling import MinkowskiGlobalPooling
 from MinkowskiBroadcast import MinkowskiBroadcastAddition, MinkowskiBroadcastMultiplication, OperationType, operation_type_to_int
-import MinkowskiEngineBackend as MEB
 from MinkowskiCoords import CoordsKey
-from Common import get_postfix, GlobalPoolingMode
+from Common import get_minkowski_function, GlobalPoolingMode
 
 
 class MinkowskiBatchNorm(Module):
@@ -89,8 +88,7 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
             process_group=process_group)
 
     def forward(self, input):
-        # Weird requirement for the input to have > 2 dimensions which is unnecessary.
-        output = self.bn(input.F.unsqueeze(2)).squeeze(2)
+        output = self.bn(input.F)
         return SparseTensor(
             output,
             coords_key=input.coords_key,
@@ -161,10 +159,8 @@ class MinkowskiInstanceNormFunction(Function):
         if glob_coords_key is None:
             glob_coords_key = CoordsKey(in_coords_key.D)
 
-        gpool_forward = getattr(MEB,
-                                'GlobalPoolingForward' + get_postfix(in_feat))
-        broadcast_forward = getattr(MEB,
-                                    'BroadcastForward' + get_postfix(in_feat))
+        gpool_forward = get_minkowski_function('GlobalPoolingForward', in_feat)
+        broadcast_forward = get_minkowski_function('BroadcastForward', in_feat)
         add = operation_type_to_int(OperationType.ADDITION)
         multiply = operation_type_to_int(OperationType.MULTIPLICATION)
 
@@ -213,10 +209,8 @@ class MinkowskiInstanceNormFunction(Function):
         # To prevent the memory leakage, compute the norm again
         inv_std, norm_feat = ctx.saved_tensors
 
-        gpool_forward = getattr(MEB,
-                                'GlobalPoolingForward' + get_postfix(out_grad))
-        broadcast_forward = getattr(MEB,
-                                    'BroadcastForward' + get_postfix(out_grad))
+        gpool_forward = get_minkowski_function('GlobalPoolingForward', out_grad)
+        broadcast_forward = get_minkowski_function('BroadcastForward', out_grad)
         add = operation_type_to_int(OperationType.ADDITION)
         multiply = operation_type_to_int(OperationType.MULTIPLICATION)
 

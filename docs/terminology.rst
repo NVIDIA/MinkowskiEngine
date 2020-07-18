@@ -77,7 +77,7 @@ In this example, we require 9 kernel maps for all :math:`3\times 3` kernel. Howe
 - Kernel B: 1 → 0
 - Kernel B: 0 → 2
 - Kernel H: 2 → 3
-- Kernel I: 0 → 2
+- Kernel I: 0 → 0
 
 
 

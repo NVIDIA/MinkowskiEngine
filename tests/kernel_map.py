@@ -63,14 +63,14 @@ class TestKernelMap(unittest.TestCase):
         oC = output.C.numpy()
         print(iC)
         print(oC)
-        in_maps, out_maps = output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3, on_gpu=True)
+        in_maps, out_maps = output.coords_man.get_kernel_map(
+            1, 2, stride=2, kernel_size=3, on_gpu=True)
         kernel_index = 0
         for in_map, out_map in zip(in_maps, out_maps):
-          for i, o in zip(in_map, out_map):
-            print(kernel_index, iC[i], '->', oC[o])
-          kernel_index += 1
+            for i, o in zip(in_map, out_map):
+                print(kernel_index, iC[i], '->', oC[o])
+            kernel_index += 1
         self.assertTrue(sum(len(in_map) for in_map in in_maps) == 26)
-
 
     def test_kernelmap(self):
         print(f"{self.__class__.__name__}: test_kernelmap")
@@ -100,12 +100,13 @@ class TestKernelMap(unittest.TestCase):
         oC = output.C.numpy()
         print(iC)
         print(oC)
-        in_maps, out_maps = output.coords_man.get_kernel_map(1, 2, stride=2, kernel_size=3)
+        in_maps, out_maps = output.coords_man.get_kernel_map(
+            1, 2, stride=2, kernel_size=3)
         kernel_index = 0
         for in_map, out_map in zip(in_maps, out_maps):
-          for i, o in zip(in_map, out_map):
-            print(kernel_index, iC[i], '->', oC[o])
-          kernel_index += 1
+            for i, o in zip(in_map, out_map):
+                print(kernel_index, iC[i], '->', oC[o])
+            kernel_index += 1
         self.assertTrue(sum(len(in_map) for in_map in in_maps) == 26)
 
 

@@ -33,7 +33,7 @@
 
 namespace minkowski {
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                           at::Tensor max_index, vector<int> tensor_strides,
                           vector<int> strides, vector<int> kernel_sizes,
@@ -41,7 +41,8 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
                           at::Tensor offsets, py::object py_in_coords_key,
                           py::object py_out_coords_key,
                           py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const auto &in_out = p_coords_manager->getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false, true);
@@ -54,11 +55,11 @@ void MaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
   max_index.zero_();
 
   MaxPoolingForwardKernelCPU<Dtype, int>(
-      in_feat.data<Dtype>(), out_feat.data<Dtype>(), max_index.data<int>(),
-      nchannel, in_out.first, in_out.second, out_nrows);
+      in_feat.template data<Dtype>(), out_feat.template data<Dtype>(),
+      max_index.data<int>(), nchannel, in_out.first, in_out.second, out_nrows);
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void MaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                            at::Tensor grad_out_feat, at::Tensor max_index,
                            vector<int> tensor_strides, vector<int> strides,
@@ -66,7 +67,8 @@ void MaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                            int region_type, py::object py_in_coords_key,
                            py::object py_out_coords_key,
                            py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false, true);
@@ -79,13 +81,14 @@ void MaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat.zero_();
 
   MaxPoolingBackwardKernelCPU<Dtype, int>(
-      grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
-      grad_out_feat.size(0), max_index.data<int>(), in_feat.size(1),
+      grad_in_feat.template data<Dtype>(), in_feat.size(0),
+      grad_out_feat.template data<Dtype>(), grad_out_feat.size(0),
+      max_index.data<int>(), in_feat.size(1),
       p_coords_manager->in_maps[map_key], p_coords_manager->out_maps[map_key]);
 }
 
 #ifndef CPU_ONLY
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                           at::Tensor num_nonzero, vector<int> tensor_strides,
                           vector<int> strides, vector<int> kernel_sizes,
@@ -93,7 +96,8 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                           at::Tensor offsets, py::object py_in_coords_key,
                           py::object py_out_coords_key,
                           py::object py_coords_manager) {
-  CoordsManager *p_coords_manager = py_coords_manager.cast<CoordsManager *>();
+  CoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<CoordsManager<MapType> *>();
   const auto &in_out = p_coords_manager->getInOutMapsGPU(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false, true);
@@ -112,14 +116,14 @@ void MaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
       (int *)p_coords_manager->getScratchGPUMemory(5 * nmap * sizeof(int));
 
   MaxPoolingForwardKernelGPU<Dtype, int>(
-      in_feat.data<Dtype>(), out_feat.data<Dtype>(), out_nrows,
-      num_nonzero.data<int>(), nchannel, in_out.first, in_out.second, d_scr,
-      at::cuda::getCurrentCUDAStream());
+      in_feat.template data<Dtype>(), out_feat.template data<Dtype>(),
+      out_nrows, num_nonzero.data<int>(), nchannel, in_out.first, in_out.second,
+      d_scr, at::cuda::getCurrentCUDAStream());
 
   p_coords_manager->clearScratchGPUMemory();
 }
 
-template <typename Dtype>
+template <typename MapType, typename Dtype>
 void MaxPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                            at::Tensor grad_out_feat, at::Tensor num_nonzero,
                            vector<int> tensor_strides, vector<int> strides,
@@ -131,34 +135,35 @@ void MaxPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
   grad_in_feat.zero_();
 
   MaxPoolingBackwardKernelGPU<Dtype, int>(
-      grad_in_feat.data<Dtype>(), in_feat.size(0), grad_out_feat.data<Dtype>(),
-      grad_out_feat.size(0), num_nonzero.data<int>(), in_feat.size(1),
+      grad_in_feat.template data<Dtype>(), in_feat.size(0),
+      grad_out_feat.template data<Dtype>(), grad_out_feat.size(0),
+      num_nonzero.data<int>(), in_feat.size(1),
       at::cuda::getCurrentCUDAStream());
 }
 #endif
 
-template void MaxPoolingForwardCPU<float>(
+template void MaxPoolingForwardCPU<CoordsToIndexMap, float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void MaxPoolingForwardCPU<double>(
+template void MaxPoolingForwardCPU<CoordsToIndexMap, double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void MaxPoolingBackwardCPU<float>(
+template void MaxPoolingBackwardCPU<CoordsToIndexMap, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void MaxPoolingBackwardCPU<double>(
+template void MaxPoolingBackwardCPU<CoordsToIndexMap, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,
@@ -167,28 +172,28 @@ template void MaxPoolingBackwardCPU<double>(
 
 #ifndef CPU_ONLY
 
-template void MaxPoolingForwardGPU<float>(
+template void MaxPoolingForwardGPU<CoordsToIndexMap, float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void MaxPoolingForwardGPU<double>(
+template void MaxPoolingForwardGPU<CoordsToIndexMap, double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void MaxPoolingBackwardGPU<float>(
+template void MaxPoolingBackwardGPU<CoordsToIndexMap, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void MaxPoolingBackwardGPU<double>(
+template void MaxPoolingBackwardGPU<CoordsToIndexMap, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,

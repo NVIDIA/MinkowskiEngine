@@ -95,7 +95,7 @@ if __name__ == '__main__':
     timer = Timer()
     for i in range(20):
         timer.tic()
-        sinput = ME.SparseTensor(features - 0.5, coords=coordinates).to(device)
+        sinput = ME.SparseTensor(features, coords=coordinates).to(device)
         timer.toc()
 
     print(f'{timer.min_time:.12f} for initialization of {len(sinput)} voxels')

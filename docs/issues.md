@@ -32,7 +32,7 @@ export CUDA_HOME=/usr/local/cuda-10.0; python setup.py install
 
 ## 2. Compilation failure due to incorrect `CUDA_HOME`
 
-Some applications modify the environment variable `CUDA_HOME` on your `.bashrc` see [#12](https://github.com/StanfordVL/MinkowskiEngine/issues/12).
+Some applications modify the environment variable `CUDA_HOME` on your `.bashrc` see [#12](https://github.com/NVIDIA/MinkowskiEngine/issues/12).
 This makes the pytorch CPPExtension module to fail leading to problems like `src/common.hpp:40:10: fatal error: cublas_v2.h: No such file or directory`.
 
 If you encounter this issue, try to set your `CUDA_HOME` explicitly.
@@ -123,4 +123,4 @@ python setup.py install --force
 
 ## Issues not listed
 
-If you have a trouble installing MinkowskiEngine, please feel free to submit an issue on [the MinkowskiEngine github page](https://github.com/StanfordVL/MinkowskiEngine/issues).
+If you have a trouble installing MinkowskiEngine, please feel free to submit an issue on [the MinkowskiEngine github page](https://github.com/NVIDIA/MinkowskiEngine/issues).

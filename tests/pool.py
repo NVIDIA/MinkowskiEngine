@@ -211,6 +211,11 @@ class TestPooling(unittest.TestCase):
         self.assertTrue(
             gradcheck(fn, (input.F, input.coords_key, None, input.coords_man)))
 
+        if torch.cuda.is_available():
+            input_cuda = input.to(torch.device(0))
+            output_cuda = pool(input)
+            self.assertTrue(torch.allclose(output_cuda.F.cpu(), output.F))
+
     def test_unpool(self):
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)

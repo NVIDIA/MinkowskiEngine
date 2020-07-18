@@ -26,8 +26,8 @@ import unittest
 import torch
 import numpy as np
 
-from MinkowskiEngine import CoordsKey, CoordsManager
-from MinkowskiEngine.utils import get_coords_map
+import MinkowskiEngine as ME
+from MinkowskiEngine import CoordsKey, CoordsManager, MemoryManagerBackend
 
 from tests.common import data_loader
 
@@ -59,23 +59,24 @@ class Test(unittest.TestCase):
         key.setTensorStride(1)
 
         cm = CoordsManager(D=1)
-        coords = (torch.rand(20, 2) * 10).int()
-        print(coords)
+        coords = torch.IntTensor([[0, 1], [0, 1], [0, 2], [0, 2], [1, 0],
+                                  [1, 0], [1, 1]])
         unique_coords = torch.unique(coords, dim=0)
-        print('Num unique: ', unique_coords.shape)
 
         # Initialize map
-        mapping = cm.initialize(
+        mapping, inverse_mapping = cm.initialize(
             coords, key, force_remap=True, allow_duplicate_coords=False)
+        self.assertTrue(len(unique_coords) == len(mapping))
         print(mapping, len(mapping))
         cm.print_diagnostics(key)
         print(cm)
-        print(cm.get_batch_size())
-        print(cm.get_batch_indices())
+        self.assertTrue(cm.get_batch_size() == 2)
+        self.assertTrue(cm.get_batch_indices() == {0, 1})
 
         # Create a strided map
         stride_key = cm.stride(key, [4])
-        print('Stride: ', cm.get_coords(stride_key))
+        strided_coords = cm.get_coords(stride_key)
+        self.assertTrue(len(strided_coords) == 2)
         cm.print_diagnostics(key)
         print(cm)
 
@@ -106,7 +107,7 @@ class Test(unittest.TestCase):
 
         # Initialize map
         cm = CoordsManager(D=2)
-        mapping = cm.initialize(
+        mapping, inverse_mapping = cm.initialize(
             coords, key, force_remap=True, allow_duplicate_coords=False)
         print(mapping, len(mapping))
         cm.print_diagnostics(key)
@@ -124,7 +125,7 @@ class Test(unittest.TestCase):
         inc = cm.get_coords(1)
         outc = cm.get_coords(2)
         for i, o in zip(ins, outs):
-          print(f"{i}: ({inc[i]}) -> {o}: ({outc[o]})")
+            print(f"{i}: ({inc[i]}) -> {o}: ({outc[o]})")
 
     def test_negative_coords(self):
         print('Negative coords test')
@@ -132,10 +133,11 @@ class Test(unittest.TestCase):
         key.setTensorStride(1)
 
         cm = CoordsManager(D=1)
-        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [0, 3]])
+        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [0, 1],
+                                  [0, 2], [0, 3]])
 
         # Initialize map
-        mapping = cm.initialize(coords, key)
+        mapping, inverse_mapping = cm.initialize(coords, key)
         print(mapping, len(mapping))
         cm.print_diagnostics(key)
 
@@ -153,16 +155,28 @@ class Test(unittest.TestCase):
 
     def test_batch_size_initialize(self):
         cm = CoordsManager(D=1)
-        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [1, 1], [1, 2], [1, 3]])
+        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [1, 1],
+                                  [1, 2], [1, 3]])
 
         # key with batch_size 2
         cm.create_coords_key(coords)
         self.assertTrue(cm.get_batch_size() == 2)
 
-        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [0, 3]])
+        coords = torch.IntTensor([[0, -3], [0, -2], [0, -1], [0, 0], [0, 1],
+                                  [0, 2], [0, 3]])
         cm.create_coords_key(coords)
 
         self.assertTrue(cm.get_batch_size() == 2)
+
+    def test_memory_manager_backend(self):
+        # Set the global GPU memory manager backend. By default PYTORCH.
+        ME.set_memory_manager_backend(MemoryManagerBackend.PYTORCH)
+        ME.set_memory_manager_backend(MemoryManagerBackend.CUDA)
+
+        # Create a coords man with the specified GPU memory manager backend.
+        # No effect with CPU_ONLY build
+        cm = CoordsManager(memory_manager_backend=MemoryManagerBackend.CUDA, D=2)
+        cm = CoordsManager(memory_manager_backend=MemoryManagerBackend.PYTORCH, D=2)
 
 
 if __name__ == '__main__':

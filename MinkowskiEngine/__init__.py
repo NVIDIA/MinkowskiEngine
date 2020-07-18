@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -21,7 +22,7 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 import os
 import sys
@@ -32,16 +33,20 @@ sys.path.append(file_dir)
 # Must be imported first to load all required shared libs
 import torch
 
-from SparseTensor import SparseTensor, SparseTensorOperationMode, \
+from MinkowskiEngineBackend import MemoryManagerBackend
+
+from SparseTensor import SparseTensor, SparseTensorOperationMode, SparseTensorQuantizationMode, \
     set_sparse_tensor_operation_mode, sparse_tensor_operation_mode, clear_global_coords_man
 
 from Common import RegionType, convert_to_int_tensor, convert_region_type, \
     MinkowskiModuleBase, KernelGenerator, GlobalPoolingMode
 
-from MinkowskiCoords import CoordsKey, CoordsManager
+from MinkowskiCoords import CoordsKey, CoordsManager, set_memory_manager_backend
 
 from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
     MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose
+
+from MinkowskiChannelwiseConvolution import MinkowskiChannelwiseConvolution
 
 from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
     MinkowskiSumPooling, \

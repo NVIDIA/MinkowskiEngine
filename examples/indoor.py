@@ -45,6 +45,7 @@ if not os.path.isfile('weights.pth'):
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_name', type=str, default='1.ply')
 parser.add_argument('--weights', type=str, default='weights.pth')
+parser.add_argument('--use_cpu', action='store_true')
 
 CLASS_LABELS = ('wall', 'floor', 'cabinet', 'bed', 'chair', 'sofa', 'table',
                 'door', 'window', 'bookshelf', 'picture', 'counter', 'desk',
@@ -98,64 +99,48 @@ SCANNET_COLOR_MAP = {
 }
 
 
-def load_file(file_name, voxel_size):
+def load_file(file_name):
     pcd = o3d.io.read_point_cloud(file_name)
     coords = np.array(pcd.points)
-    feats = np.array(pcd.colors)
-
-    quantized_coords = np.floor(coords / voxel_size)
-    inds = ME.utils.sparse_quantize(quantized_coords, return_index=True)
-
-    return quantized_coords[inds], feats[inds], pcd
-
-
-def generate_input_sparse_tensor(file_name, voxel_size=0.05):
-    # Create a batch, this process is done in a data loader during training in parallel.
-    batch = [load_file(file_name, voxel_size)]
-    coordinates_, featrues_, pcds = list(zip(*batch))
-    coordinates, features = ME.utils.sparse_collate(coordinates_, featrues_)
-
-    # Normalize features and create a sparse tensor
-    return coordinates, (features - 0.5).float()
+    colors = np.array(pcd.colors)
+    return coords, colors, pcd
 
 
 if __name__ == '__main__':
     config = parser.parse_args()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+    device = torch.device('cuda' if (
+        torch.cuda.is_available() and not config.use_cpu) else 'cpu')
+    print(f"Using {device}")
     # Define a model and load the weights
     model = MinkUNet34C(3, 20).to(device)
     model_dict = torch.load(config.weights)
     model.load_state_dict(model_dict)
     model.eval()
 
+    coords, colors, pcd = load_file(config.file_name)
     # Measure time
     with torch.no_grad():
         voxel_size = 0.02
-        coordinates, features = generate_input_sparse_tensor(
-            config.file_name, voxel_size=voxel_size)
 
         # Feed-forward pass and get the prediction
         sinput = ME.SparseTensor(
-            features, coords=coordinates).to(device)
-        soutput = model(sinput)
+            feats=torch.from_numpy(colors).float(),
+            coords=ME.utils.batched_coordinates([coords / voxel_size]),
+            quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+        ).to(device)
+        logits = model(sinput).slice(sinput)
 
-    # Feed-forward pass and get the prediction
-    coordinates, features = soutput.decomposed_coordinates_and_features
-    batch_index = 0
-
-    _, pred = features[batch_index].max(1)
+    _, pred = logits.max(1)
     pred = pred.cpu().numpy()
 
     # Create a point cloud file
     pred_pcd = o3d.geometry.PointCloud()
     # Map color
     colors = np.array([SCANNET_COLOR_MAP[VALID_CLASS_IDS[l]] for l in pred])
-    pred_pcd.points = o3d.utility.Vector3dVector(coordinates[batch_index] * 0.02)
+    pred_pcd.points = o3d.utility.Vector3dVector(coords)
     pred_pcd.colors = o3d.utility.Vector3dVector(colors / 255)
 
     # Move the original point cloud
-    pcd = o3d.io.read_point_cloud(config.file_name)
     pcd.points = o3d.utility.Vector3dVector(
         np.array(pcd.points) + np.array([0, 5, 0]))
 

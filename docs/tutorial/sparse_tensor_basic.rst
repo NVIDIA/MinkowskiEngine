@@ -1,7 +1,7 @@
 Sparse Tensor Basics
 ====================
 
-A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. Please refer to the `terminology page <https://stanfordvl.github.io/MinkowskiEngine/terminology.html>`_ for more details.
+A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. Please refer to the `terminology page <https://nvidia.github.io/MinkowskiEngine/terminology.html>`_ for more details.
 
 
 Data Generation
@@ -30,7 +30,7 @@ One can generate data directly by extracting non-zero elements. Here, we present
    to_sparse_coo(data)
 
 
-Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the `training demo page <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_.
+Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the `training demo page <https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_.
 
 
 Sparse Tensor Initialization
@@ -47,6 +47,27 @@ The next step in the pipeline is initializing a sparse tensor. A :attr:`Minkowsk
 
 
 Here, we used :attr:`MinkowskiEngine.utils.sparse_collate` function, but you can use :attr:`MinkowskiEngine.utils.batched_coordinates` to convert a list of coordinates to :attr:`MinkowskiEngine.SparseTensor` compatible coordinates.
+
+
+Sparse Tensor for Continuous Coordinates
+----------------------------------------
+
+In many cases, coordinates used in neural networks are continuous.
+However, sparse tensors used in sparse tensor networks are defined in a discrete coordinate system.
+To convert the features in continuous coordinates to discrete coordinates, we provide feature averaging functions that convert features in continuous coordinates to discrete coordinates.
+You can simply use the sparse tensor initialization for this. For example,
+
+.. code-block:: python
+
+   sinput = ME.SparseTensor(
+       feats=torch.from_numpy(colors), # Convert to a tensor
+       coords=ME.utils.batched_coordinates([coordinates / voxel_size]),  # coordinates must be defined in a integer grid. If the scale
+       quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE  # when used with continuous coordinates, average features in the same coordinate
+   )
+   logits = model(sinput).slice(sinput)
+
+
+Please refer to `indoor semantic segmentation <https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/indoor.py>`_ for more detail.
 
 
 Sparse Tensor Arithmetics
@@ -137,4 +158,4 @@ To decompose the outputs, you can use a couple function and attributes.
    feats = B.features_at(batch_index)
 
 
-For more information, please refer to `examples/sparse_tensor_basic.py <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py>`_.
+For more information, please refer to `examples/sparse_tensor_basic.py <https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py>`_.

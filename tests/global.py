@@ -80,7 +80,7 @@ if __name__ == '__main__':
         voxel_size=config.voxel_size,
         batch_size=config.batch_size)
 
-    pool = ME.MinkowskiGlobalPooling(mode=ME.GlobalPoolingMode.AUTO, dimension=3)
+    pool = ME.MinkowskiGlobalPooling(mode=ME.GlobalPoolingMode.AUTO)
 
     # Measure time
     print('Forward')

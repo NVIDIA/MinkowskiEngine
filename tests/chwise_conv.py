@@ -24,8 +24,7 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
-    MinkowskiConvolutionTranspose
+from MinkowskiEngine import SparseTensor, MinkowskiChannelwiseConvolution
 import MinkowskiEngine as ME
 
 
@@ -48,7 +47,7 @@ class TestConvolution(unittest.TestCase):
 
     def test(self):
         print(f"{self.__class__.__name__}: test")
-        in_channels, out_channels, D = 2, 3, 2
+        in_channels, D = 3, 2
         coords, feats, labels = data_loader(in_channels, batch_size=2)
 
         # Create random coordinates with tensor stride == 2
@@ -57,61 +56,46 @@ class TestConvolution(unittest.TestCase):
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords)
-        cm = input.coords_man
-        print(cm._get_coords_key(1))
 
-        conv = MinkowskiConvolution(
+        conv = MinkowskiChannelwiseConvolution(
             in_channels,
-            out_channels,
             kernel_size=3,
             stride=1,
             has_bias=False,
             dimension=D).double()
 
         print('Initial input: ', input)
-        print('Specified output coords: ', out_coords)
-        output = conv(input, out_coords)
-
-        # To specify the tensor stride
-        out_coords_key = cm.create_coords_key(out_coords, tensor_stride=2)
-        output = conv(input, out_coords_key)
+        output = conv(input)
         print('Conv output: ', output)
 
         output.F.sum().backward()
         print(input.F.grad)
 
-    def test_tr(self):
-        print(f"{self.__class__.__name__}: test_tr")
-        in_channels, out_channels, D = 2, 3, 2
+    def test_gpu(self):
+        print(f"{self.__class__.__name__}: test_gpu")
+        if not torch.cuda.is_available():
+            return
+
+        device = torch.device('cuda')
+        in_channels, D = 3, 2
         coords, feats, labels = data_loader(in_channels, batch_size=2)
-        # tensor stride must be at least 2 for convolution transpose with stride 2
-        coords[:, :2] *= 2
-        out_coords = torch.rand(10, 3)
-        out_coords[:, :2] *= 10  # random coords
-        out_coords[:, 2] *= 2  # random batch index
-        out_coords = out_coords.floor().int()
+
+        # Create random coordinates with tensor stride == 2
+        out_coords, tensor_stride = get_random_coords()
 
         feats = feats.double()
         feats.requires_grad_()
-
-        input = SparseTensor(feats, coords=coords, tensor_stride=2)
-        cm = input.coords_man
-        print(cm._get_coords_key(2))
-
-        conv_tr = MinkowskiConvolutionTranspose(
+        input = SparseTensor(feats, coords=coords).to(device)
+        conv = MinkowskiChannelwiseConvolution(
             in_channels,
-            out_channels,
             kernel_size=3,
-            stride=2,
+            stride=1,
             has_bias=False,
-            dimension=D).double()
-        print('Initial input: ', input)
-        print('Specified output coords: ', out_coords)
-        output = conv_tr(input, out_coords)
-        print('Conv output: ', output)
+            dimension=D).double().to(device)
 
-        output.F.sum().backward()
-        print(input.F.grad)
+        print('Initial input: ', input)
+        output = conv(input)
+        print('Conv output: ', output)
 
 
 if __name__ == '__main__':

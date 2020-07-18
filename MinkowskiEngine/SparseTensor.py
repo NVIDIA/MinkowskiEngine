@@ -32,26 +32,64 @@ import numpy as np
 
 from Common import convert_to_int_list
 from MinkowskiCoords import CoordsKey, CoordsManager
+import MinkowskiEngineBackend as MEB
+from MinkowskiEngineBackend import MemoryManagerBackend
 
 
 class SparseTensorOperationMode(Enum):
     """
-    SEPARATE_COORDS_MANAGER: always create a new coordinate manager.
-    SHARE_COORDS_MANAGER: always use the globally defined coordinate manager.
+    `SEPARATE_COORDS_MANAGER`: always create a new coordinate manager.
+    `SHARE_COORDS_MANAGER`: always use the globally defined coordinate manager. Must clear the coordinate manager manually by :attr:`MinkowskiEngine.SparseTensor.clear_global_coords_man`
     """
     SEPARATE_COORDS_MANAGER = 0
     SHARE_COORDS_MANAGER = 1
 
 
+class SparseTensorQuantizationMode(Enum):
+    """
+    `RANDOM_SUBSAMPLE`: Subsample one coordinate per each quantization block randomly.
+    `UNWEIGHTED_AVERAGE`: average all features within a quantization block equally.
+    """
+    RANDOM_SUBSAMPLE = 0
+    UNWEIGHTED_AVERAGE = 1
+
+
 _sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDS_MANAGER
 _global_coords_man = None
-COORDS_MAN_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://stanfordvl.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
+COORDS_MAN_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
 COORDS_KEY_DIFFERENT_ERROR = "SparseTensors must have the same coords_key."
 
 
 def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
+    r"""Define the sparse tensor coordinate manager operation mode.
+
+    By default, a :attr:`MinkowskiEngine.SparseTensor.SparseTensor`
+    instantiation creates a new coordinate manager that is not shared with
+    other sparse tensors. By setting this function with
+    :attr:`MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDS_MANAGER`, you
+    can share the coordinate manager globally with other sparse tensors.
+    However, you must explicitly clear the coordinate manger after use. Please
+    refer to :attr:`MinkowskiEngine.clear_global_coords_man`.
+
+    Args:
+        :attr:`operation_mode`
+        (:attr:`MinkowskiEngine.SparseTensorOperationMode`): The operation mode
+        for the sparse tensor coordinate manager. By default
+        :attr:`MinkowskiEngine.SparseTensorOperationMode.SEPARATE_COORDS_MANAGER`.
+
+    Example:
+
+        >>> import MinkowskiEngine as ME
+        >>> ME.set_sparse_tensor_operation_mode(ME.SparseTensorOperationMode.SHARE_COORDS_MANAGER)
+        >>> ...
+        >>> a = ME.SparseTensor(coords=A_C, feats=A_F)
+        >>> b = ME.SparseTensor(coords=B_C, feats=B_C)  # coords_man shared
+        >>> ...  # one feed forward and backward
+        >>> ME.clear_global_coords_man()  # Must use to clear the coordinates after one forward/backward
+
+    """
     assert isinstance(operation_mode, SparseTensorOperationMode), \
-      f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
+        f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
     global _sparse_tensor_operation_mode
     _sparse_tensor_operation_mode = operation_mode
 
@@ -62,10 +100,11 @@ def sparse_tensor_operation_mode():
 
 
 def clear_global_coords_man():
-    r"""
-    When using the operation mode:
-    `SparseTensorOperationMode.SHARE_COORDS_MANAGER`, you must explicitly clear
-    the coordinate manager when done using it.
+    r"""Clear the global coordinate manager cache.
+
+    When you use the operation mode:
+    :attr:`MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER`,
+    you must explicitly clear the coordinate manager after each feed forward/backward.
     """
     global _global_coords_man
     _global_coords_man = None
@@ -77,7 +116,7 @@ class SparseTensor():
 
     The :attr:`SparseTensor` class is the basic tensor in MinkowskiEngine. For
     the definition of a sparse tensor, please visit `the terminology page
-    <https://stanfordvl.github.io/MinkowskiEngine/terminology.html#sparse-tensor>`_.
+    <https://nvidia.github.io/MinkowskiEngine/terminology.html#sparse-tensor>`_.
     We use the COOrdinate (COO) format to save a sparse tensor `[1]
     <http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf>`_. This
     representation is simply a concatenation of coordinates in a matrix
@@ -127,14 +166,17 @@ class SparseTensor():
 
     """
 
-    def __init__(self,
-                 feats,
-                 coords=None,
-                 coords_key=None,
-                 coords_manager=None,
-                 force_creation=False,
-                 allow_duplicate_coords=False,
-                 tensor_stride=1):
+    def __init__(
+            self,
+            feats,
+            coords=None,
+            coords_key=None,
+            coords_manager=None,
+            force_creation=False,
+            allow_duplicate_coords=False,
+            quantization_mode=SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
+            memory_manager_backend: MemoryManagerBackend = None,
+            tensor_stride=1):
         r"""
 
         Args:
@@ -150,8 +192,8 @@ class SparseTensor():
             :attr:`coords_key` (:attr:`MinkowskiEngine.CoordsKey`): When the
             coordinates are already cached in the MinkowskiEngine, we could
             reuse the same coordinates by simply providing the coordinate hash
-            key. In most case, this process is done automatically. If you
-            provide one, make sure you understand what you are doing.
+            key. In most case, this process is done automatically. When you
+            provide a `coords_key`, all other arguments will be be ignored.
 
             :attr:`coords_manager` (:attr:`MinkowskiEngine.CoordsManager`): The
             MinkowskiEngine creates a dynamic computation graph and all
@@ -174,8 +216,13 @@ class SparseTensor():
             `allow_duplicate_coords=True` is not recommended as it could hide
             obvious errors in your data loading and preprocessing steps. Please
             refer to the quantization and data loading tutorial on `here
-            <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_
+            <https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_
             for more details.
+
+            :attr:`quantizatino_mode`
+            (:attr:`MinkowskiEngine.SparseTensorQuantizationMode`): Defines the
+            quantization method and how to define features of a sparse tensor.
+            Please refer to :attr:`SparseTensorQuantizationMode` for details.
 
             :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
             :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
@@ -184,6 +231,9 @@ class SparseTensor():
         """
         assert isinstance(feats,
                           torch.Tensor), "Features must be a torch.Tensor"
+        assert feats.ndim == 2, f"The feature should be a matrix, The input feature is an order-{feats.ndim} tensor."
+        assert isinstance(quantization_mode, SparseTensorQuantizationMode)
+        self.quantization_mode = quantization_mode
 
         if coords is None and coords_key is None:
             raise ValueError('Either coords or coords_key must be provided')
@@ -209,7 +259,7 @@ class SparseTensor():
                     'Coords implicitly converted to torch.IntTensor. ' +
                     'To remove this warning, use `.int()` to convert the ' +
                     'coords into an torch.IntTensor')
-                coords = coords.int()
+                coords = torch.floor(coords).int()
 
             if coords.device.type != 'cpu':
                 warnings.warn(
@@ -219,45 +269,74 @@ class SparseTensor():
                 coords = coords.cpu()
 
             assert feats.shape[0] == coords.shape[0], \
-                "Number of rows in features and coordinates do not match."
+                "The number of rows in features and coordinates do not match."
 
             coords = coords.contiguous()
 
+        ##########################
+        # Setup CoordsManager
+        ##########################
         if coords_manager is None:
             # If set to share the coords man, use the global coords man
             global _sparse_tensor_operation_mode, _global_coords_man
             if _sparse_tensor_operation_mode == SparseTensorOperationMode.SHARE_COORDS_MANAGER:
                 if _global_coords_man is None:
-                    _global_coords_man = CoordsManager(D=coords.size(1) - 1)
+                    _global_coords_man = CoordsManager(
+                        memory_manager_backend=memory_manager_backend,
+                        D=coords.size(1) - 1)
                 coords_manager = _global_coords_man
             else:
                 assert coords is not None, "Initial coordinates must be given"
                 coords_manager = CoordsManager(D=coords.size(1) - 1)
 
-            if not coords_key.isKeySet():
-                self.mapping = coords_manager.initialize(
-                    coords,
-                    coords_key,
-                    force_creation=force_creation,
-                    force_remap=allow_duplicate_coords,
-                    allow_duplicate_coords=allow_duplicate_coords)
-                if len(self.mapping) > 0:
-                    coords = coords[self.mapping]
-                    feats = feats[self.mapping]
         else:
             assert isinstance(coords_manager, CoordsManager)
 
-            if not coords_key.isKeySet():
-                assert coords is not None
-                self.mapping = coords_manager.initialize(
-                    coords,
-                    coords_key,
-                    force_creation=force_creation,
-                    force_remap=allow_duplicate_coords,
-                    allow_duplicate_coords=allow_duplicate_coords)
-                if len(self.mapping) > 0:
-                    coords = coords[self.mapping]
-                    feats = feats[self.mapping]
+        ##########################
+        # Initialize coords
+        ##########################
+        if not coords_key.isKeySet() and coords is not None and len(coords) > 0:
+            if quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
+                force_remap = True
+                return_inverse = False
+            elif quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+                force_remap = True
+                return_inverse = True
+
+            self.unique_index, self.inverse_mapping = coords_manager.initialize(
+                coords,
+                coords_key,
+                force_creation=force_creation,
+                force_remap=force_remap,
+                allow_duplicate_coords=allow_duplicate_coords,
+                return_inverse=return_inverse)
+
+            if quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+                self._CF = feats
+                self._CC = coords
+                feats = MEB.quantization_average_features(
+                    feats, torch.arange(len(feats)), self.inverse_mapping,
+                    len(self.unique_index), 0)
+                coords = coords[self.unique_index]
+            elif force_remap:
+                assert len(self.unique_index) > 0
+                self._CC = coords
+                self._CF = feats
+                coords = coords[self.unique_index]
+                feats = feats[self.unique_index]
+
+        elif coords is not None:  # empty / invalid coords
+            assert isinstance(coords, torch.IntTensor)
+            assert coords.ndim == 2
+            coords_manager.initialize(
+                coords,
+                coords_key,
+                force_creation=force_creation,
+                force_remap=False,
+                allow_duplicate_coords=False,
+                return_inverse=False)
+        elif coords_key is not None:
+            assert coords_key.isKeySet()
 
         self._F = feats.contiguous()
         self._C = coords
@@ -357,14 +436,29 @@ class SparseTensor():
     def features_at(self, batch_index):
         r"""Returns a feature matrix at the specified batch index.
 
-        Returns a list of torch.IntTensor :math:`C \in \mathcal{R}^{N_i
-        \times D}` coordinates per batch where :math:`N_i` is the number of non
-        zero elements in the :math:`i`th batch index in :math:`D` dimensional
-        space.
+        Returns a torch.Tensor :math:`C \in \mathcal{R}^{N
+        \times N_F}` feature matrix :math:`N` is the number of non
+        zero elements in the specified batch index and :math:`N_F` is the
+        number of channels.
         """
         row_inds = self.coords_man.get_row_indices_at(self.coords_key,
                                                       batch_index)
         return self._F[row_inds]
+
+    def coordinates_and_features_at(self, batch_index):
+        r"""Returns a coordinate and feature matrix at the specified batch index.
+
+        Returns a coordinate and feature matrix at the specified `batch_index`.
+        The coordinate matrix is a torch.IntTensor :math:`C \in \mathcal{R}^{N
+        \times D}` where :math:`N` is the number of non zero elements in the
+        specified batch index in :math:`D` dimensional space. The feature
+        matrix is a torch.Tensor :math:`C \in \mathcal{R}^{N \times N_F}`
+        matrix :math:`N` is the number of non zero elements in the specified
+        batch index and :math:`N_F` is the number of channels.
+        """
+        row_inds = self.coords_man.get_row_indices_at(self.coords_key,
+                                                      batch_index)
+        return self.C[row_inds, 1:], self._F[row_inds]
 
     @property
     def decomposed_coordinates_and_features(self):
@@ -413,7 +507,8 @@ class SparseTensor():
             + '  Feats=' + str(self.F) + os.linesep \
             + '  coords_key=' + str(self.coords_key) \
             + '  tensor_stride=' + str(self.coords_key.getTensorStride()) + os.linesep \
-            + '  coords_man=' + str(self.coords_man) + ')'
+            + '  coords_man=' + str(self.coords_man) \
+            + '  spatial dimension=' + str(self.D) + ')'
 
     def __len__(self):
         return len(self._F)
@@ -755,9 +850,10 @@ class SparseTensor():
 
         Returns:
             :attr:`spare_tensor` (torch.sparse.Tensor): the torch sparse tensor
-            representation of the self in `[Batch Dim, Spatial Dims..., Feature
-            Dim]`. The coordinate of each feature can be accessed via
-            `min_coord + tensor_stride * [the coordinate of the dense tensor]`.
+            representation of the self in `[Batch Dim, Feature Dim, Spatial
+            Dim..., Spatial Dim]`. The coordinate of each feature can be
+            accessed via `min_coord + tensor_stride * [the coordinate of the
+            dense tensor]`.
 
             :attr:`min_coords` (torch.IntTensor): the D-dimensional vector
             defining the minimum coordinate of the output sparse tensor. If
@@ -831,6 +927,68 @@ class SparseTensor():
 
         tensor_stride = torch.IntTensor(self.tensor_stride)
         return dense_F, min_coords, tensor_stride
+
+    def slice(self, X, slicing_mode=0):
+        r"""
+
+        Args:
+           :attr:`X` (:attr:`MinkowskiEngine.SparseTensor`): a sparse tensor
+           that discretized the original input.
+
+           :attr:`slicing_mode`: For future updates.
+
+        Returns:
+           :attr:`sliced_feats` (:attr:`torch.Tensor`): the resulting feature
+           matrix that slices features on the discretized coordinates to the
+           original continuous coordinates that generated the input X.
+
+        Example::
+
+           >>> # coords, feats from a data loader
+           >>> print(len(coords))  # 227742
+           >>> sinput = ME.SparseTensor(coords=coords, feats=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+           >>> print(len(sinput))  # 161890 quantization results in fewer voxels
+           >>> soutput = network(sinput)
+           >>> print(len(soutput))  # 161890 Output with the same resolution
+           >>> outputs = soutput.slice(sinput)
+           >>> assert(outputs, torch.Tensor)  # regular differentiable pytorch tensor
+           >>> len(outputs) == len(coords)  # recovers the original ordering and length
+        """
+        # Currently only supports unweighted slice.
+        return self.feats[X.inverse_mapping]
+
+    def features_at_coords(self, query_coords: torch.Tensor):
+        r"""Extract features at the specified coordinate matrix.
+
+        Args:
+           :attr:`query_coords` (:attr:`torch.IntTensor`): a coordinate matrix
+           of size :math:`N \times (D + 1)` where :math:`D` is the size of the
+           spatial dimension.
+
+        Returns:
+           :attr:`query_feats` (:attr:`torch.Tensor`): a feature matrix of size
+           :math:`N \times D_F` where :math:`D_F` is the number of channels in
+           the feature. Features for the coordinates that are not found, it will be zero.
+
+           :attr:`valid_rows` (:attr:`list`): a list of row indices that
+           contain valid values. The rest of the rows that are not found in the
+           `query_feats` will be 0.
+
+        """
+        cm = self.coords_man
+
+        self_key = self.coords_key
+        query_key = cm.create_coords_key(query_coords)
+
+        self_indices, query_indices = cm.get_kernel_map(
+            self_key, query_key, kernel_size=1)
+        query_feats = torch.zeros((len(query_coords), self._F.size(1)),
+                                  dtype=self.dtype,
+                                  device=self.device)
+
+        if len(self_indices[0]) > 0:
+            query_feats[query_indices[0]] = self._F[self_indices[0]]
+        return query_feats, query_indices[0]
 
 
 def _get_coords_key(

@@ -31,7 +31,7 @@ from time import time
 try:
     import open3d as o3d
 except ImportError:
-    raise ImportError('Please install open3d with `pip install open3d`.')
+    raise ImportError('Please install open3d and scipy with `pip install open3d scipy`.')
 
 import torch
 import torch.utils.data

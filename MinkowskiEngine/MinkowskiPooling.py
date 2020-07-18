@@ -26,12 +26,11 @@ from typing import Union
 import torch
 from torch.autograd import Function
 
-import MinkowskiEngineBackend as MEB
 from SparseTensor import SparseTensor, _get_coords_key
 from Common import KernelGenerator, RegionType, GlobalPoolingMode, \
     MinkowskiModuleBase, \
     convert_to_int_list, convert_to_int_tensor, \
-    prep_args, get_postfix
+    prep_args, get_minkowski_function
 from MinkowskiCoords import CoordsKey, save_ctx
 
 
@@ -74,7 +73,7 @@ class MinkowskiMaxPoolingFunction(Function):
 
         ctx.max_index = max_index
 
-        fw_fn = getattr(MEB, 'MaxPoolingForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('MaxPoolingForward', input_features)
         fw_fn(input_features, out_feat, max_index,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -91,7 +90,7 @@ class MinkowskiMaxPoolingFunction(Function):
 
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(MEB, 'MaxPoolingBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('MaxPoolingBackward', grad_out_feat)
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.max_index,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -148,7 +147,7 @@ class MinkowskiAvgPoolingFunction(Function):
         out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
 
-        fw_fn = getattr(MEB, 'AvgPoolingForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('AvgPoolingForward', input_features)
         fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -165,7 +164,7 @@ class MinkowskiAvgPoolingFunction(Function):
 
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(MEB, 'AvgPoolingBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('AvgPoolingBackward', grad_out_feat)
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -559,8 +558,8 @@ class MinkowskiPoolingTransposeFunction(Function):
                        region_type, in_coords_key, out_coords_key,
                        coords_manager)
         D = in_coords_key.D
-        fw_fn = getattr(MEB,
-                        'PoolingTransposeForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('PoolingTransposeForward',
+                                       input_features)
         fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -574,8 +573,8 @@ class MinkowskiPoolingTransposeFunction(Function):
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = getattr(MEB,
-                        'PoolingTransposeBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('PoolingTransposeBackward',
+                                       grad_out_feat)
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
               convert_to_int_list(ctx.tensor_stride, D),
               convert_to_int_list(ctx.stride, D),
@@ -693,8 +692,7 @@ class MinkowskiGlobalPoolingFunction(Function):
         ctx.coords_manager = coords_manager
         ctx.mode = mode.value
 
-        fw_fn = getattr(MEB,
-                        'GlobalPoolingForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('GlobalPoolingForward', input_features)
         out_feat, num_nonzero = fw_fn(ctx.in_feat,
                                       ctx.in_coords_key.CPPCoordsKey,
                                       ctx.out_coords_key.CPPCoordsKey,
@@ -707,8 +705,7 @@ class MinkowskiGlobalPoolingFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
-        bw_fn = getattr(MEB,
-                        'GlobalPoolingBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('GlobalPoolingBackward', grad_out_feat)
         grad_in_feat = bw_fn(ctx.in_feat, grad_out_feat, ctx.num_nonzero,
                              ctx.in_coords_key.CPPCoordsKey,
                              ctx.out_coords_key.CPPCoordsKey,
@@ -805,8 +802,8 @@ class MinkowskiGlobalMaxPoolingFunction(Function):
         ctx.max_index = max_index
         ctx.coords_manager = coords_manager
 
-        fw_fn = getattr(MEB,
-                        'GlobalMaxPoolingForward' + get_postfix(input_features))
+        fw_fn = get_minkowski_function('GlobalMaxPoolingForward',
+                                       input_features)
         fw_fn(ctx.in_feat, out_feat, ctx.max_index,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)
@@ -815,8 +812,8 @@ class MinkowskiGlobalMaxPoolingFunction(Function):
     @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
-        bw_fn = getattr(MEB,
-                        'GlobalMaxPoolingBackward' + get_postfix(grad_out_feat))
+        bw_fn = get_minkowski_function('GlobalMaxPoolingBackward',
+                                       grad_out_feat)
         bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.max_index,
               ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
               ctx.coords_manager.CPPCoordsManager)

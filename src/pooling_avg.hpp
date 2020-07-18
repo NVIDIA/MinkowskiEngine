@@ -31,6 +31,12 @@
 
 namespace minkowski {
 
+/**
+ * CPU pooling function. The p_out_feat must be initialized and set to 0.
+ * p_num_nonzero is set to 0 inside this function.
+ *
+ * TODO consistent memset
+ */
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
                                        Dtype *p_out_feat, Dtype *p_num_nonzero,
@@ -57,7 +63,7 @@ void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
     if (n_active_in_volume == 0)
       continue;
 
-    // Use the entire for loop inside to reduce branching
+    // Put the entire for loop inside to reduce branching
     if (use_avg) {
       for (row = 0; row < n_active_in_volume; row++) {
         // Define current pointers
@@ -137,6 +143,24 @@ void NonzeroAvgPoolingBackwardKernelCPU(
   }
 }
 
+template void NonzeroAvgPoolingForwardKernelCPU<float, int>(
+    const float *p_in_feat, float *p_out_feat, float *p_num_nonzero,
+    int nchannel, const InOutMaps<int> &in_map, const InOutMaps<int> &out_map,
+    int out_nrows, const bool use_avg);
+
+template void NonzeroAvgPoolingForwardKernelCPU<float, long>(
+    const float *p_in_feat, float *p_out_feat, float *p_num_nonzero,
+    int nchannel, const InOutMaps<long> &in_map, const InOutMaps<long> &out_map,
+    int out_nrows, const bool use_avg);
+template void NonzeroAvgPoolingForwardKernelCPU<double, int>(
+    const double *p_in_feat, double *p_out_feat, double *p_num_nonzero,
+    int nchannel, const InOutMaps<int> &in_map, const InOutMaps<int> &out_map,
+    int out_nrows, const bool use_avg);
+
+template void NonzeroAvgPoolingForwardKernelCPU<double, long>(
+    const double *p_in_feat, double *p_out_feat, double *p_num_nonzero,
+    int nchannel, const InOutMaps<long> &in_map, const InOutMaps<long> &out_map,
+    int out_nrows, const bool use_avg);
 } // namespace minkowski
 
 #endif // end CPU_POOLING_AVG

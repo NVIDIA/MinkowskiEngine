@@ -77,7 +77,7 @@ Gathering all losses to the target device.
 loss = parallel.gather(losses, target_device, dim=0).mean()
 ```
 
-The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the [complete multi-gpu example](https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/multigpu.py) for more detail.
+The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the [complete multi-gpu example](https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/multigpu.py) for more detail.
 
 
 Speedup Experiments
