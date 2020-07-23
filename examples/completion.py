@@ -612,11 +612,11 @@ def visualize(net, dataloader, device, config):
             pcd = PointCloud(coords)
             pcd.estimate_normals()
             pcd.translate([0.6 * config.resolution, 0, 0])
-            pcd.rotate(M)
+            pcd.rotate(M, np.array([[0.0],[0.0],[0.0]]))
             opcd = PointCloud(data_dict['cropped_coords'][b])
             opcd.translate([-0.6 * config.resolution, 0, 0])
             opcd.estimate_normals()
-            opcd.rotate(M)
+            opcd.rotate(M, np.array([[0.0],[0.0],[0.0]]))
             o3d.visualization.draw_geometries([pcd, opcd])
 
             n_vis += 1
