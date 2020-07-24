@@ -30,6 +30,7 @@
 #include "coordinate_map.hpp"
 #include "coordinate_map_cpu.hpp"
 #include "coordinate_map_key.hpp"
+#include "errors.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 
@@ -265,7 +266,7 @@ public:
 
   inline size_type size(coordinate_map_key_type const &key) const {
     auto it = m_coordinate_maps.find(key);
-    ASSERT(it != m_coordinate_maps.end(), "key not found");
+    ASSERT(it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
     return it->second.size();
   }
 
@@ -275,7 +276,7 @@ public:
 
   inline size_type capacity(coordinate_map_key_type const &key) const {
     auto it = m_coordinate_maps.find(key);
-    ASSERT(it != m_coordinate_maps.end(), "key not found");
+    ASSERT(it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
     return it->second.capacity();
   }
 
@@ -292,6 +293,34 @@ public:
       }
     }
     return keys;
+  }
+
+  std::string print_key(coordinate_map_key_type const &key) const {
+    Formatter out;
+    out << ArrToString(key.first);
+    if (key.second.length() > 0)
+      out << "-" << key.second;
+    return out.str();
+  }
+
+  std::string to_string(CoordinateMapKey const *p_key) const {
+    auto it = m_coordinate_maps.find(p_key->get_key());
+    ASSERT(it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
+    return print_key(it->first) + " : " + it->second.to_string();
+  }
+
+  std::string to_string() const {
+    Formatter o;
+    o << "CoordinateMapManager(";
+    for (auto const &kv : m_coordinate_maps) {
+      o << print_key(kv.first) << ":" << kv.second.to_string() << "\n";
+    }
+    for (auto const &kv : m_kernel_maps) {
+      o << print_key(std::get<0>(kv.first)) << "->"
+        << print_key(std::get<1>(kv.first)) << ":" << kv.second << "\n";
+    }
+    o << ")";
+    return o.str();
   }
 
   /****************************************************************************
@@ -539,7 +568,7 @@ struct insert_and_map_functor {
                                   CoordinateMapType> &manager);
 };
 
-// a partial specialization functor for insertion
+// a partial specialization functor for kernel map generation
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
@@ -551,6 +580,27 @@ struct kernel_map_functor {
       CoordinateMapType<coordinate_type, TemplatedAllocator> const &out_map,
       CUDAKernelMapMode::Mode kernel_map_mode,
       cpu_kernel_region<coordinate_type> &kernel);
+};
+
+// a partial specialization functor for stride map generation
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType,
+          typename kernel_map_type>
+struct stride_map_functor {
+  using stride_type = default_types::stride_type;
+
+  kernel_map_type operator()(
+      CoordinateMapType<coordinate_type, TemplatedAllocator> const &in_map,
+      CoordinateMapType<coordinate_type, TemplatedAllocator> const &out_map,
+      stride_type const &kernel);
+};
+
+// a partial specialization functor for kernel map in/out swap
+template <typename kernel_map_type> struct swap_in_out_map_functor {
+
+  kernel_map_type operator()(kernel_map_type const &kernel_map);
 };
 
 } // namespace detail

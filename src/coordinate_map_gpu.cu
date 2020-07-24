@@ -276,8 +276,8 @@ stride_copy(coordinate_type const *__restrict__ src_coordinates, //
     dst_coordinates[dst_start] = src_coordinates[src_start];
     for (index_type j = 1; j < coordinate_size; ++j) {
       dst_coordinates[dst_start + j] =
-          (__float2int_rd(__fdiv_rd(src_coordinates[src_start + j],
-                                    sh_stride[j - 1]))) *
+          (__float2int_rd(
+              __fdiv_rd(src_coordinates[src_start + j], sh_stride[j - 1]))) *
           sh_stride[j - 1];
       // (__double2int_rd(
       //     __ddiv_rn(src_coordinates[src_start + j], sh_stride[j - 1]))) *
@@ -389,8 +389,8 @@ count_kernel(map_type const __restrict__ in_map,                       //
   auto const bx = blockIdx.x;
   auto const x = blockDim.x * bx + tx;
 
-  size_type coordinate_size = kernel.coordinate_size();
-  size_type volume = kernel.volume();
+  size_type const coordinate_size = kernel.coordinate_size();
+  size_type const volume = kernel.volume();
 
   // clang-format off
   size_type *sh_size = reinterpret_cast<size_type *>(sh_all);
@@ -455,8 +455,8 @@ __global__ void preallocated_kernel_map_iteration(
   auto const bx = blockIdx.x;
   auto const x = blockDim.x * bx + tx;
 
-  size_type coordinate_size = kernel.coordinate_size();
-  size_type volume = kernel.volume();
+  size_type const coordinate_size = kernel.coordinate_size();
+  size_type const volume = kernel.volume();
 
   // clang-format off
   size_type *sh_size = reinterpret_cast<size_type *>(sh_all);
@@ -480,9 +480,6 @@ __global__ void preallocated_kernel_map_iteration(
   }
 
   __syncthreads();
-
-  if (x >= num_threads)
-    return;
 
   auto const unused_key = out_map.get_unused_key();
   if (x < num_threads) {
@@ -589,6 +586,105 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map(
       reinterpret_cast<char *>(d_p_count_per_thread),
       num_threads * sizeof(index_type));
   LOG_DEBUG("cudaFree");
+
+  return kernel_map;
+}
+
+namespace detail {
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void
+stride_map_kernel(map_type const __restrict__ in_map,                      //
+                  map_type const __restrict__ out_map,                     //
+                  index_type const *const __restrict__ in_valid_map_index, //
+                  size_type const num_threads,                             //
+                  index_type const *const __restrict__ stride,             //
+                  index_type *__restrict__ p_in_maps,                      //
+                  index_type *__restrict__ p_out_maps,
+                  size_type const coordinate_size) {
+  extern __shared__ coordinate_type sh_all[];
+
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  // clang-format off
+  size_type *sh_size = reinterpret_cast<size_type *>(sh_all);
+
+  size_type *sh_stride = sh_size;
+
+  coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_size + coordinate_size);
+  coordinate_type *sh_tmp = sh_coordinate + tx * coordinate_size;
+  // clang-format on
+
+  for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x) {
+    sh_stride[i] = stride[i];
+  }
+
+  __syncthreads();
+
+  if (x >= num_threads)
+    return;
+
+  typename map_type::value_type const &in_value =
+      in_map.data()[in_valid_map_index[x]];
+
+  sh_tmp[0] = in_value.first[0];
+  for (index_type j = 1; j < coordinate_size; ++j) {
+    sh_tmp[j] =
+        (__float2int_rd(__fdiv_rd(in_value.first[j], sh_stride[j - 1]))) *
+        sh_stride[j - 1];
+  }
+
+  auto out_iter = out_map.find(coordinate<coordinate_type>(sh_tmp));
+
+  p_in_maps[x] = in_value.second;
+  p_out_maps[x] = out_iter->second;
+}
+
+} // namespace detail
+
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map_type
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_map(
+    self_type const &out_map, stride_type const &out_tensor_stride,
+    uint32_t thread_dim) const {
+  // Over estimate the reserve size to be size();
+  size_type const in_size = size();
+  thrust::device_vector<size_type> d_out_tensor_stride(
+      out_tensor_stride.begin(), out_tensor_stride.end());
+
+  // (THREAD * D +  D) * 4
+  uint32_t const shared_memory_size_in_bytes =
+      m_coordinate_size * sizeof(index_type) +                  // stride
+      thread_dim * m_coordinate_size * sizeof(coordinate_type); // tmp
+  size_type const num_threads = in_size;
+  auto const num_blocks = GET_BLOCKS(num_threads, thread_dim);
+
+  LOG_DEBUG("num block", num_blocks);
+  LOG_DEBUG("shared_memory size", shared_memory_size_in_bytes);
+  LOG_DEBUG("threads dim", thread_dim);
+  LOG_DEBUG("num threads", num_threads);
+
+  kernel_map_type kernel_map(in_size, base_type::m_byte_allocator,
+                             false /* reserve_kernel_index */);
+  CUDA_CHECK(cudaStreamSynchronize(0));
+  LOG_DEBUG("Allocated kernel_map.");
+
+  detail::stride_map_kernel<coordinate_type, size_type, index_type, map_type>
+      <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
+          *m_map,                                               //
+          *out_map.m_map,                                       //
+          thrust::raw_pointer_cast(m_valid_map_index.data()),   //
+          num_threads,                                          //
+          thrust::raw_pointer_cast(d_out_tensor_stride.data()), //
+          kernel_map.in_maps.begin(),                           //
+          kernel_map.out_maps.begin(),                          //
+          m_coordinate_size);
 
   return kernel_map;
 }

@@ -81,10 +81,24 @@ using cpu_out_map = default_types::index_vector_type;
 // Input index to output index mapping for each spatial kernel
 using cpu_in_maps  = std::vector<cpu_in_map>;
 using cpu_out_maps = std::vector<cpu_out_map>;
-
-using cpu_kernel_map           = std::pair<cpu_in_maps, cpu_out_maps>;
-using cpu_reference_kernel_map = std::pair<cpu_in_maps &, cpu_out_maps &>;
 // clang-format on
+//
+struct cpu_kernel_map : std::pair<cpu_in_maps, cpu_out_maps> {
+  cpu_kernel_map() : std::pair<cpu_in_maps, cpu_out_maps>() {}
+  cpu_kernel_map(std::pair<cpu_in_maps, cpu_out_maps> const &other)
+      : std::pair<cpu_in_maps, cpu_out_maps>(other) {}
+  friend std::ostream &operator<<(std::ostream &out,
+                                  cpu_kernel_map const &kernel_map) {
+    uint32_t map_size = 0;
+    for (auto const &v : kernel_map.first) {
+      map_size += v.size();
+    }
+    out << "cpu_kernel_map: number of unique maps:" << kernel_map.first.size()
+        << ", kernel map size:" << map_size;
+    return out;
+  }
+};
+using cpu_reference_kernel_map = std::pair<cpu_in_maps &, cpu_out_maps &>;
 
 using coordinate_map_key_type =
     std::pair<default_types::stride_type, std::string>;

@@ -101,6 +101,8 @@ class TestConvolution(unittest.TestCase):
         conv = conv.double()
         output = conv(input)
         print(output)
+        self.assertEqual(input.coordinate_map_key.get_tensor_stride(), [1, 1])
+        self.assertEqual(output.coordinate_map_key.get_tensor_stride(), [2, 2])
 
         # kernel_map = input.coords_man.get_kernel_map(
         #     1, 2, stride=2, kernel_size=3)
@@ -117,7 +119,7 @@ class TestConvolution(unittest.TestCase):
                     conv.weight,
                     conv.kernel_generator,
                     input.coordinate_map_key,
-                    None,
+                    output.coordinate_map_key,
                     input.coordinate_manager,
                 ),
             )

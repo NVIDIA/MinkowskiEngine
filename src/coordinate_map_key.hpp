@@ -91,6 +91,7 @@ public:
     ASSERT(m_coordinate_size - 1 == key.first.size(),
            "Invalid tensor_stride size:", key.first,
            "coordinate_size:", m_coordinate_size);
+    LOG_DEBUG("Setting the key to ", key.first, ":", key.second);
     m_key = key;
     m_key_set = true;
   }

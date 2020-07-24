@@ -65,6 +65,16 @@ stride_coordinate(const coordinate<Itype> &src, std::vector<Itype> &dst,
   }
 }
 
+template <typename Itype, typename stride_type>
+inline void stride_coordinate(const coordinate<Itype> &src,
+                              std::vector<Itype> &dst,
+                              const stride_type stride) noexcept {
+  dst[0] = src[0];
+  for (default_types::index_type i = 0; i < dst.size() - 1; ++i) {
+    dst[i + 1] = std::floor((float)src[i + 1] / stride[i]) * stride[i];
+  }
+}
+
 inline default_types::stride_type
 stride_tensor_stride(const default_types::stride_type &tensor_stride,
                      const default_types::stride_type &stride) {
