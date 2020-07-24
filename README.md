@@ -260,3 +260,4 @@ Please feel free to update [the wiki page](https://github.com/NVIDIA/MinkowskiEn
 - 3D Registration: [Deep Global Registration, CVPR'20](https://arxiv.org/abs/2004.11540)
 - Pattern Recognition: [High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR'20](https://arxiv.org/abs/2005.08144)
 - Detection: [Generative Sparse Detection Networks for 3D Single-shot Object Detection, ECCV'20](https://arxiv.org/abs/2006.12356)
+- Image matching: [Sparse Neighbourhood Consensus Networks, ECCV'20](https://www.di.ens.fr/willow/research/sparse-ncnet/)
