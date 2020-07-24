@@ -292,9 +292,6 @@ class SparseTensor:
         else:
             # not (coordinate_map_key is None or coordinate_manager is None)
             self.D = coordinate_manager.D
-            coordinate_map_key = CoordinateMapKey(
-                convert_to_int_list(tensor_stride, self.D), ""
-            )
             self._manager = coordinate_manager
 
         ##########################

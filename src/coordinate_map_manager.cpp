@@ -277,7 +277,7 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
            stride_type const &kernel_stride) {
   ASSERT(exists(in_map_key), ERROR_MAP_NOT_FOUND);
   // check if the key exists.
-  coordinate_map_key_type out_map_key = std::make_pair(
+  coordinate_map_key_type out_map_key(
       detail::stride_tensor_stride(in_map_key.first, kernel_stride), "");
   bool const exists_out_map = exists(out_map_key);
   if (!exists_out_map) {
@@ -304,6 +304,26 @@ struct kernel_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
              CUDAKernelMapMode::Mode kernel_map_mode,
              cpu_kernel_region<coordinate_type> &kernel) {
     return in_map.kernel_map(out_map, kernel);
+  }
+};
+
+template <typename coordinate_type>
+struct stride_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
+                          cpu_kernel_map> {
+
+  cpu_kernel_map
+  operator()(CoordinateMapCPU<coordinate_type, std::allocator> const &in_map,
+             CoordinateMapCPU<coordinate_type, std::allocator> const &out_map,
+             default_types::stride_type const &stride) {
+    return in_map.stride_map(out_map, stride);
+  }
+};
+
+// a partial specialization functor for kernel map in/out swap
+template <> struct swap_in_out_map_functor<cpu_kernel_map> {
+
+  cpu_kernel_map operator()(cpu_kernel_map const &kernel_map) {
+    return std::make_pair(kernel_map.second, kernel_map.first);
   }
 };
 
@@ -369,24 +389,88 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     // +1 for batch index
     ASSERT(kernel_dim + 1 == in_map.coordinate_size(), "kernel size mismatch");
     ASSERT(kernel_dim + 1 == out_map.coordinate_size(), "kernel size mismatch");
+    if (!is_transpose) {
+      if (is_pool && (kernel_stride == kernel_size)) {
+        LOG_DEBUG("generating stride_map");
+        auto const stride_map =
+            detail::stride_map_functor<coordinate_type, TemplatedAllocator,
+                                       CoordinateMapType, kernel_map_type>()(
+                in_map, out_map, out_map.get_tensor_stride());
 
-    auto kernel_region = cpu_kernel_region<coordinate_type>(
-        region_type,                       //
-        in_map.coordinate_size(),          //
-        in_map.get_tensor_stride().data(), //
-        kernel_size.data(),                //
-        kernel_dilation.data(),            //
-        0, offset.data_ptr<coordinate_type>(), offset.size(0));
-    LOG_DEBUG("cpu_kernel_region set");
+        m_kernel_maps[kernel_map_key] = std::move(stride_map);
 
-    auto const kernel_map =
-        detail::kernel_map_functor<coordinate_type, TemplatedAllocator,
-                                   CoordinateMapType, kernel_map_type>()(
-            in_map, out_map, m_kernel_map_mode, kernel_region);
+      } else {
+        LOG_DEBUG("generating kernel map");
 
-    LOG_DEBUG("kernel_map done");
-    m_kernel_maps[kernel_map_key] = std::move(kernel_map);
-    LOG_DEBUG("kernel_map saved");
+        // Default kernel map
+        auto kernel_region = cpu_kernel_region<coordinate_type>(
+            region_type,                       //
+            in_map.coordinate_size(),          //
+            in_map.get_tensor_stride().data(), //
+            kernel_size.data(),                //
+            kernel_dilation.data(),            //
+            0, offset.data_ptr<coordinate_type>(), offset.size(0));
+
+        auto const kernel_map =
+            detail::kernel_map_functor<coordinate_type, TemplatedAllocator,
+                                       CoordinateMapType, kernel_map_type>()(
+                in_map, out_map, m_kernel_map_mode, kernel_region);
+
+        LOG_DEBUG("kernel_map done");
+        m_kernel_maps[kernel_map_key] = std::move(kernel_map);
+        LOG_DEBUG("kernel_map saved");
+      }
+    } else { // is_transpose == true
+      // Check first if the out2in kernel map exists
+      //
+      // Create temporary key for the flipped in/out
+      kernel_map_key_type const swapped_kernel_map_key = std::make_tuple(
+          p_out_map_key->get_key(), p_in_map_key->get_key(), // maps
+          kernel_size, kernel_stride, kernel_dilation,       // kernels
+          region_type, false, is_pool);
+
+      // Check if the temporary key exists and return swapped in/out
+      if (m_kernel_maps.find(swapped_kernel_map_key) != m_kernel_maps.end()) {
+        // copy the in out maps from the existing maps
+        m_kernel_maps[kernel_map_key] =
+            detail::swap_in_out_map_functor<kernel_map_type>()(
+                m_kernel_maps[swapped_kernel_map_key]);
+      } else { // create in out kernel if it doesn't exist
+        if (is_pool && kernel_stride == kernel_size) {
+          // e.g. out_map has tensor stride 2 in_map has tensor stride 4.
+          // Thus, create a stride map from 2 to 4, out to in.
+          auto const stride_map =
+              detail::stride_map_functor<coordinate_type, TemplatedAllocator,
+                                         CoordinateMapType, kernel_map_type>()(
+                  out_map, in_map, kernel_stride);
+
+          // TODO Replace the kernel_map values to shared pointers.
+          m_kernel_maps[kernel_map_key] =
+              detail::swap_in_out_map_functor<kernel_map_type>()(stride_map);
+        } else {
+          // Default kernel map
+          auto kernel_region = cpu_kernel_region<coordinate_type>(
+              region_type,                        //
+              out_map.coordinate_size(),          //
+              out_map.get_tensor_stride().data(), //
+              kernel_size.data(),                 //
+              kernel_dilation.data(),             //
+              0, offset.data_ptr<coordinate_type>(), offset.size(0));
+
+          // out to in kernel map
+          auto const kernel_map =
+              detail::kernel_map_functor<coordinate_type, TemplatedAllocator,
+                                         CoordinateMapType, kernel_map_type>()(
+                  out_map, in_map, m_kernel_map_mode, kernel_region);
+
+          LOG_DEBUG("kernel_map done");
+          m_kernel_maps[kernel_map_key] =
+              detail::swap_in_out_map_functor<kernel_map_type>()(
+                  std::move(kernel_map));
+          LOG_DEBUG("kernel_map saved");
+        }
+      }
+    }
   }
 
   // TODO check if it copies or moves the internal data
@@ -395,90 +479,6 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
 
 /*********************************/
 /*
-template <typename MapType>
-uint64_t CoordsManager<MapType>::createStridedCoords(
-    uint64_t coords_key, const vector<int> &tensor_strides,
-    const vector<int> &strides, bool force_creation) {
-  // Basic assertions
-  ASSERT(existsCoordsKey(coords_key),
-         "The coord map doesn't exist for the given coords_key: ",
-         to_string(coords_key), ".");
-
-  const vector<int> out_tensor_strides =
-      computeOutTensorStride(tensor_strides, strides, false);
-
-  const int D = coords_maps[coords_key].ncols - 1;
-  ASSERT(D == tensor_strides.size(), "The coordinate dimensions mismatch. ",
-         "CoordsManager dimension: ", to_string(D),
-         ", tensor_strides dimension: ", to_string(tensor_strides.size()));
-
-  uint64_t out_coords_key = 0;
-  const bool is_identity =
-      std::all_of(strides.begin(), strides.end(), [](int s) { return s == 1; });
-
-  if (is_identity) {
-    out_coords_key = coords_key;
-  } else {
-
-    // tensor_strides.size() == strides.size() on computeOutTensorStride
-    out_coords_key = hash_vec(out_tensor_strides);
-
-    // If force creationg, get a random key.
-    // ElseIf the coordinates already exists, return the key.
-    if (force_creation) {
-      if (existsCoordsKey(out_coords_key))
-        out_coords_key = getRandomCoordsKey();
-    } else if (existsCoordsKey(out_coords_key)) {
-      return out_coords_key;
-    }
-
-    // Create a strided coords map
-    coords_maps[out_coords_key] =
-        coords_maps[coords_key].stride(out_tensor_strides);
-  }
-
-  return out_coords_key;
-}
-
-template <typename MapType>
-uint64_t CoordsManager<MapType>::createTransposedStridedRegionCoords(
-    uint64_t coords_key, const vector<int> &tensor_strides,
-    const vector<int> &strides, vector<int> kernel_sizes, vector<int> dilations,
-    int region_type, at::Tensor offsets, bool force_creation) {
-  const vector<int> out_tensor_strides =
-      computeOutTensorStride(tensor_strides, strides, true // is_transpose
-                      );
-
-  // Basic assertions
-  ASSERT(existsCoordsKey(coords_key),
-         "The coord map doesn't exist for the given coords_key: ",
-         to_string(coords_key), ".");
-
-  const int D = coords_maps[coords_key].ncols - 1;
-  ASSERT(D == tensor_strides.size(), "The coordinate dimensions mismatch. ",
-         "CoordsManager dimension: ", to_string(D),
-         ", tensor_strides dimension: ", to_string(tensor_strides.size()));
-
-  // Set the out_coords_key and return if a key already exists.
-  uint64_t out_coords_key = hash_vec(out_tensor_strides);
-  if (force_creation) {
-    // set a random coords key if force creation is set
-    if (existsCoordsKey(out_coords_key))
-      out_coords_key = getRandomCoordsKey();
-  } else if (existsCoordsKey(out_coords_key)) {
-    // Returnn if not force_creation and the key exists
-    return out_coords_key;
-  }
-
-  // Create transposed coords map
-  Region region = Region(out_tensor_strides, kernel_sizes, dilations,
-                         region_type, offsets.data<int>(), offsets.size(0));
-
-  coords_maps[out_coords_key] = coords_maps[coords_key].stride_region(region);
-
-  return out_coords_key;
-}
-
 template <typename MapType>
 uint64_t
 CoordsManager<MapType>::createPrunedCoords(at::Tensor use_feat,
@@ -561,54 +561,6 @@ CoordsManager<MapType>::createUnionCoords(vector<py::object> py_in_coords_keys,
       CoordsMap<MapType>::union_coords(in_coords_maps);
 
   return out_coords_key;
-}
-
-template <typename MapType>
-const InOutMapKey CoordsManager<MapType>::getMapHashKey(
-    vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
-    vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, bool is_transpose, bool is_pool) const {
-  const int D = tensor_strides.size();
-  ASSERT(D == tensor_strides.size() and D == strides.size() and
-             D == kernel_sizes.size() and D == dilations.size(),
-         "Size mismatch. tensor_strides: ", tensor_strides.size(),
-         ", strides: ", strides.size(), ", kernel_sizes: ", kernel_sizes.size(),
-         ", dilations: ", dilations.size());
-
-  CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
-  CoordsKey *p_out_coords_key = py_out_coords_key.cast<CoordsKey *>();
-  const uint64_t out_coords_key = p_out_coords_key->getKey();
-  const uint64_t in_coords_key = p_in_coords_key->getKey();
-  const uint64_t stride_hash = hash_vec(strides);
-  const uint64_t kernel_size_hash = hash_vec(kernel_sizes);
-  const uint64_t dilation_hash = hash_vec(dilations);
-  const InOutMapKey map_key = {
-      in_coords_key, out_coords_key,        stride_hash,  kernel_size_hash,
-      dilation_hash, (uint64_t)region_type, is_transpose, is_pool};
-
-  return map_key;
-}
-
-template <typename MapType>
-const InOutMapKey CoordsManager<MapType>::getOriginMapHashKey(
-    py::object py_in_coords_key, py::object py_out_coords_key) const {
-  CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
-  CoordsKey *p_out_coords_key = py_out_coords_key.cast<CoordsKey *>();
-  ASSERT(
-      p_in_coords_key->key_set and p_out_coords_key->key_set,
-      "Key is not set. in_coords_key: ", to_string(p_in_coords_key->getKey()),
-      ", out_coords_key: ", to_string(p_out_coords_key->getKey()));
-
-  const int D = p_in_coords_key->getDimension();
-
-  const uint64_t out_coords_key = p_out_coords_key->getKey();
-  const uint64_t in_coords_key = p_in_coords_key->getKey();
-  const vector<int> zero_vec(D, 0);
-  const uint64_t zero_hash = hash_vec(zero_vec);
-  const InOutMapKey map_key = {
-      in_coords_key, out_coords_key, zero_hash, zero_hash, zero_hash, 0, false,
-      true};
-  return map_key;
 }
 
 template <typename MapType>
@@ -916,15 +868,7 @@ template <typename MapType> string CoordsManager<MapType>::toString() const {
   return out;
 }
 
-template <typename MapType>
-void CoordsManager<MapType>::printDiagnostics(py::object py_coords_key) const {
-  CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
-  const auto &map_iter = coords_maps.find(p_coords_key->getKey());
-  ASSERT(map_iter != coords_maps.end(), "Coords map does not exist.");
-  map_iter->second.print();
-}
 */
-
 /*
  * Return row indices for each batch index
  */

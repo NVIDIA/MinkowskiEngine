@@ -345,7 +345,63 @@ public:
     return std::make_pair(in_maps, out_maps);
   }
 
+  cpu_kernel_map stride_map(self_type const &out_coordinate_map,
+                            stride_type const &out_tensor_stride) const {
+    // generate an in-out (kernel) map that maps all input points in the same
+    // voxel to strided output voxel.
+    size_type in_size = size();
+    LOG_DEBUG("Generate stride_map with in NNZ:", in_size,
+              "out NNZ:", out_coordinate_map.size(),
+              "out_tensor_stride:", out_tensor_stride);
+    ASSERT(in_size > out_coordinate_map.size(), "Invalid out_coordinate_map");
+    cpu_in_maps in_maps = initialize_maps<cpu_in_map>(1, in_size);
+    cpu_out_maps out_maps = initialize_maps<cpu_out_map>(1, in_size);
+
+    // compute the chunk size per thread.
+    // There's a trade-off between the thread initialization overhead and the
+    // job sizes. If some jobs finish earlier than others due to imbalance in
+    // hash distribution, these threads will be idle.
+    const size_t in_map_num_elements = m_map.capacity();
+    size_t N = 2 * omp_get_max_threads();
+    const size_t stride = (in_map_num_elements + N - 1) / N;
+    N = (in_map_num_elements + stride - 1) / stride;
+    LOG_DEBUG("kernel map with", N, "chunks.");
+
+    index_type num_used = 0;
+#pragma omp parallel for
+    for (index_type n = 0; n < N; ++n) {
+      index_type curr_index_begin;
+      std::vector<coordinate_type> dst(m_coordinate_size);
+      for (auto iter_in = m_map.begin(stride * n);
+           iter_in.num_steps() <
+           std::min(stride, in_map_num_elements - n * stride);
+           ++iter_in) {
+        detail::stride_coordinate<coordinate_type>(iter_in->first, dst,
+                                                   out_tensor_stride);
+        const auto iter_out =
+            out_coordinate_map.find(coordinate<coordinate_type>(dst.data()));
+        ASSERT(iter_out != out_coordinate_map.m_map.cend(),
+               "Invalid out_coordinate_map");
+#pragma omp atomic capture
+        {
+          curr_index_begin = num_used;
+          num_used += 1;
+        }
+
+        in_maps[0][curr_index_begin] = iter_in->second;
+        out_maps[0][curr_index_begin] = iter_out->second;
+      }
+    }
+
+    return std::make_pair(move(in_maps), move(out_maps));
+  }
+
   inline size_type size() const noexcept { return m_map.size(); }
+  std::string to_string() const {
+    Formatter o;
+    o << "CoordinateMapCPU:" << size() << "x" << m_coordinate_size;
+    return o.str();
+  }
 
   using base_type::capacity;
   using base_type::coordinate_size;
@@ -368,7 +424,7 @@ public:
     // Put if outside the loop for speed
 #pragma omp parallel for
     for (index_type n = 0; n < N; ++n) {
-      for (auto it = m_map.begin(stride * n);                      //
+      for (auto it = m_map.begin(stride * n);                        //
            it.num_steps() < std::min(stride, capacity - n * stride); //
            ++it) {
         std::copy_n(it->first.data(), m_coordinate_size,

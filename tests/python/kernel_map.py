@@ -27,7 +27,7 @@ import torch
 
 from MinkowskiEngine import SparseTensor, MinkowskiConvolution
 
-from tests.common import data_loader
+from tests.python.common import data_loader
 
 
 class TestKernelMap(unittest.TestCase):
@@ -41,7 +41,7 @@ class TestKernelMap(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coordinates=coords)
         cm = input.coords_man
         ikey = cm._get_coords_key(1)
         print('Input coords: ')

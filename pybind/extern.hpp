@@ -343,6 +343,11 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def(py::init<>())
       .def(py::init<minkowski::CUDAKernelMapMode::Mode,
                     minkowski::default_types::size_type>())
+      .def("__repr__",
+           py::overload_cast<>(&manager_type::to_string, py::const_))
+      .def("print_coordinate_map",
+           py::overload_cast<minkowski::CoordinateMapKey const *>(
+               &manager_type::to_string, py::const_))
       // TODO .def("insert", &manager_type::insert)
       .def("insert_and_map", &manager_type::insert_and_map)
       .def("stride",

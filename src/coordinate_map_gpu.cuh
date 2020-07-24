@@ -154,10 +154,18 @@ public:
                              gpu_kernel_region<coordinate_type> const &kernel,
                              CUDAKernelMapMode::Mode kernel_map_mode,
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
+  kernel_map_type stride_map(self_type const &out_coordinate_map,
+                             stride_type const &out_tensor_stride,
+                             uint32_t thread_dim = CUDA_NUM_THREADS) const;
 
   // Returns the number of elements in the coordinate map
   inline size_type size() const { return m_size; }
   void copy_coordinates(coordinate_type *dst_coordinate) const;
+  std::string to_string() const {
+    Formatter o;
+    o << "CoordinateMapGPU:" << size() << "x" << m_coordinate_size;
+    return o.str();
+  }
 
   // access the coordinate data pointer
   using base_type::const_coordinate_data;

@@ -35,11 +35,11 @@
 #include <memory>
 
 #include <thrust/copy.h>
-#include <thrust/sort.h>
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
-#include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/constant_iterator.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/sort.h>
 
 namespace minkowski {
 
@@ -126,17 +126,19 @@ public:
         m_kernel_offset_map{other.m_kernel_offset_map}, kernels{*this},
         in_maps{*this}, out_maps{*this} {
     LOG_DEBUG("gpu_kernel_map copy constructor");
-    kernels.data(m_memory.get());
-    in_maps.data(m_memory.get() + m_capacity);
-    out_maps.data(m_memory.get() + 2 * m_capacity);
+    in_maps.data(m_memory.get() + 0 * m_capacity);
+    out_maps.data(m_memory.get() + 1 * m_capacity);
+    kernels.data(m_memory.get() + 2 * m_capacity);
   }
 
   gpu_kernel_map(size_type capacity,
-                 byte_allocator_type alloc = byte_allocator_type())
-      : m_memory_size_byte(3 * capacity * sizeof(index_type)),
-        m_capacity{capacity},
+                 byte_allocator_type alloc = byte_allocator_type(),
+                 bool requires_kernel_index = true)
+      : m_requires_kernel_index(requires_kernel_index), m_capacity{capacity},
         m_allocator{alloc}, kernels{*this}, in_maps{*this}, out_maps{*this} {
-
+    // kernel map without kernel index
+    m_memory_size_byte =
+        (requires_kernel_index ? 3 : 2) * capacity * sizeof(index_type);
     index_type *ptr = reinterpret_cast<index_type *>(
         m_allocator.allocate(m_memory_size_byte));
 
@@ -150,13 +152,32 @@ public:
         ptr, std::bind(deleter, std::placeholders::_1, m_allocator,
                        m_memory_size_byte)};
 
-    kernels.data(m_memory.get());
-    in_maps.data(m_memory.get() + m_capacity);
-    out_maps.data(m_memory.get() + 2 * m_capacity);
+    // kernel maps
+    in_maps.data(m_memory.get() + 0 * m_capacity);
+    out_maps.data(m_memory.get() + 1 * m_capacity);
+    kernels.data(m_memory.get() + 2 * m_capacity);
+
+    if (!requires_kernel_index) {
+      m_kernel_offset_map[0] = 0;
+      m_kernel_size_map[0] = capacity;
+      // Initialize the decomposed begins and sizes
+      m_decomposed = true;
+    }
+  }
+
+  self_type swap() const {
+    self_type swapped_gpu_kernel_map(*this);
+    swapped_gpu_kernel_map.in_maps.data(swapped_gpu_kernel_map.m_memory.get() +
+                                        1 * m_capacity);
+    swapped_gpu_kernel_map.out_maps.data(swapped_gpu_kernel_map.m_memory.get() +
+                                         0 * m_capacity);
+    return swapped_gpu_kernel_map;
   }
 
   self_type &operator=(self_type const &other) {
     m_decomposed = other.m_decomposed;
+    m_requires_kernel_index = other.m_requires_kernel_index;
+
     m_memory_size_byte = other.m_memory_size_byte;
     m_capacity = other.m_capacity;
 
@@ -191,6 +212,17 @@ public:
     if (iter == m_kernel_size_map.end())
       return 0;
     return iter->second;
+  }
+
+  std::string to_string() const {
+    Formatter o;
+    size_type map_size = 0;
+    for (auto const &kv : m_kernel_size_map) {
+      map_size += kv.second;
+    }
+    o << "gpu_kernel_map: number of unique maps:" << m_kernel_size_map.size()
+      << ", kernel map size:" << map_size;
+    return o.str();
   }
 
   void decompose() {
@@ -267,8 +299,15 @@ public:
     m_decomposed = true;
   }
 
+  friend std::ostream &operator<<(std::ostream &out,
+                                  self_type const &kernel_map) {
+    out << kernel_map.to_string();
+    return out;
+  }
+
 private:
   bool m_decomposed{false};
+  bool m_requires_kernel_index;
   size_type m_memory_size_byte, m_capacity;
   std::shared_ptr<index_type[]> m_memory;
   byte_allocator_type m_allocator;

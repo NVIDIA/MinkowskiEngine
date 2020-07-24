@@ -294,6 +294,7 @@ public:
   using base_type::region_type;
   using base_type::set_bounds;
   using base_type::volume;
+  using base_type::tensor_stride;
 
 #ifndef CPU_ONLY
   inline size_type const *device_tensor_stride() const {
