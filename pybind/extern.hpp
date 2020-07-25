@@ -104,6 +104,69 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
 #endif
 
 /*************************************
+ * Convolution Transpose
+ *************************************/
+template <typename coordinate_type, typename feature_type>
+at::Tensor ConvolutionTransposeForwardCPU(
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &kernel,                          //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    bool generate_new_coordinates,                     //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type, typename feature_type>
+std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &kernel,                          //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offsets,                         //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    cpu_manager_type<coordinate_type> *p_map_manager);
+
+#ifndef CPU_ONLY
+template <typename coordinate_type, typename feature_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor ConvolutionTransposeForwardGPU(
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &kernel,                          //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    bool generate_new_coordinates,                     //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+
+template <typename coordinate_type, typename feature_type,
+          template <typename C> class TemplatedAllocator>
+std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &kernel,                          //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+#endif
+
+/*************************************
  * Quantization
  *************************************/
 /*
@@ -140,22 +203,16 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::ConvolutionBackwardCPU<coordinate_type, feature_type>,
         py::call_guard<py::gil_scoped_release>());
 
-  /*
-    m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
-          &mink::ConvolutionTransposeForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
-          &mink::ConvolutionTransposeBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
-          &mink::ConvolutionTransposeForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
-          &mink::ConvolutionTransposeBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
+  m.def(
+      (std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
+      &minkowski::ConvolutionTransposeForwardCPU<coordinate_type, feature_type>,
+      py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionTransposeBackwardCPU<coordinate_type,
+                                                    feature_type>,
+        py::call_guard<py::gil_scoped_release>());
 
+  /*
     m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
           &mink::AvgPoolingForwardCPU<MapType, Dtype>,
           py::call_guard<py::gil_scoped_release>());
@@ -291,6 +348,18 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::ConvolutionBackwardGPU<coordinate_type, feature_type,
                                            TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
+
+  m.def(
+      (std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
+      &minkowski::ConvolutionTransposeForwardGPU<coordinate_type, feature_type,
+                                                 TemplatedAllocator>,
+      py::call_guard<py::gil_scoped_release>());
+
+  m.def(
+      (std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
+      &minkowski::ConvolutionTransposeBackwardGPU<coordinate_type, feature_type,
+                                                  TemplatedAllocator>,
+      py::call_guard<py::gil_scoped_release>());
 }
 #endif
 

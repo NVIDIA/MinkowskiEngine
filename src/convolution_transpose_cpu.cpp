@@ -16,16 +16,15 @@
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
  *
  * Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
 #include "coordinate_map.hpp"
-#include "coordinate_map_cpu.hpp"
 #include "coordinate_map_key.hpp"
 #include "coordinate_map_manager.hpp"
 #include "errors.hpp"
@@ -40,23 +39,26 @@
 namespace minkowski {
 
 template <typename coordinate_type, typename feature_type>
-at::Tensor
-ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
-                      at::Tensor const &kernel,                          //
-                      default_types::stride_type const &kernel_size,     //
-                      default_types::stride_type const &kernel_stride,   //
-                      default_types::stride_type const &kernel_dilation, //
-                      RegionType::Type const region_type,                //
-                      at::Tensor const &offset,                          //
-                      CoordinateMapKey *p_in_map_key,                    //
-                      CoordinateMapKey *p_out_map_key,                   //
-                      cpu_manager_type<coordinate_type> *p_map_manager) {
+at::Tensor ConvolutionTransposeForwardCPU(
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &kernel,                          //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    bool generate_new_coordinates,                     //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    cpu_manager_type<coordinate_type> *p_map_manager) {
+
+  ASSERT(!generate_new_coordinates, ERROR_NOT_IMPLEMENTED);
 
   torch::TensorArg arg_in_feat(in_feat, "in_feat", 0);
   torch::TensorArg arg_kernel(kernel, "kernel", 1);
   torch::TensorArg arg_offset(offset, "offset", 2);
 
-  torch::CheckedFrom c = "ConvolutionForwardCPU";
+  torch::CheckedFrom c = "ConvolutionTransposeForwardCPU";
   torch::checkContiguous(c, arg_in_feat);
   torch::checkContiguous(c, arg_kernel);
   torch::checkContiguous(c, arg_offset);
@@ -87,19 +89,32 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
          in_feat.size(0), "!=", p_map_manager->size(in_key));
 
   if (!p_out_map_key->is_key_set()) {
-    coordinate_map_key_type out_key =
-        std::get<0>(p_map_manager->stride(in_key, kernel_stride));
+    auto map_it = p_map_manager->find(p_in_map_key->get_key());
+    ASSERT(map_it != p_map_manager->map_end(), ERROR_MAP_NOT_FOUND);
+    auto const &in_map = (*map_it).second;
+    auto kernel_region = cpu_kernel_region<coordinate_type>(
+        region_type,                       //
+        in_map.coordinate_size(),          //
+        in_map.get_tensor_stride().data(), //
+        kernel_size.data(),                //
+        kernel_dilation.data(),            //
+        0, offset.data_ptr<coordinate_type>(), offset.size(0));
+
+    coordinate_map_key_type out_key = std::get<0>(p_map_manager->stride_region(
+        in_key, kernel_region, true /* is_transpose */));
     p_out_map_key->set_key(out_key);
   }
 
   cpu_kernel_map const &in_out =
-      p_map_manager->kernel_map(p_in_map_key,    //
-                                p_out_map_key,   //
-                                kernel_size,     //
-                                kernel_stride,   //
-                                kernel_dilation, //
-                                region_type,     //
-                                offset, false, false);
+      p_map_manager->kernel_map(p_in_map_key,            //
+                                p_out_map_key,           //
+                                kernel_size,             //
+                                kernel_stride,           //
+                                kernel_dilation,         //
+                                region_type,             //
+                                offset,                  //
+                                true /* is_transpose */, //
+                                false /* is_pool */);
 
   auto const out_nrows = p_map_manager->size(p_out_map_key->get_key());
   at::Tensor out_feat =
@@ -115,25 +130,24 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
 }
 
 template <typename coordinate_type, typename feature_type>
-std::pair<at::Tensor, at::Tensor>
-ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
-                       at::Tensor const &grad_out_feat,                   //
-                       at::Tensor const &kernel,                          //
-                       default_types::stride_type const &kernel_size,     //
-                       default_types::stride_type const &kernel_stride,   //
-                       default_types::stride_type const &kernel_dilation, //
-                       RegionType::Type const region_type,                //
-                       at::Tensor const &offset,                          //
-                       CoordinateMapKey *p_in_map_key,                    //
-                       CoordinateMapKey *p_out_map_key,                   //
-                       cpu_manager_type<coordinate_type> *p_map_manager) {
+std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
+    at::Tensor const &in_feat, at::Tensor const &grad_out_feat,
+    at::Tensor const &kernel,
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    cpu_manager_type<coordinate_type> *p_map_manager) {
 
   torch::TensorArg arg_in_feat(in_feat, "in_feat", 0);
   torch::TensorArg arg_grad_out_feat(grad_out_feat, "grad_out_feat", 1);
   torch::TensorArg arg_kernel(kernel, "kernel", 2);
   torch::TensorArg arg_offset(offset, "offset", 3);
 
-  torch::CheckedFrom c = "ConvolutionBackwardCPU";
+  torch::CheckedFrom c = "ConvolutionTransposeBackwardCPU";
   torch::checkContiguous(c, arg_in_feat);
   torch::checkContiguous(c, arg_grad_out_feat);
   torch::checkContiguous(c, arg_kernel);
@@ -164,14 +178,14 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
   coordinate_map_key_type out_key = p_out_map_key->get_key();
   ASSERT(p_map_manager->exists(out_key), ERROR_MAP_NOT_FOUND);
 
-  cpu_kernel_map const &in_out =
-      p_map_manager->kernel_map(p_in_map_key,    //
-                                p_out_map_key,   //
-                                kernel_size,     //
-                                kernel_stride,   //
-                                kernel_dilation, //
-                                region_type,     //
-                                offset, false, false);
+  cpu_kernel_map const &in_out = p_map_manager->kernel_map(
+      p_in_map_key,    //
+      p_out_map_key,   //
+      kernel_size,     //
+      kernel_stride,   //
+      kernel_dilation, //
+      region_type,     //
+      offset, true /* is_transpose */, false /* is_pool */);
 
   at::Tensor grad_in_feat =
       torch::zeros({in_feat.size(0), in_feat.size(1)}, in_feat.options());
@@ -179,9 +193,9 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
       {kernel.size(0), kernel.size(1), kernel.size(2)}, kernel.options());
 
   ConvolutionBackwardKernelCPU<feature_type, default_types::index_type>(
-      in_feat.template data_ptr<feature_type>(),
-      grad_in_feat.template data_ptr<feature_type>(), in_feat.size(1),
-      grad_out_feat.template data_ptr<feature_type>(), grad_out_feat.size(1),
+      in_feat.template data_ptr<feature_type>(),                              //
+      grad_in_feat.template data_ptr<feature_type>(), in_feat.size(1),        //
+      grad_out_feat.template data_ptr<feature_type>(), grad_out_feat.size(1), //
       kernel.template data_ptr<feature_type>(),
       grad_kernel.template data_ptr<feature_type>(), in_out.first,
       in_out.second);
@@ -190,7 +204,7 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
 }
 
 template at::Tensor
-ConvolutionForwardCPU<default_types::dcoordinate_type, float>(
+ConvolutionTransposeForwardCPU<default_types::dcoordinate_type, float>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
@@ -198,12 +212,13 @@ ConvolutionForwardCPU<default_types::dcoordinate_type, float>(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
+    bool generate_new_coordinates,                     //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
 
 template at::Tensor
-ConvolutionForwardCPU<default_types::dcoordinate_type, double>(
+ConvolutionTransposeForwardCPU<default_types::dcoordinate_type, double>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
@@ -211,12 +226,13 @@ ConvolutionForwardCPU<default_types::dcoordinate_type, double>(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
+    bool generate_new_coordinates,                     //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
 
 template std::pair<at::Tensor, at::Tensor>
-ConvolutionBackwardCPU<default_types::dcoordinate_type, float>(
+ConvolutionTransposeBackwardCPU<default_types::dcoordinate_type, float>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &grad_out_feat,                   //
     at::Tensor const &kernel,                          //
@@ -230,7 +246,7 @@ ConvolutionBackwardCPU<default_types::dcoordinate_type, float>(
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
 
 template std::pair<at::Tensor, at::Tensor>
-ConvolutionBackwardCPU<default_types::dcoordinate_type, double>(
+ConvolutionTransposeBackwardCPU<default_types::dcoordinate_type, double>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &grad_out_feat,                   //
     at::Tensor const &kernel,                          //

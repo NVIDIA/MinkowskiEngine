@@ -172,7 +172,12 @@ print(f"\nUsing BLAS={BLAS}")
 SOURCE_SETS = {
     "cpu": [
         CppExtension,
-        ["math_functions.cpp", "coordinate_map_manager.cpp", "convolution_cpu.cpp"],
+        [
+            "math_functions.cpp",
+            "coordinate_map_manager.cpp",
+            "convolution_cpu.cpp",
+            "convolution_transpose_cpu.cpp",
+        ],
         ["pybind/minkowski.cpp"],
         ["-DCPU_ONLY"],
     ],
@@ -184,6 +189,7 @@ SOURCE_SETS = {
             "convolution_gpu.cu",
             "coordinate_map_gpu.cu",
             "convolution_kernel.cu",
+            "convolution_transpose_gpu.cu",
         ],
         ["pybind/minkowski.cu"],
         [],

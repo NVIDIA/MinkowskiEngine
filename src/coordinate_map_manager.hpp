@@ -189,6 +189,15 @@ public:
 #else
       cpu_kernel_map;
 #endif
+  using kernel_map_reference_type =
+#ifndef CPU_ONLY
+      typename std::conditional<
+          detail::is_cpu_coordinate_map<CoordinateMapType>::value,
+          cpu_kernel_map,
+          gpu_kernel_map<index_type, TemplatedAllocator<char>>>::type;
+#else
+      cpu_kernel_map_reference;
+#endif
 
 public:
   // allocator backend will be ignored when coordinate map backend is CPU
@@ -242,6 +251,10 @@ public:
     return py::cast(new CoordinateMapKey(key.first.size() + 1, key));
   }
 
+  std::pair<coordinate_map_key_type, bool>
+  stride_region(coordinate_map_key_type const &in_map_key,
+                cpu_kernel_region<coordinate_type> &kernel, bool is_transpose);
+
   /****************************************************************************
    * Coordinate management helper functions
    ****************************************************************************/
@@ -252,6 +265,15 @@ public:
                                                           std::move(map)));
     LOG_DEBUG("map insertion", result.second);
     return result.second;
+  }
+
+  typename map_collection_type::iterator
+  find(coordinate_map_key_type const &map_key) {
+    return m_coordinate_maps.find(map_key);
+  }
+
+  typename map_collection_type::const_iterator map_end() const {
+    return m_coordinate_maps.cend();
   }
 
   inline bool exists(coordinate_map_key_type const &key) const noexcept {
@@ -516,11 +538,6 @@ private:
       key = std::make_pair(tensor_stride, string_id + '-' + random_string(5));
     }
     return key;
-  }
-
-  typename map_collection_type::iterator
-  find(coordinate_map_key_type const &map_key) {
-    return m_coordinate_maps.find(map_key);
   }
 
 public:

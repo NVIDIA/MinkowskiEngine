@@ -277,8 +277,11 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
            stride_type const &kernel_stride) {
   ASSERT(exists(in_map_key), ERROR_MAP_NOT_FOUND);
   // check if the key exists.
+  LOG_DEBUG("In tensor stride:", in_map_key.first,
+            "kernel stride:", kernel_stride);
   coordinate_map_key_type out_map_key(
-      detail::stride_tensor_stride(in_map_key.first, kernel_stride), "");
+      detail::stride_tensor_stride(in_map_key.first, kernel_stride, false), "");
+  LOG_DEBUG("Out stride map key:", out_map_key);
   bool const exists_out_map = exists(out_map_key);
   if (!exists_out_map) {
     // operator[] required mapped_type(), which is not defined.
@@ -287,6 +290,36 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     map_type out_map = in_map.stride(kernel_stride);
     insert(out_map_key, out_map);
   }
+  // (key, new map generated flag)
+  return std::make_pair(out_map_key, !exists_out_map);
+}
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<coordinate_map_key_type, bool>
+CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
+    stride_region(coordinate_map_key_type const &in_map_key,
+                  cpu_kernel_region<coordinate_type> &kernel,
+                  bool is_transpose) {
+  ASSERT(exists(in_map_key), ERROR_MAP_NOT_FOUND);
+  // check if the key exists.
+  stride_type out_tensor_stride(kernel.tensor_stride(),
+                                kernel.tensor_stride() +
+                                    kernel.coordinate_size() - 1);
+  coordinate_map_key_type out_map_key(out_tensor_stride, "");
+  bool const exists_out_map = exists(out_map_key);
+  if (!exists_out_map) {
+    ASSERT(false, ERROR_NOT_IMPLEMENTED);
+    // operator[] required mapped_type(), which is not defined.
+    // ASSERTION already checked that in_map_key exists.
+    //
+    // map_type const &in_map = m_coordinate_maps.find(in_map_key)->second;
+    // map_type out_map = in_map.stride_region(kernel_region);
+    // insert(out_map_key, out_map);
+  }
+  // (key, new map generated flag)
   return std::make_pair(out_map_key, !exists_out_map);
 }
 
@@ -374,10 +407,9 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     auto const in_map_it = m_coordinate_maps.find(p_in_map_key->get_key());
     auto const out_map_it = m_coordinate_maps.find(p_out_map_key->get_key());
 
-    ASSERT(in_map_it != m_coordinate_maps.end(),
-           "Input coordinate map not found.");
-    ASSERT(out_map_it != m_coordinate_maps.end(),
-           "Output coordinate map not found.");
+    ASSERT(in_map_it != m_coordinate_maps.end(), "in_map", ERROR_MAP_NOT_FOUND);
+    ASSERT(out_map_it != m_coordinate_maps.end(), "out_map",
+           ERROR_MAP_NOT_FOUND);
 
     auto const &in_map = in_map_it->second;
     auto const &out_map = out_map_it->second;
@@ -970,9 +1002,13 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
   // CPU torch.IntTensor
   auto options = torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
   if (!detail::is_cpu_coordinate_map<CoordinateMapType>::value) {
+#ifndef CPU_ONLY
     int device_id;
     CUDA_CHECK(cudaGetDevice(&device_id));
     options = options.device(torch::kCUDA, device_id);
+#else
+    ASSERT(false, ERROR_CPU_ONLY);
+#endif
   }
   at::Tensor coordinates = torch::empty({(long)nrows, (long)ncols}, options);
 
