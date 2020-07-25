@@ -77,11 +77,17 @@ inline void stride_coordinate(const coordinate<Itype> &src,
 
 inline default_types::stride_type
 stride_tensor_stride(const default_types::stride_type &tensor_stride,
-                     const default_types::stride_type &stride) {
+                     const default_types::stride_type &stride,
+                     bool is_transpose = false) {
   ASSERT(tensor_stride.size() == stride.size(), "stride size mismatch.");
   default_types::stride_type strided_tensor_stride{tensor_stride};
-  for (default_types::size_type i = 0; i < tensor_stride.size(); ++i)
-    strided_tensor_stride[i] *= stride[i];
+  if (is_transpose) {
+    for (default_types::size_type i = 0; i < tensor_stride.size(); ++i)
+      strided_tensor_stride[i] /= stride[i];
+  } else {
+    for (default_types::size_type i = 0; i < tensor_stride.size(); ++i)
+      strided_tensor_stride[i] *= stride[i];
+  }
   return strided_tensor_stride;
 }
 

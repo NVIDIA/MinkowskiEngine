@@ -40,14 +40,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   initialize_non_templated_classes(m);
 
   // Manager
-  instantiate_manager<int32_t, std::allocator, minkowski::CoordinateMapCPU>(
-      m, std::string("CPU"));
+  instantiate_manager<minkowski::cpu_manager_type<int32_t>>(m,
+                                                            std::string("CPU"));
 #ifndef CPU_ONLY
-  instantiate_manager<int32_t, minkowski::detail::default_allocator,
-                      minkowski::CoordinateMapGPU>(m,
-                                                   std::string("GPU_default"));
-  instantiate_manager<int32_t, minkowski::detail::c10_allocator,
-                      minkowski::CoordinateMapGPU>(m, std::string("GPU_c10"));
+  instantiate_manager<minkowski::gpu_default_manager_type<int32_t>>(
+      m, std::string("GPU_default"));
+  instantiate_manager<minkowski::gpu_c10_manager_type<int32_t>>(
+      m, std::string("GPU_c10"));
 #endif
 
   // Functions

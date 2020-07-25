@@ -198,40 +198,44 @@ public:
   /*
    * @brief strided coordinate map for region.
    */
-  /*
-  self_type stride_region(Region const &region) const {
-    ASSERT(stride.size() == m_coordinate_size - 1, "Invalid stride", stride);
+  self_type
+  stride_region(cpu_kernel_region<coordinate_type> const &kernel) const {
+    ASSERT(kernel.coordinate_size() == m_coordinate_size, "Invalid kernel");
     // Over estimate the reserve size to be size();
-    self_type stride_map(
-        size() * region.volume(), m_coordinate_size,
-        detail::stride_tensor_stride(base_type::m_tensor_stride, stride),
-        base_type::m_byte_allocator);
+    stride_type out_tensor_stride(
+        kernel.tensor_stride(), kernel.tensor_stride() + m_coordinate_size - 1);
 
-    index_type c = 0;
-    std::vector<coordinate_type> dst(m_coordinate_size);
-    coordinate<coordinate_type> strided_coordinate(&dst[0]);
-    for (auto const &kv : m_map) {
-      detail::stride_coordinate<coordinate_type>(kv.first, dst,
-                                                 stride_map.m_tensor_stride);
-      bool success = stride_map.insert(strided_coordinate, c);
-      LOG_DEBUG("Adding coordinate", dst, ":", c, "success:", (int)success);
-      c += success;
-    }
+    self_type stride_map(size() * kernel.volume(), m_coordinate_size,
+                         out_tensor_stride, base_type::m_byte_allocator);
 
-    Region cregion(region);
-    int c = 0;
-    for (const auto &kv : map) {
-      cregion.set_bounds(kv.first);
-      for (const auto &point : cregion) {
-        if (stride_map.find(point) == stride_map.end()) {
-          detail::Assign(stride_map, point, c++);
+    auto &out_mmap = stride_map.m_map;
+
+    auto ckernel = cpu_kernel_region<coordinate_type>(kernel);
+    std::vector<coordinate_type> lb(m_coordinate_size), ub(m_coordinate_size),
+        tmp(m_coordinate_size);
+
+    index_type num_used{0};
+    for (auto iter_in = m_map.begin(); iter_in != m_map.end(); ++iter_in) {
+
+      // set the bounds for the current region
+      ckernel.set_bounds(iter_in->first.data(), lb.data(), ub.data(),
+                         tmp.data());
+
+      // For elements in the current region
+      for (const auto &point : ckernel) {
+        // If the input coord exists
+        const auto iter_out = out_mmap.find(point);
+        // LOG_DEBUG(kernel_ind, ":",
+        //           PtrToString(iter_out->first.data(), m_coordinate_size),
+        //           "->", PtrToString(point.data(), m_coordinate_size));
+        if (iter_out == out_mmap.end()) {
+          insert(point, num_used);
+          ++num_used;
         }
       }
     }
-
     return stride_map;
   }
-  */
 
   cpu_kernel_map
   kernel_map(self_type const &out_coordinate_map,

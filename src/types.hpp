@@ -98,7 +98,7 @@ struct cpu_kernel_map : std::pair<cpu_in_maps, cpu_out_maps> {
     return out;
   }
 };
-using cpu_reference_kernel_map = std::pair<cpu_in_maps &, cpu_out_maps &>;
+using cpu_kernel_map_reference = std::pair<cpu_in_maps &, cpu_out_maps &>;
 
 using coordinate_map_key_type =
     std::pair<default_types::stride_type, std::string>;

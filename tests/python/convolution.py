@@ -137,7 +137,7 @@ class TestConvolutionTranspose(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords).to(device)
+        input = SparseTensor(feats.to(device), coordinates=coords.to(device))
         # Initialize context
         conv = (
             MinkowskiConvolution(
@@ -176,17 +176,11 @@ class TestConvolutionTranspose(unittest.TestCase):
                 fn,
                 (
                     tr_input.F,
-                    conv_tr.kernel,
-                    tr_input.tensor_stride,
-                    conv_tr.stride,
-                    conv_tr.kernel_size,
-                    conv_tr.dilation,
-                    conv_tr.region_type_,
-                    conv_tr.region_offset_,
-                    False,
-                    tr_input.coords_key,
-                    None,
-                    tr_input.coords_man,
+                    conv_tr.weight,
+                    conv_tr.kernel_generator,
+                    tr_input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    tr_input.coordinate_manager,
                 ),
             )
         )
@@ -197,7 +191,7 @@ class TestConvolutionTranspose(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coordinates=coords)
 
         # Initialize context
         conv = MinkowskiConvolution(
@@ -222,17 +216,11 @@ class TestConvolutionTranspose(unittest.TestCase):
                 fn,
                 (
                     input.F,
-                    conv_tr.kernel,
-                    input.tensor_stride,
-                    conv_tr.stride,
-                    conv_tr.kernel_size,
-                    conv_tr.dilation,
-                    conv_tr.region_type_,
-                    conv_tr.region_offset_,
-                    False,
-                    input.coords_key,
-                    None,
-                    input.coords_man,
+                    conv_tr.weight,
+                    conv_tr.kernel_generator,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input.coordinate_manager,
                 ),
             )
         )
