@@ -32,6 +32,7 @@
 #include "types.hpp"
 
 #include <functional>
+#include <map>
 #include <memory>
 
 #include <thrust/copy.h>
@@ -63,11 +64,11 @@ public:
       return *this;
     }
 
-    inline typename std::unordered_map<index_type, index_type>::const_iterator
+    inline typename std::map<index_type, index_type>::const_iterator
     key_cbegin() const {
       return m_kernel_map.m_kernel_offset_map.cbegin();
     }
-    inline typename std::unordered_map<index_type, index_type>::const_iterator
+    inline typename std::map<index_type, index_type>::const_iterator
     key_cend() const {
       return m_kernel_map.m_kernel_offset_map.cend();
     }
@@ -126,9 +127,9 @@ public:
         m_kernel_offset_map{other.m_kernel_offset_map}, kernels{*this},
         in_maps{*this}, out_maps{*this} {
     LOG_DEBUG("gpu_kernel_map copy constructor");
-    in_maps.data(m_memory.get() + 0 * m_capacity);
-    out_maps.data(m_memory.get() + 1 * m_capacity);
-    kernels.data(m_memory.get() + 2 * m_capacity);
+    in_maps.data(other.in_maps.begin());
+    out_maps.data(other.out_maps.begin());
+    kernels.data(other.kernels.begin());
   }
 
   gpu_kernel_map(size_type capacity,
@@ -171,6 +172,49 @@ public:
                                         1 * m_capacity);
     swapped_gpu_kernel_map.out_maps.data(swapped_gpu_kernel_map.m_memory.get() +
                                          0 * m_capacity);
+
+#ifdef DEBUG
+    size_type map_size = std::min<size_type>(in_maps.size(0), 100);
+
+    index_type *p_kernel_map =
+        (index_type *)std::malloc(map_size * 3 * sizeof(index_type));
+    CUDA_CHECK(cudaMemcpy(p_kernel_map, kernels.begin(0),
+                          map_size * sizeof(index_type),
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(p_kernel_map + 1 * map_size, in_maps.begin(0),
+                          map_size * sizeof(index_type),
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(p_kernel_map + 2 * map_size, out_maps.begin(0),
+                          map_size * sizeof(index_type),
+                          cudaMemcpyDeviceToHost));
+
+    for (index_type i = 0; i < map_size; ++i) {
+      std::cout << p_kernel_map[i + 0 * map_size] << ":"
+                << p_kernel_map[i + 1 * map_size] << "->"
+                << p_kernel_map[i + 2 * map_size] << "\n";
+    }
+
+    std::cout << "Swapped kernel map\n";
+
+    CUDA_CHECK(cudaMemcpy(p_kernel_map, swapped_gpu_kernel_map.kernels.begin(0),
+                          map_size * sizeof(index_type),
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(
+        p_kernel_map + 1 * map_size, swapped_gpu_kernel_map.in_maps.begin(0),
+        map_size * sizeof(index_type), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(
+        p_kernel_map + 2 * map_size, swapped_gpu_kernel_map.out_maps.begin(0),
+        map_size * sizeof(index_type), cudaMemcpyDeviceToHost));
+
+    for (index_type i = 0; i < map_size; ++i) {
+      std::cout << p_kernel_map[i + 0 * map_size] << ":"
+                << p_kernel_map[i + 1 * map_size] << "->"
+                << p_kernel_map[i + 2 * map_size] << "\n";
+    }
+    CUDA_CHECK(cudaDeviceSynchronize());
+    std::free(p_kernel_map);
+#endif
+
     return swapped_gpu_kernel_map;
   }
 
@@ -187,9 +231,9 @@ public:
     m_kernel_size_map = other.m_kernel_size_map;
     m_kernel_offset_map = other.m_kernel_offset_map;
 
-    kernels.data(m_memory.get());
-    in_maps.data(m_memory.get() + m_capacity);
-    out_maps.data(m_memory.get() + 2 * m_capacity);
+    in_maps.data(other.in_maps.begin());
+    out_maps.data(other.out_maps.begin());
+    kernels.data(other.kernels.begin());
 
     return *this;
   }
@@ -197,12 +241,12 @@ public:
   // functions
   inline index_type *data() { return m_memory.get(); }
 
-  inline typename std::unordered_map<index_type, index_type>::const_iterator
+  inline typename std::map<index_type, index_type>::const_iterator
   key_cbegin() const {
     return m_kernel_offset_map.cbegin();
   }
 
-  inline typename std::unordered_map<index_type, index_type>::const_iterator
+  inline typename std::map<index_type, index_type>::const_iterator
   key_cend() const {
     return m_kernel_offset_map.cend();
   }
@@ -245,10 +289,11 @@ public:
     CUDA_CHECK(cudaMemcpy(p_kernel_map, data(), m_memory_size_byte,
                           cudaMemcpyDeviceToHost));
     for (index_type i = 0; i < std::min<size_type>(m_capacity, 100); ++i) {
-      std::cout << p_kernel_map[i + 0 * m_capacity] << ":"
-                << p_kernel_map[i + 1 * m_capacity] << "->"
-                << p_kernel_map[i + 2 * m_capacity] << "\n";
+      std::cout << p_kernel_map[i + 2 * m_capacity] << ":"
+                << p_kernel_map[i + 0 * m_capacity] << "->"
+                << p_kernel_map[i + 1 * m_capacity] << "\n";
     }
+    std::free(p_kernel_map);
 #endif
 
     // Need to find the start and the size of each key for the kernel map
@@ -312,8 +357,8 @@ private:
   std::shared_ptr<index_type[]> m_memory;
   byte_allocator_type m_allocator;
 
-  std::unordered_map<index_type, index_type> m_kernel_size_map;
-  std::unordered_map<index_type, index_type> m_kernel_offset_map;
+  std::map<index_type, index_type> m_kernel_size_map;
+  std::map<index_type, index_type> m_kernel_offset_map;
 
 public:
   contiguous_memory kernels;

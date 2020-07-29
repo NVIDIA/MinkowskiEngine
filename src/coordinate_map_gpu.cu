@@ -727,7 +727,7 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::copy_coordinates(
   size_type const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
 
   detail::copy_coordinates<coordinate_type, size_type, index_type, map_type>
-      <<<num_blocks, num_threads>>>(
+      <<<num_blocks, CUDA_NUM_THREADS>>>(
           *m_map,                                             //
           dst_coordinate,                                     //
           thrust::raw_pointer_cast(m_valid_map_index.data()), //

@@ -21,34 +21,67 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+import os
 import numpy as np
 
 import torch
 import MinkowskiEngine as ME
+
+from urllib.request import urlretrieve
+
+try:
+    import open3d as o3d
+except ImportError:
+    raise ImportError("Please install open3d with `pip install open3d`.")
+
+if not os.path.isfile("1.ply"):
+    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", "1.ply")
+
+
+def load_file(file_name):
+    pcd = o3d.io.read_point_cloud(file_name)
+    coords = np.array(pcd.points)
+    colors = np.array(pcd.colors)
+    return coords, colors, pcd
+
+
+def batched_coordinates(coords):
+    D = np.unique(np.array([cs.shape[1] for cs in coords]))
+    assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
+    D = D[0]
+    N = np.array([len(cs) for cs in coords]).sum()
+    bcoords = torch.IntTensor(N, D + 1)  # uninitialized batched coords
+
+    s = 0
+    for batch_id, coord in enumerate(coords):
+        if isinstance(coord, np.ndarray):
+            coord = torch.from_numpy(coord)
+        else:
+            assert isinstance(
+                coord, torch.Tensor
+            ), "Coords must be of type numpy.ndarray or torch.Tensor"
+        cn = coord.shape[0]
+        coord = coord.int()
+        bcoords[s : s + cn, 1:] = coord
+        bcoords[s : s + cn, 0] = batch_id
+        s += cn
+    return bcoords
 
 
 def get_coords(data):
     coords = []
     for i, row in enumerate(data):
         for j, col in enumerate(row):
-            if col != ' ':
+            if col != " ":
                 coords.append([i, j])
     return np.array(coords)
 
 
-def data_loader(nchannel=3,
-                max_label=5,
-                is_classification=True,
-                seed=-1,
-                batch_size=2):
+def data_loader(nchannel=3, max_label=5, is_classification=True, seed=-1, batch_size=2):
     if seed >= 0:
         torch.manual_seed(seed)
 
-    data = [
-        "   X   ",  #
-        "  X X  ",  #
-        " XXXXX "
-    ]
+    data = ["   X   ", "  X X  ", " XXXXX "]  #  #
 
     # Generate coordinates
     coords = [get_coords(data) for i in range(batch_size)]

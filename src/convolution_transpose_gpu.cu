@@ -90,16 +90,20 @@ at::Tensor ConvolutionTransposeForwardGPU(
     auto map_it = p_map_manager->find(p_in_map_key->get_key());
     ASSERT(map_it != p_map_manager->map_end(), ERROR_MAP_NOT_FOUND);
     auto const &in_map = (*map_it).second;
+
+    auto out_tensor_stride = detail::stride_tensor_stride(
+        in_map.get_tensor_stride(), kernel_stride, true /* is_transpose */);
     auto kernel_region = cpu_kernel_region<coordinate_type>(
-        region_type,                       //
-        in_map.coordinate_size(),          //
-        in_map.get_tensor_stride().data(), //
-        kernel_size.data(),                //
-        kernel_dilation.data(),            //
+        region_type,              //
+        in_map.coordinate_size(), //
+        out_tensor_stride.data(), //
+        kernel_size.data(),       //
+        kernel_dilation.data(),   //
         0, offset.data_ptr<coordinate_type>(), offset.size(0));
 
     coordinate_map_key_type out_key = std::get<0>(p_map_manager->stride_region(
         in_key, kernel_region, true /* is_transpose */));
+    LOG_DEBUG("ConvolutionTranspose out key:", out_key);
     p_out_map_key->set_key(out_key);
   }
 
@@ -113,13 +117,19 @@ at::Tensor ConvolutionTransposeForwardGPU(
                                                  true /* is_transpose */, //
                                                  false /* is_pool */);
 
+#ifdef DEBUG
+  LOG_DEBUG("Transposed kernel map in_maps:", in_out.out_maps.begin() - in_out.in_maps.begin());
+#endif
+
   auto const out_nrows = p_map_manager->size(p_out_map_key->get_key());
   at::Tensor out_feat =
       torch::zeros({out_nrows, kernel.size(2)}, in_feat.options());
-  LOG_DEBUG("Allocated", out_nrows, "x", kernel.size(2), "out_features.");
+  LOG_DEBUG("In feat:", in_feat.size(0), "x", in_feat.size(1), "-> out feat",
+            out_feat.size(0), "x", out_feat.size(1));
 
   cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
-  cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
+  cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
+  cublasSetStream(handle, stream);
 
   AT_DISPATCH_FLOATING_TYPES(
       in_feat.scalar_type(), "convolution_transpose_forward_gpu", [&] {
@@ -131,7 +141,7 @@ at::Tensor ConvolutionTransposeForwardGPU(
             out_feat.size(1),                       //
             kernel.template data_ptr<scalar_t>(),   //
             in_out,                                 //
-            out_nrows, handle, at::cuda::getCurrentCUDAStream());
+            out_nrows, handle, stream);
       });
 
   return out_feat;

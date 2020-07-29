@@ -118,11 +118,11 @@ from MinkowskiNormalization import (
 # from MinkowskiUnion import MinkowskiUnion, MinkowskiUnionFunction
 #
 # from MinkowskiNetwork import MinkowskiNetwork
-#
-# import MinkowskiOps
-#
-# from MinkowskiOps import MinkowskiLinear, cat
-#
+
+import MinkowskiOps
+
+from MinkowskiOps import MinkowskiLinear, cat
+
 # import MinkowskiFunctional
 #
 import MinkowskiEngine.utils as utils

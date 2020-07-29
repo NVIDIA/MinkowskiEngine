@@ -39,6 +39,7 @@
 
 #include <torch/extension.h>
 
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -413,8 +414,8 @@ void initialize_non_templated_classes(py::module &m) {
       .def("set_key", (void (minkowski::CoordinateMapKey::*)(
                           minkowski::default_types::stride_type, std::string)) &
                           minkowski::CoordinateMapKey::set_key)
-      .def("get_tensor_stride",
-           &minkowski::CoordinateMapKey::get_tensor_stride);
+      .def("get_tensor_stride", &minkowski::CoordinateMapKey::get_tensor_stride)
+      .def(py::self == py::self);
 }
 
 template <typename manager_type>

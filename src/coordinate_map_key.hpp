@@ -131,6 +131,12 @@ public:
 
   stride_type get_tensor_stride() const { return m_key.first; }
 
+  bool operator==(CoordinateMapKey const &key) const {
+    if (!m_key_set || !key.m_key_set)
+      return false;
+    return m_key == key.m_key;
+  }
+
   // misc functions
   std::string to_string() const {
     Formatter out;

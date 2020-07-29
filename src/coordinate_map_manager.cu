@@ -151,7 +151,11 @@ struct swap_in_out_map_functor<gpu_kernel_map<
                                              detail::default_allocator<char>>;
 
   gpu_kernel_map_type operator()(gpu_kernel_map_type const &kernel_map) {
-    return kernel_map.swap();
+    auto swapped_kernel_map = kernel_map.swap();
+    LOG_DEBUG("Transposed kernel map in_maps:",
+              swapped_kernel_map.out_maps.begin() -
+                  swapped_kernel_map.in_maps.begin());
+    return std::move(swapped_kernel_map);
   }
 };
 template <>
@@ -161,7 +165,11 @@ struct swap_in_out_map_functor<
       gpu_kernel_map<default_types::index_type, detail::c10_allocator<char>>;
 
   gpu_kernel_map_type operator()(gpu_kernel_map_type const &kernel_map) {
-    return kernel_map.swap();
+    auto swapped_kernel_map = kernel_map.swap();
+    LOG_DEBUG("Transposed kernel map in_maps:",
+              swapped_kernel_map.out_maps.begin() -
+                  swapped_kernel_map.in_maps.begin());
+    return std::move(swapped_kernel_map);
   }
 };
 
