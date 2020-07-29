@@ -36,6 +36,7 @@
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   // Constant function
   m.def("is_cuda_available", &is_cuda_available);
+  m.def("cuda_version", &cuda_version);
 
   initialize_non_templated_classes(m);
 
@@ -50,18 +51,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 #endif
 
   // Functions
-  instantiate_cpu_func<int32_t, float>(m, std::string("f"));
-  instantiate_cpu_func<int32_t, double>(m, std::string("d"));
+  instantiate_cpu_func<int32_t>(m, "");
 
 #ifndef CPU_ONLY
-  instantiate_gpu_func<int32_t, float, minkowski::detail::default_allocator>(
-      m, std::string("fd"));
-  instantiate_gpu_func<int32_t, double, minkowski::detail::default_allocator>(
-      m, std::string("dd"));
+  instantiate_gpu_func<int32_t, minkowski::detail::default_allocator>(
+      m, std::string(""));
 
-  instantiate_gpu_func<int32_t, float, minkowski::detail::c10_allocator>(
-      m, std::string("fc"));
-  instantiate_gpu_func<int32_t, double, minkowski::detail::c10_allocator>(
-      m, std::string("dc"));
+  instantiate_gpu_func<int32_t, minkowski::detail::c10_allocator>(
+      m, std::string(""));
 #endif
 }

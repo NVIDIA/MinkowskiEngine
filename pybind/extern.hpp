@@ -45,7 +45,7 @@ namespace minkowski {
 /*************************************
  * Convolution
  *************************************/
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 at::Tensor
 ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       at::Tensor const &kernel,                          //
@@ -58,7 +58,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       CoordinateMapKey *p_out_map_key,                   //
                       cpu_manager_type<coordinate_type> *p_map_manager);
 
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 std::pair<at::Tensor, at::Tensor>
 ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
                        at::Tensor const &grad_out_feat,                   //
@@ -73,7 +73,7 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
                        cpu_manager_type<coordinate_type> *p_map_manager);
 
 #ifndef CPU_ONLY
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 at::Tensor ConvolutionForwardGPU(
     at::Tensor const &in_feat,                         //
@@ -87,7 +87,7 @@ at::Tensor ConvolutionForwardGPU(
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     at::Tensor const &in_feat,                         //
@@ -106,7 +106,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
 /*************************************
  * Convolution Transpose
  *************************************/
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 at::Tensor ConvolutionTransposeForwardCPU(
     at::Tensor const &in_feat,                         //
     at::Tensor const &kernel,                          //
@@ -120,7 +120,7 @@ at::Tensor ConvolutionTransposeForwardCPU(
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<coordinate_type> *p_map_manager);
 
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
     at::Tensor const &in_feat,                         //
     at::Tensor const &grad_out_feat,                   //
@@ -135,7 +135,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
     cpu_manager_type<coordinate_type> *p_map_manager);
 
 #ifndef CPU_ONLY
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 at::Tensor ConvolutionTransposeForwardGPU(
     at::Tensor const &in_feat,                         //
@@ -150,7 +150,7 @@ at::Tensor ConvolutionTransposeForwardGPU(
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
     at::Tensor const &in_feat,                         //
@@ -193,23 +193,21 @@ at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
 
 namespace py = pybind11;
 
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
-        &minkowski::ConvolutionForwardCPU<coordinate_type, feature_type>,
+        &minkowski::ConvolutionForwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
   m.def((std::string("ConvolutionBackwardCPU") + dtypestr).c_str(),
-        &minkowski::ConvolutionBackwardCPU<coordinate_type, feature_type>,
+        &minkowski::ConvolutionBackwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
-  m.def(
-      (std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
-      &minkowski::ConvolutionTransposeForwardCPU<coordinate_type, feature_type>,
-      py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionTransposeForwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
   m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
-        &minkowski::ConvolutionTransposeBackwardCPU<coordinate_type,
-                                                    feature_type>,
+        &minkowski::ConvolutionTransposeBackwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
   /*
@@ -336,30 +334,31 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
 }
 
 #ifndef CPU_ONLY
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
-        &minkowski::ConvolutionForwardGPU<coordinate_type, feature_type,
-                                          TemplatedAllocator>,
+        &minkowski::ConvolutionForwardGPU<coordinate_type, TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
 
   m.def((std::string("ConvolutionBackwardGPU") + dtypestr).c_str(),
-        &minkowski::ConvolutionBackwardGPU<coordinate_type, feature_type,
-                                           TemplatedAllocator>,
+        &minkowski::ConvolutionBackwardGPU<coordinate_type, TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
 
-  m.def(
-      (std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
-      &minkowski::ConvolutionTransposeForwardGPU<coordinate_type, feature_type,
-                                                 TemplatedAllocator>,
-      py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionTransposeForwardGPU<coordinate_type,
+                                                   TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
 
-  m.def(
-      (std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
-      &minkowski::ConvolutionTransposeBackwardGPU<coordinate_type, feature_type,
-                                                  TemplatedAllocator>,
-      py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionTransposeBackwardGPU<coordinate_type,
+                                                    TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
+
+  // m.def("coo_spmm_int32", &coo_spmm<int32_t>,
+  //       py::call_guard<py::gil_scoped_release>());
+  // m.def("coo_spmm_int64", &coo_spmm<int64_t>,
+  //       py::call_guard<py::gil_scoped_release>());
 }
 #endif
 
@@ -435,5 +434,13 @@ bool is_cuda_available() {
   return true;
 #else
   return false;
+#endif
+}
+
+int cuda_version() {
+#if defined(CUDART_VERSION)
+  return CUDART_VERSION;
+#else
+  return -1;
 #endif
 }

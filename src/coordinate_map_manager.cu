@@ -73,6 +73,7 @@ struct insert_and_map_functor<coordinate_type, TemplatedAllocator,
 
     // return tensors
     // TODO int64_t
+    LOG_DEBUG("Reserve mapping torch output tensors.");
     at::Tensor th_mapping = torch::empty(
         {(int64_t)mapping.size()},
         th_coordinate.options().requires_grad(false).dtype(torch::kInt64));
@@ -83,18 +84,23 @@ struct insert_and_map_functor<coordinate_type, TemplatedAllocator,
     auto const num_blocks =
         (mapping.size() + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 
+    LOG_DEBUG("cuda_copy_n with num_blocks:", num_blocks,
+              "mapping.size():", mapping.size());
     detail::cuda_copy_n<default_types::index_type, int64_t>
-        <<<num_blocks, mapping.size()>>>(
+        <<<num_blocks, CUDA_NUM_THREADS>>>(
             thrust::raw_pointer_cast(mapping.data()), mapping.size(),
             th_mapping.data_ptr<int64_t>());
 
     auto const num_inv_blocks =
         (inverse_mapping.size() + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
 
+    LOG_DEBUG("cuda_copy_n with num_inv_blocks:", num_inv_blocks,
+              "inverse_mapping.size():", inverse_mapping.size());
     detail::cuda_copy_n<default_types::index_type, int64_t>
-        <<<num_inv_blocks, inverse_mapping.size()>>>(
+        <<<num_inv_blocks, CUDA_NUM_THREADS>>>(
             thrust::raw_pointer_cast(inverse_mapping.data()),
             inverse_mapping.size(), th_inverse_mapping.data_ptr<int64_t>());
+    CUDA_CHECK(cudaStreamSynchronize(0));
 
     return std::make_pair(std::move(th_mapping), std::move(th_inverse_mapping));
   }

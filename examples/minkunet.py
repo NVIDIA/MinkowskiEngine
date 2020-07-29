@@ -29,7 +29,7 @@ import MinkowskiEngine as ME
 
 from MinkowskiEngine.modules.resnet_block import BasicBlock, Bottleneck
 
-from tests.common import data_loader
+from tests.python.common import data_loader
 from examples.resnet import ResNetBase
 
 
@@ -115,7 +115,7 @@ class MinkUNetBase(ResNetBase):
             self.PLANES[7],
             out_channels,
             kernel_size=1,
-            has_bias=True,
+            bias=True,
             dimension=D)
         self.relu = ME.MinkowskiReLU(inplace=True)
 

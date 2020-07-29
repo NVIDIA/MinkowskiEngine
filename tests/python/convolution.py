@@ -78,7 +78,7 @@ class TestConvolution(unittest.TestCase):
                 fn,
                 (
                     input.F,
-                    conv.weight,
+                    conv.kernel,
                     conv.kernel_generator,
                     input.coordinate_map_key,
                     None,
@@ -116,7 +116,7 @@ class TestConvolution(unittest.TestCase):
                 fn,
                 (
                     input.F,
-                    conv.weight,
+                    conv.kernel,
                     conv.kernel_generator,
                     input.coordinate_map_key,
                     output.coordinate_map_key,
@@ -176,7 +176,7 @@ class TestConvolutionTranspose(unittest.TestCase):
                 fn,
                 (
                     tr_input.F,
-                    conv_tr.weight,
+                    conv_tr.kernel,
                     conv_tr.kernel_generator,
                     tr_input.coordinate_map_key,
                     output.coordinate_map_key,
@@ -216,7 +216,7 @@ class TestConvolutionTranspose(unittest.TestCase):
                 fn,
                 (
                     input.F,
-                    conv_tr.weight,
+                    conv_tr.kernel,
                     conv_tr.kernel_generator,
                     input.coordinate_map_key,
                     output.coordinate_map_key,

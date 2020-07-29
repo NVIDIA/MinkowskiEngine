@@ -124,10 +124,10 @@ if __name__ == '__main__':
 
         # Feed-forward pass and get the prediction
         sinput = ME.SparseTensor(
-            feats=torch.from_numpy(colors).float(),
-            coords=ME.utils.batched_coordinates([coords / voxel_size]),
+            features=torch.from_numpy(colors).float().to(device),
+            coordinates=ME.utils.batched_coordinates([coords / voxel_size]).to(device),
             quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
-        ).to(device)
+        )
         logits = model(sinput).slice(sinput)
 
     _, pred = logits.max(1)

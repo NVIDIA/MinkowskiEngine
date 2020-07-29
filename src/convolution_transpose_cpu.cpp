@@ -38,7 +38,7 @@
 
 namespace minkowski {
 
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 at::Tensor ConvolutionTransposeForwardCPU(
     at::Tensor const &in_feat,                         //
     at::Tensor const &kernel,                          //
@@ -51,32 +51,18 @@ at::Tensor ConvolutionTransposeForwardCPU(
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<coordinate_type> *p_map_manager) {
-
   ASSERT(!generate_new_coordinates, ERROR_NOT_IMPLEMENTED);
 
-  torch::TensorArg arg_in_feat(in_feat, "in_feat", 0);
-  torch::TensorArg arg_kernel(kernel, "kernel", 1);
-  torch::TensorArg arg_offset(offset, "offset", 2);
+  ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
+  ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
-  torch::CheckedFrom c = "ConvolutionTransposeForwardCPU";
-  torch::checkContiguous(c, arg_in_feat);
-  torch::checkContiguous(c, arg_kernel);
-  torch::checkContiguous(c, arg_offset);
+  ASSERT(!in_feat.is_cuda(), "in_feat must be CPU");
+  ASSERT(!kernel.is_cuda(), "kernel must be CPU");
 
-  torch::checkBackend(c, arg_in_feat.tensor, torch::Backend::CPU);
-  torch::checkBackend(c, arg_kernel.tensor, torch::Backend::CPU);
+  ASSERT(in_feat.scalar_type() == kernel.scalar_type(), "type mismatch");
 
-  torch::checkScalarType(c, arg_in_feat,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-  torch::checkScalarType(c, arg_kernel,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-
-  torch::checkDim(c, arg_in_feat, 2);
-  torch::checkDim(c, arg_kernel, 3);
+  ASSERT(in_feat.dim() == 2, "in_feat.dim():", in_feat.dim());
+  ASSERT(kernel.dim() == 3, "kernel.dim():", kernel.dim());
 
   ASSERT(in_feat.size(1) == kernel.size(1),
          "Input feature size and kernel size mismatch");
@@ -121,15 +107,18 @@ at::Tensor ConvolutionTransposeForwardCPU(
       torch::zeros({out_nrows, kernel.size(2)}, in_feat.options());
   LOG_DEBUG("Allocated", out_nrows, "x", kernel.size(2), "out_features.");
 
-  ConvolutionForwardKernelCPU<feature_type, default_types::index_type>(
-      in_feat.template data_ptr<feature_type>(), in_feat.size(1),
-      out_feat.template data_ptr<feature_type>(), out_feat.size(1),
-      kernel.template data_ptr<feature_type>(), in_out.first, in_out.second);
+  AT_DISPATCH_FLOATING_TYPES(
+      in_feat.scalar_type(), "convolution_transpose_forward_cpu", [&] {
+        ConvolutionForwardKernelCPU<scalar_t, default_types::index_type>(
+            in_feat.template data_ptr<scalar_t>(), in_feat.size(1),
+            out_feat.template data_ptr<scalar_t>(), out_feat.size(1),
+            kernel.template data_ptr<scalar_t>(), in_out.first, in_out.second);
+      });
 
   return out_feat;
 }
 
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
     at::Tensor const &in_feat, at::Tensor const &grad_out_feat,
     at::Tensor const &kernel,
@@ -142,36 +131,23 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<coordinate_type> *p_map_manager) {
 
-  torch::TensorArg arg_in_feat(in_feat, "in_feat", 0);
-  torch::TensorArg arg_grad_out_feat(grad_out_feat, "grad_out_feat", 1);
-  torch::TensorArg arg_kernel(kernel, "kernel", 2);
-  torch::TensorArg arg_offset(offset, "offset", 3);
+  ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
+  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
-  torch::CheckedFrom c = "ConvolutionTransposeBackwardCPU";
-  torch::checkContiguous(c, arg_in_feat);
-  torch::checkContiguous(c, arg_grad_out_feat);
-  torch::checkContiguous(c, arg_kernel);
-  torch::checkContiguous(c, arg_offset);
+  ASSERT(!in_feat.is_cuda(), "in_feat must be CPU");
+  ASSERT(!grad_out_feat.is_cuda(), "in_feat must be CPU");
+  ASSERT(!kernel.is_cuda(), "kernel must be CPU");
 
-  torch::checkBackend(c, arg_in_feat.tensor, torch::Backend::CPU);
-  torch::checkBackend(c, arg_grad_out_feat.tensor, torch::Backend::CPU);
-  torch::checkBackend(c, arg_kernel.tensor, torch::Backend::CPU);
+  ASSERT(in_feat.scalar_type() == kernel.scalar_type(), "type mismatch");
+  ASSERT(in_feat.scalar_type() == grad_out_feat.scalar_type(), "type mismatch");
 
-  torch::checkScalarType(c, arg_in_feat,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-  torch::checkScalarType(c, arg_grad_out_feat,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-  torch::checkScalarType(c, arg_kernel,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
+  ASSERT(in_feat.dim() == 2, "in_feat.dim():", in_feat.dim());
+  ASSERT(grad_out_feat.dim() == 2, "grad_out_feat.dim():", grad_out_feat.dim());
+  ASSERT(kernel.dim() == 3, "kernel.dim():", kernel.dim());
 
-  torch::checkDim(c, arg_in_feat, 2);
-  torch::checkDim(c, arg_grad_out_feat, 2);
+  ASSERT(in_feat.size(1) == kernel.size(1),
+         "Input feature size and kernel size mismatch");
 
   coordinate_map_key_type in_key = p_in_map_key->get_key();
   ASSERT(p_map_manager->exists(in_key), ERROR_MAP_NOT_FOUND);
@@ -192,33 +168,23 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
   at::Tensor grad_kernel = torch::zeros(
       {kernel.size(0), kernel.size(1), kernel.size(2)}, kernel.options());
 
-  ConvolutionBackwardKernelCPU<feature_type, default_types::index_type>(
-      in_feat.template data_ptr<feature_type>(),                              //
-      grad_in_feat.template data_ptr<feature_type>(), in_feat.size(1),        //
-      grad_out_feat.template data_ptr<feature_type>(), grad_out_feat.size(1), //
-      kernel.template data_ptr<feature_type>(),
-      grad_kernel.template data_ptr<feature_type>(), in_out.first,
-      in_out.second);
+  AT_DISPATCH_FLOATING_TYPES(
+      in_feat.scalar_type(), "convolution_transpose_backward_cpu", [&] {
+        ConvolutionBackwardKernelCPU<scalar_t, default_types::index_type>(
+            in_feat.template data_ptr<scalar_t>(),                       //
+            grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(1), //
+            grad_out_feat.template data_ptr<scalar_t>(),
+            grad_out_feat.size(1), //
+            kernel.template data_ptr<scalar_t>(),
+            grad_kernel.template data_ptr<scalar_t>(), in_out.first,
+            in_out.second);
+      });
 
   return std::make_pair(grad_in_feat, grad_kernel);
 }
 
 template at::Tensor
-ConvolutionTransposeForwardCPU<default_types::dcoordinate_type, float>(
-    at::Tensor const &in_feat,                         //
-    at::Tensor const &kernel,                          //
-    default_types::stride_type const &kernel_size,     //
-    default_types::stride_type const &kernel_stride,   //
-    default_types::stride_type const &kernel_dilation, //
-    RegionType::Type const region_type,                //
-    at::Tensor const &offset,                          //
-    bool generate_new_coordinates,                     //
-    CoordinateMapKey *p_in_map_key,                    //
-    CoordinateMapKey *p_out_map_key,                   //
-    cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
-
-template at::Tensor
-ConvolutionTransposeForwardCPU<default_types::dcoordinate_type, double>(
+ConvolutionTransposeForwardCPU<default_types::dcoordinate_type>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
@@ -232,21 +198,7 @@ ConvolutionTransposeForwardCPU<default_types::dcoordinate_type, double>(
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
 
 template std::pair<at::Tensor, at::Tensor>
-ConvolutionTransposeBackwardCPU<default_types::dcoordinate_type, float>(
-    at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
-    at::Tensor const &kernel,                          //
-    default_types::stride_type const &kernel_size,     //
-    default_types::stride_type const &kernel_stride,   //
-    default_types::stride_type const &kernel_dilation, //
-    RegionType::Type const region_type,                //
-    at::Tensor const &offsets,                         //
-    CoordinateMapKey *p_in_map_key,                    //
-    CoordinateMapKey *p_out_map_key,                   //
-    cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
-
-template std::pair<at::Tensor, at::Tensor>
-ConvolutionTransposeBackwardCPU<default_types::dcoordinate_type, double>(
+ConvolutionTransposeBackwardCPU<default_types::dcoordinate_type>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &grad_out_feat,                   //
     at::Tensor const &kernel,                          //

@@ -37,12 +37,13 @@
 // Ninja
 #include "convolution_cpu.cpp"
 
+#include <ATen/cuda/CUDAUtils.h>
 #include <pybind11/pybind11.h>
 #include <torch/extension.h>
 
 namespace minkowski {
 
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 at::Tensor ConvolutionForwardGPU(
     at::Tensor const &in_feat,                         //
@@ -56,29 +57,18 @@ at::Tensor ConvolutionForwardGPU(
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager) {
 
-  torch::TensorArg arg_in_feat(in_feat, "in_feat", 0);
-  torch::TensorArg arg_kernel(kernel, "kernel", 1);
-  torch::TensorArg arg_offset(offset, "offset", 2);
+  ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
+  ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
-  torch::CheckedFrom c = "ConvolutionForwardGPU";
-  torch::checkContiguous(c, arg_in_feat);
-  torch::checkContiguous(c, arg_kernel);
-  torch::checkContiguous(c, arg_offset);
+  ASSERT(in_feat.is_cuda(), "in_feat must be CUDA");
+  ASSERT(kernel.is_cuda(), "kernel must be CUDA");
+  ASSERT(at::cuda::check_device({in_feat, kernel}),
+         "in_feat and kernel must be on the same device");
 
-  torch::checkBackend(c, arg_in_feat.tensor, torch::Backend::CUDA);
-  torch::checkBackend(c, arg_kernel.tensor, torch::Backend::CUDA);
+  ASSERT(in_feat.scalar_type() == kernel.scalar_type(), "type mismatch");
 
-  torch::checkScalarType(c, arg_in_feat,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-  torch::checkScalarType(c, arg_kernel,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-
-  torch::checkDim(c, arg_in_feat, 2);
-  torch::checkDim(c, arg_kernel, 3);
+  ASSERT(in_feat.dim() == 2, "in_feat.dim():", in_feat.dim());
+  ASSERT(kernel.dim() == 3, "kernel.dim():", kernel.dim());
 
   ASSERT(in_feat.size(1) == kernel.size(1),
          "Input feature size and kernel size mismatch");
@@ -115,21 +105,23 @@ at::Tensor ConvolutionForwardGPU(
   cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
   cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
 
-  ConvolutionForwardKernelGPU<feature_type, default_types::index_type,
-                              TemplatedAllocator<char>>(
-      in_feat.template data_ptr<feature_type>(),  //
-      in_feat.size(1),                            //
-      out_feat.template data_ptr<feature_type>(), //
-      out_feat.size(1),                           //
-      kernel.template data_ptr<feature_type>(),   //
-      in_out,                                     //
-      out_nrows,
-      handle, at::cuda::getCurrentCUDAStream());
+  AT_DISPATCH_FLOATING_TYPES(
+      in_feat.scalar_type(), "convolution_forward_gpu", [&] {
+        ConvolutionForwardKernelGPU<scalar_t, default_types::index_type,
+                                    TemplatedAllocator<char>>(
+            in_feat.template data_ptr<scalar_t>(),  //
+            in_feat.size(1),                        //
+            out_feat.template data_ptr<scalar_t>(), //
+            out_feat.size(1),                       //
+            kernel.template data_ptr<scalar_t>(),   //
+            in_out,                                 //
+            out_nrows, handle, at::cuda::getCurrentCUDAStream());
+      });
 
   return out_feat;
 }
 
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     at::Tensor const &in_feat,                         //
@@ -144,36 +136,25 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager) {
 
-  torch::TensorArg arg_in_feat(in_feat, "in_feat", 0);
-  torch::TensorArg arg_grad_out_feat(grad_out_feat, "grad_out_feat", 1);
-  torch::TensorArg arg_kernel(kernel, "kernel", 2);
-  torch::TensorArg arg_offset(offset, "offset", 3);
+  ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
+  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
-  torch::CheckedFrom c = "ConvolutionBackwardGPU";
-  torch::checkContiguous(c, arg_in_feat);
-  torch::checkContiguous(c, arg_grad_out_feat);
-  torch::checkContiguous(c, arg_kernel);
-  torch::checkContiguous(c, arg_offset);
+  ASSERT(in_feat.is_cuda(), "in_feat must be CUDA");
+  ASSERT(grad_out_feat.is_cuda(), "in_feat must be CUDA");
+  ASSERT(kernel.is_cuda(), "kernel must be CUDA");
+  ASSERT(at::cuda::check_device({in_feat, grad_out_feat, kernel}),
+         "in_feat, grad_out_feat, kernel must be on the same device");
 
-  torch::checkBackend(c, arg_in_feat.tensor, torch::Backend::CUDA);
-  torch::checkBackend(c, arg_grad_out_feat.tensor, torch::Backend::CUDA);
-  torch::checkBackend(c, arg_kernel.tensor, torch::Backend::CUDA);
+  ASSERT(in_feat.scalar_type() == kernel.scalar_type(), "type mismatch");
+  ASSERT(in_feat.scalar_type() == grad_out_feat.scalar_type(), "type mismatch");
 
-  torch::checkScalarType(c, arg_in_feat,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-  torch::checkScalarType(c, arg_grad_out_feat,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
-  torch::checkScalarType(c, arg_kernel,
-                         std::is_same<feature_type, float>::value
-                             ? torch::kFloat
-                             : torch::kFloat64);
+  ASSERT(in_feat.dim() == 2, "in_feat.dim():", in_feat.dim());
+  ASSERT(grad_out_feat.dim() == 2, "grad_out_feat.dim():", grad_out_feat.dim());
+  ASSERT(kernel.dim() == 3, "kernel.dim():", kernel.dim());
 
-  torch::checkDim(c, arg_in_feat, 2);
-  torch::checkDim(c, arg_grad_out_feat, 2);
+  ASSERT(in_feat.size(1) == kernel.size(1),
+         "Input feature size and kernel size mismatch");
 
   coordinate_map_key_type in_key = p_in_map_key->get_key();
   ASSERT(p_map_manager->exists(in_key), ERROR_MAP_NOT_FOUND);
@@ -196,18 +177,21 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
   cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
   cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
 
-  ConvolutionBackwardKernelGPU<feature_type, default_types::index_type,
-                               TemplatedAllocator<char>>(
-      in_feat.template data_ptr<feature_type>(),       //
-      grad_in_feat.template data_ptr<feature_type>(),  //
-      in_feat.size(1),                                 //
-      grad_out_feat.template data_ptr<feature_type>(), //
-      grad_out_feat.size(1),                           //
-      kernel.template data_ptr<feature_type>(),        //
-      grad_kernel.template data_ptr<feature_type>(),   //
-      in_out,                                          //
-      grad_out_feat.size(0),                           //
-      handle, at::cuda::getCurrentCUDAStream());
+  AT_DISPATCH_FLOATING_TYPES(
+      in_feat.scalar_type(), "convolution_backward_gpu", [&] {
+        ConvolutionBackwardKernelGPU<scalar_t, default_types::index_type,
+                                     TemplatedAllocator<char>>(
+            in_feat.template data_ptr<scalar_t>(),       //
+            grad_in_feat.template data_ptr<scalar_t>(),  //
+            in_feat.size(1),                             //
+            grad_out_feat.template data_ptr<scalar_t>(), //
+            grad_out_feat.size(1),                       //
+            kernel.template data_ptr<scalar_t>(),        //
+            grad_kernel.template data_ptr<scalar_t>(),   //
+            in_out,                                      //
+            grad_out_feat.size(0),                       //
+            handle, at::cuda::getCurrentCUDAStream());
+      });
 
   return std::make_pair(grad_in_feat, grad_kernel);
 }
@@ -215,21 +199,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
 // Forward
 // default_allocator
 template at::Tensor ConvolutionForwardGPU<default_types::dcoordinate_type,
-                                          float, detail::default_allocator>(
-    at::Tensor const &in_feat,                         //
-    at::Tensor const &kernel,                          //
-    default_types::stride_type const &kernel_size,     //
-    default_types::stride_type const &kernel_stride,   //
-    default_types::stride_type const &kernel_dilation, //
-    RegionType::Type const region_type,                //
-    at::Tensor const &offset,                          //
-    CoordinateMapKey *p_in_map_key,                    //
-    CoordinateMapKey *p_out_map_key,                   //
-    gpu_manager_type<default_types::dcoordinate_type, detail::default_allocator>
-        *p_map_manager);
-
-template at::Tensor ConvolutionForwardGPU<default_types::dcoordinate_type,
-                                          double, detail::default_allocator>(
+                                          detail::default_allocator>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
@@ -244,21 +214,7 @@ template at::Tensor ConvolutionForwardGPU<default_types::dcoordinate_type,
 
 // c10_allocator
 template at::Tensor ConvolutionForwardGPU<default_types::dcoordinate_type,
-                                          float, detail::c10_allocator>(
-    at::Tensor const &in_feat,                         //
-    at::Tensor const &kernel,                          //
-    default_types::stride_type const &kernel_size,     //
-    default_types::stride_type const &kernel_stride,   //
-    default_types::stride_type const &kernel_dilation, //
-    RegionType::Type const region_type,                //
-    at::Tensor const &offset,                          //
-    CoordinateMapKey *p_in_map_key,                    //
-    CoordinateMapKey *p_out_map_key,                   //
-    gpu_manager_type<default_types::dcoordinate_type, detail::c10_allocator>
-        *p_map_manager);
-
-template at::Tensor ConvolutionForwardGPU<default_types::dcoordinate_type,
-                                          double, detail::c10_allocator>(
+                                          detail::c10_allocator>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
@@ -274,23 +230,7 @@ template at::Tensor ConvolutionForwardGPU<default_types::dcoordinate_type,
 // Backward
 // default_allocator
 template std::pair<at::Tensor, at::Tensor>
-ConvolutionBackwardGPU<default_types::dcoordinate_type, float,
-                       detail::default_allocator>(
-    at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
-    at::Tensor const &kernel,                          //
-    default_types::stride_type const &kernel_size,     //
-    default_types::stride_type const &kernel_stride,   //
-    default_types::stride_type const &kernel_dilation, //
-    RegionType::Type const region_type,                //
-    at::Tensor const &offset,                          //
-    CoordinateMapKey *p_in_map_key,                    //
-    CoordinateMapKey *p_out_map_key,                   //
-    gpu_manager_type<default_types::dcoordinate_type, detail::default_allocator>
-        *p_map_manager);
-
-template std::pair<at::Tensor, at::Tensor>
-ConvolutionBackwardGPU<default_types::dcoordinate_type, double,
+ConvolutionBackwardGPU<default_types::dcoordinate_type,
                        detail::default_allocator>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &grad_out_feat,                   //
@@ -307,23 +247,7 @@ ConvolutionBackwardGPU<default_types::dcoordinate_type, double,
 
 // c10_allocator
 template std::pair<at::Tensor, at::Tensor>
-ConvolutionBackwardGPU<default_types::dcoordinate_type, float,
-                       detail::c10_allocator>(
-    at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
-    at::Tensor const &kernel,                          //
-    default_types::stride_type const &kernel_size,     //
-    default_types::stride_type const &kernel_stride,   //
-    default_types::stride_type const &kernel_dilation, //
-    RegionType::Type const region_type,                //
-    at::Tensor const &offset,                          //
-    CoordinateMapKey *p_in_map_key,                    //
-    CoordinateMapKey *p_out_map_key,                   //
-    gpu_manager_type<default_types::dcoordinate_type, detail::c10_allocator>
-        *p_map_manager);
-
-template std::pair<at::Tensor, at::Tensor>
-ConvolutionBackwardGPU<default_types::dcoordinate_type, double,
+ConvolutionBackwardGPU<default_types::dcoordinate_type,
                        detail::c10_allocator>(
     at::Tensor const &in_feat,                         //
     at::Tensor const &grad_out_feat,                   //

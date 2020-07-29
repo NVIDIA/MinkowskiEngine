@@ -122,12 +122,12 @@ def prep_args(
 
 def get_postfix(tensor: torch.Tensor):
     postfix = "GPU" if tensor.is_cuda else "CPU"
-    if isinstance(tensor, torch.DoubleTensor) or isinstance(
-        tensor, torch.cuda.DoubleTensor
-    ):
-        postfix += "d"
-    else:
-        postfix += "f"
+    # if isinstance(tensor, torch.DoubleTensor) or isinstance(
+    #     tensor, torch.cuda.DoubleTensor
+    # ):
+    #     postfix += "d"
+    # else:
+    #     postfix += "f"
     return postfix
 
 

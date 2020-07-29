@@ -42,6 +42,7 @@ from MinkowskiKernelGenerator import KernelRegion, KernelGenerator, save_ctx
 
 
 class MinkowskiConvolutionFunction(Function):
+
     @staticmethod
     def forward(
         ctx,
@@ -201,7 +202,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         "kernel_generator",
         "dimension",
         "use_mm",
-        "weight",
+        "kernel",
         "bias",
         "conv",
     )
@@ -248,7 +249,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         Tensor = torch.FloatTensor
         if (
             self.kernel_generator.kernel_volume == 1
-            and self.kernel_generator.requires_strided_coordiantes
+            and self.kernel_generator.requires_strided_coordinates
         ):
             kernel_shape = (self.in_channels, self.out_channels)
             self.use_mm = True
@@ -259,7 +260,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                 self.out_channels,
             )
 
-        self.weight = Parameter(Tensor(*kernel_shape))
+        self.kernel = Parameter(Tensor(*kernel_shape))
         self.bias = Parameter(Tensor(1, out_channels)) if bias else None
         self.conv = (
             MinkowskiConvolutionTransposeFunction()
@@ -294,7 +295,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
             out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
             outfeat = self.conv.apply(
                 input.F,
-                self.weight,
+                self.kernel,
                 self.kernel_generator,
                 input.coordinate_map_key,
                 out_coordinate_map_key,
@@ -314,7 +315,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
             self.out_channels if is_transpose else self.in_channels
         ) * self.kernel_generator.kernel_volume
         stdv = 1.0 / math.sqrt(n)
-        self.weight.data.uniform_(-stdv, stdv)
+        self.kernel.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
 

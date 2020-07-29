@@ -36,36 +36,9 @@
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   // Constant function
   m.def("is_cuda_available", &is_cuda_available);
+  m.def("cuda_version", &cuda_version);
 
   initialize_non_templated_classes(m);
-
-  /*
-  py::class_<minkowski::cpu_manager_type<int>>(m, "CoordinateMapManagerCPU")
-      .def(py::init<>())
-      .def(py::init<minkowski::CUDAKernelMapMode::Mode,
-                    minkowski::default_types::size_type>())
-      .def("insert_and_map", &minkowski::cpu_manager_type<int>::insert_and_map)
-      .def("kernel_map", &minkowski::cpu_manager_type<int>::kernel_map);
-
-  py::class_<minkowski::gpu_c10_manager_type<int>>(
-      m, "CoordinateMapManagerGPU_c10")
-      .def(py::init<>())
-      .def(py::init<minkowski::CUDAKernelMapMode::Mode,
-                    minkowski::default_types::size_type>())
-      .def("insert_and_map",
-           &minkowski::gpu_c10_manager_type<int>::insert_and_map)
-      .def("stride",
-           (typename py::object //
-            (minkowski::gpu_c10_manager_type<int>::*)(
-                minkowski::CoordinateMapKey const *in_map_key,
-                minkowski::default_types::stride_type const &kernel_stride)) &
-               minkowski::gpu_c10_manager_type<int>::stride)
-      .def("size", (typename minkowski::default_types::size_type //
-                    (minkowski::gpu_c10_manager_type<int>::*)(
-                        minkowski::CoordinateMapKey const *map_key) const) &
-                       minkowski::gpu_c10_manager_type<int>::size)
-      .def("kernel_map", &minkowski::gpu_c10_manager_type<int>::kernel_map);
-  */
 
   // Manager
   instantiate_manager<minkowski::cpu_manager_type<int32_t>>(m,
@@ -77,18 +50,14 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       m, std::string("GPU_c10"));
 #endif
 
-  instantiate_cpu_func<int32_t, float>(m, std::string("f"));
-  instantiate_cpu_func<int32_t, double>(m, std::string("d"));
+  // Functions
+  instantiate_cpu_func<int32_t>(m, "");
 
 #ifndef CPU_ONLY
-  instantiate_gpu_func<int32_t, float, minkowski::detail::default_allocator>(
-      m, std::string("f"));
-  instantiate_gpu_func<int32_t, double, minkowski::detail::default_allocator>(
-      m, std::string("d"));
+  instantiate_gpu_func<int32_t, minkowski::detail::default_allocator>(
+      m, std::string(""));
 
-  instantiate_gpu_func<int32_t, float, minkowski::detail::c10_allocator>(
-      m, std::string("f"));
-  instantiate_gpu_func<int32_t, double, minkowski::detail::c10_allocator>(
-      m, std::string("d"));
+  instantiate_gpu_func<int32_t, minkowski::detail::c10_allocator>(
+      m, std::string(""));
 #endif
 }
