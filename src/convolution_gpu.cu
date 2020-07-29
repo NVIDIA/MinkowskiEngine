@@ -105,6 +105,7 @@ at::Tensor ConvolutionForwardGPU(
   cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
   cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
 
+  LOG_DEBUG("Convolution on", out_nrows, "x", kernel.size(2));
   AT_DISPATCH_FLOATING_TYPES(
       in_feat.scalar_type(), "convolution_forward_gpu", [&] {
         ConvolutionForwardKernelGPU<scalar_t, default_types::index_type,

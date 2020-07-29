@@ -43,6 +43,7 @@ from MinkowskiCoordinateManager import (
     _allocator_type,
     _coordinate_map_type,
 )
+from sparse_matrix_functions import spmm as _spmm
 
 
 class SparseTensorOperationMode(Enum):
@@ -343,29 +344,23 @@ class SparseTensor:
                 SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
             ]:
                 N = len(features)
-                import ipdb; ipdb.set_trace()
-                # int_inverse_mapping = self.inverse_mapping.int()
-                COO = torch.stack(
-                    (
-                        self.inverse_mapping,
-                        torch.arange(N, dtype=int, device=self.unique_index.device),
-                    ),
-                    0,
+                cols = torch.arange(
+                    N,
+                    dtype=self.inverse_mapping.dtype,
+                    device=self.inverse_mapping.device,
                 )
-                self.sp_mapping = torch.sparse.FloatTensor(
-                    COO,
-                    torch.ones(N).to(self.unique_index),
-                    torch.Size([len(self.unique_index), len(features)]),
-                ).to(self.unique_index)
+                vals = torch.ones(N, dtype=features.dtype, device=features.device)
+                size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
+                features = _spmm(self.inverse_mapping, cols, vals, size, features)
+                # int_inverse_mapping = self.inverse_mapping.int()
                 if (
                     self.quantization_mode
-                    == SparseTensorQuantizationMode.UNWEIGHTED_SUM
+                    == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
                 ):
-                    features = self.sp_mapping.matmul(features)
-                else:
-                    features = self.sp_mapping.matmul(
-                        features
-                    ) / self.sp_mapping.matmul(torch.ones(len(features), 1))
+                    nums = _spmm(
+                        self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),
+                    )
+                    features /= nums
             else:
                 features = features[self.unique_index]
 
@@ -586,10 +581,10 @@ class SparseTensor:
 
     def _is_same_key(self, other):
         assert isinstance(other, SparseTensor)
-        assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
+        assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
         assert (
             self.coordinate_map_key == other.coordinate_map_key
-        ), COORDS_KEY_DIFFERENT_ERROR
+        ), COORDINATE_KEY_DIFFERENT_ERROR
 
     # Operation overloading
     def __iadd__(self, other):
@@ -622,7 +617,7 @@ class SparseTensor:
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
 
             if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(
@@ -661,7 +656,7 @@ class SparseTensor:
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
 
             if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(
@@ -702,7 +697,7 @@ class SparseTensor:
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
 
             if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(
@@ -742,7 +737,7 @@ class SparseTensor:
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
 
             if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(

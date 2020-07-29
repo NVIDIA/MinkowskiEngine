@@ -25,7 +25,7 @@ class ConvolutionTestCase(unittest.TestCase):
         # size, in, out
         kernel = torch.rand(3, IC, OC).to(0)
 
-        out_features = _C.ConvolutionForwardGPUf(
+        out_features = _C.ConvolutionForwardGPU(
             in_features,
             kernel,
             kernel_size,
@@ -55,7 +55,7 @@ class ConvolutionTestCase(unittest.TestCase):
         # size, in, out
         kernel = torch.rand(9, IC, OC).to(0)
 
-        out_features = _C.ConvolutionForwardGPUf(
+        out_features = _C.ConvolutionForwardGPU(
             in_features,
             kernel,
             kernel_size,
@@ -69,7 +69,7 @@ class ConvolutionTestCase(unittest.TestCase):
         )
 
         out_feat_grad = torch.rand_like(out_features)
-        in_feat_grad, kernel_grad = _C.ConvolutionBackwardGPUf(
+        in_feat_grad, kernel_grad = _C.ConvolutionBackwardGPU(
             in_features,
             out_feat_grad,
             kernel,
@@ -113,7 +113,7 @@ class ConvolutionTestCase(unittest.TestCase):
                     out_key = _C.CoordinateMapKey(4)
 
                     stime = time.time()
-                    out_features = _C.ConvolutionForwardGPUf(
+                    out_features = _C.ConvolutionForwardGPU(
                         in_feats,
                         kernel,
                         kernel_size,
@@ -163,7 +163,7 @@ class ConvolutionTestCase(unittest.TestCase):
                             out_key = _C.CoordinateMapKey(4)
 
                             stime = time.time()
-                            out_features = _C.ConvolutionForwardGPUf(
+                            out_features = _C.ConvolutionForwardGPU(
                                 in_feats,
                                 kernel,
                                 kernel_size,
