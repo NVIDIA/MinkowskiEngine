@@ -91,12 +91,27 @@ from MinkowskiConvolution import (
 #     MinkowskiBroadcast, MinkowskiBroadcastConcatenation, \
 #     MinkowskiBroadcastAddition, MinkowskiBroadcastMultiplication, OperationType
 #
-# from MinkowskiNonlinearity import MinkowskiReLU, MinkowskiSigmoid, MinkowskiSoftmax, \
-#     MinkowskiPReLU, MinkowskiELU, MinkowskiSELU, MinkowskiCELU, MinkowskiDropout, \
-#     MinkowskiThreshold, MinkowskiTanh
-#
-# from MinkowskiNormalization import MinkowskiBatchNorm, MinkowskiSyncBatchNorm, \
-#     MinkowskiInstanceNorm, MinkowskiInstanceNormFunction, MinkowskiStableInstanceNorm
+from MinkowskiNonlinearity import (
+    MinkowskiReLU,
+    MinkowskiSigmoid,
+    MinkowskiSoftmax,
+    MinkowskiPReLU,
+    MinkowskiELU,
+    MinkowskiSELU,
+    MinkowskiCELU,
+    MinkowskiDropout,
+    MinkowskiThreshold,
+    MinkowskiTanh,
+)
+
+from MinkowskiNormalization import (
+    MinkowskiBatchNorm,
+    MinkowskiSyncBatchNorm,
+    # MinkowskiInstanceNorm,
+    # MinkowskiInstanceNormFunction,
+    # MinkowskiStableInstanceNorm,
+)
+
 #
 # from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
 #

@@ -343,14 +343,20 @@ class SparseTensor:
                 SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
             ]:
                 N = len(features)
+                import ipdb; ipdb.set_trace()
+                # int_inverse_mapping = self.inverse_mapping.int()
                 COO = torch.stack(
-                    (self.inverse_mapping.long(), torch.arange(N)), 0
-                ).long()
+                    (
+                        self.inverse_mapping,
+                        torch.arange(N, dtype=int, device=self.unique_index.device),
+                    ),
+                    0,
+                )
                 self.sp_mapping = torch.sparse.FloatTensor(
                     COO,
-                    torch.ones(N),
+                    torch.ones(N).to(self.unique_index),
                     torch.Size([len(self.unique_index), len(features)]),
-                )
+                ).to(self.unique_index)
                 if (
                     self.quantization_mode
                     == SparseTensorQuantizationMode.UNWEIGHTED_SUM

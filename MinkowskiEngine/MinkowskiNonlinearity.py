@@ -24,7 +24,7 @@
 import torch
 from torch.nn import Module
 
-from SparseTensor import SparseTensor
+from MinkowskiSparseTensor import SparseTensor
 
 
 class MinkowskiModuleBase(Module):
@@ -38,8 +38,8 @@ class MinkowskiModuleBase(Module):
         output = self.module(input.F)
         return SparseTensor(
             output,
-            coords_key=input.coords_key,
-            coords_manager=input.coords_man)
+            coordinate_map_key=input.coordinate_map_key,
+            coordinate_manager=input.coordinate_manager)
 
     def __repr__(self):
         return self.__class__.__name__ + '()'

@@ -26,7 +26,7 @@ from typing import Union
 import torch
 from torch.autograd import Function
 
-from SparseTensor import SparseTensor, _get_coords_key
+from MinkowskiSparseTensor import SparseTensor, _get_coords_key
 from Common import KernelGenerator, RegionType, GlobalPoolingMode, \
     MinkowskiModuleBase, \
     convert_to_int_list, convert_to_int_tensor, \
