@@ -1,4 +1,6 @@
-/*  Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/*
+ *  Copyright (c) 2020 NVIDIA Corporation.
+ *  Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,76 +31,75 @@
 #include <functional>
 #include <vector>
 
+#ifndef CPU_ONLY
+#include <thrust/host_vector.h>
+#endif
+
 namespace minkowski {
 
-using std::array;
-using std::pair;
-using std::vector;
-
-// D-Dimensional coordinate + batch dimension = D + 1
-template <typename Itype> using Stride = vector<Itype>;
-
-// For hashing kernel sizes, strides, and dilations.
-template <uint8_t D, typename Itype> using Arr = array<Itype, D>;
-
-// unordered map key type
-template <typename Itype> struct Coord {
-  Itype *ptr;
-  int size;
-
-  Coord(){};
-  Coord(Itype *ptr_, int size_) : ptr(ptr_), size(size_){};
-
-  bool operator==(const Coord &other) const {
-    bool equal = size == other.size;
-    int i = 0;
-    while (equal && i < size) {
-      equal &= ptr[i] == other.ptr[i];
-      i++;
-    }
-    return equal;
-  };
-
-  Itype *data() { return ptr; }
-  Itype operator[](const int index) const { return ptr[index]; }
+// clang-format off
+template <typename uint_type, typename int_type, typename float_type>
+struct type_wrapper {
+  using tensor_order_type = uint_type;
+  using index_type        = uint_type;
+  using stride_type       = uint_type;
+  using size_type         = uint_type;
+  using dcoordinate_type  = int_type;
+  using ccoordinate_type  = float_type;
+#ifndef CPU_ONLY
+  using index_vector_type = thrust::host_vector<index_type>;
+#else
+  using index_vector_type = std::vector<index_type>;
+#endif // CPU_ONLY
 };
 
-template <typename Itype> struct pVector {
-  Itype *ptr_;
-  int size_;
+using default_types = type_wrapper<uint32_t, int32_t, float>;
 
-  pVector(Itype *ptr, int size) : ptr_(ptr), size_(size) {}
-  int size() const { return size_; };
-  Itype *data() { return ptr_; };
-  const Itype *data() const { return ptr_; };
+// Vector backend
+
+// D-Dimensional coordinate + batch dimension = D + 1
+template <typename int_type = default_types::stride_type>
+using strides = std::vector<int_type>;
+
+// For hashing kernel sizes, strides, nd dilations.
+template <default_types::tensor_order_type D,
+          typename int_type = default_types::index_type>
+using dim_array = std::array<int_type, D>;
+
+template <typename data_type, typename size_type = default_types::size_type>
+struct ptr_vector {
+
+  ptr_vector(data_type *ptr, size_type size) : ptr_(ptr), size_(size) {}
+  size_type size() const { return size_; };
+  data_type *data() { return ptr_; };
+  const data_type *data() const { return ptr_; };
+
+  // members
+  data_type *ptr_;
+  default_types::size_type size_;
 };
 
 // Key for InOutMap
 // (in_coords_key, out_coords_key, stride hash, kernel size, dilation,
 // is_transpose, is_pool)
-using InOutMapKey = array<uint64_t, 8>;
+using InOutMapKey = std::array<uint64_t, 8>;
+
+/*
+ * Kernel map specific types
+ */
+using cpuInMap  = default_types::index_vector_type;
+using cpuOutMap = default_types::index_vector_type;
 
 // Input index to output index mapping for each spatial kernel
-template <typename Itype> using InOutMaps = vector<vector<Itype>>;
+using cpuInMaps  = std::vector<cpuInMap>;
+using cpuOutMaps = std::vector<cpuOutMap>;
+// clang-format on
 
-// Input index to output index mapping in ptr, sise pair
-// Used for device pointer and size
-template <typename Itype> using pInOutMaps = vector<pVector<Itype>>;
-
-template <typename Itype>
-using InOutMapsPair = pair<InOutMaps<Itype>, InOutMaps<Itype>>;
-
-template <typename Itype>
-using pInOutMapsPair = pair<pInOutMaps<Itype>, pInOutMaps<Itype>>;
-
-template <typename Itype>
-using InOutMapsRefPair = pair<InOutMaps<Itype> &, InOutMaps<Itype> &>;
-
-template <typename Itype>
-using pInOutMapsRefPair = pair<pInOutMaps<Itype> &, pInOutMaps<Itype> &>;
+using cpuInOutMapsPair    = std::pair<cpuInMaps, cpuOutMaps>;
+using cpuInOutMapsRefPair = std::pair<cpuInMaps &, cpuOutMaps &>;
 
 // GPU memory manager backend. No effect with CPU_ONLY build
-enum MemoryManagerBackend { CUDA = 0, PYTORCH = 1 };
+enum GPUMemoryManagerBackend { CUDA = 0, PYTORCH = 1 };
 
 // FNV64-1a
 // uint64_t for unsigned long, must use CXX -m64
@@ -117,9 +118,9 @@ struct InOutMapKeyHash {
   }
 };
 
-template <uint8_t D, typename Itype> struct ArrHash {
-  uint64_t operator()(Arr<D, Itype> const &p) const {
-    return hash_vec<Arr<D, Itype>>(p);
+template <uint32_t D, typename Itype> struct ArrHash {
+  uint64_t operator()(dim_array<D, Itype> const &p) const {
+    return hash_vec<dim_array<D, Itype>>(p);
   }
 };
 

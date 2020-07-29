@@ -38,11 +38,12 @@
 
 #include <torch/extension.h>
 
-#include "coordsmap.hpp"
+#include "coords_map.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 
 #ifndef CPU_ONLY
+#include "coords_map.cuh"
 #include "gpu_memory_manager.hpp"
 #include <ATen/cuda/CUDAContext.h>
 #endif // CPU_ONLY
@@ -67,7 +68,8 @@ template <typename VType> int getInOutMapsSize(const VType &map) {
   return n;
 }
 
-inline long computeKernelVolume(int region_type, const vector<int> &kernel_size,
+inline long computeKernelVolume(int region_type,
+                                const vector<int> &kernel_size,
                                 int n_offset) {
   int kernel_volume;
   if (region_type == 0) { // Hypercube
@@ -106,7 +108,8 @@ inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
   return out_tensor_strides;
 }
 
-template <typename MapType = CoordsToIndexMap> class CoordsManager {
+template <typename MapType = CoordsToIndexMap>
+class CoordsManager {
 public:
   // Variables
   //
@@ -273,7 +276,6 @@ public:
   std::shared_ptr<GPUMemoryManager> gpu_memory_manager;
 
   // Keep all in out maps throughout the lifecycle of the coords manager
-  //
   unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_in_maps;
   unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_out_maps;
 

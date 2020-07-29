@@ -59,11 +59,11 @@ class CoordsKey {
 private:
   uint64_t key_; // Use the key_ for all coordshashmap query. Lazily set
   int D_;        // dimension of the current coordinate system
-
-public:
+  std::vector<int> tensor_strides_;
   bool key_set = false;
   bool tensor_stride_set = false;
-  std::vector<int> tensor_strides_;
+
+public:
 
   // Functions
   CoordsKey() { reset(); }
