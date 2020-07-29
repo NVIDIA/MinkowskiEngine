@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -28,21 +29,35 @@ from typing import Union, List, Tuple
 import warnings
 
 import torch
-from Common import convert_to_int_list, convert_to_int_tensor, prep_args
+from MinkowskiCommon import convert_to_int_list, convert_to_int_tensor, prep_args
 import MinkowskiEngineBackend._C as _C
 from MinkowskiEngineBackend._C import (
     CoordinateMapKey,
     GPUMemoryAllocatorType,
     CoordinateMapType,
     RegionType,
+    CUDAKernelMapMode,
 )
 
 CPU_COUNT = os.cpu_count()
 if "OMP_NUM_THREADS" in os.environ:
     CPU_COUNT = int(os.environ["OMP_NUM_THREADS"])
 
-_allocator_type = GPUMemoryAllocator.PYTORCH
-_map_type = CoordinateMapType.CUDA if _C.is_cuda_available() else CoordinateMapType.CPU
+_allocator_type = GPUMemoryAllocatorType.PYTORCH
+_coordinate_map_type = (
+    CoordinateMapType.CUDA if _C.is_cuda_available() else CoordinateMapType.CPU
+)
+_kernel_map_mode = CUDAKernelMapMode.SPEED_OPTIMIZED
+
+
+def set_coordinate_map_type(coordinate_map_type: CoordinateMapType):
+    r"""Set the default coordinate map type.
+
+    The MinkowskiEngine automatically set the coordinate_map_type to CUDA if
+    a NVIDIA GPU is available. To control the 
+    """
+    global _coordinate_map_type
+    _coordinate_map_type = coordinate_map_type
 
 
 def set_gpu_allocator(backend: GPUMemoryAllocatorType):
@@ -62,9 +77,9 @@ def set_gpu_allocator(backend: GPUMemoryAllocatorType):
 
        >>> import MinkowskiEngine as ME
        >>> # Set the GPU memory manager backend to raw CUDA calls
-       >>> ME.set_gpu_allocator(ME.GPUMemoryAllocator.CUDA)
+       >>> ME.set_gpu_allocator(ME.GPUMemoryAllocatorType.CUDA)
        >>> # Set the GPU memory manager backend to the pytorch c10 allocator
-       >>> ME.set_gpu_allocator(ME.GPUMemoryAllocator.PYTORCH)
+       >>> ME.set_gpu_allocator(ME.GPUMemoryAllocatorType.PYTORCH)
 
     """
     assert isinstance(
@@ -74,7 +89,7 @@ def set_gpu_allocator(backend: GPUMemoryAllocatorType):
     _allocator_type = backend
 
 
-def set_memory_manager_backend(backend: GPUMemoryAllocator):
+def set_memory_manager_backend(backend: GPUMemoryAllocatorType):
     r"""Alias for set_gpu_allocator. Deprecated and will be removed.
     """
     warnings.warn(
@@ -93,36 +108,39 @@ class CoordsManager:
 class CoordinateManager:
     def __init__(
         self,
-        D: int = -1,
+        D: int = 0,
         num_threads: int = -1,
-        map_type: CoordinateMapType = None,
+        coordinate_map_type: CoordinateMapType = None,
         allocator_type: GPUMemoryAllocatorType = None,
-        map_mode=None,  # TODO
+        kernel_map_mode: CUDAKernelMapMode = None,
     ):
         r"""
 
         :attr:`D`: The order, or dimension of the coordinates.
         """
+        global _coordinate_map_type, _allocator_type, _kernel_map_mode
         if D < 1:
             raise ValueError(f"Invalid rank D > 0, D = {D}.")
         if num_threads < 0:
             num_threads = min(CPU_COUNT, 20)
-        if map_type is None:
-            global _map_type
-            map_type = _map_type
+        if coordinate_map_type is None:
+            coordinate_map_type = _coordinate_map_type
         if allocator_type is None:
-            global _allocator_type
             allocator_type = _allocator_type
+        if kernel_map_mode is None:
+            kernel_map_mode = _kernel_map_mode
 
-        postfix = "CPU" if map_type == CoordinateMapType.CPU else "GPU"
-        if map_type == CoordinateMapType.GPU:
-            postfix += (
+        postfix = ""
+        if coordinate_map_type == CoordinateMapType.CPU:
+            postfix = "CPU"
+        else:
+            postfix = "GPU" + (
                 "_default" if allocator_type == GPUMemoryAllocatorType.CUDA else "_c10"
             )
 
         self.D = D
         self._CoordinateManagerClass = getattr(_C, "CoordinateMapManager" + postfix)
-        self._manager = self._CoordinateManagerClass()  # TODO kernel_map_mode
+        self._manager = self._CoordinateManagerClass(kernel_map_mode, num_threads)
 
     # TODO: insert without remap, unique_map, inverse_mapa
     #
@@ -136,7 +154,8 @@ class CoordinateManager:
     ) -> Tuple[CoordinateMapKey, Tuple[torch.IntTensor, torch.IntTensor]]:
         r"""create a new coordinate map and returns 
 
-        :attr:`coordinates`: `torch.IntTensor` (`CUDA` if map_type == `CoordinateMapType.GPU`) that defines the coordinates.
+        :attr:`coordinates`: `torch.IntTensor` (`CUDA` if coordinate_map_type
+        == `CoordinateMapType.GPU`) that defines the coordinates.
 
         Example::
 
@@ -204,7 +223,7 @@ class CoordinateManager:
     #     )
     #     return strided_key
 
-    def _get_coordinate_key(self, key_or_tensor_strides):
+    def _get_coordinate_map_key(self, key_or_tensor_strides):
         r"""Helper function that retrieves a coordinate map key from tensor stride.
         """
         assert isinstance(key_or_tensor_strides, CoordinateMapKey) or isinstance(
@@ -222,10 +241,8 @@ class CoordinateManager:
             return coords_key
 
     def get_coordinates(self, coords_key_or_tensor_strides):
-        coords_key = self._get_coords_key(coords_key_or_tensor_strides)
-        coords = torch.IntTensor()
-        self.CPPCoordsManager.getCoords(coords, coords_key.CPPCoordsKey)
-        return coords
+        key = self._get_coordinate_map_key(coords_key_or_tensor_strides)
+        return self._manager.get_coordinates(key)
 
     # def get_batch_size(self):
     #     return self.CPPCoordsManager.getBatchSize()
@@ -302,8 +319,8 @@ class CoordinateManager:
     #     if region_offset is None:
     #         region_offset = torch.IntTensor()
 
-    #     in_coords_key = self._get_coords_key(in_key_or_tensor_strides)
-    #     out_coords_key = self._get_coords_key(out_key_or_tensor_strides)
+    #     in_coords_key = self._get_coordinate_map_key(in_key_or_tensor_strides)
+    #     out_coords_key = self._get_coordinate_map_key(out_key_or_tensor_strides)
 
     #     tensor_strides = convert_to_int_tensor(in_tensor_strides, self.D)
     #     strides = convert_to_int_tensor(stride, self.D)
@@ -351,8 +368,8 @@ class CoordinateManager:
     #           print(f"{i} -> {o}")
 
     #     """
-    #     in_coords_key = self._get_coords_key(in_key_or_tensor_strides)
-    #     out_coords_key = self._get_coords_key(out_key_or_tensor_strides)
+    #     in_coords_key = self._get_coordinate_map_key(in_key_or_tensor_strides)
+    #     out_coords_key = self._get_coordinate_map_key(out_key_or_tensor_strides)
 
     #     return self.CPPCoordsManager.getCoordsMap(
     #         in_coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey
@@ -392,8 +409,8 @@ class CoordinateManager:
     #     return self.CPPCoordsManager.getCoordsSize(coords_key.CPPCoordsKey)
 
     # def get_mapping_by_tensor_strides(self, in_tensor_strides, out_tensor_strides):
-    #     in_key = self._get_coords_key(in_tensor_strides)
-    #     out_key = self._get_coords_key(out_tensor_strides)
+    #     in_key = self._get_coordinate_map_key(in_tensor_strides)
+    #     out_key = self._get_coordinate_map_key(out_tensor_strides)
     #     return self.get_mapping_by_coords_key(in_key, out_key)
 
     # def permute_label(
@@ -402,8 +419,8 @@ class CoordinateManager:
     #     if target_tensor_stride == label_tensor_stride:
     #         return label
 
-    #     label_coords_key = self._get_coords_key(label_tensor_stride)
-    #     target_coords_key = self._get_coords_key(target_tensor_stride)
+    #     label_coords_key = self._get_coordinate_map_key(label_tensor_stride)
+    #     target_coords_key = self._get_coordinate_map_key(target_tensor_stride)
 
     #     permutation = self.get_mapping_by_coords_key(
     #         label_coords_key, target_coords_key
@@ -417,31 +434,9 @@ class CoordinateManager:
     #     np.add.at(counter, (permutation, label), 1)
     #     return torch.from_numpy(np.argmax(counter, 1))
 
-    def print_diagnostics(self, coords_key: CoordsKey):
-        assert isinstance(coords_key, CoordsKey)
-        self.CPPCoordsManager.printDiagnostics(coords_key.CPPCoordsKey)
+    # def print_diagnostics(self, coords_key: CoordsKey):
+    #     assert isinstance(coords_key, CoordsKey)
+    #     self.CPPCoordsManager.printDiagnostics(coords_key.CPPCoordsKey)
 
-    def __repr__(self):
-        return str(self.CPPCoordsManager)
-
-
-def save_ctx(
-    ctx,  # function object context
-    tensor_stride: torch.IntTensor,
-    stride: torch.IntTensor,
-    kernel_size: torch.IntTensor,
-    dilation: torch.IntTensor,
-    region_type: int,
-    in_coords_key: CoordsKey,
-    out_coords_key: CoordsKey,
-    coords_man: CoordsManager,
-):
-    ctx.tensor_stride = tensor_stride
-    ctx.stride = stride
-    ctx.kernel_size = kernel_size
-    ctx.dilation = dilation
-    ctx.region_type = region_type
-    ctx.in_coords_key = in_coords_key
-    ctx.out_coords_key = out_coords_key
-    ctx.coords_man = coords_man
-    return ctx
+    # def __repr__(self):
+    #     return str(self._manager)

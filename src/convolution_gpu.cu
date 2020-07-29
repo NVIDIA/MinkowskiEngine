@@ -78,6 +78,7 @@ at::Tensor ConvolutionForwardGPU(
                              : torch::kFloat64);
 
   torch::checkDim(c, arg_in_feat, 2);
+  torch::checkDim(c, arg_kernel, 3);
 
   ASSERT(in_feat.size(1) == kernel.size(1),
          "Input feature size and kernel size mismatch");

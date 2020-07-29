@@ -133,7 +133,9 @@ public:
   // misc functions
   std::string to_string() const {
     Formatter out;
-    out << "coordinate map key:" << m_key.first << ":" << m_key.second;
+    out << "coordinate map key:" << m_key.first;
+    if (m_key.second.length() > 0)
+      out << ":" << m_key.second;
     return out;
   }
 

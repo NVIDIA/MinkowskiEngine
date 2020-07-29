@@ -118,13 +118,13 @@ public:
     mapping.reserve(N);
     inverse_mapping.reserve(N);
 
-    index_type value = 0;
+    index_type value{0}, row_index{0};
     for (coordinate_type const *key = coordinate_begin; key != coordinate_end;
-         key += m_coordinate_size) {
+         key += m_coordinate_size, row_index += 1) {
       // value_type ctor needed because this might be called with std::pair's
       auto const result = insert(key_type(key), value);
       if (result.second) {
-        mapping.push_back(value);
+        mapping.push_back(row_index);
         inverse_mapping.push_back(value);
       } else {
         // result.first is an iterator of pair<key, mapped_type>
@@ -357,17 +357,19 @@ public:
   }
 
   void copy_coordinates(coordinate_type *dst_coordinate) const {
-    size_t N = 2 * omp_get_max_threads();
-    const size_t stride = (size() + N - 1) / N;
-    N = (size() + stride - 1) / stride;
-    LOG_DEBUG("kernel map with", N, "chunks.");
+    size_t const capacity = m_map.capacity();
+    size_t N = omp_get_max_threads();
+    const size_t stride = (capacity + N - 1) / N;
+    N = (capacity + stride - 1) / stride;
+    LOG_DEBUG("kernel map with", N, "chunks, stride", stride, "capacity",
+              capacity);
 
     // When no need to iterate through the region
     // Put if outside the loop for speed
 #pragma omp parallel for
     for (index_type n = 0; n < N; ++n) {
       for (auto it = m_map.begin(stride * n);                      //
-           it.num_steps() < std::min(stride, size() - n * stride); //
+           it.num_steps() < std::min(stride, capacity - n * stride); //
            ++it) {
         std::copy_n(it->first.data(), m_coordinate_size,
                     dst_coordinate + m_coordinate_size * it->second);

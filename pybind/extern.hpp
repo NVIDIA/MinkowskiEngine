@@ -103,6 +103,29 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 #endif
 
+/*************************************
+ * Quantization
+ *************************************/
+/*
+template <typename MapType>
+std::vector<py::array>
+quantize_np(py::array_t<int, py::array::c_style | py::array::forcecast> coords);
+
+vector<py::array> quantize_label_np(
+    py::array_t<int, py::array::c_style | py::array::forcecast> coords,
+    py::array_t<int, py::array::c_style | py::array::forcecast> labels,
+    int invalid_label);
+
+template <typename MapType> vector<at::Tensor> quantize_th(at::Tensor coords);
+
+vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
+                                     int invalid_label);
+
+at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
+                                         at::Tensor out_map, int out_nrows,
+                                         int mode);
+*/
+
 } // end namespace minkowski
 
 namespace py = pybind11;
@@ -113,7 +136,7 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::ConvolutionForwardCPU<coordinate_type, feature_type>,
         py::call_guard<py::gil_scoped_release>());
 
-  m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
+  m.def((std::string("ConvolutionBackwardCPU") + dtypestr).c_str(),
         &minkowski::ConvolutionBackwardCPU<coordinate_type, feature_type>,
         py::call_guard<py::gil_scoped_release>());
 
@@ -264,25 +287,62 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
                                           TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
 
-  m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
+  m.def((std::string("ConvolutionBackwardGPU") + dtypestr).c_str(),
         &minkowski::ConvolutionBackwardGPU<coordinate_type, feature_type,
                                            TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
 }
 #endif
 
-template <typename coordinate_type,
-          template <typename C> class TemplatedAllocator,
-          template <typename T, template <typename Q> class A>
-          class CoordinateMapType>
-void instantiate_manager(py::module &m, const std::string &dtypestr) {
-  using manager_type =
-      minkowski::CoordinateMapManager<coordinate_type, TemplatedAllocator,
-                                      CoordinateMapType>;
+void initialize_non_templated_classes(py::module &m) {
+  // Enums
+  py::enum_<minkowski::GPUMemoryAllocatorBackend::Type>(
+      m, "GPUMemoryAllocatorType")
+      .value("PYTORCH", minkowski::GPUMemoryAllocatorBackend::Type::PYTORCH)
+      .value("CUDA", minkowski::GPUMemoryAllocatorBackend::Type::CUDA)
+      .export_values();
 
+  py::enum_<minkowski::CUDAKernelMapMode::Mode>(m, "CUDAKernelMapMode")
+      .value("MEMORY_EFFICIENT",
+             minkowski::CUDAKernelMapMode::Mode::MEMORY_EFFICIENT)
+      .value("SPEED_OPTIMIZED",
+             minkowski::CUDAKernelMapMode::Mode::SPEED_OPTIMIZED)
+      .export_values();
+
+  py::enum_<minkowski::CoordinateMapBackend::Type>(m, "CoordinateMapType")
+      .value("CPU", minkowski::CoordinateMapBackend::Type::CPU)
+      .value("CUDA", minkowski::CoordinateMapBackend::Type::CUDA)
+      .export_values();
+
+  py::enum_<minkowski::RegionType::Type>(m, "RegionType")
+      .value("HYPER_CUBE", minkowski::RegionType::Type::HYPER_CUBE)
+      .value("HYPER_CROSS", minkowski::RegionType::Type::HYPER_CROSS)
+      .value("CUSTOM", minkowski::RegionType::Type::CUSTOM)
+      .export_values();
+
+  // Classes
+  py::class_<minkowski::CoordinateMapKey>(m, "CoordinateMapKey")
+      .def(py::init<minkowski::default_types::size_type>())
+      .def(py::init<minkowski::default_types::stride_type, std::string>())
+      .def("__repr__", &minkowski::CoordinateMapKey::to_string)
+      .def("is_key_set", &minkowski::CoordinateMapKey::is_key_set)
+      .def("get_coordinate_size",
+           &minkowski::CoordinateMapKey::get_coordinate_size)
+      .def("get_key", &minkowski::CoordinateMapKey::get_key)
+      .def("set_key", (void (minkowski::CoordinateMapKey::*)(
+                          minkowski::default_types::stride_type, std::string)) &
+                          minkowski::CoordinateMapKey::set_key)
+      .def("get_tensor_stride",
+           &minkowski::CoordinateMapKey::get_tensor_stride);
+}
+
+template <typename manager_type>
+void instantiate_manager(py::module &m, const std::string &dtypestr) {
   py::class_<manager_type>(
       m, (std::string("CoordinateMapManager") + dtypestr).c_str())
       .def(py::init<>())
+      .def(py::init<minkowski::CUDAKernelMapMode::Mode,
+                    minkowski::default_types::size_type>())
       // TODO .def("insert", &manager_type::insert)
       .def("insert_and_map", &manager_type::insert_and_map)
       .def("stride",

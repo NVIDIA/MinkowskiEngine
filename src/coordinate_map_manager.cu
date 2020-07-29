@@ -37,9 +37,9 @@ namespace minkowski {
 
 namespace detail {
 
-template <typename SrcType, typename DstType>
-__global__ void dtypeCopy(SrcType const *src, DstType *dst, size_t n) {
-  CUDA_KERNEL_LOOP(index, n) { dst[index] = src[index]; }
+template <typename src_type, typename dst_type>
+__global__ void cuda_copy_n(src_type const *src, uint32_t N, dst_type *dst) {
+  CUDA_KERNEL_LOOP(index, N) { dst[index] = src[index]; }
 }
 
 template <typename coordinate_type,
@@ -72,23 +72,29 @@ struct insert_and_map_functor<coordinate_type, TemplatedAllocator,
     auto const &inverse_mapping = map_inverse_map.second;
 
     // return tensors
-    at::Tensor th_mapping =
-        torch::empty({(int64_t)mapping.size()},
-                     th_coordinate.options().requires_grad(false));
-    at::Tensor th_inverse_mapping =
-        torch::empty({(int64_t)inverse_mapping.size()},
-                     th_coordinate.options().requires_grad(false));
+    // TODO int64_t
+    at::Tensor th_mapping = torch::empty(
+        {(int64_t)mapping.size()},
+        th_coordinate.options().requires_grad(false).dtype(torch::kInt64));
+    at::Tensor th_inverse_mapping = torch::empty(
+        {(int64_t)inverse_mapping.size()},
+        th_coordinate.options().requires_grad(false).dtype(torch::kInt64));
 
-    static_assert(sizeof(coordinate_type) == sizeof(default_types::index_type));
-    CUDA_CHECK(cudaMemcpy(th_mapping.data_ptr<coordinate_type>(),
-                          thrust::raw_pointer_cast(mapping.data()),
-                          mapping.size() * sizeof(default_types::index_type),
-                          cudaMemcpyDeviceToDevice));
-    CUDA_CHECK(
-        cudaMemcpy(th_inverse_mapping.data_ptr<coordinate_type>(),
-                   thrust::raw_pointer_cast(inverse_mapping.data()),
-                   inverse_mapping.size() * sizeof(default_types::index_type),
-                   cudaMemcpyDeviceToDevice));
+    auto const num_blocks =
+        (mapping.size() + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
+
+    detail::cuda_copy_n<default_types::index_type, int64_t>
+        <<<num_blocks, mapping.size()>>>(
+            thrust::raw_pointer_cast(mapping.data()), mapping.size(),
+            th_mapping.data_ptr<int64_t>());
+
+    auto const num_inv_blocks =
+        (inverse_mapping.size() + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
+
+    detail::cuda_copy_n<default_types::index_type, int64_t>
+        <<<num_inv_blocks, inverse_mapping.size()>>>(
+            thrust::raw_pointer_cast(inverse_mapping.data()),
+            inverse_mapping.size(), th_inverse_mapping.data_ptr<int64_t>());
 
     return std::make_pair(std::move(th_mapping), std::move(th_inverse_mapping));
   }

@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -30,34 +31,50 @@ from typing import Union
 from collections import Sequence
 import numpy as np
 
-from Common import convert_to_int_list
-from MinkowskiCoords import CoordsKey, CoordsManager
-import MinkowskiEngineBackend as MEB
-from MinkowskiEngineBackend import MemoryManagerBackend
+from MinkowskiCommon import convert_to_int_list, StrideType
+from MinkowskiEngineBackend._C import (
+    GPUMemoryAllocatorType,
+    CUDAKernelMapMode,
+    CoordinateMapType,
+    CoordinateMapKey,
+)
+from MinkowskiCoordinateManager import (
+    CoordinateManager,
+    _allocator_type,
+    _coordinate_map_type,
+)
 
 
 class SparseTensorOperationMode(Enum):
+    r"""Enum class for SparseTensor internal instantiation modes.
+
+    :attr:`SEPARATE_COORDINATE_MANAGER`: always create a new coordinate manager.
+
+    :attr:`SHARE_COORDINATE_MANAGER`: always use the globally defined coordinate
+    manager. Must clear the coordinate manager manually by
+    :attr:`MinkowskiEngine.SparseTensor.clear_global_coordinate_mananager`.
+
     """
-    `SEPARATE_COORDS_MANAGER`: always create a new coordinate manager.
-    `SHARE_COORDS_MANAGER`: always use the globally defined coordinate manager. Must clear the coordinate manager manually by :attr:`MinkowskiEngine.SparseTensor.clear_global_coords_man`
-    """
-    SEPARATE_COORDS_MANAGER = 0
-    SHARE_COORDS_MANAGER = 1
+    SEPARATE_COORDINATE_MANAGER = 0
+    SHARE_COORDINATE_MANAGER = 1
 
 
 class SparseTensorQuantizationMode(Enum):
-    """
+    r"""
     `RANDOM_SUBSAMPLE`: Subsample one coordinate per each quantization block randomly.
     `UNWEIGHTED_AVERAGE`: average all features within a quantization block equally.
+    `UNWEIGHTED_SUM`: sum all features within a quantization block equally.
     """
     RANDOM_SUBSAMPLE = 0
     UNWEIGHTED_AVERAGE = 1
+    UNWEIGHTED_SUM = 2
 
 
-_sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDS_MANAGER
-_global_coords_man = None
-COORDS_MAN_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
-COORDS_KEY_DIFFERENT_ERROR = "SparseTensors must have the same coords_key."
+_sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER
+_global_coordinate_manager = None
+
+COORDINATE_MANAGER_DIFFERENT_ERROR = "SparseTensors must share the same coordinate manager for this operation. Please refer to the SparseTensor creation API (https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html) to share the coordinate manager, or set the sparse tensor operation mode with `set_sparse_tensor_operation_mode` to share it by default."
+COORDINATE_KEY_DIFFERENT_ERROR = "SparseTensors must have the same coordinate_map_key."
 
 
 def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
@@ -69,27 +86,28 @@ def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
     :attr:`MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDS_MANAGER`, you
     can share the coordinate manager globally with other sparse tensors.
     However, you must explicitly clear the coordinate manger after use. Please
-    refer to :attr:`MinkowskiEngine.clear_global_coords_man`.
+    refer to :attr:`MinkowskiEngine.clear_global_coordinate_mananager`.
 
     Args:
         :attr:`operation_mode`
         (:attr:`MinkowskiEngine.SparseTensorOperationMode`): The operation mode
         for the sparse tensor coordinate manager. By default
-        :attr:`MinkowskiEngine.SparseTensorOperationMode.SEPARATE_COORDS_MANAGER`.
+        :attr:`MinkowskiEngine.SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER`.
 
     Example:
 
         >>> import MinkowskiEngine as ME
-        >>> ME.set_sparse_tensor_operation_mode(ME.SparseTensorOperationMode.SHARE_COORDS_MANAGER)
+        >>> ME.set_sparse_tensor_operation_mode(ME.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER)
         >>> ...
-        >>> a = ME.SparseTensor(coords=A_C, feats=A_F)
-        >>> b = ME.SparseTensor(coords=B_C, feats=B_C)  # coords_man shared
+        >>> a = ME.SparseTensor(...)
+        >>> b = ME.SparseTensor(...)  # coords_man shared
         >>> ...  # one feed forward and backward
-        >>> ME.clear_global_coords_man()  # Must use to clear the coordinates after one forward/backward
+        >>> ME.clear_global_coordinate_mananager()  # Must use to clear the coordinates after one forward/backward
 
     """
-    assert isinstance(operation_mode, SparseTensorOperationMode), \
-        f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
+    assert isinstance(
+        operation_mode, SparseTensorOperationMode
+    ), f"Input must be an instance of SparseTensorOperationMode not {operation_mode}"
     global _sparse_tensor_operation_mode
     _sparse_tensor_operation_mode = operation_mode
 
@@ -99,18 +117,18 @@ def sparse_tensor_operation_mode():
     return copy.deepcopy(_sparse_tensor_operation_mode)
 
 
-def clear_global_coords_man():
+def clear_global_coordinate_mananager():
     r"""Clear the global coordinate manager cache.
 
     When you use the operation mode:
-    :attr:`MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER`,
+    :attr:`MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER`,
     you must explicitly clear the coordinate manager after each feed forward/backward.
     """
-    global _global_coords_man
-    _global_coords_man = None
+    global _global_coordinate_manager
+    _global_coordinate_manager = None
 
 
-class SparseTensor():
+class SparseTensor:
     r"""A sparse tensor class. Can be accessed via
     :attr:`MinkowskiEngine.SparseTensor`.
 
@@ -141,6 +159,22 @@ class SparseTensor():
     x_i^D)`, and the associated feature :math:`\mathbf{f}_i`. Internally, we
     handle the batch index as an additional spatial dimension.
 
+    Example::
+
+        >>> coords, feats = ME.utils.sparse_collate([coords_batch0, coords_batch1], [feats_batch0, feats_batch1])
+        >>> A = ME.SparseTensor(features=feats, coordinates=coords)
+        >>> B = ME.SparseTensor(features=feats, coordinate_map_key=A.coordiante_map_key, coordinate_manager=A.coordinate_manager)
+        >>> C = ME.SparseTensor(features=feats, coordinates=coords, quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+        >>> D = ME.SparseTensor(features=feats, coordinates=coords, tensor_stride=2)
+
+    .. warning::
+
+       To use the GPU-backend for coordinate management, the
+       :attr:`coordinates` must be a torch tensor on GPU. Applying `to(device)`
+       after a :attr:`MinkowskiEngine.SparseTensor` initialization with a CPU
+       `coordinates` will waste time and computation for creating a CPU
+       CoordinateMap since GPU CoordinateMap will be created from scratch.
+
     .. warning::
 
        Before MinkowskiEngine version 0.4, we put the batch indices on the last
@@ -167,61 +201,47 @@ class SparseTensor():
     """
 
     def __init__(
-            self,
-            feats,
-            coords=None,
-            coords_key=None,
-            coords_manager=None,
-            force_creation=False,
-            allow_duplicate_coords=False,
-            quantization_mode=SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
-            memory_manager_backend: MemoryManagerBackend = None,
-            tensor_stride=1):
+        self,
+        features: torch.Tensor,
+        coordinates: torch.Tensor = None,
+        # optional coordinate related arguments
+        tensor_stride: StrideType = 1,
+        coordinate_map_key: CoordinateMapKey = None,
+        coordinate_manager: CoordinateManager = None,
+        quantization_mode: SparseTensorQuantizationMode = SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
+        # optional manager related arguments
+        allocator_type: GPUMemoryAllocatorType = None,
+        kernel_map_mode: CUDAKernelMapMode = None,
+    ):
         r"""
 
         Args:
-            :attr:`feats` (:attr:`torch.FloatTensor`,
+            :attr:`features` (:attr:`torch.FloatTensor`,
             :attr:`torch.DoubleTensor`, :attr:`torch.cuda.FloatTensor`, or
-            :attr:`torch.cuda.DoubleTensor`): The features of the sparse
+            :attr:`torch.cuda.DoubleTensor`): The features of a sparse
             tensor.
 
-            :attr:`coords` (:attr:`torch.IntTensor`): The coordinates
-            associated to the features. If not provided, :attr:`coords_key`
+            :attr:`coordinates` (:attr:`torch.IntTensor`): The coordinates
+            associated to the features. If not provided, :attr:`coordinate_map_key`
             must be provided.
 
-            :attr:`coords_key` (:attr:`MinkowskiEngine.CoordsKey`): When the
-            coordinates are already cached in the MinkowskiEngine, we could
-            reuse the same coordinates by simply providing the coordinate hash
-            key. In most case, this process is done automatically. When you
-            provide a `coords_key`, all other arguments will be be ignored.
+            :attr:`coordinate_map_key`
+            (:attr:`MinkowskiEngine.CoordinateMapKey`): When the coordinates
+            are already cached in the MinkowskiEngine, we could reuse the same
+            coordinate map by simply providing the coordinate map key. In most
+            case, this process is done automatically. When you provide a
+            `coordinate_map_key`, `coordinates` will be be ignored.
 
-            :attr:`coords_manager` (:attr:`MinkowskiEngine.CoordsManager`): The
-            MinkowskiEngine creates a dynamic computation graph and all
-            coordinates inside the same computation graph are managed by a
-            CoordsManager object. If not provided, the MinkowskiEngine will
-            create a new computation graph. In most cases, this process is
-            handled automatically and you do not need to use this. When you use
-            it, make sure you understand what you are doing.
+            :attr:`coordinate_manager`
+            (:attr:`MinkowskiEngine.CoordinateManager`): The MinkowskiEngine
+            manages all coordinate maps using the `_C.CoordinateMapManager`. If
+            not provided, the MinkowskiEngine will create a new computation
+            graph. In most cases, this process is handled automatically and you
+            do not need to use this.
 
-            :attr:`force_creation` (:attr:`bool`): Force creation of the
-            coordinates. This allows generating a new set of coordinates even
-            when there exists another set of coordinates with the same
-            tensor stride. This could happen when you manually feed the same
-            :attr:`coords_manager`.
-
-            :attr:`allow_duplicate_coords` (:attr:`bool`): Allow duplicate
-            coordinates when creating the sparse tensor. Internally, it will
-            generate a new unique set of coordinates and use features of at the
-            corresponding unique coordinates. In general, setting
-            `allow_duplicate_coords=True` is not recommended as it could hide
-            obvious errors in your data loading and preprocessing steps. Please
-            refer to the quantization and data loading tutorial on `here
-            <https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_
-            for more details.
-
-            :attr:`quantizatino_mode`
-            (:attr:`MinkowskiEngine.SparseTensorQuantizationMode`): Defines the
-            quantization method and how to define features of a sparse tensor.
+            :attr:`quantization_mode`
+            (:attr:`MinkowskiEngine.SparseTensorQuantizationMode`): Defines how
+            continuous coordinates will be quantized to define a sparse tensor.
             Please refer to :attr:`SparseTensorQuantizationMode` for details.
 
             :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
@@ -229,123 +249,139 @@ class SparseTensor():
             of the current sparse tensor. By default, it is 1.
 
         """
-        assert isinstance(feats,
-                          torch.Tensor), "Features must be a torch.Tensor"
-        assert feats.ndim == 2, f"The feature should be a matrix, The input feature is an order-{feats.ndim} tensor."
+        # Type checks
+        assert isinstance(features, torch.Tensor), "Features must be a torch.Tensor"
+        assert (
+            features.ndim == 2
+        ), f"The feature should be a matrix, The input feature is an order-{features.ndim} tensor."
         assert isinstance(quantization_mode, SparseTensorQuantizationMode)
         self.quantization_mode = quantization_mode
 
-        if coords is None and coords_key is None:
-            raise ValueError('Either coords or coords_key must be provided')
+        if coordinates is not None:
+            assert isinstance(coordinates, torch.Tensor)
+        if coordinate_map_key is not None:
+            assert isinstance(coordinate_map_key, CoordinateMapKey)
+        if coordinate_manager is not None:
+            assert isinstance(coordinate_manager, CoordinateManager)
 
-        if coords_key is None:
-            assert coords_manager is not None or coords is not None
-            D = -1
-            if coords_manager is None:
-                D = coords.size(1) - 1
-            else:
-                D = coords_manager.D
-            coords_key = CoordsKey(D)
-            coords_key.setTensorStride(convert_to_int_list(tensor_stride, D))
+        # Coordinate Management
+        self.D = 0  # coordinate size - 1
+        if coordinates is None and (
+            coordinate_map_key is None or coordinate_manager is None
+        ):
+            raise ValueError(
+                "Either coordinates or (coordinate_map_key, coordinate_manager) pair must be provided."
+            )
+        elif coordinates is not None:
+            if not isinstance(coordinates, (torch.IntTensor, torch.cuda.IntTensor)):
+                warnings.warn(
+                    "coordinates implicitly converted to torch.IntTensor. "
+                    + "To remove this warning, use `.int()` to convert the "
+                    + "coords into an torch.IntTensor"
+                )
+                coordinates = torch.floor(coordinates).int()
+            assert (
+                features.shape[0] == coordinates.shape[0]
+            ), "The number of rows in features and coordinates must match."
+            self.D = coordinates.size(1) - 1
+
+            coordinate_map_key = CoordinateMapKey(
+                convert_to_int_list(tensor_stride, self.D), ""
+            )
+            self._manager = coordinate_manager
         else:
-            assert isinstance(coords_key, CoordsKey)
-
-        if coords is not None:
-            assert isinstance(coords, torch.Tensor), \
-                "Coordinate must be of type torch.Tensor"
-
-            if not isinstance(coords, (torch.IntTensor, torch.cuda.IntTensor)):
-                warnings.warn(
-                    'Coords implicitly converted to torch.IntTensor. ' +
-                    'To remove this warning, use `.int()` to convert the ' +
-                    'coords into an torch.IntTensor')
-                coords = torch.floor(coords).int()
-
-            if coords.device.type != 'cpu':
-                warnings.warn(
-                    'Coords implicitly converted to CPU type. ' +
-                    'To remove this warning, use `.cpu()` to convert the ' +
-                    'coords into a CPU type')
-                coords = coords.cpu()
-
-            assert feats.shape[0] == coords.shape[0], \
-                "The number of rows in features and coordinates do not match."
-
-            coords = coords.contiguous()
+            # not (coordinate_map_key is None or coordinate_manager is None)
+            self.D = coordinate_manager.D
+            coordinate_map_key = CoordinateMapKey(
+                convert_to_int_list(tensor_stride, self.D), ""
+            )
+            self._manager = coordinate_manager
 
         ##########################
         # Setup CoordsManager
         ##########################
-        if coords_manager is None:
+        if coordinate_manager is None:
             # If set to share the coords man, use the global coords man
-            global _sparse_tensor_operation_mode, _global_coords_man
-            if _sparse_tensor_operation_mode == SparseTensorOperationMode.SHARE_COORDS_MANAGER:
-                if _global_coords_man is None:
-                    _global_coords_man = CoordsManager(
-                        memory_manager_backend=memory_manager_backend,
-                        D=coords.size(1) - 1)
-                coords_manager = _global_coords_man
+            global _sparse_tensor_operation_mode, _global_coordinate_manager, _allocator_type
+            if (
+                _sparse_tensor_operation_mode
+                == SparseTensorOperationMode.SHARE_COORDINATE_MANAGER
+            ):
+                if _global_coordinate_manager is None:
+                    _global_coordinate_manager = CoordinateManager(
+                        D=self.D,
+                        coordinate_map_type=CoordinateMapType.CUDA
+                        if coordinates.is_cuda
+                        else CoordinateMapType.CPU,
+                        allocator_type=allocator_type,
+                    )
+                coordinate_manager = _global_coordinate_manager
             else:
-                assert coords is not None, "Initial coordinates must be given"
-                coords_manager = CoordsManager(D=coords.size(1) - 1)
-
-        else:
-            assert isinstance(coords_manager, CoordsManager)
+                coordinate_manager = CoordinateManager(
+                    D=coordinates.size(1) - 1,
+                    coordinate_map_type=CoordinateMapType.CUDA
+                    if coordinates.is_cuda
+                    else CoordinateMapType.CPU,
+                    allocator_type=allocator_type,
+                    kernel_map_mode=kernel_map_mode,
+                )
+            self._manager = coordinate_manager
 
         ##########################
         # Initialize coords
         ##########################
-        if not coords_key.isKeySet() and coords is not None and len(coords) > 0:
-            if quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
-                force_remap = True
-                return_inverse = False
-            elif quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
-                force_remap = True
-                return_inverse = True
+        if coordinates is not None:
+            assert (
+                features.is_cuda == coordinates.is_cuda
+            ), "Features and coordinates must have the same backend."
+            (
+                self.coordinate_map_key,
+                (unique_index, self.inverse_mapping),
+            ) = self._manager.insert_and_map(coordinates, *coordinate_map_key.get_key())
+            self.unique_index = unique_index.long()
+            coordinates = coordinates[self.unique_index]
 
-            self.unique_index, self.inverse_mapping = coords_manager.initialize(
-                coords,
-                coords_key,
-                force_creation=force_creation,
-                force_remap=force_remap,
-                allow_duplicate_coords=allow_duplicate_coords,
-                return_inverse=return_inverse)
+            if self.quantization_mode in [
+                SparseTensorQuantizationMode.UNWEIGHTED_SUM,
+                SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+            ]:
+                N = len(features)
+                COO = torch.stack(
+                    (self.inverse_mapping.long(), torch.arange(N)), 0
+                ).long()
+                self.sp_mapping = torch.sparse.FloatTensor(
+                    COO,
+                    torch.ones(N),
+                    torch.Size([len(self.unique_index), len(features)]),
+                )
+                if (
+                    self.quantization_mode
+                    == SparseTensorQuantizationMode.UNWEIGHTED_SUM
+                ):
+                    features = self.sp_mapping.matmul(features)
+                else:
+                    features = self.sp_mapping.matmul(
+                        features
+                    ) / self.sp_mapping.matmul(torch.ones(len(features), 1))
+            else:
+                features = features[self.unique_index]
 
-            if quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
-                self._CF = feats
-                self._CC = coords
-                feats = MEB.quantization_average_features(
-                    feats, torch.arange(len(feats)), self.inverse_mapping,
-                    len(self.unique_index), 0)
-                coords = coords[self.unique_index]
-            elif force_remap:
-                assert len(self.unique_index) > 0
-                self._CC = coords
-                self._CF = feats
-                coords = coords[self.unique_index]
-                feats = feats[self.unique_index]
+        elif coordinate_map_key is not None:
+            assert (
+                coordinate_map_key.is_key_set()
+            ), "The coordinate key must be a valid key."
+            self.coordinate_map_key = coordinate_map_key
 
-        elif coords is not None:  # empty / invalid coords
-            assert isinstance(coords, torch.IntTensor)
-            assert coords.ndim == 2
-            coords_manager.initialize(
-                coords,
-                coords_key,
-                force_creation=force_creation,
-                force_remap=False,
-                allow_duplicate_coords=False,
-                return_inverse=False)
-        elif coords_key is not None:
-            assert coords_key.isKeySet()
+        self._F = features
+        self._C = coordinates
 
-        self._F = feats.contiguous()
-        self._C = coords
-        self.coords_key = coords_key
-        self.coords_man = coords_manager
+    @property
+    def coordinate_manager(self):
+        return self._manager
 
     @property
     def tensor_stride(self):
-        return self.coords_key.getTensorStride()
+        return self.coordinate_map_key.get_tensor_stride()
 
     @tensor_stride.setter
     def tensor_stride(self, p):
@@ -353,19 +389,19 @@ class SparseTensor():
         This function is not recommended to be used directly.
         """
         p = convert_to_int_list(p, self.D)
-        self.coords_key.setTensorStride(p)
+        self.coordinate_map_key.set_tensor_stride(p)
 
-    def _get_coords(self):
-        return self.coords_man.get_coords(self.coords_key)
+    def _get_coordinates(self):
+        return self._manager.get_coordinates(self.coordinate_map_key)
 
     @property
     def C(self):
         r"""The alias of :attr:`coords`.
         """
-        return self.coords
+        return self.coordinates
 
     @property
-    def coords(self):
+    def coordinates(self):
         r"""
         The coordinates of the current sparse tensor. The coordinates are
         represented as a :math:`N \times (D + 1)` dimensional matrix where
@@ -376,7 +412,7 @@ class SparseTensor():
         different instances in a batch.
         """
         if self._C is None:
-            self._C = self._get_coords()
+            self._C = self._get_coordinates()
         return self._C
 
     @property
@@ -388,8 +424,7 @@ class SparseTensor():
         zero elements in the :math:`i`th batch index in :math:`D` dimensional
         space.
         """
-        row_inds_list = self.coords_man.get_row_indices_per_batch(
-            self.coords_key)
+        row_inds_list = self._manager.get_row_indices_per_batch(self.coordinate_map_key)
         return [self.C[row_inds, 1:] for row_inds in row_inds_list]
 
     def coordinates_at(self, batch_index):
@@ -400,8 +435,9 @@ class SparseTensor():
         is the number of non zero elements in the :math:`i`th batch index in
         :math:`D` dimensional space.
         """
-        row_inds = self.coords_man.get_row_indices_at(self.coords_key,
-                                                      batch_index)
+        row_inds = self._manager.get_row_indices_at(
+            self.coordinate_map_key, batch_index
+        )
         return self.C[row_inds, 1:]
 
     @property
@@ -411,7 +447,7 @@ class SparseTensor():
         return self._F
 
     @property
-    def feats(self):
+    def features(self):
         r"""
         The features of the current sparse tensor. The features are :math:`N
         \times D_F` where :math:`N` is the number of points in the space and
@@ -429,8 +465,7 @@ class SparseTensor():
         zero elements in the :math:`i`th batch index in :math:`D` dimensional
         space.
         """
-        row_inds_list = self.coords_man.get_row_indices_per_batch(
-            self.coords_key)
+        row_inds_list = self._manager.get_row_indices_per_batch(self.coordinate_map_key)
         return [self._F[row_inds] for row_inds in row_inds_list]
 
     def features_at(self, batch_index):
@@ -441,8 +476,9 @@ class SparseTensor():
         zero elements in the specified batch index and :math:`N_F` is the
         number of channels.
         """
-        row_inds = self.coords_man.get_row_indices_at(self.coords_key,
-                                                      batch_index)
+        row_inds = self._manager.get_row_indices_at(
+            self.coordinate_map_key, batch_index
+        )
         return self._F[row_inds]
 
     def coordinates_and_features_at(self, batch_index):
@@ -456,8 +492,9 @@ class SparseTensor():
         matrix :math:`N` is the number of non zero elements in the specified
         batch index and :math:`N_F` is the number of channels.
         """
-        row_inds = self.coords_man.get_row_indices_at(self.coords_key,
-                                                      batch_index)
+        row_inds = self._manager.get_row_indices_at(
+            self.coordinate_map_key, batch_index
+        )
         return self.C[row_inds, 1:], self._F[row_inds]
 
     @property
@@ -465,18 +502,11 @@ class SparseTensor():
         r"""Returns a list of coordinates and a list of features per batch.abs
 
         """
-        row_inds_list = self.coords_man.get_row_indices_per_batch(
-            self.coords_key)
-        return [self.C[row_inds, 1:] for row_inds in row_inds_list], \
-            [self._F[row_inds] for row_inds in row_inds_list]
-
-    @property
-    def D(self):
-        r"""
-        The spatial dimension of the sparse tensor. This is equal to the number
-        of columns of :attr:`C` minus 1.
-        """
-        return self.coords_key.D
+        row_inds_list = self._manager.get_row_indices_per_batch(self.coordinate_map_key)
+        return (
+            [self.C[row_inds, 1:] for row_inds in row_inds_list],
+            [self._F[row_inds] for row_inds in row_inds_list],
+        )
 
     @property
     def dimension(self):
@@ -499,16 +529,28 @@ class SparseTensor():
 
     def set_tensor_stride(self, s):
         ss = convert_to_int_list(s, self.D)
-        self.coords_key.setTensorStride(ss)
+        self.coordinate_map_key.set_tensor_stride(ss)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(' + os.linesep \
-            + '  Coords=' + str(self.C) + os.linesep \
-            + '  Feats=' + str(self.F) + os.linesep \
-            + '  coords_key=' + str(self.coords_key) \
-            + '  tensor_stride=' + str(self.coords_key.getTensorStride()) + os.linesep \
-            + '  coords_man=' + str(self.coords_man) \
-            + '  spatial dimension=' + str(self.D) + ')'
+        return (
+            self.__class__.__name__
+            + "("
+            + os.linesep
+            + "  coordinates="
+            + str(self.C)
+            + os.linesep
+            + "  features="
+            + str(self.F)
+            + os.linesep
+            + "  coordinate_map_key="
+            + str(self.coordinate_map_key)
+            + os.linesep
+            + "  coordinate_manager="
+            + str(self._manager)
+            + "  spatial dimension="
+            + str(self.D)
+            + ")"
+        )
 
     def __len__(self):
         return len(self._F)
@@ -539,36 +581,31 @@ class SparseTensor():
     def get_device(self):
         return self._F.get_device()
 
+    def _is_same_key(self, other):
+        assert isinstance(other, SparseTensor)
+        assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
+        assert (
+            self.coordinate_map_key == other.coordinate_map_key
+        ), COORDS_KEY_DIFFERENT_ERROR
+
     # Operation overloading
     def __iadd__(self, other):
-        assert isinstance(other, SparseTensor)
-        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
-        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
-
+        self._is_same_key(other)
         self._F += other.F
         return self
 
     def __isub__(self, other):
-        assert isinstance(other, SparseTensor)
-        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
-        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
-
+        self._is_same_key(other)
         self._F -= other.F
         return self
 
     def __imul__(self, other):
-        assert isinstance(other, SparseTensor)
-        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
-        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
-
+        self._is_same_key(other)
         self._F *= other.F
         return self
 
     def __idiv__(self, other):
-        assert isinstance(other, SparseTensor)
-        assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
-        assert self.coords_key == other.coords_key, COORDS_KEY_DIFFERENT_ERROR
-
+        self._is_same_key(other)
         self._F /= other.F
         return self
 
@@ -582,31 +619,35 @@ class SparseTensor():
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
 
-            if self.coords_key == other.coords_key:
+            if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(
                     self._F + other.F,
-                    coords_key=self.coords_key,
-                    coords_manager=self.coords_man)
+                    coordinate_map_key=self.coordinate_map_key,
+                    coords_manager=self._manager,
+                )
             else:
                 # Generate union maps
-                out_key = CoordsKey(self.coords_man.D)
-                ins, outs = self.coords_man.get_union_map(
-                    (self.coords_key, other.coords_key), out_key)
-                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
-                out_F = torch.zeros((N_out, self._F.size(1)),
-                                    dtype=self.dtype,
-                                    device=self.device)
+                out_key = CoordsKey(self._manager.D)
+                ins, outs = self._manager.get_union_map(
+                    (self.coordinate_map_key, other.coordinate_map_key), out_key
+                )
+                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
+                out_F = torch.zeros(
+                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
+                )
                 out_F[outs[0]] = self._F[ins[0]]
                 out_F[outs[1]] += other._F[ins[1]]
                 return SparseTensor(
-                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
+                )
         else:  # when it is a torch.Tensor
             return SparseTensor(
                 self._F + other,
-                coords_key=self.coords_key,
-                coords_manager=self.coords_man)
+                coordinate_map_key=self.coordinate_map_key,
+                coords_manager=self._manager,
+            )
 
     def __sub__(self, other):
         r"""
@@ -617,32 +658,36 @@ class SparseTensor():
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
 
-            if self.coords_key == other.coords_key:
+            if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(
                     self._F - other.F,
-                    coords_key=self.coords_key,
-                    coords_manager=self.coords_man)
+                    coordinate_map_key=self.coordinate_map_key,
+                    coords_manager=self._manager,
+                )
             else:
                 # Generate union maps
-                out_key = CoordsKey(self.coords_man.D)
-                ins, outs = self.coords_man.get_union_map(
-                    (self.coords_key, other.coords_key), out_key)
-                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
-                out_F = torch.zeros((N_out, self._F.size(1)),
-                                    dtype=self.dtype,
-                                    device=self.device)
+                out_key = CoordsKey(self._manager.D)
+                ins, outs = self._manager.get_union_map(
+                    (self.coordinate_map_key, other.coordinate_map_key), out_key
+                )
+                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
+                out_F = torch.zeros(
+                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
+                )
                 out_F[outs[0]] = self._F[ins[0]]
                 out_F[outs[1]] -= other._F[ins[1]]
                 return SparseTensor(
-                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
+                )
 
         else:  # when it is a torch.Tensor
             return SparseTensor(
                 self._F - other,
-                coords_key=self.coords_key,
-                coords_manager=self.coords_man)
+                coordinate_map_key=self.coordinate_map_key,
+                coords_manager=self._manager,
+            )
 
     def __mul__(self, other):
         r"""
@@ -654,31 +699,35 @@ class SparseTensor():
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
 
-            if self.coords_key == other.coords_key:
+            if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(
                     self._F * other.F,
-                    coords_key=self.coords_key,
-                    coords_manager=self.coords_man)
+                    coordinate_map_key=self.coordinate_map_key,
+                    coords_manager=self._manager,
+                )
             else:
                 # Generate union maps
-                out_key = CoordsKey(self.coords_man.D)
-                ins, outs = self.coords_man.get_union_map(
-                    (self.coords_key, other.coords_key), out_key)
-                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
-                out_F = torch.zeros((N_out, self._F.size(1)),
-                                    dtype=self.dtype,
-                                    device=self.device)
+                out_key = CoordsKey(self._manager.D)
+                ins, outs = self._manager.get_union_map(
+                    (self.coordinate_map_key, other.coordinate_map_key), out_key
+                )
+                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
+                out_F = torch.zeros(
+                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
+                )
                 out_F[outs[0]] = self._F[ins[0]]
                 out_F[outs[1]] *= other._F[ins[1]]
                 return SparseTensor(
-                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
+                )
         else:  # when it is a torch.Tensor
             return SparseTensor(
                 self._F * other,
-                coords_key=self.coords_key,
-                coords_manager=self.coords_man)
+                coordinate_map_key=self.coordinate_map_key,
+                coords_manager=self._manager,
+            )
 
     def __truediv__(self, other):
         r"""
@@ -690,37 +739,42 @@ class SparseTensor():
         """
         assert isinstance(other, (SparseTensor, torch.Tensor))
         if isinstance(other, SparseTensor):
-            assert self.coords_man == other.coords_man, COORDS_MAN_DIFFERENT_ERROR
+            assert self._manager == other._manager, COORDS_MAN_DIFFERENT_ERROR
 
-            if self.coords_key == other.coords_key:
+            if self.coordinate_map_key == other.coordinate_map_key:
                 return SparseTensor(
                     self._F / other.F,
-                    coords_key=self.coords_key,
-                    coords_manager=self.coords_man)
+                    coordinate_map_key=self.coordinate_map_key,
+                    coords_manager=self._manager,
+                )
             else:
                 # Generate union maps
-                out_key = CoordsKey(self.coords_man.D)
-                ins, outs = self.coords_man.get_union_map(
-                    (self.coords_key, other.coords_key), out_key)
-                N_out = self.coords_man.get_coords_size_by_coords_key(out_key)
-                out_F = torch.zeros((N_out, self._F.size(1)),
-                                    dtype=self.dtype,
-                                    device=self.device)
+                out_key = CoordsKey(self._manager.D)
+                ins, outs = self._manager.get_union_map(
+                    (self.coordinate_map_key, other.coordinate_map_key), out_key
+                )
+                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
+                out_F = torch.zeros(
+                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
+                )
                 out_F[outs[0]] = self._F[ins[0]]
                 out_F[outs[1]] /= other._F[ins[1]]
                 return SparseTensor(
-                    out_F, coords_key=out_key, coords_manager=self.coords_man)
+                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
+                )
         else:  # when it is a torch.Tensor
             return SparseTensor(
                 self._F / other,
-                coords_key=self.coords_key,
-                coords_manager=self.coords_man)
+                coordinate_map_key=self.coordinate_map_key,
+                coords_manager=self._manager,
+            )
 
     def __power__(self, power):
         return SparseTensor(
-            self._F**power,
-            coords_key=self.coords_key,
-            coords_manager=self.coords_man)
+            self._F ** power,
+            coordinate_map_key=self.coordinate_map_key,
+            coords_manager=self._manager,
+        )
 
     # Conversion functions
     def sparse(self, min_coords=None, max_coords=None, contract_coords=True):
@@ -770,14 +824,14 @@ class SparseTensor():
                 elif feats.dtype == torch.float32:
                     return torch.sparse.FloatTensor(coords, feats)
                 else:
-                    raise ValueError('Feature type not supported.')
+                    raise ValueError("Feature type not supported.")
             else:
                 if feats.dtype == torch.float64:
                     return torch.sparse.DoubleTensor(coords, feats, size)
                 elif feats.dtype == torch.float32:
                     return torch.sparse.FloatTensor(coords, feats, size)
                 else:
-                    raise ValueError('Feature type not supported.')
+                    raise ValueError("Feature type not supported.")
 
         # Use int tensor for all operations
         tensor_stride = torch.IntTensor(self.tensor_stride)
@@ -792,14 +846,18 @@ class SparseTensor():
         elif min_coords.ndim == 1:
             min_coords = min_coords.unsqueeze(0)
 
-        assert (min_coords % tensor_stride).sum() == 0, \
-            "The minimum coordinates must be divisible by the tensor stride."
+        assert (
+            min_coords % tensor_stride
+        ).sum() == 0, "The minimum coordinates must be divisible by the tensor stride."
 
         if max_coords is not None:
             if max_coords.ndim == 1:
                 max_coords = max_coords.unsqueeze(0)
-            assert (max_coords % tensor_stride).sum() == 0, \
+            assert (
+                max_coords % tensor_stride
+            ).sum() == 0, (
                 "The maximum coordinates must be divisible by the tensor stride."
+            )
 
         coords -= min_coords
 
@@ -823,11 +881,12 @@ class SparseTensor():
             # Squeeze to make the size one-dimensional
             size = size.squeeze()
 
-            max_batch = max(self.coords_man.get_batch_indices())
+            max_batch = max(self._manager.get_batch_indices())
             size = torch.Size([max_batch + 1, *size, self.F.size(1)])
 
-        sparse_tensor = torch_sparse_Tensor(new_coords.t().to(self.F.device),
-                                            self.F, size)
+        sparse_tensor = torch_sparse_Tensor(
+            new_coords.t().to(self.F.device), self.F, size
+        )
         tensor_stride = torch.IntTensor(self.tensor_stride)
         return sparse_tensor, min_coords, tensor_stride
 
@@ -884,14 +943,18 @@ class SparseTensor():
         elif min_coords.ndim == 1:
             min_coords = min_coords.unsqueeze(0)
 
-        assert (min_coords % tensor_stride).sum() == 0, \
-            "The minimum coordinates must be divisible by the tensor stride."
+        assert (
+            min_coords % tensor_stride
+        ).sum() == 0, "The minimum coordinates must be divisible by the tensor stride."
 
         if max_coords is not None:
             if max_coords.ndim == 1:
                 max_coords = max_coords.unsqueeze(0)
-            assert (max_coords % tensor_stride).sum() == 0, \
+            assert (
+                max_coords % tensor_stride
+            ).sum() == 0, (
                 "The maximum coordinates must be divisible by the tensor stride."
+            )
 
         coords -= min_coords
 
@@ -907,7 +970,7 @@ class SparseTensor():
 
         size = None
         nchannels = self.F.size(1)
-        max_batch = max(self.coords_man.get_batch_indices())
+        max_batch = max(self._manager.get_batch_indices())
         if max_coords is not None:
             size = max_coords - min_coords + 1  # inclusive
             # Squeeze to make the size one-dimensional
@@ -921,9 +984,11 @@ class SparseTensor():
 
         tcoords = coords.t().long()
         batch_indices = batch_indices.long()
-        exec("dense_F[batch_indices, :, " +
-             ", ".join([f"tcoords[{i}]" for i in range(len(tcoords))]) +
-             "] = self.F")
+        exec(
+            "dense_F[batch_indices, :, "
+            + ", ".join([f"tcoords[{i}]" for i in range(len(tcoords))])
+            + "] = self.F"
+        )
 
         tensor_stride = torch.IntTensor(self.tensor_stride)
         return dense_F, min_coords, tensor_stride
@@ -955,7 +1020,11 @@ class SparseTensor():
            >>> len(outputs) == len(coords)  # recovers the original ordering and length
         """
         # Currently only supports unweighted slice.
-        return self.feats[X.inverse_mapping]
+        assert X.quantization_mode in [
+            SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
+            SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+        ], "slice only available for sparse tensors with quantization RANDOM_SUBSAMPLE or UNWEIGHTED_AVERAGE"
+        return self.F[X.inverse_mapping]
 
     def features_at_coords(self, query_coords: torch.Tensor):
         r"""Extract features at the specified coordinate matrix.
@@ -975,41 +1044,42 @@ class SparseTensor():
            `query_feats` will be 0.
 
         """
-        cm = self.coords_man
+        cm = self._manager
 
-        self_key = self.coords_key
-        query_key = cm.create_coords_key(query_coords)
+        self_key = self.coordinate_map_key
+        query_key = cm.create_coordinate_map_key(query_coords)
 
         self_indices, query_indices = cm.get_kernel_map(
-            self_key, query_key, kernel_size=1)
-        query_feats = torch.zeros((len(query_coords), self._F.size(1)),
-                                  dtype=self.dtype,
-                                  device=self.device)
+            self_key, query_key, kernel_size=1
+        )
+        query_feats = torch.zeros(
+            (len(query_coords), self._F.size(1)), dtype=self.dtype, device=self.device
+        )
 
         if len(self_indices[0]) > 0:
             query_feats[query_indices[0]] = self._F[self_indices[0]]
         return query_feats, query_indices[0]
 
 
-def _get_coords_key(
-        input: SparseTensor,
-        coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None,
-        tensor_stride: Union[Sequence, np.ndarray, torch.IntTensor] = 1):
+def _get_coordinate_map_key(
+    input: SparseTensor,
+    coordinates: torch.Tensor = None,
+    tensor_stride: StrideType = 1,
+):
     r"""Process coords according to its type.
     """
-    if coords is not None:
-        assert isinstance(coords, (CoordsKey, torch.IntTensor, SparseTensor))
-        if isinstance(coords, torch.IntTensor):
-            coords_key = input.coords_man.create_coords_key(
-                coords,
-                tensor_stride=tensor_stride,
-                force_creation=True,
-                force_remap=True,
-                allow_duplicate_coords=True)
-        elif isinstance(coords, SparseTensor):
-            coords_key = coords.coords_key
-        else:  # CoordsKey type due to the previous assertion
-            coords_key = coords
-    else:
-        coords_key = CoordsKey(input.D)
-    return coords_key
+    if coordinates is not None:
+        assert isinstance(coords, (CoordinateMapKey, torch.Tensor, SparseTensor))
+        if isinstance(coordinates, torch.Tensor):
+            coordinate_map_key = input._manager.create_coordinate_map_key(
+                coordinates, tensor_stride=tensor_stride
+            )
+        elif isinstance(coordinates, SparseTensor):
+            coordinate_map_key = coordinates.coordinate_map_key
+        else:  # CoordinateMapKey type due to the previous assertion
+            coordinate_map_key = coordinates
+    else:  # coordinates is None
+        coordinate_map_key = CoordinateMapKey(
+            input.coordinate_map_key.get_coordinate_size()
+        )
+    return coordinate_map_key

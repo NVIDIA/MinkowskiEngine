@@ -128,6 +128,9 @@ if CPU_ONLY:
     print("--------------------------------")
     Extension = CppExtension
 else:
+    print("--------------------------------")
+    print("| CUDA compilation set         |")
+    print("--------------------------------")
     # system python installation
     libraries.append("cusparse")
 

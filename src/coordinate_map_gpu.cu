@@ -261,7 +261,7 @@ stride_copy(coordinate_type const *__restrict__ src_coordinates, //
             size_type const *__restrict__ stride,                //
             coordinate_type *__restrict__ dst_coordinates,       //
             size_type const num_threads, size_type const coordinate_size) {
-  extern __shared__ coordinate_type sh_stride[];
+  extern __shared__ size_type sh_stride[];
 
   auto const tx = threadIdx.x;
   auto const bx = blockIdx.x;
@@ -276,9 +276,12 @@ stride_copy(coordinate_type const *__restrict__ src_coordinates, //
     dst_coordinates[dst_start] = src_coordinates[src_start];
     for (index_type j = 1; j < coordinate_size; ++j) {
       dst_coordinates[dst_start + j] =
-          ((coordinate_type)floorf(
-              __fdiv_rd(src_coordinates[src_start + j], sh_stride[j - 1]))) *
+          (__float2int_rd(__fdiv_rd(src_coordinates[src_start + j],
+                                    sh_stride[j - 1]))) *
           sh_stride[j - 1];
+      // (__double2int_rd(
+      //     __ddiv_rn(src_coordinates[src_start + j], sh_stride[j - 1]))) *
+      // sh_stride[j - 1];
     }
   }
 }
@@ -311,8 +314,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
   auto const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
 
   detail::stride_copy<coordinate_type, size_type, index_type>
-      <<<num_blocks, CUDA_NUM_THREADS,
-         m_coordinate_size * sizeof(index_type)>>>(
+      <<<num_blocks, CUDA_NUM_THREADS, m_coordinate_size * sizeof(size_type)>>>(
           const_coordinate_data(),
           thrust::raw_pointer_cast(m_valid_row_index.data()),
           thrust::raw_pointer_cast(stride_map.m_device_tensor_stride.data()),

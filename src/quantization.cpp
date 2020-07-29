@@ -39,6 +39,7 @@ namespace py = pybind11;
 
 namespace minkowski {
 
+/*
 struct IndexLabel {
   int index;
   int label;
@@ -230,6 +231,7 @@ template <typename Dtype> InOutMaps<Dtype> CopyToInOutMap(at::Tensor th_map) {
   return vec_map;
 }
 
+*/
 #ifndef CPU_ONLY
 template <typename Dtype>
 pInOutMaps<Dtype> CopyToInOutMapGPU(at::Tensor th_map) {

@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -28,229 +29,256 @@ import torch
 from torch.autograd import Function
 from torch.nn import Parameter
 
-from SparseTensor import SparseTensor, _get_coords_key
-from Common import RegionType, MinkowskiModuleBase, KernelGenerator, \
-    prep_args, convert_to_int_list, convert_to_int_tensor, \
-    get_minkowski_function
-from MinkowskiCoords import CoordsKey, save_ctx
+from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType
+from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
+from MinkowskiCommon import (
+    MinkowskiModuleBase,
+    prep_args,
+    convert_to_int_list,
+    get_minkowski_function,
+)
+from MinkowskiCoordinateManager import CoordinateManager
+from MinkowskiKernelGenerator import KernelRegion, KernelGenerator, save_ctx
 
 
 class MinkowskiConvolutionFunction(Function):
-
     @staticmethod
-    def forward(ctx,
-                input_features,
-                kernel,
-                tensor_stride=1,
-                stride=1,
-                kernel_size=-1,
-                dilation=1,
-                region_type=0,
-                region_offset=None,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
-        """
-        region_type=0 HyperCube
-        """
-        # Prep arguments
-        # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
-        assert input_features.shape[1] == kernel.shape[1], \
-            "The input shape " + str(list(input_features.shape)) + \
-            " does not match the kernel shape " + str(list(kernel.shape))
-        if out_coords_key is None:
-            out_coords_key = CoordsKey(in_coords_key.D)
-        assert in_coords_key.D == out_coords_key.D
-        assert input_features.type() == kernel.type(), \
-            f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
+    def forward(
+        ctx,
+        input_features: torch.Tensor,
+        kernel_weights: torch.Tensor,
+        kernel_generator: KernelGenerator,
+        in_coordinate_map_key: CoordinateMapKey,
+        out_coordinate_map_key: CoordinateMapKey = None,
+        coordinate_manager: CoordinateManager = None,
+    ):
+        if out_coordinate_map_key is None:
+            out_coordinate_map_key = CoordinateMapKey(
+                in_coordinate_map_key.get_coordinate_size()
+            )
+        assert (
+            input_features.type() == kernel_weights.type()
+        ), f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
-        tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
-            tensor_stride, stride, kernel_size, dilation, region_type,
-            in_coords_key.D)
+        ctx.input_features = input_features
+        ctx.kernel_weights = kernel_weights
+        ctx = save_ctx(
+            ctx,
+            kernel_generator,
+            in_coordinate_map_key,
+            out_coordinate_map_key,
+            coordinate_manager,
+        )
 
-        if region_offset is None:
-            region_offset = torch.IntTensor()
+        D = in_coordinate_map_key.get_coordinate_size() - 1
 
-        ctx.in_feat = input_features
-        ctx.kernel = kernel
-        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
-                       region_type, in_coords_key, out_coords_key,
-                       coords_manager)
-
-        D = in_coords_key.D
-        out_feat = input_features.new()
-
-        fw_fn = get_minkowski_function('ConvolutionForward', input_features)
-        fw_fn(ctx.in_feat, out_feat, kernel,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), region_type, region_offset,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
-        return out_feat
+        fw_fn = get_minkowski_function("ConvolutionForward", input_features)
+        return fw_fn(
+            ctx.input_features,
+            kernel_weights,
+            kernel_generator.kernel_size,
+            kernel_generator.kernel_stride,
+            kernel_generator.kernel_dilation,
+            kernel_generator.region_type,
+            kernel_generator.region_offsets,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager._manager,
+        )
 
     @staticmethod
-    def backward(ctx, grad_out_feat):
-        if not grad_out_feat.is_contiguous():
-            grad_out_feat = grad_out_feat.contiguous()
+    def backward(ctx, grad_out_feat: torch.Tensor):
+        D = ctx.in_coordinate_map_key.get_coordinate_size() - 1
 
-        grad_in_feat = grad_out_feat.new()
-        grad_kernel = grad_out_feat.new()
-        D = ctx.in_coords_key.D
-        bw_fn = get_minkowski_function('ConvolutionBackward', grad_out_feat)
-        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel, grad_kernel,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), ctx.region_type,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
-        return grad_in_feat, grad_kernel, None, None, None, None, None, None, None, None, None
+        bw_fn = get_minkowski_function("ConvolutionBackward", grad_out_feat)
+        grad_in_feat, grad_kernel = bw_fn(
+            ctx.input_features,
+            grad_out_feat,
+            ctx.kernel_weights,
+            ctx.kernel_generator.kernel_size,
+            ctx.kernel_generator.kernel_stride,
+            ctx.kernel_generator.kernel_dilation,
+            ctx.kernel_generator.region_type,
+            ctx.kernel_generator.region_offsets,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager._manager,
+        )
+        return (
+            grad_in_feat,
+            grad_kernel,
+            None,
+            None,
+            None,
+            None,
+        )
 
 
 class MinkowskiConvolutionTransposeFunction(Function):
-
     @staticmethod
-    def forward(ctx,
-                input_features,
-                kernel,
-                tensor_stride=1,
-                stride=1,
-                kernel_size=-1,
-                dilation=1,
-                region_type=0,
-                region_offset=None,
-                generate_new_coords=False,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
-        """
-        region_type=0 HyperCube
-        """
-        # Prep arguments
-        # Kernel shape (n_spatial_kernels, in_nfeat, out_nfeat)
-        assert input_features.shape[1] == kernel.shape[1], \
-            "The input shape " + str(list(input_features.shape)) + \
-            " does not match the kernel shape " + str(list(kernel.shape))
-        if out_coords_key is None:
-            out_coords_key = CoordsKey(in_coords_key.D)
-        assert in_coords_key.D == out_coords_key.D
-        assert input_features.type() == kernel.type(), \
-            f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
+    def forward(
+        ctx,
+        input_features: torch.Tensor,
+        kernel_weights: torch.Tensor,
+        kernel_generator: KernelGenerator,
+        generate_new_coordinates: bool = False,
+        in_coordinate_map_key: CoordinateMapKey = None,
+        out_coordinate_map_key: CoordinateMapKey = None,
+        coordinate_manager: CoordinateManager = None,
+    ):
+        if out_coordinate_map_key is None:
+            out_coordinate_map_key = CoordinateMapKey(
+                in_coordinate_map_key.get_coordinate_size()
+            )
+        assert (
+            input_features.type() == kernel.type()
+        ), f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
-        tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
-            tensor_stride, stride, kernel_size, dilation, region_type,
-            in_coords_key.D)
+        ctx.input_features = input_features
+        ctx.kernel_weights = kernel_weights
+        ctx = save_ctx(
+            ctx,
+            kernel_region,
+            in_coordinate_map_key,
+            out_coordinate_map_key,
+            coordinate_manager,
+        )
 
-        if region_offset is None:
-            region_offset = torch.IntTensor()
+        D = in_coordinate_map_key.get_coordinate_size() - 1
 
-        ctx.in_feat = input_features
-        ctx.kernel = kernel
-        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
-                       region_type, in_coords_key, out_coords_key,
-                       coords_manager)
-
-        D = in_coords_key.D
-        out_feat = input_features.new()
-
-        fw_fn = get_minkowski_function('ConvolutionTransposeForward',
-                                       input_features)
-        fw_fn(ctx.in_feat, out_feat, kernel,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), region_type, region_offset,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager, generate_new_coords)
-        return out_feat
+        fw_fn = get_minkowski_function("ConvolutionTransposeForward", input_features)
+        return fw_fn(
+            ctx.input_features,
+            kernel_weights,
+            convert_to_int_list(kernel_region.kernel_size, D),
+            convert_to_int_list(kernel_region.kernel_stride, D),
+            convert_to_int_list(kernel_region.kernel_dilation, D),
+            kernel_region.region_type,
+            kernel_region.region_offset,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager,
+            generate_new_coordinates,
+        )
 
     @staticmethod
-    def backward(ctx, grad_out_feat):
-        if not grad_out_feat.is_contiguous():
-            grad_out_feat = grad_out_feat.contiguous()
+    def backward(ctx, grad_out_feat: torch.Tensor):
+        D = ctx.in_coordinate_map_key.get_coordinate_size() - 1
 
-        grad_in_feat = grad_out_feat.new()
-        grad_kernel = grad_out_feat.new()
-        D = ctx.in_coords_key.D
-        bw_fn = get_minkowski_function('ConvolutionTransposeBackward',
-                                       grad_out_feat)
-        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.kernel, grad_kernel,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), ctx.region_type,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
-        return grad_in_feat, grad_kernel, None, None, None, None, None, None, None, None, None, None
+        bw_fn = get_minkowski_function("ConvolutionTransposeBackward", grad_out_feat)
+        grad_in_feat, grad_kernel = bw_fn(
+            ctx.input_features,
+            grad_out_feat,
+            ctx.kernel_weights,
+            convert_to_int_list(ctx.kernel_region.kernel_size, D),
+            convert_to_int_list(ctx.kernel_region.kernel_stride, D),
+            convert_to_int_list(ctx.kernel_region.kernel_dilation, D),
+            ctx.kernel_region.region_type,
+            ctx.kernel_region.region_offset,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager,
+        )
+        return (
+            grad_in_feat,
+            grad_kernel,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
 
 
 class MinkowskiConvolutionBase(MinkowskiModuleBase):
 
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 kernel_size=-1,
-                 stride=1,
-                 dilation=1,
-                 has_bias=False,
-                 kernel_generator=None,
-                 is_transpose=False,
-                 dimension=-1):
+    __slots__ = (
+        "in_channels",
+        "out_channels",
+        "is_transpose",
+        "kernel_generator",
+        "dimension",
+        "use_mm",
+        "weight",
+        "bias",
+        "conv",
+    )
+
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size=-1,
+        stride=1,
+        dilation=1,
+        bias=False,
+        kernel_generator=None,
+        is_transpose=False,  # only the base class has this argument
+        dimension=-1,
+    ):
+        r"""
+
+        .. note::
+
+           When the kernel generator is provided, all kernel related arguments
+           (kernel_size, stride, dilation) will be ignored.
+
+        """
         super(MinkowskiConvolutionBase, self).__init__()
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
 
         if kernel_generator is None:
             kernel_generator = KernelGenerator(
                 kernel_size=kernel_size,
-                stride=stride,
-                dilation=dilation,
-                dimension=dimension)
-        else:
-            kernel_size = kernel_generator.kernel_size
-
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
-
-        kernel_volume = kernel_generator.kernel_volume
+                kernel_stride=stride,
+                kernel_dilation=dilation,
+                dimension=dimension,
+            )
 
         self.is_transpose = is_transpose
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.kernel_size = kernel_size
-        self.kernel_volume = kernel_volume
-        self.stride = stride
-        self.dilation = dilation
+
         self.kernel_generator = kernel_generator
         self.dimension = dimension
-        self.use_mm = False  # use matrix multiplication when kernel is 1
+        self.use_mm = False  # use matrix multiplication when kernel_volume is 1
 
         Tensor = torch.FloatTensor
-        if torch.prod(kernel_size) == 1 and torch.prod(stride) == 1:
-            self.kernel_shape = (self.in_channels, self.out_channels)
+        if (
+            self.kernel_generator.kernel_volume == 1
+            and self.kernel_generator.requires_strided_coordiantes
+        ):
+            kernel_shape = (self.in_channels, self.out_channels)
             self.use_mm = True
         else:
-            self.kernel_shape = (self.kernel_volume, self.in_channels,
-                                 self.out_channels)
+            kernel_shape = (
+                self.kernel_generator.kernel_volume,
+                self.in_channels,
+                self.out_channels,
+            )
 
-        self.kernel = Parameter(Tensor(*self.kernel_shape))
-        self.bias = Parameter(Tensor(1, out_channels)) if has_bias else None
-        self.has_bias = has_bias
+        self.weight = Parameter(Tensor(*kernel_shape))
+        self.bias = Parameter(Tensor(1, out_channels)) if bias else None
+        self.conv = (
+            MinkowskiConvolutionTransposeFunction()
+            if is_transpose
+            else MinkowskiConvolutionFunction()
+        )
 
-    def forward(self,
-                input: SparseTensor,
-                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+    def forward(
+        self,
+        input: SparseTensor,
+        coordinates: Union[torch.Tensor, CoordinateMapKey, SparseTensor] = None,
+    ):
         r"""
         :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
         convolution on.
 
-        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        :attr:`coordinates` ((`torch.IntTensor`, `MinkowskiEngine.CoordinateMapKey`,
         `MinkowskiEngine.SparseTensor`), optional): If provided, generate
         results on the provided coordinates. None by default.
 
@@ -258,53 +286,51 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
-        # Create a region_offset
-        self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
-
         if self.use_mm and coords is None:
             # If the kernel_size == 1, the convolution is simply a matrix
             # multiplication
             outfeat = input.F.mm(self.kernel)
             out_coords_key = input.coords_key
         else:
-            if self.is_transpose:
-                conv = MinkowskiConvolutionTransposeFunction()
-            else:
-                conv = MinkowskiConvolutionFunction()
-            # Get a new coords key or extract one from the coords
-            out_coords_key = _get_coords_key(input, coords)
-            outfeat = conv.apply(input.F, self.kernel, input.tensor_stride,
-                                 self.stride, self.kernel_size, self.dilation,
-                                 self.region_type_, self.region_offset_,
-                                 input.coords_key, out_coords_key,
-                                 input.coords_man)
-        if self.has_bias:
+            # Get a new coordinate_map_key or extract one from the coords
+            out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
+            outfeat = self.conv.apply(
+                input.F,
+                self.weight,
+                self.kernel_generator,
+                input.coordinate_map_key,
+                out_coordinate_map_key,
+                input._manager,
+            )
+        if self.bias is not None:
             outfeat += self.bias
 
         return SparseTensor(
-            outfeat, coords_key=out_coords_key, coords_manager=input.coords_man)
+            outfeat,
+            coordinate_map_key=out_coordinate_map_key,
+            coordinate_manager=input._manager,
+        )
 
     def reset_parameters(self, is_transpose=False):
-        n = (self.out_channels
-             if is_transpose else self.in_channels) * self.kernel_volume
-        stdv = 1. / math.sqrt(n)
-        self.kernel.data.uniform_(-stdv, stdv)
+        n = (
+            self.out_channels if is_transpose else self.in_channels
+        ) * self.kernel_generator.kernel_volume
+        stdv = 1.0 / math.sqrt(n)
+        self.weight.data.uniform_(-stdv, stdv)
         if self.bias is not None:
             self.bias.data.uniform_(-stdv, stdv)
 
     def __repr__(self):
-        s = '(in={}, out={}, region_type={}, '.format(
-            self.in_channels, self.out_channels,
-            self.kernel_generator.region_type)
-        if self.kernel_generator.region_type in [
-                RegionType.HYBRID, RegionType.CUSTOM
-        ]:
-            s += 'kernel_volume={}, '.format(self.kernel_volume)
+        s = "(in={}, out={}, region_type={}, ".format(
+            self.in_channels, self.out_channels, self.kernel_generator.region_type
+        )
+        if self.kernel_generator.region_type in [RegionType.CUSTOM]:
+            s += "kernel_volume={}, ".format(self.kernel_generator.kernel_volume)
         else:
-            s += 'kernel_size={}, '.format(self.kernel_size.tolist())
-        s += 'stride={}, dilation={})'.format(self.stride.tolist(),
-                                              self.dilation.tolist())
+            s += "kernel_size={}, ".format(self.kernel_generator.kernel_size)
+        s += "stride={}, dilation={})".format(
+            self.kernel_generator.kernel_stride, self.kernel_generator.kernel_dilation,
+        )
         return self.__class__.__name__ + s
 
 
@@ -331,15 +357,17 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
 
     """
 
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 kernel_size=-1,
-                 stride=1,
-                 dilation=1,
-                 has_bias=False,
-                 kernel_generator=None,
-                 dimension=None):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size=-1,
+        stride=1,
+        dilation=1,
+        bias=False,
+        kernel_generator=None,
+        dimension=None,
+    ):
         r"""convolution on a sparse tensor
 
         Args:
@@ -383,10 +411,11 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             kernel_size,
             stride,
             dilation,
-            has_bias,
+            bias,
             kernel_generator,
             is_transpose=False,
-            dimension=dimension)
+            dimension=dimension,
+        )
         self.reset_parameters()
 
 
@@ -394,16 +423,18 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
     r"""A generalized sparse transposed convolution or deconvolution layer.
     """
 
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 kernel_size=-1,
-                 stride=1,
-                 dilation=1,
-                 has_bias=False,
-                 kernel_generator=None,
-                 generate_new_coords=False,
-                 dimension=None):
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size=-1,
+        stride=1,
+        dilation=1,
+        bias=False,
+        kernel_generator=None,
+        generate_new_coordinates=False,
+        dimension=None,
+    ):
         r"""a generalized sparse transposed convolution layer.
 
         Args:
@@ -455,21 +486,24 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             kernel_size,
             stride,
             dilation,
-            has_bias,
+            bias,
             kernel_generator,
             is_transpose=True,
-            dimension=dimension)
+            dimension=dimension,
+        )
         self.reset_parameters(True)
-        self.generate_new_coords = generate_new_coords
+        self.generate_new_coordinates = generate_new_coordinates
 
-    def forward(self,
-                input: SparseTensor,
-                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+    def forward(
+        self,
+        input: SparseTensor,
+        coordinates: Union[torch.Tensor, CoordinateMapKey, SparseTensor] = None,
+    ):
         r"""
         :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
         convolution on.
 
-        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        :attr:`coordinates` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
         `MinkowskiEngine.SparseTensor`), optional): If provided, generate
         results on the provided coordinates. None by default.
 
@@ -478,24 +512,35 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
         assert input.D == self.dimension
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
+        self.region_type_, self.region_offset_, _ = self.kernel_generator.get_kernel(
+            input.tensor_stride, self.is_transpose
+        )
 
         if self.use_mm and coords is None:
             # If the kernel_size == 1, the convolution is simply a matrix
             # multiplication
             outfeat = input.F.mm(self.kernel)
-            out_coords_key = input.coords_key
+            out_coordinate_map_key = input.coordinate_map_key
         else:
             # Get a new coords key or extract one from the coords
             out_coords_key = _get_coords_key(input, coords, tensor_stride=1)
             outfeat = MinkowskiConvolutionTransposeFunction().apply(
-                input.F, self.kernel, input.tensor_stride, self.stride,
-                self.kernel_size, self.dilation, self.region_type_,
-                self.region_offset_, self.generate_new_coords, input.coords_key,
-                out_coords_key, input.coords_man)
+                input.F,
+                self.kernel,
+                input.tensor_stride,
+                self.stride,
+                self.kernel_size,
+                self.dilation,
+                self.region_type_,
+                self.region_offset_,
+                self.generate_new_coords,
+                input.coords_key,
+                out_coords_key,
+                input.coords_man,
+            )
         if self.has_bias:
             outfeat += self.bias
 
         return SparseTensor(
-            outfeat, coords_key=out_coords_key, coords_manager=input.coords_man)
+            outfeat, coords_key=out_coords_key, coords_manager=input.coords_man
+        )

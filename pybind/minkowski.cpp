@@ -37,38 +37,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   // Constant function
   m.def("is_cuda_available", &is_cuda_available);
 
-  // Enums
-  py::enum_<minkowski::GPUMemoryAllocatorBackend::Type>(
-      m, "GPUMemoryAllocatorType")
-      .value("PYTORCH", minkowski::GPUMemoryAllocatorBackend::Type::PYTORCH)
-      .value("CUDA", minkowski::GPUMemoryAllocatorBackend::Type::CUDA)
-      .export_values();
-
-  py::enum_<minkowski::CoordinateMapBackend::Type>(m, "CoordinateMapType")
-      .value("CPU", minkowski::CoordinateMapBackend::Type::CPU)
-      .value("CUDA", minkowski::CoordinateMapBackend::Type::CUDA)
-      .export_values();
-
-  py::enum_<minkowski::RegionType::Type>(m, "RegionType")
-      .value("HYPER_CUBE", minkowski::RegionType::Type::HYPER_CUBE)
-      .value("HYPER_CROSS", minkowski::RegionType::Type::HYPER_CROSS)
-      .value("CUSTOM", minkowski::RegionType::Type::CUSTOM)
-      .export_values();
-
-  // Classes
-  py::class_<minkowski::CoordinateMapKey>(m, "CoordinateMapKey")
-      .def(py::init<minkowski::default_types::size_type>())
-      .def(py::init<minkowski::default_types::stride_type, std::string>())
-      .def("__repr__", &minkowski::CoordinateMapKey::to_string)
-      .def("is_key_set", &minkowski::CoordinateMapKey::is_key_set)
-      .def("get_coordinate_size",
-           &minkowski::CoordinateMapKey::get_coordinate_size)
-      .def("get_key", &minkowski::CoordinateMapKey::get_key)
-      .def("set_key", (void (minkowski::CoordinateMapKey::*)(
-                          minkowski::default_types::stride_type, std::string)) &
-                          minkowski::CoordinateMapKey::set_key)
-      .def("get_tensor_stride",
-           &minkowski::CoordinateMapKey::get_tensor_stride);
+  initialize_non_templated_classes(m);
 
   // Manager
   instantiate_manager<int32_t, std::allocator, minkowski::CoordinateMapCPU>(

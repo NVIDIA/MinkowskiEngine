@@ -40,21 +40,42 @@ from MinkowskiEngineBackend._C import (
     RegionType,
 )
 
-# from SparseTensor import SparseTensor, SparseTensorOperationMode, SparseTensorQuantizationMode, \
-#     set_sparse_tensor_operation_mode, sparse_tensor_operation_mode, clear_global_coords_man
+from MinkowskiKernelGenerator import (
+    KernelRegion,
+    KernelGenerator,
+    convert_region_type,
+    get_kernel_volume,
+)
 
-# from Common import RegionType, convert_to_int_tensor, convert_region_type, \
-#     MinkowskiModuleBase, KernelGenerator, GlobalPoolingMode
-#
-from MinkowskiCoords import (
+from MinkowskiSparseTensor import (
+    SparseTensor,
+    SparseTensorOperationMode,
+    SparseTensorQuantizationMode,
+    set_sparse_tensor_operation_mode,
+    sparse_tensor_operation_mode,
+    clear_global_coordinate_mananager,
+)
+
+from MinkowskiCommon import (
+    convert_to_int_tensor,
+    MinkowskiModuleBase,
+    GlobalPoolingMode,
+)
+
+from MinkowskiCoordinateManager import (
     set_memory_manager_backend,
     set_gpu_allocator,
     CoordsManager,
     CoordinateManager,
 )
 
-# from MinkowskiConvolution import MinkowskiConvolutionFunction, MinkowskiConvolution, \
-#     MinkowskiConvolutionTransposeFunction, MinkowskiConvolutionTranspose
+from MinkowskiConvolution import (
+    MinkowskiConvolutionFunction,
+    MinkowskiConvolution,
+    MinkowskiConvolutionTransposeFunction,
+    MinkowskiConvolutionTranspose,
+)
+
 #
 # from MinkowskiChannelwiseConvolution import MinkowskiChannelwiseConvolution
 #
@@ -89,5 +110,6 @@ from MinkowskiCoords import (
 #
 # import MinkowskiFunctional
 #
-# import MinkowskiEngine.utils as utils
+import MinkowskiEngine.utils as utils
+
 # import MinkowskiEngine.modules as modules

@@ -183,15 +183,22 @@ struct insert_and_map_functor<coordinate_type, std::allocator,
 
     // return tensors
     at::Tensor th_mapping = torch::empty(
-        {(long)mapping.size()}, torch::TensorOptions().dtype(torch::kInt));
-    at::Tensor th_inverse_mapping =
-        torch::empty({(long)inverse_mapping.size()},
-                     torch::TensorOptions().dtype(torch::kInt));
+        {(int64_t)mapping.size()},
+        torch::TensorOptions().requires_grad(false).dtype(torch::kInt64));
+    at::Tensor th_inverse_mapping = torch::empty(
+        {(int64_t)inverse_mapping.size()},
+        torch::TensorOptions().requires_grad(false).dtype(torch::kInt64));
 
-    std::copy_n(mapping.begin(), mapping.size(),
-                th_mapping.data_ptr<coordinate_type>());
-    std::copy_n(inverse_mapping.begin(), inverse_mapping.size(),
-                th_inverse_mapping.data_ptr<coordinate_type>());
+    // copy_n to int to long
+    int64_t *p_mapping = th_mapping.data_ptr<int64_t>();
+    for (default_types::index_type i = 0; i < mapping.size(); ++i) {
+      p_mapping[i] = mapping[i];
+    }
+
+    int64_t *p_inverse_mapping = th_inverse_mapping.data_ptr<int64_t>();
+    for (default_types::index_type i = 0; i < inverse_mapping.size(); ++i) {
+      p_inverse_mapping[i] = inverse_mapping[i];
+    }
 
     return std::make_pair(std::move(th_mapping), std::move(th_inverse_mapping));
   }
@@ -1017,8 +1024,13 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
   auto const ncols = map.coordinate_size();
 
   // CPU torch.IntTensor
-  at::Tensor coordinates = torch::empty(
-      {(long)nrows, (long)ncols}, torch::TensorOptions().dtype(torch::kInt));
+  auto options = torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
+  if (!detail::is_cpu_coordinate_map<CoordinateMapType>::value) {
+    int device_id;
+    CUDA_CHECK(cudaGetDevice(&device_id));
+    options = options.device(torch::kCUDA, device_id);
+  }
+  at::Tensor coordinates = torch::empty({(long)nrows, (long)ncols}, options);
 
   // copy to the out coords
   map.copy_coordinates(coordinates.template data_ptr<coordinate_type>());
