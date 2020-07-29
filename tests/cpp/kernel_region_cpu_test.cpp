@@ -71,7 +71,7 @@ region_iterator_test(const torch::Tensor &coordinates,
   }
 
   auto region = cpu_kernel_region<coordinate_type>(
-      REGION_TYPE::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
+      RegionType::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
       dilation.data());
 
   std::vector<coordinate_type> lb(D), ub(D);
@@ -102,7 +102,7 @@ kernel_map_test(const torch::Tensor &in_coordinates,
   torch::TensorArg arg_out_coordinates(out_coordinates, "coordinates", 1);
   torch::TensorArg arg_kernel_size(kernel_size, "kernel_size", 2);
 
-  torch::CheckedFrom c = "region_iterator_test";
+  torch::CheckedFrom c = "kernel_map_test";
   torch::checkContiguous(c, arg_in_coordinates);
   torch::checkContiguous(c, arg_out_coordinates);
   torch::checkContiguous(c, arg_kernel_size);
@@ -133,18 +133,13 @@ kernel_map_test(const torch::Tensor &in_coordinates,
 
   auto in_coordinate_range = coordinate_range<coordinate_type>(N_in, D, ptr);
   simple_range iter_in{N_in};
-  in_map.insert(in_coordinate_range.begin(), // key begin
-                in_coordinate_range.end(),   // key end
-                iter_in.begin(),             // value begin
-                iter_in.end());              // value end
+  in_map.insert(ptr,
+                ptr + N_in * D);
 
   auto out_coordinate_range =
       coordinate_range<coordinate_type>(N_out, D, ptr_out);
   simple_range iter_out{N_out};
-  out_map.insert(out_coordinate_range.begin(), // key begin
-                 out_coordinate_range.end(),   // key end
-                 iter_out.begin(),             // value begin
-                 iter_out.end());              // value end
+  out_map.insert(ptr_out, ptr_out + N_out * D);
 
   LOG_DEBUG("coordinate initialization");
 
@@ -161,7 +156,7 @@ kernel_map_test(const torch::Tensor &in_coordinates,
 
   LOG_DEBUG("kernel_region initialization");
   auto region = cpu_kernel_region<coordinate_type>(
-      REGION_TYPE::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
+      RegionType::HYPER_CUBE, D, tensor_stride.data(), s_kernel_size.data(),
       dilation.data());
 
   timer t;

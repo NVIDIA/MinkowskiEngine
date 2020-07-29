@@ -28,35 +28,32 @@ from MinkowskiEngine import (SparseTensor, SparseTensorOperationMode,
                              SparseTensorQuantizationMode,
                              set_sparse_tensor_operation_mode)
 
-from tests.common import data_loader
+from tests.python.common import data_loader
 
 
-class Test(unittest.TestCase):
-
+class SparseTensorTestCase(unittest.TestCase):
     def test(self):
         print(f"{self.__class__.__name__}: test SparseTensor")
         coords, feats, labels = data_loader(nchannel=2)
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coordinates=coords)
         print(input)
 
     def test_empty(self):
         print(f"{self.__class__.__name__}: test_empty SparseTensor")
         feats = torch.FloatTensor(0, 16)
         coords = torch.IntTensor(0, 4)
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coordinates=coords)
         print(input)
 
     def test_force_creation(self):
         print(f"{self.__class__.__name__}: test_force_creation")
         coords, feats, labels = data_loader(nchannel=2)
-        input1 = SparseTensor(feats, coords=coords, tensor_stride=1)
+        input1 = SparseTensor(feats, coordinates=coords)
         input2 = SparseTensor(
             feats,
-            coords=coords,
-            tensor_stride=1,
-            coords_manager=input1.coords_man,
-            force_creation=True)
-        print(input2)
+            coordinates=coords,
+            coordinate_manager=input1.coordinate_manager)
+        print(input1.coordinate_map_key, input2.coordinate_map_key)
 
     def test_duplicate_coords(self):
         print(f"{self.__class__.__name__}: test_duplicate_coords")
@@ -64,13 +61,11 @@ class Test(unittest.TestCase):
         # create duplicate coords
         coords[0] = coords[1]
         coords[2] = coords[3]
-        input = SparseTensor(feats, coords=coords, allow_duplicate_coords=True)
+        input = SparseTensor(feats, coordinates=coords)
         self.assertTrue(len(input) == len(coords) - 2)
-        print(coords)
-        print(input)
         input = SparseTensor(
             feats,
-            coords=coords,
+            coordinates=coords,
             quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
         self.assertTrue(len(coords) == 16)
         self.assertTrue(len(input) == 14)
@@ -81,14 +76,14 @@ class Test(unittest.TestCase):
         feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T
         # 0.5, 2.5, 5.5, 7
         sinput = SparseTensor(
-            coords=coords,
-            feats=feats,
+            coordinates=coords,
+            features=feats,
             quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
         self.assertTrue(len(sinput) == 4)
-        self.assertTrue(0.5 in sinput.feats)
-        self.assertTrue(2.5 in sinput.feats)
-        self.assertTrue(5.5 in sinput.feats)
-        self.assertTrue(7 in sinput.feats)
+        self.assertTrue(0.5 in sinput.features)
+        self.assertTrue(2.5 in sinput.features)
+        self.assertTrue(5.5 in sinput.features)
+        self.assertTrue(7 in sinput.features)
         self.assertTrue(len(sinput.slice(sinput)) == len(coords))
 
     def test_extraction(self):
@@ -123,18 +118,17 @@ class Test(unittest.TestCase):
     def test_operation_mode(self):
         # Set to use the global sparse tensor coords manager by default
         set_sparse_tensor_operation_mode(
-            SparseTensorOperationMode.SHARE_COORDS_MANAGER)
+            SparseTensorOperationMode.SHARE_COORDINATE_MANAGER)
 
         coords, feats, labels = data_loader(nchannel=2)
 
         # Create a sparse tensor on two different coordinates.
-        A = SparseTensor(torch.rand(feats.shape), coords, force_creation=True)
+        A = SparseTensor(torch.rand(feats.shape), coordinates=coords)
         B = SparseTensor(
             torch.rand(4, 2),
-            torch.IntTensor([[0, 0, 0], [1, 1, 1], [0, 1, 0], [1, 0, 1]]),
-            force_creation=True)
+            coordinates=torch.IntTensor([[0, 0, 0], [1, 1, 1], [0, 1, 0], [1, 0, 1]]))
 
-        self.assertTrue(A.coords_man == B.coords_man)
+        self.assertTrue(A.coordinate_manager == B.coordinate_manager)
 
         A.requires_grad_(True)
         B.requires_grad_(True)
@@ -156,7 +150,3 @@ class Test(unittest.TestCase):
         A -= D
         A *= D
         A /= D
-
-
-if __name__ == '__main__':
-    unittest.main()

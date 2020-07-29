@@ -10,6 +10,16 @@ from utils import load_file, batched_coordinates
 
 class KernelRegionTestCase(unittest.TestCase):
     def test(self):
+        coordinates = torch.IntTensor(
+            [[0, 1, -1], [0, 1, 0], [0, 1, 1], [0, 2, -1], [0, 2, 0], [0, 2, 1]]
+        )
+        kernel_size = torch.IntTensor([3, 3])
+
+        (in_maps, out_maps), N, t = MinkowskiEngineTest._C.kernel_map_test(
+            coordinates, coordinates, kernel_size
+        )
+
+    def test2(self):
         coordinates = torch.IntTensor([[0, 1, -1], [0, 2, 1]])
         kernel_size = torch.IntTensor([3, 3])
 
@@ -75,6 +85,18 @@ class KernelRegionTestCase(unittest.TestCase):
         self.assertEqual(regions[10], [0, 1, 0, 4])
         self.assertEqual(regions[11], [0, 2, 0, 4])
 
+    def test_kernel_map1(self):
+        in_coordinates = torch.IntTensor([[0, 1, -1], [0, 2, 1]])
+        out_coordinates = torch.IntTensor([[0, 1, -1], [0, 2, 1], [1, 2, 1]])
+        kernel_size = torch.IntTensor([1, 1])
+
+        (in_maps, out_maps), num, t = MinkowskiEngineTest._C.kernel_map_test(
+            in_coordinates, out_coordinates, kernel_size
+        )
+
+        self.assertEqual(in_maps[0], [0, 1])
+        self.assertEqual(out_maps[0], [0, 1])
+
     def test_kernel_map(self):
         in_coordinates = torch.IntTensor([[0, 1, -1], [0, 2, 1]])
         out_coordinates = torch.IntTensor([[0, 1, 0], [0, 1, 2], [1, 2, 1]])
@@ -87,8 +109,6 @@ class KernelRegionTestCase(unittest.TestCase):
         in_maps = kernel_map[0]
         out_maps = kernel_map[1]
         self.assertEqual(len(in_maps), torch.prod(kernel_size).item())
-        print(in_maps)
-        print(out_maps)
 
         self.assertEqual(in_maps[1], [0])
         self.assertEqual(out_maps[1], [0])

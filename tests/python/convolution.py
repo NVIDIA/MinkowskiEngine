@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -24,15 +25,21 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiConvolution, MinkowskiConvolutionFunction, \
-    MinkowskiConvolutionTranspose, MinkowskiConvolutionTransposeFunction
+import MinkowskiEngineBackend._C as _C
 
-from tests.common import data_loader
+from MinkowskiEngine import (
+    SparseTensor,
+    MinkowskiConvolution,
+    MinkowskiConvolutionFunction,
+    MinkowskiConvolutionTranspose,
+    MinkowskiConvolutionTransposeFunction,
+)
+
+from tests.python.common import data_loader
 from utils.gradcheck import gradcheck
 
 
 class TestConvolution(unittest.TestCase):
-
     def test_gpu(self):
         print(f"{self.__class__.__name__}: test_gpu")
         if not torch.cuda.is_available():
@@ -41,26 +48,23 @@ class TestConvolution(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
+
         # Initialize context
         conv = MinkowskiConvolution(
-            in_channels,
-            out_channels,
-            kernel_size=3,
-            stride=2,
-            has_bias=True,
-            dimension=D)
+            in_channels, out_channels, kernel_size=3, stride=2, bias=True, dimension=D
+        )
+
         print(conv)
+        input = SparseTensor(feats, coordinates=coords)
         conv = conv.double()
         output = conv(input)
         print(output)
 
-        device = torch.device('cuda')
-        input = input.to(device)
+        device = torch.device("cuda")
+        input = SparseTensor(feats.to(device), coordinates=coords.to(device))
         conv = conv.to(device)
         output = conv(input)
         print(output)
-        print(output.F, output.coords)
 
         # Check backward
         fn = MinkowskiConvolutionFunction()
@@ -70,10 +74,18 @@ class TestConvolution(unittest.TestCase):
         output.F.backward(grad)
 
         self.assertTrue(
-            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride,
-                           conv.stride, conv.kernel_size, conv.dilation,
-                           conv.region_type_, conv.region_offset_,
-                           input.coords_key, None, input.coords_man)))
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    conv.weight,
+                    conv.kernel_generator,
+                    input.coordinate_map_key,
+                    None,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
     def test(self):
         print(f"{self.__class__.__name__}: test")
@@ -81,61 +93,74 @@ class TestConvolution(unittest.TestCase):
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coordinates=coords)
         # Initialize context
         conv = MinkowskiConvolution(
-            in_channels,
-            out_channels,
-            kernel_size=3,
-            stride=2,
-            has_bias=True,
-            dimension=D)
+            in_channels, out_channels, kernel_size=3, stride=2, bias=True, dimension=D
+        )
         conv = conv.double()
         output = conv(input)
         print(output)
 
-        kernel_map = input.coords_man.get_kernel_map(
-            1, 2, stride=2, kernel_size=3)
-        print(kernel_map)
+        # kernel_map = input.coords_man.get_kernel_map(
+        #     1, 2, stride=2, kernel_size=3)
+        # print(kernel_map)
 
         # Check backward
         fn = MinkowskiConvolutionFunction()
 
         self.assertTrue(
-            gradcheck(fn, (input.F, conv.kernel, input.tensor_stride,
-                           conv.stride, conv.kernel_size, conv.dilation,
-                           conv.region_type_, conv.region_offset_,
-                           input.coords_key, None, input.coords_man)))
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    conv.weight,
+                    conv.kernel_generator,
+                    input.coordinate_map_key,
+                    None,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
 
 class TestConvolutionTranspose(unittest.TestCase):
-
     def test_gpu(self):
         print(f"{self.__class__.__name__}: test_gpu")
         if not torch.cuda.is_available():
             return
 
-        device = torch.device('cuda')
+        device = torch.device("cuda")
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coords=coords).to(device)
         # Initialize context
-        conv = MinkowskiConvolution(
-            in_channels,
-            out_channels,
-            kernel_size=3,
-            stride=2,
-            has_bias=True,
-            dimension=D).double().to(device)
-        conv_tr = MinkowskiConvolutionTranspose(
-            out_channels,
-            in_channels,
-            kernel_size=3,
-            stride=2,
-            has_bias=True,
-            dimension=D).double().to(device)
+        conv = (
+            MinkowskiConvolution(
+                in_channels,
+                out_channels,
+                kernel_size=3,
+                stride=2,
+                bias=True,
+                dimension=D,
+            )
+            .double()
+            .to(device)
+        )
+        conv_tr = (
+            MinkowskiConvolutionTranspose(
+                out_channels,
+                in_channels,
+                kernel_size=3,
+                stride=2,
+                bias=True,
+                dimension=D,
+            )
+            .double()
+            .to(device)
+        )
         tr_input = conv(input)
         print(tr_input)
         output = conv_tr(tr_input)
@@ -145,11 +170,24 @@ class TestConvolutionTranspose(unittest.TestCase):
         fn = MinkowskiConvolutionTransposeFunction()
 
         self.assertTrue(
-            gradcheck(fn,
-                      (tr_input.F, conv_tr.kernel, tr_input.tensor_stride,
-                       conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
-                       conv_tr.region_type_, conv_tr.region_offset_, False,
-                       tr_input.coords_key, None, tr_input.coords_man)))
+            gradcheck(
+                fn,
+                (
+                    tr_input.F,
+                    conv_tr.kernel,
+                    tr_input.tensor_stride,
+                    conv_tr.stride,
+                    conv_tr.kernel_size,
+                    conv_tr.dilation,
+                    conv_tr.region_type_,
+                    conv_tr.region_offset_,
+                    False,
+                    tr_input.coords_key,
+                    None,
+                    tr_input.coords_man,
+                ),
+            )
+        )
 
     def test(self):
         print(f"{self.__class__.__name__}: test")
@@ -161,37 +199,38 @@ class TestConvolutionTranspose(unittest.TestCase):
 
         # Initialize context
         conv = MinkowskiConvolution(
-            in_channels,
-            out_channels,
-            kernel_size=3,
-            stride=2,
-            has_bias=True,
-            dimension=D).double()
+            in_channels, out_channels, kernel_size=3, stride=2, bias=True, dimension=D
+        ).double()
         conv_tr = MinkowskiConvolutionTranspose(
-            out_channels,
-            in_channels,
-            kernel_size=2,
-            stride=2,
-            has_bias=True,
-            dimension=D).double()
+            out_channels, in_channels, kernel_size=2, stride=2, bias=True, dimension=D
+        ).double()
 
-        print('Initial input: ', input)
+        print("Initial input: ", input)
         input = conv(input)
-        print('Conv output: ', input)
+        print("Conv output: ", input)
 
         output = conv_tr(input)
-        print('Conv tr output: ', output)
+        print("Conv tr output: ", output)
 
         # Check backward
         fn = MinkowskiConvolutionTransposeFunction()
 
         self.assertTrue(
-            gradcheck(fn,
-                      (input.F, conv_tr.kernel, input.tensor_stride,
-                       conv_tr.stride, conv_tr.kernel_size, conv_tr.dilation,
-                       conv_tr.region_type_, conv_tr.region_offset_, False,
-                       input.coords_key, None, input.coords_man)))
-
-
-if __name__ == '__main__':
-    unittest.main()
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    conv_tr.kernel,
+                    input.tensor_stride,
+                    conv_tr.stride,
+                    conv_tr.kernel_size,
+                    conv_tr.dilation,
+                    conv_tr.region_type_,
+                    conv_tr.region_offset_,
+                    False,
+                    input.coords_key,
+                    None,
+                    input.coords_man,
+                ),
+            )
+        )
