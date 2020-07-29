@@ -24,6 +24,8 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
+#include "extern.hpp"
+
 #include <string>
 
 #include <torch/extension.h>
@@ -31,22 +33,16 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "extern.hpp"
-
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  // Constant function
-  m.def("is_cuda_available", &is_cuda_available);
-
   // Enums
-  py::enum_<minkowski::GPUMemoryAllocatorBackend::Type>(
-      m, "GPUMemoryAllocatorType")
+  py::enum_<minkowski::GPUMemoryAllocatorBackend::Type>(m, "GPUMemoryAllocator")
       .value("PYTORCH", minkowski::GPUMemoryAllocatorBackend::Type::PYTORCH)
       .value("CUDA", minkowski::GPUMemoryAllocatorBackend::Type::CUDA)
       .export_values();
 
-  py::enum_<minkowski::CoordinateMapBackend::Type>(m, "CoordinateMapType")
+  py::enum_<minkowski::CoordinateMapBackend::Type>(m, "CoordinateMap")
       .value("CPU", minkowski::CoordinateMapBackend::Type::CPU)
-      .value("CUDA", minkowski::CoordinateMapBackend::Type::CUDA)
+      .value("PYTORCH", minkowski::CoordinateMapBackend::Type::CUDA)
       .export_values();
 
   py::enum_<minkowski::RegionType::Type>(m, "RegionType")

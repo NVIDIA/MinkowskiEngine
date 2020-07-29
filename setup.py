@@ -60,6 +60,7 @@ import subprocess
 from sys import argv, platform
 from setuptools import setup
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
+from pathlib import Path
 
 from distutils.sysconfig import get_python_inc
 
@@ -86,10 +87,6 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-def run_command(*args):
-    subprocess.check_call(args)
-
-
 def _argparse(pattern, argv, is_flag=True):
     if is_flag:
         found = pattern in argv
@@ -108,9 +105,10 @@ def _argparse(pattern, argv, is_flag=True):
 
 # For cpu only build
 CPU_ONLY, argv = _argparse("--cpu_only", argv)
-CPU_ONLY = CPU_ONLY or not torch.cuda.is_available()
-KEEP_OBJS, argv = _argparse("--keep_objs", argv)
 FORCE_CUDA, argv = _argparse("--force_cuda", argv)
+CPU_ONLY = CPU_ONLY or not torch.cuda.is_available()
+if FORCE_CUDA:
+    CPU_ONLY = False
 
 # args with return value
 CUDA_HOME, argv = _argparse("--cuda_home", argv, False)
@@ -119,23 +117,15 @@ BLAS_INCLUDE_DIRS, argv = _argparse("--blas_include_dirs", argv, False)
 BLAS_LIBRARY_DIRS, argv = _argparse("--blas_library_dirs", argv, False)
 
 Extension = CUDAExtension
-compile_args = [
-    "make",
-    "-j%d" % min(os.cpu_count(), 12),  # parallel compilation
-    "PYTHON=" + sys.executable,  # curr python
-]
-
 extra_compile_args = ["-Wno-deprecated-declarations"]
 extra_link_args = []
-libraries = ["minkowski"]
+libraries = []
 
 # extra_compile_args+=['-g']  # Uncomment for debugging
-if CPU_ONLY and not FORCE_CUDA:
+if CPU_ONLY:
     print("--------------------------------")
     print("| WARNING: CPU_ONLY build set  |")
     print("--------------------------------")
-    compile_args += ["CPU_ONLY=1"]
-    extra_compile_args += ["-DCPU_ONLY"]
     Extension = CppExtension
 else:
     # system python installation
@@ -143,10 +133,6 @@ else:
 
 if not (CUDA_HOME is False):  # False when not set, str otherwise
     print(f"Using CUDA_HOME={CUDA_HOME}")
-    compile_args += [f"CUDA_HOME={CUDA_HOME}"]
-
-if KEEP_OBJS:
-    print("\nUsing built objects")
 
 BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise
@@ -180,15 +166,77 @@ else:
 
 print(f"\nUsing BLAS={BLAS}")
 
-compile_args += ["BLAS=" + BLAS]
+# The Ninja cannot compile the files that have the same name with different
+# extensions correctly and uses the nvcc/CXX based on the extension. Import a
+# .cpp file to the corresponding .cu file to force the nvcc compilation.
+SOURCE_SETS = {
+    "cpu": [
+        CppExtension,
+        ["math_functions.cpp", "coordinate_map_manager.cpp", "convolution_cpu.cpp"],
+        ["pybind/minkowski.cpp"],
+        ["-DCPU_ONLY"],
+    ],
+    "gpu": [
+        CUDAExtension,
+        [
+            "math_functions.cpp",
+            "coordinate_map_manager.cu",
+            "convolution_gpu.cu",
+            "coordinate_map_gpu.cu",
+            "convolution_kernel.cu",
+        ],
+        ["pybind/minkowski.cu"],
+        [],
+    ],
+}
+
+no_debug, argv = _argparse("--nodebug", argv)
+
+USE_NINJA = os.getenv("USE_NINJA") == "0"
+HERE = Path(os.path.dirname(__file__)).absolute()
+SRC_PATH = HERE / "src"
+CXX = os.environ["CXX"]
+
+if sys.platform == "win32":
+    vc_version = os.getenv("VCToolsVersion", "")
+    if vc_version.startswith("14.16."):
+        CXX_FLAGS = ["/sdl"]
+    else:
+        CXX_FLAGS = ["/sdl", "/permissive-"]
+else:
+    CXX_FLAGS = ["-fopenmp"]
 
 if "darwin" in platform:
-    extra_compile_args += ["-stdlib=libc++"]
+    CXX_FLAGS += ["-stdlib=libc++"]
 
-if not KEEP_OBJS:
-    run_command("make", "clean")
+NVCC_FLAGS = [f"-ccbin={CXX}", "--extended-lambda"]
 
-run_command(*compile_args)
+if not no_debug:
+    CXX_FLAGS += ["-g", "-DDEBUG"]
+    NVCC_FLAGS += ["-g", "-DDEBUG"]
+else:
+    CXX_FLAGS += ["-O3"]
+    NVCC_FLAGS += ["-O3"]
+
+test_target = "cpu" if CPU_ONLY else "gpu"
+
+Extension = SOURCE_SETS[test_target][0]
+SRC_FILES = SOURCE_SETS[test_target][1]
+BIND_FILES = SOURCE_SETS[test_target][2]
+ARGS = SOURCE_SETS[test_target][3]
+CXX_FLAGS += ARGS
+NVCC_FLAGS += ARGS
+
+ext_modules = [
+    Extension(
+        name="MinkowskiEngineBackend._C",
+        # ["type_test.cpp", "],
+        sources=[*[str(SRC_PATH / src_file) for src_file in SRC_FILES], *BIND_FILES],
+        extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS,},
+        # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
+        libraries=libraries,
+    ),
+]
 
 # Python interface
 setup(
@@ -197,16 +245,11 @@ setup(
     install_requires=["torch", "numpy"],
     packages=["MinkowskiEngine", "MinkowskiEngine.utils", "MinkowskiEngine.modules"],
     package_dir={"MinkowskiEngine": "./MinkowskiEngine"},
-    ext_modules=[
-        Extension(
-            name="MinkowskiEngineBackend",
-            include_dirs=[here, get_python_inc() + "/.."],
-            library_dirs=["objs"],
-            sources=["pybind/minkowski.cpp",],
-            libraries=libraries,
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
-        )
+    ext_modules=ext_modules,
+    include_dirs=[
+        str(SRC_PATH),
+        str(SRC_PATH / "3rdparty"),
+        # os.path.join(CUDA_HOME, "include"),
     ],
     cmdclass={"build_ext": BuildExtension},
     author="Christopher Choy",

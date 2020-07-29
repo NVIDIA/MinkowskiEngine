@@ -142,11 +142,12 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
 
   detail::insert_and_map_kernel<coordinate_type, size_type, index_type,
                                 map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
-      *m_map, const_coordinate_data(),
-      thrust::raw_pointer_cast(m_valid_map_index.data()),
-      // thrust::raw_pointer_cast(m_inverse_row_index.data()),
-      thrust::raw_pointer_cast(m_valid_row_index.data()),
-      thrust::raw_pointer_cast(success.data()), num_threads, m_coordinate_size);
+      *m_map, const_coordinate_data(),                    //
+      thrust::raw_pointer_cast(m_valid_map_index.data()), //
+      // thrust::raw_pointer_cast(m_inverse_row_index.data()), //
+      thrust::raw_pointer_cast(m_valid_row_index.data()), //
+      thrust::raw_pointer_cast(success.data()),           //
+      num_threads, m_coordinate_size);
   CUDA_CHECK(cudaStreamSynchronize(0));
 
   // Valid row index
@@ -166,8 +167,10 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
   m_size = number_of_valid;
   LOG_DEBUG("Number of successful insertion", m_size);
 
-  if (remap) {
-    // remap values
+  if (remap                   // When remapping
+      && number_of_valid != N // when the # of inserted items differ from the #
+                              // of successful insertions
+  ) {
     thrust::counting_iterator<uint32_t> count_begin{0};
     thrust::for_each(count_begin, count_begin + number_of_valid,
                      detail::update_value<coordinate_type, map_type>{
@@ -187,7 +190,7 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
 
     LOG_DEBUG("Remapping finished");
   }
-}
+} // namespace minkowski
 
 using return_vector_type = thrust::device_vector<default_types::index_type>;
 template <typename coordinate_type,
@@ -279,37 +282,45 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
           stride_map.coordinate_data()));
 
   thrust::device_vector<bool> success(N);
-  auto &stride_valid_index = stride_map.m_valid_row_index;
-  stride_valid_index.resize(N);
-  thrust::sequence(thrust::device, stride_valid_index.begin(),
-                   stride_valid_index.end());
+  auto &stride_valid_row_index = stride_map.m_valid_row_index;
+  auto &stride_valid_map_index = stride_map.m_valid_map_index;
+
+  stride_valid_row_index.resize(N); // row indices
+  stride_valid_map_index.resize(N); // map offset
 
   // Insert coordinates
   auto insert = detail::insert_coordinate<coordinate_type, map_type,
                                           index_type *>{
-      *stride_map.m_map,                                   // map
-      stride_map.const_coordinate_data(),                  // coordinates,
-      thrust::raw_pointer_cast(stride_valid_index.data()), // iter begin
+      *stride_map.m_map,                                       // map
+      stride_map.const_coordinate_data(),                      // coordinates,
+      thrust::raw_pointer_cast(stride_valid_row_index.data()), // valid row
+      thrust::raw_pointer_cast(stride_valid_map_index.data()), // iter offset
       m_coordinate_size};
   thrust::transform(count_begin, count_begin + N, success.begin(), insert);
 
   // Valid row index
   auto valid_begin = thrust::make_zip_iterator(
-      thrust::make_tuple(success.begin(), stride_valid_index.begin()));
+      thrust::make_tuple(success.begin(),                //
+                         stride_valid_row_index.begin(), //
+                         stride_valid_map_index.begin()));
   size_type const number_of_valid =
-      thrust::remove_if(thrust::device, valid_begin,
-                        thrust::make_zip_iterator(thrust::make_tuple(
-                            success.end(), stride_valid_index.end())),
+      thrust::remove_if(thrust::device, //
+                        valid_begin,    //
+                        thrust::make_zip_iterator(
+                            thrust::make_tuple(success.end(),                //
+                                               stride_valid_row_index.end(), //
+                                               stride_valid_map_index.end())),
                         detail::is_first<false>()) -
       valid_begin;
-  stride_valid_index.resize(number_of_valid);
+  stride_valid_row_index.resize(number_of_valid);
+  stride_valid_map_index.resize(number_of_valid);
   stride_map.m_size = number_of_valid;
 
   // remap values
   thrust::for_each(count_begin, count_begin + number_of_valid,
                    detail::update_value<coordinate_type, map_type>{
                        *stride_map.m_map, stride_map.const_coordinate_data(),
-                       thrust::raw_pointer_cast(stride_valid_index.data()),
+                       thrust::raw_pointer_cast(stride_valid_row_index.data()),
                        m_coordinate_size});
 
   return stride_map;
@@ -537,6 +548,52 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map(
   LOG_DEBUG("cudaFree");
 
   return kernel_map;
+}
+
+namespace detail {
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void copy_coordinates(map_type __restrict__ map,                  //
+                                 coordinate_type *__restrict__ coordinates,  //
+                                 index_type const *__restrict__ map_offsets, //
+                                 size_type const num_threads,                //
+                                 size_type const coordinate_size             //
+) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    typename map_type::value_type const *p_value = map.data() + map_offsets[x];
+    // Compute Capabilities 3.5 or newer
+    coordinate_type *dst_coordinate =
+        coordinates + p_value->second * coordinate_size;
+    for (index_type i = 0; i < coordinate_size; ++i)
+      dst_coordinate[i] = p_value->first[i];
+  }
+}
+
+} // namespace detail
+
+// Helper functions
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::copy_coordinates(
+    coordinate_type *dst_coordinate) const {
+
+  size_type const num_threads = size();
+  size_type const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
+
+  detail::copy_coordinates<coordinate_type, size_type, index_type, map_type>
+      <<<num_blocks, num_threads>>>(
+          *m_map,                                             //
+          dst_coordinate,                                     //
+          thrust::raw_pointer_cast(m_valid_map_index.data()), //
+          num_threads,                                        //
+          m_coordinate_size);
 }
 
 // Template instantiation

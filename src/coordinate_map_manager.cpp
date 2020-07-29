@@ -134,32 +134,6 @@ CoordsManager<MapType>::getCoordsKey(const vector<int> &tensor_strides) const {
 }
 
 template <typename MapType>
-void CoordsManager<MapType>::getCoords(at::Tensor coords,
-                                       py::object py_coords_key) const {
-  CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
-  const uint64_t coords_key = p_coords_key->getKey();
-
-  // initialize
-  const auto &coords_map_iter = coords_maps.find(coords_key);
-  ASSERT(coords_map_iter != coords_maps.end(),
-         "The coord map doesn't exist for the given coords_key: ",
-         to_string(coords_key), ".");
-  const CoordsMap<MapType> &coordmap = coords_map_iter->second;
-  int nrows = coordmap.nrows;
-  int ncols = coordmap.ncols;
-  coords.resize_({nrows, ncols});
-  int *p_coords = coords.data<int>();
-
-  // auto &curr_coords = coords_maps[coords_key].coords;
-  // copy(curr_coords.begin(), curr_coords.end(), p_coords);
-
-  // copy to the out coords
-  for (const auto &kv : coordmap) {
-    copy_n(kv.first.begin(), ncols, p_coords + kv.second * ncols);
-  }
-}
-
-template <typename MapType>
 void CoordsManager<MapType>::setOriginCoordsKey(py::object py_coords_key) {
   CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
   const int D = p_coords_key->getDimension();
@@ -1026,6 +1000,30 @@ CoordsManager<MapType>::getRowIndicesPerBatch(py::object py_in_coords_key,
   return out_inds;
 }
 */
+
+/* Helper functions */
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+at::Tensor
+CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
+    get_coordinates(CoordinateMapKey const *p_key) const {
+  ASSERT(exists(p_key), ERROR_MAP_NOT_FOUND);
+  auto const it = m_coordinate_maps.find(p_key->get_key());
+  ASSERT(it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
+  auto const &map = it->second;
+  auto const nrows = map.size();
+  auto const ncols = map.coordinate_size();
+
+  // CPU torch.IntTensor
+  at::Tensor coordinates = torch::empty(
+      {(long)nrows, (long)ncols}, torch::TensorOptions().dtype(torch::kInt));
+
+  // copy to the out coords
+  map.copy_coordinates(coordinates.template data_ptr<coordinate_type>());
+  return coordinates;
+}
 
 template class CoordinateMapManager<default_types::dcoordinate_type,
                                     std::allocator, CoordinateMapCPU>;

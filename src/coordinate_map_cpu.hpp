@@ -356,6 +356,25 @@ public:
     m_map.reserve(c);
   }
 
+  void copy_coordinates(coordinate_type *dst_coordinate) const {
+    size_t N = 2 * omp_get_max_threads();
+    const size_t stride = (size() + N - 1) / N;
+    N = (size() + stride - 1) / stride;
+    LOG_DEBUG("kernel map with", N, "chunks.");
+
+    // When no need to iterate through the region
+    // Put if outside the loop for speed
+#pragma omp parallel for
+    for (index_type n = 0; n < N; ++n) {
+      for (auto it = m_map.begin(stride * n);                      //
+           it.num_steps() < std::min(stride, size() - n * stride); //
+           ++it) {
+        std::copy_n(it->first.data(), m_coordinate_size,
+                    dst_coordinate + m_coordinate_size * it->second);
+      }
+    }
+  }
+
 private:
   std::pair<iterator, bool> insert(key_type const &key,
                                    mapped_type const &val) {

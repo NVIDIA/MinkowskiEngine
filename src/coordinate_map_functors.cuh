@@ -75,10 +75,10 @@ struct insert_coordinate {
    */
   insert_coordinate(map_type &map,                       // underlying map
                     coordinate_type const *p_coordinate, // key coordinate begin
-                    mapped_iterator value_iter,
+                    mapped_iterator row_iter, mapped_iterator map_iter,
                     uint32_t const coordinate_size) // coordinate size
       : m_coordinate_size{coordinate_size}, m_coordinates{p_coordinate},
-        m_value_iter{value_iter}, m_map{map} {}
+        m_row_iter{row_iter}, m_map_iter{map_iter}, m_map{map} {}
 
   /*
    * @brief insert a <coordinate, row index> pair into the unordered_map
@@ -89,16 +89,20 @@ struct insert_coordinate {
   __device__ bool operator()(uint32_t i) {
     auto coord =
         coordinate<coordinate_type>{&m_coordinates[i * m_coordinate_size]};
-    value_type pair = thrust::make_pair(coord, *(m_value_iter + i));
-    // m_map.insert(pair);
+    value_type pair = thrust::make_pair(coord, i);
     // Returns pair<iterator, (bool)insert_success>
     auto result = m_map.insert(pair);
+
+    m_row_iter[i] = i;
+    m_map_iter[i] = result.first.offset();
+
     return result.second;
   }
 
   size_t const m_coordinate_size;
   coordinate_type const *m_coordinates;
-  mapped_iterator m_value_iter;
+  mapped_iterator m_row_iter;
+  mapped_iterator m_map_iter;
   map_type m_map;
 };
 

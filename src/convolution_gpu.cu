@@ -34,6 +34,9 @@
 #include "convolution_kernel.cuh"
 #include "kernel_map.cuh"
 
+// Ninja
+#include "convolution_cpu.cpp"
+
 #include <pybind11/pybind11.h>
 #include <torch/extension.h>
 
