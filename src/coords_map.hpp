@@ -30,7 +30,8 @@
 #include <set>
 #include <tuple>
 
-#include "3rdparty/robin_hood.h"
+#include <robin_hood.h>
+
 #include "primitives/small_vector.hpp"
 
 #include "region.hpp"
@@ -44,55 +45,67 @@ using std::tuple;
 using std::vector;
 
 template <typename Itype> struct byte_hash_vec {
-  size_t operator()(vector<Itype> const &vec) const noexcept {
+  std::size_t operator()(vector<Itype> const &vec) const noexcept {
     return robin_hood::hash_bytes(vec.data(), sizeof(Itype) * vec.size());
   }
 };
 
 template <typename Itype>
-inline vector<int> stride_copy(const vector<Itype> &src,
-                               const vector<Itype> &tensor_strides) noexcept {
-  vector<Itype> dst(src.size());
-  const int size = tensor_strides.size();
+inline vector<Itype> stride_copy(const vector<Itype> &src,
+                                 const vector<Itype> &tensor_strides) noexcept {
+  vector<Itype> dst{src.size()};
+  const std::size_t size = tensor_strides.size();
 #ifdef BATCH_FIRST
-  const int b = 1;
+  constexpr int COORD_START = 1;
   dst[0] = src[0];
 #else
-  const int b = 0;
+  constexpr int COORD_START = 0;
   dst[size] = src[size];
 #endif
-
-  for (int i = 0; i < size; i++) {
-    dst[i + b] =
-        std::floor((float)src[i + b] / tensor_strides[i]) * tensor_strides[i];
+  for (std::size_t i = 0; i < size; i++) {
+    dst[i + COORD_START] =
+        std::floor((float)src[i + COORD_START] / tensor_strides[i]) *
+        tensor_strides[i];
   }
   return dst;
 }
 
-using CoordsMapVectorVType = small_vector<int, 4>;
-using CoordsToIndexMap =
-    robin_hood::unordered_flat_map<vector<int>, int, byte_hash_vec<int>>;
-using CoordsToVectorMap =
-    robin_hood::unordered_flat_map<vector<int>, CoordsMapVectorVType,
-                                   byte_hash_vec<int>>;
+// clang-format off
 
-template <typename MapType = CoordsToIndexMap> struct CoordsMap {
-  MapType map;
-  using key_type = typename MapType::key_type;
+// Coord specific types
+using coordinate_type      = int32_t;
+using CoordsMapVectorVType = small_vector<coordinate_type, 4>;
+using CoordsToIndexMap     = robin_hood::unordered_flat_map<vector<coordinate_type>,
+                                                            int32_t,
+                                                            byte_hash_vec<coordinate_type>>;
+using CoordsToVectorMap    = robin_hood::unordered_flat_map<vector<coordinate_type>,
+                                                            CoordsMapVectorVType,
+                                                            byte_hash_vec<coordinate_type>>;
+/*
+ * A wrapper for an unordered_map for coordinate management
+ *
+ * @note
+ */
+template <typename MapType = CoordsToIndexMap>
+struct CoordsMap {
+  using key_type   = typename MapType::key_type;
   using value_type = typename MapType::mapped_type;
-  int nrows, ncols;
+  using map_type   = typename MapType;
 
-  // Constructors
+  // Empty Constructors
   CoordsMap() {}
-  // batch indices must be arranged in ascending order for coordsmap.map
-  CoordsMap(int ncols_, const set<int> &batch_indices);
+  CoordsMap(std::size_t ncols_, set<int> const &batch_indices);
 
   // Initializations
-  vector<int> initialize(const int *p_coords_, const int nrows_,
-                         const int ncols_, const bool force_remap = false);
+  vector<int> initialize(coordinate_type const *p_coords_,
+                         std::size_t nrows_,
+                         std::size_t ncols_,
+                         bool force_remap = false);
 
   tuple<vector<int>, vector<int>, set<int>>
-  initialize_batch(const int *p_coords_, const int nrows_, const int ncols_,
+  initialize_batch(const int *p_coords_,
+                   const int nrows_,
+                   const int ncols_,
                    const bool force_remap = false,
                    const bool return_inverse = false);
 
@@ -122,24 +135,27 @@ template <typename MapType = CoordsToIndexMap> struct CoordsMap {
             const CoordsMap &out_map);
 
   // Iterators
-  typename MapType::iterator begin() { return map.begin(); }
-  typename MapType::const_iterator begin() const { return map.begin(); }
-  typename MapType::iterator end() { return map.end(); }
-  typename MapType::const_iterator end() const { return map.end(); }
-  typename MapType::iterator find(const vector<int> &key) {
-    return map.find(key);
-  }
-  typename MapType::const_iterator find(const vector<int> &key) const {
-    return map.find(key);
-  }
+  typename map_type::iterator begin() { return map.begin(); }
+  typename map_type::const_iterator begin() const { return map.begin(); }
 
-  size_t size() const { return map.size(); }
-  void reserve(size_t size) { map.reserve(size); }
+  typename map_type::iterator end() { return map.end(); }
+  typename map_type::const_iterator end() const { return map.end(); }
+
+  typename map_type::iterator find(key_type const &key) { return map.find(key); }
+  typename map_type::const_iterator find(key_type const &key) const { return map.find(key); }
+
+  std::size_t size() const { return map.size(); }
+  void reserve(std::size_t size) { map.reserve(size); }
 
   value_type &operator[](const vector<int> &coord) { return map[coord]; }
 
   void print() const;
+
+  // members
+  map_type map;
+  int nrows, ncols;
 };
+// clang-format on
 
 } // end namespace minkowski
 

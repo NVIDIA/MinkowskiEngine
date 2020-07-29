@@ -26,7 +26,7 @@
 #include <numeric>
 #include <omp.h>
 
-#include "coordsmap.hpp"
+#include "coords_map.hpp"
 
 namespace minkowski {
 
@@ -302,8 +302,10 @@ vector<int> CoordsMap<MapType>::initialize(const int *p_coords,
 
 template <typename MapType>
 tuple<vector<int>, vector<int>, set<int>>
-CoordsMap<MapType>::initialize_batch(const int *p_coords, const int nrows_,
-                                     const int ncols_, const bool force_remap,
+CoordsMap<MapType>::initialize_batch(const int *p_coords,
+                                     const int nrows_,
+                                     const int ncols_,
+                                     const bool force_remap,
                                      const bool return_inverse) {
   nrows = nrows_;
   ncols = ncols_;
