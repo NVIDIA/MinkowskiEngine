@@ -121,7 +121,6 @@ if __name__ == '__main__':
     # Measure time
     with torch.no_grad():
         voxel_size = 0.02
-
         # Feed-forward pass and get the prediction
         sinput = ME.SparseTensor(
             features=torch.from_numpy(colors).float().to(device),

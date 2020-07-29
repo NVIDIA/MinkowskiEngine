@@ -24,6 +24,8 @@
 # of the code.
 import torch
 import unittest
+import time
+import numpy as np
 
 import MinkowskiEngineBackend._C as _C
 
@@ -35,7 +37,7 @@ from MinkowskiEngine import (
     MinkowskiConvolutionTransposeFunction,
 )
 
-from tests.python.common import data_loader
+from tests.python.common import data_loader, load_file, batched_coordinates
 from utils.gradcheck import gradcheck
 
 
@@ -224,3 +226,52 @@ class TestConvolutionTranspose(unittest.TestCase):
                 ),
             )
         )
+
+
+class TestPCD(unittest.TestCase):
+    def test_conv(self):
+        IC, OC = 3, 16
+        coords, colors, pcd = load_file("1.ply")
+        kernel_size = [3, 3, 3]
+        kernel_stride = [2, 2, 2]
+        kernel_dilation = [1, 1, 1]
+
+        # size, in, out
+        kernel = torch.rand(np.prod(kernel_size), IC, OC).to(0)
+
+        for batch_size in [1, 5, 10, 20, 40]:
+            for voxel_size in [0.05, 0.035, 0.02]:
+                min_time = 100000
+
+                dcoords = torch.from_numpy(np.floor(coords / voxel_size)).int()
+                bcoords = batched_coordinates([dcoords for i in range(batch_size)])
+
+                for i in range(10):
+                    manager = _C.CoordinateMapManagerGPU_c10()
+
+                    # batch insert
+                    in_key, (unique_map, inverse_map) = manager.insert_and_map(
+                        bcoords.to(0), [1, 1, 1], ""
+                    )
+                    in_feats = torch.rand(manager.size(in_key), IC).to(0)
+                    out_key = _C.CoordinateMapKey(4)
+
+                    stime = time.time()
+                    out_features = _C.ConvolutionForwardGPU(
+                        in_feats,
+                        kernel,
+                        kernel_size,
+                        kernel_stride,
+                        kernel_dilation,
+                        _C.RegionType.HYPER_CUBE,
+                        torch.IntTensor(),
+                        in_key,
+                        out_key,
+                        manager,
+                    )
+                    min_time = min(time.time() - stime, min_time)
+                    import ipdb; ipdb.set_trace()
+
+                print(
+                    f"{batch_size}\t{manager.size(in_key)}\t{manager.size(out_key)}\t{min_time}"
+                )

@@ -187,8 +187,6 @@ public:
       detail::stride_coordinate<coordinate_type>(kv.first, dst,
                                                  stride_map.m_tensor_stride);
       auto result = stride_map.insert(strided_coordinate, c);
-      LOG_DEBUG("Adding coordinate", dst, ":", c,
-                "success:", (int)result.second);
       c += result.second;
     }
 

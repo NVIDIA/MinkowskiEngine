@@ -400,7 +400,8 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
                       region_type, is_transpose, is_pool);
 
   const auto &kernel_map_iter = m_kernel_maps.find(kernel_map_key);
-  LOG_DEBUG("kernel map key set");
+  LOG_DEBUG("set kernel map key for kernel map:", p_in_map_key->get_key(), "->",
+            p_out_map_key->get_key());
 
   if (kernel_map_iter == m_kernel_maps.end()) {
     // create a kernel map if it exists
@@ -416,7 +417,8 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
 
     auto const D = in_map.coordinate_size();
     LOG_DEBUG("coordinate_size:", D,
-              "tensor_stride:", in_map.get_tensor_stride());
+              "in tensor_stride:", in_map.get_tensor_stride(),
+              "out tensor_stride:", out_map.get_tensor_stride());
 
     // +1 for batch index
     ASSERT(kernel_dim + 1 == in_map.coordinate_size(), "kernel size mismatch");
@@ -464,10 +466,12 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
       // Check if the temporary key exists and return swapped in/out
       if (m_kernel_maps.find(swapped_kernel_map_key) != m_kernel_maps.end()) {
         // copy the in out maps from the existing maps
+        LOG_DEBUG("found existing kernel_map_key for transposed kernel map");
         m_kernel_maps[kernel_map_key] =
             detail::swap_in_out_map_functor<kernel_map_type>()(
                 m_kernel_maps[swapped_kernel_map_key]);
       } else { // create in out kernel if it doesn't exist
+        LOG_DEBUG("No existing kernel_map_key for transposed kernel map");
         if (is_pool && kernel_stride == kernel_size) {
           // e.g. out_map has tensor stride 2 in_map has tensor stride 4.
           // Thus, create a stride map from 2 to 4, out to in.

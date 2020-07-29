@@ -279,11 +279,11 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
-        if self.use_mm and coords is None:
+        if self.use_mm and coordinates is None:
             # If the kernel_size == 1, the convolution is simply a matrix
             # multiplication
             outfeat = input.F.mm(self.kernel)
-            out_coordinate_map_key = input.coords_key
+            out_coordinate_map_key = input.coordinate_map_key
         else:
             # Get a new coordinate_map_key or extract one from the coords
             out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)

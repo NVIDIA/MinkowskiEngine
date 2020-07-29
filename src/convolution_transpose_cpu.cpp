@@ -105,7 +105,8 @@ at::Tensor ConvolutionTransposeForwardCPU(
   auto const out_nrows = p_map_manager->size(p_out_map_key->get_key());
   at::Tensor out_feat =
       torch::zeros({out_nrows, kernel.size(2)}, in_feat.options());
-  LOG_DEBUG("Allocated", out_nrows, "x", kernel.size(2), "out_features.");
+  LOG_DEBUG("In feat:", in_feat.size(0), "x", in_feat.size(1), "-> out feat",
+            out_feat.size(0), "x", out_feat.size(1));
 
   AT_DISPATCH_FLOATING_TYPES(
       in_feat.scalar_type(), "convolution_transpose_forward_cpu", [&] {

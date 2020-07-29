@@ -153,7 +153,7 @@ at::Tensor region_iterator_test(const torch::Tensor &coordinates,
   return out_coordinates;
 }
 
-std::tuple<cpu_kernel_map, size_type, double>
+std::tuple<std::pair<cpu_in_maps, cpu_out_maps>, size_type, double>
 kernel_map_test(const torch::Tensor &in_coordinates,
                 const torch::Tensor &out_coordinates,
                 const torch::Tensor &kernel_size,
@@ -195,13 +195,13 @@ kernel_map_test(const torch::Tensor &in_coordinates,
   CoordinateMapGPU<coordinate_type> out_map{N_out, D, occupancy};
 
   auto in_coordinate_range = coordinate_range<coordinate_type>(N_in, D, ptr_in);
-  in_map.insert(in_coordinate_range.begin(), // key begin
-                in_coordinate_range.end());  // key end
+  in_map.insert<false>(in_coordinate_range.begin(), // key begin
+                       in_coordinate_range.end());  // key end
 
   auto out_coordinate_range =
       coordinate_range<coordinate_type>(N_out, D, ptr_out);
-  out_map.insert(out_coordinate_range.begin(), // key begin
-                 out_coordinate_range.end());  // key end
+  out_map.insert<false>(out_coordinate_range.begin(), // key begin
+                        out_coordinate_range.end());  // key end
 
   LOG_DEBUG("coordinate initialization");
 
@@ -226,7 +226,8 @@ kernel_map_test(const torch::Tensor &in_coordinates,
 
   timer t;
   t.tic();
-  auto kernel_map = in_map.kernel_map(out_map, gpu_region, thread_dim);
+  auto kernel_map = in_map.kernel_map(
+      out_map, gpu_region, CUDAKernelMapMode::SPEED_OPTIMIZED, thread_dim);
   double k_time = t.toc();
 
   const auto volume = region.volume();

@@ -23,11 +23,14 @@
 # of the code.
 import torch
 from torch.nn.modules import Module
-from SparseTensor import SparseTensor, COORDS_MAN_DIFFERENT_ERROR, COORDS_KEY_DIFFERENT_ERROR
+from MinkowskiSparseTensor import (
+    SparseTensor,
+    COORDINATE_MANAGER_DIFFERENT_ERROR,
+    COORDINATE_KEY_DIFFERENT_ERROR,
+)
 
 
 class MinkowskiLinear(Module):
-
     def __init__(self, in_features, out_features, bias=True):
         super(MinkowskiLinear, self).__init__()
         self.linear = torch.nn.Linear(in_features, out_features, bias=bias)
@@ -36,13 +39,16 @@ class MinkowskiLinear(Module):
         output = self.linear(input.F)
         return SparseTensor(
             output,
-            coords_key=input.coords_key,
-            coords_manager=input.coords_man)
+            coordinate_map_key=input.coordinate_map_key,
+            coordinate_manager=input.coordinate_manager,
+        )
 
     def __repr__(self):
-        s = '(in_features={}, out_features={}, bias={})'.format(
-            self.linear.in_features, self.linear.out_features,
-            self.linear.bias is not None)
+        s = "(in_features={}, out_features={}, bias={})".format(
+            self.linear.in_features,
+            self.linear.out_features,
+            self.linear.bias is not None,
+        )
         return self.__class__.__name__ + s
 
 
@@ -58,22 +64,30 @@ def cat(*sparse_tensors):
 
        >>> import MinkowskiEngine as ME
        >>> sin = ME.SparseTensor(feats, coords)
-       >>> sin2 = ME.SparseTensor(feats2, coords_key=sin.coords_key, coords_man=sin.coords_man)
+       >>> sin2 = ME.SparseTensor(feats2, coordinate_map_key=sin.coordinate_map_key, coords_man=sin.coordinate_manager)
        >>> sout = UNet(sin)  # Returns an output sparse tensor on the same coordinates
        >>> sout2 = ME.cat(sin, sin2, sout)  # Can concatenate multiple sparse tensors
 
     """
     for s in sparse_tensors:
         assert isinstance(s, SparseTensor), "Inputs must be sparse tensors."
-    coords_man = sparse_tensors[0].coords_man
-    coords_key = sparse_tensors[0].coords_key
+    coordinate_manager = sparse_tensors[0].coordinate_manager
+    coordinate_map_key = sparse_tensors[0].coordinate_map_key
     for s in sparse_tensors:
-        assert coords_man == s.coords_man, COORDS_MAN_DIFFERENT_ERROR
-        assert coords_key == s.coords_key, COORDS_KEY_DIFFERENT_ERROR
+        assert (
+            coordinate_manager == s.coordinate_manager
+        ), COORDINATE_MANAGER_DIFFERENT_ERROR
+        assert coordinate_map_key == s.coordinate_map_key, (
+            COORDINATE_KEY_DIFFERENT_ERROR
+            + str(coordinate_map_key)
+            + " != "
+            + str(s.coordinate_map_key)
+        )
     tens = []
     for s in sparse_tensors:
         tens.append(s.F)
     return SparseTensor(
         torch.cat(tens, dim=1),
-        coords_key=sparse_tensors[0].coords_key,
-        coords_manager=coords_man)
+        coordinate_map_key=coordinate_map_key,
+        coordinate_manager=coordinate_manager,
+    )
