@@ -254,7 +254,7 @@ class SparseTensor():
             assert isinstance(coords, torch.Tensor), \
                 "Coordinate must be of type torch.Tensor"
 
-            if not isinstance(coords, torch.IntTensor):
+            if not isinstance(coords, (torch.IntTensor, torch.cuda.IntTensor)):
                 warnings.warn(
                     'Coords implicitly converted to torch.IntTensor. ' +
                     'To remove this warning, use `.int()` to convert the ' +

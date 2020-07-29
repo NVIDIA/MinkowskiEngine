@@ -1,4 +1,5 @@
-/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/* Copyright (c) 2020 NVIDIA CORPORATION.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,42 +23,43 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
-#ifndef ROBIN_COORDSMAP
-#define ROBIN_COORDSMAP
+#ifndef COORDINATE_MAP_HPP
+#define COORDINATE_MAP_HPP
+
+#include "coordinate.hpp"
+#include "coordinate_unordered_map.hpp"
+#include "region.hpp"
+#include "types.hpp"
 
 #include <cmath>
+#include <functional>
 #include <memory>
 #include <set>
 #include <tuple>
+#include <vector>
 
 #include <robin_hood.h>
-
-#include "coordinate.hpp"
-#include "region.hpp"
-#include "types.hpp"
 
 namespace minkowski {
 
 namespace detail {
 
+/*
 template <typename Itype> struct byte_hash_vec {
   std::size_t operator()(std::vector<Itype> const &vec) const noexcept {
     return robin_hood::hash_bytes(vec.data(), sizeof(Itype) * vec.size());
   }
 };
+*/
 
 template <typename Itype>
-inline vector<Itype> stride_copy(const vector<Itype> &src,
-                                 const vector<Itype> &tensor_strides) noexcept {
+inline std::vector<Itype>
+stride_copy(const vector<Itype> &src,
+            const vector<Itype> &tensor_strides) noexcept {
   vector<Itype> dst{src.size()};
   const std::size_t size = tensor_strides.size();
-#ifdef BATCH_FIRST
   constexpr int COORD_START = 1;
   dst[0] = src[0];
-#else
-  constexpr int COORD_START = 0;
-  dst[size] = src[size];
-#endif
   for (std::size_t i = 0; i < size; i++) {
     dst[i + COORD_START] =
         std::floor((float)src[i + COORD_START] / tensor_strides[i]) *
@@ -68,49 +70,62 @@ inline vector<Itype> stride_copy(const vector<Itype> &src,
 
 } // namespace detail
 
-// Coord specific types
-template <typename coordinate_type>
-using CoordinateUnorderedMap = robin_hood::unordered_flat_map<coordinate<coordinate_type>,
-      default_types::index_type,
-      detail::byte_hash_vec<default_types::coordinate_type>>;
 /*
- * A wrapper for an unordered_map for coordinate management
+ * @brief A wrapper for a coordinate map.
  *
  * @note
  */
 template <typename coordinate_type,
           typename MapType = CoordinateUnorderedMap<coordinate_type>,
-          typename Allocator = std::allocator<coordinate_type>>
+          typename CoordinateAllocator = std::allocator<coordinate_type>>
 class CoordinateMap {
 
 public:
   // clang-format off
-  using key_type       = typename MapType::key_type;
-  using value_type     = typename MapType::mapped_type;
-  using map_type       = typename MapType;
-  using allocator_type = typename Allocator;
-  using size_type      = default_types::size_type;
+  using key_type          = typename MapType::key_type;
+  using mapped_type       = typename MapType::mapped_type;
+  using value_type        = typename MapType::value_type;
+  using map_type          = MapType;
+  using allocator_type    = CoordinateAllocator;
+  using index_type        = default_types::index_type;
+  using size_type         = default_types::size_type;
+  using Self              = CoordinateMap<coordinate_type, map_type, allocator_type>;
+
+  // return types
+  using index_vector_type = std::vector<default_types::index_type>;
+  using index_set_type    = std::set<default_types::index_type>;
+  using iterator          = typename map_type::iterator;
+  using const_iterator    = typename map_type::const_iterator;
   // clang-format on
 
-  // Empty Constructors
-  CoordsMap() {}
+  // Constructors
+  CoordinateMap(size_type const number_of_coordinates,
+                size_type const coordinate_size)
+      : m_map(MapType{number_of_coordinates, coordinate_size}),
+        m_coordinate_size(coordinate_size), m_capacity(0) {
+    allocate(number_of_coordinates, m_coordinate_size);
+  }
 
-  // Initializations
-  //
+  /*
   // returns: unique_index, reverse_index, batch indices
-  tuple<vector<int>, vector<int>, set<int>>
-  initialize_batch(const int *p_coords_, const int nrows_, const int ncols_,
-                   const bool force_remap = false,
-                   const bool return_inverse = false);
+  std::tuple<index_vector_type, index_vector_type, index_set_type>
+  initialize(coordinate_type const *const p_coodinates, //
+             size_type const num_coordinates,           //
+             size_type const coordinate_size,           //
+             bool const force_remap = false,            //
+             bool const return_inverse = false);
 
   // Generate strided version of the input coordinate map.
   // returns mapping: out_coord row index to in_coord row index
-  CoordsMap<MapType> stride(const vector<int> &tensor_strides) const;
-  CoordsMap<MapType> stride_region(const Region &region) const;
-  CoordsMap<MapType> prune(const bool *p_keep, int n) const;
-
+  CoordinateMap<MapType>
+  stride(default_types::stride_type const &tensor_strides) const;
+  CoordinateMap<MapType> stride_region(Region const &region) const;
+  CoordinateMap<MapType> prune(bool const *p_keep,
+                               size_type num_keep_coordinates) const;
+  */
+  /*
   // class method
-  static CoordsMap<MapType>
+  static CoordinateMap<MapType>
   union_coords(const vector<reference_wrapper<CoordsMap<MapType>>> &maps);
 
   // Generate in-out kernel maps
@@ -128,34 +143,57 @@ public:
   union_map(const vector<reference_wrapper<CoordsMap>> &in_maps,
             const CoordsMap &out_map);
 
+  */
   // Iterators
-  typename map_type::iterator begin() { return map.begin(); }
-  typename map_type::const_iterator begin() const { return map.begin(); }
+  iterator begin() { return m_map.begin(); }
+  const_iterator begin() const { return m_map.begin(); }
 
-  typename map_type::iterator end() { return map.end(); }
-  typename map_type::const_iterator end() const { return map.end(); }
+  iterator end() { return m_map.end(); }
+  const_iterator end() const { return m_map.end(); }
 
-  typename map_type::iterator find(key_type const &key) {
-    return map.find(key);
+  iterator find(key_type const &key) { return m_map.find(key); }
+  const_iterator find(key_type const &key) const { return m_map.find(key); }
+
+  size_type size() const { return m_map.size(); }
+
+  void reserve(size_type size) {
+    if (m_capacity < size) {
+      allocate(size, m_coordinate_size);
+      m_map.reserve(size);
+    }
   }
-  typename map_type::const_iterator find(key_type const &key) const {
-    return map.find(key);
-  }
-
-  std::size_t size() const { return map.size(); }
-  void reserve(std::size_t size) { map.reserve(size); }
-
-  value_type &operator[](const vector<int> &coord) { return map[coord]; }
 
   void print() const;
 
-private:
+  std::string to_string() const;
+
+  size_type capacity() const { return m_capacity; }
+
+protected:
+  // clang-format off
+  void allocate(size_type const number_of_coordinates, size_type const coordinate_size) {
+    auto const size = number_of_coordinates * coordinate_size;
+    coordinate_type *ptr = m_allocator.allocate(size);
+
+    auto deleter = [](coordinate_type *p, CoordinateMap::allocator_type alloc, CoordinateMap::size_type size) {
+      alloc.deallocate(p, size);
+    };
+
+    m_coordinates = std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>>{
+        ptr, std::bind(deleter, std::placeholders::_1, m_allocator, size)};
+    m_capacity = number_of_coordinates;
+  }
+
   // members
   allocator_type m_allocator;
-  map_type *m_map;
-  size_type m_number_of_coordinates, m_coordinate_size;
+  map_type m_map;
+  std::unique_ptr<coordinate_type[], std::function<void(coordinate_type *)>> m_coordinates;
+  size_type m_number_of_coordinates;
+  size_type m_coordinate_size;
+  size_type m_capacity;
+  // clang-format on
 };
 
 } // end namespace minkowski
 
-#endif // robin coordsmap
+#endif // COORDINATE_MAP_HPP

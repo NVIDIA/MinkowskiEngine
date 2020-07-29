@@ -41,9 +41,23 @@ def _argparse(pattern, argv, is_flag=True):
 
 
 SOURCE_SETS = {
-    "coordinate_map_key": [["coordinate_map_key_test.cpp"], ["coordinate_map_key.cpp"]],
-    "coordinate": [["coordinate_test.cpp"], []],
-    "type": [["type_test.cpp"], []],
+    "coordinate_map_key": [
+        CppExtension,
+        ["coordinate_map_key_test.cpp"],
+        ["coordinate_map_key.cpp"],
+    ],
+    "concurrent_coordinate_map": [
+        CUDAExtension,
+        ["concurrent_coordinate_map_test.cpp"],
+        ["concurrent_coordinate_map.cu"],
+    ],
+    "coordinate_map_cpu": [
+        CppExtension,
+        ["coordinate_map_cpu_test.cpp"],
+        [],
+    ],
+    "coordinate": [CppExtension, ["coordinate_test.cpp"], []],
+    "type": [CppExtension, ["type_test.cpp"], []],
 }
 
 test_target, argv = _argparse("--test", argv, False)
@@ -55,17 +69,18 @@ SRC_PATH = HERE.parent.parent / "src"
 OBJ_DIR = HERE / "objs"
 ME_OBJ_DIR = OBJ_DIR / "ME"
 
-CURR_TEST_FILES = SOURCE_SETS[test_target]
+CURR_TEST_FILES = SOURCE_SETS[test_target][1:]
+Extension = SOURCE_SETS[test_target][0]
 
 ext_modules = [
-    CppExtension(
+    Extension(
         name="MinkowskiEngineTest._C",
         # ["type_test.cpp", "],
         sources=[
             *[str(HERE / test_file) for test_file in CURR_TEST_FILES[0]],
             *[str(SRC_PATH / src_file) for src_file in CURR_TEST_FILES[1]],
         ],
-        extra_compile_args=CXX_FLAGS,
+        extra_compile_args={"cxx": CXX_FLAGS, "nvcc": ["-O2"]},
         # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
         # libraries=["coordinate_map_key"],
     ),

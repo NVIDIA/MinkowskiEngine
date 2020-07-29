@@ -24,8 +24,11 @@
  */
 #ifndef UTILS
 #define UTILS
-#include <vector>
+#include <algorithm>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 
 template <typename T>
 std::ostream &operator<<(std::ostream &out, const std::vector<T> &v) {
@@ -132,5 +135,71 @@ private:
 #define MINK_CUDA_HOST_DEVICE
 #define MINK_CUDA_DEVICE
 #endif
+
+#ifdef DEBUG
+#define COLOR "\033[31;1m"
+#define RESET "\033[0m"
+#define __DEBUG(msg, ...) fprintf(stderr, COLOR msg "%c" RESET, __VA_ARGS__);
+#define LOG_DEBUG(...) __DEBUG(__VA_ARGS__, '\n')
+#else
+#define LOG_DEBUG(...) (void)0
+#endif
+
+class simple_range {
+  using index_type = uint32_t;
+
+public:
+  // member typedefs provided through inheriting from std::iterator
+  class iterator
+      : public std::iterator<std::input_iterator_tag, // iterator_category
+                             index_type,              // value_type
+                             index_type,              // difference_type
+                             const index_type *,      // pointer
+                             index_type               // reference
+                             > {
+    // custom iterator members
+    index_type m_num;
+
+  public:
+    explicit iterator(index_type _num = 0) : m_num(_num) {}
+    iterator &operator++() {
+      m_num++;
+      return *this;
+    }
+    iterator operator++(int) {
+      iterator retval = *this;
+      ++(*this);
+      return retval;
+    }
+    bool operator==(iterator &other) const { return m_num == other.m_num; }
+    bool operator!=(iterator &other) const { return !(*this == other); }
+    bool operator!=(iterator &&other) const { return !(*this == other); }
+    reference operator*() const { return m_num; }
+  };
+
+  simple_range(index_type from, index_type to) : m_from(from), m_to(to) {
+    ASSERT(m_to > m_from, "Invalid range");
+  }
+  simple_range(index_type to) : m_from(0), m_to(to) {
+    ASSERT(m_to > m_from, "Invalid range");
+  }
+  simple_range(simple_range const &) = delete;
+  simple_range(simple_range &&other) : m_from(other.m_from), m_to(other.m_to) {}
+
+  std::string to_string() {
+    Formatter formatter;
+    formatter << "Range: " << m_from << " -- " << m_to << "\n";
+    return formatter.str();
+  }
+
+  iterator begin() {
+    return iterator(m_from);
+  }
+  iterator end() {
+    return iterator(m_to);
+  }
+
+  index_type const m_from, m_to;
+};
 
 #endif // UTILS

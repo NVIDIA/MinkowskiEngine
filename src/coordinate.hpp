@@ -32,7 +32,7 @@ namespace minkowski {
 // The size of a coordinate is defined in the equality functor, and the hash
 // functor.
 template <typename coordinate_type> struct coordinate {
-  coordinate() {}
+  MINK_CUDA_HOST_DEVICE inline coordinate() {}
   MINK_CUDA_HOST_DEVICE inline coordinate(coordinate_type const *_ptr)
       : ptr{_ptr} {}
 
@@ -44,10 +44,30 @@ template <typename coordinate_type> struct coordinate {
   coordinate_type const *ptr;
 };
 
+template <typename T> struct coordinate_print_functor {
+  inline coordinate_print_functor(size_t _coordinate_size)
+      : m_coordinate_size(_coordinate_size) {}
+
+  std::string operator()(coordinate<T> const &v) {
+    Formatter out;
+    auto actual_delim = ", ";
+    auto delim = "";
+    out << '[';
+    for (auto i = 0; i < m_coordinate_size; ++i) {
+      out << delim << v[i];
+      delim = actual_delim;
+    }
+    out << "]";
+    return out;
+  }
+
+  size_t const m_coordinate_size;
+};
+
 namespace detail {
 
 template <typename coordinate_type> struct coordinate_equal_to {
-  coordinate_equal_to(size_t _coordinate_size)
+  MINK_CUDA_HOST_DEVICE inline coordinate_equal_to(size_t _coordinate_size)
       : coordinate_size(_coordinate_size) {}
   MINK_CUDA_HOST_DEVICE inline bool
   operator()(coordinate<coordinate_type> const &lhs,

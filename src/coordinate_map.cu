@@ -20,11 +20,31 @@
  * IN THE SOFTWARE.
  */
 
-#include "coords_map.cuh"
+#include "concurrent_coordinate_map.cuh"
+#include "coordinate_map.hpp"
 
 #include <thrust/device_vector.h>
 
 namespace minkowski {
+
+template <typename coordinate_type, typename CoordinateAllocator>
+void CoordinateMap<coordinate_type, ConcurrentCoordinateUnorderedMap<coordinate_type, CoordinateAllocator>>::allocate(
+    CoordinateMap::size_type const number_of_coordinates,
+    CoordinateMap::size_type const coordinate_size) {
+  auto const size = number_of_coordinates * coordinate_size;
+  coordinate_type* ptr = m_allocator.allocate(size);
+
+  auto deleter = [](coordinate_type *p, CoordinateMap::allocator_type alloc,
+                    CoordinateMap::size_type size) {
+    alloc.deallocate(p, size);
+  };
+
+  m_coordinates = std::unique_ptr<coordinate_type[],
+                                  std::function<void(coordinate_type *)>>{
+      ptr, std::bind(deleter, std::placeholders::_1, m_allocator, size)};
+  m_capacity = number_of_coordinates;
+}
+
 
 template <>
 CoordsMap<ConcurrentCoordsToIndexMap>::initialize(
