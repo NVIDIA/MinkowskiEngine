@@ -33,6 +33,8 @@
 
 namespace minkowski {
 
+using std::vector;
+
 class Region;
 class RegionIterator {
 private:
