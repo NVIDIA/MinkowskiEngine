@@ -146,6 +146,7 @@ at::Tensor ConvolutionTransposeForwardGPU(
 
   return out_feat;
 }
+
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(

@@ -83,56 +83,6 @@ struct coordinate_map_key_hasher {
 };
 */
 
-struct coordinate_map_key_comparator {
-  bool operator()(coordinate_map_key_type const &lhs,
-                  coordinate_map_key_type const &rhs) const {
-    auto vec_less = lhs.first < rhs.first;
-    if (!vec_less && (lhs.first == rhs.first)) {
-      return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(),
-                                          rhs.second.begin(), rhs.second.end());
-    }
-    return vec_less;
-  }
-};
-
-struct kernel_map_key_comparator {
-  using stride_type = default_types::stride_type;
-
-  bool operator()(kernel_map_key_type const &lhs,
-                  kernel_map_key_type const &rhs) {
-    coordinate_map_key_type const &lin_map_key = std::get<0>(lhs);
-    coordinate_map_key_type const &lout_map_key = std::get<1>(lhs);
-    stride_type const &lkernel_size = std::get<2>(lhs);
-    // stride_type const &lkernel_stride = std::get<3>(lhs);
-    stride_type const &lkernel_dilation = std::get<3>(lhs);
-    // RegionType::Type const &lregion_type = std::get<4>(lhs);
-    // bool const &lis_transpose = std::get<5>(lhs);
-    // bool const &lis_pool = std::get<6>(lhs);
-
-    coordinate_map_key_type const &rin_map_key = std::get<0>(rhs);
-    coordinate_map_key_type const &rout_map_key = std::get<1>(rhs);
-    stride_type const &rkernel_size = std::get<2>(rhs);
-    // stride_type const &rkernel_stride = std::get<3>(rhs);
-    stride_type const &rkernel_dilation = std::get<3>(rhs);
-    // RegionType::Type const &rregion_type = std::get<4>(rhs);
-    // bool const &ris_transpose = std::get<5>(rhs);
-    // bool const &ris_pool = std::get<6>(rhs);
-
-    bool const map_less =
-        coordinate_map_key_comparator()(lin_map_key, rin_map_key);
-    if (!map_less && lin_map_key == rin_map_key) {
-      bool const kernel_size_less = lkernel_size < rkernel_size;
-      if (!kernel_size_less && lkernel_size == rkernel_size) {
-        return lkernel_dilation < rkernel_dilation;
-      } else {
-        return kernel_size_less;
-      }
-    } else {
-      return map_less;
-    }
-  }
-};
-
 } // namespace detail
 
 /*
@@ -179,7 +129,7 @@ public:
   using self_type = CoordinateMapManager<coordinate_type, TemplatedAllocator,
                                          CoordinateMapType>;
   using map_collection_type = std::map<coordinate_map_key_type, map_type,
-                                       detail::coordinate_map_key_comparator>;
+                                       coordinate_map_key_comparator>;
   using kernel_map_type =
 #ifndef CPU_ONLY
       typename std::conditional<
@@ -547,13 +497,12 @@ private:
   // NOTE: operator[] required mapped_type(), which is not defined.
   //
   // CoordinateMapManager owns the coordinate maps
-  std::map<coordinate_map_key_type, map_type,
-           detail::coordinate_map_key_comparator>
+  std::map<coordinate_map_key_type, map_type, coordinate_map_key_comparator>
       m_coordinate_maps;
 
   // CoordinateMapManager owns the tensors
-  std::map<kernel_map_key_type, kernel_map_type,
-           detail::kernel_map_key_comparator>
+  std::unordered_map<kernel_map_key_type, kernel_map_type,
+                     kernel_map_key_hasher<coordinate_map_key_hasher>>
       m_kernel_maps;
 
 #ifndef CPU_ONLY
