@@ -1,4 +1,6 @@
-/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/*
+ * Copyright (c) 2020 NVIDIA Corporation.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -189,6 +191,14 @@ at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
                                          int mode);
 */
 
+#ifndef CPU_ONLY
+template <typename th_int_type>
+torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
+                       torch::Tensor const &vals, int64_t const dim_i,
+                       int64_t const dim_j, torch::Tensor const &mat2,
+                       int64_t spmm_algorithm_id);
+#endif
+
 } // end namespace minkowski
 
 namespace py = pybind11;
@@ -354,12 +364,15 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::ConvolutionTransposeBackwardGPU<coordinate_type,
                                                     TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
-
-  // m.def("coo_spmm_int32", &coo_spmm<int32_t>,
-  //       py::call_guard<py::gil_scoped_release>());
-  // m.def("coo_spmm_int64", &coo_spmm<int64_t>,
-  //       py::call_guard<py::gil_scoped_release>());
 }
+
+void non_templated_gpu_func(py::module &m) {
+  m.def("coo_spmm_int32", &minkowski::coo_spmm<int32_t>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def("coo_spmm_int64", &minkowski::coo_spmm<int64_t>,
+        py::call_guard<py::gil_scoped_release>());
+}
+
 #endif
 
 void initialize_non_templated_classes(py::module &m) {

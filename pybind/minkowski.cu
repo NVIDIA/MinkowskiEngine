@@ -59,5 +59,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   instantiate_gpu_func<int32_t, minkowski::detail::c10_allocator>(
       m, std::string(""));
+
+  non_templated_gpu_func(m);
 #endif
 }

@@ -38,7 +38,7 @@
 
 namespace minkowski {
 
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 at::Tensor
 ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       at::Tensor const &kernel,                          //
@@ -51,7 +51,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       CoordinateMapKey *p_out_map_key,                   //
                       cpu_manager_type<coordinate_type> *p_map_manager);
 
-template <typename coordinate_type, typename feature_type>
+template <typename coordinate_type>
 std::pair<at::Tensor, at::Tensor>
 ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
                        at::Tensor const &grad_out_feat,                   //
@@ -114,23 +114,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
                        minkowski::cpu_manager_type<int>::size)
       .def("kernel_map", &minkowski::cpu_manager_type<int>::kernel_map);
 
-  m.def("ConvolutionForwardCPUf",
+  m.def("ConvolutionForwardCPU",
         &minkowski::ConvolutionForwardCPU<
-            minkowski::default_types::dcoordinate_type, float>,
+            minkowski::default_types::dcoordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
-  m.def("ConvolutionForwardCPUd",
-        &minkowski::ConvolutionForwardCPU<
-            minkowski::default_types::dcoordinate_type, double>,
-        py::call_guard<py::gil_scoped_release>());
-
-  m.def("ConvolutionBackwardCPUf",
+  m.def("ConvolutionBackwardCPU",
         &minkowski::ConvolutionBackwardCPU<
-            minkowski::default_types::dcoordinate_type, float>,
-        py::call_guard<py::gil_scoped_release>());
-
-  m.def("ConvolutionBackwardCPUd",
-        &minkowski::ConvolutionBackwardCPU<
-            minkowski::default_types::dcoordinate_type, double>,
+            minkowski::default_types::dcoordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 }

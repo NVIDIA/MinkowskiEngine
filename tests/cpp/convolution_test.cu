@@ -40,7 +40,7 @@
 
 namespace minkowski {
 
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 at::Tensor ConvolutionForwardGPU(
     at::Tensor const &in_feat,                         //
@@ -54,7 +54,7 @@ at::Tensor ConvolutionForwardGPU(
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 
-template <typename coordinate_type, typename feature_type,
+template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     at::Tensor const &in_feat,                         //
@@ -117,27 +117,15 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
                        minkowski::gpu_c10_manager_type<int>::size)
       .def("kernel_map", &minkowski::gpu_c10_manager_type<int>::kernel_map);
 
-  m.def("ConvolutionForwardGPUf",
+  m.def("ConvolutionForwardGPU",
         &minkowski::ConvolutionForwardGPU<
-            minkowski::default_types::dcoordinate_type, float,
+            minkowski::default_types::dcoordinate_type,
             minkowski::detail::c10_allocator>,
         py::call_guard<py::gil_scoped_release>());
 
-  m.def("ConvolutionForwardCPUd",
-        &minkowski::ConvolutionForwardGPU<
-            minkowski::default_types::dcoordinate_type, double,
-            minkowski::detail::c10_allocator>,
-        py::call_guard<py::gil_scoped_release>());
-
-  m.def("ConvolutionBackwardGPUf",
+  m.def("ConvolutionBackwardGPU",
         &minkowski::ConvolutionBackwardGPU<
-            minkowski::default_types::dcoordinate_type, float,
-            minkowski::detail::c10_allocator>,
-        py::call_guard<py::gil_scoped_release>());
-
-  m.def("ConvolutionBackwardGPUd",
-        &minkowski::ConvolutionBackwardGPU<
-            minkowski::default_types::dcoordinate_type, double,
+            minkowski::default_types::dcoordinate_type,
             minkowski::detail::c10_allocator>,
         py::call_guard<py::gil_scoped_release>());
 }

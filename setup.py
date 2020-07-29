@@ -190,13 +190,15 @@ SOURCE_SETS = {
             "coordinate_map_gpu.cu",
             "convolution_kernel.cu",
             "convolution_transpose_gpu.cu",
+            "spmm.cu",
+            "gpu.cu",
         ],
         ["pybind/minkowski.cu"],
         [],
     ],
 }
 
-no_debug, argv = _argparse("--nodebug", argv)
+debug, argv = _argparse("--debug", argv)
 
 USE_NINJA = os.getenv("USE_NINJA") == "0"
 HERE = Path(os.path.dirname(__file__)).absolute()
@@ -217,7 +219,7 @@ if "darwin" in platform:
 
 NVCC_FLAGS = [f"-ccbin={CXX}", "--extended-lambda"]
 
-if not no_debug:
+if debug:
     CXX_FLAGS += ["-g", "-DDEBUG"]
     NVCC_FLAGS += ["-g", "-DDEBUG"]
 else:

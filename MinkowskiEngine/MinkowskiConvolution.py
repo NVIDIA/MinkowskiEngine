@@ -57,9 +57,6 @@ class MinkowskiConvolutionFunction(Function):
             out_coordinate_map_key = CoordinateMapKey(
                 in_coordinate_map_key.get_coordinate_size()
             )
-        assert (
-            input_features.type() == kernel_weights.type()
-        ), f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
@@ -132,9 +129,6 @@ class MinkowskiConvolutionTransposeFunction(Function):
             out_coordinate_map_key = CoordinateMapKey(
                 in_coordinate_map_key.get_coordinate_size()
             )
-        assert (
-            input_features.type() == kernel_weights.type()
-        ), f"Type mismatch input: {input_features.type()} != kernel: {kernel.type()}"
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
