@@ -78,12 +78,15 @@ at::Tensor ConvolutionTransposeForwardCPU(
     auto map_it = p_map_manager->find(p_in_map_key->get_key());
     ASSERT(map_it != p_map_manager->map_end(), ERROR_MAP_NOT_FOUND);
     auto const &in_map = (*map_it).second;
+
+    auto out_tensor_stride = detail::stride_tensor_stride(
+        in_map.get_tensor_stride(), kernel_stride, true /* is_transpose */);
     auto kernel_region = cpu_kernel_region<coordinate_type>(
-        region_type,                       //
-        in_map.coordinate_size(),          //
-        in_map.get_tensor_stride().data(), //
-        kernel_size.data(),                //
-        kernel_dilation.data(),            //
+        region_type,              //
+        in_map.coordinate_size(), //
+        out_tensor_stride.data(), //
+        kernel_size.data(),       //
+        kernel_dilation.data(),   //
         0, offset.data_ptr<coordinate_type>(), offset.size(0));
 
     coordinate_map_key_type out_key = std::get<0>(p_map_manager->stride_region(

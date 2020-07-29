@@ -127,6 +127,27 @@ class TestConvolution(unittest.TestCase):
             )
         )
 
+    def test_analytic(self):
+        print(f"{self.__class__.__name__}: test")
+        in_channels, out_channels, D = 2, 2, 1
+        coords = torch.IntTensor([[0, 0], [0, 1], [0, 2]])
+        feats = torch.FloatTensor([[0, 1], [1, 0], [1, 1]])
+        input = SparseTensor(feats, coordinates=coords)
+        # Initialize context
+        conv = MinkowskiConvolution(
+            in_channels, out_channels, kernel_size=2, stride=2, bias=False, dimension=D
+        )
+        conv.kernel[:] = torch.FloatTensor([[[1, 2], [2, 1]], [[0, 1], [1, 0]]])
+        output = conv(input)
+        print(output)
+
+        conv = MinkowskiConvolution(
+            in_channels, out_channels, kernel_size=2, stride=1, bias=False, dimension=D
+        )
+        conv.kernel[:] = torch.FloatTensor([[[1, 2], [2, 1]], [[0, 1], [1, 0]]])
+        output = conv(input)
+        print(output)
+
 
 class TestConvolutionTranspose(unittest.TestCase):
     def test_gpu(self):
@@ -227,6 +248,76 @@ class TestConvolutionTranspose(unittest.TestCase):
             )
         )
 
+    def test_analytic(self):
+        print(f"{self.__class__.__name__}: test")
+        in_channels, out_channels, D = 2, 2, 2
+        coords = torch.IntTensor([[0, 0, 0], [0, 1, 1], [0, 2, 1]])
+        feats = torch.FloatTensor([[0, 1], [1, 0], [1, 1]])
+        input = SparseTensor(feats, coordinates=coords)
+        # Initialize context
+        conv = MinkowskiConvolution(
+            in_channels, out_channels, kernel_size=2, stride=2, bias=False, dimension=D
+        )
+        conv.kernel[:] = torch.FloatTensor(
+            [[[1, 2], [2, 1]], [[0, 1], [1, 0]], [[0, 1], [1, 1]], [[1, 1], [1, 0]]]
+        )
+        output = conv(input)
+        print(output)
+
+        conv_tr = MinkowskiConvolutionTranspose(
+            in_channels, out_channels, kernel_size=2, stride=2, bias=False, dimension=D
+        )
+        conv_tr.kernel[:] = torch.FloatTensor(
+            [[[1, 2], [2, 1]], [[0, 1], [1, 0]], [[0, 1], [1, 1]], [[1, 1], [1, 0]]]
+        )
+        output_tr = conv_tr(output)
+        print(output_tr)
+
+    def test_analytic_odd(self):
+        print(f"{self.__class__.__name__}: test")
+        in_channels, out_channels, D = 2, 2, 2
+        coords = torch.IntTensor([[0, 0, 0], [0, 1, 1], [0, 2, 1]])
+        feats = torch.FloatTensor([[0, 1], [1, 0], [1, 1]])
+        input = SparseTensor(feats, coordinates=coords)
+        # Initialize context
+        conv = MinkowskiConvolution(
+            in_channels, out_channels, kernel_size=3, stride=2, bias=False, dimension=D
+        )
+        conv.kernel[:] = torch.FloatTensor(
+            [
+                [[1, 2], [2, 1]],
+                [[0, 1], [1, 0]],
+                [[0, 1], [1, 1]],
+                [[1, 1], [1, 0]],
+                [[1, 1], [1, 0]],
+                [[2, 1], [1, 0.5]],
+                [[1, 1], [1, 0.1]],
+                [[1, 1], [1, 0.7]],
+                [[1, 0.3], [1, 0.5]],
+            ]
+        )
+        output = conv(input)
+        print(output)
+
+        conv_tr = MinkowskiConvolutionTranspose(
+            in_channels, out_channels, kernel_size=3, stride=2, bias=False, dimension=D
+        )
+        conv_tr.kernel[:] = torch.FloatTensor(
+            [
+                [[1, 2], [2, 1]],
+                [[0, 1], [1, 0]],
+                [[0, 1], [1, 1]],
+                [[1, 1], [1, 0]],
+                [[1, 1], [1, 0]],
+                [[2, 1], [1, 0.5]],
+                [[1, 1], [1, 0.1]],
+                [[1, 1], [1, 0.7]],
+                [[1, 0.3], [1, 0.5]],
+            ]
+        )
+        output_tr = conv_tr(output)
+        print(output_tr)
+
 
 class TestPCD(unittest.TestCase):
     def test_conv(self):
@@ -270,7 +361,6 @@ class TestPCD(unittest.TestCase):
                         manager,
                     )
                     min_time = min(time.time() - stime, min_time)
-                    import ipdb; ipdb.set_trace()
 
                 print(
                     f"{batch_size}\t{manager.size(in_key)}\t{manager.size(out_key)}\t{min_time}"

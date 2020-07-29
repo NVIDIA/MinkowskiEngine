@@ -508,6 +508,11 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
       }
     }
   }
+#ifdef DEBUG
+  else {
+    LOG_DEBUG("kernel map found");
+  }
+#endif
 
   // TODO check if it copies or moves the internal data
   return m_kernel_maps[kernel_map_key];

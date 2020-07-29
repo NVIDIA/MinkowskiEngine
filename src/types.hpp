@@ -30,6 +30,7 @@
 #include <array>
 #include <functional>
 #include <pybind11/pybind11.h>
+#include <robin_hood.h>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -103,6 +104,29 @@ using cpu_kernel_map_reference = std::pair<cpu_in_maps &, cpu_out_maps &>;
 using coordinate_map_key_type =
     std::pair<default_types::stride_type, std::string>;
 
+struct coordinate_map_key_hasher {
+  using result_type = size_t;
+
+  result_type operator()(coordinate_map_key_type const &key) const {
+    auto hash = robin_hood::hash_bytes(
+        key.first.data(), sizeof(default_types::size_type) * key.first.size());
+    hash += std::hash<std::string>{}(key.second);
+    return hash;
+  }
+};
+
+struct coordinate_map_key_comparator {
+  bool operator()(coordinate_map_key_type const &lhs,
+                  coordinate_map_key_type const &rhs) const {
+    auto vec_less = lhs.first < rhs.first;
+    if (!vec_less && (lhs.first == rhs.first)) {
+      return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(),
+                                          rhs.second.begin(), rhs.second.end());
+    }
+    return vec_less;
+  }
+};
+
 template <typename vector_type>
 std::vector<vector_type>
 initialize_maps(default_types::size_type number_of_vectors,
@@ -169,18 +193,31 @@ template <typename T> uint64_t hash_vec(T p) {
   return hash;
 }
 
-/*
-struct KernelMapKeyHash {
-  uint64_t operator()(KernelMapKey const &key) const {
-  }
-};
+template <typename hasher = coordinate_map_key_hasher>
+struct kernel_map_key_hasher {
+  using stride_type = default_types::stride_type;
+  using result_type = size_t;
 
-template <uint32_t D, typename Itype> struct ArrHash {
-  uint64_t operator()(dim_array<D, Itype> const &p) const {
-    return hash_vec<dim_array<D, Itype>>(p);
+  result_type hash_stride(stride_type const &stride) const {
+    return robin_hood::hash_bytes(
+        stride.data(), sizeof(default_types::size_type) * stride.size());
+  }
+
+  result_type operator()(kernel_map_key_type const &key) const {
+    auto const &in_map_key = std::get<0>(key);
+    auto const &out_map_key = std::get<1>(key);
+
+    result_type hash = hasher{}(in_map_key);
+    hash ^= hasher{}(out_map_key);
+    hash ^= hash_stride(std::get<2>(key));
+    hash ^= hash_stride(std::get<3>(key));
+    hash ^= hash_stride(std::get<4>(key));
+    hash ^= (result_type)std::get<5>(key);
+    hash ^= (result_type)std::get<6>(key);
+    hash ^= (result_type)std::get<7>(key);
+    return hash;
   }
 };
-*/
 
 } // end namespace minkowski
 
