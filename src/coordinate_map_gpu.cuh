@@ -157,6 +157,7 @@ public:
 
   // Returns the number of elements in the coordinate map
   inline size_type size() const { return m_size; }
+  void copy_coordinates(coordinate_type *dst_coordinate) const;
 
   // access the coordinate data pointer
   using base_type::const_coordinate_data;

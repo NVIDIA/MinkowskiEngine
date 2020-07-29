@@ -22,380 +22,284 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
+#include "coordinate_map.hpp"
+#include "coordinate_map_cpu.hpp"
+#include "coordinate_map_key.hpp"
+#include "coordinate_map_manager.hpp"
+#include "errors.hpp"
+#include "types.hpp"
+#include "utils.hpp"
+
+#ifndef CPU_ONLY
+#include "allocators.cuh"
+#include "coordinate_map_gpu.cuh"
+#endif
+
 #include <torch/extension.h>
 
-#include "src/common.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace minkowski {
 
 /*************************************
  * Convolution
  *************************************/
-template <typename MapType, typename Dtype>
-void ConvolutionForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                           at::Tensor kernel, std::vector<int> tensor_strides,
-                           std::vector<int> strides,
-                           std::vector<int> kernel_sizes,
-                           std::vector<int> dilations, int region_type,
-                           at::Tensor offsets, py::object py_in_coords_key,
-                           py::object py_out_coords_key,
-                           py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void ConvolutionBackwardCPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void ConvolutionForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
-                           at::Tensor kernel, std::vector<int> tensor_strides,
-                           std::vector<int> strides,
-                           std::vector<int> kernel_sizes,
-                           std::vector<int> dilations, int region_type,
-                           at::Tensor offsets, py::object py_in_coords_key,
-                           py::object py_out_coords_key,
-                           py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void ConvolutionBackwardGPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-#endif
-
-/*************************************
- * Convolution Transpose
- *************************************/
-template <typename MapType, typename Dtype>
-void ConvolutionTransposeForwardCPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager,
-    bool generate_new_coords);
-
-template <typename MapType, typename Dtype>
-void ConvolutionTransposeBackwardCPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void ConvolutionTransposeForwardGPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager,
-    bool generate_new_coords);
-
-template <typename MapType, typename Dtype>
-void ConvolutionTransposeBackwardGPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor kernel, at::Tensor grad_kernel, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-#endif
-
-/*************************************
- * AvgPooling
- *************************************/
-template <typename MapType, typename Dtype>
-void AvgPoolingForwardCPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
-
-template <typename MapType, typename Dtype>
-void AvgPoolingBackwardCPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void AvgPoolingForwardGPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
-
-template <typename MapType, typename Dtype>
-void AvgPoolingBackwardGPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager, bool use_avg);
-#endif
-
-/*************************************
- * MaxPooling
- *************************************/
-template <typename MapType, typename Dtype>
-void MaxPoolingForwardCPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void MaxPoolingBackwardCPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void MaxPoolingForwardGPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void MaxPoolingBackwardGPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-#endif
-
-/*************************************
- * PoolingTranspose
- *************************************/
-template <typename MapType, typename Dtype>
-void PoolingTransposeForwardCPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void PoolingTransposeBackwardCPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void PoolingTransposeForwardGPU(
-    at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
-    std::vector<int> tensor_strides, std::vector<int> strides,
-    std::vector<int> kernel_sizes, std::vector<int> dilations, int region_type,
-    at::Tensor offsets, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void PoolingTransposeBackwardGPU(
-    at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-    at::Tensor num_nonzero, std::vector<int> tensor_strides,
-    std::vector<int> strides, std::vector<int> kernel_sizes,
-    std::vector<int> dilations, int region_type, py::object py_in_coords_key,
-    py::object py_out_coords_key, py::object py_coords_manager);
-#endif
-
-/*************************************
- * GlobalPooling
- *************************************/
-template <typename MapType, typename Dtype>
-vector<at::Tensor> GlobalPoolingForwardCPU(at::Tensor in_feat,
-                                           py::object py_in_coords_key,
-                                           py::object py_out_coords_key,
-                                           py::object py_coords_manager,
-                                           bool use_avg, int pooling_mode);
-
-template <typename MapType, typename Dtype>
+template <typename coordinate_type, typename feature_type>
 at::Tensor
-GlobalPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_out_feat,
-                         at::Tensor num_nonzero, py::object py_in_coords_key,
-                         py::object py_out_coords_key,
-                         py::object py_coords_manager, bool use_avg);
+ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
+                      at::Tensor const &kernel,                          //
+                      default_types::stride_type const &kernel_size,     //
+                      default_types::stride_type const &kernel_stride,   //
+                      default_types::stride_type const &kernel_dilation, //
+                      RegionType::Type const region_type,                //
+                      at::Tensor const &offset,                          //
+                      CoordinateMapKey *p_in_map_key,                    //
+                      CoordinateMapKey *p_out_map_key,                   //
+                      cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type, typename feature_type>
+std::pair<at::Tensor, at::Tensor>
+ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
+                       at::Tensor const &grad_out_feat,                   //
+                       at::Tensor const &kernel,                          //
+                       default_types::stride_type const &kernel_size,     //
+                       default_types::stride_type const &kernel_stride,   //
+                       default_types::stride_type const &kernel_dilation, //
+                       RegionType::Type const region_type,                //
+                       at::Tensor const &offsets,                         //
+                       CoordinateMapKey *p_in_map_key,                    //
+                       CoordinateMapKey *p_out_map_key,                   //
+                       cpu_manager_type<coordinate_type> *p_map_manager);
 
 #ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-vector<at::Tensor> GlobalPoolingForwardGPU(at::Tensor in_feat,
-                                           py::object py_in_coords_key,
-                                           py::object py_out_coords_key,
-                                           py::object py_coords_manager,
-                                           bool use_avg, int pooling_mode);
+template <typename coordinate_type, typename feature_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor ConvolutionForwardGPU(
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &kernel,                          //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 
-template <typename MapType, typename Dtype>
-at::Tensor
-GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_out_feat,
-                         at::Tensor num_nonzero, py::object py_in_coords_key,
-                         py::object py_out_coords_key,
-                         py::object py_coords_manager, bool use_avg);
+template <typename coordinate_type, typename feature_type,
+          template <typename C> class TemplatedAllocator>
+std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &kernel,                          //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 #endif
-
-/*************************************
- * GlobalMaxPooling
- *************************************/
-template <typename MapType, typename Dtype>
-void GlobalMaxPoolingForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                                at::Tensor num_nonzero,
-                                py::object py_in_coords_key,
-                                py::object py_out_coords_key,
-                                py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void GlobalMaxPoolingBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                                 at::Tensor grad_out_feat,
-                                 at::Tensor num_nonzero,
-                                 py::object py_in_coords_key,
-                                 py::object py_out_coords_key,
-                                 py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void GlobalMaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
-                                at::Tensor num_nonzero,
-                                py::object py_in_coords_key,
-                                py::object py_out_coords_key,
-                                py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void GlobalMaxPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                                 at::Tensor grad_out_feat,
-                                 at::Tensor num_nonzero,
-                                 py::object py_in_coords_key,
-                                 py::object py_out_coords_key,
-                                 py::object py_coords_manager);
-#endif
-
-/*************************************
- * Broadcast
- *************************************/
-template <typename MapType, typename Dtype>
-at::Tensor BroadcastForwardCPU(at::Tensor in_feat, at::Tensor in_feat_glob,
-                               int op, py::object py_in_coords_key,
-                               py::object py_out_coords_key,
-                               py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void BroadcastBackwardCPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                          at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
-                          at::Tensor grad_out_feat, int op,
-                          py::object py_in_coords_key,
-                          py::object py_out_coords_key,
-                          py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-at::Tensor BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
-                               int op, py::object py_in_coords_key,
-                               py::object py_out_coords_key,
-                               py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
-                          at::Tensor in_feat_glob, at::Tensor grad_in_feat_glob,
-                          at::Tensor grad_out_feat, int op,
-                          py::object py_in_coords_key,
-                          py::object py_out_coords_key,
-                          py::object py_coords_manager);
-#endif
-
-/*************************************
- * Pruning
- *************************************/
-template <typename MapType, typename Dtype>
-void PruningForwardCPU(at::Tensor in_feat, at::Tensor out_feat,
-                       at::Tensor use_feat, py::object py_in_coords_key,
-                       py::object py_out_coords_key,
-                       py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void PruningBackwardCPU(at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-                        py::object py_in_coords_key,
-                        py::object py_out_coords_key,
-                        py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-void PruningForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
-                       at::Tensor use_feat, py::object py_in_coords_key,
-                       py::object py_out_coords_key,
-                       py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-void PruningBackwardGPU(at::Tensor grad_in_feat, at::Tensor grad_out_feat,
-                        py::object py_in_coords_key,
-                        py::object py_out_coords_key,
-                        py::object py_coords_manager);
-#endif
-
-/*************************************
- * Union
- *************************************/
-template <typename MapType, typename Dtype>
-at::Tensor UnionForwardCPU(vector<at::Tensor> in_feats,
-                           vector<py::object> py_in_coords_keys,
-                           py::object py_out_coords_key,
-                           py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-vector<at::Tensor>
-UnionBackwardCPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
-                 py::object py_out_coords_key, py::object py_coords_manager);
-
-#ifndef CPU_ONLY
-template <typename MapType, typename Dtype>
-at::Tensor UnionForwardGPU(vector<at::Tensor> in_feat,
-                           vector<py::object> py_in_coords_keys,
-                           py::object py_out_coords_key,
-                           py::object py_coords_manager);
-
-template <typename MapType, typename Dtype>
-vector<at::Tensor>
-UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
-                 py::object py_out_coords_key, py::object py_coords_manager);
-#endif
-/*************************************
- * Quantization
- *************************************/
-template <typename MapType>
-vector<py::array>
-quantize_np(py::array_t<int, py::array::c_style | py::array::forcecast> coords);
-
-vector<py::array> quantize_label_np(
-    py::array_t<int, py::array::c_style | py::array::forcecast> coords,
-    py::array_t<int, py::array::c_style | py::array::forcecast> labels,
-    int invalid_label);
-
-template <typename MapType> vector<at::Tensor> quantize_th(at::Tensor coords);
-
-vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
-                                     int invalid_label);
-
-at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
-                                         at::Tensor out_map, int out_nrows,
-                                         int mode);
 
 } // end namespace minkowski
+
+namespace py = pybind11;
+
+template <typename coordinate_type, typename feature_type>
+void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
+  m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionForwardCPU<coordinate_type, feature_type>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionBackwardCPU<coordinate_type, feature_type>,
+        py::call_guard<py::gil_scoped_release>());
+
+  /*
+    m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
+          &mink::ConvolutionTransposeForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
+          &mink::ConvolutionTransposeBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
+          &mink::ConvolutionTransposeForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
+          &mink::ConvolutionTransposeBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
+          &mink::AvgPoolingForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
+          &mink::AvgPoolingBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("AvgPoolingForwardGPU") + dtypestr).c_str(),
+          &mink::AvgPoolingForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
+          &mink::AvgPoolingBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
+          &mink::MaxPoolingForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("MaxPoolingBackwardCPU") + dtypestr).c_str(),
+          &mink::MaxPoolingBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("MaxPoolingForwardGPU") + dtypestr).c_str(),
+          &mink::MaxPoolingForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("MaxPoolingBackwardGPU") + dtypestr).c_str(),
+          &mink::MaxPoolingBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
+          &mink::PoolingTransposeForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),
+          &mink::PoolingTransposeBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("PoolingTransposeForwardGPU") + dtypestr).c_str(),
+          &mink::PoolingTransposeForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("PoolingTransposeBackwardGPU") + dtypestr).c_str(),
+          &mink::PoolingTransposeBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
+          &mink::GlobalPoolingForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
+          &mink::GlobalPoolingBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
+          &mink::GlobalPoolingForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
+          &mink::GlobalPoolingBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("GlobalMaxPoolingForwardCPU") + dtypestr).c_str(),
+          &mink::GlobalMaxPoolingForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("GlobalMaxPoolingBackwardCPU") + dtypestr).c_str(),
+          &mink::GlobalMaxPoolingBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("GlobalMaxPoolingForwardGPU") + dtypestr).c_str(),
+          &mink::GlobalMaxPoolingForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("GlobalMaxPoolingBackwardGPU") + dtypestr).c_str(),
+          &mink::GlobalMaxPoolingBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
+          &mink::BroadcastForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
+          &mink::BroadcastBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
+          &mink::BroadcastForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
+          &mink::BroadcastBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
+          &mink::PruningForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
+          &mink::PruningBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
+          &mink::PruningForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
+          &mink::PruningBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+
+    m.def((std::string("UnionForwardCPU") + dtypestr).c_str(),
+          &mink::UnionForwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("UnionBackwardCPU") + dtypestr).c_str(),
+          &mink::UnionBackwardCPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #ifndef CPU_ONLY
+    m.def((std::string("UnionForwardGPU") + dtypestr).c_str(),
+          &mink::UnionForwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+    m.def((std::string("UnionBackwardGPU") + dtypestr).c_str(),
+          &mink::UnionBackwardGPU<MapType, Dtype>,
+          py::call_guard<py::gil_scoped_release>());
+  #endif
+  */
+}
+
+#ifndef CPU_ONLY
+template <typename coordinate_type, typename feature_type,
+          template <typename C> class TemplatedAllocator>
+void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
+  m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionForwardGPU<coordinate_type, feature_type,
+                                          TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
+        &minkowski::ConvolutionBackwardGPU<coordinate_type, feature_type,
+                                           TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
+}
+#endif
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+void instantiate_manager(py::module &m, const std::string &dtypestr) {
+  using manager_type =
+      minkowski::CoordinateMapManager<coordinate_type, TemplatedAllocator,
+                                      CoordinateMapType>;
+
+  py::class_<manager_type>(
+      m, (std::string("CoordinateMapManager") + dtypestr).c_str())
+      .def(py::init<>())
+      // TODO .def("insert", &manager_type::insert)
+      .def("insert_and_map", &manager_type::insert_and_map)
+      .def("stride",
+           py::overload_cast<minkowski::CoordinateMapKey const *,
+                             typename manager_type::stride_type const &>(
+               &manager_type::stride))
+      .def("get_coordinates", &manager_type::get_coordinates)
+      .def("get_coordinate_map_keys", &manager_type::get_coordinate_map_keys)
+      .def("size", py::overload_cast<minkowski::CoordinateMapKey const *>(
+                       &manager_type::size, py::const_))
+      .def("kernel_map", &manager_type::kernel_map);
+}
+
+bool is_cuda_available() {
+#ifndef CPU_ONLY
+  return true;
+#else
+  return false;
+#endif
+}

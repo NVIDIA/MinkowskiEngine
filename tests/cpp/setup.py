@@ -86,8 +86,6 @@ no_debug, argv = _argparse("--nodebug", argv)
 USE_NINJA = os.getenv("USE_NINJA") == "0"
 HERE = Path(os.path.dirname(__file__)).absolute()
 SRC_PATH = HERE.parent.parent / "src"
-OBJ_DIR = HERE / "objs"
-ME_OBJ_DIR = OBJ_DIR / "ME"
 CXX = os.environ["CXX"]
 
 assert test_target in SOURCE_SETS.keys()
@@ -125,7 +123,6 @@ ext_modules = [
             *[str(SRC_PATH / src_file) for src_file in CURR_TEST_FILES[1]],
         ],
         extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS,},
-        # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
         libraries=["openblas"],
     ),
 ]

@@ -51,40 +51,46 @@ public:
 
 public:
   CoordinateMapKey() = delete;
-  CoordinateMapKey(size_type dim) : m_key_set(false), m_dimension{dim} {
-    ASSERT(dim > 0, "Invalid dimension");
-  }
+  CoordinateMapKey(size_type coordinate_size)
+      : m_key_set(false), m_coordinate_size{coordinate_size} {}
 
-  CoordinateMapKey(size_type dim, coordinate_map_key_type &key)
-      : m_key_set(true), m_dimension{dim}, m_key(key) {
-    ASSERT(dim > 0, "Invalid dimension");
-    ASSERT(dim - 1 == m_key.first.size(), "Invalid tensor_stride:", m_key.first,
-           "dimension:", dim);
+  CoordinateMapKey(CoordinateMapKey const &other)
+      : m_key_set(other.m_key_set), m_coordinate_size{other.m_coordinate_size},
+        m_key(other.m_key) {}
+
+  CoordinateMapKey(size_type coordinate_size,
+                   coordinate_map_key_type const &key)
+      : m_key_set(true), m_coordinate_size{coordinate_size}, m_key(key) {
+    ASSERT(coordinate_size - 1 == m_key.first.size(),
+           "Invalid tensor_stride:", m_key.first,
+           "coordinate_size:", m_coordinate_size);
   }
 
   CoordinateMapKey(stride_type tensor_stride, std::string string_id = "")
-      : m_dimension(tensor_stride.size() + 1), m_key{std::make_pair(
-                                                   tensor_stride, string_id)} {
-    // valid tensor stride if the dimensions match
+      : m_coordinate_size(tensor_stride.size() + 1), m_key{std::make_pair(
+                                                         tensor_stride,
+                                                         string_id)} {
+    // valid tensor stride if the coordinate_size match
     m_key = std::make_pair(tensor_stride, string_id);
     m_key_set = true;
   }
 
-  // dimension functions
-  size_type get_dimension() const { return m_dimension; }
+  // coordinate_size functions
+  size_type get_coordinate_size() const { return m_coordinate_size; }
 
   // key functions
   void set_key(stride_type tensor_stride, std::string string_id) {
-    ASSERT(m_dimension - 1 == tensor_stride.size(),
+    ASSERT(m_coordinate_size - 1 == tensor_stride.size(),
            "Invalid tensor_stride size:", tensor_stride,
-           "dimension:", m_dimension);
+           "coordinate_size:", m_coordinate_size);
     m_key = std::make_pair(tensor_stride, string_id);
     m_key_set = true;
   }
 
   void set_key(coordinate_map_key_type key) {
-    ASSERT(m_dimension - 1 == key.first.size(),
-           "Invalid tensor_stride size:", key.first, "dimension:", m_dimension);
+    ASSERT(m_coordinate_size - 1 == key.first.size(),
+           "Invalid tensor_stride size:", key.first,
+           "coordinate_size:", m_coordinate_size);
     m_key = key;
     m_key_set = true;
   }
@@ -134,7 +140,7 @@ public:
 private:
   bool m_key_set;
 
-  size_type m_dimension;
+  size_type m_coordinate_size;
   coordinate_map_key_type m_key;
 }; // CoordinateMapKey
 

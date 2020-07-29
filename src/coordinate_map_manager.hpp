@@ -34,8 +34,8 @@
 #include "utils.hpp"
 
 #ifndef CPU_ONLY
-#include "kernel_map.cuh"
 #include "coordinate_map_gpu.cuh"
+#include "kernel_map.cuh"
 #endif
 
 #include <algorithm>
@@ -211,6 +211,10 @@ public:
   /****************************************************************************
    * Coordinate generation, modification, and initialization entry functions
    ****************************************************************************/
+  // TODO
+  // py::object insert(at::Tensor const &th_coordinate,
+  //                  stride_type const tensor_stride,
+  //                  std::string const string_id = "");
 
   /*
    * New coordinate map initialzation function.
@@ -275,6 +279,21 @@ public:
     return it->second.capacity();
   }
 
+  at::Tensor get_coordinates(CoordinateMapKey const *p_key) const;
+
+  std::vector<py::object>
+  get_coordinate_map_keys(stride_type const tensor_stride) const {
+    std::vector<py::object> keys;
+    for (auto it = m_coordinate_maps.begin(); it != m_coordinate_maps.end();
+         ++it) {
+      coordinate_map_key_type const &key = it->first;
+      if (key.first == tensor_stride) {
+        keys.push_back(py::cast(new CoordinateMapKey(key.first.size(), key)));
+      }
+    }
+    return keys;
+  }
+
   /****************************************************************************
    * Kernel map related functions
    ****************************************************************************/
@@ -302,7 +321,6 @@ public:
   uint64_t getCoordsKey(const vector<int> &tensor_strides) const;
   long int getBatchSize() const { return batch_indices.size(); }
   set<int> getBatchIndices() const { return batch_indices; }
-  void getCoords(at::Tensor coords, py::object py_coords_key) const;
   vector<vector<at::Tensor>>
   getKernelMap(vector<int> tensor_strides, vector<int> strides,
                vector<int> kernel_sizes, vector<int> dilations, int
@@ -478,7 +496,10 @@ private:
 
 public:
   size_t m_gpu_default_occupancy;
+
 private:
+  // NOTE: operator[] required mapped_type(), which is not defined.
+  //
   // CoordinateMapManager owns the coordinate maps
   std::map<coordinate_map_key_type, map_type,
            detail::coordinate_map_key_comparator>
