@@ -28,6 +28,7 @@
 #define COORDINATE_MAP_KEY_HPP
 
 #include "types.hpp"
+#include "utils.hpp"
 
 #include <vector>
 
@@ -43,46 +44,94 @@ namespace minkowski {
 class CoordinateMapKey {
 public:
   // clang-format off
-  using dimension_type = default_types::tensor_order_type;
-  using stride_type    = default_types::stride_type;
-  using hash_key_type  = default_types::coordinate_map_hash_type;
+  using size_type     = default_types::size_type;
+  using stride_type   = default_types::stride_type;
+  using hash_key_type = default_types::coordinate_map_hash_type;
   // clang-format on
 
 public:
-  CoordinateMapKey() { reset(); }
-  CoordinateMapKey(dimension_type dim);
-  CoordinateMapKey(stride_type const &tensor_strides_, dimension_type dim);
+  CoordinateMapKey() = delete;
+  CoordinateMapKey(size_type dim) : m_key_set(false), m_dimension{dim} {
+    ASSERT(dim > 0, "Invalid dimension");
+  }
 
-  void reset();
-  void copy(py::object ohter);
+  CoordinateMapKey(size_type dim, coordinate_map_key_type &key)
+      : m_key_set(true), m_dimension{dim}, m_key(key) {
+    ASSERT(dim > 0, "Invalid dimension");
+    ASSERT(dim - 1 == m_key.first.size(),
+           "Invalid tensor_stride:", m_key.first, "dimension:", dim);
+  }
+
+  CoordinateMapKey(stride_type tensor_stride, std::string string_id = "")
+      : m_dimension(tensor_stride.size() + 1), m_key{std::make_pair(
+                                                   tensor_stride, string_id)} {
+    // valid tensor stride if the dimensions match
+    m_key = std::make_pair(tensor_stride, string_id);
+    m_key_set = true;
+  }
 
   // dimension functions
-  void set_dimension(dimension_type dim);
-  dimension_type get_dimension() const { return m_dimension; }
+  size_type get_dimension() const { return m_dimension; }
 
   // key functions
-  void set_key(coordinate_map_key_type key);
-  hash_key_type get_key() const;
-  bool is_key_set() const { return m_key_set; }
-  bool is_tensor_stride_set() const { return m_tensor_stride_set; }
+  void set_key(stride_type tensor_stride, std::string string_id) {
+    ASSERT(m_dimension - 1 == tensor_stride.size(),
+           "Invalid tensor_stride size:", tensor_stride,
+           "dimension:", m_dimension);
+    m_key = std::make_pair(tensor_stride, string_id);
+    m_key_set = true;
+  }
 
-  // stride functions
-  void set_tensor_stride(stride_type const &tensor_strides);
-  void stride(stride_type const &strides);
-  void up_stride(stride_type const &strides);
-  stride_type get_tensor_stride() const { return m_tensor_strides; }
+  void set_key(coordinate_map_key_type key) {
+    ASSERT(m_dimension - 1 == key.first.size(),
+           "Invalid tensor_stride size:", key.first, "dimension:", m_dimension);
+    m_key = key;
+    m_key_set = true;
+  }
+
+  coordinate_map_key_type get_key() const { return m_key; }
+  bool is_key_set() const { return m_key_set; }
+
+  /*
+  void stride(stride_type const &strides) {
+    ASSERT(m_tensor_stride_set, "You must set the tensor strides first.");
+    ASSERT(m_dimension - 1 == strides.size(), "The size of strides: ", strides,
+           "does not match the dimension of the CoordinateMapKey coordinate "
+           "system:",
+           std::to_string(get_dimension()), ".");
+    for (size_type i = 0; i < m_dimension - 1; ++i)
+      m_tensor_strides[i] *= strides[i];
+  }
+
+  void up_stride(stride_type const &strides) {
+    ASSERT(m_tensor_stride_set, "You must set the tensor strides first.");
+    ASSERT(m_tensor_strides.size() == strides.size(),
+           "The size of the strides: ", strides,
+           " does not match the size of the CoordinateMapKey tensor_strides: ",
+           m_tensor_strides, ".");
+    for (size_type i = 0; i < m_dimension - 1; ++i) {
+      ASSERT(m_tensor_strides[i] % strides[i] == 0,
+             "The output tensor stride is not divisible by ",
+             "up_strides. tensor stride:", m_tensor_strides,
+             ", up_strides:", strides, ".");
+      m_tensor_strides[i] /= strides[i];
+    }
+  }*/
+
+  stride_type get_tensor_stride() const { return m_key.first; }
 
   // misc functions
-  std::string to_string() const;
+  std::string to_string() const {
+    Formatter out;
+    out << "key:" << m_key.first << m_key.second;
+    return out;
+  }
 
 private:
-  coordinate_map_key_type m_key; // Use the key_ for all coordshashmap query. Lazily set
-  // The dimension of the current coordinate system. The order of the system is
-  // D + 1.
-  dimension_type m_dimension = 0;
-  stride_type m_tensor_strides;
-  bool m_key_set = false;
-  bool m_tensor_stride_set = false;
+  bool m_key_set;
+
+  size_type m_dimension;
+  coordinate_map_key_type m_key;
 }; // CoordinateMapKey
 
 } // namespace minkowski

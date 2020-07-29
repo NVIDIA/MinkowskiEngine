@@ -124,11 +124,11 @@ initialize_maps(default_types::size_type number_of_vectors,
 
 // GPU memory manager backend. No effect with CPU_ONLY build
 namespace GPUMemoryAllocatorBackend {
-enum Type { CUDA = 0, PYTORCH = 1 };
+enum Type { PYTORCH = 0, CUDA = 1 };
 }
 
 namespace CoordinateMapBackend {
-enum Type { CPU = 0, CUDA_MAP = 1 };
+enum Type { CPU = 0, CUDA = 1 };
 }
 
 // FNV64-1a

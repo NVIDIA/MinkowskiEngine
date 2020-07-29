@@ -33,22 +33,31 @@ namespace minkowski {
 void coordinate_map_key_test() {
   // Check basic type compilation
   CoordinateMapKey key{3};
-  CoordinateMapKey key2{default_types::stride_type{2, 3, 4}, 3};
+  CoordinateMapKey key2{default_types::stride_type{2, 3, 4}};
+}
+
+py::object coordinate_map_key_return(default_types::stride_type tensor_stride,
+                                     std::string string_id) {
+  return py::cast(new CoordinateMapKey(tensor_stride, string_id));
 }
 
 } // namespace minkowski
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   py::class_<minkowski::CoordinateMapKey>(m, "CoordinateMapKey")
-      .def(py::init<minkowski::default_types::tensor_order_type>())
-      .def(py::init<minkowski::default_types::stride_type,
-                    minkowski::default_types::tensor_order_type>())
+      .def(py::init<minkowski::default_types::size_type>())
+      .def(py::init<minkowski::default_types::stride_type, std::string>())
       .def("__repr__", &minkowski::CoordinateMapKey::to_string)
-      .def("set_dimension", &minkowski::CoordinateMapKey::set_dimension)
-      .def("stride", &minkowski::CoordinateMapKey::stride)
-      .def("up_stride", &minkowski::CoordinateMapKey::up_stride)
-      .def("set_tensor_stride", &minkowski::CoordinateMapKey::set_tensor_stride)
-      .def("get_tensor_stride", &minkowski::CoordinateMapKey::get_tensor_stride);
+      .def("get_dimension", &minkowski::CoordinateMapKey::get_dimension)
+      .def("get_key", &minkowski::CoordinateMapKey::get_key)
+      .def("set_key", (void (minkowski::CoordinateMapKey::*)(
+                          minkowski::default_types::stride_type, std::string)) &
+                          minkowski::CoordinateMapKey::set_key)
+      .def("get_tensor_stride",
+           &minkowski::CoordinateMapKey::get_tensor_stride);
+
+  m.def("coordinate_map_key_return", &minkowski::coordinate_map_key_return,
+        "Minkowski Engine coordinate map key return test");
 
   m.def("coordinate_map_key_test", &minkowski::coordinate_map_key_test,
         "Minkowski Engine coordinate map key test");
