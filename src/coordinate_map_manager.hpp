@@ -27,6 +27,11 @@
 #ifndef COORDINATE_MAP_MANAGER
 #define COORDINATE_MAP_MANAGER
 
+#include "coordinate_map.hpp"
+#include "coordinate_map_cpu.hpp"
+#include "types.hpp"
+#include "utils.hpp"
+
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -34,23 +39,62 @@
 #include <iterator>
 #include <omp.h>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include <robin_hood.h>
+
 #include <torch/extension.h>
 
-#include "coords_map.hpp"
-#include "types.hpp"
-#include "utils.hpp"
-
-#ifndef CPU_ONLY
-#include "coords_map.cuh"
-#include "gpu_memory_manager.hpp"
-#include <ATen/cuda/CUDAContext.h>
-#endif // CPU_ONLY
-
 namespace minkowski {
+
+namespace detail {
+
+template <template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+struct is_cpu_coordinate_map : std::false_type {};
+
+template <>
+struct is_cpu_coordinate_map<CoordinateMapCPU> : std::true_type {};
+
+template <typename T1, typename T2> void copy_types(const T1 &src, T2 &dst) {
+  size_t curr_it = 0;
+  for (const auto s : src)
+    dst[curr_it++] = s;
+}
+
+/*
+template <typename index_type, typename stride_type>
+struct coordinate_map_key_hasher {
+  uint64_t operator()(coordinate_map_key_type const &key) {
+    auto hash_vec = robin_hood::hash_bytes(
+        key.first.data(), sizeof(index_type) * key.first.size());
+    hash_vec ^= robin_hood::hash_bytes(key.second.data(), key.second.length());
+    return hash_vec;
+  }
+};
+*/
+
+template <typename index_type, typename stride_type>
+struct coordinate_map_key_comparator {
+  bool operator()(coordinate_map_key_type const &lhs,
+                  coordinate_map_key_type const &rhs) {
+    auto vec_less = std::lexicographical_compare(
+        lhs.first.begin(), lhs.first.end(), rhs.first.begin(), rhs.first.end());
+    if (!vec_less & std::equal(lhs.first.begin(), lhs.first.end(),
+                               rhs.first.begin(), rhs.first.end())) {
+      return std::lexicographical_compare(lhs.second.begin(), lhs.second.end(),
+                                          rhs.second.begin(), rhs.second.end());
+    }
+    return vec_less;
+  }
+};
+
+} // namespace detail
+
+using std::vector;
 
 template <typename VType> int getInOutMapsSize(const VType &map) {
   // can't use ::accumulate as pVector template instantiation requires a bit
@@ -81,23 +125,52 @@ inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
   return out_tensor_strides;
 }
 
-template <typename MapType = CoordsToIndexMap>
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
 class CoordinateMapManager {
 public:
-  CoordsManager(int num_threads, MemoryManagerBackend backend) {
+  using size_type = default_types::size_type;
+  using index_type = default_types::index_type;
+  using stride_type = default_types::stride_type;
+  using map_type = CoordinateMapType<coordinate_type, TemplatedAllocator>;
+  using self_type = CoordinateMapManager<coordinate_type, TemplatedAllocator,
+                                         CoordinateMapType>;
+  using map_collection_type =
+      std::map<coordinate_map_key_type, map_type,
+               detail::coordinate_map_key_comparator<index_type, stride_type>>;
+
+public:
+  // allocator backend will be ignored when coordinate map backend is CPU
+  CoordinateMapManager(size_type num_threads = 0) {
     if (num_threads > 0) {
+      // Doesn't seem to work. use `export OMP_NUM_THREADS=N;` in bash.
       omp_set_dynamic(0);
       omp_set_num_threads(num_threads);
     }
-#ifndef CPU_ONLY
-    gpu_memory_manager = std::make_shared<GPUMemoryManager>(backend);
-#endif
   }
-  CoordsManager(int num_threads): CoordsManager(num_threads, PYTORCH) {}
-  CoordsManager(): CoordsManager(-1, PYTORCH) {}
+  ~CoordinateMapManager() { // clear();
+  }
 
-  ~CoordsManager() { clear(); }
+  /*
+   * New coordinate map initialzation function.
+   *
+   * returns key and map, inverse map
+   */
+  std::pair<py::object, std::pair<at::Tensor, at::Tensor>>
+  insert_and_map(at::Tensor const &th_coordinate,
+                 stride_type const tensor_stride,
+                 std::string const string_id = "");
 
+  // return kernel map
+  // std::pair<std::vector<at::Tensor>, std::vector<at::Tensor>>
+  // kernel_map(py::object py_in_coords_key, py::object py_out_coords_key,
+  //            stride_type strides, stride_type kernel_sizes,
+  //            stride_type dilations, REGION_TYPE:: region_type, at::Tensor
+  //            offsets);
+
+  /*
   void printDiagnostics(py::object py_coords_key) const;
 
   bool existsCoordsKey(uint64_t coords_key) const;
@@ -116,6 +189,7 @@ public:
                vector<int> kernel_sizes, vector<int> dilations, int region_type,
                at::Tensor offsets, py::object py_in_coords_key,
                py::object py_out_coords_key, bool is_transpose, bool is_pool);
+
 #ifndef CPU_ONLY
   vector<vector<at::Tensor>>
   getKernelMapGPU(vector<int> tensor_strides, vector<int> strides,
@@ -124,6 +198,7 @@ public:
                   py::object py_in_coords_key, py::object py_out_coords_key,
                   bool is_transpose, bool is_pool);
 #endif
+
   // TODO make this function non-const with ability to generate a new map
   vector<at::Tensor> getCoordsMap(py::object py_in_coords_key,
                                   py::object py_out_coords_key) const;
@@ -133,21 +208,6 @@ public:
 
   // Set the py_coords_key to the origin coords map key
   void setOriginCoordsKey(py::object py_coords_key);
-
-  // New coords map initialzation entry
-  uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
-                            at::Tensor inverse_mapping,
-                            const vector<int> &tensor_strides,
-                            const bool force_creation, const bool force_remap,
-                            const bool allow_duplicate_coords,
-                            const bool return_inverse);
-
-  uint64_t initializeCoords(at::Tensor coords, at::Tensor mapping,
-                            at::Tensor inverse_mapping,
-                            py::object py_coords_key, const bool force_creation,
-                            const bool force_remap,
-                            const bool allow_duplicate_coords,
-                            const bool return_inverse);
 
   // New coords map given an input
   uint64_t createStridedCoords(uint64_t coords_key,
@@ -229,11 +289,7 @@ public:
                                        const int batch_index);
   vector<at::Tensor> getRowIndicesPerBatch(py::object py_in_coords_key,
                                            py::object py_out_coords_key);
-
 #ifndef CPU_ONLY
-  // GPU memory manager
-  std::shared_ptr<GPUMemoryManager> gpu_memory_manager;
-
   // Keep all in out maps throughout the lifecycle of the coords manager
   unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_in_maps;
   unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_out_maps;
@@ -261,30 +317,86 @@ public:
   getUnionInOutMapsGPU(vector<py::object> py_in_coords_keys,
                        py::object py_out_coords_key);
 
-  void *getScratchGPUMemory(size_t size) {
+  void *allocate(size_type size) {
+
     return gpu_memory_manager.get()->tmp_data(size);
   }
 
   void clearScratchGPUMemory() { gpu_memory_manager.get()->clear_tmp(); }
 
 #endif // CPU_ONLY
+  */
 
-public:
-  // Variables
-  //
-  // Coordinate hash key to coordinate hash map
-  unordered_map<uint64_t, CoordsMap<MapType>> coords_maps;
+  coordinate_map_key_type get_random_string_id(stride_type const &tensor_stride,
+                                               std::string string_id) {
+    coordinate_map_key_type key =
+        std::make_pair(tensor_stride, string_id + '-' + random_string(5));
+    while (m_coordinate_maps.find(key) != m_coordinate_maps.end()) {
+      key = std::make_pair(tensor_stride, string_id + '-' + random_string(5));
+    }
+    return key;
+  }
 
+  bool insert(coordinate_map_key_type map_key, map_type &map) {
+    LOG_DEBUG("insert map with tensor_stride", map_key.first);
+    auto result = m_coordinate_maps.insert(
+        std::make_pair<coordinate_map_key_type, map_type>(std::move(map_key),
+                                                          std::move(map)));
+    LOG_DEBUG("map insertion", result.second);
+    return result.second;
+  }
+
+  typename map_collection_type::iterator
+  find(coordinate_map_key_type const &map_key) {
+    return m_coordinate_maps.find(map_key);
+  }
+
+private:
+  // random string generator
+  std::string random_string(size_t length) {
+    auto randchar = []() -> char {
+      const char charset[] = "0123456789"
+                             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                             "abcdefghijklmnopqrstuvwxyz";
+      const size_t max_index = (sizeof(charset) - 1);
+      return charset[rand() % max_index];
+    };
+    std::string str(length, 0);
+    std::generate_n(str.begin(), length, randchar);
+    return str;
+  }
+
+private:
+  std::map<coordinate_map_key_type, map_type,
+           detail::coordinate_map_key_comparator<index_type, stride_type>>
+      m_coordinate_maps;
+#ifndef CPU_ONLY
+  TemplatedAllocator<char> m_allocator;
+#endif
   // Track whether the batch indices are set
   bool is_batch_indices_set = false;
-  set<int> batch_indices;
-  vector<int> vec_batch_indices;
 
   // In to out index mapping for each kernel, pooling
-  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
-  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
+  // unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
+  // unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
 
-};     // coordsmanager
+}; // coordsmanager
+
+namespace detail {
+
+// a partial specialization functor for insertion
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+struct insert_and_map_functor {
+  std::pair<at::Tensor, at::Tensor>
+  operator()(coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
+             CoordinateMapManager<coordinate_type, TemplatedAllocator,
+                                  CoordinateMapType> &manager);
+};
+
+} // namespace detail
 
 } // namespace minkowski
 

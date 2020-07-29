@@ -32,25 +32,35 @@ def _argparse(pattern, argv, is_flag=True):
 
 
 SOURCE_SETS = {
-    "coordinate_map_key": [
+    "coordinate_map_manager_cpu": [
         CppExtension,
-        ["coordinate_map_key_test.cpp"],
-        ["coordinate_map_key.cpp"],
+        ["coordinate_map_manager_cpu_test.cpp"],
+        ["coordinate_map_manager.cpp"],
+        ["-DCPU_ONLY"],
     ],
-    "coordinate_map_cpu": [CppExtension, ["coordinate_map_cpu_test.cpp"], [],],
+    "coordinate_map_manager_gpu": [
+        CUDAExtension,
+        ["coordinate_map_manager_gpu_test.cu"],
+        ["coordinate_map_manager.cu", "coordinate_map_gpu.cu"],
+        [],
+    ],
+    "coordinate_map_key": [CppExtension, ["coordinate_map_key_test.cpp"], [], [],],
+    "coordinate_map_cpu": [CppExtension, ["coordinate_map_cpu_test.cpp"], [], [],],
     "coordinate_map_gpu": [
         CUDAExtension,
         ["coordinate_map_gpu_test.cu"],
         ["coordinate_map_gpu.cu"],
+        [],
     ],
-    "coordinate": [CppExtension, ["coordinate_test.cpp"], []],
-    "kernel_region_cpu": [CppExtension, ["kernel_region_cpu_test.cpp"], []],
+    "coordinate": [CppExtension, ["coordinate_test.cpp"], [], []],
+    "kernel_region_cpu": [CppExtension, ["kernel_region_cpu_test.cpp"], [], []],
     "kernel_region_gpu": [
         CUDAExtension,
         ["kernel_region_gpu_test.cu"],
         ["coordinate_map_gpu.cu"],
+        [],
     ],
-    "type": [CppExtension, ["type_test.cpp"], []],
+    "type": [CppExtension, ["type_test.cpp"], [], []],
 }
 
 test_target, argv = _argparse("--test", argv, False)
@@ -83,8 +93,11 @@ else:
     CXX_FLAGS += ["-O3"]
     NVCC_FLAGS += ["-O3"]
 
-CURR_TEST_FILES = SOURCE_SETS[test_target][1:]
 Extension = SOURCE_SETS[test_target][0]
+CURR_TEST_FILES = SOURCE_SETS[test_target][1:3]
+ARGS = SOURCE_SETS[test_target][3]
+CXX_FLAGS += ARGS
+NVCC_FLAGS += ARGS
 
 ext_modules = [
     Extension(
@@ -94,10 +107,7 @@ ext_modules = [
             *[str(HERE / test_file) for test_file in CURR_TEST_FILES[0]],
             *[str(SRC_PATH / src_file) for src_file in CURR_TEST_FILES[1]],
         ],
-        extra_compile_args={
-            "cxx": CXX_FLAGS,
-            "nvcc": NVCC_FLAGS,
-        },
+        extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS,},
         # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
         # libraries=["coordinate_map_key"],
     ),

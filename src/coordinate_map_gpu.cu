@@ -520,7 +520,10 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map(
 }
 
 // Template instantiation
-template class CoordinateMapGPU<default_types::dcoordinate_type>;
+template class CoordinateMapGPU<default_types::dcoordinate_type,
+                                detail::default_allocator>;
+template class CoordinateMapGPU<default_types::dcoordinate_type,
+                                detail::c10_allocator>;
 // Insert arg templates
 // using citer32 = coordinate_iterator<default_types::dcoordinate_type>;
 // template void CoordinateMapGPU<default_types::dcoordinate_type>::insert<
