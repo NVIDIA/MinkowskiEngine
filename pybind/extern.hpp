@@ -430,17 +430,15 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("print_coordinate_map",
            py::overload_cast<minkowski::CoordinateMapKey const *>(
                &manager_type::to_string, py::const_))
-      // TODO .def("insert", &manager_type::insert)
       .def("insert_and_map", &manager_type::insert_and_map)
-      .def("stride",
-           py::overload_cast<minkowski::CoordinateMapKey const *,
-                             typename manager_type::stride_type const &>(
-               &manager_type::stride))
+      .def("stride", &manager_type::py_stride)
+      .def("origin", &manager_type::py_origin)
       .def("get_coordinates", &manager_type::get_coordinates)
       .def("get_coordinate_map_keys", &manager_type::get_coordinate_map_keys)
       .def("size", py::overload_cast<minkowski::CoordinateMapKey const *>(
                        &manager_type::size, py::const_))
-      .def("kernel_map", &manager_type::kernel_map);
+      .def("kernel_map", &manager_type::kernel_map)
+      .def("origin_map", &manager_type::origin_map);
 }
 
 bool is_cuda_available() {

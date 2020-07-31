@@ -138,6 +138,7 @@ if __name__ == '__main__':
     colors = np.array([SCANNET_COLOR_MAP[VALID_CLASS_IDS[l]] for l in pred])
     pred_pcd.points = o3d.utility.Vector3dVector(coords)
     pred_pcd.colors = o3d.utility.Vector3dVector(colors / 255)
+    pred_pcd.estimate_normals()
 
     # Move the original point cloud
     pcd.points = o3d.utility.Vector3dVector(

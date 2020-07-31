@@ -150,12 +150,16 @@ public:
    * @brief strided coordinate map.
    */
   self_type stride(stride_type const &stride) const;
+  self_type origin() const;
+
   kernel_map_type kernel_map(self_type const &out_coordinate_map,
                              gpu_kernel_region<coordinate_type> const &kernel,
                              CUDAKernelMapMode::Mode kernel_map_mode,
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
   kernel_map_type stride_map(self_type const &out_coordinate_map,
                              stride_type const &out_tensor_stride,
+                             uint32_t thread_dim = CUDA_NUM_THREADS) const;
+  kernel_map_type origin_map(self_type const &origin_coordinate_map,
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
 
   // Returns the number of elements in the coordinate map
@@ -179,6 +183,8 @@ public:
 
 private:
   using base_type::m_coordinate_size;
+  using base_type::m_byte_allocator;
+
   size_type m_hashtable_occupancy;
   size_type m_capacity;
   size_type m_size;

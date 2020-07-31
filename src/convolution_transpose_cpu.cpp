@@ -136,7 +136,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
     cpu_manager_type<coordinate_type> *p_map_manager) {
 
   ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
-  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feat must be contiguous");
   ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
   ASSERT(!in_feat.is_cuda(), "in_feat must be CPU");

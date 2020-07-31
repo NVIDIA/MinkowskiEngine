@@ -184,11 +184,8 @@ class CoordinateManager:
         stride = convert_to_int_list(stride, self.D)
         return self._manager.stride(coordinate_map_key, stride)
 
-    # def reduce(self):
-    #     origin_key = CoordsKey(self.D)
-    #     origin_key.setTensorStride(convert_to_int_list(0, self.D))
-    #     origin_key.setKey(self.CPPCoordsManager.createOriginCoords(self.D))
-    #     return origin_key
+    def origin(self):
+        return self._manager.origin()
 
     # def transposed_stride(
     #     self,
@@ -352,6 +349,9 @@ class CoordinateManager:
 
     #     return kernel_map
 
+    def origin_map(self, key: CoordinateMapKey):
+        return self._manager.origin_map(key)
+
     # def get_coords_map(self, in_key_or_tensor_strides, out_key_or_tensor_strides):
     #     r"""Extract input coords indices that maps to output coords indices.
 
@@ -438,5 +438,5 @@ class CoordinateManager:
     #     assert isinstance(coords_key, CoordsKey)
     #     self.CPPCoordsManager.printDiagnostics(coords_key.CPPCoordsKey)
 
-    # def __repr__(self):
-    #     return str(self._manager)
+    def __repr__(self):
+        return "CoordinateManager(\n" + str(self._manager) + "  )\n"

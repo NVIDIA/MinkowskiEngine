@@ -173,6 +173,90 @@ struct swap_in_out_map_functor<
   }
 };
 
+namespace detail {
+
+template <typename dst_type, typename src_type, typename size_type>
+__global__ void strided_copy(dst_type *__restrict__ dst,       //
+                             size_type const num_threads,      //
+                             src_type const *__restrict__ src, //
+                             size_type const stride_size) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    dst[x] = src[x * stride_size];
+  }
+}
+
+} // namespace detail
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+struct origin_map_functor<
+    coordinate_type, TemplatedAllocator, CoordinateMapGPU,
+    gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>>> {
+  std::pair<at::Tensor, std::vector<at::Tensor>> operator()(
+      CoordinateMapGPU<coordinate_type, TemplatedAllocator> const
+          &origin_coordinate_map,
+      gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>> const
+          &origin_map) {
+    int curr_device = -1;
+    CUDA_CHECK(cudaGetDevice(&curr_device));
+
+    auto options = torch::TensorOptions({at::kCUDA, curr_device})
+                       .dtype(torch::kLong)
+                       .requires_grad(false);
+    auto const out_size = origin_coordinate_map.size();
+    auto const coordinate_size = origin_coordinate_map.coordinate_size();
+
+    at::Tensor batch_indices = torch::empty({out_size}, options);
+    int64_t *d_batch_indices = batch_indices.data_ptr<int64_t>();
+
+    detail::strided_copy<int64_t, default_types::dcoordinate_type,
+                         default_types::size_type>
+        <<<GET_BLOCKS(out_size, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
+            d_batch_indices, out_size,
+            origin_coordinate_map.const_coordinate_data(), coordinate_size);
+
+    std::vector<int64_t> vec_batch_indices(out_size);
+    CUDA_CHECK(cudaMemcpy(vec_batch_indices.data(), d_batch_indices,
+                          out_size * sizeof(int64_t), cudaMemcpyDeviceToHost));
+
+    auto const max_batch_index = vec_batch_indices[out_size - 1];
+
+    std::vector<at::Tensor> in_maps;
+    default_types::index_type current_batch_row_index = 0;
+    for (default_types::index_type i = 0; i < (max_batch_index + 1);) {
+      if (vec_batch_indices[current_batch_row_index] == i) {
+        auto p_curr_map = origin_map.in_maps.begin(i);
+        auto const curr_size = origin_map.size(i);
+        at::Tensor row_indices = torch::empty({curr_size}, options);
+        int64_t *d_row_indices = row_indices.data_ptr<int64_t>();
+
+        detail::strided_copy<int64_t, default_types::index_type,
+                             default_types::size_type>
+            <<<GET_BLOCKS(curr_size, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
+                d_row_indices, curr_size, p_curr_map, 1);
+        in_maps.push_back(std::move(row_indices));
+
+        // if there is a match, move the index.
+        ++current_batch_row_index;
+        if (current_batch_row_index >= out_size) {
+          // Should not happen, but for safety
+          break;
+        }
+      } else {
+        at::Tensor row_indices = torch::empty({0}, options);
+        in_maps.push_back(std::move(row_indices));
+      }
+      ++i;
+    }
+
+    return std::make_pair(batch_indices, in_maps);
+  }
+};
+
 } // namespace detail
 
 template class CoordinateMapManager<int32_t, detail::default_allocator,

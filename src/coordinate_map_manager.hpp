@@ -195,15 +195,27 @@ public:
          stride_type const &kernel_stride);
 
   // python-side stride function
-  py::object stride(CoordinateMapKey const *in_map_key,
-                    stride_type const &kernel_stride) {
+  py::object py_stride(CoordinateMapKey const *in_map_key,
+                       stride_type const &kernel_stride) {
     auto key = std::get<0>(stride(in_map_key->get_key(), kernel_stride));
     return py::cast(new CoordinateMapKey(key.first.size() + 1, key));
   }
 
+  // stride region: new coordinate generation
   std::pair<coordinate_map_key_type, bool>
   stride_region(coordinate_map_key_type const &in_map_key,
                 cpu_kernel_region<coordinate_type> &kernel, bool is_transpose);
+
+  // origin coordinate map creation
+  std::pair<coordinate_map_key_type, bool> origin();
+
+  // python-side stride function
+  py::object py_origin() {
+    auto map_key_bool = origin();
+    LOG_DEBUG("Return origin map key");
+    return py::cast(new CoordinateMapKey(map_key_bool.first.first.size() + 1,
+                                         map_key_bool.first));
+  }
 
   /****************************************************************************
    * Coordinate management helper functions
@@ -283,15 +295,14 @@ public:
 
   std::string to_string() const {
     Formatter o;
-    o << "CoordinateMapManager(";
     for (auto const &kv : m_coordinate_maps) {
-      o << print_key(kv.first) << ":" << kv.second.to_string() << "\n";
+      o << "\t" << print_key(kv.first) << ":\t" << kv.second.to_string()
+        << "\n";
     }
     for (auto const &kv : m_kernel_maps) {
-      o << print_key(std::get<0>(kv.first)) << "->"
-        << print_key(std::get<1>(kv.first)) << ":" << kv.second << "\n";
+      o << "\t" << print_key(std::get<0>(kv.first)) << "->"
+        << print_key(std::get<1>(kv.first)) << ":\t" << kv.second << "\n";
     }
-    o << ")";
     return o.str();
   }
 
@@ -309,78 +320,16 @@ public:
              stride_type const &kernel_dilation,        //
              RegionType::Type const region_type,        //
              at::Tensor const &offsets, bool is_transpose, bool is_pool);
-  /*
-  void printDiagnostics(py::object py_coords_key) const;
 
-  bool existsCoordsKey(uint64_t coords_key) const;
-  bool existsCoordsKey(py::object py_coords_key) const;
+  std::pair<at::Tensor, std::vector<at::Tensor>>
+  origin_map(CoordinateMapKey const *py_out_coords_key);
+
+  /*
   bool existsInOutMapKey(const InOutMapKey &map_key) const {
     return in_maps.find(map_key) != in_maps.end();
   }
-  int getCoordsSize(uint64_t coords_key) const;
-  int getCoordsSize(py::object py_coords_key) const;
-  uint64_t getCoordsKey(const vector<int> &tensor_strides) const;
-  long int getBatchSize() const { return batch_indices.size(); }
-  set<int> getBatchIndices() const { return batch_indices; }
-  vector<vector<at::Tensor>>
-  getKernelMap(vector<int> tensor_strides, vector<int> strides,
-               vector<int> kernel_sizes, vector<int> dilations, int
-region_type, at::Tensor offsets, py::object py_in_coords_key, py::object
-py_out_coords_key, bool is_transpose, bool is_pool);
-
-#ifndef CPU_ONLY
-  vector<vector<at::Tensor>>
-  getKernelMapGPU(vector<int> tensor_strides, vector<int> strides,
-                  vector<int> kernel_sizes, vector<int> dilations,
-                  int region_type, at::Tensor offsets,
-                  py::object py_in_coords_key, py::object py_out_coords_key,
-                  bool is_transpose, bool is_pool);
-#endif
-
-  // TODO make this function non-const with ability to generate a new map
-  vector<at::Tensor> getCoordsMap(py::object py_in_coords_key,
-                                  py::object py_out_coords_key) const;
-  pair<vector<at::Tensor>, vector<at::Tensor>>
-  getUnionMap(vector<py::object> py_in_coords_keys,
-              py::object py_out_coords_key);
-
-  // Set the py_coords_key to the origin coords map key
-  void setOriginCoordsKey(py::object py_coords_key);
-
-  // New coords map given an input
-  uint64_t createStridedCoords(uint64_t coords_key,
-                               const vector<int> &tensor_strides,
-                               const vector<int> &strides, bool
-force_creation); uint64_t createTransposedStridedRegionCoords( uint64_t
-coords_key, const vector<int> &tensor_strides, const vector<int> &strides,
-vector<int> kernel_sizes, vector<int> dilations, int region_type, at::Tensor
-offsets, bool force_creation); uint64_t createPrunedCoords(at::Tensor
-use_feat, py::object py_in_coords_key, py::object py_out_coords_key);
-  uint64_t createOriginCoords(const int D);
-  uint64_t createUnionCoords(vector<py::object> py_in_coords_keys,
-                             py::object py_out_coords_key);
 
   // Mappings
-  const InOutMapKey getMapHashKey(vector<int> tensor_strides,
-                                  vector<int> strides, vector<int>
-kernel_sizes, vector<int> dilations, int region_type, py::object
-py_in_coords_key, py::object py_out_coords_key, bool is_transpose, bool
-is_pool) const; const InOutMapKey getOriginMapHashKey(py::object
-py_in_coords_key, py::object py_out_coords_key) const; const InOutMapKey
-getUnionMapHashKey(vector<py::object> py_in_coords_keys, py::object
-py_out_coords_key) const;
-
-  // Wrapper functions for setting up coords and returning maps
-  const InOutMapsRefPair<int>
-  getInOutMaps(const vector<int> &tensor_strides, const vector<int>
-&strides, const vector<int> &kernel_sizes, const vector<int> &dilations, int
-region_type, const at::Tensor &offsets, py::object py_in_coords_key,
-py::object py_out_coords_key, bool is_transpose, bool is_pool = false, bool
-generate_new_coords = false);
-
-  const InOutMapsRefPair<int> getOriginInOutMaps(py::object
-py_in_coords_key, py::object py_out_coords_key);
-
   const InOutMapsRefPair<int> getPruningInOutMaps(at::Tensor use_feat,
                                                   py::object
 py_in_coords_key, py::object py_out_coords_key);
@@ -490,6 +439,18 @@ private:
     return key;
   }
 
+  kernel_map_key_type
+  origin_map_key(coordinate_map_key_type const &in_key) const {
+    map_type const &random_map = m_coordinate_maps.begin()->second;
+    stride_type zero_vec(random_map.coordinate_size() - 1);
+    std::for_each(zero_vec.begin(), zero_vec.end(), [](auto &i) { i = 0; });
+    coordinate_map_key_type origin_key = std::make_pair(zero_vec, "");
+
+    return std::make_tuple(in_key, origin_key,           // maps
+                           zero_vec, zero_vec, zero_vec, // kernels
+                           RegionType::HYPER_CUBE, false, false);
+  }
+
 public:
   size_t m_gpu_default_occupancy;
 
@@ -508,9 +469,6 @@ private:
 #ifndef CPU_ONLY
   TemplatedAllocator<char> m_allocator;
 #endif
-  // Track whether the batch indices are set
-  bool is_batch_indices_set = false;
-
   // kernel map mode
   CUDAKernelMapMode::Mode m_kernel_map_mode;
 
@@ -567,6 +525,19 @@ struct stride_map_functor {
 template <typename kernel_map_type> struct swap_in_out_map_functor {
 
   kernel_map_type operator()(kernel_map_type const &kernel_map);
+};
+
+// a partial specialization functor for origin_map
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType,
+          typename kernel_map_type>
+struct origin_map_functor {
+  std::pair<at::Tensor, std::vector<at::Tensor>>
+  operator()(CoordinateMapType<coordinate_type, TemplatedAllocator> const
+                 &origin_coordinate_map,
+             kernel_map_type const &origin_map);
 };
 
 } // namespace detail
