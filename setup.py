@@ -203,7 +203,11 @@ debug, argv = _argparse("--debug", argv)
 USE_NINJA = os.getenv("USE_NINJA") == "0"
 HERE = Path(os.path.dirname(__file__)).absolute()
 SRC_PATH = HERE / "src"
-CXX = os.environ["CXX"]
+
+try:
+    CXX = os.environ["CXX"]
+except:
+    CXX = "g++"
 
 if sys.platform == "win32":
     vc_version = os.getenv("VCToolsVersion", "")

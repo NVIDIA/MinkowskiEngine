@@ -96,22 +96,36 @@ class CoordinateManagerTestCase(unittest.TestCase):
         self.assertTrue([0, -2] in strided_coords)
         self.assertTrue([0, 2] in strided_coords)
 
-    # def test_batch_size_initialize(self):
-    #     cm = CoordsManager(D=1)
-    #     coords = torch.IntTensor(
-    #         [[0, -3], [0, -2], [0, -1], [0, 0], [1, 1], [1, 2], [1, 3]]
-    #     )
+    def test_origin_map(self):
+        manager = ME.CoordinateManager(
+            D=1, coordinate_map_type=ME.CoordinateMapType.CPU
+        )
+        coords = torch.IntTensor(
+            [[0, -3], [0, -2], [0, -1], [0, 0], [1, 1], [1, 2], [1, 3]]
+        )
 
-    #     # key with batch_size 2
-    #     cm.create_coords_key(coords)
-    #     self.assertTrue(cm.get_batch_size() == 2)
+        # key with batch_size 2
+        key, (unique_map, inverse_map) = manager.insert_and_map(coords, [1])
+        print(manager.origin_map(key))
+        key = manager.origin()
 
-    #     coords = torch.IntTensor(
-    #         [[0, -3], [0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [0, 3]]
-    #     )
-    #     cm.create_coords_key(coords)
+        batch_coordinates = manager.get_coordinates(key)
+        print(batch_coordinates)
+        self.assertTrue(len(batch_coordinates) == 2)
 
-    #     self.assertTrue(cm.get_batch_size() == 2)
+        if not torch.cuda.is_available():
+            return
+
+        manager = ME.CoordinateManager(
+            D=1, coordinate_map_type=ME.CoordinateMapType.CUDA
+        )
+        key, (unique_map, inverse_map) = manager.insert_and_map(coords.to(0), [1])
+        print(manager.origin_map(key))
+        key = manager.origin()
+
+        batch_coordinates = manager.get_coordinates(key)
+        print(batch_coordinates)
+        self.assertTrue(len(batch_coordinates) == 2)
 
     def test_gpu_allocator(self):
         # Set the global GPU memory manager backend. By default PYTORCH.

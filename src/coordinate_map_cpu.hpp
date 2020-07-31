@@ -235,6 +235,32 @@ public:
     return stride_map;
   }
 
+  /*
+   * @brief strided coordinate map.
+   */
+  self_type origin() const {
+    // tensor stride is set to {0,..., 0} for the origin map.
+    stride_type origin_tensor_stride(m_coordinate_size - 1);
+    std::for_each(origin_tensor_stride.begin(), origin_tensor_stride.end(),
+                  [](auto &i) { i = 0; });
+
+    // Over estimate the reserve size to be size();
+    self_type origin_map(size(), m_coordinate_size, origin_tensor_stride,
+                         base_type::m_byte_allocator);
+
+    index_type c = 0;
+    std::vector<coordinate_type> dst(m_coordinate_size);
+    std::for_each(dst.begin(), dst.end(), [](auto &i) { i = 0; });
+
+    coordinate<coordinate_type> tmp_coordinate(&dst[0]);
+    for (auto const &kv : m_map) {
+      dst[0] = kv.first[0];
+      auto result = origin_map.insert(tmp_coordinate, c);
+      c += result.second;
+    }
+    return origin_map;
+  }
+
   cpu_kernel_map
   kernel_map(self_type const &out_coordinate_map,
              cpu_kernel_region<coordinate_type> const &kernel) const {
@@ -396,6 +422,85 @@ public:
     }
 
     return std::make_pair(move(in_maps), move(out_maps));
+  }
+
+  cpu_kernel_map origin_map(self_type const &origin_coordinate_map) const {
+    // generate an in-out (kernel) map that maps all input points in the same
+    // voxel to strided output voxel.
+    ASSERT(std::all_of(origin_coordinate_map.get_tensor_stride().begin(),
+                       origin_coordinate_map.get_tensor_stride().end(),
+                       [](auto const &i) { return i == 0; }),
+           "Invalid origin tensor stride",
+           origin_coordinate_map.get_tensor_stride());
+
+    size_type in_size = size();
+    LOG_DEBUG("Generate origin_map with in NNZ:", in_size,
+              "out NNZ:", origin_coordinate_map.size());
+    ASSERT(in_size > origin_coordinate_map.size(),
+           "Invalid out_coordinate_map");
+
+    std::vector<std::pair<index_type, index_type>> in_out(in_size);
+
+    // compute the chunk size per thread.
+    // There's a trade-off between the thread initialization overhead and the
+    // job sizes. If some jobs finish earlier than others due to imbalance in
+    // hash distribution, these threads will be idle.
+    const size_t in_map_num_elements = m_map.capacity();
+    size_t N = 2 * omp_get_max_threads();
+    const size_t stride = (in_map_num_elements + N - 1) / N;
+    N = (in_map_num_elements + stride - 1) / stride;
+    LOG_DEBUG("kernel map with", N, "chunks.");
+
+    size_type num_used = 0;
+#pragma omp parallel for
+    for (index_type n = 0; n < N; ++n) {
+      index_type curr_index_begin;
+      std::vector<coordinate_type> dst(m_coordinate_size);
+      std::for_each(dst.begin(), dst.end(), [](auto &i) { i = 0; });
+
+      for (auto iter_in = m_map.begin(stride * n);
+           iter_in.num_steps() <
+           std::min(stride, in_map_num_elements - n * stride);
+           ++iter_in) {
+        dst[0] = iter_in->first[0];
+        const auto iter_origin =
+            origin_coordinate_map.find(coordinate<coordinate_type>(dst.data()));
+        ASSERT(iter_origin != origin_coordinate_map.m_map.cend(),
+               "Invalid origin_coordinate_map");
+        index_type origin_row_index = iter_origin->second;
+
+#pragma omp atomic capture
+        {
+          curr_index_begin = num_used;
+          num_used += 1;
+        }
+
+        in_out[curr_index_begin] =
+            std::make_pair(iter_in->second, origin_row_index);
+      }
+    }
+
+    // TODO sort by row index (out_maps[0]) and split into vectors.
+    std::sort(in_out.begin(), in_out.end(),
+              [](std::pair<index_type, index_type> const &l,
+                 std::pair<index_type, index_type> const &r) {
+                return l.second < r.second;
+              });
+
+    cpu_in_maps in_maps(1);
+    cpu_in_maps out_maps(1);
+    auto &in_map = in_maps[0];
+    auto &out_map = out_maps[0];
+    in_map.resize(in_size);
+    out_map.resize(in_size);
+
+    for (index_type i = 0; i < in_size; ++i) {
+      auto const &curr_pair = in_out[i];
+      in_map[i] = curr_pair.first;
+      out_map[i] = curr_pair.second;
+    }
+
+    return cpu_kernel_map(std::make_pair(in_maps, out_maps));
   }
 
   inline size_type size() const noexcept { return m_map.size(); }

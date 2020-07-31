@@ -560,14 +560,6 @@ class SparseTensor:
     def shape(self):
         return self._F.shape
 
-    def to(self, device):
-        self._F = self._F.to(device)
-        return self
-
-    def cpu(self):
-        self._F = self._F.cpu()
-        return self
-
     @property
     def device(self):
         return self._F.device
@@ -607,6 +599,39 @@ class SparseTensor:
         self._F /= other.F
         return self
 
+    def _binary_functor(self, other, binary_fn):
+        assert isinstance(other, (SparseTensor, torch.Tensor))
+        if isinstance(other, SparseTensor):
+            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
+
+            if self.coordinate_map_key == other.coordinate_map_key:
+                return SparseTensor(
+                    binary_fn(self._F, other.F),
+                    coordinate_map_key=self.coordinate_map_key,
+                    coordinate_manager=self._manager,
+                )
+            else:
+                # Generate union maps
+                out_key = CoordsKey(self._manager.D)
+                ins, outs = self._manager.get_union_map(
+                    (self.coordinate_map_key, other.coordinate_map_key), out_key
+                )
+                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
+                out_F = torch.zeros(
+                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
+                )
+                out_F[outs[0]] = self._F[ins[0]]
+                out_F[outs[1]] = binary_fn(out_F[outs[1]], other._F[ins[1]])
+                return SparseTensor(
+                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
+                )
+        else:  # when it is a torch.Tensor
+            return SparseTensor(
+                binary_fn(self._F, other),
+                coordinate_map_key=self.coordinate_map_key,
+                coordinate_manager=self._manager,
+            )
+
     def __add__(self, other):
         r"""
         Add its feature with the corresponding feature of the other
@@ -615,37 +640,7 @@ class SparseTensor:
         on the other, features of the counterpart that do not exist will be set
         to 0.
         """
-        assert isinstance(other, (SparseTensor, torch.Tensor))
-        if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
-
-            if self.coordinate_map_key == other.coordinate_map_key:
-                return SparseTensor(
-                    self._F + other.F,
-                    coordinate_map_key=self.coordinate_map_key,
-                    coords_manager=self._manager,
-                )
-            else:
-                # Generate union maps
-                out_key = CoordsKey(self._manager.D)
-                ins, outs = self._manager.get_union_map(
-                    (self.coordinate_map_key, other.coordinate_map_key), out_key
-                )
-                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
-                out_F = torch.zeros(
-                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
-                )
-                out_F[outs[0]] = self._F[ins[0]]
-                out_F[outs[1]] += other._F[ins[1]]
-                return SparseTensor(
-                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
-                )
-        else:  # when it is a torch.Tensor
-            return SparseTensor(
-                self._F + other,
-                coordinate_map_key=self.coordinate_map_key,
-                coords_manager=self._manager,
-            )
+        return self._binary_functor(other, lambda x, y: x + y)
 
     def __sub__(self, other):
         r"""
@@ -654,38 +649,7 @@ class SparseTensor:
         For coordinates that exist on one sparse tensor but not on the other,
         features of the counterpart that do not exist will be set to 0.
         """
-        assert isinstance(other, (SparseTensor, torch.Tensor))
-        if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
-
-            if self.coordinate_map_key == other.coordinate_map_key:
-                return SparseTensor(
-                    self._F - other.F,
-                    coordinate_map_key=self.coordinate_map_key,
-                    coords_manager=self._manager,
-                )
-            else:
-                # Generate union maps
-                out_key = CoordsKey(self._manager.D)
-                ins, outs = self._manager.get_union_map(
-                    (self.coordinate_map_key, other.coordinate_map_key), out_key
-                )
-                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
-                out_F = torch.zeros(
-                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
-                )
-                out_F[outs[0]] = self._F[ins[0]]
-                out_F[outs[1]] -= other._F[ins[1]]
-                return SparseTensor(
-                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
-                )
-
-        else:  # when it is a torch.Tensor
-            return SparseTensor(
-                self._F - other,
-                coordinate_map_key=self.coordinate_map_key,
-                coords_manager=self._manager,
-            )
+        return self._binary_functor(other, lambda x, y: x - y)
 
     def __mul__(self, other):
         r"""
@@ -695,37 +659,7 @@ class SparseTensor:
         on the other, features of the counterpart that do not exist will be set
         to 0.
         """
-        assert isinstance(other, (SparseTensor, torch.Tensor))
-        if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
-
-            if self.coordinate_map_key == other.coordinate_map_key:
-                return SparseTensor(
-                    self._F * other.F,
-                    coordinate_map_key=self.coordinate_map_key,
-                    coords_manager=self._manager,
-                )
-            else:
-                # Generate union maps
-                out_key = CoordsKey(self._manager.D)
-                ins, outs = self._manager.get_union_map(
-                    (self.coordinate_map_key, other.coordinate_map_key), out_key
-                )
-                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
-                out_F = torch.zeros(
-                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
-                )
-                out_F[outs[0]] = self._F[ins[0]]
-                out_F[outs[1]] *= other._F[ins[1]]
-                return SparseTensor(
-                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
-                )
-        else:  # when it is a torch.Tensor
-            return SparseTensor(
-                self._F * other,
-                coordinate_map_key=self.coordinate_map_key,
-                coords_manager=self._manager,
-            )
+        return self._binary_functor(other, lambda x, y: x * y)
 
     def __truediv__(self, other):
         r"""
@@ -735,43 +669,13 @@ class SparseTensor:
         on the other, features of the counterpart that do not exist will be set
         to 0.
         """
-        assert isinstance(other, (SparseTensor, torch.Tensor))
-        if isinstance(other, SparseTensor):
-            assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
-
-            if self.coordinate_map_key == other.coordinate_map_key:
-                return SparseTensor(
-                    self._F / other.F,
-                    coordinate_map_key=self.coordinate_map_key,
-                    coords_manager=self._manager,
-                )
-            else:
-                # Generate union maps
-                out_key = CoordsKey(self._manager.D)
-                ins, outs = self._manager.get_union_map(
-                    (self.coordinate_map_key, other.coordinate_map_key), out_key
-                )
-                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
-                out_F = torch.zeros(
-                    (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
-                )
-                out_F[outs[0]] = self._F[ins[0]]
-                out_F[outs[1]] /= other._F[ins[1]]
-                return SparseTensor(
-                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
-                )
-        else:  # when it is a torch.Tensor
-            return SparseTensor(
-                self._F / other,
-                coordinate_map_key=self.coordinate_map_key,
-                coords_manager=self._manager,
-            )
+        return self._binary_functor(other, lambda x, y: x / y)
 
     def __power__(self, power):
         return SparseTensor(
             self._F ** power,
             coordinate_map_key=self.coordinate_map_key,
-            coords_manager=self._manager,
+            coordinate_manager=self._manager,
         )
 
     # Conversion functions

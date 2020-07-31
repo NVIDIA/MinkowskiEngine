@@ -118,7 +118,8 @@ at::Tensor ConvolutionTransposeForwardGPU(
                                                  false /* is_pool */);
 
 #ifdef DEBUG
-  LOG_DEBUG("Transposed kernel map in_maps:", in_out.out_maps.begin() - in_out.in_maps.begin());
+  LOG_DEBUG("Transposed kernel map in_maps:",
+            in_out.out_maps.begin() - in_out.in_maps.begin());
 #endif
 
   auto const out_nrows = p_map_manager->size(p_out_map_key->get_key());
@@ -163,7 +164,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager) {
 
   ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
-  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feat must be contiguous");
   ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
   ASSERT(in_feat.is_cuda(), "in_feat must be CUDA");
@@ -187,13 +188,14 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
   coordinate_map_key_type out_key = p_out_map_key->get_key();
   ASSERT(p_map_manager->exists(out_key), ERROR_MAP_NOT_FOUND);
 
-  auto const &in_out = p_map_manager->kernel_map(p_in_map_key,    //
-                                                 p_out_map_key,   //
-                                                 kernel_size,     //
-                                                 kernel_stride,   //
-                                                 kernel_dilation, //
-                                                 region_type,     //
-                                                 offset, false, false);
+  auto const &in_out = p_map_manager->kernel_map(
+      p_in_map_key,    //
+      p_out_map_key,   //
+      kernel_size,     //
+      kernel_stride,   //
+      kernel_dilation, //
+      region_type,     //
+      offset, true /* is_transpose */, false /* is_pool */);
 
   at::Tensor grad_in_feat =
       torch::zeros({in_feat.size(0), in_feat.size(1)}, in_feat.options());
@@ -201,7 +203,8 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
       {kernel.size(0), kernel.size(1), kernel.size(2)}, kernel.options());
 
   cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
-  cublasSetStream(handle, at::cuda::getCurrentCUDAStream().stream());
+  cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
+  cublasSetStream(handle, stream);
 
   AT_DISPATCH_FLOATING_TYPES(
       in_feat.scalar_type(), "convolution_transpose_backward_gpu", [&] {
@@ -216,7 +219,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
             grad_kernel.template data_ptr<scalar_t>(),   //
             in_out,                                      //
             grad_out_feat.size(0),                       //
-            handle, at::cuda::getCurrentCUDAStream());
+            handle, stream);
       });
 
   return std::make_pair(grad_in_feat, grad_kernel);
