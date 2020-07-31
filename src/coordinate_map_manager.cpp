@@ -926,8 +926,7 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
   auto options = torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
   if (!detail::is_cpu_coordinate_map<CoordinateMapType>::value) {
 #ifndef CPU_ONLY
-    int device_id;
-    CUDA_CHECK(cudaGetDevice(&device_id));
+    auto device_id = at::cuda::current_device();
     options = options.device(torch::kCUDA, device_id);
 #else
     ASSERT(false, ERROR_CPU_ONLY);

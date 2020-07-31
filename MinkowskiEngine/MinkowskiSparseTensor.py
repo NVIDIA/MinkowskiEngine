@@ -213,6 +213,7 @@ class SparseTensor:
         # optional manager related arguments
         allocator_type: GPUMemoryAllocatorType = None,
         kernel_map_mode: CUDAKernelMapMode = None,
+        device = None,
     ):
         r"""
 
@@ -264,6 +265,11 @@ class SparseTensor:
             assert isinstance(coordinate_map_key, CoordinateMapKey)
         if coordinate_manager is not None:
             assert isinstance(coordinate_manager, CoordinateManager)
+
+        # To device
+        if device is not None:
+            features = features.to(device)
+            coordinates = coordinates.to(device)
 
         # Coordinate Management
         self.D = 0  # coordinate size - 1
