@@ -372,6 +372,13 @@ class SparseTensor:
 
         self._F = features
         self._C = coordinates
+        self._batch_rows = None
+
+    @property
+    def _batchwise_row_indices(self):
+        if self._batch_rows is None:
+            _, self._batch_rows = self._manager.origin_map(self.coordinate_map_key)
+        return self._batch_rows
 
     @property
     def coordinate_manager(self):
@@ -422,8 +429,7 @@ class SparseTensor:
         zero elements in the :math:`i`th batch index in :math:`D` dimensional
         space.
         """
-        row_inds_list = self._manager.get_row_indices_per_batch(self.coordinate_map_key)
-        return [self.C[row_inds, 1:] for row_inds in row_inds_list]
+        return [self.C[row_inds, 1:] for row_inds in self._batchwise_row_indices]
 
     def coordinates_at(self, batch_index):
         r"""Return coordinates at the specified batch index.
@@ -433,10 +439,7 @@ class SparseTensor:
         is the number of non zero elements in the :math:`i`th batch index in
         :math:`D` dimensional space.
         """
-        row_inds = self._manager.get_row_indices_at(
-            self.coordinate_map_key, batch_index
-        )
-        return self.C[row_inds, 1:]
+        return self.C[self._batchwise_row_indices[batch_index], 1:]
 
     @property
     def F(self):
@@ -463,8 +466,7 @@ class SparseTensor:
         zero elements in the :math:`i`th batch index in :math:`D` dimensional
         space.
         """
-        row_inds_list = self._manager.get_row_indices_per_batch(self.coordinate_map_key)
-        return [self._F[row_inds] for row_inds in row_inds_list]
+        return [self._F[row_inds] for row_inds in self._batchwise_row_indices]
 
     def features_at(self, batch_index):
         r"""Returns a feature matrix at the specified batch index.
@@ -474,10 +476,7 @@ class SparseTensor:
         zero elements in the specified batch index and :math:`N_F` is the
         number of channels.
         """
-        row_inds = self._manager.get_row_indices_at(
-            self.coordinate_map_key, batch_index
-        )
-        return self._F[row_inds]
+        return self._F[self._batchwise_row_indices[batch_index]]
 
     def coordinates_and_features_at(self, batch_index):
         r"""Returns a coordinate and feature matrix at the specified batch index.
@@ -490,9 +489,7 @@ class SparseTensor:
         matrix :math:`N` is the number of non zero elements in the specified
         batch index and :math:`N_F` is the number of channels.
         """
-        row_inds = self._manager.get_row_indices_at(
-            self.coordinate_map_key, batch_index
-        )
+        row_inds = self._batchwise_row_indices[batch_index]
         return self.C[row_inds, 1:], self._F[row_inds]
 
     @property
@@ -500,7 +497,7 @@ class SparseTensor:
         r"""Returns a list of coordinates and a list of features per batch.abs
 
         """
-        row_inds_list = self._manager.get_row_indices_per_batch(self.coordinate_map_key)
+        row_inds_list = self._batchwise_row_indices
         return (
             [self.C[row_inds, 1:] for row_inds in row_inds_list],
             [self._F[row_inds] for row_inds in row_inds_list],
