@@ -55,6 +55,18 @@ class SparseTensorTestCase(unittest.TestCase):
             coordinate_manager=input1.coordinate_manager)
         print(input1.coordinate_map_key, input2.coordinate_map_key)
 
+    def test_device(self):
+        if not torch.cuda.is_available():
+            return
+        coords = torch.IntTensor([[0, 1], [0, 1], [0, 2], [0, 2], [1, 0],
+                                  [1, 0], [1, 1]])
+        feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T
+
+        SparseTensor(feats, coords)
+        SparseTensor(feats.to(0), coords.to(0))
+        feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T.to(0)
+        SparseTensor(feats, coords, device=feats.device)
+
     def test_duplicate_coords(self):
         print(f"{self.__class__.__name__}: test_duplicate_coords")
         coords, feats, labels = data_loader(nchannel=2)

@@ -201,8 +201,7 @@ struct origin_map_functor<
           &origin_coordinate_map,
       gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>> const
           &origin_map) {
-    int curr_device = -1;
-    CUDA_CHECK(cudaGetDevice(&curr_device));
+    auto curr_device = at::cuda::current_device();
 
     auto options = torch::TensorOptions({at::kCUDA, curr_device})
                        .dtype(torch::kLong)
