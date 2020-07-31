@@ -467,7 +467,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
       m_coordinate_size};
 
   thrust::counting_iterator<uint32_t> count_begin{0};
-  thrust::for_each(thrust::device, count_begin, count_begin + N, insert);
+  thrust::for_each(thrust::device, count_begin, count_begin + N_unique, insert);
 
 #ifdef DEBUG
   CUDA_CHECK(cudaStreamSynchronize(0));
