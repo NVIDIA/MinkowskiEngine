@@ -213,15 +213,19 @@ struct origin_map_functor<
     at::Tensor batch_indices = torch::empty({out_size}, options);
     int64_t *d_batch_indices = batch_indices.data_ptr<int64_t>();
 
+    LOG_DEBUG("manager origin map strided_copy");
     detail::strided_copy<int64_t, default_types::dcoordinate_type,
                          default_types::size_type>
         <<<GET_BLOCKS(out_size, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
             d_batch_indices, out_size,
             origin_coordinate_map.const_coordinate_data(), coordinate_size);
+    CUDA_CHECK(cudaStreamSynchronize(0));
 
+    LOG_DEBUG("manager batch copy");
     std::vector<int64_t> vec_batch_indices(out_size);
     CUDA_CHECK(cudaMemcpy(vec_batch_indices.data(), d_batch_indices,
                           out_size * sizeof(int64_t), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaStreamSynchronize(0));
 
     auto const max_batch_index = vec_batch_indices[out_size - 1];
 
@@ -234,6 +238,7 @@ struct origin_map_functor<
         at::Tensor row_indices = torch::empty({curr_size}, options);
         int64_t *d_row_indices = row_indices.data_ptr<int64_t>();
 
+        LOG_DEBUG("manager batch copy", i);
         detail::strided_copy<int64_t, default_types::index_type,
                              default_types::size_type>
             <<<GET_BLOCKS(curr_size, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
@@ -252,6 +257,7 @@ struct origin_map_functor<
       }
       ++i;
     }
+    CUDA_CHECK(cudaStreamSynchronize(0));
 
     return std::make_pair(batch_indices, in_maps);
   }

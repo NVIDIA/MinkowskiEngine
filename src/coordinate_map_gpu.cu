@@ -885,7 +885,9 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin_map(
           kernel_map.kernels.begin(),                         //
           m_coordinate_size);
 
+  CUDA_CHECK(cudaStreamSynchronize(0));
   kernel_map.decompose();
+  LOG_DEBUG("origin map decomposed");
 
   return kernel_map;
 }

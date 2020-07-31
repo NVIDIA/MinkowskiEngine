@@ -23,7 +23,7 @@
 # of the code.
 import torch.nn.functional as F
 
-from SparseTensor import SparseTensor
+from MinkowskiSparseTensor import SparseTensor
 
 
 # Activations

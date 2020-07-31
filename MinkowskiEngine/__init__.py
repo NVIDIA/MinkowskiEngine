@@ -117,7 +117,7 @@ from MinkowskiNormalization import (
 #
 # from MinkowskiUnion import MinkowskiUnion, MinkowskiUnionFunction
 #
-# from MinkowskiNetwork import MinkowskiNetwork
+from MinkowskiNetwork import MinkowskiNetwork
 
 import MinkowskiOps
 

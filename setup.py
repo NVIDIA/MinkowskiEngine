@@ -6,13 +6,13 @@ Usage:
 
   python setup.py install <additional_flags>..<additional_flags> <additional_arg>=<value>..<additional_arg>=<value>
 
-  export CXX=<C++ compiler>; python setup.py install <additional_flags>..<additional_flags> <additional_arg>=<value>..<additional_arg>=<value>
+  export CC=<C++ compiler>; python setup.py install <additional_flags>..<additional_flags> <additional_arg>=<value>..<additional_arg>=<value>
 
 
 Examples:
 
   python setup.py install --force_cuda --cuda_home=/usr/local/cuda
-  export CXX=g++7; python setup.py install --force_cuda --cuda_home=/usr/local/cuda
+  export CC=g++7; python setup.py install --force_cuda --cuda_home=/usr/local/cuda
 
 
 Additional flags:
@@ -60,6 +60,7 @@ import subprocess
 from sys import argv, platform
 from setuptools import setup
 from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
+import distutils.ccompiler
 from pathlib import Path
 
 from distutils.sysconfig import get_python_inc
@@ -69,7 +70,6 @@ if platform == "win32":
 elif platform == "darwin":
     # Set the distutils to use clang instead of g++ for valid std
     os.environ["CC"] = "/usr/local/opt/llvm/bin/clang"
-    os.environ["CXX"] = "/usr/local/opt/llvm/bin/clang"
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -170,7 +170,7 @@ else:
 print(f"\nUsing BLAS={BLAS}")
 
 # The Ninja cannot compile the files that have the same name with different
-# extensions correctly and uses the nvcc/CXX based on the extension. Import a
+# extensions correctly and uses the nvcc/CC based on the extension. Import a
 # .cpp file to the corresponding .cu file to force the nvcc compilation.
 SOURCE_SETS = {
     "cpu": [
@@ -207,30 +207,33 @@ USE_NINJA = os.getenv("USE_NINJA") == "0"
 HERE = Path(os.path.dirname(__file__)).absolute()
 SRC_PATH = HERE / "src"
 
-try:
-    CXX = os.environ["CXX"]
-except:
-    CXX = "g++"
-
 if sys.platform == "win32":
     vc_version = os.getenv("VCToolsVersion", "")
     if vc_version.startswith("14.16."):
-        CXX_FLAGS = ["/sdl"]
+        CC_FLAGS = ["/sdl"]
     else:
-        CXX_FLAGS = ["/sdl", "/permissive-"]
+        CC_FLAGS = ["/sdl", "/permissive-"]
 else:
-    CXX_FLAGS = ["-fopenmp"]
+    CC_FLAGS = ["-fopenmp"]
 
 if "darwin" in platform:
-    CXX_FLAGS += ["-stdlib=libc++"]
+    CC_FLAGS += ["-stdlib=libc++"]
 
-NVCC_FLAGS = [f"-ccbin={CXX}", "--extended-lambda"]
+NVCC_FLAGS = ["--extended-lambda"]
+
+# distutils only checks CC not CXX
+try:
+    CC = os.environ["CC"]
+    print(f"Using {CC} for c++ compilation")
+    NVCC_FLAGS += [f"-ccbin={CC}"]
+except:
+    pass
 
 if debug:
-    CXX_FLAGS += ["-g", "-DDEBUG"]
+    CC_FLAGS += ["-g", "-DDEBUG"]
     NVCC_FLAGS += ["-g", "-DDEBUG"]
 else:
-    CXX_FLAGS += ["-O3"]
+    CC_FLAGS += ["-O3"]
     NVCC_FLAGS += ["-O3"]
 
 test_target = "cpu" if CPU_ONLY else "gpu"
@@ -239,16 +242,14 @@ Extension = SOURCE_SETS[test_target][0]
 SRC_FILES = SOURCE_SETS[test_target][1]
 BIND_FILES = SOURCE_SETS[test_target][2]
 ARGS = SOURCE_SETS[test_target][3]
-CXX_FLAGS += ARGS
+CC_FLAGS += ARGS
 NVCC_FLAGS += ARGS
 
 ext_modules = [
     Extension(
         name="MinkowskiEngineBackend._C",
-        # ["type_test.cpp", "],
         sources=[*[str(SRC_PATH / src_file) for src_file in SRC_FILES], *BIND_FILES],
-        extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS,},
-        # library_dirs=[str(OBJ_DIR), str(ME_OBJ_DIR)],
+        extra_compile_args={"cxx": CC_FLAGS, "nvcc": NVCC_FLAGS,},
         libraries=libraries,
     ),
 ]
