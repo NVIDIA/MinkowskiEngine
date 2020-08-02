@@ -162,6 +162,8 @@ template <typename Dtype1, typename Dtype2>
 void print(const thrust::device_vector<Dtype1> &v1,
            const thrust::device_vector<Dtype2> &v2);
 
+std::pair<size_t, size_t> get_memory_info();
+
 } // end namespace minkowski
 
 #endif // GPU_H_

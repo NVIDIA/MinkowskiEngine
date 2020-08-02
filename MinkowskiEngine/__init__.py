@@ -42,6 +42,9 @@ from MinkowskiEngineBackend._C import (
     GPUMemoryAllocatorType,
     CoordinateMapType,
     RegionType,
+    is_cuda_available,
+    cuda_version,
+    get_gpu_memory_info,
 )
 
 from MinkowskiKernelGenerator import (
@@ -127,8 +130,8 @@ import MinkowskiOps
 
 from MinkowskiOps import MinkowskiLinear, cat
 
-# import MinkowskiFunctional
-#
+import MinkowskiFunctional
+
 import MinkowskiEngine.utils as utils
 
-# import MinkowskiEngine.modules as modules
+import MinkowskiEngine.modules as modules
