@@ -51,6 +51,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 #endif
 
   // Functions
+  non_templated_cpu_func(m);
   instantiate_cpu_func<int32_t>(m, "");
 
 #ifndef CPU_ONLY

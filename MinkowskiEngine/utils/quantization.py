@@ -24,7 +24,7 @@
 import torch
 import numpy as np
 from collections import Sequence
-import MinkowskiEngineBackend as MEB
+import MinkowskiEngineBackend._C as MEB
 
 
 def fnv_hash_vec(arr):

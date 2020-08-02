@@ -39,6 +39,7 @@
 
 #include <torch/extension.h>
 
+#include <pybind11/numpy.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -172,17 +173,17 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
 /*************************************
  * Quantization
  *************************************/
-/*
-template <typename MapType>
-std::vector<py::array>
-quantize_np(py::array_t<int, py::array::c_style | py::array::forcecast> coords);
+std::vector<py::array> quantize_np(
+    py::array_t<int32_t, py::array::c_style | py::array::forcecast> coords);
 
+std::vector<at::Tensor> quantize_th(at::Tensor &coords);
+
+/*
 vector<py::array> quantize_label_np(
     py::array_t<int, py::array::c_style | py::array::forcecast> coords,
     py::array_t<int, py::array::c_style | py::array::forcecast> labels,
     int invalid_label);
 
-template <typename MapType> vector<at::Tensor> quantize_th(at::Tensor coords);
 
 vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
                                      int invalid_label);
@@ -365,6 +366,11 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::ConvolutionTransposeBackwardGPU<coordinate_type,
                                                     TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
+}
+
+void non_templated_cpu_func(py::module &m) {
+  m.def("quantize_np", &minkowski::quantize_np);
+  m.def("quantize_th", &minkowski::quantize_th);
 }
 
 void non_templated_gpu_func(py::module &m) {
