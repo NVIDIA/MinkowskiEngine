@@ -22,11 +22,9 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-import math
 from collections import Sequence
 import numpy as np
 from enum import Enum
-from itertools import product
 from typing import Union
 
 import torch
@@ -122,12 +120,6 @@ def prep_args(
 
 def get_postfix(tensor: torch.Tensor):
     postfix = "GPU" if tensor.is_cuda else "CPU"
-    # if isinstance(tensor, torch.DoubleTensor) or isinstance(
-    #     tensor, torch.cuda.DoubleTensor
-    # ):
-    #     postfix += "d"
-    # else:
-    #     postfix += "f"
     return postfix
 
 

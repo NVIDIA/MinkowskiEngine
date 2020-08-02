@@ -26,8 +26,6 @@ import math
 from collections import Sequence, namedtuple
 from functools import reduce
 import numpy as np
-from enum import Enum
-from itertools import product
 from typing import Union
 
 import torch

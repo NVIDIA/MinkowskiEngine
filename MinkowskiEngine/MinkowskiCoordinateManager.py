@@ -29,13 +29,12 @@ from typing import Union, List, Tuple
 import warnings
 
 import torch
-from MinkowskiCommon import convert_to_int_list, convert_to_int_tensor, prep_args
+from MinkowskiCommon import convert_to_int_list, convert_to_int_tensor
 import MinkowskiEngineBackend._C as _C
 from MinkowskiEngineBackend._C import (
     CoordinateMapKey,
     GPUMemoryAllocatorType,
     CoordinateMapType,
-    RegionType,
     CUDAKernelMapMode,
 )
 
@@ -221,7 +220,7 @@ class CoordinateManager:
     #     return strided_key
 
     def _get_coordinate_map_key(self, key_or_tensor_strides):
-        r"""Helper function that retrieves a coordinate map key from tensor stride.
+        r"""Helper function that retrieves the first coordinate map key for the given tensor stride.
         """
         assert isinstance(key_or_tensor_strides, CoordinateMapKey) or isinstance(
             key_or_tensor_strides, (Sequence, np.ndarray, torch.IntTensor, int)
@@ -231,11 +230,9 @@ class CoordinateManager:
             return key_or_tensor_strides
         else:
             tensor_strides = convert_to_int_list(key_or_tensor_strides, self.D)
-            key = self.CPPCoordsManager.getCoordsKey(tensor_strides)
-            coords_key = CoordsKey(self.D)
-            coords_key.setKey(key)
-            coords_key.setTensorStride(tensor_strides)
-            return coords_key
+            keys = self._manager.get_coordinate_map_keys(tensor_strides)
+            assert len(keys) > 0
+            return keys[0]
 
     def get_coordinates(self, coords_key_or_tensor_strides):
         key = self._get_coordinate_map_key(coords_key_or_tensor_strides)
