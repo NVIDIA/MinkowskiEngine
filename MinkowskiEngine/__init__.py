@@ -30,6 +30,10 @@ import sys
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
 
+# Force OMP_NUM_THREADS setup
+if os.cpu_count() > 16 and "OMP_NUM_THREADS" not in os.environ:
+  os.environ["OMP_NUM_THREADS"] = 16
+
 # Must be imported first to load all required shared libs
 import torch
 
