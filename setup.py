@@ -87,6 +87,10 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
+def run_command(*args):
+    subprocess.check_call(args)
+
+
 def _argparse(pattern, argv, is_flag=True):
     if is_flag:
         found = pattern in argv
@@ -102,6 +106,11 @@ def _argparse(pattern, argv, is_flag=True):
             argv.remove(arr[0])
             return arr[0].split("=")[1], argv
 
+try:
+    # Force uninstall previous version
+    run_command('pip uninstall MinkowskiEngine')
+except:
+    pass
 
 # For cpu only build
 CPU_ONLY, argv = _argparse("--cpu_only", argv)
