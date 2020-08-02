@@ -295,11 +295,9 @@ class SparseTensor:
             coordinate_map_key = CoordinateMapKey(
                 convert_to_int_list(tensor_stride, self.D), ""
             )
-            self._manager = coordinate_manager
         else:
             # not (coordinate_map_key is None or coordinate_manager is None)
             self.D = coordinate_manager.D
-            self._manager = coordinate_manager
 
         ##########################
         # Setup CoordsManager
@@ -329,7 +327,7 @@ class SparseTensor:
                     allocator_type=allocator_type,
                     kernel_map_mode=kernel_map_mode,
                 )
-            self._manager = coordinate_manager
+        self._manager = coordinate_manager
 
         ##########################
         # Initialize coords

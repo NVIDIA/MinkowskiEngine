@@ -26,7 +26,7 @@ import unittest
 import numpy as np
 
 from MinkowskiEngine.utils import sparse_quantize
-import MinkowskiEngineBackend as MEB
+import MinkowskiEngineBackend._C as MEB
 
 
 class TestQuantization(unittest.TestCase):
@@ -54,6 +54,7 @@ class TestQuantization(unittest.TestCase):
         coords = (np.random.rand(N, 3) * 100).astype(np.int32)
         mapping, inverse_mapping = MEB.quantize_np(coords)
         print('N unique:', len(mapping), 'N:', N)
+        self.assertTrue((coords == coords[mapping][inverse_mapping]).all())
         self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
         coords = torch.from_numpy(coords)
