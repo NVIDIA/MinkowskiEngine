@@ -72,9 +72,18 @@ template <class T> struct c10_allocator {
   constexpr c10_allocator(const c10_allocator<U> &) noexcept {}
 
   T *allocate(std::size_t n, cudaStream_t stream = 0) const {
-    return reinterpret_cast<T *>(
-        c10::cuda::CUDACachingAllocator::raw_alloc_with_stream(
-            n * sizeof(T), at::cuda::getCurrentCUDAStream()));
+    T *tmp;
+    try {
+      tmp = reinterpret_cast<T *>(
+          c10::cuda::CUDACachingAllocator::raw_alloc(n * sizeof(T)));
+    } catch (std::exception const &e) {
+      // try to allocate once more after empty cache
+      c10::cuda::CUDACachingAllocator::emptyCache();
+      LOG_DEBUG("Automatically called empty cache");
+      tmp = reinterpret_cast<T *>(
+          c10::cuda::CUDACachingAllocator::raw_alloc(n * sizeof(T)));
+    }
+    return tmp;
   }
 
   void deallocate(T *p, std::size_t n, cudaStream_t stream = 0) const {

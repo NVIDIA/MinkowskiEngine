@@ -199,6 +199,8 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
                        torch::Tensor const &vals, int64_t const dim_i,
                        int64_t const dim_j, torch::Tensor const &mat2,
                        int64_t spmm_algorithm_id);
+
+std::pair<size_t, size_t> get_memory_info();
 #endif
 
 } // end namespace minkowski
@@ -460,5 +462,13 @@ int cuda_version() {
   return CUDART_VERSION;
 #else
   return -1;
+#endif
+}
+
+std::pair<size_t, size_t> get_gpu_memory_info() {
+#ifndef CPU_ONLY
+  return minkowski::get_memory_info();
+#else
+  return std::make_pair(0, 0);
 #endif
 }

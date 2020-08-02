@@ -216,8 +216,8 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         if kernel_generator is None:
             kernel_generator = KernelGenerator(
                 kernel_size=kernel_size,
-                kernel_stride=stride,
-                kernel_dilation=dilation,
+                stride=stride,
+                dilation=dilation,
                 dimension=dimension,
             )
 
@@ -464,8 +464,8 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
         if kernel_generator is None:
             kernel_generator = KernelGenerator(
                 kernel_size=kernel_size,
-                kernel_stride=stride,
-                kernel_dilation=dilation,
+                stride=stride,
+                dilation=dilation,
                 generate_new_coordinates=generate_new_coordinates,
                 dimension=dimension,
             )

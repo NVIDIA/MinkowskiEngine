@@ -240,8 +240,8 @@ class KernelGenerator:
     def __init__(
         self,
         kernel_size=-1,
-        kernel_stride=1,
-        kernel_dilation=1,
+        stride=1,
+        dilation=1,
         is_transpose: bool = False,
         region_type: RegionType = RegionType.HYPER_CUBE,
         region_offsets: torch.Tensor = None,
@@ -270,8 +270,8 @@ class KernelGenerator:
         assert isinstance(region_type, RegionType)
 
         kernel_size = convert_to_int_list(kernel_size, dimension)
-        kernel_stride = convert_to_int_list(kernel_stride, dimension)
-        kernel_dilation = convert_to_int_list(kernel_dilation, dimension)
+        kernel_stride = convert_to_int_list(stride, dimension)
+        kernel_dilation = convert_to_int_list(dilation, dimension)
 
         self.cache = {}
         self.kernel_size = kernel_size

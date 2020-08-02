@@ -37,6 +37,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   // Constant function
   m.def("is_cuda_available", &is_cuda_available);
   m.def("cuda_version", &cuda_version);
+  m.def("get_gpu_memory_info", &get_gpu_memory_info);
 
   initialize_non_templated_classes(m);
 
