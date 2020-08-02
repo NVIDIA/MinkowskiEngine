@@ -33,16 +33,13 @@ from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType
 from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
 from MinkowskiCommon import (
     MinkowskiModuleBase,
-    prep_args,
-    convert_to_int_list,
     get_minkowski_function,
 )
 from MinkowskiCoordinateManager import CoordinateManager
-from MinkowskiKernelGenerator import KernelRegion, KernelGenerator, save_ctx
+from MinkowskiKernelGenerator import KernelGenerator, save_ctx
 
 
 class MinkowskiConvolutionFunction(Function):
-
     @staticmethod
     def forward(
         ctx,
@@ -70,8 +67,6 @@ class MinkowskiConvolutionFunction(Function):
             coordinate_manager,
         )
 
-        D = in_coordinate_map_key.get_coordinate_size() - 1
-
         fw_fn = get_minkowski_function("ConvolutionForward", input_features)
         return fw_fn(
             ctx.input_features,
@@ -88,8 +83,6 @@ class MinkowskiConvolutionFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat: torch.Tensor):
-        D = ctx.in_coordinate_map_key.get_coordinate_size() - 1
-
         bw_fn = get_minkowski_function("ConvolutionBackward", grad_out_feat)
         grad_in_feat, grad_kernel = bw_fn(
             ctx.input_features,
@@ -142,8 +135,6 @@ class MinkowskiConvolutionTransposeFunction(Function):
             coordinate_manager,
         )
 
-        D = in_coordinate_map_key.get_coordinate_size() - 1
-
         fw_fn = get_minkowski_function("ConvolutionTransposeForward", input_features)
         return fw_fn(
             ctx.input_features,
@@ -161,8 +152,6 @@ class MinkowskiConvolutionTransposeFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat: torch.Tensor):
-        D = ctx.in_coordinate_map_key.get_coordinate_size() - 1
-
         bw_fn = get_minkowski_function("ConvolutionTransposeBackward", grad_out_feat)
         grad_in_feat, grad_kernel = bw_fn(
             ctx.input_features,

@@ -23,14 +23,9 @@
 # of the code.
 from abc import ABC, abstractmethod
 
-import numpy as np
-
-import torch
 import torch.nn as nn
 
-import MinkowskiEngineBackend as MEB
 from MinkowskiSparseTensor import SparseTensor
-from MinkowskiCommon import convert_to_int_tensor
 
 
 class MinkowskiNetwork(nn.Module, ABC):

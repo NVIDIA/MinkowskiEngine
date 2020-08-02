@@ -27,9 +27,6 @@ import warnings
 import torch
 import copy
 from enum import Enum
-from typing import Union
-from collections import Sequence
-import numpy as np
 
 from MinkowskiCommon import convert_to_int_list, StrideType
 from MinkowskiEngineBackend._C import (
@@ -41,7 +38,6 @@ from MinkowskiEngineBackend._C import (
 from MinkowskiCoordinateManager import (
     CoordinateManager,
     _allocator_type,
-    _coordinate_map_type,
 )
 from sparse_matrix_functions import spmm as _spmm
 
@@ -213,7 +209,7 @@ class SparseTensor:
         # optional manager related arguments
         allocator_type: GPUMemoryAllocatorType = None,
         kernel_map_mode: CUDAKernelMapMode = None,
-        device = None,
+        device=None,
     ):
         r"""
 
@@ -613,7 +609,7 @@ class SparseTensor:
                 )
             else:
                 # Generate union maps
-                out_key = CoordsKey(self._manager.D)
+                out_key = CoordinateMapKey(self._manager.D)
                 ins, outs = self._manager.get_union_map(
                     (self.coordinate_map_key, other.coordinate_map_key), out_key
                 )
@@ -972,7 +968,7 @@ def _get_coordinate_map_key(
     r"""Process coords according to its type.
     """
     if coordinates is not None:
-        assert isinstance(coords, (CoordinateMapKey, torch.Tensor, SparseTensor))
+        assert isinstance(coordinates, (CoordinateMapKey, torch.Tensor, SparseTensor))
         if isinstance(coordinates, torch.Tensor):
             coordinate_map_key = input._manager.create_coordinate_map_key(
                 coordinates, tensor_stride=tensor_stride
