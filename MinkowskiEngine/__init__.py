@@ -26,13 +26,24 @@ __version__ = "0.5.0a"
 
 import os
 import sys
+import warnings
 
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
 
 # Force OMP_NUM_THREADS setup
 if os.cpu_count() > 16 and "OMP_NUM_THREADS" not in os.environ:
-    os.environ["OMP_NUM_THREADS"] = 16
+    warnings.warn(
+        " ".join(
+            [
+                "The environment variable `OMP_NUM_THREADS` not set. MinkowskiEngine will automatically set `OMP_NUM_THREADS=16`.",
+                "If you want to set `OMP_NUM_THREADS` manually, please export it on the command line before running a python script.",
+                "e.g. `export OMP_NUM_THREADS=12; python your_program.py`.",
+                "It is recommended to set it below 24.",
+            ]
+        )
+    )
+    os.environ["OMP_NUM_THREADS"] = str(16)
 
 # Must be imported first to load all required shared libs
 import torch
