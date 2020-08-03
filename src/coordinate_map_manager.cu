@@ -225,7 +225,9 @@ struct origin_map_functor<
     CUDA_CHECK(cudaMemcpy(vec_batch_indices.data(), d_batch_indices,
                           out_size * sizeof(int64_t), cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaStreamSynchronize(0));
-
+#ifdef DEBUG
+    LOG_DEBUG("Batch indices:", vec_batch_indices);
+#endif
     auto const max_batch_index = vec_batch_indices[out_size - 1];
 
     std::vector<at::Tensor> in_maps;
