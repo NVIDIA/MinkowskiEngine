@@ -373,6 +373,28 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
 
 namespace detail {
 
+template <typename coordinate_type, typename size_type, typename index_type,
+          bool stride_src>
+__global__ void
+copy_column_with_valid(coordinate_type *__restrict__ dst_coordinates,       //
+                       size_type const num_threads,                         //
+                       coordinate_type const *__restrict__ src_coordinates, //
+                       index_type const *__restrict__ src_valid_row_index,  //
+                       size_type const coordinate_size) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    if (stride_src)
+      dst_coordinates[x] =
+          src_coordinates[src_valid_row_index[x] * coordinate_size];
+    else
+      dst_coordinates[x * coordinate_size] =
+          src_coordinates[src_valid_row_index[x]];
+  }
+}
+
 template <typename coordinate_type, typename size_type, bool stride_src>
 __global__ void
 copy_column(coordinate_type *__restrict__ dst_coordinates,       //
@@ -398,6 +420,7 @@ template <typename coordinate_type,
 CoordinateMapGPU<coordinate_type, TemplatedAllocator>
 CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
   size_type const N = size();
+  LOG_DEBUG("Origin map from in map size:", N);
 
   // tensor stride is set to {0,..., 0} for the origin map.
   stride_type origin_tensor_stride(m_coordinate_size - 1);
@@ -407,9 +430,11 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
   // thrust unique for unique batch index
   coordinate_type *d_batch_indices = reinterpret_cast<coordinate_type *>(
       m_byte_allocator.allocate(N * sizeof(coordinate_type)));
-  detail::copy_column<coordinate_type, size_type, true>
+  detail::copy_column_with_valid<coordinate_type, size_type, index_type, true>
       <<<GET_BLOCKS(N, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
-          d_batch_indices, N, const_coordinate_data(), m_coordinate_size);
+          d_batch_indices, N, const_coordinate_data(),
+          thrust::raw_pointer_cast(m_valid_row_index.data()),
+          m_coordinate_size);
 
 #ifdef DEBUG
   CUDA_CHECK(cudaStreamSynchronize(0));
@@ -426,6 +451,12 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
       thrust::unique(thrust::device, d_batch_indices, d_batch_indices + N);
   size_type const N_unique = d_batch_indices_end - d_batch_indices;
 #ifdef DEBUG
+  size_t Nsize = std::min<int>(N, 100);
+  std::vector<coordinate_type> tmp(Nsize);
+  CUDA_CHECK(cudaMemcpy(tmp.data(), d_batch_indices,
+                        Nsize * sizeof(coordinate_type),
+                        cudaMemcpyDeviceToHost));
+  LOG_DEBUG("sort and unique batch", tmp);
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("unique done");
 #endif
@@ -824,25 +855,24 @@ origin_map_kernel(map_type const __restrict__ in_map,                      //
   coordinate_type *sh_tmp = sh_all + tx * coordinate_size;
   // clang-format on
 
-  for (index_type i = 0; i < coordinate_size - 1; ++i) {
-    sh_tmp[i] = 0;
-  }
+  if (x < num_threads)
+    for (index_type i = 0; i < coordinate_size; ++i)
+      sh_tmp[i] = 0;
 
   __syncthreads();
 
-  if (x >= num_threads)
-    return;
+  if (x < num_threads) {
+    typename map_type::value_type const &in_value =
+        in_map.data()[in_valid_map_index[x]];
 
-  typename map_type::value_type const &in_value =
-      in_map.data()[in_valid_map_index[x]];
+    sh_tmp[0] = in_value.first[0];
+    auto origin_iter = origin_map.find(coordinate<coordinate_type>(sh_tmp));
 
-  sh_tmp[0] = in_value.first[0];
-  auto origin_iter = origin_map.find(coordinate<coordinate_type>(sh_tmp));
-
-  p_in_maps[x] = in_value.second;
-  p_out_maps[x] = origin_iter->second; // row index
-  // For kernel_map decompose()
-  p_kernels[x] = origin_iter->second;
+    p_in_maps[x] = in_value.second;
+    p_out_maps[x] = origin_iter->second; // origin_map row index
+    // For kernel_map decompose()
+    p_kernels[x] = origin_iter->second;
+  }
 }
 
 } // namespace detail
@@ -859,6 +889,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin_map(
 
   // reserve size();
   size_type const in_size = size();
+  LOG_DEBUG("in_map size:", in_size, "origin_map size:", origin_map.size());
   // (THREAD * D) * 4
   uint32_t const shared_memory_size_in_bytes =
       thread_dim * m_coordinate_size * sizeof(coordinate_type); // tmp
