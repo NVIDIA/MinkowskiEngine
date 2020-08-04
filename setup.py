@@ -195,9 +195,10 @@ SOURCE_SETS = {
     "cpu": [
         CppExtension,
         [
-            "math_functions.cpp",
+            "math_functions_cpu.cpp",
             "coordinate_map_manager.cpp",
             "convolution_cpu.cpp",
+            "local_pooling_cpu.cpp",
             "convolution_transpose_cpu.cpp",
             "quantization.cpp",
         ],
@@ -207,12 +208,15 @@ SOURCE_SETS = {
     "gpu": [
         CUDAExtension,
         [
-            "math_functions.cpp",
+            "math_functions_cpu.cpp",
+            "math_functions_gpu.cu",
             "coordinate_map_manager.cu",
-            "convolution_gpu.cu",
             "coordinate_map_gpu.cu",
             "convolution_kernel.cu",
+            "convolution_gpu.cu",
             "convolution_transpose_gpu.cu",
+            "pooling_avg_kernel.cu",
+            "local_pooling_gpu.cu",
             "spmm.cu",
             "gpu.cu",
             "quantization.cpp",

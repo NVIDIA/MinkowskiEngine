@@ -38,9 +38,11 @@
  * wA is A's width and wB is B's width
  */
 template <typename Dtype, typename Itype, int BLOCK_SIZE>
-__global__ void matmul(const Dtype *A, const int wA, const int hA,
-                       const Dtype *B, const int wB, const int hB, Dtype *C,
-                       const Itype *in_map, const Itype *out_map) {
+__global__ void
+matmul(const Dtype *__restrict__ A, const int wA, const int hA, //
+       const Dtype *__restrict__ B, const int wB, const int hB, //
+       Dtype *__restrict__ C,                                   //
+       const Itype *__restrict__ in_map, const Itype *__restrict__ out_map) {
   // Use in_feat as A and kernel as B
 
   // Block index
@@ -120,10 +122,12 @@ __global__ void matmul(const Dtype *A, const int wA, const int hA,
  *
  */
 template <typename Dtype, typename Itype, int BLOCK_SIZE>
-__global__ void matmul2(const Dtype *A, const int wA, const int hA,
-                        const Dtype *B, const int wB, const int hB,
-                        const Dtype *D, const int wD, const int hD, Dtype *C,
-                        Dtype *E, const Itype *in_map, const Itype *out_map) {
+__global__ void
+matmul2(const Dtype *__restrict__ A, const int wA, const int hA, //
+        const Dtype *__restrict__ B, const int wB, const int hB, //
+        const Dtype *__restrict__ D, const int wD, const int hD, //
+        Dtype *__restrict__ C, Dtype *__restrict__ E,
+        const Itype *__restrict__ in_map, const Itype *__restrict__ out_map) {
   // Use grad_out_feat as A, transposed kernel weight as B, and in_feat as D
 
   // Block index

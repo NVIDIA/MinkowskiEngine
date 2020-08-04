@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -26,197 +27,203 @@ from typing import Union
 import torch
 from torch.autograd import Function
 
-from MinkowskiSparseTensor import SparseTensor, _get_coords_key
-from Common import KernelGenerator, RegionType, GlobalPoolingMode, \
-    MinkowskiModuleBase, \
-    convert_to_int_list, convert_to_int_tensor, \
-    prep_args, get_minkowski_function
-from MinkowskiCoords import CoordsKey, save_ctx
+from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType
+from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
+from MinkowskiCoordinateManager import CoordinateManager
+from MinkowskiKernelGenerator import KernelGenerator, save_ctx
+from MinkowskiCommon import (
+    GlobalPoolingMode,
+    MinkowskiModuleBase,
+    get_minkowski_function,
+)
 
 
 class MinkowskiMaxPoolingFunction(Function):
-
     @staticmethod
-    def forward(ctx,
-                input_features,
-                tensor_stride=1,
-                stride=1,
-                kernel_size=-1,
-                dilation=1,
-                region_type=0,
-                region_offset=None,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
-        assert isinstance(region_type, RegionType)
-        if out_coords_key is None:
-            out_coords_key = CoordsKey(in_coords_key.D)
-        assert in_coords_key.D == out_coords_key.D
+    def forward(
+        ctx,
+        input_features: torch.Tensor,
+        kernel_generator: KernelGenerator,
+        in_coordinate_map_key: CoordinateMapKey,
+        out_coordinate_map_key: CoordinateMapKey = None,
+        coordinate_manager: CoordinateManager = None,
+    ):
+        if out_coordinate_map_key is None:
+            out_coordinate_map_key = CoordinateMapKey(
+                in_coordinate_map_key.get_coordinate_size()
+            )
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
-        tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
-            tensor_stride, stride, kernel_size, dilation, region_type,
-            in_coords_key.D)
+        ctx.input_features = input_features
+        ctx.kernel_weights = kernel_weights
+        ctx = save_ctx(
+            ctx,
+            kernel_generator,
+            in_coordinate_map_key,
+            out_coordinate_map_key,
+            coordinate_manager,
+        )
 
-        if region_offset is None:
-            region_offset = torch.IntTensor()
-
-        ctx.in_feat = input_features
-        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
-                       region_type, in_coords_key, out_coords_key,
-                       coords_manager)
-
-        D = in_coords_key.D
-        out_feat = input_features.new()
-        max_index = input_features.new().int()
-
+        fw_fn = get_minkowski_function("MaxPoolingForward", input_features)
+        out_feat, max_index = fw_fn(
+            ctx.input_features,
+            kernel_generator.kernel_size,
+            kernel_generator.kernel_stride,
+            kernel_generator.kernel_dilation,
+            kernel_generator.region_type,
+            kernel_generator.region_offsets,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager._manager,
+        )
         ctx.max_index = max_index
-
-        fw_fn = get_minkowski_function('MaxPoolingForward', input_features)
-        fw_fn(input_features, out_feat, max_index,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), region_type, region_offset,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
         return out_feat
 
     @staticmethod
-    def backward(ctx, grad_out_feat):
-        if not grad_out_feat.is_contiguous():
-            grad_out_feat = grad_out_feat.contiguous()
+    def backward(ctx, grad_out_feat: torch.Tensor):
+        bw_fn = get_minkowski_function("MaxPoolingBackward", grad_out_feat)
+        grad_in_feat = bw_fn(
+            ctx.input_features,
+            ctx.max_index,
+            grad_out_feat,
+            ctx.kernel_generator.kernel_size,
+            ctx.kernel_generator.kernel_stride,
+            ctx.kernel_generator.kernel_dilation,
+            ctx.kernel_generator.region_type,
+            ctx.kernel_generator.region_offsets,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager._manager,
+        )
+        return (
+            grad_in_feat,
+            None,
+            None,
+            None,
+            None,
+        )
 
-        grad_in_feat = grad_out_feat.new()
-        D = ctx.in_coords_key.D
-        bw_fn = get_minkowski_function('MaxPoolingBackward', grad_out_feat)
-        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.max_index,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), ctx.region_type,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
-        return grad_in_feat, None, None, None, None, None, None, None, None, None
 
-
-class MinkowskiAvgPoolingFunction(Function):
-    '''
-    Due to ctx.num_nonzero = in_feat.new()....,
-    Should the function be called multiple times, this function must be first
-    instantiated and then reused every time it needs to be called. Otherwise,
-    PyTorch cannot free, out_feat, ctx.num_nonzero, which are initialized inside
-    the ffi function.
-    '''
-
+class MinkowskiLocalPoolingFunction(Function):
     @staticmethod
-    def forward(ctx,
-                input_features,
-                tensor_stride=1,
-                stride=1,
-                kernel_size=-1,
-                dilation=1,
-                region_type=0,
-                region_offset=None,
-                average=True,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
-        assert isinstance(region_type, RegionType)
-        if out_coords_key is None:
-            out_coords_key = CoordsKey(in_coords_key.D)
-        assert in_coords_key.D == out_coords_key.D
+    def forward(
+        ctx,
+        input_features: torch.Tensor,
+        pooling_mode: int,
+        kernel_generator: KernelGenerator,
+        in_coordinate_map_key: CoordinateMapKey,
+        out_coordinate_map_key: CoordinateMapKey = None,
+        coordinate_manager: CoordinateManager = None,
+    ):
+        if out_coordinate_map_key is None:
+            out_coordinate_map_key = CoordinateMapKey(
+                in_coordinate_map_key.get_coordinate_size()
+            )
         if not input_features.is_contiguous():
             input_features = input_features.contiguous()
 
-        tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
-            tensor_stride, stride, kernel_size, dilation, region_type,
-            in_coords_key.D)
+        ctx.input_features = input_features
+        ctx = save_ctx(
+            ctx,
+            kernel_generator,
+            in_coordinate_map_key,
+            out_coordinate_map_key,
+            coordinate_manager,
+        )
+        ctx.pooling_mode = pooling_mode
 
-        if region_offset is None:
-            region_offset = torch.IntTensor()
-
-        ctx.in_feat = input_features
-        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
-                       region_type, in_coords_key, out_coords_key,
-                       coords_manager)
-        ctx.use_avg = average
-
-        D = in_coords_key.D
-        out_feat = input_features.new()
-        ctx.num_nonzero = input_features.new()
-
-        fw_fn = get_minkowski_function('AvgPoolingForward', input_features)
-        fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), region_type, region_offset,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager, ctx.use_avg)
+        fw_fn = get_minkowski_function("LocalPoolingForward", input_features)
+        out_feat, num_nonzero = fw_fn(
+            ctx.input_features,
+            kernel_generator.kernel_size,
+            kernel_generator.kernel_stride,
+            kernel_generator.kernel_dilation,
+            kernel_generator.region_type,
+            kernel_generator.region_offsets,
+            pooling_mode,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager._manager,
+        )
+        ctx.num_nonzero = num_nonzero
         return out_feat
 
     @staticmethod
     def backward(ctx, grad_out_feat):
-        if not grad_out_feat.is_contiguous():
-            grad_out_feat = grad_out_feat.contiguous()
+        bw_fn = get_minkowski_function("LocalPoolingBackward", grad_out_feat)
+        grad_in_feat = bw_fn(
+            ctx.input_features,
+            grad_out_feat,
+            ctx.num_nonzero,
+            ctx.kernel_generator.kernel_size,
+            ctx.kernel_generator.kernel_stride,
+            ctx.kernel_generator.kernel_dilation,
+            ctx.kernel_generator.region_type,
+            ctx.kernel_generator.region_offsets,
+            ctx.pooling_mode,
+            ctx.in_coordinate_map_key,
+            ctx.out_coordinate_map_key,
+            ctx.coordinate_manager._manager,
+        )
 
-        grad_in_feat = grad_out_feat.new()
-        D = ctx.in_coords_key.D
-        bw_fn = get_minkowski_function('AvgPoolingBackward', grad_out_feat)
-        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), ctx.region_type,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager, ctx.use_avg)
-        return grad_in_feat, None, None, None, None, None, None, None, None, None, None
+        return (
+            grad_in_feat,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
 
 
 class MinkowskiPoolingBase(MinkowskiModuleBase):
 
-    def __init__(self,
-                 kernel_size,
-                 stride=1,
-                 dilation=1,
-                 kernel_generator=None,
-                 is_transpose=False,
-                 average=True,
-                 dimension=-1):
+    __slots__ = (
+        "is_transpose",
+        "kernel_generator",
+        "pooling_mode",
+        "dimension",
+        "pooling",
+    )
+
+    def __init__(
+        self,
+        kernel_size,
+        stride=1,
+        dilation=1,
+        kernel_generator=None,
+        is_transpose=False,
+        pooling_mode=1,
+        dimension=-1,
+    ):
         super(MinkowskiPoolingBase, self).__init__()
         assert dimension > 0, f"dimension must be a positive integer, {dimension}"
-
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
-        if torch.prod(kernel_size) == 1 and torch.prod(stride) == 1:
-            raise ValueError('Trivial input output mapping')
 
         if kernel_generator is None:
             kernel_generator = KernelGenerator(
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
-                dimension=dimension)
+                dimension=dimension,
+            )
 
         self.is_transpose = is_transpose
-        self.average = average
-        self.kernel_size = kernel_size
-        self.stride = stride
-        self.dilation = dilation
         self.kernel_generator = kernel_generator
+        self.pooling_mode = pooling_mode
         self.dimension = dimension
+        self.pooling = MinkowskiLocalPoolingFunction()
 
-    def forward(self,
-                input: SparseTensor,
-                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+    def forward(
+        self,
+        input: SparseTensor,
+        coordinates: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
+    ):
         r"""
         :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
         convolution on.
 
-        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        :attr:`coordinates` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
         `MinkowskiEngine.SparseTensor`), optional): If provided, generate
         results on the provided coordinates. None by default.
 
@@ -224,25 +231,27 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
 
-        # Create a region_offset
-        self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
-
-        # Get a new coords key or extract one from the coords
-        out_coords_key = _get_coords_key(input, coords)
-
-        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
-                                    self.kernel_size, self.dilation,
-                                    self.region_type_, self.region_offset_,
-                                    self.average, input.coords_key,
-                                    out_coords_key, input.coords_man)
+        # Get a new coordinate map key or extract one from the coordinates
+        out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
+        outfeat = self.pooling.apply(
+            input.F,
+            self.pooling_mode,
+            self.kernel_generator,
+            input.coordinate_map_key,
+            out_coordinate_map_key,
+            input._manager,
+        )
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man)
+            outfeat,
+            coordinate_map_key=out_coordinate_map_key,
+            coordinate_manager=input.coordinate_manager,
+        )
 
     def __repr__(self):
-        s = '(kernel_size={}, stride={}, dilation={})'.format(
-            self.kernel_size, self.stride, self.dilation)
+        s = "(kernel_size={}, stride={}, dilation={})".format(
+            self.kernel_size, self.stride, self.dilation
+        )
         return self.__class__.__name__ + s
 
 
@@ -283,12 +292,14 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
 
     """
 
-    def __init__(self,
-                 kernel_size=-1,
-                 stride=1,
-                 dilation=1,
-                 kernel_generator=None,
-                 dimension=None):
+    def __init__(
+        self,
+        kernel_size=-1,
+        stride=1,
+        dilation=1,
+        kernel_generator=None,
+        dimension=None,
+    ):
         r"""a high-dimensional sparse average pooling layer.
 
         Args:
@@ -328,9 +339,9 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             dilation,
             kernel_generator,
             is_transpose,
-            average=True,
-            dimension=dimension)
-        self.pooling = MinkowskiAvgPoolingFunction()
+            pooling_mode=1,
+            dimension=dimension,
+        )
 
 
 class MinkowskiSumPooling(MinkowskiPoolingBase):
@@ -371,12 +382,9 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
 
     """
 
-    def __init__(self,
-                 kernel_size,
-                 stride=1,
-                 dilation=1,
-                 kernel_generator=None,
-                 dimension=None):
+    def __init__(
+        self, kernel_size, stride=1, dilation=1, kernel_generator=None, dimension=None
+    ):
         r"""a high-dimensional sum pooling layer
 
         Args:
@@ -416,9 +424,9 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
             dilation,
             kernel_generator,
             is_transpose,
-            average=False,
-            dimension=dimension)
-        self.pooling = MinkowskiAvgPoolingFunction()
+            pooling_mode=0,
+            dimension=dimension,
+        )
 
 
 class MinkowskiMaxPooling(MinkowskiPoolingBase):
@@ -446,12 +454,9 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
 
     """
 
-    def __init__(self,
-                 kernel_size,
-                 stride=1,
-                 dilation=1,
-                 kernel_generator=None,
-                 dimension=None):
+    def __init__(
+        self, kernel_size, stride=1, dilation=1, kernel_generator=None, dimension=None
+    ):
         r"""a high-dimensional max pooling layer for sparse tensors.
 
         Args:
@@ -491,12 +496,15 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
             dilation,
             kernel_generator,
             is_transpose=False,
-            dimension=dimension)
+            dimension=dimension,
+        )
         self.pooling = MinkowskiMaxPoolingFunction()
 
-    def forward(self,
-                input: SparseTensor,
-                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+    def forward(
+        self,
+        input: SparseTensor,
+        coords: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
+    ):
         r"""
         :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
         convolution on.
@@ -510,43 +518,53 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
         assert input.D == self.dimension
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
+        self.region_type_, self.region_offset_, _ = self.kernel_generator.get_kernel(
+            input.tensor_stride, self.is_transpose
+        )
 
         # Get a new coords key or extract one from the coords
         out_coords_key = _get_coords_key(input, coords)
 
-        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
-                                    self.kernel_size, self.dilation,
-                                    self.region_type_, self.region_offset_,
-                                    input.coords_key, out_coords_key,
-                                    input.coords_man)
+        output = self.pooling.apply(
+            input.F,
+            input.tensor_stride,
+            self.stride,
+            self.kernel_size,
+            self.dilation,
+            self.region_type_,
+            self.region_offset_,
+            input.coords_key,
+            out_coords_key,
+            input.coords_man,
+        )
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man
+        )
 
 
 class MinkowskiPoolingTransposeFunction(Function):
-
     @staticmethod
-    def forward(ctx,
-                input_features,
-                tensor_stride=1,
-                stride=1,
-                kernel_size=-1,
-                dilation=1,
-                region_type=-1,
-                region_offset=None,
-                average=False,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
+    def forward(
+        ctx,
+        input_features,
+        tensor_stride=1,
+        stride=1,
+        kernel_size=-1,
+        dilation=1,
+        region_type=-1,
+        region_offset=None,
+        average=False,
+        in_coords_key=None,
+        out_coords_key=None,
+        coords_manager=None,
+    ):
         assert isinstance(region_type, RegionType)
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         assert in_coords_key.D == out_coords_key.D
         tensor_stride, stride, kernel_size, dilation, region_type = prep_args(
-            tensor_stride, stride, kernel_size, dilation, region_type,
-            in_coords_key.D)
+            tensor_stride, stride, kernel_size, dilation, region_type, in_coords_key.D
+        )
 
         if region_offset is None:
             region_offset = torch.IntTensor()
@@ -554,34 +572,54 @@ class MinkowskiPoolingTransposeFunction(Function):
         ctx.in_feat = input_features
         out_feat = input_features.new()
         ctx.num_nonzero = input_features.new()
-        ctx = save_ctx(ctx, tensor_stride, stride, kernel_size, dilation,
-                       region_type, in_coords_key, out_coords_key,
-                       coords_manager)
+        ctx = save_ctx(
+            ctx,
+            tensor_stride,
+            stride,
+            kernel_size,
+            dilation,
+            region_type,
+            in_coords_key,
+            out_coords_key,
+            coords_manager,
+        )
         D = in_coords_key.D
-        fw_fn = get_minkowski_function('PoolingTransposeForward',
-                                       input_features)
-        fw_fn(ctx.in_feat, out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), region_type, region_offset,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
+        fw_fn = get_minkowski_function("PoolingTransposeForward", input_features)
+        fw_fn(
+            ctx.in_feat,
+            out_feat,
+            ctx.num_nonzero,
+            convert_to_int_list(ctx.tensor_stride, D),
+            convert_to_int_list(ctx.stride, D),
+            convert_to_int_list(ctx.kernel_size, D),
+            convert_to_int_list(ctx.dilation, D),
+            region_type,
+            region_offset,
+            ctx.in_coords_key.CPPCoordsKey,
+            ctx.out_coords_key.CPPCoordsKey,
+            ctx.coords_man.CPPCoordsManager,
+        )
         return out_feat
 
     @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
         D = ctx.in_coords_key.D
-        bw_fn = get_minkowski_function('PoolingTransposeBackward',
-                                       grad_out_feat)
-        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.num_nonzero,
-              convert_to_int_list(ctx.tensor_stride, D),
-              convert_to_int_list(ctx.stride, D),
-              convert_to_int_list(ctx.kernel_size, D),
-              convert_to_int_list(ctx.dilation, D), ctx.region_type,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_man.CPPCoordsManager)
+        bw_fn = get_minkowski_function("PoolingTransposeBackward", grad_out_feat)
+        bw_fn(
+            ctx.in_feat,
+            grad_in_feat,
+            grad_out_feat,
+            ctx.num_nonzero,
+            convert_to_int_list(ctx.tensor_stride, D),
+            convert_to_int_list(ctx.stride, D),
+            convert_to_int_list(ctx.kernel_size, D),
+            convert_to_int_list(ctx.dilation, D),
+            ctx.region_type,
+            ctx.in_coords_key.CPPCoordsKey,
+            ctx.out_coords_key.CPPCoordsKey,
+            ctx.coords_man.CPPCoordsManager,
+        )
         return grad_in_feat, None, None, None, None, None, None, None, None, None, None
 
 
@@ -592,12 +630,9 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
     contributed.
     """
 
-    def __init__(self,
-                 kernel_size,
-                 stride,
-                 dilation=1,
-                 kernel_generator=None,
-                 dimension=None):
+    def __init__(
+        self, kernel_size, stride, dilation=1, kernel_generator=None, dimension=None
+    ):
         r"""a high-dimensional unpooling layer for sparse tensors.
 
         Args:
@@ -634,12 +669,15 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
             kernel_generator,
             is_transpose,
             average=False,
-            dimension=dimension)
+            dimension=dimension,
+        )
         self.pooling = MinkowskiPoolingTransposeFunction()
 
-    def forward(self,
-                input: SparseTensor,
-                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+    def forward(
+        self,
+        input: SparseTensor,
+        coords: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
+    ):
         r"""
         :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
         convolution on.
@@ -653,36 +691,48 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
         assert input.D == self.dimension
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.tensor_stride, self.is_transpose)
+        self.region_type_, self.region_offset_, _ = self.kernel_generator.get_kernel(
+            input.tensor_stride, self.is_transpose
+        )
 
         # Get a new coords key or extract one from the coords
         out_coords_key = _get_coords_key(input, coords)
 
-        output = self.pooling.apply(input.F, input.tensor_stride, self.stride,
-                                    self.kernel_size, self.dilation,
-                                    self.region_type_, self.region_offset_,
-                                    self.average, input.coords_key,
-                                    out_coords_key, input.coords_man)
+        output = self.pooling.apply(
+            input.F,
+            input.tensor_stride,
+            self.stride,
+            self.kernel_size,
+            self.dilation,
+            self.region_type_,
+            self.region_offset_,
+            self.average,
+            input.coords_key,
+            out_coords_key,
+            input.coords_man,
+        )
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man
+        )
 
 
 class MinkowskiGlobalPoolingFunction(Function):
-
     @staticmethod
-    def forward(ctx,
-                input_features,
-                average=True,
-                mode=GlobalPoolingMode.AUTO,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
+    def forward(
+        ctx,
+        input_features,
+        average=True,
+        mode=GlobalPoolingMode.AUTO,
+        in_coords_key=None,
+        out_coords_key=None,
+        coords_manager=None,
+    ):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
-        assert isinstance(mode, GlobalPoolingMode), \
-            f"Mode must be an instance of GlobalPoolingMode, {mode}"
+        assert isinstance(
+            mode, GlobalPoolingMode
+        ), f"Mode must be an instance of GlobalPoolingMode, {mode}"
 
         ctx.in_coords_key = in_coords_key
         ctx.out_coords_key = out_coords_key
@@ -692,12 +742,15 @@ class MinkowskiGlobalPoolingFunction(Function):
         ctx.coords_manager = coords_manager
         ctx.mode = mode.value
 
-        fw_fn = get_minkowski_function('GlobalPoolingForward', input_features)
-        out_feat, num_nonzero = fw_fn(ctx.in_feat,
-                                      ctx.in_coords_key.CPPCoordsKey,
-                                      ctx.out_coords_key.CPPCoordsKey,
-                                      ctx.coords_manager.CPPCoordsManager,
-                                      ctx.average, ctx.mode)
+        fw_fn = get_minkowski_function("GlobalPoolingForward", input_features)
+        out_feat, num_nonzero = fw_fn(
+            ctx.in_feat,
+            ctx.in_coords_key.CPPCoordsKey,
+            ctx.out_coords_key.CPPCoordsKey,
+            ctx.coords_manager.CPPCoordsManager,
+            ctx.average,
+            ctx.mode,
+        )
 
         ctx.num_nonzero = num_nonzero
 
@@ -705,11 +758,16 @@ class MinkowskiGlobalPoolingFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
-        bw_fn = get_minkowski_function('GlobalPoolingBackward', grad_out_feat)
-        grad_in_feat = bw_fn(ctx.in_feat, grad_out_feat, ctx.num_nonzero,
-                             ctx.in_coords_key.CPPCoordsKey,
-                             ctx.out_coords_key.CPPCoordsKey,
-                             ctx.coords_manager.CPPCoordsManager, ctx.average)
+        bw_fn = get_minkowski_function("GlobalPoolingBackward", grad_out_feat)
+        grad_in_feat = bw_fn(
+            ctx.in_feat,
+            grad_out_feat,
+            ctx.num_nonzero,
+            ctx.in_coords_key.CPPCoordsKey,
+            ctx.out_coords_key.CPPCoordsKey,
+            ctx.coords_manager.CPPCoordsManager,
+            ctx.average,
+        )
         return grad_in_feat, None, None, None, None, None
 
 
@@ -735,8 +793,9 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
 
         """
         super(MinkowskiGlobalPooling, self).__init__()
-        assert isinstance(mode, GlobalPoolingMode), \
-            f"Mode must be an instance of GlobalPoolingMode. mode={mode}"
+        assert isinstance(
+            mode, GlobalPoolingMode
+        ), f"Mode must be an instance of GlobalPoolingMode. mode={mode}"
 
         self.mode = mode
         self.average = average
@@ -746,19 +805,24 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         assert isinstance(input, SparseTensor)
 
         out_coords_key = CoordsKey(input.coords_key.D)
-        output = self.pooling.apply(input.F, self.average, self.mode,
-                                    input.coords_key, out_coords_key,
-                                    input.coords_man)
+        output = self.pooling.apply(
+            input.F,
+            self.average,
+            self.mode,
+            input.coords_key,
+            out_coords_key,
+            input.coords_man,
+        )
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man
+        )
 
     def __repr__(self):
         return self.__class__.__name__ + "(average=" + str(self.average) + ")"
 
 
 class MinkowskiGlobalSumPooling(MinkowskiGlobalPooling):
-
     def __init__(self, mode=GlobalPoolingMode.AUTO):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
@@ -770,7 +834,6 @@ class MinkowskiGlobalSumPooling(MinkowskiGlobalPooling):
 
 
 class MinkowskiGlobalAvgPooling(MinkowskiGlobalPooling):
-
     def __init__(self, mode=GlobalPoolingMode.AUTO):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
@@ -782,13 +845,14 @@ class MinkowskiGlobalAvgPooling(MinkowskiGlobalPooling):
 
 
 class MinkowskiGlobalMaxPoolingFunction(Function):
-
     @staticmethod
-    def forward(ctx,
-                input_features,
-                in_coords_key=None,
-                out_coords_key=None,
-                coords_manager=None):
+    def forward(
+        ctx,
+        input_features,
+        in_coords_key=None,
+        out_coords_key=None,
+        coords_manager=None,
+    ):
         if out_coords_key is None:
             out_coords_key = CoordsKey(in_coords_key.D)
         ctx.in_coords_key = in_coords_key
@@ -802,21 +866,30 @@ class MinkowskiGlobalMaxPoolingFunction(Function):
         ctx.max_index = max_index
         ctx.coords_manager = coords_manager
 
-        fw_fn = get_minkowski_function('GlobalMaxPoolingForward',
-                                       input_features)
-        fw_fn(ctx.in_feat, out_feat, ctx.max_index,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager)
+        fw_fn = get_minkowski_function("GlobalMaxPoolingForward", input_features)
+        fw_fn(
+            ctx.in_feat,
+            out_feat,
+            ctx.max_index,
+            ctx.in_coords_key.CPPCoordsKey,
+            ctx.out_coords_key.CPPCoordsKey,
+            ctx.coords_manager.CPPCoordsManager,
+        )
         return out_feat
 
     @staticmethod
     def backward(ctx, grad_out_feat):
         grad_in_feat = grad_out_feat.new()
-        bw_fn = get_minkowski_function('GlobalMaxPoolingBackward',
-                                       grad_out_feat)
-        bw_fn(ctx.in_feat, grad_in_feat, grad_out_feat, ctx.max_index,
-              ctx.in_coords_key.CPPCoordsKey, ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager)
+        bw_fn = get_minkowski_function("GlobalMaxPoolingBackward", grad_out_feat)
+        bw_fn(
+            ctx.in_feat,
+            grad_in_feat,
+            grad_out_feat,
+            ctx.max_index,
+            ctx.in_coords_key.CPPCoordsKey,
+            ctx.out_coords_key.CPPCoordsKey,
+            ctx.coords_manager.CPPCoordsManager,
+        )
         return grad_in_feat, None, None, None, None, None
 
 
@@ -844,11 +917,13 @@ class MinkowskiGlobalMaxPooling(MinkowskiModuleBase):
         assert isinstance(input, SparseTensor)
 
         out_coords_key = CoordsKey(input.coords_key.D)
-        output = self.pooling.apply(input.F, input.coords_key, out_coords_key,
-                                    input.coords_man)
+        output = self.pooling.apply(
+            input.F, input.coords_key, out_coords_key, input.coords_man
+        )
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man)
+            output, coords_key=out_coords_key, coords_manager=input.coords_man
+        )
 
     def __repr__(self):
         return self.__class__.__name__

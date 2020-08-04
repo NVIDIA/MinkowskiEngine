@@ -97,14 +97,14 @@ from MinkowskiConvolution import (
 #
 # from MinkowskiChannelwiseConvolution import MinkowskiChannelwiseConvolution
 #
-# from MinkowskiPooling import MinkowskiAvgPoolingFunction, MinkowskiAvgPooling, \
-#     MinkowskiSumPooling, \
-#     MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
-#     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
-#     MinkowskiGlobalSumPooling, MinkowskiGlobalAvgPooling, \
-#     MinkowskiGlobalMaxPoolingFunction, MinkowskiGlobalMaxPooling, \
-#     MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
-#
+from MinkowskiPooling import MinkowskiLocalPoolingFunction, MinkowskiAvgPooling, \
+    MinkowskiSumPooling, \
+    MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
+    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
+    MinkowskiGlobalSumPooling, MinkowskiGlobalAvgPooling, \
+    MinkowskiGlobalMaxPoolingFunction, MinkowskiGlobalMaxPooling, \
+    MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
+
 # from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
 #     MinkowskiBroadcast, MinkowskiBroadcastConcatenation, \
 #     MinkowskiBroadcastAddition, MinkowskiBroadcastMultiplication, OperationType

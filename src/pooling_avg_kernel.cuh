@@ -1,4 +1,6 @@
-/* Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+/*
+ * Copyright (c) 2020 NVIDIA Corporation.
+ * Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,26 +31,33 @@
 #include <vector>
 
 #include "gpu.cuh"
+#include "kernel_map.cuh"
 #include "math_functions.hpp"
 #include "types.hpp"
 
 namespace minkowski {
 
-template <typename Dtype, typename Itype>
-void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
-                                       Dtype *d_out_feat, int out_nrows,
-                                       Dtype *d_num_nonzero, int nchannel,
-                                       const pInOutMaps<Itype> &in_map,
-                                       const pInOutMaps<Itype> &out_map,
-                                       bool use_avg, cusparseHandle_t cushandle,
-                                       cudaStream_t stream);
+template <typename Dtype, typename Itype, typename ByteAllocator>
+void NonzeroAvgPoolingForwardKernelGPU(
+    Dtype const *d_in_feat,                                 //
+    default_types::size_type const in_nrows,                //
+    Dtype *d_out_feat,                                      //
+    default_types::size_type const out_nrows,               //
+    Dtype *d_num_nonzero,                                   //
+    default_types::size_type const nchannel,                //
+    gpu_kernel_map<Itype, ByteAllocator> const &kernel_map, //
+    bool const use_avg, cusparseHandle_t cushandle, cudaStream_t stream);
 
-template <typename Dtype, typename Itype>
+template <typename Dtype, typename Itype, typename ByteAllocator>
 void NonzeroAvgPoolingBackwardKernelGPU(
-    Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
-    int out_nrows, const Dtype *d_num_nonzero, int nchannel,
-    const pInOutMaps<Itype> &in_map, const pInOutMaps<Itype> &out_map,
-    bool use_avg, cudaStream_t stream);
+    Dtype *d_grad_in_feat,                    //
+    default_types::size_type const in_nrows,  //
+    Dtype const *d_grad_out_feat,             //
+    default_types::size_type const out_nrows, //
+    Dtype const *d_num_nonzero,               //
+    default_types::size_type const nchannel,  //
+    gpu_kernel_map<Itype, ByteAllocator> const &kernel_map, bool const use_avg,
+    cudaStream_t stream);
 
 } // end namespace minkowski
 

@@ -74,6 +74,7 @@ public:
     }
 
     inline index_type *data() { return m_data; }
+    inline index_type const *cdata() const { return m_data; }
     inline void data(index_type *p_data) { m_data = p_data; }
 
     inline index_type *begin() const { return m_data; }

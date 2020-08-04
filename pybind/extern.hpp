@@ -171,6 +171,69 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
 #endif
 
 /*************************************
+ * Local Pooling
+ *************************************/
+template <typename coordinate_type>
+std::pair<at::Tensor, at::Tensor>
+LocalPoolingForwardCPU(at::Tensor const &in_feat,
+                       default_types::stride_type const &kernel_size,     //
+                       default_types::stride_type const &kernel_stride,   //
+                       default_types::stride_type const &kernel_dilation, //
+                       RegionType::Type const region_type,                //
+                       at::Tensor const &offset,                          //
+                       uint32_t pooling_mode,                             //
+                       CoordinateMapKey *p_in_map_key,                    //
+                       CoordinateMapKey *p_out_map_key,                   //
+                       cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type>
+at::Tensor
+LocalPoolingBackwardCPU(at::Tensor in_feat,                                //
+                        at::Tensor grad_out_feat,                          //
+                        at::Tensor num_nonzero,                            //
+                        default_types::stride_type const &kernel_size,     //
+                        default_types::stride_type const &kernel_stride,   //
+                        default_types::stride_type const &kernel_dilation, //
+                        RegionType::Type const region_type,                //
+                        at::Tensor const &offset,                          //
+                        uint32_t pooling_mode,                             //
+                        CoordinateMapKey *p_in_map_key,                    //
+                        CoordinateMapKey *p_out_map_key,                   //
+                        cpu_manager_type<coordinate_type> *p_map_manager);
+
+#ifndef CPU_ONLY
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
+    at::Tensor const &in_feat,
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    uint32_t pooling_mode,                             //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor LocalPoolingBackwardGPU(
+    at::Tensor in_feat,                                //
+    at::Tensor grad_out_feat,                          //
+    at::Tensor num_nonzero,                            //
+    default_types::stride_type const &kernel_size,     //
+    default_types::stride_type const &kernel_stride,   //
+    default_types::stride_type const &kernel_dilation, //
+    RegionType::Type const region_type,                //
+    at::Tensor const &offset,                          //
+    uint32_t pooling_mode,                             //
+    CoordinateMapKey *p_in_map_key,                    //
+    CoordinateMapKey *p_out_map_key,                   //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+#endif
+
+/*************************************
  * Quantization
  *************************************/
 std::vector<py::array> quantize_np(
@@ -224,22 +287,14 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::ConvolutionTransposeBackwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
-  /*
-    m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
-          &mink::AvgPoolingForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
-          &mink::AvgPoolingBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("AvgPoolingForwardGPU") + dtypestr).c_str(),
-          &mink::AvgPoolingForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
-          &mink::AvgPoolingBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
+  m.def((std::string("LocalPoolingForwardCPU") + dtypestr).c_str(),
+        &minkowski::LocalPoolingForwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("LocalPoolingBackwardCPU") + dtypestr).c_str(),
+        &minkowski::LocalPoolingBackwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
 
+  /*
     m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
           &mink::MaxPoolingForwardCPU<MapType, Dtype>,
           py::call_guard<py::gil_scoped_release>());
@@ -368,6 +423,14 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::ConvolutionTransposeBackwardGPU<coordinate_type,
                                                     TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("LocalPoolingForwardGPU") + dtypestr).c_str(),
+        &minkowski::LocalPoolingForwardGPU<coordinate_type, TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def(
+      (std::string("LocalPoolingBackwardGPU") + dtypestr).c_str(),
+      &minkowski::LocalPoolingBackwardGPU<coordinate_type, TemplatedAllocator>,
+      py::call_guard<py::gil_scoped_release>());
 }
 
 void non_templated_cpu_func(py::module &m) {
