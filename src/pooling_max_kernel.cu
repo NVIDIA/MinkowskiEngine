@@ -37,20 +37,23 @@
 #include <thrust/reduce.h>
 #include <thrust/sort.h>
 
+#include "allocators.cuh"
 #include "gpu.cuh"
-#include "pooling_max.cuh"
+#include "pooling_max_kernel.cuh"
 #include "utils.hpp"
 
 template <typename Dtype, typename Itype>
 __global__ void set_gradient(const int n, const Dtype *d_grad_out,
                              Dtype *d_grad_in, const Itype *in_index) {
-  CUDA_KERNEL_LOOP(index, n) { d_grad_in[in_index[index]] = d_grad_out[index]; }
+  CUDA_KERNEL_LOOP(index, n) {
+    atomicAdd(&d_grad_in[in_index[index]], d_grad_out[index]);
+  }
 }
 
 template <typename Dtype, typename Itype>
 __global__ void max_pool(const int N, const int out_nrows, const int nchannel,
                          const int nmap, const Dtype *d_in_feat,
-                         Dtype *d_out_feat, Itype *d_max_index,
+                         Dtype *d_out_feat, int32_t *d_max_index,
                          const Itype *d_in_map, const Itype *d_out_map,
                          const Itype *d_in_index_min) {
   // N == nmap * nchannel
@@ -99,28 +102,31 @@ __global__ void copy_sorted(const int n, const int nrows, const int nchannel,
 
 namespace minkowski {
 
-template <typename Dtype, typename Itype>
-void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
-                                int out_nrows, Itype *d_max_index, int nchannel,
-                                const pInOutMaps<Itype> &in_maps,
-                                const pInOutMaps<Itype> &out_maps, Itype *d_scr,
-                                cudaStream_t stream) {
-  int nmap = 0;
+template <typename Dtype, typename Itype, typename ByteAllocator>
+void MaxPoolingForwardKernelGPU(
+    const Dtype *d_in_feat, Dtype *d_out_feat, int out_nrows, int *d_max_index,
+    int nchannel, gpu_kernel_map<Itype, ByteAllocator> const &kernel_map,
+    Itype *d_scr, cudaStream_t stream) {
 
-  // Copy all maps to one vector
-  for (const auto &map : in_maps)
-    nmap += map.size();
+  size_t nmap = kernel_map.size();
 
   Itype *d_in_map = d_scr, *d_out_map = d_scr + nmap;
+  Itype *d_curr_in_map = d_in_map;
+  Itype *d_curr_out_map = d_out_map;
 
-  CUDA_CHECK(cudaMemcpy(d_in_map,
-                        in_maps[0].data(), // in_maps are contiguous of size nnz
-                        nmap * sizeof(int), cudaMemcpyDeviceToDevice));
-
-  CUDA_CHECK(
-      cudaMemcpy(d_out_map,
-                 out_maps[0].data(), // out_maps are contiguous of size nnz
-                 nmap * sizeof(int), cudaMemcpyDeviceToDevice));
+  for (auto k = kernel_map.key_cbegin(); k != kernel_map.key_cend(); ++k) {
+    auto kernel_index = k->first;
+    size_t curr_size = kernel_map.in_maps.size(kernel_index);
+    CUDA_CHECK(cudaMemcpyAsync(
+        d_curr_in_map, kernel_map.in_maps.begin(kernel_index),
+        curr_size * sizeof(int), cudaMemcpyDeviceToDevice, stream));
+    CUDA_CHECK(cudaMemcpyAsync(
+        d_curr_out_map, kernel_map.out_maps.begin(kernel_index),
+        curr_size * sizeof(int), cudaMemcpyDeviceToDevice, stream));
+    d_curr_in_map += curr_size;
+    d_curr_out_map += curr_size;
+  }
+  CUDA_CHECK(cudaStreamSynchronize(stream));
 
   // First, sort d_out_map and d_in_map with the d_out_map so that in_feat are
   // placed adjacent according to out_map
@@ -157,50 +163,75 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
   // Finally, use the max kernel to map all in_feats with the same out key to
   // out_feats Also, create out max_index for gradient
   max_pool<Dtype, Itype>
-      <<<GET_BLOCKS(out_nrows * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
-          nchannel * out_nrows, // N
-          out_nrows, nchannel, nmap, d_in_feat, d_out_feat,
-          d_max_index, // Out indices for backward
-          d_in_map,    // in index
-          d_reduced_out_map, d_in_map_min);
+      <<<GET_BLOCKS(out_nrows * nchannel, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
+         0, stream>>>(nchannel * out_nrows, // N
+                      out_nrows, nchannel, nmap, d_in_feat, d_out_feat,
+                      d_max_index, // Out indices for backward
+                      d_in_map,    // in index
+                      d_reduced_out_map, d_in_map_min);
 
   // cudaFree(d_in_map);
   // cudaFree(d_index);
   CUDA_CHECK(cudaGetLastError());
+  CUDA_CHECK(cudaStreamSynchronize(stream));
 }
 
-template void MaxPoolingForwardKernelGPU<float, int32_t>(
+// default_allocator
+template void
+MaxPoolingForwardKernelGPU<float, uint32_t, detail::default_allocator<char>>(
     const float *d_in_feat, float *d_out_feat, int out_nrows,
-    int32_t *d_max_index, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int32_t *d_scr, cudaStream_t stream);
+    int32_t *d_max_index, int nchannel,
+    gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map,
+    uint32_t *d_scr, cudaStream_t stream);
 
-template void MaxPoolingForwardKernelGPU<double, int32_t>(
+template void
+MaxPoolingForwardKernelGPU<double, uint32_t, detail::default_allocator<char>>(
     const double *d_in_feat, double *d_out_feat, int out_nrows,
-    int32_t *d_max_index, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int32_t *d_scr, cudaStream_t stream);
+    int32_t *d_max_index, int nchannel,
+    gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map,
+    uint32_t *d_scr, cudaStream_t stream);
 
-template <typename Dtype, typename Itype>
+// c10_allocator
+template void
+MaxPoolingForwardKernelGPU<float, uint32_t, detail::c10_allocator<char>>(
+    const float *d_in_feat, float *d_out_feat, int out_nrows,
+    int32_t *d_max_index, int nchannel,
+    gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map,
+    uint32_t *d_scr, cudaStream_t stream);
+
+template void
+MaxPoolingForwardKernelGPU<double, uint32_t, detail::c10_allocator<char>>(
+    const double *d_in_feat, double *d_out_feat, int out_nrows,
+    int32_t *d_max_index, int nchannel,
+    gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map,
+    uint32_t *d_scr, cudaStream_t stream);
+
+template <typename Dtype>
 void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  const Dtype *d_grad_out_feat, int out_nrows,
-                                 const Itype *d_max_index, int nchannel,
+                                 const int32_t *d_max_index, int nchannel,
                                  cudaStream_t stream) {
   int num_kernels = out_nrows * nchannel;
   // Assume that gradients for input feature are all set to zero
-  set_gradient<Dtype><<<GET_BLOCKS(num_kernels), CUDA_NUM_THREADS, 0, stream>>>(
-      num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index);
+  LOG_DEBUG("MaxPool Backward GPU with #", num_kernels, out_nrows, nchannel);
+  set_gradient<Dtype>
+      <<<GET_BLOCKS(num_kernels, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0,
+         stream>>>(num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index);
 
-  CUDA_CHECK(cudaGetLastError());
+  CUDA_CHECK(cudaStreamSynchronize(stream));
 }
 
-template void MaxPoolingBackwardKernelGPU<float, int32_t>(
-    float *d_grad_in_feat, int in_nrows, const float *d_grad_out_feat,
-    int out_nrows, const int32_t *d_max_index, int nchannel,
-    cudaStream_t stream);
+template void
+MaxPoolingBackwardKernelGPU<float>(float *d_grad_in_feat, int in_nrows,
+                                   const float *d_grad_out_feat, int out_nrows,
+                                   const int32_t *d_max_index, int nchannel,
+                                   cudaStream_t stream);
 
-template void MaxPoolingBackwardKernelGPU<double, int32_t>(
-    double *d_grad_in_feat, int in_nrows, const double *d_grad_out_feat,
-    int out_nrows, const int32_t *d_max_index, int nchannel,
-    cudaStream_t stream);
+template void
+MaxPoolingBackwardKernelGPU<double>(double *d_grad_in_feat, int in_nrows,
+                                    const double *d_grad_out_feat,
+                                    int out_nrows, const int32_t *d_max_index,
+                                    int nchannel, cudaStream_t stream);
 
 } // end namespace minkowski
 

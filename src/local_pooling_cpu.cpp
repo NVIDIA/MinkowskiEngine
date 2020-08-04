@@ -33,6 +33,7 @@
 #include "utils.hpp"
 
 #include "pooling_avg_kernel.hpp"
+#include "pooling_max_kernel.hpp"
 
 #include <pybind11/pybind11.h>
 #include <torch/extension.h>
@@ -47,7 +48,7 @@ LocalPoolingForwardCPU(at::Tensor const &in_feat,
                        default_types::stride_type const &kernel_dilation, //
                        RegionType::Type const region_type,                //
                        at::Tensor const &offset,                          //
-                       uint32_t pooling_mode,                             //
+                       PoolingMode::Type pooling_mode,                    //
                        CoordinateMapKey *p_in_map_key,                    //
                        CoordinateMapKey *p_out_map_key,                   //
                        cpu_manager_type<coordinate_type> *p_map_manager) {
@@ -82,36 +83,51 @@ LocalPoolingForwardCPU(at::Tensor const &in_feat,
   at::Tensor out_feat =
       torch::zeros({out_nrows, in_feat.size(1)}, in_feat.options());
   LOG_DEBUG("Allocated", out_nrows, "x", in_feat.size(1), "features.");
-  at::Tensor num_nonzero = torch::zeros({0}, in_feat.options());
 
-  if (pooling_mode == 1) {
-    num_nonzero.resize_({out_nrows});
-    num_nonzero.zero_();
+  if (pooling_mode == PoolingMode::LOCAL_MAX_POOLING) {
+    at::Tensor max_index = torch::empty(
+        {0}, in_feat.options().dtype(torch::kInt).requires_grad(false));
+    max_index.resize_({out_nrows, in_feat.size(1)});
+    max_index.zero_();
+
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_forward_cpu", [&] {
+          MaxPoolingForwardKernelCPU<scalar_t, int>(
+              in_feat.template data_ptr<scalar_t>(),
+              out_feat.template data_ptr<scalar_t>(), max_index.data_ptr<int>(),
+              in_feat.size(1), in_out.first, in_out.second, out_nrows);
+        });
+    return std::make_pair(out_feat, max_index);
+  } else {
+    at::Tensor num_nonzero =
+        torch::empty({0}, in_feat.options().requires_grad(false));
+    if (pooling_mode == PoolingMode::LOCAL_AVG_POOLING) {
+      num_nonzero.resize_({out_nrows});
+      num_nonzero.zero_();
+    }
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_forward_cpu", [&] {
+          NonzeroAvgPoolingForwardKernelCPU<scalar_t, coordinate_type>(
+              in_feat.template data_ptr<scalar_t>(),
+              out_feat.template data_ptr<scalar_t>(),
+              num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+              in_out.first, in_out.second, out_nrows, pooling_mode);
+        });
+    return std::make_pair(out_feat, num_nonzero);
   }
-
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "local_pooling_forward_cpu", [&] {
-        NonzeroAvgPoolingForwardKernelCPU<scalar_t, coordinate_type>(
-            in_feat.template data_ptr<scalar_t>(),
-            out_feat.template data_ptr<scalar_t>(),
-            num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
-            in_out.first, in_out.second, out_nrows, pooling_mode);
-      });
-
-  return std::make_pair(out_feat, num_nonzero);
 }
 
 template <typename coordinate_type>
 at::Tensor
-LocalPoolingBackwardCPU(at::Tensor in_feat,                                //
-                        at::Tensor grad_out_feat,                          //
-                        at::Tensor num_nonzero,                            //
+LocalPoolingBackwardCPU(at::Tensor const &in_feat,                         //
+                        at::Tensor const &grad_out_feat,                   //
+                        at::Tensor const &num_nonzero,                     //
                         default_types::stride_type const &kernel_size,     //
                         default_types::stride_type const &kernel_stride,   //
                         default_types::stride_type const &kernel_dilation, //
                         RegionType::Type const region_type,                //
                         at::Tensor const &offset,                          //
-                        uint32_t pooling_mode,                             //
+                        PoolingMode::Type pooling_mode,                    //
                         CoordinateMapKey *p_in_map_key,                    //
                         CoordinateMapKey *p_out_map_key,                   //
                         cpu_manager_type<coordinate_type> *p_map_manager) {
@@ -143,15 +159,26 @@ LocalPoolingBackwardCPU(at::Tensor in_feat,                                //
   at::Tensor grad_in_feat =
       torch::zeros({in_feat.size(0), in_feat.size(1)}, in_feat.options());
 
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "local_pooling_backward_cpu", [&] {
-        NonzeroAvgPoolingBackwardKernelCPU<scalar_t, coordinate_type>(
-            grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
-            grad_out_feat.template data_ptr<scalar_t>(),
-            num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
-            in_out.first, in_out.second, pooling_mode);
-      });
-
+  if (pooling_mode == PoolingMode::LOCAL_MAX_POOLING) {
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_backward_cpu", [&] {
+          MaxPoolingBackwardKernelCPU<scalar_t, default_types::index_type>(
+              grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+              grad_out_feat.template data_ptr<scalar_t>(),
+              grad_out_feat.size(0), num_nonzero.data_ptr<int>(),
+              in_feat.size(1));
+        });
+  } else {
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_backward_cpu", [&] {
+          NonzeroAvgPoolingBackwardKernelCPU<scalar_t,
+                                             default_types::index_type>(
+              grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+              grad_out_feat.template data_ptr<scalar_t>(),
+              num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+              in_out.first, in_out.second, pooling_mode);
+        });
+  }
   return grad_in_feat;
 }
 
@@ -162,21 +189,21 @@ template std::pair<at::Tensor, at::Tensor> LocalPoolingForwardCPU<int32_t>(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<int32_t> *p_map_manager);
 
 template at::Tensor LocalPoolingBackwardCPU<int32_t>(
-    at::Tensor in_feat,                                //
-    at::Tensor grad_out_feat,                          //
-    at::Tensor num_nonzero,                            //
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &num_nonzero,                     //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<int32_t> *p_map_manager);

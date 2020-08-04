@@ -33,6 +33,7 @@
 #include "utils.hpp"
 
 #include "pooling_avg_kernel.cuh"
+#include "pooling_max_kernel.cuh"
 
 // Ninja
 #include "local_pooling_cpu.cpp"
@@ -51,7 +52,7 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager) {
@@ -86,42 +87,68 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
   at::Tensor out_feat =
       torch::zeros({out_nrows, in_feat.size(1)}, in_feat.options());
   LOG_DEBUG("Allocated", out_nrows, "x", in_feat.size(1), "features.");
-  at::Tensor num_nonzero = torch::zeros({0}, in_feat.options());
 
-  if (pooling_mode > 0) {
-    num_nonzero.resize_({out_nrows});
-    num_nonzero.zero_();
-  }
-
-  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
   cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
-  cusparseSetStream(handle, stream);
 
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "local_pooling_forward_gpu", [&] {
-        NonzeroAvgPoolingForwardKernelGPU<scalar_t, default_types::index_type,
-                                          TemplatedAllocator<char>>(
-            in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
-            out_feat.template data_ptr<scalar_t>(), out_nrows,
-            num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1), in_out,
-            pooling_mode > 0, handle, stream);
-      });
+  if (pooling_mode == PoolingMode::LOCAL_MAX_POOLING) {
+    at::Tensor max_index = torch::empty({0}, torch::TensorOptions()
+                                                 .device(in_feat.device())
+                                                 .dtype(torch::kInt)
+                                                 .requires_grad(false));
+    max_index.resize_({out_nrows, in_feat.size(1)});
+    max_index.zero_();
+    size_t scratch_bytes = 5 * in_out.size() * sizeof(uint32_t);
+    void *d_scr = p_map_manager->allocate(scratch_bytes);
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_forward_gpu", [&] {
+          MaxPoolingForwardKernelGPU<scalar_t, default_types::index_type,
+                                     TemplatedAllocator<char>>(
+              in_feat.template data_ptr<scalar_t>(),
+              out_feat.template data_ptr<scalar_t>(), out_nrows,
+              max_index.data_ptr<int>(), in_feat.size(1), in_out,
+              reinterpret_cast<uint32_t *>(d_scr), stream);
+        });
+    p_map_manager->deallocate(d_scr, scratch_bytes);
+    return std::make_pair(out_feat, max_index);
 
-  return std::make_pair(out_feat, num_nonzero);
+  } else {
+    at::Tensor num_nonzero =
+        torch::empty({0}, in_feat.options().requires_grad(false));
+
+    if (pooling_mode == PoolingMode::LOCAL_AVG_POOLING) {
+      num_nonzero.resize_({out_nrows});
+      num_nonzero.zero_();
+    }
+    cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+    cusparseSetStream(handle, stream);
+
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_forward_gpu", [&] {
+          NonzeroAvgPoolingForwardKernelGPU<scalar_t, default_types::index_type,
+                                            TemplatedAllocator<char>>(
+              in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+              out_feat.template data_ptr<scalar_t>(), out_nrows,
+              num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+              in_out, pooling_mode == PoolingMode::LOCAL_AVG_POOLING, handle,
+              stream);
+        });
+
+    return std::make_pair(out_feat, num_nonzero);
+  }
 }
 
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 at::Tensor LocalPoolingBackwardGPU(
-    at::Tensor in_feat,                                //
-    at::Tensor grad_out_feat,                          //
-    at::Tensor num_nonzero,                            //
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &num_nonzero,                     //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager) {
@@ -155,15 +182,27 @@ at::Tensor LocalPoolingBackwardGPU(
 
   cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
 
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "local_pooling_backward_cpu", [&] {
-        NonzeroAvgPoolingBackwardKernelGPU<scalar_t, default_types::index_type,
-                                           TemplatedAllocator<char>>(
-            grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
-            grad_out_feat.template data_ptr<scalar_t>(), grad_out_feat.size(0),
-            num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1), in_out,
-            pooling_mode > 0, stream);
-      });
+  if (pooling_mode == PoolingMode::LOCAL_MAX_POOLING) {
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_backward_gpu", [&] {
+          MaxPoolingBackwardKernelGPU<scalar_t>(
+              grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+              grad_out_feat.template data_ptr<scalar_t>(),
+              grad_out_feat.size(0), num_nonzero.data_ptr<int>(),
+              in_feat.size(1), stream);
+        });
+  } else {
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "local_pooling_backward_gpu", [&] {
+          NonzeroAvgPoolingBackwardKernelGPU<
+              scalar_t, default_types::index_type, TemplatedAllocator<char>>(
+              grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+              grad_out_feat.template data_ptr<scalar_t>(),
+              grad_out_feat.size(0), num_nonzero.template data_ptr<scalar_t>(),
+              in_feat.size(1), in_out,
+              pooling_mode == PoolingMode::LOCAL_AVG_POOLING, stream);
+        });
+  }
 
   return grad_in_feat;
 }
@@ -178,7 +217,7 @@ LocalPoolingForwardGPU<default_types::dcoordinate_type,
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<default_types::dcoordinate_type, detail::default_allocator>
@@ -192,7 +231,7 @@ LocalPoolingForwardGPU<default_types::dcoordinate_type, detail::c10_allocator>(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<default_types::dcoordinate_type, detail::c10_allocator>
@@ -201,15 +240,15 @@ LocalPoolingForwardGPU<default_types::dcoordinate_type, detail::c10_allocator>(
 // Backward
 template at::Tensor LocalPoolingBackwardGPU<default_types::dcoordinate_type,
                                             detail::default_allocator>(
-    at::Tensor in_feat,                                //
-    at::Tensor grad_out_feat,                          //
-    at::Tensor num_nonzero,                            //
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &num_nonzero,                     //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<default_types::dcoordinate_type, detail::default_allocator>
@@ -217,15 +256,15 @@ template at::Tensor LocalPoolingBackwardGPU<default_types::dcoordinate_type,
 
 template at::Tensor
 LocalPoolingBackwardGPU<default_types::dcoordinate_type, detail::c10_allocator>(
-    at::Tensor in_feat,                                //
-    at::Tensor grad_out_feat,                          //
-    at::Tensor num_nonzero,                            //
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &num_nonzero,                     //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<default_types::dcoordinate_type, detail::c10_allocator>

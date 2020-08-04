@@ -28,25 +28,26 @@
 #include <array>
 #include <vector>
 
+#include "allocators.cuh"
 #include "gpu.cuh"
+#include "kernel_map.cuh"
 #include "math_functions.hpp"
 #include "types.hpp"
 
 namespace minkowski {
 
-template <typename Dtype, typename Itype>
-void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
-                                int out_nrows, Itype *d_max_index, int nchannel,
-                                const pInOutMaps<Itype> &in_map,
-                                const pInOutMaps<Itype> &out_map, Itype *d_scr,
-                                cudaStream_t stream);
+template <typename Dtype, typename Itype, typename ByteAllocator>
+void MaxPoolingForwardKernelGPU(
+    const Dtype *d_in_feat, Dtype *d_out_feat, int out_nrows, int *d_max_index,
+    int nchannel, gpu_kernel_map<Itype, ByteAllocator> const &kernel_map,
+    Itype *d_scr, cudaStream_t stream);
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
                                  const Dtype *d_grad_out_feat, int out_nrows,
-                                 const Itype *d_max_index, int nchannel,
+                                 const int32_t *d_max_index, int nchannel,
                                  cudaStream_t stream);
 
-} //end namespace minkowski
+} // end namespace minkowski
 
 #endif // end POOLING_MAX_CUH
