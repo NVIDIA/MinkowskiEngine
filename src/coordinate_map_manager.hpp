@@ -204,7 +204,8 @@ public:
   // stride region: new coordinate generation
   std::pair<coordinate_map_key_type, bool>
   stride_region(coordinate_map_key_type const &in_map_key,
-                cpu_kernel_region<coordinate_type> &kernel, bool is_transpose);
+                cpu_kernel_region<coordinate_type> &kernel,
+                bool generate_new_map);
 
   // origin coordinate map creation
   std::pair<coordinate_map_key_type, bool> origin();
@@ -456,7 +457,9 @@ public:
 #ifndef CPU_ONLY
   void *allocate(size_type n) { return m_allocator.allocate(n); }
 
-  void deallocate(void *p, size_type n) { m_allocator.deallocate((char *)p, n); }
+  void deallocate(void *p, size_type n) {
+    m_allocator.deallocate((char *)p, n);
+  }
 #endif
 private:
   // NOTE: operator[] required mapped_type(), which is not defined.

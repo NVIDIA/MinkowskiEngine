@@ -196,17 +196,12 @@ public:
   /*
    * @brief strided coordinate map for region.
    */
-  self_type
-  stride_region(cpu_kernel_region<coordinate_type> const &kernel) const {
+  self_type stride_region(cpu_kernel_region<coordinate_type> const &kernel,
+                          stride_type const &out_tensor_stride) const {
     ASSERT(kernel.coordinate_size() == m_coordinate_size, "Invalid kernel");
     // Over estimate the reserve size to be size();
-    stride_type out_tensor_stride(
-        kernel.tensor_stride(), kernel.tensor_stride() + m_coordinate_size - 1);
-
     self_type stride_map(size() * kernel.volume(), m_coordinate_size,
                          out_tensor_stride, base_type::m_byte_allocator);
-
-    auto &out_mmap = stride_map.m_map;
 
     auto ckernel = cpu_kernel_region<coordinate_type>(kernel);
     std::vector<coordinate_type> lb(m_coordinate_size), ub(m_coordinate_size),
@@ -221,15 +216,8 @@ public:
 
       // For elements in the current region
       for (const auto &point : ckernel) {
-        // If the input coord exists
-        const auto iter_out = out_mmap.find(point);
-        // LOG_DEBUG(kernel_ind, ":",
-        //           PtrToString(iter_out->first.data(), m_coordinate_size),
-        //           "->", PtrToString(point.data(), m_coordinate_size));
-        if (iter_out == out_mmap.end()) {
-          insert(point, num_used);
-          ++num_used;
-        }
+        auto const result = stride_map.insert(point, num_used);
+        num_used += result.second;
       }
     }
     return stride_map;

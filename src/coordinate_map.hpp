@@ -82,8 +82,12 @@ stride_tensor_stride(const default_types::stride_type &tensor_stride,
   ASSERT(tensor_stride.size() == stride.size(), "stride size mismatch.");
   default_types::stride_type strided_tensor_stride{tensor_stride};
   if (is_transpose) {
-    for (default_types::size_type i = 0; i < tensor_stride.size(); ++i)
+    for (default_types::size_type i = 0; i < tensor_stride.size(); ++i) {
+      ASSERT(strided_tensor_stride[i] % stride[i] == 0,
+             "Invalid up stride on tensor stride:", tensor_stride,
+             "kernel stride:", stride);
       strided_tensor_stride[i] /= stride[i];
+    }
   } else {
     for (default_types::size_type i = 0; i < tensor_stride.size(); ++i)
       strided_tensor_stride[i] *= stride[i];
