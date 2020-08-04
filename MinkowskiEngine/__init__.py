@@ -53,6 +53,7 @@ from MinkowskiEngineBackend._C import (
     GPUMemoryAllocatorType,
     CoordinateMapType,
     RegionType,
+    PoolingMode,
     is_cuda_available,
     cuda_version,
     get_gpu_memory_info,
@@ -103,7 +104,7 @@ from MinkowskiPooling import MinkowskiLocalPoolingFunction, MinkowskiAvgPooling,
     MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
     MinkowskiGlobalSumPooling, MinkowskiGlobalAvgPooling, \
     MinkowskiGlobalMaxPoolingFunction, MinkowskiGlobalMaxPooling, \
-    MinkowskiMaxPoolingFunction, MinkowskiMaxPooling
+    MinkowskiMaxPooling
 
 # from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
 #     MinkowskiBroadcast, MinkowskiBroadcastConcatenation, \

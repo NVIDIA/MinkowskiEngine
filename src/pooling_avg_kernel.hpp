@@ -38,12 +38,14 @@ namespace minkowski {
  * TODO consistent memset
  */
 template <typename Dtype, typename Itype>
-void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
-                                       Dtype *p_out_feat,                  //
-                                       Dtype *p_num_nonzero, int nchannel, //
-                                       const cpu_in_maps &in_maps,         //
-                                       const cpu_out_maps &out_maps,       //
-                                       int out_nrows, const bool use_avg) {
+void NonzeroAvgPoolingForwardKernelCPU(Dtype const *p_in_feat,
+                                       Dtype *p_out_feat, //
+                                       Dtype *p_num_nonzero,
+                                       int const nchannel,           //
+                                       cpu_in_maps const &in_maps,   //
+                                       cpu_out_maps const &out_maps, //
+                                       int const out_nrows,
+                                       const bool use_avg) {
   int kernel_volume, n_active_in_volume, row, j, k;
   const Dtype *p_curr_in;
   Dtype *p_curr_out;
@@ -99,13 +101,14 @@ void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
 }
 
 template <typename Dtype, typename Itype>
-void NonzeroAvgPoolingBackwardKernelCPU(Dtype *p_grad_in_feat, int in_nrows,
-                                        const Dtype *p_grad_out_feat,
-                                        const Dtype *p_num_nonzero,
-                                        int nchannel,                 //
-                                        const cpu_in_maps &in_maps,   //
-                                        const cpu_out_maps &out_maps, //
-                                        const bool use_avg) {
+void NonzeroAvgPoolingBackwardKernelCPU(Dtype *p_grad_in_feat,
+                                        int const in_nrows,
+                                        Dtype const *p_grad_out_feat,
+                                        Dtype const *p_num_nonzero,
+                                        int const nchannel,           //
+                                        cpu_in_maps const &in_maps,   //
+                                        cpu_out_maps const &out_maps, //
+                                        bool const use_avg) {
   int kernel_volume, n_active_in_volume, row, j, k;
   Dtype *p_curr_grad_in, curr_num_nonzero;
   const Dtype *p_curr_grad_out;
@@ -147,31 +150,31 @@ void NonzeroAvgPoolingBackwardKernelCPU(Dtype *p_grad_in_feat, int in_nrows,
 }
 
 template void NonzeroAvgPoolingForwardKernelCPU<float, int>(
-    const float *p_in_feat, float *p_out_feat, float *p_num_nonzero,
-    int nchannel,
-    const cpu_in_maps &in_maps,   //
-    const cpu_out_maps &out_maps, //
-    int out_nrows, const bool use_avg);
+    float const *p_in_feat, float *p_out_feat, float *p_num_nonzero,
+    int const nchannel,
+    cpu_in_maps const &in_maps,   //
+    cpu_out_maps const &out_maps, //
+    int const out_nrows, bool const use_avg);
 
 template void NonzeroAvgPoolingForwardKernelCPU<float, long>(
-    const float *p_in_feat, float *p_out_feat, float *p_num_nonzero,
-    int nchannel,
-    const cpu_in_maps &in_maps,   //
-    const cpu_out_maps &out_maps, //
-    int out_nrows, const bool use_avg);
+    float const *p_in_feat, float *p_out_feat, float *p_num_nonzero,
+    int const nchannel,
+    cpu_in_maps const &in_maps,   //
+    cpu_out_maps const &out_maps, //
+    int const out_nrows, bool const use_avg);
 template void NonzeroAvgPoolingForwardKernelCPU<double, int>(
-    const double *p_in_feat, double *p_out_feat, double *p_num_nonzero,
-    int nchannel,
-    const cpu_in_maps &in_maps,   //
-    const cpu_out_maps &out_maps, //
-    int out_nrows, const bool use_avg);
+    double const *p_in_feat, double *p_out_feat, double *p_num_nonzero,
+    int const nchannel,
+    cpu_in_maps const &in_maps,   //
+    cpu_out_maps const &out_maps, //
+    int const out_nrows, bool const use_avg);
 
 template void NonzeroAvgPoolingForwardKernelCPU<double, long>(
-    const double *p_in_feat, double *p_out_feat, double *p_num_nonzero,
-    int nchannel,
-    const cpu_in_maps &in_maps,   //
-    const cpu_out_maps &out_maps, //
-    int out_nrows, const bool use_avg);
+    double const *p_in_feat, double *p_out_feat, double *p_num_nonzero,
+    int const nchannel,
+    cpu_in_maps const &in_maps,   //
+    cpu_out_maps const &out_maps, //
+    int const out_nrows, bool const use_avg);
 } // namespace minkowski
 
 #endif // end CPU_POOLING_AVG

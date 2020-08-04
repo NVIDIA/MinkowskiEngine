@@ -32,18 +32,18 @@
 namespace minkowski {
 
 template <typename Dtype, typename Itype>
-void MaxPoolingForwardKernelCPU(const Dtype *p_in_feat, Dtype *p_out_feat,
-                                Itype *p_mask_index, int nchannel,
-                                const InOutMaps<Itype> &in_map,
-                                const InOutMaps<Itype> &out_map,
-                                int out_nrows) {
+void MaxPoolingForwardKernelCPU(Dtype const *p_in_feat, Dtype *p_out_feat,
+                                Itype *p_mask_index, int const nchannel,
+                                cpu_in_maps const &in_maps,   //
+                                cpu_out_maps const &out_maps, //
+                                int const out_nrows) {
   int kernel_volume, n_active_in_volume, row, j, k;
   const Dtype *p_curr_in;
   Dtype *p_curr_out;
   Itype *p_curr_mask_index;
 
   // Number of weights
-  kernel_volume = in_map.size();
+  kernel_volume = in_maps.size();
 
   // Set all values to - Dtype min
   std::fill(p_mask_index, p_mask_index + out_nrows * nchannel, -1);
@@ -52,20 +52,22 @@ void MaxPoolingForwardKernelCPU(const Dtype *p_in_feat, Dtype *p_out_feat,
 
   // Iterate through each spatial kernel out of filter_volume spatial kernels
   for (k = 0; k < kernel_volume; k++) {
-    n_active_in_volume = in_map[k].size();
+    n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
       continue;
+    auto const &in_map = in_maps[k];
+    auto const &out_map = out_maps[k];
 
     for (row = 0; row < n_active_in_volume; row++) {
       // Define current pointers
-      p_curr_in = p_in_feat + in_map[k][row] * nchannel;
-      p_curr_out = p_out_feat + out_map[k][row] * nchannel;
-      p_curr_mask_index = p_mask_index + out_map[k][row] * nchannel;
+      p_curr_in = p_in_feat + in_map[row] * nchannel;
+      p_curr_out = p_out_feat + out_map[row] * nchannel;
+      p_curr_mask_index = p_mask_index + out_map[row] * nchannel;
 
       for (j = 0; j < nchannel; j++) {
         if (*p_curr_out < *p_curr_in) {
           *p_curr_out = *p_curr_in;
-          *p_curr_mask_index = in_map[k][row] * nchannel + j;
+          *p_curr_mask_index = in_map[row] * nchannel + j;
         }
         p_curr_in++;
         p_curr_out++;
@@ -76,13 +78,12 @@ void MaxPoolingForwardKernelCPU(const Dtype *p_in_feat, Dtype *p_out_feat,
 }
 
 template <typename Dtype, typename Itype>
-void MaxPoolingBackwardKernelCPU(Dtype *p_grad_in_feat, int in_nrows,
-                                 const Dtype *p_grad_out_feat, int out_nrows,
-                                 const Itype *p_mask_index, int nchannel,
-                                 const InOutMaps<Itype> &in_map,
-                                 const InOutMaps<Itype> &out_map) {
+void MaxPoolingBackwardKernelCPU(Dtype *p_grad_in_feat, int const in_nrows,
+                                 Dtype const *p_grad_out_feat,
+                                 int const out_nrows, int const *p_mask_index,
+                                 int const nchannel) {
   const Dtype *p_curr_grad_out;
-  const Itype *p_curr_mask_index;
+  const int *p_curr_mask_index;
 
   // cleanup gradients
   std::fill(p_grad_in_feat, p_grad_in_feat + in_nrows * nchannel, 0);

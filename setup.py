@@ -216,6 +216,7 @@ SOURCE_SETS = {
             "convolution_gpu.cu",
             "convolution_transpose_gpu.cu",
             "pooling_avg_kernel.cu",
+            "pooling_max_kernel.cu",
             "local_pooling_gpu.cu",
             "spmm.cu",
             "gpu.cu",

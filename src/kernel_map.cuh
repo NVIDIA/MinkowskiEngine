@@ -252,6 +252,14 @@ public:
     return m_kernel_offset_map.cend();
   }
 
+  size_type size() const {
+    size_type nmap = 0;
+    for (auto const &k : m_kernel_size_map) {
+      nmap += k.second;
+    }
+    return nmap;
+  }
+
   size_type size(index_type const kernel_index) const {
     auto const iter = m_kernel_size_map.find(kernel_index);
     if (iter == m_kernel_size_map.end())

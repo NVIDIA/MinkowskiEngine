@@ -181,22 +181,22 @@ LocalPoolingForwardCPU(at::Tensor const &in_feat,
                        default_types::stride_type const &kernel_dilation, //
                        RegionType::Type const region_type,                //
                        at::Tensor const &offset,                          //
-                       uint32_t pooling_mode,                             //
+                       PoolingMode::Type pooling_mode,                    //
                        CoordinateMapKey *p_in_map_key,                    //
                        CoordinateMapKey *p_out_map_key,                   //
                        cpu_manager_type<coordinate_type> *p_map_manager);
 
 template <typename coordinate_type>
 at::Tensor
-LocalPoolingBackwardCPU(at::Tensor in_feat,                                //
-                        at::Tensor grad_out_feat,                          //
-                        at::Tensor num_nonzero,                            //
+LocalPoolingBackwardCPU(at::Tensor const &in_feat,                         //
+                        at::Tensor const &grad_out_feat,                   //
+                        at::Tensor const &num_nonzero,                     //
                         default_types::stride_type const &kernel_size,     //
                         default_types::stride_type const &kernel_stride,   //
                         default_types::stride_type const &kernel_dilation, //
                         RegionType::Type const region_type,                //
                         at::Tensor const &offset,                          //
-                        uint32_t pooling_mode,                             //
+                        PoolingMode::Type pooling_mode,                    //
                         CoordinateMapKey *p_in_map_key,                    //
                         CoordinateMapKey *p_out_map_key,                   //
                         cpu_manager_type<coordinate_type> *p_map_manager);
@@ -211,7 +211,7 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
@@ -219,15 +219,15 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 at::Tensor LocalPoolingBackwardGPU(
-    at::Tensor in_feat,                                //
-    at::Tensor grad_out_feat,                          //
-    at::Tensor num_nonzero,                            //
+    at::Tensor const &in_feat,                         //
+    at::Tensor const &grad_out_feat,                   //
+    at::Tensor const &num_nonzero,                     //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    uint32_t pooling_mode,                             //
+    PoolingMode::Type pooling_mode,                    //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
@@ -471,6 +471,15 @@ void initialize_non_templated_classes(py::module &m) {
       .value("HYPER_CUBE", minkowski::RegionType::Type::HYPER_CUBE)
       .value("HYPER_CROSS", minkowski::RegionType::Type::HYPER_CROSS)
       .value("CUSTOM", minkowski::RegionType::Type::CUSTOM)
+      .export_values();
+
+  py::enum_<minkowski::PoolingMode::Type>(m, "PoolingMode")
+      .value("LOCAL_SUM_POOLING",
+             minkowski::PoolingMode::Type::LOCAL_SUM_POOLING)
+      .value("LOCAL_AVG_POOLING",
+             minkowski::PoolingMode::Type::LOCAL_AVG_POOLING)
+      .value("LOCAL_MAX_POOLING",
+             minkowski::PoolingMode::Type::LOCAL_MAX_POOLING)
       .export_values();
 
   // Classes

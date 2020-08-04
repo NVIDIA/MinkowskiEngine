@@ -27,7 +27,7 @@ from typing import Union
 import torch
 from torch.autograd import Function
 
-from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType
+from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType, PoolingMode
 from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
 from MinkowskiCoordinateManager import CoordinateManager
 from MinkowskiKernelGenerator import KernelGenerator, save_ctx
@@ -38,79 +38,12 @@ from MinkowskiCommon import (
 )
 
 
-class MinkowskiMaxPoolingFunction(Function):
-    @staticmethod
-    def forward(
-        ctx,
-        input_features: torch.Tensor,
-        kernel_generator: KernelGenerator,
-        in_coordinate_map_key: CoordinateMapKey,
-        out_coordinate_map_key: CoordinateMapKey = None,
-        coordinate_manager: CoordinateManager = None,
-    ):
-        if out_coordinate_map_key is None:
-            out_coordinate_map_key = CoordinateMapKey(
-                in_coordinate_map_key.get_coordinate_size()
-            )
-        if not input_features.is_contiguous():
-            input_features = input_features.contiguous()
-
-        ctx.input_features = input_features
-        ctx.kernel_weights = kernel_weights
-        ctx = save_ctx(
-            ctx,
-            kernel_generator,
-            in_coordinate_map_key,
-            out_coordinate_map_key,
-            coordinate_manager,
-        )
-
-        fw_fn = get_minkowski_function("MaxPoolingForward", input_features)
-        out_feat, max_index = fw_fn(
-            ctx.input_features,
-            kernel_generator.kernel_size,
-            kernel_generator.kernel_stride,
-            kernel_generator.kernel_dilation,
-            kernel_generator.region_type,
-            kernel_generator.region_offsets,
-            ctx.in_coordinate_map_key,
-            ctx.out_coordinate_map_key,
-            ctx.coordinate_manager._manager,
-        )
-        ctx.max_index = max_index
-        return out_feat
-
-    @staticmethod
-    def backward(ctx, grad_out_feat: torch.Tensor):
-        bw_fn = get_minkowski_function("MaxPoolingBackward", grad_out_feat)
-        grad_in_feat = bw_fn(
-            ctx.input_features,
-            ctx.max_index,
-            grad_out_feat,
-            ctx.kernel_generator.kernel_size,
-            ctx.kernel_generator.kernel_stride,
-            ctx.kernel_generator.kernel_dilation,
-            ctx.kernel_generator.region_type,
-            ctx.kernel_generator.region_offsets,
-            ctx.in_coordinate_map_key,
-            ctx.out_coordinate_map_key,
-            ctx.coordinate_manager._manager,
-        )
-        return (
-            grad_in_feat,
-            None,
-            None,
-            None,
-            None,
-        )
-
-
 class MinkowskiLocalPoolingFunction(Function):
     @staticmethod
     def forward(
         ctx,
         input_features: torch.Tensor,
-        pooling_mode: int,
+        pooling_mode: PoolingMode,
         kernel_generator: KernelGenerator,
         in_coordinate_map_key: CoordinateMapKey,
         out_coordinate_map_key: CoordinateMapKey = None,
@@ -166,7 +99,7 @@ class MinkowskiLocalPoolingFunction(Function):
             ctx.out_coordinate_map_key,
             ctx.coordinate_manager._manager,
         )
-
+        print(grad_in_feat, grad_out_feat, ctx.num_nonzero)
         return (
             grad_in_feat,
             None,
@@ -194,7 +127,7 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
         dilation=1,
         kernel_generator=None,
         is_transpose=False,
-        pooling_mode=1,
+        pooling_mode=PoolingMode.LOCAL_AVG_POOLING,
         dimension=-1,
     ):
         super(MinkowskiPoolingBase, self).__init__()
@@ -339,7 +272,7 @@ class MinkowskiAvgPooling(MinkowskiPoolingBase):
             dilation,
             kernel_generator,
             is_transpose,
-            pooling_mode=1,
+            pooling_mode=PoolingMode.LOCAL_AVG_POOLING,
             dimension=dimension,
         )
 
@@ -424,7 +357,7 @@ class MinkowskiSumPooling(MinkowskiPoolingBase):
             dilation,
             kernel_generator,
             is_transpose,
-            pooling_mode=0,
+            pooling_mode=PoolingMode.LOCAL_SUM_POOLING,
             dimension=dimension,
         )
 
@@ -496,49 +429,8 @@ class MinkowskiMaxPooling(MinkowskiPoolingBase):
             dilation,
             kernel_generator,
             is_transpose=False,
+            pooling_mode=PoolingMode.LOCAL_MAX_POOLING,
             dimension=dimension,
-        )
-        self.pooling = MinkowskiMaxPoolingFunction()
-
-    def forward(
-        self,
-        input: SparseTensor,
-        coords: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
-    ):
-        r"""
-        :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
-        convolution on.
-
-        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
-        `MinkowskiEngine.SparseTensor`), optional): If provided, generate
-        results on the provided coordinates. None by default.
-
-        """
-        assert isinstance(input, SparseTensor)
-        assert input.D == self.dimension
-
-        # Create a region_offset
-        self.region_type_, self.region_offset_, _ = self.kernel_generator.get_kernel(
-            input.tensor_stride, self.is_transpose
-        )
-
-        # Get a new coords key or extract one from the coords
-        out_coords_key = _get_coords_key(input, coords)
-
-        output = self.pooling.apply(
-            input.F,
-            input.tensor_stride,
-            self.stride,
-            self.kernel_size,
-            self.dilation,
-            self.region_type_,
-            self.region_offset_,
-            input.coords_key,
-            out_coords_key,
-            input.coords_man,
-        )
-        return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man
         )
 
 

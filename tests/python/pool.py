@@ -37,7 +37,6 @@ from MinkowskiEngine import (
     MinkowskiGlobalPooling,
     MinkowskiGlobalMaxPoolingFunction,
     MinkowskiGlobalMaxPooling,
-    MinkowskiMaxPoolingFunction,
     MinkowskiMaxPooling,
     GlobalPoolingMode,
 )
@@ -46,75 +45,71 @@ from utils.gradcheck import gradcheck
 from tests.python.common import data_loader
 
 
-class TestPooling(unittest.TestCase):
-    def test_maxpooling(self):
-        in_channels, D = 2, 2
-        coords, feats, labels = data_loader(in_channels, batch_size=2)
-        feats.requires_grad_()
-        feats = feats.double()
-        input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiMaxPooling(kernel_size=2, stride=2, dimension=D)
-        print(pool)
-        output = pool(input)
-        print(input)
-        print(output)
-        C = output.coords_man
-        print(C.get_coords(2))
-        region_type, _, _ = pool.kernel_generator.cache[(1, 1)]
-        print(
-            C.get_kernel_map(
-                1, 2, stride=2, kernel_size=2, region_type=region_type, is_pool=True
-            )
-        )
-        # Check backward
-        fn = MinkowskiMaxPoolingFunction()
+class TestLocalMaxPooling(unittest.TestCase):
+    def test_gpu(self):
+        if not torch.cuda.is_available():
+            return
 
-        # Even numbered kernel_size error!
-        self.assertTrue(
-            gradcheck(
-                fn,
-                (
-                    input.F,
-                    input.tensor_stride,
-                    pool.stride,
-                    pool.kernel_size,
-                    pool.dilation,
-                    pool.region_type_,
-                    pool.region_offset_,
-                    input.coords_key,
-                    None,
-                    input.coords_man,
-                ),
-            )
-        )
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coordinates=coords)
+        pool = MinkowskiMaxPooling(kernel_size=3, stride=2, dimension=D)
+        output = pool(input)
+        print(output)
 
         if not torch.cuda.is_available():
             return
 
-        device = torch.device("cuda")
-        input = input.to(device)
+        input = SparseTensor(feats, coordinates=coords, device=0)
         output = pool(input)
         print(output)
 
         # Check backward
+        fn = MinkowskiLocalPoolingFunction()
         self.assertTrue(
             gradcheck(
                 fn,
                 (
                     input.F,
-                    input.tensor_stride,
-                    pool.stride,
-                    pool.kernel_size,
-                    pool.dilation,
-                    pool.region_type_,
-                    pool.region_offset_,
-                    input.coords_key,
-                    None,
-                    input.coords_man,
+                    pool.pooling_mode,
+                    pool.kernel_generator,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
                 ),
             )
         )
 
+    def test(self):
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coordinates=coords)
+        pool = MinkowskiMaxPooling(kernel_size=3, stride=2, dimension=D)
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiLocalPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    pool.kernel_generator,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+
+
+class TestLocalSumPooling(unittest.TestCase):
     def test_sumpooling(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
@@ -153,7 +148,9 @@ class TestPooling(unittest.TestCase):
             output = pool(input)
             print(output)
 
-    def test_avgpooling_gpu(self):
+
+class TestLocalAvgPooling(unittest.TestCase):
+    def test_gpu(self):
         if not torch.cuda.is_available():
             return
 
@@ -189,7 +186,7 @@ class TestPooling(unittest.TestCase):
             )
         )
 
-    def test_avgpooling(self):
+    def test(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
@@ -215,6 +212,8 @@ class TestPooling(unittest.TestCase):
             )
         )
 
+
+class TestGlobalAvgPooling(unittest.TestCase):
     def test_global_avgpool(self):
         in_channels = 2
         coords, feats, labels = data_loader(in_channels, batch_size=2)
@@ -399,7 +398,3 @@ class TestPooling(unittest.TestCase):
                 ),
             )
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

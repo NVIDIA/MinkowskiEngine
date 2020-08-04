@@ -160,6 +160,10 @@ namespace RegionType {
 enum Type { HYPER_CUBE, HYPER_CROSS, CUSTOM };
 }
 
+namespace PoolingMode {
+enum Type { LOCAL_SUM_POOLING, LOCAL_AVG_POOLING, LOCAL_MAX_POOLING };
+}
+
 /* Key for KernelMap
  *
  * A tuple of (CoordinateMapKey (input),
