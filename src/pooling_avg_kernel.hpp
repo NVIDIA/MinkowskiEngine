@@ -39,10 +39,10 @@ namespace minkowski {
  */
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
-                                       Dtype *p_out_feat, Dtype *p_num_nonzero,
-                                       int nchannel,
-                                       const InOutMaps<Itype> &in_map,
-                                       const InOutMaps<Itype> &out_map,
+                                       Dtype *p_out_feat,                  //
+                                       Dtype *p_num_nonzero, int nchannel, //
+                                       const cpu_in_maps &in_maps,         //
+                                       const cpu_out_maps &out_maps,       //
                                        int out_nrows, const bool use_avg) {
   int kernel_volume, n_active_in_volume, row, j, k;
   const Dtype *p_curr_in;
@@ -50,7 +50,7 @@ void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
   Dtype *p_curr_num_nonzero;
 
   // Number of weights
-  kernel_volume = in_map.size();
+  kernel_volume = in_maps.size();
 
   // Set all values to - Dtype min
   if (use_avg)
@@ -59,7 +59,7 @@ void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
 
   // Iterate through each spatial kernel out of filter_volume spatial kernels
   for (k = 0; k < kernel_volume; k++) {
-    n_active_in_volume = in_map[k].size();
+    n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
       continue;
 
@@ -67,17 +67,17 @@ void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
     if (use_avg) {
       for (row = 0; row < n_active_in_volume; row++) {
         // Define current pointers
-        p_curr_in = p_in_feat + in_map[k][row] * nchannel;
-        p_curr_out = p_out_feat + out_map[k][row] * nchannel;
-        p_curr_num_nonzero = p_num_nonzero + out_map[k][row];
+        p_curr_in = p_in_feat + in_maps[k][row] * nchannel;
+        p_curr_out = p_out_feat + out_maps[k][row] * nchannel;
+        p_curr_num_nonzero = p_num_nonzero + out_maps[k][row];
         (*p_curr_num_nonzero)++;
         cpu_add<Dtype>(nchannel, p_curr_in, p_curr_out, p_curr_out);
       }
     } else {
       for (row = 0; row < n_active_in_volume; row++) {
         // Define current pointers
-        p_curr_in = p_in_feat + in_map[k][row] * nchannel;
-        p_curr_out = p_out_feat + out_map[k][row] * nchannel;
+        p_curr_in = p_in_feat + in_maps[k][row] * nchannel;
+        p_curr_out = p_out_feat + out_maps[k][row] * nchannel;
         cpu_add<Dtype>(nchannel, p_curr_in, p_curr_out, p_curr_out);
       }
     }
@@ -99,33 +99,36 @@ void NonzeroAvgPoolingForwardKernelCPU(const Dtype *p_in_feat,
 }
 
 template <typename Dtype, typename Itype>
-void NonzeroAvgPoolingBackwardKernelCPU(
-    Dtype *p_grad_in_feat, int in_nrows, const Dtype *p_grad_out_feat,
-    const Dtype *p_num_nonzero, int nchannel, const InOutMaps<Itype> &in_map,
-    const InOutMaps<Itype> &out_map, const bool use_avg) {
+void NonzeroAvgPoolingBackwardKernelCPU(Dtype *p_grad_in_feat, int in_nrows,
+                                        const Dtype *p_grad_out_feat,
+                                        const Dtype *p_num_nonzero,
+                                        int nchannel,                 //
+                                        const cpu_in_maps &in_maps,   //
+                                        const cpu_out_maps &out_maps, //
+                                        const bool use_avg) {
   int kernel_volume, n_active_in_volume, row, j, k;
   Dtype *p_curr_grad_in, curr_num_nonzero;
   const Dtype *p_curr_grad_out;
 
   // Number of weights
-  kernel_volume = in_map.size();
+  kernel_volume = in_maps.size();
 
   // cleanup gradients
   std::fill(p_grad_in_feat, p_grad_in_feat + in_nrows * nchannel, 0);
 
   for (k = 0; k < kernel_volume; k++) {
-    n_active_in_volume = in_map[k].size();
+    n_active_in_volume = in_maps[k].size();
     if (n_active_in_volume == 0)
       continue;
 
     for (row = 0; row < n_active_in_volume; row++) {
       // Define current pointers
-      p_curr_grad_in = p_grad_in_feat + in_map[k][row] * nchannel;
-      p_curr_grad_out = p_grad_out_feat + out_map[k][row] * nchannel;
+      p_curr_grad_in = p_grad_in_feat + in_maps[k][row] * nchannel;
+      p_curr_grad_out = p_grad_out_feat + out_maps[k][row] * nchannel;
 
       // To speed up, create if outside for loop
       if (use_avg) {
-        curr_num_nonzero = p_num_nonzero[out_map[k][row]];
+        curr_num_nonzero = p_num_nonzero[out_maps[k][row]];
         for (j = 0; j < nchannel; j++) {
           if (curr_num_nonzero > 0)
             *p_curr_grad_in += *p_curr_grad_out / curr_num_nonzero;
@@ -145,21 +148,29 @@ void NonzeroAvgPoolingBackwardKernelCPU(
 
 template void NonzeroAvgPoolingForwardKernelCPU<float, int>(
     const float *p_in_feat, float *p_out_feat, float *p_num_nonzero,
-    int nchannel, const InOutMaps<int> &in_map, const InOutMaps<int> &out_map,
+    int nchannel,
+    const cpu_in_maps &in_maps,   //
+    const cpu_out_maps &out_maps, //
     int out_nrows, const bool use_avg);
 
 template void NonzeroAvgPoolingForwardKernelCPU<float, long>(
     const float *p_in_feat, float *p_out_feat, float *p_num_nonzero,
-    int nchannel, const InOutMaps<long> &in_map, const InOutMaps<long> &out_map,
+    int nchannel,
+    const cpu_in_maps &in_maps,   //
+    const cpu_out_maps &out_maps, //
     int out_nrows, const bool use_avg);
 template void NonzeroAvgPoolingForwardKernelCPU<double, int>(
     const double *p_in_feat, double *p_out_feat, double *p_num_nonzero,
-    int nchannel, const InOutMaps<int> &in_map, const InOutMaps<int> &out_map,
+    int nchannel,
+    const cpu_in_maps &in_maps,   //
+    const cpu_out_maps &out_maps, //
     int out_nrows, const bool use_avg);
 
 template void NonzeroAvgPoolingForwardKernelCPU<double, long>(
     const double *p_in_feat, double *p_out_feat, double *p_num_nonzero,
-    int nchannel, const InOutMaps<long> &in_map, const InOutMaps<long> &out_map,
+    int nchannel,
+    const cpu_in_maps &in_maps,   //
+    const cpu_out_maps &out_maps, //
     int out_nrows, const bool use_avg);
 } // namespace minkowski
 

@@ -129,7 +129,8 @@ void gpu_addition(const int N, const Dtype *a, const Dtype *b, Dtype *y,
                   cudaStream_t stream) {
   // NOLINT_NEXT_LINE(whitespace/operators)
   addition_kernel<Dtype>
-      <<<GET_BLOCKS(N), CUDA_NUM_THREADS, 0, stream>>>(N, a, b, y);
+      <<<GET_BLOCKS(N, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0, stream>>>(N, a,
+                                                                         b, y);
 }
 
 template void gpu_addition<float>(const int N, const float *a, const float *b,
@@ -144,7 +145,8 @@ void gpu_multiplication(const int N, const Dtype *a, const Dtype *b, Dtype *y,
                         cudaStream_t stream) {
   // NOLINT_NEXT_LINE(whitespace/operators)
   multiplication_kernel<Dtype>
-      <<<GET_BLOCKS(N), CUDA_NUM_THREADS, 0, stream>>>(N, a, b, y);
+      <<<GET_BLOCKS(N, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0, stream>>>(N, a,
+                                                                         b, y);
 }
 
 template void gpu_multiplication<float>(const int N, const float *a,
@@ -171,8 +173,8 @@ template <typename Dtype>
 void col2row_major(const int nrows, const int ncols, const Dtype *colA,
                    Dtype *rowA, cudaStream_t stream) {
   col2row_major_kernel<Dtype>
-      <<<GET_BLOCKS(nrows * ncols), CUDA_NUM_THREADS, 0, stream>>>(
-          nrows * ncols, nrows, ncols, colA, rowA);
+      <<<GET_BLOCKS(nrows * ncols, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0,
+         stream>>>(nrows * ncols, nrows, ncols, colA, rowA);
 }
 
 template void col2row_major<float>(const int nrows, const int ncols,
@@ -199,8 +201,8 @@ template <typename Dtype>
 void row2col_major(const int nrows, const int ncols, const Dtype *colA,
                    Dtype *rowA, cudaStream_t stream) {
   row2col_major_kernel<Dtype>
-      <<<GET_BLOCKS(nrows * ncols), CUDA_NUM_THREADS, 0, stream>>>(
-          nrows * ncols, nrows, ncols, colA, rowA);
+      <<<GET_BLOCKS(nrows * ncols, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0,
+         stream>>>(nrows * ncols, nrows, ncols, colA, rowA);
 }
 
 template void row2col_major<float>(const int nrows, const int ncols,

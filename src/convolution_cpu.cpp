@@ -79,14 +79,14 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
     p_out_map_key->set_key(out_key);
   }
 
-  cpu_kernel_map const &in_out =
-      p_map_manager->kernel_map(p_in_map_key,    //
-                                p_out_map_key,   //
-                                kernel_size,     //
-                                kernel_stride,   //
-                                kernel_dilation, //
-                                region_type,     //
-                                offset, false, false);
+  cpu_kernel_map const &in_out = p_map_manager->kernel_map(
+      p_in_map_key,    //
+      p_out_map_key,   //
+      kernel_size,     //
+      kernel_stride,   //
+      kernel_dilation, //
+      region_type,     //
+      offset, false /* is_transpose */, false /* is_pool */);
 
   auto const out_nrows = p_map_manager->size(p_out_map_key->get_key());
   at::Tensor out_feat =
@@ -95,7 +95,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
 
   AT_DISPATCH_FLOATING_TYPES(
       in_feat.scalar_type(), "convolution_forward_cpu", [&] {
-        ConvolutionForwardKernelCPU<scalar_t, default_types::index_type>(
+        ConvolutionForwardKernelCPU<scalar_t, coordinate_type>(
             in_feat.template data_ptr<scalar_t>(), in_feat.size(1),
             out_feat.template data_ptr<scalar_t>(), out_feat.size(1),
             kernel.template data_ptr<scalar_t>(), in_out.first, in_out.second);
@@ -141,14 +141,14 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
   coordinate_map_key_type out_key = p_out_map_key->get_key();
   ASSERT(p_map_manager->exists(out_key), ERROR_MAP_NOT_FOUND);
 
-  cpu_kernel_map const &in_out =
-      p_map_manager->kernel_map(p_in_map_key,    //
-                                p_out_map_key,   //
-                                kernel_size,     //
-                                kernel_stride,   //
-                                kernel_dilation, //
-                                region_type,     //
-                                offset, false, false);
+  cpu_kernel_map const &in_out = p_map_manager->kernel_map(
+      p_in_map_key,    //
+      p_out_map_key,   //
+      kernel_size,     //
+      kernel_stride,   //
+      kernel_dilation, //
+      region_type,     //
+      offset, false /* is_transpose */, false /* is_pool */);
 
   at::Tensor grad_in_feat =
       torch::zeros({in_feat.size(0), in_feat.size(1)}, in_feat.options());
@@ -157,7 +157,7 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
 
   AT_DISPATCH_FLOATING_TYPES(
       in_feat.scalar_type(), "convolution_backward_cpu", [&] {
-        ConvolutionBackwardKernelCPU<scalar_t, default_types::index_type>(
+        ConvolutionBackwardKernelCPU<scalar_t, coordinate_type>(
             in_feat.template data_ptr<scalar_t>(),
             grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(1),
             grad_out_feat.template data_ptr<scalar_t>(), grad_out_feat.size(1),
