@@ -93,6 +93,7 @@ from MinkowskiConvolution import (
     MinkowskiConvolution,
     MinkowskiConvolutionTransposeFunction,
     MinkowskiConvolutionTranspose,
+    MinkowskiGenerativeConvolutionTranspose,
 )
 
 #

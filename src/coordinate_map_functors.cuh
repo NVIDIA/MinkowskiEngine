@@ -155,11 +155,29 @@ template <typename coordinate_type, typename map_type> struct update_value {
   map_type m_map;
 };
 
-template <bool value> struct is_first {
+template <typename index_type, typename map_type>
+struct update_value_with_offset {
+  update_value_with_offset(map_type &_map, index_type const *valid_map_offset)
+      : m_valid_map_offset(valid_map_offset), m_map{_map} {}
+
+  __device__ void operator()(index_type i) {
+    auto &result = m_map.data()[m_valid_map_offset[i]];
+    result.second = i;
+  }
+
+  index_type const *m_valid_map_offset;
+  map_type m_map;
+};
+
+template <typename T> struct is_first {
+  is_first(T value) : m_value(value) {}
+
   template <typename Tuple>
   inline __device__ bool operator()(Tuple const &item) const {
-    return thrust::get<0>(item) == value;
+    return thrust::get<0>(item) == m_value;
   }
+
+  T m_value;
 };
 
 template <typename coordinate_type, typename mapped_type>

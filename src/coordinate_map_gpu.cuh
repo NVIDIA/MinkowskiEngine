@@ -150,6 +150,8 @@ public:
    * @brief strided coordinate map.
    */
   self_type stride(stride_type const &stride) const;
+  self_type stride_region(cpu_kernel_region<coordinate_type> &kernel,
+                          stride_type const &out_tensor_stride) const;
   self_type origin() const;
 
   kernel_map_type kernel_map(self_type const &out_coordinate_map,
@@ -182,8 +184,8 @@ public:
   // find(key_iterator key_first, key_iterator key_last);
 
 private:
-  using base_type::m_coordinate_size;
   using base_type::m_byte_allocator;
+  using base_type::m_coordinate_size;
 
   size_type m_hashtable_occupancy;
   size_type m_capacity;

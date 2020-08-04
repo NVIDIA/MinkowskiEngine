@@ -51,8 +51,6 @@ at::Tensor ConvolutionTransposeForwardCPU(
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<coordinate_type> *p_map_manager) {
-  ASSERT(!generate_new_coordinates, ERROR_NOT_IMPLEMENTED);
-
   ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
   ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
@@ -74,7 +72,7 @@ at::Tensor ConvolutionTransposeForwardCPU(
   ASSERT(in_feat.size(0) == p_map_manager->size(in_key), "Invalid in_feat size",
          in_feat.size(0), "!=", p_map_manager->size(in_key));
 
-  if (!p_out_map_key->is_key_set()) {
+  if (!p_out_map_key->is_key_set() || generate_new_coordinates) {
     auto map_it = p_map_manager->find(p_in_map_key->get_key());
     ASSERT(map_it != p_map_manager->map_end(), ERROR_MAP_NOT_FOUND);
     auto const &in_map = (*map_it).second;
@@ -87,10 +85,13 @@ at::Tensor ConvolutionTransposeForwardCPU(
         out_tensor_stride.data(), //
         kernel_size.data(),       //
         kernel_dilation.data(),   //
-        0, offset.data_ptr<coordinate_type>(), offset.size(0));
+        0,                        // volume. Will be initialized automatically
+        offset.data_ptr<coordinate_type>(), offset.size(0),
+        true // is_transpose
+    );
 
     coordinate_map_key_type out_key = std::get<0>(p_map_manager->stride_region(
-        in_key, kernel_region, true /* is_transpose */));
+        in_key, kernel_region, generate_new_coordinates));
     p_out_map_key->set_key(out_key);
   }
 

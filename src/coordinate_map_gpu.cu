@@ -160,7 +160,7 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
           thrust::device, valid_begin,
           thrust::make_zip_iterator(thrust::make_tuple(
               success.end(), m_valid_row_index.end(), m_valid_map_index.end())),
-          detail::is_first<false>()) -
+          detail::is_first<bool>(false)) -
       valid_begin;
 
   m_valid_row_index.resize(number_of_valid);
@@ -353,7 +353,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
                             thrust::make_tuple(success.end(),                //
                                                stride_valid_row_index.end(), //
                                                stride_valid_map_index.end())),
-                        detail::is_first<false>()) -
+                        detail::is_first<bool>(false)) -
       valid_begin;
   stride_valid_row_index.resize(number_of_valid);
   stride_valid_map_index.resize(number_of_valid);
@@ -368,6 +368,166 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
                        m_coordinate_size});
   LOG_DEBUG("Stride remap done");
 
+  return stride_map;
+}
+
+namespace detail {
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void kernel_region_insert(
+    map_type __restrict__ out_map,                              //
+    coordinate_type const *const __restrict__ p_in_coordinates, //
+    index_type const *const __restrict__ in_valid_row_index,    //
+    coordinate_type *__restrict__ p_out_coordinates,            //
+    index_type *__restrict__ out_valid_row_index,               //
+    index_type *__restrict__ out_valid_map_index,               //
+    size_type const num_threads,                                //
+    gpu_kernel_region<coordinate_type> kernel,                  //
+    index_type const unused_key) {                              //
+  extern __shared__ coordinate_type sh_all[];
+
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  size_type const coordinate_size = kernel.coordinate_size();
+  size_type const volume = kernel.volume();
+
+  // clang-format off
+  size_type *sh_size = reinterpret_cast<size_type *>(sh_all);
+
+  size_type *sh_tensor_stride = sh_size;
+  size_type *sh_kernel_size   = sh_tensor_stride + coordinate_size;
+  size_type *sh_dilation      = sh_kernel_size   + coordinate_size;
+
+  coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_dilation + coordinate_size);
+  coordinate_type *sh_tmp = sh_coordinate +                   tx  * coordinate_size;
+  coordinate_type *sh_lb  = sh_coordinate + (1 * blockDim.x + tx) * coordinate_size;
+  coordinate_type *sh_ub  = sh_coordinate + (2 * blockDim.x + tx) * coordinate_size;
+  // clang-format on
+
+  for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x) {
+    sh_tensor_stride[i] = kernel.tensor_stride()[i];
+    sh_kernel_size[i] = kernel.kernel_size()[i];
+    sh_dilation[i] = kernel.dilation()[i];
+  }
+
+  __syncthreads();
+
+  if (x < num_threads) {
+    // iterate over values
+    index_type out_index = x * volume;
+    // set bounds for the valid keys
+    kernel.set_bounds(
+        &p_in_coordinates[in_valid_row_index[x] * coordinate_size], sh_lb,
+        sh_ub, sh_tmp);
+    for (auto const &curr_coordinate : kernel) {
+      // initialize out coordinate
+      for (uint32_t i = 0; i < coordinate_size; ++i)
+        p_out_coordinates[out_index * coordinate_size + i] = curr_coordinate[i];
+
+      auto const result = out_map.insert(thrust::make_pair(
+          coordinate<coordinate_type>{
+              &p_out_coordinates[out_index * coordinate_size]},
+          out_index));
+
+      if (result.second) {
+        // row index in the out_coordinates
+        out_valid_row_index[out_index] = x;
+        // offset in the coordinate map
+        out_valid_map_index[out_index] = result.first.offset();
+      } else {
+        out_valid_row_index[out_index] = unused_key;
+      }
+      ++out_index;
+    }
+  }
+}
+
+} // namespace detail
+
+/*
+ * @brief generate a region strided coordinate map
+ *
+ * @return a gpu_coordinate_map
+ */
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_region(
+    cpu_kernel_region<coordinate_type> &kernel,
+    stride_type const &out_tensor_stride) const {
+
+  ASSERT(m_coordinate_size == kernel.coordinate_size(),
+         "Invalid kernel coordinate_size");
+  gpu_kernel_region<coordinate_type> gpu_kernel(kernel.to_gpu());
+  // Over estimate the reserve size to be size();
+  size_type const N_in = size();
+  size_type const N_out = N_in * kernel.volume();
+
+  LOG_DEBUG("Stride region out tensor stride:", out_tensor_stride,
+            "with capacity:", N_out);
+  self_type stride_map(N_out, m_coordinate_size, m_hashtable_occupancy,
+                       out_tensor_stride, m_map_allocator,
+                       base_type::m_byte_allocator);
+
+  auto &out_valid_row_index = stride_map.m_valid_row_index;
+  auto &out_valid_map_index = stride_map.m_valid_map_index;
+
+  out_valid_row_index.resize(N_out);
+  out_valid_map_index.resize(N_out);
+
+  index_type const unused_key = std::numeric_limits<index_type>::max();
+  // (THREAD * 3 * D +  3 * D) * 4
+  uint32_t const shared_memory_size_in_bytes =
+      3 * m_coordinate_size * sizeof(index_type) + // stride, kernel, dilation
+      3 * CUDA_NUM_THREADS * m_coordinate_size *
+          sizeof(coordinate_type); // tmp, lb, ub
+
+  detail::kernel_region_insert<coordinate_type, size_type, index_type, map_type>
+      <<<GET_BLOCKS(N_in, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
+         shared_memory_size_in_bytes>>>(
+          *stride_map.m_map,                                    //
+          const_coordinate_data(),                              //
+          thrust::raw_pointer_cast(m_valid_row_index.data()),   //
+          stride_map.coordinate_data(),                         //
+          thrust::raw_pointer_cast(out_valid_row_index.data()), //
+          thrust::raw_pointer_cast(out_valid_map_index.data()), //
+          N_in,                                                 //
+          gpu_kernel,                                           //
+          unused_key);                                          //
+  CUDA_CHECK(cudaStreamSynchronize(0));
+  LOG_DEBUG("kernel_region_insert done");
+  LOG_DEBUG("valid row index", out_valid_row_index);
+  LOG_DEBUG("valid map offset", out_valid_map_index);
+
+  // remove unused_keys
+  auto valid_begin = thrust::make_zip_iterator(
+      thrust::make_tuple(out_valid_row_index.begin(), //
+                         out_valid_map_index.begin()));
+  size_type const number_of_valid =
+      thrust::remove_if(thrust::device, //
+                        valid_begin,    //
+                        thrust::make_zip_iterator(
+                            thrust::make_tuple(out_valid_row_index.end(), //
+                                               out_valid_map_index.end())),
+                        detail::is_first<index_type>(unused_key)) -
+      valid_begin;
+  out_valid_row_index.resize(number_of_valid);
+  out_valid_map_index.resize(number_of_valid);
+  stride_map.m_size = number_of_valid;
+  LOG_DEBUG("Reduced to", number_of_valid);
+
+  // remap values
+  thrust::counting_iterator<index_type> count_begin{0};
+  thrust::for_each(count_begin, count_begin + number_of_valid,
+                   detail::update_value_with_offset<index_type, map_type>{
+                       *stride_map.m_map,
+                       thrust::raw_pointer_cast(out_valid_map_index.data())});
+  LOG_DEBUG("Stride remap done");
   return stride_map;
 }
 

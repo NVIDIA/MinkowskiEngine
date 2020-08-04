@@ -291,25 +291,30 @@ std::pair<coordinate_map_key_type, bool>
 CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     stride_region(coordinate_map_key_type const &in_map_key,
                   cpu_kernel_region<coordinate_type> &kernel,
-                  bool is_transpose) {
+                  bool generate_new_map) {
   ASSERT(exists(in_map_key), ERROR_MAP_NOT_FOUND);
-  // check if the key exists.
-  stride_type out_tensor_stride(kernel.tensor_stride(),
+  LOG_DEBUG("stride_region");
+  // kernel.tensor_stride must be set to out tensor stride.
+  stride_type out_tensor_stride{kernel.tensor_stride(),
                                 kernel.tensor_stride() +
-                                    kernel.coordinate_size() - 1);
+                                    kernel.coordinate_size() - 1};
+  // check if the key exists.
   coordinate_map_key_type out_map_key(out_tensor_stride, "");
   bool const exists_out_map = exists(out_map_key);
-  if (!exists_out_map) {
-    ASSERT(false, ERROR_NOT_IMPLEMENTED);
-    // operator[] required mapped_type(), which is not defined.
-    // ASSERTION already checked that in_map_key exists.
-    //
-    // map_type const &in_map = m_coordinate_maps.find(in_map_key)->second;
-    // map_type out_map = in_map.stride_region(kernel_region);
-    // insert(out_map_key, out_map);
+  if (!exists_out_map || generate_new_map) {
+    LOG_DEBUG("Create a new stride region map for tensor_stride:",
+              out_tensor_stride);
+    map_type const &in_map = m_coordinate_maps.find(in_map_key)->second;
+    map_type out_map = in_map.stride_region(kernel, out_tensor_stride);
+    if (exists_out_map) {
+      LOG_DEBUG("coordinate map exists for tensor_stride:", out_tensor_stride);
+      out_map_key = get_random_string_id(out_tensor_stride, "");
+      LOG_DEBUG("created a random key:", out_map_key);
+    }
+    insert(out_map_key, out_map);
   }
   // (key, new map generated flag)
-  return std::make_pair(out_map_key, !exists_out_map);
+  return std::make_pair(out_map_key, !exists_out_map || generate_new_map);
 }
 
 template <typename coordinate_type,
@@ -516,7 +521,9 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
               out_map.get_tensor_stride().data(), //
               kernel_size.data(),                 //
               kernel_dilation.data(),             //
-              0, offset.data_ptr<coordinate_type>(), offset.size(0));
+              0, offset.data_ptr<coordinate_type>(), offset.size(0),
+              true // is_transpose
+          );
 
           // out to in kernel map
           auto const kernel_map =

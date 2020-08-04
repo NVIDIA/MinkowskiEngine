@@ -414,7 +414,6 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
         dilation=1,
         bias=False,
         kernel_generator=None,
-        generate_new_coordinates=False,
         dimension=None,
     ):
         r"""a generalized sparse transposed convolution layer.
@@ -466,9 +465,93 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
-                generate_new_coordinates=generate_new_coordinates,
                 dimension=dimension,
             )
+
+        MinkowskiConvolutionBase.__init__(
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            dilation,
+            bias,
+            kernel_generator,
+            is_transpose=True,
+            dimension=dimension,
+        )
+        self.reset_parameters(True)
+
+
+class MinkowskiGenerativeConvolutionTranspose(MinkowskiConvolutionBase):
+    r"""A generalized sparse transposed convolution or deconvolution layer that generates new coordinates.
+    """
+
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        kernel_size=-1,
+        stride=1,
+        dilation=1,
+        bias=False,
+        kernel_generator=None,
+        dimension=None,
+    ):
+        r"""a generalized sparse transposed convolution layer that creates new coordinates.
+
+        Args:
+            :attr:`in_channels` (int): the number of input channels in the
+            input tensor.
+
+            :attr:`out_channels` (int): the number of output channels in the
+            output tensor.
+
+            :attr:`kernel_size` (int, optional): the size of the kernel in the
+            output tensor. If not provided, :attr:`region_offset` should be
+            :attr:`RegionType.CUSTOM` and :attr:`region_offset` should be a 2D
+            matrix with size :math:`N\times D` such that it lists all :math:`N`
+            offsets in D-dimension.
+
+            :attr:`stride` (int, or list, optional): stride size that defines
+            upsampling rate. If non-identity is used, the output coordinates
+            will be :attr:`tensor_stride` / :attr:`stride` apart.  When a list is
+            given, the length must be D; each element will be used for stride
+            size for the specific axis.
+
+            :attr:`dilation` (int, or list, optional): dilation size for the
+            convolution kernel. When a list is given, the length must be D and
+            each element is an axis specific dilation. All elements must be > 0.
+
+            :attr:`has_bias` (bool, optional): if True, the convolution layer
+            has a bias.
+
+            :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
+            optional): defines custom kernel shape.
+
+            :attr:`generate_new_coords` (bool, optional): Force generation of
+            new coordinates. When True, the output coordinates will be the
+            outer product of the kernel shape and the input coordinates.
+            `False` by defaul.
+
+            :attr:`dimension` (int): the spatial dimension of the space where
+            all the inputs and the network are defined. For example, images are
+            in a 2D space, meshes and 3D shapes are in a 3D space.
+
+        .. note:
+            TODO: support `kernel_size` > `stride`.
+
+        """
+        if kernel_generator is None:
+            kernel_generator = KernelGenerator(
+                kernel_size=kernel_size,
+                stride=stride,
+                dilation=dilation,
+                generate_new_coordinates=True,
+                dimension=dimension,
+            )
+        else:
+            kernel_generator.generate_new_coordinates = True
 
         MinkowskiConvolutionBase.__init__(
             self,

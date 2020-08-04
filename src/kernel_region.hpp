@@ -146,11 +146,13 @@ public:
       size_type const *dilation,      // stride / dilation within kernel,
       size_type const volume = 0,     // kernel volume
       coordinate_type const *p_offset = nullptr, // m_coordinate_size * n_offset
-      uint32_t n_offset = 0)
+      uint32_t n_offset = 0,                     //
+      bool is_transpose = false                  // is_transpose
+      )
       : m_region_type(region_type), m_coordinate_size{coordinate_size},
         m_num_offset{n_offset}, m_tensor_stride{tensor_stride},
-        m_kernel_size{kernel_size},
-        m_dilation{dilation}, m_volume{volume}, m_offset{p_offset} {
+        m_kernel_size{kernel_size}, m_dilation{dilation}, m_volume{volume},
+        m_offset{p_offset}, m_is_transpose{is_transpose} {
     if (m_volume == 0)
       set_volume();
   }
@@ -223,6 +225,9 @@ public:
   MINK_CUDA_HOST_DEVICE inline size_type const *dilation() const {
     return m_dilation;
   }
+  MINK_CUDA_HOST_DEVICE inline bool is_transpose() const {
+    return m_is_transpose;
+  }
 
 private:
   MINK_CUDA_HOST_DEVICE void set_volume() {
@@ -249,6 +254,8 @@ private:
 
 protected:
   // flag indicating tensor_stride, kernel_size, dilation are on gpu
+  bool m_is_transpose{false};
+
   RegionType::Type const m_region_type;
   size_type const m_coordinate_size;
   size_type m_num_offset, m_volume{0};
@@ -275,26 +282,29 @@ public:
   cpu_kernel_region(
       RegionType::Type type,
       size_type coordinate_size,      // Dimension of the coordinate
-      size_type const *tensor_stride, // stride size between points
+      size_type const *tensor_stride, // stride size between points on the input
       size_type const *kernel_size,   // size of the kernel or region
       size_type const *dilation,      // stride / dilation within kernel,
       size_type const volume = 0,     // volume
       coordinate_type const *p_offset = nullptr, // m_coordinate_size * n_offset
-      uint32_t n_offset = 0)
-      : base_type{type,     coordinate_size, tensor_stride, kernel_size,
-                  dilation, volume,          p_offset,      n_offset} {}
+      uint32_t n_offset = 0,
+      bool is_transpose = false // is_transpose
+      )
+      : base_type{type,   coordinate_size, tensor_stride, kernel_size, dilation,
+                  volume, p_offset,        n_offset,      is_transpose} {}
 
   using base_type::begin;
   using base_type::cbegin;
   using base_type::end;
 
   using base_type::coordinate_size;
+  using base_type::is_transpose;
   using base_type::num_offset;
   using base_type::offset;
   using base_type::region_type;
   using base_type::set_bounds;
-  using base_type::volume;
   using base_type::tensor_stride;
+  using base_type::volume;
 
 #ifndef CPU_ONLY
   inline size_type const *device_tensor_stride() const {
@@ -305,43 +315,44 @@ public:
   inline coordinate_type const *device_offset() const { return m_d_offset; }
 
   self_type const to_gpu() {
-    // move the kernel_region to GPU
-    size_type num_bytes = (m_coordinate_size - 1) * 3 * sizeof(size_type);
-    if (m_region_type == RegionType::CUSTOM)
-      num_bytes +=
-          (m_coordinate_size - 1) * m_num_offset * sizeof(coordinate_type);
+    if (!m_on_gpu) {
+      // move the kernel_region to GPU
+      size_type num_bytes = (m_coordinate_size - 1) * 3 * sizeof(size_type);
+      if (m_region_type == RegionType::CUSTOM)
+        num_bytes +=
+            (m_coordinate_size - 1) * m_num_offset * sizeof(coordinate_type);
 
-    void *p_tmp = std::malloc(num_bytes);
-    size_type *p_size_type = reinterpret_cast<size_type *>(p_tmp);
-    coordinate_type *p_coordinate_type = reinterpret_cast<coordinate_type *>(
-        p_size_type + 3 * (m_coordinate_size - 1));
+      void *p_tmp = std::malloc(num_bytes);
+      size_type *p_size_type = reinterpret_cast<size_type *>(p_tmp);
+      coordinate_type *p_coordinate_type = reinterpret_cast<coordinate_type *>(
+          p_size_type + 3 * (m_coordinate_size - 1));
 
-    std::copy_n(m_tensor_stride, m_coordinate_size - 1, &p_size_type[0]);
-    std::copy_n(m_kernel_size, m_coordinate_size - 1,
-                &p_size_type[m_coordinate_size - 1]);
-    std::copy_n(m_dilation, m_coordinate_size - 1,
-                &p_size_type[2 * (m_coordinate_size - 1)]);
+      std::copy_n(m_tensor_stride, m_coordinate_size - 1, &p_size_type[0]);
+      std::copy_n(m_kernel_size, m_coordinate_size - 1,
+                  &p_size_type[m_coordinate_size - 1]);
+      std::copy_n(m_dilation, m_coordinate_size - 1,
+                  &p_size_type[2 * (m_coordinate_size - 1)]);
 
-    if (m_region_type == RegionType::CUSTOM) {
-      std::copy_n(m_offset, m_num_offset * (m_coordinate_size - 1),
-                  p_coordinate_type);
+      if (m_region_type == RegionType::CUSTOM) {
+        std::copy_n(m_offset, m_num_offset * (m_coordinate_size - 1),
+                    p_coordinate_type);
+      }
+
+      LOG_DEBUG("Copied", num_bytes, "bytes to contiguous memory.");
+      size_type *d_tmp;
+      CUDA_CHECK(cudaMalloc((void **)&d_tmp, num_bytes));
+      CUDA_CHECK(cudaMemcpy(d_tmp, p_tmp, num_bytes, cudaMemcpyHostToDevice));
+      // clang-format off
+      m_d_tensor_stride = d_tmp + 0 * (m_coordinate_size - 1);
+      m_d_kernel_size   = d_tmp + 1 * (m_coordinate_size - 1);
+      m_d_dilation      = d_tmp + 2 * (m_coordinate_size - 1);
+      m_d_offset        = reinterpret_cast<coordinate_type*>(d_tmp + 3 * (m_coordinate_size - 1));
+      // clang-format on
+
+      m_on_gpu = true;
+
+      std::free(p_tmp);
     }
-
-    LOG_DEBUG("Copied", num_bytes, "bytes to contiguous memory.");
-    size_type *d_tmp;
-    CUDA_CHECK(cudaMalloc((void **)&d_tmp, num_bytes));
-    CUDA_CHECK(cudaMemcpy(d_tmp, p_tmp, num_bytes, cudaMemcpyHostToDevice));
-    // clang-format off
-    m_d_tensor_stride = d_tmp + 0 * (m_coordinate_size - 1);
-    m_d_kernel_size   = d_tmp + 1 * (m_coordinate_size - 1);
-    m_d_dilation      = d_tmp + 2 * (m_coordinate_size - 1);
-    m_d_offset        = reinterpret_cast<coordinate_type*>(d_tmp + 3 * (m_coordinate_size - 1));
-    // clang-format on
-
-    m_on_gpu = true;
-
-    std::free(p_tmp);
-
     return *this;
   }
 
