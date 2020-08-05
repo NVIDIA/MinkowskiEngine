@@ -186,6 +186,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
 
   AT_DISPATCH_FLOATING_TYPES(
       in_feat.scalar_type(), "convolution_backward_gpu", [&] {
+        TemplatedAllocator<char> byte_allocator;
         ConvolutionBackwardKernelGPU<scalar_t, default_types::index_type,
                                      TemplatedAllocator<char>>(
             in_feat.template data_ptr<scalar_t>(),       //
@@ -197,6 +198,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
             grad_kernel.template data_ptr<scalar_t>(),   //
             in_out,                                      //
             grad_out_feat.size(0),                       //
+            byte_allocator,                              //
             handle, stream);
       });
 
