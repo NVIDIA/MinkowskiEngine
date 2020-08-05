@@ -173,11 +173,10 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
                               // of successful insertions
   ) {
     thrust::counting_iterator<uint32_t> count_begin{0};
-    thrust::for_each(count_begin, count_begin + number_of_valid,
-                     detail::update_value<coordinate_type, map_type>{
-                         *m_map, const_coordinate_data(),
-                         thrust::raw_pointer_cast(m_valid_row_index.data()),
-                         m_coordinate_size});
+    thrust::for_each(
+        count_begin, count_begin + number_of_valid,
+        detail::update_value_with_offset<index_type, map_type>{
+            *m_map, thrust::raw_pointer_cast(m_valid_map_index.data())});
 
     size_type const num_threads = N;
     auto const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
@@ -361,11 +360,12 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
   LOG_DEBUG("Reduced to", number_of_valid);
 
   // remap values
-  thrust::for_each(count_begin, count_begin + number_of_valid,
-                   detail::update_value<coordinate_type, map_type>{
-                       *stride_map.m_map, stride_map.const_coordinate_data(),
-                       thrust::raw_pointer_cast(stride_valid_row_index.data()),
-                       m_coordinate_size});
+  thrust::for_each(
+      count_begin, count_begin + number_of_valid,
+      detail::update_value_with_offset<index_type, map_type>{
+          *stride_map.m_map,
+          thrust::raw_pointer_cast(stride_map.m_valid_map_index.data())});
+
   LOG_DEBUG("Stride remap done");
 
   return stride_map;

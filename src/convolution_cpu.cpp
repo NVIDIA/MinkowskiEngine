@@ -107,7 +107,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
 template <typename coordinate_type>
 std::pair<at::Tensor, at::Tensor>
 ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
-                       at::Tensor const &grad_out_feat,                   //
+                       at::Tensor &grad_out_feat,                         //
                        at::Tensor const &kernel,                          //
                        default_types::stride_type const &kernel_size,     //
                        default_types::stride_type const &kernel_stride,   //
@@ -119,7 +119,8 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
                        cpu_manager_type<coordinate_type> *p_map_manager) {
 
   ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
-  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  // ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  grad_out_feat = grad_out_feat.contiguous();
   ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
   ASSERT(!in_feat.is_cuda(), "in_feat must be CPU");
@@ -184,7 +185,7 @@ template at::Tensor ConvolutionForwardCPU<default_types::dcoordinate_type>(
 template std::pair<at::Tensor, at::Tensor>
 ConvolutionBackwardCPU<default_types::dcoordinate_type>(
     at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
+    at::Tensor &grad_out_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
