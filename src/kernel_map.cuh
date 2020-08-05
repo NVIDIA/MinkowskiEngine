@@ -260,6 +260,15 @@ public:
     return nmap;
   }
 
+  size_type max_size() const {
+    size_type nmap = 0;
+    for (auto const &k : m_kernel_size_map) {
+      if (k.second > nmap)
+        nmap = k.second;
+    }
+    return nmap;
+  }
+
   size_type size(index_type const kernel_index) const {
     auto const iter = m_kernel_size_map.find(kernel_index);
     if (iter == m_kernel_size_map.end())

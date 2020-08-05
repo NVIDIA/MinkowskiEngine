@@ -65,7 +65,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
 template <typename coordinate_type>
 std::pair<at::Tensor, at::Tensor>
 ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
-                       at::Tensor const &grad_out_feat,                   //
+                       at::Tensor &grad_out_feat,                         //
                        at::Tensor const &kernel,                          //
                        default_types::stride_type const &kernel_size,     //
                        default_types::stride_type const &kernel_stride,   //
@@ -95,7 +95,7 @@ template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
+    at::Tensor &grad_out_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //

@@ -130,7 +130,7 @@ template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
+    at::Tensor &grad_out_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
@@ -142,7 +142,8 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager) {
 
   ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
-  ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  // ASSERT(grad_out_feat.is_contiguous(), "grad_out_feata must be contiguous");
+  grad_out_feat = grad_out_feat.contiguous();
   ASSERT(kernel.is_contiguous(), "kernel must be contiguous");
 
   ASSERT(in_feat.is_cuda(), "in_feat must be CUDA");
@@ -239,7 +240,7 @@ template std::pair<at::Tensor, at::Tensor>
 ConvolutionBackwardGPU<default_types::dcoordinate_type,
                        detail::default_allocator>(
     at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
+    at::Tensor &grad_out_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
@@ -256,7 +257,7 @@ template std::pair<at::Tensor, at::Tensor>
 ConvolutionBackwardGPU<default_types::dcoordinate_type,
                        detail::c10_allocator>(
     at::Tensor const &in_feat,                         //
-    at::Tensor const &grad_out_feat,                   //
+    at::Tensor &grad_out_feat,                         //
     at::Tensor const &kernel,                          //
     default_types::stride_type const &kernel_size,     //
     default_types::stride_type const &kernel_stride,   //
