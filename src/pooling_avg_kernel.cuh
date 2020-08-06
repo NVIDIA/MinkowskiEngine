@@ -46,7 +46,9 @@ void NonzeroAvgPoolingForwardKernelGPU(
     Dtype *d_num_nonzero,                                   //
     default_types::size_type const nchannel,                //
     gpu_kernel_map<Itype, ByteAllocator> const &kernel_map, //
-    bool const use_avg, cusparseHandle_t cushandle, cudaStream_t stream);
+    bool const use_avg,
+    ByteAllocator &allocator, //
+    cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype, typename ByteAllocator>
 void NonzeroAvgPoolingBackwardKernelGPU(

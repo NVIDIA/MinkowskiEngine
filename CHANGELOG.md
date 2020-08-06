@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.0a] - 2020-08-05
+
+### Changed
+
+- Remove Makefile for installation as pytorch supports multithreaded compilation
+- GPU coordinate map support
+
 ## [0.4.3] - 2020-05-29
 
 ### Changed

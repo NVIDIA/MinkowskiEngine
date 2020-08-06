@@ -59,59 +59,6 @@ void gpu_gemm<double>(cublasHandle_t handle, const CBLAS_TRANSPOSE TransA,
                            A, lda, &beta, C, N));
 }
 
-// CUBLAS, CUSPARSE assume all dense matrices to be col major
-// If op(B)=B, cusparse<t>csrmm2() is the same as cusparse<t>csrmm();
-// otherwise, only op(A)=A is supported and the matrix type must be
-// CUSPARSE_MATRIX_TYPE_GENERAL.
-// M: # row of A
-// N: # col of op(B) or C
-// K: # col of A
-template <>
-cusparseStatus_t
-cusparse_csrmv<float>(cusparseHandle_t handle, cusparseOperation_t transA,
-                      int m, int n, int nnz, const float *alpha,
-                      const cusparseMatDescr_t descrA, const float *csrValA,
-                      const int *csrRowPtrA, const int *csrColIndA,
-                      const float *x, const float *beta, float *y) {
-  return cusparseScsrmv(handle, transA, m, n, nnz, alpha, descrA, csrValA,
-                        csrRowPtrA, csrColIndA, x, beta, y);
-};
-
-template <>
-cusparseStatus_t
-cusparse_csrmv<double>(cusparseHandle_t handle, cusparseOperation_t transA,
-                       int m, int n, int nnz, const double *alpha,
-                       const cusparseMatDescr_t descrA, const double *csrValA,
-                       const int *csrRowPtrA, const int *csrColIndA,
-                       const double *x, const double *beta, double *y) {
-  return cusparseDcsrmv(handle, transA, m, n, nnz, alpha, descrA, csrValA,
-                        csrRowPtrA, csrColIndA, x, beta, y);
-};
-
-template <>
-cusparseStatus_t
-cusparse_csrmm<float>(cusparseHandle_t handle, cusparseOperation_t transA,
-                      cusparseOperation_t transB, int m, int n, int k, int nnz,
-                      const float *alpha, const cusparseMatDescr_t descrA,
-                      const float *csrValA, const int *csrRowPtrA,
-                      const int *csrColIndA, const float *B, int ldb,
-                      const float *beta, float *C, int ldc) {
-  return cusparseScsrmm2(handle, transA, transB, m, n, k, nnz, alpha, descrA,
-                         csrValA, csrRowPtrA, csrColIndA, B, ldb, beta, C, ldc);
-}
-
-template <>
-cusparseStatus_t
-cusparse_csrmm<double>(cusparseHandle_t handle, cusparseOperation_t transA,
-                       cusparseOperation_t transB, int m, int n, int k, int nnz,
-                       const double *alpha, const cusparseMatDescr_t descrA,
-                       const double *csrValA, const int *csrRowPtrA,
-                       const int *csrColIndA, const double *B, int ldb,
-                       const double *beta, double *C, int ldc) {
-  return cusparseDcsrmm2(handle, transA, transB, m, n, k, nnz, alpha, descrA,
-                         csrValA, csrRowPtrA, csrColIndA, B, ldb, beta, C, ldc);
-}
-
 template <typename Dtype>
 __global__ void addition_kernel(const int n, const Dtype *a, const Dtype *b,
                                 Dtype *y) {
@@ -233,5 +180,4 @@ void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,
   cudaFree(pBuffer);
   cudaFree(P);
 }
-
 } // end namespace minkowski

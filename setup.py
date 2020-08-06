@@ -110,6 +110,11 @@ run_command("pip", "uninstall", "MinkowskiEngine", "-y")
 # For cpu only build
 CPU_ONLY, argv = _argparse("--cpu_only", argv)
 FORCE_CUDA, argv = _argparse("--force_cuda", argv)
+if not torch.cuda.is_available() and not FORCE_CUDA:
+    warnings.warn(
+        "torch.cuda.is_available() is False. MinkowskiEngine will compile with CPU_ONLY. Please use `--force_cuda` to compile with CUDA."
+    )
+
 CPU_ONLY = CPU_ONLY or not torch.cuda.is_available()
 if FORCE_CUDA:
     CPU_ONLY = False
