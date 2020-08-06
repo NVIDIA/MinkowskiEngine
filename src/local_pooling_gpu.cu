@@ -124,13 +124,14 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
 
     AT_DISPATCH_FLOATING_TYPES(
         in_feat.scalar_type(), "local_pooling_forward_gpu", [&] {
+          TemplatedAllocator<char> byte_allocator;
           NonzeroAvgPoolingForwardKernelGPU<scalar_t, default_types::index_type,
                                             TemplatedAllocator<char>>(
               in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
               out_feat.template data_ptr<scalar_t>(), out_nrows,
               num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
-              in_out, pooling_mode == PoolingMode::LOCAL_AVG_POOLING, handle,
-              stream);
+              in_out, pooling_mode == PoolingMode::LOCAL_AVG_POOLING,
+              byte_allocator, handle, stream);
         });
 
     return std::make_pair(out_feat, num_nonzero);

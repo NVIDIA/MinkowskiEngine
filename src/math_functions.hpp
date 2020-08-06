@@ -70,6 +70,7 @@ template <typename Dtype>
 void row2col_major(const int nrows, const int ncols, const Dtype *colA,
                    Dtype *rowA, cudaStream_t stream);
 
+/*
 template <typename Dtype>
 cusparseStatus_t
 cusparse_csrmv(cusparseHandle_t handle, cusparseOperation_t transA, int m,
@@ -86,6 +87,7 @@ cusparse_csrmm(cusparseHandle_t handle, cusparseOperation_t transA,
                const Dtype *csrValA, const int *csrRowPtrA,
                const int *csrColIndA, const Dtype *B, int ldb,
                const Dtype *beta, Dtype *C, int ldc);
+*/
 
 void sort_coo_gpu(cusparseHandle_t handle, const int m, const int n,
                   const int nnz, int *d_coo_row, int *d_coo_col);

@@ -468,7 +468,9 @@ void ConvolutionBackwardKernelGPU(
     Dtype *d_output_buffer = (Dtype *)allocator.allocate(out_buffer_size);
 
     dim3 threads(32, shared_mem_size);
+#ifdef DEBUG
     timer t;
+#endif
     for (auto it = kernel_map.key_cbegin(); it != kernel_map.key_cend(); ++it) {
       auto const k = it->first;
       n_active_in_volume = kernel_map.size(k);

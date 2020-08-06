@@ -80,7 +80,7 @@ def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
     By default, a :attr:`MinkowskiEngine.SparseTensor.SparseTensor`
     instantiation creates a new coordinate manager that is not shared with
     other sparse tensors. By setting this function with
-    :attr:`MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDS_MANAGER`, you
+    :attr:`MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER`, you
     can share the coordinate manager globally with other sparse tensors.
     However, you must explicitly clear the coordinate manger after use. Please
     refer to :attr:`MinkowskiEngine.clear_global_coordinate_mananager`.

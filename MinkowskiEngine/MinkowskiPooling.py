@@ -99,7 +99,6 @@ class MinkowskiLocalPoolingFunction(Function):
             ctx.out_coordinate_map_key,
             ctx.coordinate_manager._manager,
         )
-        print(grad_in_feat, grad_out_feat, ctx.num_nonzero)
         return (
             grad_in_feat,
             None,
