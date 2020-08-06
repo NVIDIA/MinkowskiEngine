@@ -31,7 +31,7 @@ from enum import Enum
 from MinkowskiCommon import convert_to_int_list, StrideType
 from MinkowskiEngineBackend._C import (
     GPUMemoryAllocatorType,
-    CUDAKernelMapMode,
+    MinkowskiAlgorithm,
     CoordinateMapType,
     CoordinateMapKey,
 )
@@ -208,7 +208,7 @@ class SparseTensor:
         quantization_mode: SparseTensorQuantizationMode = SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
         # optional manager related arguments
         allocator_type: GPUMemoryAllocatorType = None,
-        kernel_map_mode: CUDAKernelMapMode = None,
+        minkowski_algorithm: MinkowskiAlgorithm = None,
         device=None,
     ):
         r"""
@@ -321,7 +321,7 @@ class SparseTensor:
                     if coordinates.is_cuda
                     else CoordinateMapType.CPU,
                     allocator_type=allocator_type,
-                    kernel_map_mode=kernel_map_mode,
+                    minkowski_algorithm=minkowski_algorithm,
                 )
         self._manager = coordinate_manager
 

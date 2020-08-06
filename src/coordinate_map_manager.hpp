@@ -71,30 +71,9 @@ template <typename T1, typename T2> void copy_types(const T1 &src, T2 &dst) {
     dst[curr_it++] = s;
 }
 
-/*
-template <typename index_type, typename stride_type>
-struct coordinate_map_key_hasher {
-  uint64_t operator()(coordinate_map_key_type const &key) {
-    auto hash_vec = robin_hood::hash_bytes(
-        key.first.data(), sizeof(index_type) * key.first.size());
-    hash_vec ^= robin_hood::hash_bytes(key.second.data(), key.second.length());
-    return hash_vec;
-  }
-};
-*/
-
 } // namespace detail
 
 /*
-template <typename VType> int getInOutMapsSize(const VType &map) {
-  // can't use ::accumulate as pVector template instantiation requires a bit
-  // dirty syntax
-  int n = 0;
-  for (auto cmap = begin(map); cmap != end(map); ++cmap)
-    n += cmap->size();
-  return n;
-}
-
 inline std::vector<int>
 computeOutTensorStride(const vector<int> &tensor_strides,
                        const vector<int> &strides, bool is_transpose) {
@@ -151,19 +130,31 @@ public:
 
 public:
   // allocator backend will be ignored when coordinate map backend is CPU
-  CoordinateMapManager(CUDAKernelMapMode::Mode kernel_map_mode =
-                           CUDAKernelMapMode::SPEED_OPTIMIZED,
-                       size_type num_threads = 0)
-      : m_kernel_map_mode(kernel_map_mode) {
+  CoordinateMapManager(
+      MinkowskiAlgorithm::Mode algo = MinkowskiAlgorithm::DEFAULT,
+      size_type num_threads = 0)
+      : m_algorithm(algo) {
     if (num_threads > 0) {
       // Doesn't seem to work. use `export OMP_NUM_THREADS=N;` in bash.
       omp_set_dynamic(0);
       omp_set_num_threads(num_threads);
     }
-    if (kernel_map_mode == CUDAKernelMapMode::SPEED_OPTIMIZED) {
+    switch (m_algorithm) {
+    case MinkowskiAlgorithm::DEFAULT: {
+      m_kernel_map_mode = CUDAKernelMapMode::SPEED_OPTIMIZED;
       m_gpu_default_occupancy = 25;
-    } else {
+      break;
+    }
+    case MinkowskiAlgorithm::MEMORY_EFFICIENT: {
+      m_kernel_map_mode = CUDAKernelMapMode::MEMORY_EFFICIENT;
       m_gpu_default_occupancy = 50;
+      break;
+    }
+    case MinkowskiAlgorithm::SPEED_OPTIMIZED: {
+      m_kernel_map_mode = CUDAKernelMapMode::SPEED_OPTIMIZED;
+      m_gpu_default_occupancy = 25;
+      break;
+    }
     }
   }
   ~CoordinateMapManager() {}
@@ -307,6 +298,10 @@ public:
     return o.str();
   }
 
+  MinkowskiAlgorithm::Mode algorithm() const {
+    return m_algorithm;
+  }
+
   /****************************************************************************
    * Kernel map related functions
    ****************************************************************************/
@@ -326,87 +321,9 @@ public:
   origin_map(CoordinateMapKey const *py_out_coords_key);
 
   /*
-  bool existsInOutMapKey(const InOutMapKey &map_key) const {
-    return in_maps.find(map_key) != in_maps.end();
-  }
-
-  // Mappings
-  const InOutMapsRefPair<int> getPruningInOutMaps(at::Tensor use_feat,
-                                                  py::object
-py_in_coords_key, py::object py_out_coords_key);
-
-  const InOutMapsRefPair<int>
-  getUnionInOutMaps(vector<py::object> py_in_coords_keys,
-                    py::object py_out_coords_key);
-
-  int getMapSize(const InOutMaps<int> &in_maps) {
-    int n = 0;
-    for (auto &map : in_maps)
-      n += (int)(map.size());
-    return n;
-  }
-
-  int getMaxMapSize(const InOutMaps<int> &in_maps) {
-    int max_n_active = -1;
-    for (auto &map : in_maps)
-      if (max_n_active < (int)(map.size()))
-        max_n_active = (int)(map.size());
-    return max_n_active;
-  }
-
-  int getMaxMapSize(const pair<InOutMaps<int> &, InOutMaps<int> &> &in_out)
-{ return getMaxMapSize(in_out.first);
-  }
-
-  uint64_t getRandomCoordsKey();
-
-  string toString() const;
-  void clear() {
-    coords_maps.clear();
-    in_maps.clear();
-    out_maps.clear();
-  }
-
   at::Tensor getRowIndicesAtBatchIndex(py::object py_in_coords_key,
                                        py::object py_out_coords_key,
                                        const int batch_index);
-  vector<at::Tensor> getRowIndicesPerBatch(py::object py_in_coords_key,
-                                           py::object py_out_coords_key);
-#ifndef CPU_ONLY
-  // Keep all in out maps throughout the lifecycle of the coords manager
-  unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_in_maps;
-  unordered_map<InOutMapKey, pInOutMaps<int>, InOutMapKeyHash> d_out_maps;
-
-  const pInOutMaps<int> copyInOutMapToGPU(const InOutMaps<int> &map);
-  void copyInOutMapsToGPU(const InOutMapKey &map_key);
-
-  const pInOutMapsRefPair<int>
-  getInOutMapsGPU(const vector<int> &tensor_strides, const vector<int>
-&strides, const vector<int> &kernel_sizes, const vector<int> &dilations, int
-region_type, const at::Tensor &offsets, py::object py_in_coords_key,
-py::object py_out_coords_key, bool is_transpose, bool is_pool = false, bool
-force_creation = false);
-
-  const pInOutMapsRefPair<int>
-  getOriginInOutMapsGPU(py::object py_in_coords_key,
-                        py::object py_out_coords_key);
-
-  const pInOutMapsRefPair<int>
-  getPruningInOutMapsGPU(at::Tensor use_feat, py::object py_in_coords_key,
-                         py::object py_out_coords_key);
-
-  const pInOutMapsRefPair<int>
-  getUnionInOutMapsGPU(vector<py::object> py_in_coords_keys,
-                       py::object py_out_coords_key);
-
-  void *allocate(size_type size) {
-
-    return gpu_memory_manager.get()->tmp_data(size);
-  }
-
-  void clearScratchGPUMemory() { gpu_memory_manager.get()->clear_tmp(); }
-
-#endif // CPU_ONLY
   */
 
 private:
@@ -479,9 +396,8 @@ private:
   // kernel map mode
   CUDAKernelMapMode::Mode m_kernel_map_mode;
 
-  // In to out index mapping for each kernel, pooling
-  // unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
-  // unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
+  // Algorithm index
+  MinkowskiAlgorithm::Mode m_algorithm;
 
 }; // coordsmanager
 

@@ -232,7 +232,7 @@ def sparse_quantize(coords,
                                            ignore_label)
 
         if return_index:
-            return mapping, colabels
+            return discrete_coords[unique_map], mapping, colabels
         else:
             if use_feat:
                 return discrete_coords[mapping], feats[mapping], colabels
@@ -243,9 +243,9 @@ def sparse_quantize(coords,
         unique_map, inverse_map = quantize(discrete_coords)
         if return_index:
             if return_inverse:
-                return unique_map, inverse_map
+                return discrete_coords[unique_map], unique_map, inverse_map
             else:
-                return unique_map
+                return discrete_coords[unique_map], uunique_map
         else:
             if use_feat:
                 return discrete_coords[unique_map], feats[unique_map]

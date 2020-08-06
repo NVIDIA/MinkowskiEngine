@@ -462,6 +462,15 @@ void initialize_non_templated_classes(py::module &m) {
              minkowski::CUDAKernelMapMode::Mode::SPEED_OPTIMIZED)
       .export_values();
 
+  py::enum_<minkowski::MinkowskiAlgorithm::Mode>(m, "MinkowskiAlgorithm")
+      .value("DEFAULT",
+             minkowski::MinkowskiAlgorithm::Mode::DEFAULT)
+      .value("MEMORY_EFFICIENT",
+             minkowski::MinkowskiAlgorithm::Mode::MEMORY_EFFICIENT)
+      .value("SPEED_OPTIMIZED",
+             minkowski::MinkowskiAlgorithm::Mode::SPEED_OPTIMIZED)
+      .export_values();
+
   py::enum_<minkowski::CoordinateMapBackend::Type>(m, "CoordinateMapType")
       .value("CPU", minkowski::CoordinateMapBackend::Type::CPU)
       .value("CUDA", minkowski::CoordinateMapBackend::Type::CUDA)
@@ -503,7 +512,7 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
   py::class_<manager_type>(
       m, (std::string("CoordinateMapManager") + dtypestr).c_str())
       .def(py::init<>())
-      .def(py::init<minkowski::CUDAKernelMapMode::Mode,
+      .def(py::init<minkowski::MinkowskiAlgorithm::Mode,
                     minkowski::default_types::size_type>())
       .def("__repr__",
            py::overload_cast<>(&manager_type::to_string, py::const_))

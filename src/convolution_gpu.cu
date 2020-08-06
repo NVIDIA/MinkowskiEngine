@@ -199,6 +199,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
             in_out,                                      //
             grad_out_feat.size(0),                       //
             byte_allocator,                              //
+            p_map_manager->algorithm(),                  //
             handle, stream);
       });
 

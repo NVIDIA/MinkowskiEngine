@@ -49,6 +49,7 @@ if os.cpu_count() > 16 and "OMP_NUM_THREADS" not in os.environ:
 import torch
 
 from MinkowskiEngineBackend._C import (
+    MinkowskiAlgorithm,
     CoordinateMapKey,
     GPUMemoryAllocatorType,
     CoordinateMapType,
