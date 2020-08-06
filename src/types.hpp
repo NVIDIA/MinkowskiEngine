@@ -152,6 +152,10 @@ namespace CUDAKernelMapMode {
 enum Mode { MEMORY_EFFICIENT = 0, SPEED_OPTIMIZED = 1 };
 }
 
+namespace MinkowskiAlgorithm {
+enum Mode { DEFAULT = 0, MEMORY_EFFICIENT = 1, SPEED_OPTIMIZED = 2 };
+}
+
 namespace CoordinateMapBackend {
 enum Type { CPU = 0, CUDA = 1 };
 }

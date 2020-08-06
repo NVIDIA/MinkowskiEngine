@@ -173,7 +173,6 @@ class SparseTensorTestCase(unittest.TestCase):
                 self.assertEqual(len(decomposed_coords), batch_size)
                 self.assertEqual(len(decomposed_feats), batch_size)
 
-
     def test_operation_mode(self):
         # Set to use the global sparse tensor coords manager by default
         set_sparse_tensor_operation_mode(
@@ -207,7 +206,11 @@ class SparseTensorTestCase(unittest.TestCase):
 
         # Inplace
         A.requires_grad_(False)
-        D = SparseTensor(torch.rand(feats.shape), coords_key=A.coords_key)
+        D = SparseTensor(
+            torch.rand(feats.shape),
+            coordinate_map_key=A.coordinate_map_key,
+            coordinate_manager=A.coordinate_manager,
+        )
         A -= D
         A *= D
         A /= D

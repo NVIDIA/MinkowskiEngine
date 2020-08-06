@@ -438,6 +438,7 @@ void ConvolutionBackwardKernelGPU(
     gpu_kernel_map<Itype, ByteAllocator> const &kernel_map, //
     default_types::size_type const out_nrows,               //
     ByteAllocator &allocator,                               //
+    MinkowskiAlgorithm::Mode const algo_index,              //
     cublasHandle_t cuhandle, cudaStream_t stream) {
 
 #ifdef DEBUG
@@ -459,7 +460,9 @@ void ConvolutionBackwardKernelGPU(
   else
     shared_mem_size = 8;
 
-  if (in_nchannel + out_nchannel > 256) {
+  if ((algo_index == MinkowskiAlgorithm::DEFAULT ||
+       algo_index == MinkowskiAlgorithm::SPEED_OPTIMIZED) &&
+      (in_nchannel + out_nchannel > 256)) {
     // find max size
     size_t max_active = kernel_map.max_size();
     size_t in_buffer_size = max_active * in_nchannel * sizeof(Dtype);
@@ -646,6 +649,7 @@ ConvolutionBackwardKernelGPU<float, uint32_t, detail::default_allocator<char>>(
         &kernel_map,                            //
     default_types::size_type const out_nrows,   //
     detail::default_allocator<char> &allocator, //
+    MinkowskiAlgorithm::Mode const algo_index,  //
     cublasHandle_t cuhandle, cudaStream_t stream);
 
 template void
@@ -659,6 +663,7 @@ ConvolutionBackwardKernelGPU<double, uint32_t, detail::default_allocator<char>>(
         &kernel_map,                            //
     default_types::size_type const out_nrows,   //
     detail::default_allocator<char> &allocator, //
+    MinkowskiAlgorithm::Mode const algo_index,  //
     cublasHandle_t cuhandle, cudaStream_t stream);
 
 // c10_allocator
@@ -672,6 +677,7 @@ ConvolutionBackwardKernelGPU<float, uint32_t, detail::c10_allocator<char>>(
     gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map, //
     default_types::size_type const out_nrows,                                //
     detail::c10_allocator<char> &allocator,                                  //
+    MinkowskiAlgorithm::Mode const algo_index,                               //
     cublasHandle_t cuhandle, cudaStream_t stream);
 
 template void
@@ -684,6 +690,7 @@ ConvolutionBackwardKernelGPU<double, uint32_t, detail::c10_allocator<char>>(
     gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map, //
     default_types::size_type const out_nrows,                                //
     detail::c10_allocator<char> &allocator,                                  //
+    MinkowskiAlgorithm::Mode const algo_index,                               //
     cublasHandle_t cuhandle, cudaStream_t stream);
 
 } // end namespace minkowski

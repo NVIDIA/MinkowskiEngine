@@ -35,7 +35,7 @@ from MinkowskiEngineBackend._C import (
     CoordinateMapKey,
     GPUMemoryAllocatorType,
     CoordinateMapType,
-    CUDAKernelMapMode,
+    MinkowskiAlgorithm,
 )
 
 CPU_COUNT = os.cpu_count()
@@ -46,7 +46,7 @@ _allocator_type = GPUMemoryAllocatorType.PYTORCH
 _coordinate_map_type = (
     CoordinateMapType.CUDA if _C.is_cuda_available() else CoordinateMapType.CPU
 )
-_kernel_map_mode = CUDAKernelMapMode.SPEED_OPTIMIZED
+_minkowski_algorithm = MinkowskiAlgorithm.DEFAULT
 
 
 def set_coordinate_map_type(coordinate_map_type: CoordinateMapType):
@@ -111,13 +111,13 @@ class CoordinateManager:
         num_threads: int = -1,
         coordinate_map_type: CoordinateMapType = None,
         allocator_type: GPUMemoryAllocatorType = None,
-        kernel_map_mode: CUDAKernelMapMode = None,
+        minkowski_algorithm: MinkowskiAlgorithm = None,
     ):
         r"""
 
         :attr:`D`: The order, or dimension of the coordinates.
         """
-        global _coordinate_map_type, _allocator_type, _kernel_map_mode
+        global _coordinate_map_type, _allocator_type, _minkowski_algorithm
         if D < 1:
             raise ValueError(f"Invalid rank D > 0, D = {D}.")
         if num_threads < 0:
@@ -126,8 +126,8 @@ class CoordinateManager:
             coordinate_map_type = _coordinate_map_type
         if allocator_type is None:
             allocator_type = _allocator_type
-        if kernel_map_mode is None:
-            kernel_map_mode = _kernel_map_mode
+        if minkowski_algorithm is None:
+            minkowski_algorithm = _minkowski_algorithm
 
         postfix = ""
         if coordinate_map_type == CoordinateMapType.CPU:
@@ -139,7 +139,7 @@ class CoordinateManager:
 
         self.D = D
         self._CoordinateManagerClass = getattr(_C, "CoordinateMapManager" + postfix)
-        self._manager = self._CoordinateManagerClass(kernel_map_mode, num_threads)
+        self._manager = self._CoordinateManagerClass(minkowski_algorithm, num_threads)
 
     # TODO: insert without remap, unique_map, inverse_mapa
     #

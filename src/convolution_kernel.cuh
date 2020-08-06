@@ -56,8 +56,9 @@ void ConvolutionBackwardKernelGPU(
     Dtype const *d_kernel,                       //
     Dtype *d_grad_kernel,                        //
     gpu_kernel_map<Itype, ByteAllocator> const &kernel_map,
-    default_types::size_type const out_nrows, //
-    ByteAllocator &allocator,                 //
+    default_types::size_type const out_nrows,  //
+    ByteAllocator &allocator,                  //
+    MinkowskiAlgorithm::Mode const algo_index, //
     cublasHandle_t cuhandle, cudaStream_t stream);
 } // end namespace minkowski
 
