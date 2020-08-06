@@ -63,7 +63,8 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
   TORCH_CHECK(false, "CUDART_VERSION not defined");
 #endif
 
-  constexpr bool is_int32 = std::is_same<th_int_type, int64_t>::value;
+  constexpr bool is_int32 = std::is_same<th_int_type, int32_t>::value;
+  constexpr bool is_int64 = std::is_same<th_int_type, int64_t>::value;
 
   cusparseSpMMAlg_t mm_alg;
 #if defined(CUDART_VERSION) && (CUDART_VERSION < 10010)
@@ -84,7 +85,7 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
     TORCH_CHECK(false, "Invalid algorithm id.", spmm_algorithm_id);
     mm_alg = CUSPARSE_MM_ALG_DEFAULT;
   }
-  TORCH_CHECK(!is_int32, "int64 cusparseSpMM requires CUDA 11.0 or greater");
+  TORCH_CHECK(is_int32, "int64 cusparseSpMM requires CUDA 11.0 or greater");
 #elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11000)
   switch (spmm_algorithm_id) {
   case 1:
@@ -96,16 +97,14 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
   case 3:
     mm_alg = CUSPARSE_SPMM_COO_ALG3;
     break;
-  case 3:
+  case 4:
     mm_alg = CUSPARSE_SPMM_COO_ALG4;
     break;
   default:
     TORCH_CHECK(false, "Invalid algorithm id.", spmm_algorithm_id);
     mm_alg = CUSPARSE_SPMM_ALG_DEFAULT;
   }
-  TORCH_CHECK(std::is_same<int32_t, th_int_type>::value ||
-              (std::is_same<int64_t, th_int_type>::value &&
-               (mm_alg == CUSPARSE_SPMM_COO_ALG4)));
+  TORCH_CHECK(is_int32 || (is_int64 && (mm_alg == CUSPARSE_SPMM_COO_ALG4)));
 #endif
 
   at::ScalarType int_scalar_type = std::is_same<th_int_type, int32_t>::value
