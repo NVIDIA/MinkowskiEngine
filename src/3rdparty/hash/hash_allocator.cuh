@@ -35,7 +35,11 @@ struct managed_allocator {
   T* allocate(std::size_t n, cudaStream_t stream = 0) const
   {
     T* d_tmp;
-    cudaMalloc((void**) &d_tmp, n * sizeof(T));
+    cudaError_t error = cudaMalloc((void**) &d_tmp, n * sizeof(T));
+    if (error != cudaSuccess) {
+      cudaGetLastError();  // clear CUDA error
+      std::runtime_error("cudaMalloc failed in the hash_allocator.cuh:managed_allocator.");
+    }
     return d_tmp;
     // return static_cast<T*>(mr->allocate(n * sizeof(T), stream));
   }
@@ -73,7 +77,12 @@ struct default_allocator {
   T* allocate(std::size_t n, cudaStream_t stream = 0) const
   {
     T* d_tmp;
-    cudaMalloc((void**) &d_tmp, n * sizeof(T));
+    cudaError_t error = cudaMalloc((void**) &d_tmp, n * sizeof(T));
+    if (error != cudaSuccess) {
+      cudaGetLastError();  // clear CUDA error
+      std::runtime_error("cudaMalloc failed in the hash_allocator.cuh:default_allocator.");
+    }
+
     return d_tmp;
     // return static_cast<T*>(mr->allocate(n * sizeof(T), stream));
   }

@@ -436,4 +436,6 @@ class CoordinateManager:
     #     self.CPPCoordsManager.printDiagnostics(coords_key.CPPCoordsKey)
 
     def __repr__(self):
-        return "CoordinateManager(\n" + str(self._manager) + "  )\n"
+        return (
+            self._CoordinateManagerClass.__name__ + "(\n" + str(self._manager) + "  )\n"
+        )

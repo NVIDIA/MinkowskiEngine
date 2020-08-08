@@ -286,9 +286,6 @@ void ConvolutionForwardKernelGPU(
     default_types::size_type const out_nrows, //
     cublasHandle_t cuhandle, cudaStream_t stream) {
 
-  CUDA_CHECK_ARGS(cudaDeviceSynchronize(),
-                  ". Error triggered from a previous kernel call.");
-
   size_t n_active_in_volume, shared_mem_size = -1;
 
   // Define the shared memory size
@@ -386,7 +383,7 @@ void ConvolutionForwardKernelGPU(
 #endif
     CUDA_CHECK(cudaGetLastError());
   }
-  CUDA_CHECK(cudaDeviceSynchronize());
+  CUDA_CHECK(cudaStreamSynchronize(stream));
 }
 
 // default_allocator
@@ -493,8 +490,8 @@ void ConvolutionBackwardKernelGPU(
           <<<grid_out, threads, threads.x * sizeof(Itype), stream>>>(
               n_active_in_volume, out_nchannel, d_grad_out_feat,
               d_output_buffer, d_out_map);
-      CUDA_CHECK(cudaStreamSynchronize(stream));
 #ifdef DEBUG
+      CUDA_CHECK(cudaStreamSynchronize(stream));
       LOG_DEBUG("copy input", t.toc());
       t.tic();
 #endif
@@ -508,8 +505,8 @@ void ConvolutionBackwardKernelGPU(
                       0,                                         // beta
                       d_input_buffer                             // C
       );
-      CUDA_CHECK(cudaStreamSynchronize(0));
 #ifdef DEBUG
+      CUDA_CHECK(cudaStreamSynchronize(0));
       LOG_DEBUG("input grad gemm", t.toc());
       t.tic();
 #endif
@@ -525,8 +522,8 @@ void ConvolutionBackwardKernelGPU(
               n_active_in_volume,          // In channel
               d_grad_in_feat, in_nchannel, // Out
               d_in_map);                   // Out channel
-      CUDA_CHECK(cudaStreamSynchronize(stream));
 #ifdef DEBUG
+      CUDA_CHECK(cudaStreamSynchronize(stream));
       LOG_DEBUG("accumulate in grad", t.toc());
       t.tic();
 #endif
@@ -539,12 +536,13 @@ void ConvolutionBackwardKernelGPU(
           <<<grid_in, threads, threads.x * sizeof(Itype), stream>>>(
               n_active_in_volume, in_nchannel, d_in_feat, d_input_buffer,
               d_in_map);
-      CUDA_CHECK(cudaStreamSynchronize(stream));
 #ifdef DEBUG
       LOG_DEBUG("copy in feat to buffer", t.toc());
       t.tic();
 #endif
 
+      // sync before the blas call
+      CUDA_CHECK(cudaStreamSynchronize(stream));
       gpu_gemm<Dtype>(cuhandle, CblasTrans, CblasNoTrans,
                       in_nchannel,                                   // M
                       out_nchannel,                                  // N

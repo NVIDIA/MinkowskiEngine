@@ -52,7 +52,13 @@ template <class T> struct default_allocator {
 
   T *allocate(std::size_t n, cudaStream_t stream = 0) const {
     T *d_tmp;
-    cudaMalloc((void **)&d_tmp, n * sizeof(T));
+    cudaError_t error = cudaMalloc((void **)&d_tmp, n * sizeof(T));
+    if (error != cudaSuccess) {
+      cudaGetLastError(); // clear error
+      c10::cuda::CUDACachingAllocator::emptyCache();
+      LOG_DEBUG("Automatically called empty cache");
+      CUDA_CHECK(cudaMalloc((void **)&d_tmp, n * sizeof(T)));
+    }
     return d_tmp;
     // return static_cast<T*>(mr->allocate(n * sizeof(T), stream));
   }
