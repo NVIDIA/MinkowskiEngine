@@ -38,6 +38,7 @@ class MinkUNetBase(ResNetBase):
     PLANES = None
     DILATIONS = (1, 1, 1, 1, 1, 1, 1, 1)
     LAYERS = (2, 2, 2, 2, 2, 2, 2, 2)
+    PLANES = (32, 64, 128, 256, 256, 128, 96, 96)
     INIT_DIM = 32
     OUT_TENSOR_STRIDE = 1
 
@@ -112,7 +113,7 @@ class MinkUNetBase(ResNetBase):
                                        self.LAYERS[7])
 
         self.final = ME.MinkowskiConvolution(
-            self.PLANES[7],
+            self.PLANES[7] * self.BLOCK.expansion,
             out_channels,
             kernel_size=1,
             bias=True,

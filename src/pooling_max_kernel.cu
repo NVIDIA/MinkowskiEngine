@@ -134,7 +134,6 @@ void MaxPoolingForwardKernelGPU(
 
   // Second, create number of in_feat per out, and starting index
   Itype *d_index, *d_in_map_min, *d_reduced_out_map;
-  // CUDA_CHECK(cudaMalloc((void **)&d_index, 3 * nmap * sizeof(Itype)));
   d_index = d_scr + 2 * nmap;
   d_in_map_min = d_scr + 3 * nmap;
   d_reduced_out_map = d_scr + 4 * nmap;
