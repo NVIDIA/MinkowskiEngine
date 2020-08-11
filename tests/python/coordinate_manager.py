@@ -123,6 +123,7 @@ class CoordinateManagerTestCase(unittest.TestCase):
         print(manager.origin_map(key))
         key = manager.origin()
 
+        self.assertTrue(manager.number_of_unique_batch_indices() == 2)
         batch_coordinates = manager.get_coordinates(key)
         print(batch_coordinates)
         self.assertTrue(len(batch_coordinates) == 2)

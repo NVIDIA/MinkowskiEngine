@@ -28,6 +28,7 @@
 #define GPU_POOLING_AVG
 
 #include <limits>
+#include <cusparse.h>
 
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
@@ -143,8 +144,8 @@ void NonzeroAvgPoolingForwardKernelGPU(
 #elif defined(CUDART_VERSION) && (CUDART_VERSION >= 10010) &&                  \
     (CUDART_VERSION < 11000)
   mm_alg = CUSPARSE_COOMM_ALG1;
-  static_assert(is_int32, "int64 cusparseSpMM requires CUDA 11.0 or greater");
-#elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11000)
+  static_assert(is_int32, "int64 cusparseSpMM requires CUDA 11.1 or greater");
+#elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11100)
   mm_alg = CUSPARSE_SPMM_COO_ALG1;
   static_assert(is_int32 || is_int64, "Invalid index type");
 #endif
