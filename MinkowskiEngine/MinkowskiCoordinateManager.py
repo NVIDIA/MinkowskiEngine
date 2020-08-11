@@ -238,8 +238,8 @@ class CoordinateManager:
         key = self._get_coordinate_map_key(coords_key_or_tensor_strides)
         return self._manager.get_coordinates(key)
 
-    # def get_batch_size(self):
-    #     return self.CPPCoordsManager.getBatchSize()
+    def number_of_unique_batch_indices(self):
+        return self._manager.origin_map_size()
 
     # def get_batch_indices(self):
     #     return self.CPPCoordsManager.getBatchIndices()

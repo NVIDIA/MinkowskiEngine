@@ -326,6 +326,11 @@ public:
                                        const int batch_index);
   */
 
+  size_t origin_map_size() {
+    auto const key = origin().first;
+    return m_coordinate_maps.find(key)->second.size();
+  }
+
 private:
   void coordinate_map_key_check(CoordinateMapKey const *p_map_key) const {
     ASSERT(p_map_key != nullptr, "Input coordinate map key not defined.");
