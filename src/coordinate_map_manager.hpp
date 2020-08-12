@@ -317,8 +317,11 @@ public:
              RegionType::Type const region_type,        //
              at::Tensor const &offsets, bool is_transpose, bool is_pool);
 
-  std::pair<at::Tensor, std::vector<at::Tensor>>
+  kernel_map_type const &
   origin_map(CoordinateMapKey const *py_out_coords_key);
+
+  std::pair<at::Tensor, std::vector<at::Tensor>>
+  origin_map_th(CoordinateMapKey const *py_out_coords_key);
 
   /*
   at::Tensor getRowIndicesAtBatchIndex(py::object py_in_coords_key,

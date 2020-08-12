@@ -560,8 +560,6 @@ struct origin_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
   operator()(CoordinateMapCPU<coordinate_type, std::allocator> const
                  &origin_coordinate_map,
              cpu_kernel_map const &origin_map) {
-    auto const &in_map = origin_map.first[0];
-    auto const &out_map = origin_map.second[0];
 
     auto options =
         torch::TensorOptions().dtype(torch::kLong).requires_grad(false);
@@ -572,45 +570,44 @@ struct origin_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
         torch::empty({origin_coordinate_map.size()}, options);
     int64_t *p_batch_indices = batch_indices.data_ptr<int64_t>();
 
+    LOG_DEBUG("Copying", origin_coordinate_map.size(), "batch indices");
     for (default_types::index_type i = 0; i < out_size; ++i) {
       p_batch_indices[i] =
           origin_coordinate_map.const_coordinate_data()[i * coordinate_size];
     }
-    std::sort(p_batch_indices, p_batch_indices + out_size);
-    auto const max_batch_index = p_batch_indices[out_size - 1];
+
+    // WARNING: this is an inclusive max index
+    coordinate_type const max_batch_index =
+        *std::max_element(p_batch_indices, p_batch_indices + out_size);
 
     std::vector<at::Tensor> in_maps;
-    default_types::index_type current_batch_row_index = 0;
-    for (default_types::index_type i = 0; i < (max_batch_index + 1);) {
-      if (p_batch_indices[current_batch_row_index] == i) {
-        // batch wise at::Tensor
-        auto lb = std::lower_bound(out_map.begin(), out_map.end(),
-                                   p_batch_indices[i]);
-        auto const ub = std::upper_bound(out_map.begin(), out_map.end(),
-                                         p_batch_indices[i]);
-        auto const curr_size = ub - lb;
-        default_types::index_type start_index = lb - out_map.begin();
+    for (uint32_t i = 0; i <= max_batch_index; ++i) {
+      at::Tensor row_indices = torch::empty({0}, options);
+      in_maps.push_back(std::move(row_indices));
+    }
 
-        at::Tensor row_indices = torch::empty({curr_size}, options);
-        int64_t *p_row_indices = row_indices.data_ptr<int64_t>();
+    ASSERT(origin_map.first.size() == origin_map.second.size(),
+           "invalid kernel_map");
+    LOG_DEBUG("Iterating over", origin_map.first.size(), "unique maps");
+    for (uint32_t out_row_index = 0; out_row_index < origin_map.first.size();
+         ++out_row_index) {
+      LOG_DEBUG(out_row_index);
+      auto const &in_map = origin_map.first[out_row_index];
+      auto const &out_map = origin_map.second[out_row_index];
+      int32_t const curr_size = in_map.size();
+      ASSERT(curr_size > 0, "invalid kernel map");
+      auto const curr_batch_index = out_map[0];
 
-        for (default_types::index_type i = start_index;
-             i < (start_index + curr_size); ++i, ++p_row_indices) {
-          *p_row_indices = in_map[i];
-        }
-        in_maps.push_back(std::move(row_indices));
+      ASSERT(curr_batch_index <= max_batch_index, "invalid batch index");
+      at::Tensor &row_indices = in_maps[curr_batch_index];
+      row_indices.resize_({curr_size});
+      int64_t *p_row_indices = row_indices.data_ptr<int64_t>();
 
-        // if there is a match, move the index.
-        ++current_batch_row_index;
-        if (current_batch_row_index >= out_size) {
-          // Should not happen, but for safety
-          break;
-        }
-      } else {
-        at::Tensor row_indices = torch::empty({0}, options);
-        in_maps.push_back(std::move(row_indices));
+      LOG_DEBUG("Copying", curr_size, "elements to batch index",
+                curr_batch_index, "and row index", out_row_index);
+      for (default_types::index_type i = 0; i < curr_size; ++i) {
+        p_row_indices[i] = in_map[i];
       }
-      ++i;
     }
 
     return std::make_pair(batch_indices, in_maps);
@@ -623,7 +620,8 @@ template <typename coordinate_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
           class CoordinateMapType>
-std::pair<at::Tensor, std::vector<at::Tensor>>
+typename CoordinateMapManager<coordinate_type, TemplatedAllocator,
+                              CoordinateMapType>::kernel_map_type const &
 CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     origin_map(CoordinateMapKey const *p_in_map_key) {
   ASSERT(exists(p_in_map_key), ERROR_MAP_NOT_FOUND);
@@ -639,9 +637,21 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     m_kernel_maps[kernel_map_key] = std::move(origin_map);
   }
 
-  // get the origin map
+  return m_kernel_maps[kernel_map_key];
+}
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<at::Tensor, std::vector<at::Tensor>>
+CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
+    origin_map_th(CoordinateMapKey const *p_in_map_key) {
+  kernel_map_type const &kernel_map = origin_map(p_in_map_key);
+
+  coordinate_map_key_type const origin_key = origin().first;
   map_type const &origin_map = m_coordinate_maps.find(origin_key)->second;
-  kernel_map_type const &kernel_map = m_kernel_maps[kernel_map_key];
+
   return detail::origin_map_functor<coordinate_type, TemplatedAllocator,
                                     CoordinateMapType, kernel_map_type>()(
       origin_map, kernel_map);

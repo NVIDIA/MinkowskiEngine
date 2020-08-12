@@ -27,6 +27,7 @@
 #include "coordinate_map_functors.cuh"
 #include "coordinate_map_gpu.cuh"
 #include "gpu.cuh"
+#include "kernel_map.hpp"
 #include "kernel_map.cuh"
 
 #include <thrust/copy.h>
@@ -200,6 +201,7 @@ std::pair<return_vector_type, return_vector_type>
 CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert_and_map(
     coordinate_iterator<coordinate_type> key_first,
     coordinate_iterator<coordinate_type> key_last) {
+  LOG_DEBUG("insert_and_map");
   insert<remap>(key_first, key_last);
   return std::make_pair(m_valid_row_index, m_inverse_row_index);
 }
