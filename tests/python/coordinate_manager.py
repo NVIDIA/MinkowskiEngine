@@ -115,7 +115,7 @@ class CoordinateManagerTestCase(unittest.TestCase):
         print(batch_coordinates)
         self.assertTrue(len(batch_coordinates) == 2)
 
-        if not torch.cuda.is_available():
+        if not ME.is_cuda_available():
             return
 
         manager = ME.CoordinateManager(
@@ -134,6 +134,9 @@ class CoordinateManagerTestCase(unittest.TestCase):
         self.assertTrue(len(batch_coordinates) == 2)
 
     def test_gpu_allocator(self):
+        if not ME.is_cuda_available():
+            return
+
         # Set the global GPU memory manager backend. By default PYTORCH.
         ME.set_gpu_allocator(ME.GPUMemoryAllocatorType.PYTORCH)
         ME.set_gpu_allocator(ME.GPUMemoryAllocatorType.CUDA)

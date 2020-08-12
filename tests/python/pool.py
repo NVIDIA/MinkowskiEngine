@@ -28,17 +28,17 @@ import unittest
 from MinkowskiEngine import (
     SparseTensor,
     MinkowskiConvolution,
-    MinkowskiSumPooling,
     MinkowskiLocalPoolingFunction,
+    MinkowskiSumPooling,
     MinkowskiAvgPooling,
+    MinkowskiMaxPooling,
     MinkowskiPoolingTransposeFunction,
     MinkowskiPoolingTranspose,
     MinkowskiGlobalPoolingFunction,
     MinkowskiGlobalPooling,
-    MinkowskiGlobalMaxPoolingFunction,
+    MinkowskiGlobalSumPooling,
+    MinkowskiGlobalAvgPooling,
     MinkowskiGlobalMaxPooling,
-    MinkowskiMaxPooling,
-    GlobalPoolingMode,
 )
 
 from utils.gradcheck import gradcheck
@@ -217,92 +217,7 @@ class TestLocalAvgPooling(unittest.TestCase):
         )
 
 
-class TestGlobalAvgPooling(unittest.TestCase):
-    def test_global_avgpool(self):
-        in_channels = 2
-        coords, feats, labels = data_loader(in_channels, batch_size=2)
-        feats = feats.double()
-        feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalPooling()
-        output = pool(input)
-        print(output)
-
-        # Check backward
-        fn = MinkowskiGlobalPoolingFunction()
-        self.assertTrue(
-            gradcheck(
-                fn,
-                (
-                    input.F,
-                    True,
-                    GlobalPoolingMode.INDEX_SELECT,
-                    input.coords_key,
-                    None,
-                    input.coords_man,
-                ),
-            )
-        )
-
-        self.assertTrue(
-            gradcheck(
-                fn,
-                (
-                    input.F,
-                    True,
-                    GlobalPoolingMode.SPARSE,
-                    input.coords_key,
-                    None,
-                    input.coords_man,
-                ),
-            )
-        )
-
-        coords, feats, labels = data_loader(in_channels, batch_size=1)
-        feats = feats.double()
-        feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalPooling()
-        output = pool(input)
-        print(output)
-
-        # Check backward
-        fn = MinkowskiGlobalPoolingFunction()
-        self.assertTrue(
-            gradcheck(
-                fn,
-                (
-                    input.F,
-                    True,
-                    GlobalPoolingMode.AUTO,
-                    input.coords_key,
-                    None,
-                    input.coords_man,
-                ),
-            )
-        )
-
-    def test_global_maxpool(self):
-        in_channels = 2
-        coords, feats, labels = data_loader(in_channels)
-        feats = feats.double()
-        feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalMaxPooling()
-        output = pool(input)
-        print(output)
-
-        # Check backward
-        fn = MinkowskiGlobalMaxPoolingFunction()
-        self.assertTrue(
-            gradcheck(fn, (input.F, input.coords_key, None, input.coords_man))
-        )
-
-        if torch.cuda.is_available():
-            input_cuda = input.to(torch.device(0))
-            output_cuda = pool(input)
-            self.assertTrue(torch.allclose(output_cuda.F.cpu(), output.F))
-
+class TestPoolingTranspose(unittest.TestCase):
     def test_unpool(self):
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
@@ -399,6 +314,94 @@ class TestGlobalAvgPooling(unittest.TestCase):
                     input.coords_key,
                     None,
                     input.coords_man,
+                ),
+            )
+        )
+
+class TestGlobalAvgPooling(unittest.TestCase):
+    def test_gpu(self):
+        if not torch.cuda.is_available():
+            return
+
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coordinates=coords)
+        pool = MinkowskiGlobalAvgPooling()
+        output = pool(input)
+        print(output)
+
+        if not torch.cuda.is_available():
+            return
+
+        input = SparseTensor(feats, coordinates=coords, device=0)
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiLocalPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    pool.kernel_generator,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+
+    def test(self):
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords)
+        pool = MinkowskiGlobalAvgPooling()
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiGlobalPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+
+class TestGlobalMaxPooling(unittest.TestCase):
+    def test(self):
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords)
+        pool = MinkowskiGlobalAvgPooling()
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiGlobalPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
                 ),
             )
         )

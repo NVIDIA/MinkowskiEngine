@@ -32,7 +32,6 @@ from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
 from MinkowskiCoordinateManager import CoordinateManager
 from MinkowskiKernelGenerator import KernelGenerator, save_ctx
 from MinkowskiCommon import (
-    GlobalPoolingMode,
     MinkowskiModuleBase,
     get_minkowski_function,
 )
@@ -53,8 +52,6 @@ class MinkowskiLocalPoolingFunction(Function):
             out_coordinate_map_key = CoordinateMapKey(
                 in_coordinate_map_key.get_coordinate_size()
             )
-        if not input_features.is_contiguous():
-            input_features = input_features.contiguous()
 
         ctx.input_features = input_features
         ctx = save_ctx(
@@ -612,35 +609,32 @@ class MinkowskiGlobalPoolingFunction(Function):
     @staticmethod
     def forward(
         ctx,
-        input_features,
-        average=True,
-        mode=GlobalPoolingMode.AUTO,
-        in_coords_key=None,
-        out_coords_key=None,
-        coords_manager=None,
+        input_features: torch.Tensor,
+        pooling_mode: PoolingMode,
+        in_coordinate_map_key: CoordinateMapKey,
+        out_coordinate_map_key: CoordinateMapKey = None,
+        coordinate_manager: CoordinateManager = None,
     ):
-        if out_coords_key is None:
-            out_coords_key = CoordsKey(in_coords_key.D)
-        assert isinstance(
-            mode, GlobalPoolingMode
-        ), f"Mode must be an instance of GlobalPoolingMode, {mode}"
+        if out_coordinate_map_key is None:
+            out_coordinate_map_key = CoordinateMapKey(
+                in_coordinate_map_key.get_coordinate_size()
+            )
+        if not input_features.is_contiguous():
+            input_features = input_features.contiguous()
 
-        ctx.in_coords_key = in_coords_key
-        ctx.out_coords_key = out_coords_key
-
-        ctx.in_feat = input_features
-        ctx.average = average
-        ctx.coords_manager = coords_manager
-        ctx.mode = mode.value
+        ctx.input_features = input_features
+        ctx.in_coords_key = in_coordinate_map_key
+        ctx.out_coords_key = out_coordinate_map_key
+        ctx.coordinate_manager = coordinate_manager
+        ctx.pooling_mode = pooling_mode
 
         fw_fn = get_minkowski_function("GlobalPoolingForward", input_features)
         out_feat, num_nonzero = fw_fn(
-            ctx.in_feat,
-            ctx.in_coords_key.CPPCoordsKey,
-            ctx.out_coords_key.CPPCoordsKey,
-            ctx.coords_manager.CPPCoordsManager,
-            ctx.average,
-            ctx.mode,
+            input_features,
+            pooling_mode,
+            ctx.in_coords_key,
+            ctx.out_coords_key,
+            ctx.coordinate_manager._manager,
         )
 
         ctx.num_nonzero = num_nonzero
@@ -651,13 +645,13 @@ class MinkowskiGlobalPoolingFunction(Function):
     def backward(ctx, grad_out_feat):
         bw_fn = get_minkowski_function("GlobalPoolingBackward", grad_out_feat)
         grad_in_feat = bw_fn(
-            ctx.in_feat,
+            ctx.input_features,
             grad_out_feat,
             ctx.num_nonzero,
-            ctx.in_coords_key.CPPCoordsKey,
-            ctx.out_coords_key.CPPCoordsKey,
-            ctx.coords_manager.CPPCoordsManager,
-            ctx.average,
+            ctx.pooling_mode,
+            ctx.in_coords_key,
+            ctx.out_coords_key,
+            ctx.coordinate_manager._manager,
         )
         return grad_in_feat, None, None, None, None, None
 
@@ -672,119 +666,72 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
 
     """
 
-    def __init__(self, average=True, mode=GlobalPoolingMode.AUTO):
+    def __init__(self, mode: PoolingMode):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
         Args:
-            :attr:`average` (bool): when True, return the averaged output. If
-            not, return the sum of all input features.
+            :attr:`mode` (PoolingMode):
 
         """
         super(MinkowskiGlobalPooling, self).__init__()
         assert isinstance(
-            mode, GlobalPoolingMode
-        ), f"Mode must be an instance of GlobalPoolingMode. mode={mode}"
+            mode, PoolingMode
+        ), f"Mode must be an instance of PoolingMode. mode={mode}"
 
-        self.mode = mode
-        self.average = average
+        self.pooling_mode = mode
         self.pooling = MinkowskiGlobalPoolingFunction()
 
-    def forward(self, input):
-        assert isinstance(input, SparseTensor)
-
-        out_coords_key = CoordsKey(input.coords_key.D)
+    def forward(
+        self,
+        input: SparseTensor,
+        coordinates: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
+    ):
+        # Get a new coordinate map key or extract one from the coordinates
+        out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
         output = self.pooling.apply(
             input.F,
-            self.average,
-            self.mode,
-            input.coords_key,
-            out_coords_key,
-            input.coords_man,
+            self.pooling_mode,
+            input.coordinate_map_key,
+            out_coordinate_map_key,
+            input._manager,
         )
 
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man
+            output,
+            coordinate_map_key=out_coordinate_map_key,
+            coordinate_manager=input.coordinate_manager,
         )
 
     def __repr__(self):
-        return self.__class__.__name__ + "(average=" + str(self.average) + ")"
+        return self.__class__.__name__ + f"(mode={str(self.mode)})"
 
 
 class MinkowskiGlobalSumPooling(MinkowskiGlobalPooling):
-    def __init__(self, mode=GlobalPoolingMode.AUTO):
+    def __init__(self, mode=PoolingMode.GLOBAL_SUM_POOLING_KERNEL):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
         """
-        MinkowskiGlobalPooling.__init__(self, False, mode=mode)
+        MinkowskiGlobalPooling.__init__(self, mode=mode)
 
 
 class MinkowskiGlobalAvgPooling(MinkowskiGlobalPooling):
-    def __init__(self, mode=GlobalPoolingMode.AUTO):
+    def __init__(self, mode=PoolingMode.GLOBAL_AVG_POOLING_KERNEL):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
         """
-        MinkowskiGlobalPooling.__init__(self, True, mode=mode)
+        MinkowskiGlobalPooling.__init__(self, mode=mode)
 
 
-class MinkowskiGlobalMaxPoolingFunction(Function):
-    @staticmethod
-    def forward(
-        ctx,
-        input_features,
-        in_coords_key=None,
-        out_coords_key=None,
-        coords_manager=None,
-    ):
-        if out_coords_key is None:
-            out_coords_key = CoordsKey(in_coords_key.D)
-        ctx.in_coords_key = in_coords_key
-        ctx.out_coords_key = out_coords_key
-
-        ctx.in_feat = input_features
-        out_feat = input_features.new()
-
-        max_index = input_features.new().int()
-
-        ctx.max_index = max_index
-        ctx.coords_manager = coords_manager
-
-        fw_fn = get_minkowski_function("GlobalMaxPoolingForward", input_features)
-        fw_fn(
-            ctx.in_feat,
-            out_feat,
-            ctx.max_index,
-            ctx.in_coords_key.CPPCoordsKey,
-            ctx.out_coords_key.CPPCoordsKey,
-            ctx.coords_manager.CPPCoordsManager,
-        )
-        return out_feat
-
-    @staticmethod
-    def backward(ctx, grad_out_feat):
-        grad_in_feat = grad_out_feat.new()
-        bw_fn = get_minkowski_function("GlobalMaxPoolingBackward", grad_out_feat)
-        bw_fn(
-            ctx.in_feat,
-            grad_in_feat,
-            grad_out_feat,
-            ctx.max_index,
-            ctx.in_coords_key.CPPCoordsKey,
-            ctx.out_coords_key.CPPCoordsKey,
-            ctx.coords_manager.CPPCoordsManager,
-        )
-        return grad_in_feat, None, None, None, None, None
-
-
-class MinkowskiGlobalMaxPooling(MinkowskiModuleBase):
+class MinkowskiGlobalMaxPooling(MinkowskiGlobalPooling):
     r"""Max pool all input features to one output feature at the origin.
 
     .. math::
@@ -794,27 +741,11 @@ class MinkowskiGlobalMaxPooling(MinkowskiModuleBase):
 
     """
 
-    def __init__(self):
+    def __init__(self, mode=PoolingMode.GLOBAL_MAX_POOLING_KERNEL):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
         of the coords is the batch index.
 
         """
-        super(MinkowskiGlobalMaxPooling, self).__init__()
-        self.pooling = MinkowskiGlobalMaxPoolingFunction()
-
-    def forward(self, input):
-        assert isinstance(input, SparseTensor)
-
-        out_coords_key = CoordsKey(input.coords_key.D)
-        output = self.pooling.apply(
-            input.F, input.coords_key, out_coords_key, input.coords_man
-        )
-
-        return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man
-        )
-
-    def __repr__(self):
-        return self.__class__.__name__
+        MinkowskiGlobalPooling.__init__(self, mode=mode)
