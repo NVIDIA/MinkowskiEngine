@@ -26,6 +26,7 @@
 #define COORDINATE_MAP_CPU_HPP
 
 #include "coordinate_map.hpp"
+#include "kernel_map.hpp"
 #include "kernel_region.hpp"
 #include <omp.h>
 
@@ -421,11 +422,11 @@ public:
            "Invalid origin tensor stride",
            origin_coordinate_map.get_tensor_stride());
 
-    size_type in_size = size();
+    size_type const in_size = size();
+    size_type const out_size = origin_coordinate_map.size();
     LOG_DEBUG("Generate origin_map with in NNZ:", in_size,
-              "out NNZ:", origin_coordinate_map.size());
-    ASSERT(in_size > origin_coordinate_map.size(),
-           "Invalid out_coordinate_map");
+              "out NNZ:", out_size);
+    ASSERT(in_size > out_size, "Invalid out_coordinate_map");
 
     std::vector<std::pair<index_type, index_type>> in_out(in_size);
 
@@ -468,27 +469,9 @@ public:
       }
     }
 
-    // TODO sort by row index (out_maps[0]) and split into vectors.
-    std::sort(in_out.begin(), in_out.end(),
-              [](std::pair<index_type, index_type> const &l,
-                 std::pair<index_type, index_type> const &r) {
-                return l.second < r.second;
-              });
-
-    cpu_in_maps in_maps(1);
-    cpu_in_maps out_maps(1);
-    auto &in_map = in_maps[0];
-    auto &out_map = out_maps[0];
-    in_map.resize(in_size);
-    out_map.resize(in_size);
-
-    for (index_type i = 0; i < in_size; ++i) {
-      auto const &curr_pair = in_out[i];
-      in_map[i] = curr_pair.first;
-      out_map[i] = curr_pair.second;
-    }
-
-    return cpu_kernel_map(std::make_pair(in_maps, out_maps));
+    // Decomposed kernel map
+    auto batch_indices = origin_coordinate_map.batch_indices();
+    return cpu_kernel_map(in_out, batch_indices);
   }
 
   inline size_type size() const noexcept { return m_map.size(); }
@@ -526,6 +509,14 @@ public:
                     dst_coordinate + m_coordinate_size * it->second);
       }
     }
+  }
+
+  std::vector<coordinate_type> batch_indices() const {
+    std::vector<coordinate_type> indices(size());
+    for (auto it = m_map.begin(); it != m_map.end(); ++it) {
+      indices[it->second] = it->first.data()[0];
+    }
+    return indices;
   }
 
 private:

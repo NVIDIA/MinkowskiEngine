@@ -106,7 +106,9 @@ class CoordinateManagerTestCase(unittest.TestCase):
 
         # key with batch_size 2
         key, (unique_map, inverse_map) = manager.insert_and_map(coords, [1])
-        print(manager.origin_map(key))
+        batch_indices, origin_map = manager.origin_map(key)
+        print(origin_map)
+        # self.assertTrue(set(origin_map[0].numpy()) == set([0, 1, 2, 3]))
         key = manager.origin()
 
         batch_coordinates = manager.get_coordinates(key)
@@ -117,10 +119,13 @@ class CoordinateManagerTestCase(unittest.TestCase):
             return
 
         manager = ME.CoordinateManager(
-            D=1, coordinate_map_type=ME.CoordinateMapType.CUDA
+            D=1,
+            coordinate_map_type=ME.CoordinateMapType.CUDA,
+            allocator_type=ME.GPUMemoryAllocatorType.PYTORCH,
         )
         key, (unique_map, inverse_map) = manager.insert_and_map(coords.to(0), [1])
-        print(manager.origin_map(key))
+        origin_map = manager.origin_map(key)
+        print(origin_map)
         key = manager.origin()
 
         self.assertTrue(manager.number_of_unique_batch_indices() == 2)

@@ -138,6 +138,7 @@ public:
       m_map = map_type::create(
           compute_hash_table_size(size, m_hashtable_occupancy),
           m_unused_element, m_unused_key, m_hasher, m_equal, m_map_allocator);
+      LOG_DEBUG("Done concurrent_unordered_map creation");
       CUDA_TRY(cudaStreamSynchronize(0));
       m_capacity = size;
       LOG_DEBUG("Reserved concurrent_unordered_map");

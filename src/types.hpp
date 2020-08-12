@@ -72,35 +72,6 @@ struct ptr_vector {
   default_types::size_type size_;
 };
 
-// clang-format off
-/*
- * Kernel map specific types
- */
-using cpu_in_map  = default_types::index_vector_type;
-using cpu_out_map = default_types::index_vector_type;
-
-// Input index to output index mapping for each spatial kernel
-using cpu_in_maps  = std::vector<cpu_in_map>;
-using cpu_out_maps = std::vector<cpu_out_map>;
-// clang-format on
-//
-struct cpu_kernel_map : std::pair<cpu_in_maps, cpu_out_maps> {
-  cpu_kernel_map() : std::pair<cpu_in_maps, cpu_out_maps>() {}
-  cpu_kernel_map(std::pair<cpu_in_maps, cpu_out_maps> const &other)
-      : std::pair<cpu_in_maps, cpu_out_maps>(other) {}
-  friend std::ostream &operator<<(std::ostream &out,
-                                  cpu_kernel_map const &kernel_map) {
-    uint32_t map_size = 0;
-    for (auto const &v : kernel_map.first) {
-      map_size += v.size();
-    }
-    out << "cpu_kernel_map: number of unique maps:" << kernel_map.first.size()
-        << ", kernel map size:" << map_size;
-    return out;
-  }
-};
-using cpu_kernel_map_reference = std::pair<cpu_in_maps &, cpu_out_maps &>;
-
 using coordinate_map_key_type =
     std::pair<default_types::stride_type, std::string>;
 
@@ -165,7 +136,20 @@ enum Type { HYPER_CUBE, HYPER_CROSS, CUSTOM };
 }
 
 namespace PoolingMode {
-enum Type { LOCAL_SUM_POOLING, LOCAL_AVG_POOLING, LOCAL_MAX_POOLING };
+enum Type {
+  LOCAL_SUM_POOLING,
+  LOCAL_AVG_POOLING,
+  LOCAL_MAX_POOLING,
+  GLOBAL_SUM_POOLING_DEFAULT,
+  GLOBAL_AVG_POOLING_DEFAULT,
+  GLOBAL_MAX_POOLING_DEFAULT,
+  GLOBAL_SUM_POOLING_KERNEL,
+  GLOBAL_AVG_POOLING_KERNEL,
+  GLOBAL_MAX_POOLING_KERNEL,
+  GLOBAL_SUM_POOLING_PYTORCH_INDEX,
+  GLOBAL_AVG_POOLING_PYTORCH_INDEX,
+  GLOBAL_MAX_POOLING_PYTORCH_INDEX
+};
 }
 
 /* Key for KernelMap
