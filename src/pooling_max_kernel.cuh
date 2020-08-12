@@ -40,7 +40,7 @@ template <typename Dtype, typename Itype, typename ByteAllocator>
 void MaxPoolingForwardKernelGPU(
     const Dtype *d_in_feat, Dtype *d_out_feat, int out_nrows, int *d_max_index,
     int nchannel, gpu_kernel_map<Itype, ByteAllocator> const &kernel_map,
-    Itype *d_scr, cudaStream_t stream);
+    ByteAllocator &allocator, cudaStream_t stream);
 
 template <typename Dtype>
 void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,

@@ -106,10 +106,11 @@ template <typename Dtype, typename Itype, typename ByteAllocator>
 void MaxPoolingForwardKernelGPU(
     const Dtype *d_in_feat, Dtype *d_out_feat, int out_nrows, int *d_max_index,
     int nchannel, gpu_kernel_map<Itype, ByteAllocator> const &kernel_map,
-    Itype *d_scr, cudaStream_t stream) {
+    ByteAllocator &allocator, cudaStream_t stream) {
 
   size_t nmap = kernel_map.size();
-
+  size_t scratch_bytes = 5 * kernel_map.size() * sizeof(Itype);
+  Itype *d_scr = (Itype *)allocator.allocate(scratch_bytes);
   Itype *d_in_map = d_scr, *d_out_map = d_scr + nmap;
   Itype *d_curr_in_map = d_in_map;
   Itype *d_curr_out_map = d_out_map;
@@ -173,6 +174,7 @@ void MaxPoolingForwardKernelGPU(
   // cudaFree(d_index);
   CUDA_CHECK(cudaGetLastError());
   CUDA_CHECK(cudaStreamSynchronize(stream));
+  allocator.deallocate((char *)d_scr, scratch_bytes);
 }
 
 // default_allocator
@@ -181,14 +183,14 @@ MaxPoolingForwardKernelGPU<float, uint32_t, detail::default_allocator<char>>(
     const float *d_in_feat, float *d_out_feat, int out_nrows,
     int32_t *d_max_index, int nchannel,
     gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map,
-    uint32_t *d_scr, cudaStream_t stream);
+    detail::default_allocator<char> &allocator, cudaStream_t stream);
 
 template void
 MaxPoolingForwardKernelGPU<double, uint32_t, detail::default_allocator<char>>(
     const double *d_in_feat, double *d_out_feat, int out_nrows,
     int32_t *d_max_index, int nchannel,
     gpu_kernel_map<uint32_t, detail::default_allocator<char>> const &kernel_map,
-    uint32_t *d_scr, cudaStream_t stream);
+    detail::default_allocator<char> &allocator, cudaStream_t stream);
 
 // c10_allocator
 template void
@@ -196,14 +198,14 @@ MaxPoolingForwardKernelGPU<float, uint32_t, detail::c10_allocator<char>>(
     const float *d_in_feat, float *d_out_feat, int out_nrows,
     int32_t *d_max_index, int nchannel,
     gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map,
-    uint32_t *d_scr, cudaStream_t stream);
+    detail::c10_allocator<char> &allocator, cudaStream_t stream);
 
 template void
 MaxPoolingForwardKernelGPU<double, uint32_t, detail::c10_allocator<char>>(
     const double *d_in_feat, double *d_out_feat, int out_nrows,
     int32_t *d_max_index, int nchannel,
     gpu_kernel_map<uint32_t, detail::c10_allocator<char>> const &kernel_map,
-    uint32_t *d_scr, cudaStream_t stream);
+    detail::c10_allocator<char> &allocator, cudaStream_t stream);
 
 template <typename Dtype>
 void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,

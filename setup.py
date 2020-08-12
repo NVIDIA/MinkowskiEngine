@@ -224,6 +224,7 @@ SOURCE_SETS = {
             "pooling_avg_kernel.cu",
             "pooling_max_kernel.cu",
             "local_pooling_gpu.cu",
+            "global_pooling_gpu.cu",
             "spmm.cu",
             "gpu.cu",
             "quantization.cpp",

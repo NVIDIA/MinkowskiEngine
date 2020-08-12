@@ -253,6 +253,28 @@ GlobalPoolingBackwardCPU(at::Tensor const &in_feat, at::Tensor &grad_out_feat,
                          CoordinateMapKey *p_out_map_key,      //
                          cpu_manager_type<coordinate_type> *p_map_manager);
 
+#ifndef CPU_ONLY
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+std::tuple<at::Tensor, at::Tensor> GlobalPoolingForwardGPU(
+    at::Tensor const &in_feat,
+    PoolingMode::Type const pooling_mode, //
+    CoordinateMapKey *p_in_map_key,       //
+    CoordinateMapKey *p_out_map_key,      //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor GlobalPoolingBackwardGPU(
+    at::Tensor const &in_feat,            //
+    at::Tensor &grad_out_feat,            //
+    at::Tensor const &num_nonzero,        //
+    PoolingMode::Type const pooling_mode, //
+    CoordinateMapKey *p_in_map_key,       //
+    CoordinateMapKey *p_out_map_key,      //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+#endif
+
 /*************************************
  * Quantization
  *************************************/
@@ -397,6 +419,15 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
   m.def(
       (std::string("LocalPoolingBackwardGPU") + dtypestr).c_str(),
       &minkowski::LocalPoolingBackwardGPU<coordinate_type, TemplatedAllocator>,
+      py::call_guard<py::gil_scoped_release>());
+
+  m.def(
+      (std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
+      &minkowski::GlobalPoolingForwardGPU<coordinate_type, TemplatedAllocator>,
+      py::call_guard<py::gil_scoped_release>());
+  m.def(
+      (std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
+      &minkowski::GlobalPoolingBackwardGPU<coordinate_type, TemplatedAllocator>,
       py::call_guard<py::gil_scoped_release>());
 }
 #endif
