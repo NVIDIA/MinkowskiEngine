@@ -204,6 +204,7 @@ SOURCE_SETS = {
             "coordinate_map_manager.cpp",
             "convolution_cpu.cpp",
             "local_pooling_cpu.cpp",
+            "global_pooling_cpu.cpp",
             "convolution_transpose_cpu.cpp",
             "quantization.cpp",
         ],

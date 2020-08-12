@@ -100,13 +100,19 @@ from MinkowskiConvolution import (
 #
 # from MinkowskiChannelwiseConvolution import MinkowskiChannelwiseConvolution
 #
-from MinkowskiPooling import MinkowskiLocalPoolingFunction, MinkowskiAvgPooling, \
-    MinkowskiSumPooling, \
-    MinkowskiPoolingTransposeFunction, MinkowskiPoolingTranspose, \
-    MinkowskiGlobalPoolingFunction, MinkowskiGlobalPooling, \
-    MinkowskiGlobalSumPooling, MinkowskiGlobalAvgPooling, \
-    MinkowskiGlobalMaxPoolingFunction, MinkowskiGlobalMaxPooling, \
-    MinkowskiMaxPooling
+from MinkowskiPooling import (
+    MinkowskiLocalPoolingFunction,
+    MinkowskiSumPooling,
+    MinkowskiAvgPooling,
+    MinkowskiMaxPooling,
+    MinkowskiPoolingTransposeFunction,
+    MinkowskiPoolingTranspose,
+    MinkowskiGlobalPoolingFunction,
+    MinkowskiGlobalPooling,
+    MinkowskiGlobalSumPooling,
+    MinkowskiGlobalAvgPooling,
+    MinkowskiGlobalMaxPooling,
+)
 
 # from MinkowskiBroadcast import MinkowskiBroadcastFunction, \
 #     MinkowskiBroadcast, MinkowskiBroadcastConcatenation, \

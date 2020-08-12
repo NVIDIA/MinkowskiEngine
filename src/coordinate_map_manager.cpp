@@ -336,7 +336,7 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator,
   bool const exists_origin_map = exists(origin_map_key);
   if (!exists_origin_map) {
     LOG_DEBUG("origin coordinate map not found");
-    map_type const *p_min_coordinate_map;
+    map_type const *p_min_coordinate_map{nullptr};
     size_type min_size = std::numeric_limits<size_type>::max();
     for (auto map_it = m_coordinate_maps.begin();
          map_it != m_coordinate_maps.end(); ++map_it) {
@@ -344,9 +344,14 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator,
         p_min_coordinate_map = &(map_it->second);
       }
     }
-    map_type origin_map = p_min_coordinate_map->origin();
-    LOG_DEBUG("origin map with size:", origin_map.size(), " inserted");
-    insert(origin_map_key, origin_map);
+
+    if (p_min_coordinate_map != nullptr) {
+      map_type origin_map = p_min_coordinate_map->origin();
+      LOG_DEBUG("origin map with size:", origin_map.size(), " inserted");
+      insert(origin_map_key, origin_map);
+    } else {
+      ASSERT(false, "Invalid origin map");
+    }
   }
 
   // (key, new map generated flag)

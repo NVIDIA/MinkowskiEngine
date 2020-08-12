@@ -149,10 +149,11 @@ public:
       uint32_t n_offset = 0,                     //
       bool is_transpose = false                  // is_transpose
       )
-      : m_region_type(region_type), m_coordinate_size{coordinate_size},
-        m_num_offset{n_offset}, m_tensor_stride{tensor_stride},
-        m_kernel_size{kernel_size}, m_dilation{dilation}, m_volume{volume},
-        m_offset{p_offset}, m_is_transpose{is_transpose} {
+      : m_is_transpose{is_transpose},
+        m_region_type(region_type), m_coordinate_size{coordinate_size},
+        m_num_offset{n_offset}, m_volume{volume},
+        m_tensor_stride{tensor_stride}, m_kernel_size{kernel_size},
+        m_dilation{dilation}, m_offset{p_offset} {
     if (m_volume == 0)
       set_volume();
   }

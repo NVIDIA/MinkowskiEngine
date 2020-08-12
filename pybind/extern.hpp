@@ -234,6 +234,26 @@ at::Tensor LocalPoolingBackwardGPU(
 #endif
 
 /*************************************
+ * Global Pooling
+ *************************************/
+template <typename coordinate_type>
+std::tuple<at::Tensor, at::Tensor>
+GlobalPoolingForwardCPU(at::Tensor const &in_feat,
+                        PoolingMode::Type const pooling_mode, //
+                        CoordinateMapKey *p_in_map_key,       //
+                        CoordinateMapKey *p_out_map_key,      //
+                        cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type>
+at::Tensor
+GlobalPoolingBackwardCPU(at::Tensor const &in_feat, at::Tensor &grad_out_feat,
+                         at::Tensor const &num_nonzero,
+                         PoolingMode::Type const pooling_mode, //
+                         CoordinateMapKey *p_in_map_key,       //
+                         CoordinateMapKey *p_out_map_key,      //
+                         cpu_manager_type<coordinate_type> *p_map_manager);
+
+/*************************************
  * Quantization
  *************************************/
 std::vector<py::array> quantize_np(
@@ -294,67 +314,14 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::LocalPoolingBackwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
+  m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
+        &minkowski::GlobalPoolingForwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
+        &minkowski::GlobalPoolingBackwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+
   /*
-    m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
-          &mink::MaxPoolingForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("MaxPoolingBackwardCPU") + dtypestr).c_str(),
-          &mink::MaxPoolingBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("MaxPoolingForwardGPU") + dtypestr).c_str(),
-          &mink::MaxPoolingForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("MaxPoolingBackwardGPU") + dtypestr).c_str(),
-          &mink::MaxPoolingBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
-
-    m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
-          &mink::PoolingTransposeForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),
-          &mink::PoolingTransposeBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("PoolingTransposeForwardGPU") + dtypestr).c_str(),
-          &mink::PoolingTransposeForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("PoolingTransposeBackwardGPU") + dtypestr).c_str(),
-          &mink::PoolingTransposeBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
-
-    m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
-          &mink::GlobalPoolingForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
-          &mink::GlobalPoolingBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
-          &mink::GlobalPoolingForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
-          &mink::GlobalPoolingBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
-
-    m.def((std::string("GlobalMaxPoolingForwardCPU") + dtypestr).c_str(),
-          &mink::GlobalMaxPoolingForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("GlobalMaxPoolingBackwardCPU") + dtypestr).c_str(),
-          &mink::GlobalMaxPoolingBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("GlobalMaxPoolingForwardGPU") + dtypestr).c_str(),
-          &mink::GlobalMaxPoolingForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("GlobalMaxPoolingBackwardGPU") + dtypestr).c_str(),
-          &mink::GlobalMaxPoolingBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
-
     m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
           &mink::BroadcastForwardCPU<MapType, Dtype>,
           py::call_guard<py::gil_scoped_release>());
@@ -432,19 +399,20 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
       &minkowski::LocalPoolingBackwardGPU<coordinate_type, TemplatedAllocator>,
       py::call_guard<py::gil_scoped_release>());
 }
+#endif
 
 void non_templated_cpu_func(py::module &m) {
   m.def("quantize_np", &minkowski::quantize_np);
   m.def("quantize_th", &minkowski::quantize_th);
 }
 
+#ifndef CPU_ONLY
 void non_templated_gpu_func(py::module &m) {
   m.def("coo_spmm_int32", &minkowski::coo_spmm<int32_t>,
         py::call_guard<py::gil_scoped_release>());
   m.def("coo_spmm_int64", &minkowski::coo_spmm<int64_t>,
         py::call_guard<py::gil_scoped_release>());
 }
-
 #endif
 
 void initialize_non_templated_classes(py::module &m) {
@@ -463,8 +431,7 @@ void initialize_non_templated_classes(py::module &m) {
       .export_values();
 
   py::enum_<minkowski::MinkowskiAlgorithm::Mode>(m, "MinkowskiAlgorithm")
-      .value("DEFAULT",
-             minkowski::MinkowskiAlgorithm::Mode::DEFAULT)
+      .value("DEFAULT", minkowski::MinkowskiAlgorithm::Mode::DEFAULT)
       .value("MEMORY_EFFICIENT",
              minkowski::MinkowskiAlgorithm::Mode::MEMORY_EFFICIENT)
       .value("SPEED_OPTIMIZED",
@@ -489,6 +456,24 @@ void initialize_non_templated_classes(py::module &m) {
              minkowski::PoolingMode::Type::LOCAL_AVG_POOLING)
       .value("LOCAL_MAX_POOLING",
              minkowski::PoolingMode::Type::LOCAL_MAX_POOLING)
+      .value("GLOBAL_SUM_POOLING_DEFAULT",
+             minkowski::PoolingMode::Type::GLOBAL_SUM_POOLING_DEFAULT)
+      .value("GLOBAL_AVG_POOLING_DEFAULT",
+             minkowski::PoolingMode::Type::GLOBAL_AVG_POOLING_DEFAULT)
+      .value("GLOBAL_MAX_POOLING_DEFAULT",
+             minkowski::PoolingMode::Type::GLOBAL_MAX_POOLING_DEFAULT)
+      .value("GLOBAL_SUM_POOLING_KERNEL",
+             minkowski::PoolingMode::Type::GLOBAL_SUM_POOLING_KERNEL)
+      .value("GLOBAL_AVG_POOLING_KERNEL",
+             minkowski::PoolingMode::Type::GLOBAL_AVG_POOLING_KERNEL)
+      .value("GLOBAL_MAX_POOLING_KERNEL",
+             minkowski::PoolingMode::Type::GLOBAL_MAX_POOLING_KERNEL)
+      .value("GLOBAL_SUM_POOLING_PYTORCH_INDEX",
+             minkowski::PoolingMode::Type::GLOBAL_SUM_POOLING_PYTORCH_INDEX)
+      .value("GLOBAL_AVG_POOLING_PYTORCH_INDEX",
+             minkowski::PoolingMode::Type::GLOBAL_AVG_POOLING_PYTORCH_INDEX)
+      .value("GLOBAL_MAX_POOLING_PYTORCH_INDEX",
+             minkowski::PoolingMode::Type::GLOBAL_MAX_POOLING_PYTORCH_INDEX)
       .export_values();
 
   // Classes
