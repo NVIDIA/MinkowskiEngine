@@ -222,7 +222,7 @@ class TestPoolingTranspose(unittest.TestCase):
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coords)
         conv = MinkowskiConvolution(
             in_channels, out_channels, kernel_size=3, stride=2, dimension=D
         )
@@ -340,14 +340,13 @@ class TestGlobalAvgPooling(unittest.TestCase):
         print(output)
 
         # Check backward
-        fn = MinkowskiLocalPoolingFunction()
+        fn = MinkowskiGlobalPoolingFunction()
         self.assertTrue(
             gradcheck(
                 fn,
                 (
                     input.F,
                     pool.pooling_mode,
-                    pool.kernel_generator,
                     input.coordinate_map_key,
                     output.coordinate_map_key,
                     input._manager,
@@ -381,6 +380,41 @@ class TestGlobalAvgPooling(unittest.TestCase):
         )
 
 class TestGlobalMaxPooling(unittest.TestCase):
+    def test_gpu(self):
+        if not torch.cuda.is_available():
+            return
+
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coordinates=coords)
+        pool = MinkowskiGlobalMaxPooling()
+        output = pool(input)
+        print(output)
+
+        if not torch.cuda.is_available():
+            return
+
+        input = SparseTensor(feats, coordinates=coords, device=0)
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiGlobalPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+
     def test(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)

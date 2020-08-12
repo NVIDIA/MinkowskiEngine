@@ -420,6 +420,14 @@ class SparseTensor:
             self._C = self._get_coordinates()
         return self._C
 
+    @C.setter
+    def C(self):
+        raise SyntaxError("Direct modification of coordinates is not permitted")
+
+    @coordinates.setter
+    def coordinates(self):
+        raise SyntaxError("Direct modification of coordinates is not permitted")
+
     @property
     def decomposed_coordinates(self):
         r"""Returns a list of coordinates per batch.

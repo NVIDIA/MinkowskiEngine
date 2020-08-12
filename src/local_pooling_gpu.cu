@@ -97,8 +97,7 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
                                                  .requires_grad(false));
     max_index.resize_({out_nrows, in_feat.size(1)});
     max_index.zero_();
-    size_t scratch_bytes = 5 * in_out.size() * sizeof(uint32_t);
-    void *d_scr = p_map_manager->allocate(scratch_bytes);
+    TemplatedAllocator<char> byte_allocator;
     AT_DISPATCH_FLOATING_TYPES(
         in_feat.scalar_type(), "local_pooling_forward_gpu", [&] {
           MaxPoolingForwardKernelGPU<scalar_t, default_types::index_type,
@@ -106,9 +105,8 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingForwardGPU(
               in_feat.template data_ptr<scalar_t>(),
               out_feat.template data_ptr<scalar_t>(), out_nrows,
               max_index.data_ptr<int>(), in_feat.size(1), in_out,
-              reinterpret_cast<uint32_t *>(d_scr), stream);
+              byte_allocator, stream);
         });
-    p_map_manager->deallocate(d_scr, scratch_bytes);
     return std::make_pair(out_feat, max_index);
 
   } else {
