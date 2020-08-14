@@ -139,9 +139,9 @@ from MinkowskiNormalization import (
     # MinkowskiStableInstanceNorm,
 )
 
-#
-# from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
-#
+
+from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
+
 # from MinkowskiUnion import MinkowskiUnion, MinkowskiUnionFunction
 #
 from MinkowskiNetwork import MinkowskiNetwork

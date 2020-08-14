@@ -78,33 +78,7 @@ default_types::stride_type _fill_vec(size_t const len) {
   return vec;
 }
 
-default_types::stride_type zeros(size_t const len) { return _fill_vec<0>(len); }
-
-default_types::stride_type ones(size_t const len) { return _fill_vec<1>(len); }
-
 } // namespace detail
-
-/*
-inline std::vector<int>
-computeOutTensorStride(const vector<int> &tensor_strides,
-                       const vector<int> &strides, bool is_transpose) {
-  vector<int> out_tensor_strides;
-  ASSERT(tensor_strides.size() == strides.size(),
-         "The dimension of tensor_stride: ", ArrToString(tensor_strides),
-         " does not match the dimension of strides: ", ArrToString(strides));
-  for (size_t i = 0; i < strides.size(); i++) {
-    if (is_transpose) {
-      ASSERT(tensor_strides[i] % strides[i] == 0,
-             "The output tensor stride is not divisible by ",
-             "up_strides. tensor stride: ", ArrToString(tensor_strides),
-             ", up_strides: ", ArrToString(strides));
-      out_tensor_strides.push_back(tensor_strides[i] / strides[i]);
-    } else
-      out_tensor_strides.push_back(tensor_strides[i] * strides[i]);
-  }
-  return out_tensor_strides;
-}
-*/
 
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator,
@@ -339,12 +313,6 @@ public:
   std::pair<at::Tensor, std::vector<at::Tensor>>
   origin_map_th(CoordinateMapKey const *py_out_coords_key);
 
-  /*
-  at::Tensor getRowIndicesAtBatchIndex(py::object py_in_coords_key,
-                                       py::object py_out_coords_key,
-                                       const int batch_index);
-  */
-
   size_t origin_map_size() {
     auto const key = origin().first;
     return m_coordinate_maps.find(key)->second.size();
@@ -373,10 +341,14 @@ private:
 
   coordinate_map_key_type get_random_string_id(stride_type const &tensor_stride,
                                                std::string string_id) {
-    coordinate_map_key_type key =
-        std::make_pair(tensor_stride, string_id + '-' + random_string(5));
+    coordinate_map_key_type key = std::make_pair(
+        tensor_stride, string_id.size() > 0 ? string_id + '-' + random_string(5)
+                                            : random_string(5));
     while (m_coordinate_maps.find(key) != m_coordinate_maps.end()) {
-      key = std::make_pair(tensor_stride, string_id + '-' + random_string(5));
+      key =
+          std::make_pair(tensor_stride, string_id.size() > 0
+                                            ? string_id + '-' + random_string(5)
+                                            : random_string(5));
     }
     return key;
   }

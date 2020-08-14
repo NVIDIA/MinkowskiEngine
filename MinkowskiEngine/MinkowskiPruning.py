@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -25,49 +26,51 @@ import torch
 from torch.nn import Module
 from torch.autograd import Function
 
-from MinkowskiCoords import CoordsKey
-from SparseTensor import SparseTensor
-from Common import get_minkowski_function
+from MinkowskiEngineBackend._C import CoordinateMapKey
+from MinkowskiSparseTensor import SparseTensor
+from MinkowskiCommon import (
+    MinkowskiModuleBase,
+    get_minkowski_function,
+)
+from MinkowskiCoordinateManager import CoordinateManager
 
 
 class MinkowskiPruningFunction(Function):
-
     @staticmethod
-    def forward(ctx, in_feat, mask, in_coords_key, out_coords_key,
-                coords_manager):
-        assert in_feat.size(0) == mask.size(0)
-        assert isinstance(mask, torch.BoolTensor), "Mask must be a cpu bool tensor."
-        if not in_feat.is_contiguous():
-            in_feat = in_feat.contiguous()
-        if not mask.is_contiguous():
-            mask = mask.contiguous()
-
+    def forward(
+        ctx,
+        in_feat: torch.Tensor,
+        mask: torch.Tensor,
+        in_coords_key: CoordinateMapKey,
+        out_coords_key: CoordinateMapKey = None,
+        coords_manager: CoordinateManager = None,
+    ):
         ctx.in_coords_key = in_coords_key
         ctx.out_coords_key = out_coords_key
         ctx.coords_manager = coords_manager
 
-        out_feat = in_feat.new()
-
-        fw_fn = get_minkowski_function('PruningForward', in_feat)
-        fw_fn(in_feat, out_feat, mask, ctx.in_coords_key.CPPCoordsKey,
-              ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager)
-        return out_feat
+        fw_fn = get_minkowski_function("PruningForward", in_feat)
+        return fw_fn(
+            in_feat,
+            mask,
+            ctx.in_coords_key,
+            ctx.out_coords_key,
+            ctx.coords_manager._manager,
+        )
 
     @staticmethod
-    def backward(ctx, grad_out_feat):
-        if not grad_out_feat.is_contiguous():
-            grad_out_feat = grad_out_feat.contiguous()
+    def backward(ctx, grad_out_feat: torch.Tensor):
+        bw_fn = get_minkowski_function("PruningBackward", grad_out_feat)
+        grad_in_feat = bw_fn(
+            grad_out_feat,
+            ctx.in_coords_key,
+            ctx.out_coords_key,
+            ctx.coords_manager._manager,
+        )
+        return grad_in_feat, None, None, None, None
 
-        grad_in_feat = grad_out_feat.new()
-        bw_fn = get_minkowski_function('PruningBackward', grad_out_feat)
-        bw_fn(grad_in_feat, grad_out_feat, ctx.in_coords_key.CPPCoordsKey,
-              ctx.out_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager)
-        return grad_in_feat, None, None, None, None, None
 
-
-class MinkowskiPruning(Module):
+class MinkowskiPruning(MinkowskiModuleBase):
     r"""Remove specified coordinates from a :attr:`MinkowskiEngine.SparseTensor`.
 
     """
@@ -76,7 +79,7 @@ class MinkowskiPruning(Module):
         super(MinkowskiPruning, self).__init__()
         self.pruning = MinkowskiPruningFunction()
 
-    def forward(self, input, mask):
+    def forward(self, input: SparseTensor, mask: torch.Tensor):
         r"""
         Args:
             :attr:`input` (:attr:`MinkowskiEnigne.SparseTensor`): a sparse tensor
@@ -102,11 +105,15 @@ class MinkowskiPruning(Module):
         """
         assert isinstance(input, SparseTensor)
 
-        out_coords_key = CoordsKey(input.coords_key.D)
-        output = self.pruning.apply(input.F, mask, input.coords_key,
-                                    out_coords_key, input.coords_man)
+        out_coords_key = CoordinateMapKey(
+            input.coordinate_map_key.get_coordinate_size()
+        )
+        output = self.pruning.apply(
+            input.F, mask, input.coordinate_map_key, out_coords_key, input._manager
+        )
         return SparseTensor(
-            output, coords_key=out_coords_key, coords_manager=input.coords_man)
+            output, coordinate_map_key=out_coords_key, coordinate_manager=input._manager
+        )
 
     def __repr__(self):
-        return self.__class__.__name__ + '()'
+        return self.__class__.__name__ + "()"

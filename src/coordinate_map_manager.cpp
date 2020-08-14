@@ -37,6 +37,13 @@ namespace py = pybind11;
 
 namespace minkowski {
 
+namespace detail {
+
+default_types::stride_type zeros(size_t const len) { return _fill_vec<0>(len); }
+
+default_types::stride_type ones(size_t const len) { return _fill_vec<1>(len); }
+
+} // namespace detail
 /*
 
 template <typename MapType>
@@ -123,22 +130,6 @@ CoordsManager<MapType>::getUnionMap(vector<py::object> py_in_coords_keys,
   return make_pair(th_ins, th_outs);
 }
 
-template <typename MapType>
-void CoordsManager<MapType>::setOriginCoordsKey(py::object py_coords_key) {
-  CoordsKey *p_coords_key = py_coords_key.cast<CoordsKey *>();
-  const int D = p_coords_key->getDimension();
-  ASSERT(D > 0, "Invalid dimension: ", D);
-  if (!p_coords_key->key_set) {
-    p_coords_key->setKey(createOriginCoords(D));
-    const vector<int> zero_vec(D, 0);
-    p_coords_key->setTensorStride(zero_vec);
-  } else {
-    auto coords_key = p_coords_key->getKey();
-    auto origin_key = createOriginCoords(D);
-    ASSERT(coords_key == origin_key, "Invalid key: ", to_string(coords_key),
-           " != Origin key: ", to_string(origin_key));
-  }
-}
 */
 
 /*******************************
@@ -375,14 +366,13 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
     map_key = get_random_string_id(map_key.first, "");
   }
 
-  // auto const map_it = m_coordinate_maps.find(in_key);
-  // ASSERT(map_it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
+  auto const map_it = m_coordinate_maps.find(in_key);
+  ASSERT(map_it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
 
-  // map_type pruned_map = map_it->second.prune(keep_begin, keep_end);
-  // LOG_DEBUG("pruned map with size:", pruned_map.size(), " inserted");
-  // insert(map_key, pruned_map);
+  map_type pruned_map = map_it->second.prune(keep_begin, keep_end);
+  LOG_DEBUG("pruned map with size:", pruned_map.size(), " inserted");
+  insert(map_key, pruned_map);
 
-  // (key, new map generated flag)
   return map_key;
 }
 
@@ -443,7 +433,8 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
   ASSERT(map_it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
   auto const coordinate_size = map_it->second.coordinate_size();
   auto const one_vec = detail::ones(coordinate_size - 1);
-  auto const offset = at::Tensor();
+  auto const offset = torch::empty(
+      {0}, torch::TensorOptions().dtype(torch::kInt32).requires_grad(false));
 
   return kernel_map(p_in_map_key, p_out_map_key, one_vec, one_vec, one_vec,
                     RegionType::HYPER_CUBE, offset, false, false);
@@ -650,10 +641,9 @@ struct origin_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
          ++out_row_index) {
       LOG_DEBUG(out_row_index);
       auto const &in_map = origin_map.first[out_row_index];
-      auto const &out_map = origin_map.second[out_row_index];
       int32_t const curr_size = in_map.size();
       ASSERT(curr_size > 0, "invalid kernel map");
-      auto const curr_batch_index = out_map[0];
+      auto const curr_batch_index = p_batch_indices[out_row_index];
 
       ASSERT(curr_batch_index <= max_batch_index, "invalid batch index");
       at::Tensor &row_indices = in_maps[curr_batch_index];
