@@ -44,9 +44,12 @@
 
 template <typename Dtype, typename Itype>
 __global__ void set_gradient(const int n, const Dtype *d_grad_out,
-                             Dtype *d_grad_in, const Itype *in_index) {
+                             Dtype *d_grad_in, const Itype *in_index,
+                             const int unused_key) {
   CUDA_KERNEL_LOOP(index, n) {
-    atomicAdd(&d_grad_in[in_index[index]], d_grad_out[index]);
+    auto const queried_index = in_index[index];
+    if (queried_index != unused_key)
+      atomicAdd(&d_grad_in[in_index[index]], d_grad_out[index]);
   }
 }
 
@@ -58,11 +61,11 @@ __global__ void max_pool(const int N, const int out_nrows, const int nchannel,
                          const Itype *d_in_index_min) {
   // N == nmap * nchannel
   CUDA_KERNEL_LOOP(index, N) {
-    int nrow = index / nchannel;
-    int ch = index % nchannel;
+    int const nrow = index / nchannel;
+    int const ch = index % nchannel;
 
-    Itype out_map_row = d_out_map[nrow];
-    Itype in_index = d_in_index_min[nrow];
+    Itype const out_map_row = d_out_map[nrow];
+    Itype const in_index = d_in_index_min[nrow];
     Itype num_in_feat;
     if (nrow == out_nrows - 1)
       num_in_feat = nmap - in_index;
@@ -71,7 +74,7 @@ __global__ void max_pool(const int N, const int out_nrows, const int nchannel,
     // It is guaranteed to have at least one input per output
     Itype curr_index, max_index = d_in_map[in_index] * nchannel + ch;
     Dtype curr_val, max_val = d_in_feat[max_index];
-    for (int curr_iter = 0; curr_iter < num_in_feat; curr_iter++) {
+    for (int curr_iter = 0; curr_iter < num_in_feat; ++curr_iter) {
       curr_index = d_in_map[in_index + curr_iter] * nchannel + ch;
       curr_val = d_in_feat[curr_index];
       if (max_val < curr_val) {
@@ -79,9 +82,13 @@ __global__ void max_pool(const int N, const int out_nrows, const int nchannel,
         max_index = curr_index;
       }
     }
-    Itype out_ind = out_map_row * nchannel + ch;
-    d_out_feat[out_ind] = max_val;
-    d_max_index[out_ind] = max_index;
+    Itype const out_ind = out_map_row * nchannel + ch;
+    // TODO thrust::reduce_by_key results in erroneous results at the end for
+    // very large array
+    if (out_map_row < out_nrows) {
+      d_out_feat[out_ind] = max_val;
+      d_max_index[out_ind] = max_index;
+    }
   }
 }
 
@@ -102,6 +109,19 @@ __global__ void copy_sorted(const int n, const int nrows, const int nchannel,
 
 namespace minkowski {
 
+namespace detail {
+
+template <typename Dtype>
+__global__ void fill(const int n, Dtype *dst, Dtype const val) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+  if (x < n)
+    dst[x] = val;
+}
+
+} // namespace detail
+
 template <typename Dtype, typename Itype, typename ByteAllocator>
 void MaxPoolingForwardKernelGPU(
     const Dtype *d_in_feat, Dtype *d_out_feat, int out_nrows, int *d_max_index,
@@ -109,11 +129,16 @@ void MaxPoolingForwardKernelGPU(
     ByteAllocator &allocator, cudaStream_t stream) {
 
   size_t nmap = kernel_map.size();
-  size_t scratch_bytes = 5 * kernel_map.size() * sizeof(Itype);
+  size_t scratch_bytes = 5 * (kernel_map.size() + 1) * sizeof(Itype);
   Itype *d_scr = (Itype *)allocator.allocate(scratch_bytes);
-  Itype *d_in_map = d_scr, *d_out_map = d_scr + nmap;
+  Itype *d_in_map = d_scr, *d_out_map = d_scr + nmap + 1;
   Itype *d_curr_in_map = d_in_map;
   Itype *d_curr_out_map = d_out_map;
+
+#ifdef DEBUG
+  cudaMemset(d_scr, 0, scratch_bytes);
+  std::cout << "out_nrows: " << out_nrows << ", nmap: " << nmap << "\n";
+#endif
 
   for (auto k = kernel_map.key_cbegin(); k != kernel_map.key_cend(); ++k) {
     auto kernel_index = k->first;
@@ -135,9 +160,9 @@ void MaxPoolingForwardKernelGPU(
 
   // Second, create number of in_feat per out, and starting index
   Itype *d_index, *d_in_map_min, *d_reduced_out_map;
-  d_index = d_scr + 2 * nmap;
-  d_in_map_min = d_scr + 3 * nmap;
-  d_reduced_out_map = d_scr + 4 * nmap;
+  d_index = d_scr + 2 * nmap + 2;
+  d_in_map_min = d_scr + 3 * nmap + 3;
+  d_reduced_out_map = d_scr + 4 * nmap + 4;
 
   thrust::sequence(thrust::device, d_index, d_index + nmap);
 
@@ -153,22 +178,55 @@ void MaxPoolingForwardKernelGPU(
                             d_in_map_min,      // val out begin
                             equal_pred,        // binary pred
                             min_op);           // binary op
-
+  CUDA_CHECK(cudaStreamSynchronize(0));
   size_t num_unique_out_map = reduction_pair.first - d_reduced_out_map;
-  if (num_unique_out_map != out_nrows)
+
+#ifdef DEBUG
+  std::cout << "num_unique_out_map: " << num_unique_out_map << "\n";
+  Itype *p_scr = (Itype *)std::malloc((nmap + 1) * 2 * sizeof(Itype));
+  CUDA_CHECK(cudaMemcpy(p_scr, d_in_map_min, (nmap + 1) * 2 * sizeof(Itype),
+                        cudaMemcpyDeviceToHost));
+  Itype step = std::max<Itype>(num_unique_out_map / 100, 1);
+  Itype i = 0;
+  for (; i < num_unique_out_map;) {
+    std::cout << i;
+    std::cout << " in_map_min: " << p_scr[i]
+              << ", reduced_out_map: " << p_scr[i + 1 + nmap] << "\n";
+    i += step;
+  }
+  i -= step;
+  for (; i < num_unique_out_map; ++i) {
+    std::cout << i;
+    std::cout << " in_map_min: " << p_scr[i]
+              << ", reduced_out_map: " << p_scr[i + 1 + nmap] << "\n";
+  }
+  std::free(p_scr);
+  std::cout << "done printing\n";
+#endif
+  if (num_unique_out_map > out_nrows)
     throw std::invalid_argument(
-        Formatter() << "Reduction size mismatch. out_nrows: " << out_nrows
+        Formatter() << "Invalid number of out nrows: " << out_nrows
                     << ", num_unique_out_map: " << num_unique_out_map);
+
+  // fill it with unused key
+  detail::fill<<<GET_BLOCKS(out_nrows * nchannel, CUDA_NUM_THREADS),
+                 CUDA_NUM_THREADS, 0, stream>>>(
+      out_nrows * nchannel, d_max_index, std::numeric_limits<int>::max());
+  CUDA_CHECK(cudaStreamSynchronize(stream));
+#ifdef DEBUG
+  std::cout << "filled\n";
+#endif
 
   // Finally, use the max kernel to map all in_feats with the same out key to
   // out_feats Also, create out max_index for gradient
   max_pool<Dtype, Itype>
-      <<<GET_BLOCKS(out_nrows * nchannel, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
-         0, stream>>>(nchannel * out_nrows, // N
-                      out_nrows, nchannel, nmap, d_in_feat, d_out_feat,
-                      d_max_index, // Out indices for backward
-                      d_in_map,    // in index
-                      d_reduced_out_map, d_in_map_min);
+      <<<GET_BLOCKS(num_unique_out_map * nchannel, CUDA_NUM_THREADS),
+         CUDA_NUM_THREADS, 0, stream>>>(nchannel * num_unique_out_map, // N
+                                        num_unique_out_map, nchannel, nmap,
+                                        d_in_feat, d_out_feat,
+                                        d_max_index, // Out indices for backward
+                                        d_in_map,    // in index
+                                        d_reduced_out_map, d_in_map_min);
 
   // cudaFree(d_in_map);
   // cudaFree(d_index);
@@ -217,7 +275,8 @@ void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,
   LOG_DEBUG("MaxPool Backward GPU with #", num_kernels, out_nrows, nchannel);
   set_gradient<Dtype>
       <<<GET_BLOCKS(num_kernels, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0,
-         stream>>>(num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index);
+         stream>>>(num_kernels, d_grad_out_feat, d_grad_in_feat, d_max_index,
+                   std::numeric_limits<int>::max());
 
   CUDA_CHECK(cudaStreamSynchronize(stream));
 }

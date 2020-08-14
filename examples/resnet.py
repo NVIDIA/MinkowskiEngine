@@ -54,7 +54,7 @@ class ResNetBase(nn.Module):
         self.bn1 = ME.MinkowskiBatchNorm(self.inplanes)
         self.relu = ME.MinkowskiReLU(inplace=True)
 
-        self.pool = ME.MinkowskiAvgPooling(kernel_size=2, stride=2, dimension=D)
+        self.pool = ME.MinkowskiMaxPooling(kernel_size=2, stride=2, dimension=D)
 
         self.layer1 = self._make_layer(
             self.BLOCK, self.PLANES[0], self.LAYERS[0], stride=2)

@@ -324,11 +324,12 @@ void ConvolutionForwardKernelGPU(
 
       // copy in out map
 #ifdef DEBUG
+      /*
       size_t map_size = curr_num_active;
-
       Itype *p_kernel_map = (Itype *)std::malloc(map_size * 3 * sizeof(Itype));
       CUDA_CHECK(cudaMemcpy(p_kernel_map, kernel_map.kernels.begin(k),
-                            map_size * sizeof(Itype), cudaMemcpyDeviceToHost));
+                            map_size * sizeof(Itype),
+                            cudaMemcpyDeviceToHost));
       CUDA_CHECK(cudaMemcpy(p_kernel_map + 1 * map_size,
                             kernel_map.in_maps.begin(k),
                             map_size * sizeof(Itype), cudaMemcpyDeviceToHost));
@@ -344,6 +345,7 @@ void ConvolutionForwardKernelGPU(
 
       CUDA_CHECK(cudaDeviceSynchronize());
       std::free(p_kernel_map);
+      */
 #endif
 
       switch (shared_mem_size) {
