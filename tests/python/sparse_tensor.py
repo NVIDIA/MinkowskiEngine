@@ -30,6 +30,7 @@ from MinkowskiEngine import (
     SparseTensorOperationMode,
     SparseTensorQuantizationMode,
     set_sparse_tensor_operation_mode,
+    is_cuda_available,
 )
 
 from tests.python.common import data_loader, load_file, batched_coordinates
@@ -59,7 +60,7 @@ class SparseTensorTestCase(unittest.TestCase):
         print(input1.coordinate_map_key, input2.coordinate_map_key)
 
     def test_device(self):
-        if not torch.cuda.is_available():
+        if not is_cuda_available():
             return
         coords = torch.IntTensor(
             [[0, 1], [0, 1], [0, 2], [0, 2], [1, 0], [1, 0], [1, 1]]
@@ -123,10 +124,30 @@ class SparseTensorTestCase(unittest.TestCase):
         CC0, FC0 = X.coordinates_and_features_at(0)
         self.assertTrue((C0 == CC0).all())
         self.assertTrue((F0 == FC0).all())
+
         coords, feats = X.decomposed_coordinates_and_features
         for c, f in zip(coords, feats):
             self.assertEqual(c.numel(), f.numel())
             print(c, f)
+        self.assertEqual(len(coords[0]), 3)
+        self.assertEqual(len(coords[1]), 0)
+        self.assertEqual(len(coords[2]), 2)
+
+        if not is_cuda_available():
+            return
+
+        coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
+        feats = torch.FloatTensor([[1.1, 2.1, 3.1, 4.1, 5.1]]).t()
+
+        X = SparseTensor(feats, coords, device=0)
+        coords, feats = X.decomposed_coordinates_and_features
+        for c, f in zip(coords, feats):
+            self.assertEqual(c.numel(), f.numel())
+            print(c, f)
+
+        self.assertEqual(len(coords[0]), 3)
+        self.assertEqual(len(coords[1]), 0)
+        self.assertEqual(len(coords[2]), 2)
 
         # feats, valid_inds = X.features_at_coords(torch.IntTensor([[0, 0], [2, 2], [-1, -1]]))
         # self.assertTrue(feats[0, 0] == 1.1)

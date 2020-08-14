@@ -273,6 +273,7 @@ public:
         c += result.second;
       }
     }
+    LOG_DEBUG("size:", pruned_map.size(), "capacity:", pruned_map.capacity());
     return pruned_map;
   }
 
@@ -285,11 +286,13 @@ public:
     // Over estimate the reserve size to be size();
     size_type out_size = out_coordinate_map.size();
     size_type kernel_volume = kernel.volume();
+    LOG_DEBUG("kernel volume:", kernel_volume, "out_size:", out_size);
 
     cpu_in_maps in_maps = initialize_maps<cpu_in_map>(kernel_volume, out_size);
     cpu_out_maps out_maps =
         initialize_maps<cpu_out_map>(kernel_volume, out_size);
     std::vector<size_type> num_used(kernel_volume);
+    std::for_each(num_used.begin(), num_used.end(), [](auto &i) { i = 0; });
 
     // OMP
     const auto &out_mmap = out_coordinate_map.m_map;
@@ -306,32 +309,25 @@ public:
     size_t N = 2 * omp_get_max_threads();
     const size_t stride = (out_map_num_elements + N - 1) / N;
     N = (out_map_num_elements + stride - 1) / stride;
-    LOG_DEBUG("kernel map with", N, "chunks.");
+    LOG_DEBUG("kernel map with", N, "chunks and", stride, "stride.");
+    LOG_DEBUG((kernel.region_type() != RegionType::CUSTOM && kernel_volume == 1)
+                  ? "single kernel"
+                  : "otherwise");
 
     // When no need to iterate through the region
     // Put if outside the loop for speed
     if (kernel.region_type() != RegionType::CUSTOM && kernel_volume == 1) {
-#pragma omp parallel for
-      for (index_type n = 0; n < N; ++n) {
-        index_type curr_index_begin;
-        for (auto iter_out = out_mmap.begin(stride * n);
-             iter_out.num_steps() <
-             std::min(stride, out_map_num_elements - n * stride);
-             ++iter_out) {
-
-          const auto iter_in = m_map.find(iter_out->first);
-          if (iter_in != m_map.end()) {
-#pragma omp atomic capture
-            {
-              curr_index_begin = num_used[0];
-              num_used[0] += 1;
-            }
-
-            in_maps[0][curr_index_begin] = iter_in->second;
-            out_maps[0][curr_index_begin] = iter_out->second;
-          }
+      index_type curr_index_begin = 0;
+      for (auto iter_out = out_mmap.begin(); iter_out != out_mmap.end();
+           ++iter_out) {
+        const auto iter_in = m_map.find(iter_out->first);
+        if (iter_in != m_map.end()) {
+          in_maps[0][curr_index_begin] = iter_in->second;
+          out_maps[0][curr_index_begin] = iter_out->second;
+          ++curr_index_begin;
         }
       }
+      num_used[0] = curr_index_begin;
     } else {
 #pragma omp parallel for
       for (index_type n = 0; n < N; n++) {
@@ -520,6 +516,8 @@ public:
   }
 
   void copy_coordinates(coordinate_type *dst_coordinate) const {
+    if (m_map.size() == 0)
+      return;
     size_t const capacity = m_map.capacity();
     size_t N = omp_get_max_threads();
     const size_t stride = (capacity + N - 1) / N;

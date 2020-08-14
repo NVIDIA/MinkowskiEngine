@@ -231,14 +231,15 @@ struct origin_map_functor<
 #ifdef DEBUG
     LOG_DEBUG("Batch indices:", vec_batch_indices);
 #endif
+    // gpu origin() sort batch indices
     auto const max_batch_index = vec_batch_indices[out_size - 1];
 
     std::vector<at::Tensor> in_maps;
     default_types::index_type current_batch_row_index = 0;
     for (default_types::index_type i = 0; i < (max_batch_index + 1);) {
       if (vec_batch_indices[current_batch_row_index] == i) {
-        auto p_curr_map = origin_map.in_maps.begin(i);
-        auto const curr_size = origin_map.size(i);
+        auto p_curr_map = origin_map.in_maps.begin(current_batch_row_index);
+        auto const curr_size = origin_map.size(current_batch_row_index);
         at::Tensor row_indices = torch::empty({curr_size}, options);
         int64_t *d_row_indices = row_indices.data_ptr<int64_t>();
 

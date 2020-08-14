@@ -29,7 +29,7 @@
 
 namespace minkowski {
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void PruningForwardKernelCPU(const Dtype *p_in_feat, Dtype *p_out_feat,
                              int const nchannel, const cpu_in_maps &in_maps,
                              const cpu_out_maps &out_maps) {
@@ -47,7 +47,7 @@ void PruningForwardKernelCPU(const Dtype *p_in_feat, Dtype *p_out_feat,
   }
 }
 
-template <typename Dtype, typename Itype>
+template <typename Dtype>
 void PruningBackwardKernelCPU(Dtype *p_grad_in_feat,
                               const Dtype *p_grad_out_feat, int const nchannel,
                               const cpu_in_maps &in_maps,

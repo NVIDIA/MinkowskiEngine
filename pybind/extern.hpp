@@ -276,6 +276,41 @@ at::Tensor GlobalPoolingBackwardGPU(
 #endif
 
 /*************************************
+ * Pruning
+ *************************************/
+template <typename coordinate_type>
+at::Tensor
+PruningForwardCPU(at::Tensor const &in_feat, // CPU feat
+                  at::Tensor const &keep,    // uint8 / bool / byte CPU data
+                  CoordinateMapKey *p_in_map_key,  //
+                  CoordinateMapKey *p_out_map_key, //
+                  cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type>
+at::Tensor PruningBackwardCPU(at::Tensor &grad_out_feat,       // CPU out feat
+                              CoordinateMapKey *p_in_map_key,  //
+                              CoordinateMapKey *p_out_map_key, //
+                              cpu_manager_type<coordinate_type> *p_map_manager);
+
+#ifndef CPU_ONLY
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor PruningForwardGPU(
+    at::Tensor const &in_feat,       // GPU feat
+    at::Tensor const &keep,          // uint8 CPU data
+    CoordinateMapKey *p_in_map_key,  //
+    CoordinateMapKey *p_out_map_key, //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor PruningBackwardGPU(
+    at::Tensor &grad_out_feat,       // GPU out feat
+    CoordinateMapKey *p_in_map_key,  //
+    CoordinateMapKey *p_out_map_key, //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+#endif
+/*************************************
  * Quantization
  *************************************/
 std::vector<py::array> quantize_np(
@@ -343,6 +378,13 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::GlobalPoolingBackwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
+  m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
+        &minkowski::PruningForwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
+        &minkowski::PruningBackwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+
   /*
     m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
           &mink::BroadcastForwardCPU<MapType, Dtype>,
@@ -350,29 +392,8 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
     m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
           &mink::BroadcastBackwardCPU<MapType, Dtype>,
           py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
-          &mink::BroadcastForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
-          &mink::BroadcastBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
 
-    m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
-          &mink::PruningForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
-          &mink::PruningBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
-          &mink::PruningForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
-          &mink::PruningBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
+
 
     m.def((std::string("UnionForwardCPU") + dtypestr).c_str(),
           &mink::UnionForwardCPU<MapType, Dtype>,
@@ -429,6 +450,13 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
       (std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
       &minkowski::GlobalPoolingBackwardGPU<coordinate_type, TemplatedAllocator>,
       py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
+        &minkowski::PruningForwardGPU<coordinate_type, TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
+        &minkowski::PruningBackwardGPU<coordinate_type, TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
 }
 #endif
 
@@ -542,9 +570,8 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("get_coordinate_map_keys", &manager_type::get_coordinate_map_keys)
       .def("size", py::overload_cast<minkowski::CoordinateMapKey const *>(
                        &manager_type::size, py::const_))
-      .def("origin_map", &manager_type::origin_map_th)
       .def("origin_map_size", &manager_type::origin_map_size)
-      .def("kernel_map", &manager_type::kernel_map);
+      .def("origin_map", &manager_type::origin_map_th);
 }
 
 bool is_cuda_available() {

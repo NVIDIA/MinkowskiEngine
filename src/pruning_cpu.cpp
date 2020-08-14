@@ -77,22 +77,24 @@ PruningForwardCPU(at::Tensor const &in_feat, // CPU feat
   }
 
   const auto &in_out = p_map_manager->kernel_map(p_in_map_key, p_out_map_key);
+  LOG_DEBUG("Generated kernel map");
 
   // Get the total number of coords
-  at::Tensor sum = keep.sum();
-  const int64_t tot_n = sum.item<int64_t>();
+  const int64_t tot_n = p_map_manager->size(p_out_map_key->get_key());
+  const auto nchannel = in_feat.size(1);
   at::Tensor out_feat =
-      torch::empty({tot_n, in_feat.size(1)}, in_feat.options());
+      torch::empty({tot_n, nchannel}, in_feat.options());
+  LOG_DEBUG("out_feat", tot_n, "x", nchannel);
 
   if (tot_n == 0) {
     WARNING(true, "MinkowskiPruning: Generating an empty SparseTensor");
   } else {
     out_feat.zero_();
     AT_DISPATCH_FLOATING_TYPES(
-        in_feat.scalar_type(), "pruning_foward_cpu", [&] {
-          PruningForwardKernelCPU<scalar_t, coordinate_type>(
+        in_feat.scalar_type(), "pruning_forward_cpu", [&] {
+          PruningForwardKernelCPU<scalar_t>(
               in_feat.template data_ptr<scalar_t>(),
-              out_feat.template data_ptr<scalar_t>(), in_feat.size(1),
+              out_feat.template data_ptr<scalar_t>(), nchannel,
               std::get<0>(in_out), std::get<1>(in_out));
         });
   }
@@ -129,7 +131,7 @@ PruningBackwardCPU(at::Tensor &grad_out_feat,       // CPU out feat
   if (grad_out_feat.size(0) > 0)
     AT_DISPATCH_FLOATING_TYPES(
         grad_out_feat.scalar_type(), "pruning_backward_cpu", [&] {
-          PruningBackwardKernelCPU<scalar_t, coordinate_type>(
+          PruningBackwardKernelCPU<scalar_t>(
               grad_in_feat.template data_ptr<scalar_t>(),
               grad_out_feat.template data_ptr<scalar_t>(), nchannel,
               std::get<0>(in_out), std::get<1>(in_out));

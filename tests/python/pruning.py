@@ -24,21 +24,54 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiConvolution, \
-    MinkowskiConvolutionTranspose, MinkowskiPruning, MinkowskiPruningFunction
+import MinkowskiEngineBackend._C as _C
 
+from MinkowskiEngine import (
+    SparseTensor,
+    MinkowskiConvolution,
+    MinkowskiConvolutionTranspose,
+    MinkowskiPruning,
+    MinkowskiPruningFunction,
+)
 from utils.gradcheck import gradcheck
-from tests.common import data_loader
+from tests.python.common import data_loader
 
 
 class TestPruning(unittest.TestCase):
+    def test(self):
+        in_channels = 2
+        coords, feats, labels = data_loader(in_channels, batch_size=1)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords)
+        use_feat = torch.rand(feats.size(0)) < 0.5
+        pruning = MinkowskiPruning()
+        output = pruning(input, use_feat)
+        print(input)
+        print(use_feat)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiPruningFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    use_feat,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
     def test_empty(self):
         in_channels = 2
         coords, feats, labels = data_loader(in_channels, batch_size=1)
         feats = feats.double()
         feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coords)
         use_feat = torch.BoolTensor(len(input))
         use_feat.zero_()
         pruning = MinkowskiPruning()
@@ -50,15 +83,24 @@ class TestPruning(unittest.TestCase):
         # Check backward
         fn = MinkowskiPruningFunction()
         self.assertTrue(
-            gradcheck(fn, (input.F, use_feat, input.coords_key,
-                           output.coords_key, input.coords_man)))
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    use_feat,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
     def test_pruning(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels, batch_size=1)
         feats = feats.double()
         feats.requires_grad_()
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coords)
         use_feat = torch.rand(feats.size(0)) < 0.5
         pruning = MinkowskiPruning()
         output = pruning(input, use_feat)
@@ -69,18 +111,46 @@ class TestPruning(unittest.TestCase):
         # Check backward
         fn = MinkowskiPruningFunction()
         self.assertTrue(
-            gradcheck(fn, (input.F, use_feat, input.coords_key,
-                           output.coords_key, input.coords_man)))
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    use_feat,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
-        device = torch.device('cuda')
-        with torch.cuda.device(0):
-            input = input.to(device)
-            output = pruning(input, use_feat)
-            print(output)
+    def test_device(self):
+        in_channels, D = 2, 2
+        device = torch.device("cuda")
+        coords, feats, labels = data_loader(in_channels, batch_size=1)
+        feats = feats.double()
+        feats.requires_grad_()
 
-            self.assertTrue(
-                gradcheck(fn, (input.F, use_feat, input.coords_key,
-                               output.coords_key, input.coords_man)))
+        use_feat = (torch.rand(feats.size(0)) < 0.5).to(device)
+        pruning = MinkowskiPruning()
+
+        input = SparseTensor(feats, coords, device=device)
+        output = pruning(input, use_feat)
+        print(input)
+        print(output)
+
+        fn = MinkowskiPruningFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    use_feat,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
     def test_with_convtr(self):
         channels, D = [2, 3, 4], 2
@@ -90,27 +160,30 @@ class TestPruning(unittest.TestCase):
         # Create a sparse tensor with large tensor strides for upsampling
         start_tensor_stride = 4
         input = SparseTensor(
-            feats,
-            coords=coords * start_tensor_stride,
-            tensor_stride=start_tensor_stride)
+            feats, coords * start_tensor_stride, tensor_stride=start_tensor_stride,
+        )
         conv_tr1 = MinkowskiConvolutionTranspose(
             channels[0],
             channels[1],
             kernel_size=3,
             stride=2,
             generate_new_coords=True,
-            dimension=D).double()
+            dimension=D,
+        ).double()
         conv1 = MinkowskiConvolution(
-            channels[1], channels[1], kernel_size=3, dimension=D).double()
+            channels[1], channels[1], kernel_size=3, dimension=D
+        ).double()
         conv_tr2 = MinkowskiConvolutionTranspose(
             channels[1],
             channels[2],
             kernel_size=3,
             stride=2,
             generate_new_coords=True,
-            dimension=D).double()
+            dimension=D,
+        ).double()
         conv2 = MinkowskiConvolution(
-            channels[2], channels[2], kernel_size=3, dimension=D).double()
+            channels[2], channels[2], kernel_size=3, dimension=D
+        ).double()
         pruning = MinkowskiPruning()
 
         out1 = conv_tr1(input)
@@ -131,7 +204,3 @@ class TestPruning(unittest.TestCase):
 
         # Check gradient flow
         print(input.F.grad)
-
-
-if __name__ == '__main__':
-    unittest.main()
