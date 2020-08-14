@@ -194,6 +194,10 @@ public:
     return stride_map;
   }
 
+  /*****************************************************************************
+   * Map generation
+   ****************************************************************************/
+
   /*
    * @brief strided coordinate map for region.
    */
@@ -250,6 +254,31 @@ public:
     return origin_map;
   }
 
+  /*
+   * @brief generate a new coordinate map that only keeps coordinates with true
+   * keep mask
+   */
+  self_type prune(bool const *keep_begin, bool const *keep_end) const {
+    ASSERT(keep_end - keep_begin == size(), "Invalid range for pruning");
+
+    // Over estimate the reserve size to be size();
+    self_type pruned_map(size(), m_coordinate_size, base_type::m_tensor_stride,
+                         base_type::m_byte_allocator);
+
+    index_type c = 0;
+    for (auto const &kv : m_map) {
+      // Use the row index defined
+      if (keep_begin[kv.second]) {
+        auto result = pruned_map.insert(kv.first, c);
+        c += result.second;
+      }
+    }
+    return pruned_map;
+  }
+
+  /*****************************************************************************
+   * Kernel map
+   ****************************************************************************/
   cpu_kernel_map
   kernel_map(self_type const &out_coordinate_map,
              cpu_kernel_region<coordinate_type> const &kernel) const {

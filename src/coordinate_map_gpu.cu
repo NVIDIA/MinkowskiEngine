@@ -27,8 +27,8 @@
 #include "coordinate_map_functors.cuh"
 #include "coordinate_map_gpu.cuh"
 #include "gpu.cuh"
-#include "kernel_map.hpp"
 #include "kernel_map.cuh"
+#include "kernel_map.hpp"
 
 #include <thrust/copy.h>
 #include <thrust/device_vector.h>
@@ -679,6 +679,141 @@ template <typename coordinate_type, //
           typename size_type,       //
           typename index_type,      //
           typename map_type>
+__global__ void prune_copy_and_insert(
+    size_type const num_threads,                              //
+    size_type const coordinate_size,                          //
+    index_type const unused_map_offset,                       //
+    index_type const *const __restrict__ in_valid_row_index,  //
+    coordinate_type const *const __restrict__ in_coordinates, //
+    bool const *const __restrict__ keep_begin,                //
+    index_type const *const __restrict__ inclusive_scan_keep, //
+    map_type __restrict__ out_map,                            //
+    coordinate_type *__restrict__ out_coordinates,            //
+    index_type *__restrict__ out_valid_row_index,             //
+    index_type *__restrict__ out_valid_map_offset             //
+) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    auto out_row_index = (x < 1) ? 0 : inclusive_scan_keep[x - 1];
+    coordinate_type const *curr_in_coord =
+        &in_coordinates[in_valid_row_index[x] * m_coordinate_size];
+    coordinate_type *curr_out_coord =
+        &out_coordinates[out_row_index * m_coordinate_size];
+    for (index_type i = 0; i < m_coordinate_size; ++i)
+      curr_out_coord[i] = curr_in_coord[i];
+
+    // insert to the out_map
+    auto coord = coordinate<coordinate_type>{curr_out_coord};
+    // remap the value
+    value_type pair = thrust::make_pair(coord, 0);
+    auto result = out_map.insert(pair);
+    out_valid_row_index[x] = x;
+    if (result == out_map.end())
+      out_valid_map_offset[i] = unused_map_offset;
+    else
+      out_valid_map_offset[i] = result->second;
+  }
+}
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void remap(size_type const num_threads,                  //
+                      map_type const __restrict__ out_map,          //
+                      index_type *__restrict__ out_valid_map_offset //
+) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    auto &pair = out_map.data()[out_valid_map_offset[x]];
+    pair.second = x;
+  }
+}
+
+} // namespace detail
+
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::prune(
+    bool const *keep_begin, bool const *keep_end) const {
+  size_type const N = size();
+  ASSERT(N == keep_end - keep_begin, "Invalid keep size");
+  LOG_DEBUG("Prune size:", N);
+
+  // exclusive sum for coordinate copy.
+  auto const inclusive_scan_size = N * sizeof(index_type);
+  index_type *d_inclusive_scan =
+      (index_type *)m_byte_allocator.allocate(exclusive_scan_size);
+  CUDA_CHECK(cudaMemcpy(d_inclusive_scan, keep_begin, inclusive_scan_size,
+                        cudaMemcpyDeviceToDevice));
+  thrust::inclusive_scan(thrust::device, d_inclusive_scan,
+                         d_inclusive_scan + N);
+  index_type N_pruned;
+  CUDA_CHECK(cudaMemcpy(&N_pruned, d_inclusive_scan + N - 1, sizeof(index_type),
+                        cudaMemcpyDeviceToHost));
+
+  // create a coordinate_map
+  self_type pruned_map(N_pruned, m_coordinate_size, m_hashtable_occupancy,
+                       m_tensor_stride, m_map_allocator,
+                       base_type::m_byte_allocator);
+
+  // Copy and insert kernel that first checks keep[i] is true and insert at
+  // inclusive_scan[i - 1].
+  auto &out_valid_map_offset = pruned_map.m_valid_map_index;
+  auto &out_valid_row_index = pruned_map.m_valid_row_index;
+  out_valid_map_offset.resize(N);
+  out_valid_row_index.resize(N);
+
+  index_type const unused_map_offset = std::numeric_limits<index_type>::max();
+  detail::prune_copy_and_insert<coordinate_type, size_type, index_type,
+                                map_type>
+      <<<GET_BLOCKS(N, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
+          N, m_coordinate_size, unused_map_offset, m_valid_row_index,
+          const_coordinate_data(), keep_begin, d_inclusive_scan,
+          *(pruned_map.m_map), pruned_map.coordinate_data(),
+          thrust::raw_pointer_cast(out_valid_row_index.data()),
+          thrust::raw_pointer_cast(out_valid_map_offset.data()));
+
+  // Remove not inserted rows
+  auto valid_begin = thrust::make_zip_iterator(thrust::make_tuple(
+      out_valid_map_offset.begin(), out_valid_row_index.begin()));
+  size_type const number_of_valid =
+      thrust::remove_if(
+          thrust::device, valid_begin,
+          thrust::make_zip_iterator(thrust::make_tuple(
+              out_valid_map_offset.end(), out_valid_row_index.end())),
+          is_first<index_type>(unused_map_offset)) -
+      valid_begin;
+
+  out_valid_map_offset.resize(number_of_valid);
+  out_valid_row_index.resize(number_of_valid);
+
+  pruned_map.m_size = N_unique;
+
+  // remap the final map values
+  detail::remap<coordinate_type, size_type, index_type, map_type>
+      <<<GET_BLOCKS(number_of_valid, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
+          number_of_valid, *(pruned_map.m_map),
+          thrust::raw_pointer_cast(out_valid_map_offset.data()));
+
+  m_byte_allocator.deallocate((char *)d_inclusive_scan, inclusive_scan_size);
+
+  return pruned_map;
+}
+
+namespace detail {
+
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
 __global__ void
 count_kernel(map_type const __restrict__ in_map,                       //
              map_type const __restrict__ out_map,                      //
@@ -811,6 +946,35 @@ __global__ void preallocated_kernel_map_iteration(
   }
 }
 
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void
+direct_in_out_map(size_type const num_threads,                               //
+                  map_type const __restrict__ in_map,                        //
+                  map_type const __restrict__ out_map,                       //
+                  index_type const *const __restrict__ out_valid_map_offset, //
+                  index_type *__restrict__ p_in_maps,                        //
+                  index_type *__restrict__ p_out_maps,
+                  index_type const unused_key) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    typename map_type::value_type const &out_value =
+        out_map.data()[out_valid_map_index[x]];
+    auto const &result = in_map.find(out_value.first);
+    if (result != in_map.end()) {
+      p_in_maps[x] = result.second;
+      p_out_maps[x] = out_value.second;
+    } else {
+      p_in_maps[x] = unused_key;
+    }
+  }
+}
+
 } // namespace detail
 
 template <typename coordinate_type,
@@ -823,74 +987,115 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map(
   size_type const out_size = out_map.size();
   size_type const kernel_volume = kernel.volume();
 
-  // clang-format off
+  if (kernel_volume > 1 && kernel.region_type() != RegionType::CUSTOM) {
+    // clang-format off
   // (THREAD * 3 * D +  3 * D) * 4
   uint32_t const shared_memory_size_in_bytes =
       3 * m_coordinate_size * sizeof(index_type) + // stride, kernel, dilation
       3 * thread_dim * m_coordinate_size * sizeof(coordinate_type); // tmp, lb, ub
-  // clang-format on
-  size_type const num_threads = out_size;
-  auto const num_blocks = GET_BLOCKS(num_threads, thread_dim);
+    // clang-format on
+    size_type const num_threads = out_size;
+    auto const num_blocks = GET_BLOCKS(num_threads, thread_dim);
 
-  LOG_DEBUG("num block", num_blocks);
-  LOG_DEBUG("out_map size", out_map.size());
-  LOG_DEBUG("shared_memory size", shared_memory_size_in_bytes);
-  LOG_DEBUG("threads dim", thread_dim);
-  LOG_DEBUG("num threads", num_threads);
+    LOG_DEBUG("num block", num_blocks);
+    LOG_DEBUG("out_map size", out_map.size());
+    LOG_DEBUG("shared_memory size", shared_memory_size_in_bytes);
+    LOG_DEBUG("threads dim", thread_dim);
+    LOG_DEBUG("num threads", num_threads);
 
-  index_type *d_p_count_per_thread = reinterpret_cast<index_type *>(
-      base_type::m_byte_allocator.allocate(num_threads * sizeof(index_type)));
+    index_type *d_p_count_per_thread = reinterpret_cast<index_type *>(
+        base_type::m_byte_allocator.allocate(num_threads * sizeof(index_type)));
 
-  // Initialize count per thread
-  detail::count_kernel<coordinate_type, size_type, index_type, map_type>
-      <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
-          *m_map,                                                     //
-          *out_map.m_map,                                             //
-          thrust::raw_pointer_cast(out_map.m_valid_map_index.data()), //
-          num_threads,                                                //
-          kernel,                                                     //
-          d_p_count_per_thread);
-  CUDA_CHECK(cudaStreamSynchronize(0));
-  LOG_DEBUG("count_kernel finished");
+    // Initialize count per thread
+    detail::count_kernel<coordinate_type, size_type, index_type, map_type>
+        <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
+            *m_map,                                                     //
+            *out_map.m_map,                                             //
+            thrust::raw_pointer_cast(out_map.m_valid_map_index.data()), //
+            num_threads,                                                //
+            kernel,                                                     //
+            d_p_count_per_thread);
+    CUDA_CHECK(cudaStreamSynchronize(0));
+    LOG_DEBUG("count_kernel finished");
 
-  thrust::inclusive_scan(thrust::device, d_p_count_per_thread,
-                         d_p_count_per_thread + num_threads,
-                         d_p_count_per_thread);
+    thrust::inclusive_scan(thrust::device, d_p_count_per_thread,
+                           d_p_count_per_thread + num_threads,
+                           d_p_count_per_thread);
 
-  index_type num_kernel_map; // type following the kernel map allocator
-  CUDA_CHECK(cudaMemcpy(&num_kernel_map, d_p_count_per_thread + num_threads - 1,
-                        sizeof(index_type), cudaMemcpyDeviceToHost));
+    index_type num_kernel_map; // type following the kernel map allocator
+    CUDA_CHECK(cudaMemcpy(&num_kernel_map,
+                          d_p_count_per_thread + num_threads - 1,
+                          sizeof(index_type), cudaMemcpyDeviceToHost));
 
-  // set kernel map
-  LOG_DEBUG("Found", num_kernel_map, "kernel map elements.");
+    // set kernel map
+    LOG_DEBUG("Found", num_kernel_map, "kernel map elements.");
 
-  kernel_map_type kernel_map(num_kernel_map, base_type::m_byte_allocator);
-  CUDA_CHECK(cudaStreamSynchronize(0));
-  LOG_DEBUG("Allocated kernel_map.");
+    kernel_map_type kernel_map(num_kernel_map, base_type::m_byte_allocator);
+    CUDA_CHECK(cudaStreamSynchronize(0));
+    LOG_DEBUG("Allocated kernel_map.");
 
-  detail::preallocated_kernel_map_iteration<coordinate_type, size_type,
-                                            index_type, map_type>
-      <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
-          *m_map,                                                     //
-          *out_map.m_map,                                             //
-          thrust::raw_pointer_cast(out_map.m_valid_map_index.data()), //
-          num_threads,                                                //
-          kernel,                                                     //
-          d_p_count_per_thread,                                       //
-          kernel_map.kernels.begin(),                                 //
-          kernel_map.in_maps.begin(),                                 //
-          kernel_map.out_maps.begin());
+    detail::preallocated_kernel_map_iteration<coordinate_type, size_type,
+                                              index_type, map_type>
+        <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
+            *m_map,                                                     //
+            *out_map.m_map,                                             //
+            thrust::raw_pointer_cast(out_map.m_valid_map_index.data()), //
+            num_threads,                                                //
+            kernel,                                                     //
+            d_p_count_per_thread,                                       //
+            kernel_map.kernels.begin(),                                 //
+            kernel_map.in_maps.begin(),                                 //
+            kernel_map.out_maps.begin());
 
-  CUDA_CHECK(cudaStreamSynchronize(0));
-  LOG_DEBUG("Preallocated kernel map done");
+    CUDA_CHECK(cudaStreamSynchronize(0));
+    LOG_DEBUG("Preallocated kernel map done");
 
-  kernel_map.decompose();
-  base_type::m_byte_allocator.deallocate(
-      reinterpret_cast<char *>(d_p_count_per_thread),
-      num_threads * sizeof(index_type));
-  LOG_DEBUG("cudaFree");
+    kernel_map.decompose();
+    base_type::m_byte_allocator.deallocate(
+        reinterpret_cast<char *>(d_p_count_per_thread),
+        num_threads * sizeof(index_type));
+    LOG_DEBUG("cudaFree");
 
-  return kernel_map;
+    return kernel_map;
+  } else { // kernel volume == 1
+    ASSERT(kernel_volume == 1, "Invalid kernel volume:", kernel_volume);
+    // directly iterate over all output first by finding all in out map.
+    auto const N = out_map.size();
+
+    index_type *in_out_map = (index_type *)base_type::m_byte_allocator.allocate(
+        2 * N * sizeof(index_type));
+
+    index_type unused_key = std::numeric_limits<index_type>::max();
+    detail::direct_in_out_map<coordinate_type, size_type, index_type, map_type>
+        <<<GET_BLOCKS(N, thread_dim), thread_dim>>>(
+            N, *m_map,                                                  //
+            *(out_map.m_map),                                           //
+            thrust::raw_pointer_cast(out_map.m_valid_map_index.data()), //
+            in_out_map,     // in map
+            in_out_map + N, // out map
+            unused_key);
+
+    auto begin = thrust::make_zip_iterator(
+        thrust::make_tuple(in_out_map, in_out_map + N));
+    auto const valid_size =
+        thrust::remove_if(begin,
+                          thrust::make_zip_iterator(thrust::make_tuple(
+                              in_out_map + N, in_out_map + 2 * N)),
+                          detail::is_first<index_type>(unused_key)) -
+        begin;
+
+    kernel_map_type kernel_map(valid_size, base_type::m_byte_allocator, false);
+    CUDA_CHECK(cudaMemcpy(kernel_map.in_maps.data(), in_out_map,
+                          valid_size * sizeof(index_type),
+                          cudaMemcpyDeviceToDevice));
+    CUDA_CHECK(cudaMemcpy(kernel_map.out_maps.data(), in_out_map + N,
+                          valid_size * sizeof(index_type),
+                          cudaMemcpyDeviceToDevice));
+
+    base_type::m_byte_allocator.deallocate((char *)in_out_map,
+                                           2 * N * sizeof(index_type));
+    return kernel_map;
+  }
 }
 
 namespace detail {

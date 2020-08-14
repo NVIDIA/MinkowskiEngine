@@ -268,7 +268,7 @@ class SparseTensor:
             coordinates = coordinates.to(device)
 
         # Coordinate Management
-        self.D = 0  # coordinate size - 1
+        self._D = 0  # coordinate size - 1
         if coordinates is None and (
             coordinate_map_key is None or coordinate_manager is None
         ):
@@ -286,14 +286,14 @@ class SparseTensor:
             assert (
                 features.shape[0] == coordinates.shape[0]
             ), "The number of rows in features and coordinates must match."
-            self.D = coordinates.size(1) - 1
+            self._D = coordinates.size(1) - 1
 
             coordinate_map_key = CoordinateMapKey(
-                convert_to_int_list(tensor_stride, self.D), ""
+                convert_to_int_list(tensor_stride, self._D), ""
             )
         else:
             # not (coordinate_map_key is None or coordinate_manager is None)
-            self.D = coordinate_manager.D
+            self._D = coordinate_manager.D
 
         ##########################
         # Setup CoordsManager
@@ -307,7 +307,7 @@ class SparseTensor:
             ):
                 if _global_coordinate_manager is None:
                     _global_coordinate_manager = CoordinateManager(
-                        D=self.D,
+                        D=self._D,
                         coordinate_map_type=CoordinateMapType.CUDA
                         if coordinates.is_cuda
                         else CoordinateMapType.CPU,
@@ -393,7 +393,7 @@ class SparseTensor:
         r"""
         This function is not recommended to be used directly.
         """
-        p = convert_to_int_list(p, self.D)
+        p = convert_to_int_list(p, self._D)
         self.coordinate_map_key.set_tensor_stride(p)
 
     def _get_coordinates(self):
@@ -515,7 +515,21 @@ class SparseTensor:
     def dimension(self):
         r"""Alias of attr:`D`
         """
-        return self.D
+        return self._D
+
+    @dimension.setter
+    def dimension(self):
+        raise SyntaxError("Direct modification not permitted")
+
+    @property
+    def D(self):
+        r"""Alias of attr:`D`
+        """
+        return self._D
+
+    @D.setter
+    def D(self):
+        raise SyntaxError("Direct modification not permitted")
 
     @property
     def requires_grad(self):
@@ -531,7 +545,7 @@ class SparseTensor:
         self._F = self._F.double()
 
     def set_tensor_stride(self, s):
-        ss = convert_to_int_list(s, self.D)
+        ss = convert_to_int_list(s, self._D)
         self.coordinate_map_key.set_tensor_stride(ss)
 
     def __repr__(self):
@@ -551,7 +565,7 @@ class SparseTensor:
             + "  coordinate_manager="
             + str(self._manager)
             + "  spatial dimension="
-            + str(self.D)
+            + str(self._D)
             + ")"
         )
 
@@ -719,10 +733,10 @@ class SparseTensor:
 
         if min_coords is not None:
             assert isinstance(min_coords, torch.IntTensor)
-            assert min_coords.numel() == self.D
+            assert min_coords.numel() == self._D
         if max_coords is not None:
             assert isinstance(max_coords, torch.IntTensor)
-            assert min_coords.numel() == self.D
+            assert min_coords.numel() == self._D
 
         def torch_sparse_Tensor(coords, feats, size=None):
             if size is None:
@@ -832,10 +846,10 @@ class SparseTensor:
         """
         if min_coords is not None:
             assert isinstance(min_coords, torch.IntTensor)
-            assert min_coords.numel() == self.D
+            assert min_coords.numel() == self._D
         if max_coords is not None:
             assert isinstance(max_coords, torch.IntTensor)
-            assert min_coords.numel() == self.D
+            assert min_coords.numel() == self._D
 
         # Use int tensor for all operations
         tensor_stride = torch.IntTensor(self.tensor_stride)
@@ -931,6 +945,9 @@ class SparseTensor:
             SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
         ], "slice only available for sparse tensors with quantization RANDOM_SUBSAMPLE or UNWEIGHTED_AVERAGE"
+        assert (
+            X.coordinate_map_key == self.coordinate_map_key
+        ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
         return self.F[X.inverse_mapping]
 
     def features_at_coords(self, query_coords: torch.Tensor):
@@ -966,6 +983,18 @@ class SparseTensor:
         if len(self_indices[0]) > 0:
             query_feats[query_indices[0]] = self._F[self_indices[0]]
         return query_feats, query_indices[0]
+
+    __slots__ = (
+        "_C",
+        "_F",
+        "_D",
+        "coordinate_map_key",
+        "_manager",
+        "unique_index",
+        "inverse_mapping",
+        "quantization_mode",
+        "_batch_rows",
+    )
 
 
 def _get_coordinate_map_key(

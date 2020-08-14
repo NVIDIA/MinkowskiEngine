@@ -154,6 +154,7 @@ public:
   self_type stride_region(cpu_kernel_region<coordinate_type> &kernel,
                           stride_type const &out_tensor_stride) const;
   self_type origin() const;
+  self_type prune(bool const *keep_begin, bool const *keep_end) const;
 
   kernel_map_type kernel_map(self_type const &out_coordinate_map,
                              gpu_kernel_region<coordinate_type> const &kernel,

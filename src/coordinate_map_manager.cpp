@@ -358,6 +358,34 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator,
   return std::make_pair(origin_map_key, !exists_origin_map);
 }
 
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+coordinate_map_key_type
+CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
+    prune(coordinate_map_key_type const &in_key, bool const *keep_begin,
+          bool const *keep_end) {
+
+  ASSERT(exists(in_key), "In map doesn't exist");
+
+  // create a coordinate_map_key
+  coordinate_map_key_type map_key = std::make_pair(in_key.first, "");
+  if (m_coordinate_maps.find(map_key) != m_coordinate_maps.end()) {
+    map_key = get_random_string_id(map_key.first, "");
+  }
+
+  // auto const map_it = m_coordinate_maps.find(in_key);
+  // ASSERT(map_it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
+
+  // map_type pruned_map = map_it->second.prune(keep_begin, keep_end);
+  // LOG_DEBUG("pruned map with size:", pruned_map.size(), " inserted");
+  // insert(map_key, pruned_map);
+
+  // (key, new map generated flag)
+  return map_key;
+}
+
 // Kernel map
 
 namespace detail {
@@ -396,6 +424,30 @@ template <> struct swap_in_out_map_functor<cpu_kernel_map> {
 };
 
 } // namespace detail
+
+/*
+ * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps
+ * and return the indices of the coord_map_ind in coord_map_dst
+ */
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+typename CoordinateMapManager<coordinate_type, TemplatedAllocator,
+                              CoordinateMapType>::kernel_map_type const &
+CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
+    kernel_map(CoordinateMapKey const *p_in_map_key,
+               CoordinateMapKey const *p_out_map_key) {
+  // when kernel has volume 1
+  auto const &map_it = m_coordinate_maps.find(p_in_map_key->get_key());
+  ASSERT(map_it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
+  auto const coordinate_size = map_it->second.coordinate_size();
+  auto const one_vec = detail::ones(coordinate_size - 1);
+  auto const offset = at::Tensor();
+
+  return kernel_map(p_in_map_key, p_out_map_key, one_vec, one_vec, one_vec,
+                    RegionType::HYPER_CUBE, offset, false, false);
+}
 
 /*
  * Given tensor_stride_src and tensor_stride_dst, find the respective coord_maps

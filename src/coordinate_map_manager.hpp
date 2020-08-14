@@ -71,6 +71,17 @@ template <typename T1, typename T2> void copy_types(const T1 &src, T2 &dst) {
     dst[curr_it++] = s;
 }
 
+template <default_types::index_type V>
+default_types::stride_type _fill_vec(size_t const len) {
+  default_types::stride_type vec(len);
+  std::for_each(vec.begin(), vec.end(), [](auto &i) { i = V; });
+  return vec;
+}
+
+default_types::stride_type zeros(size_t const len) { return _fill_vec<0>(len); }
+
+default_types::stride_type ones(size_t const len) { return _fill_vec<1>(len); }
+
 } // namespace detail
 
 /*
@@ -201,6 +212,10 @@ public:
   // origin coordinate map creation
   std::pair<coordinate_map_key_type, bool> origin();
 
+  // pruning
+  coordinate_map_key_type prune(coordinate_map_key_type const &in_key,
+                                bool const *keep_begin, bool const *keep_end);
+
   // python-side stride function
   py::object py_origin() {
     auto map_key_bool = origin();
@@ -298,9 +313,7 @@ public:
     return o.str();
   }
 
-  MinkowskiAlgorithm::Mode algorithm() const {
-    return m_algorithm;
-  }
+  MinkowskiAlgorithm::Mode algorithm() const { return m_algorithm; }
 
   /****************************************************************************
    * Kernel map related functions
@@ -317,8 +330,11 @@ public:
              RegionType::Type const region_type,        //
              at::Tensor const &offsets, bool is_transpose, bool is_pool);
 
-  kernel_map_type const &
-  origin_map(CoordinateMapKey const *py_out_coords_key);
+  // for kernel size 0
+  kernel_map_type const &kernel_map(CoordinateMapKey const *py_in_coords_key,
+                                    CoordinateMapKey const *py_out_coords_key);
+
+  kernel_map_type const &origin_map(CoordinateMapKey const *py_out_coords_key);
 
   std::pair<at::Tensor, std::vector<at::Tensor>>
   origin_map_th(CoordinateMapKey const *py_out_coords_key);
