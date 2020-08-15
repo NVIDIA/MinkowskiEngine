@@ -76,7 +76,7 @@ from MinkowskiSparseTensor import (
     clear_global_coordinate_mananager,
 )
 
-from MinkowskiTensorField import TensorField, MinkowskiToSparseTensor
+from MinkowskiTensorField import TensorField
 
 from MinkowskiCommon import (
     convert_to_int_tensor,
@@ -150,7 +150,14 @@ from MinkowskiNetwork import MinkowskiNetwork
 
 import MinkowskiOps
 
-from MinkowskiOps import MinkowskiLinear, cat
+from MinkowskiOps import (
+    MinkowskiLinear,
+    MinkowskiToSparseTensor,
+    MinkowskiToDenseTensor,
+    cat,
+    to_sparse,
+    dense_coordinates,
+)
 
 import MinkowskiFunctional
 

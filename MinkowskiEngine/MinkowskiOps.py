@@ -22,6 +22,7 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 from typing import Union
+import numpy as np
 
 import torch
 from torch.nn.modules import Module
@@ -31,6 +32,7 @@ from MinkowskiSparseTensor import (
     COORDINATE_KEY_DIFFERENT_ERROR,
 )
 from MinkowskiTensorField import TensorField
+from MinkowskiCommon import MinkowskiModuleBase
 
 
 class MinkowskiLinear(Module):
@@ -103,3 +105,166 @@ def cat(*sparse_tensors):
         coordinate_map_key=coordinate_map_key,
         coordinate_manager=coordinate_manager,
     )
+
+
+def dense_coordinates(shape: Union[list, torch.Size]):
+    """
+    coordinates = dense_coordinates(tensor.shape)
+    """
+    r"""
+    Assume the input to have BxCxD1xD2x....xDN format.
+
+    If the shape of the tensor do not change, use 
+    """
+    spatial_dim = len(shape) - 2
+    assert (
+        spatial_dim > 0
+    ), "Invalid shape. Shape must be batch x channel x spatial dimensions."
+
+    # Generate coordinates
+    size = [i for i in shape]
+    B = size[0]
+    coordinates = torch.from_numpy(
+        np.stack(
+            [
+                s.reshape(-1)
+                for s in np.meshgrid(
+                    np.linspace(0, B - 1, B),
+                    *(np.linspace(0, s - 1, s) for s in size[2:]),
+                    indexing="ij"
+                )
+            ],
+            1,
+        )
+    ).int()
+    return coordinates
+
+
+def to_sparse(dense_tensor: torch.Tensor, coordinates: torch.Tensor = None):
+    r"""Converts a (differentiable) dense tensor to a sparse tensor.
+
+    Assume the input to have BxCxD1xD2x....xDN format.
+
+    If the shape of the tensor do not change, use `dense_coordinates` to cache the coordinates.
+    Please refer to tests/python/dense.py for usage
+
+    Example::
+
+       >>> dense_tensor = torch.rand(3, 4, 5, 6, 7, 8)  # BxCxD1xD2xD3xD4
+       >>> dense_tensor.requires_grad = True
+       >>> stensor = to_sparse(dense_tensor)
+
+    """
+    spatial_dim = dense_tensor.ndim - 2
+    assert (
+        spatial_dim > 0
+    ), "Invalid shape. Shape must be batch x channel x spatial dimensions."
+
+    if coordinates is None:
+        coordinates = dense_coordinates(dense_tensor.shape)
+
+    feat_tensor = dense_tensor.permute(0, *(2 + i for i in range(spatial_dim)), 1)
+    return SparseTensor(
+        feat_tensor.reshape(-1, dense_tensor.size(1)),
+        coordinates,
+        device=dense_tensor.dtype,
+    )
+
+
+class MinkowskiToSparseTensor(MinkowskiModuleBase):
+    r"""Converts a (differentiable) dense tensor or a :attr:`MinkowskiEngine.TensorField` to a :attr:`MinkowskiEngine.SparseTensor`.
+
+    For dense tensor, the input must have the BxCxD1xD2x....xDN format.
+
+    If the shape of the tensor do not change, use `dense_coordinates` to cache the coordinates.
+    Please refer to tests/python/dense.py for usage.
+
+    Example::
+
+       >>> # Differentiable dense torch.Tensor to sparse tensor.
+       >>> dense_tensor = torch.rand(3, 4, 11, 11, 11, 11)  # BxCxD1xD2x....xDN
+       >>> dense_tensor.requires_grad = True
+
+       >>> # Since the shape is fixed, cache the coordinates for faster inference
+       >>> coordinates = dense_coordinates(dense_tensor.shape)
+
+       >>> network = nn.Sequential(
+       >>>     # Add layers that can be applied on a regular pytorch tensor
+       >>>     nn.ReLU(),
+       >>>     MinkowskiToSparseTensor(coordinates=coordinates),
+       >>>     MinkowskiConvolution(4, 5, kernel_size=3, dimension=4),
+       >>>     MinkowskiBatchNorm(5),
+       >>>     MinkowskiReLU(),
+       >>> )
+
+       >>> for i in range(5):
+       >>>   print(f"Iteration: {i}")
+       >>>   soutput = network(dense_tensor)
+       >>>   soutput.F.sum().backward()
+       >>>   soutput.dense(shape=dense_tensor.shape)
+
+    """
+
+    def __init__(self, coordinates: torch.Tensor = None):
+        MinkowskiModuleBase.__init__(self)
+        self.coordinates = coordinates
+
+    def forward(self, input: Union[TensorField, torch.Tensor]):
+        if isinstance(input, TensorField):
+            return input.sparse()
+        elif isinstance(input, torch.Tensor):
+            # dense tensor to sparse tensor conversion
+            return to_sparse(input, self.coordinates)
+        else:
+            raise ValueError(
+                "Unsupported type. Only TensorField and torch.Tensor are supported"
+            )
+
+    def __repr__(self):
+        return self.__class__.__name__ + "()"
+
+
+class MinkowskiToDenseTensor(MinkowskiModuleBase):
+    r"""Converts a (differentiable) sparse tensor to a torch tensor.
+
+    The return type has the BxCxD1xD2x....xDN format.
+
+    Example::
+
+       >>> dense_tensor = torch.rand(3, 4, 11, 11, 11, 11)  # BxCxD1xD2x....xDN
+       >>> dense_tensor.requires_grad = True
+
+       >>> # Since the shape is fixed, cache the coordinates for faster inference
+       >>> coordinates = dense_coordinates(dense_tensor.shape)
+
+       >>> network = nn.Sequential(
+       >>>     # Add layers that can be applied on a regular pytorch tensor
+       >>>     nn.ReLU(),
+       >>>     MinkowskiToSparseTensor(coordinates=coordinates),
+       >>>     MinkowskiConvolution(4, 5, stride=2, kernel_size=3, dimension=4),
+       >>>     MinkowskiBatchNorm(5),
+       >>>     MinkowskiReLU(),
+       >>>     MinkowskiConvolutionTranspose(5, 6, stride=2, kernel_size=3, dimension=4),
+       >>>     MinkowskiToDenseTensor(
+       >>>         dense_tensor.shape
+       >>>     ),  # must have the same tensor stride.
+       >>> )
+
+       >>> for i in range(5):
+       >>>     print(f"Iteration: {i}")
+       >>>     output = network(dense_tensor) # returns a regular pytorch tensor
+       >>>     output.sum().backward()
+
+    """
+
+    def __init__(self, shape: torch.Size = None):
+        MinkowskiModuleBase.__init__(self)
+        self.shape = shape
+
+    def forward(self, input: SparseTensor):
+        # dense tensor to sparse tensor conversion
+        dense_tensor, _, _ = input.dense(shape=self.shape)
+        return dense_tensor
+
+    def __repr__(self):
+        return self.__class__.__name__ + "()"

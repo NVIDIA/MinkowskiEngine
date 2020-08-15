@@ -45,3 +45,24 @@ cat
 ___
 
 .. autofunction:: MinkowskiEngine.cat
+
+
+to_sparse
+---------
+
+.. autofunction:: MinkowskiEngine.to_sparse
+
+MinkowskiToSparseTensor
+-----------------------
+
+.. autoclass:: MinkowskiEngine.MinkowskiToSparseTensor
+
+    .. automethod:: __init__
+
+
+MinkowskiToDenseTensor
+-----------------------
+
+.. autoclass:: MinkowskiEngine.MinkowskiToDenseTensor
+
+    .. automethod:: __init__
