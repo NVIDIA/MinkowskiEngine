@@ -23,13 +23,25 @@
 # of the code.
 import unittest
 import torch
+import torch.nn as nn
 
 import MinkowskiEngine as ME
-from MinkowskiEngine import SparseTensor, MinkowskiConvolution
+from MinkowskiEngine import (
+    SparseTensor,
+    MinkowskiConvolution,
+    MinkowskiConvolutionTranspose,
+    MinkowskiBatchNorm,
+    MinkowskiReLU,
+)
+from MinkowskiOps import (
+    MinkowskiToSparseTensor,
+    to_sparse,
+    dense_coordinates,
+    MinkowskiToDenseTensor,
+)
 
 
 class TestDense(unittest.TestCase):
-
     def test(self):
         print(f"{self.__class__.__name__}: test_dense")
         in_channels, out_channels, D = 2, 3, 2
@@ -39,7 +51,7 @@ class TestDense(unittest.TestCase):
         coords2 = torch.IntTensor([[1, 1], [1, 2], [2, 1]])
         feats2 = torch.DoubleTensor([[7, 8], [9, 10], [11, 12]])
         coords, feats = ME.utils.sparse_collate([coords1, coords2], [feats1, feats2])
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coords)
         input.requires_grad_()
         dinput, min_coord, tensor_stride = input.dense()
         self.assertTrue(dinput[0, 0, 0, 1] == 3)
@@ -54,12 +66,8 @@ class TestDense(unittest.TestCase):
 
         # Initialize context
         conv = MinkowskiConvolution(
-            in_channels,
-            out_channels,
-            kernel_size=3,
-            stride=2,
-            has_bias=True,
-            dimension=D)
+            in_channels, out_channels, kernel_size=3, stride=2, bias=True, dimension=D,
+        )
         conv = conv.double()
         output = conv(input)
         print(input.C, output.C)
@@ -72,8 +80,8 @@ class TestDense(unittest.TestCase):
         print(tensor_stride)
 
         dense_output, min_coord, tensor_stride = output.dense(
-            min_coords=torch.IntTensor([-2, -2]),
-            max_coords=torch.IntTensor([4, 4]))
+            min_coordinate=torch.IntTensor([-2, -2])
+        )
 
         print(dense_output)
         print(min_coord)
@@ -87,5 +95,36 @@ class TestDense(unittest.TestCase):
         print(feats.grad)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestDenseToSparse(unittest.TestCase):
+    def test(self):
+        dense_tensor = torch.rand(3, 4, 5, 6)
+        sparse_tensor = to_sparse(dense_tensor)
+        self.assertEqual(len(sparse_tensor), 3 * 5 * 6)
+        self.assertEqual(sparse_tensor.F.size(1), 4)
+
+    def test_network(self):
+        dense_tensor = torch.rand(3, 4, 11, 11, 11, 11)  # BxCxD1xD2x....xDN
+        dense_tensor.requires_grad = True
+
+        # Since the shape is fixed, cache the coordinates for faster inference
+        coordinates = dense_coordinates(dense_tensor.shape)
+
+        network = nn.Sequential(
+            # Add layers that can be applied on a regular pytorch tensor
+            nn.ReLU(),
+            MinkowskiToSparseTensor(coordinates=coordinates),
+            MinkowskiConvolution(4, 5, stride=2, kernel_size=3, dimension=4),
+            MinkowskiBatchNorm(5),
+            MinkowskiReLU(),
+            MinkowskiConvolutionTranspose(5, 6, stride=2, kernel_size=3, dimension=4),
+            MinkowskiToDenseTensor(
+                dense_tensor.shape
+            ),  # must have the same tensor stride.
+        )
+
+        for i in range(5):
+            print(f"Iteration: {i}")
+            output = network(dense_tensor)
+            output.sum().backward()
+
+        assert dense_tensor.grad is not None

@@ -106,11 +106,3 @@ class TensorField(SparseTensor):
             coordinate_map_key=self.coordinate_map_key,
             coordinate_manager=self.coordinate_manager,
         )
-
-
-class MinkowskiToSparseTensor(MinkowskiModuleBase):
-    def forward(self, input: TensorField):
-        return input.sparse()
-
-    def __repr__(self):
-        return self.__class__.__name__ + "()"
