@@ -186,6 +186,9 @@ class CoordinateManager:
     def origin(self):
         return self._manager.origin()
 
+    def size(self, coordinate_map_key: CoordinateMapKey):
+        return self._manager.size(coordinate_map_key)
+
     # def transposed_stride(
     #     self,
     #     coords_key: CoordsKey,

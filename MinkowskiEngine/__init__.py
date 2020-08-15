@@ -76,6 +76,8 @@ from MinkowskiSparseTensor import (
     clear_global_coordinate_mananager,
 )
 
+from MinkowskiTensorField import TensorField, MinkowskiToSparseTensor
+
 from MinkowskiCommon import (
     convert_to_int_tensor,
     MinkowskiModuleBase,

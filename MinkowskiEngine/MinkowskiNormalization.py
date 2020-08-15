@@ -27,6 +27,7 @@ from torch.nn import Module
 from torch.autograd import Function
 
 from MinkowskiSparseTensor import SparseTensor
+from MinkowskiTensorField import TensorField
 
 # from MinkowskiPooling import MinkowskiGlobalPooling
 # from MinkowskiBroadcast import (
@@ -35,7 +36,7 @@ from MinkowskiSparseTensor import SparseTensor
 #     OperationType,
 #     operation_type_to_int,
 # )
-from MinkowskiEngineBackend._C import CoordinateMapKey
+# from MinkowskiEngineBackend._C import CoordinateMapKey
 
 from MinkowskiCommon import get_minkowski_function, GlobalPoolingMode
 
@@ -65,11 +66,20 @@ class MinkowskiBatchNorm(Module):
 
     def forward(self, input):
         output = self.bn(input.F)
-        return SparseTensor(
-            output,
-            coordinate_map_key=input.coordinate_map_key,
-            coordinate_manager=input.coordinate_manager,
-        )
+        if isinstance(input, TensorField):
+            return input.__class__(
+                output,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+                inverse_mapping=input.inverse_mapping,
+                quantization_mode=input.quantization_mode,
+            )
+        else:
+            return input.__class__(
+                output,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+            )
 
     def __repr__(self):
         s = "({}, eps={}, momentum={}, affine={}, track_running_stats={})".format(

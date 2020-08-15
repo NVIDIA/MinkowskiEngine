@@ -53,5 +53,13 @@ def spmm(
                 )
     else:
         COO = torch.stack((rows, cols), 0,)
-        sp = torch.sparse.Tensor(COO, vals, size)
+        torchSparseTensor = None
+        if vals.dtype == torch.float64:
+            torchSparseTensor = torch.sparse.DoubleTensor
+        elif vals.dtype == torch.float32:
+            torchSparseTensor = torch.sparse.FloatTensor
+        else:
+            raise ValueError("Unsupported data type")
+
+        sp = torchSparseTensor(COO, vals, size)
         return sp.matmul(mat)

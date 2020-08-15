@@ -22,64 +22,75 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import torch
-from torch.nn import Module
 
+from MinkowskiCommon import MinkowskiModuleBase
 from MinkowskiSparseTensor import SparseTensor
+from MinkowskiTensorField import TensorField
 
 
-class MinkowskiModuleBase(Module):
+class MinkowskiNonlinearityBase(MinkowskiModuleBase):
     MODULE = None
 
     def __init__(self, *args, **kwargs):
-        super(MinkowskiModuleBase, self).__init__()
+        super(MinkowskiNonlinearityBase, self).__init__()
         self.module = self.MODULE(*args, **kwargs)
 
     def forward(self, input):
         output = self.module(input.F)
-        return SparseTensor(
-            output,
-            coordinate_map_key=input.coordinate_map_key,
-            coordinate_manager=input.coordinate_manager)
+        if isinstance(input, TensorField):
+            return input.__class__(
+                output,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+                inverse_mapping=input.inverse_mapping,
+                quantization_mode=input.quantization_mode,
+            )
+        else:
+            return input.__class__(
+                output,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+            )
 
     def __repr__(self):
-        return self.__class__.__name__ + '()'
+        return self.__class__.__name__ + "()"
 
 
-class MinkowskiReLU(MinkowskiModuleBase):
+class MinkowskiReLU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.ReLU
 
 
-class MinkowskiPReLU(MinkowskiModuleBase):
+class MinkowskiPReLU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.PReLU
 
 
-class MinkowskiELU(MinkowskiModuleBase):
+class MinkowskiELU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.ELU
 
 
-class MinkowskiSELU(MinkowskiModuleBase):
+class MinkowskiSELU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.SELU
 
 
-class MinkowskiCELU(MinkowskiModuleBase):
+class MinkowskiCELU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.CELU
 
 
-class MinkowskiDropout(MinkowskiModuleBase):
+class MinkowskiDropout(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Dropout
 
 
-class MinkowskiThreshold(MinkowskiModuleBase):
+class MinkowskiThreshold(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Threshold
 
 
-class MinkowskiSigmoid(MinkowskiModuleBase):
+class MinkowskiSigmoid(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Sigmoid
 
 
-class MinkowskiTanh(MinkowskiModuleBase):
+class MinkowskiTanh(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Tanh
 
 
-class MinkowskiSoftmax(MinkowskiModuleBase):
+class MinkowskiSoftmax(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Softmax
