@@ -61,9 +61,15 @@ logging.basicConfig(
 )
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--voxel_size", type=float, default=0.025)
+parser.add_argument("--voxel_size", type=float, default=0.02)
 parser.add_argument("--max_iter", type=int, default=120000)
 parser.add_argument("--val_freq", type=int, default=1000)
+parser.add_argument(
+    "--sample_density",
+    type=int,
+    default=2000,
+    help="use higher number for small voxel size",
+)
 parser.add_argument("--batch_size", default=256, type=int)
 parser.add_argument("--lr", default=1e-2, type=float)
 parser.add_argument("--momentum", type=float, default=0.9)
@@ -215,7 +221,7 @@ class RandomRotation:
     def _M(self, axis, theta):
         return expm(np.cross(np.eye(3), axis / norm(axis) * theta))
 
-    def __call__(self, coords, feats):
+    def __call__(self, coords, feats=None):
         if self.axis is not None:
             axis = self.axis
         else:
@@ -234,19 +240,19 @@ class RandomScale:
         self.scale = max - min
         self.bias = min
 
-    def __call__(self, coords, feats):
+    def __call__(self, coords, feats=None):
         s = self.scale * np.random.rand(1) + self.bias
         return coords * s, feats
 
 
 class RandomShear:
-    def __call__(self, coords, feats):
+    def __call__(self, coords, feats=None):
         T = np.eye(3) + 0.1 * np.random.randn(3, 3)
         return coords @ T, feats
 
 
 class RandomTranslation:
-    def __call__(self, coords, feats):
+    def __call__(self, coords, feats=None):
         trans = 0.05 * np.random.randn(1, 3)
         return coords + trans, feats
 
@@ -318,7 +324,7 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
         logging.info(
             f"Loading the subset {phase} from {self.root} with {len(self.files)} files"
         )
-        self.density = 4000
+        self.density = config.sample_density
 
         # Ignore warnings in obj loader
         o3d.utility.set_verbosity_level(o3d.utility.VerbosityLevel.Error)
@@ -346,6 +352,13 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
 
             # Oversample points and copy
             xyz = resample_mesh(pcd, density=self.density)
+            for i in range(1, 3):
+                if len(np.unique(np.floor(xyz / self.voxel_size), axis=0)) < 1000:
+                    logging.info(
+                        f"Resampling attempt # {i} with density {self.density * 2 ** i}"
+                    )
+                    xyz = resample_mesh(pcd, density=self.density * 2 ** i)
+
             self.cache[idx] = xyz
             cache_percent = int((len(self.cache) / len(self)) * 100)
             if (
@@ -358,22 +371,21 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
                 )
                 self.last_cache_percent = cache_percent
 
-        # Use color or other features if available
-        feats = np.ones((len(xyz), 1))
-
         if len(xyz) < 1000:
             logging.info(
-                f"Skipping {mesh_file}: does not have sufficient CAD sampling density after resampling: {len(xyz)}."
+                f"Skipping {mesh_file}: does not have sufficient CAD sampling density after resampling. Length: {len(xyz)}."
             )
             return None
 
         if self.transform:
-            xyz, feats = self.transform(xyz, feats)
+            xyz, _ = self.transform(xyz, None)
 
         # Get coords
-        coords = np.floor(xyz / self.voxel_size)
+        coords = xyz / self.voxel_size
+        # Use coords or other features if available
+        feats = xyz
 
-        return (coords, xyz, label)
+        return (coords, feats, label)
 
 
 def make_data_loader(
@@ -411,17 +423,14 @@ def test(net, test_iter, config, phase="val"):
     num_correct, tot_num = 0, 0
     for i in range(len(test_iter)):
         data_dict = test_iter.next()
-        sin = ME.SparseTensor(
-            data_dict["coords"][:, :3] * config.voxel_size,
-            data_dict["coords"].int(),
-            device=device,
-        )
+        sin = ME.SparseTensor(data_dict["feats"], data_dict["coords"], device=device)
         sout = net(sin)
         is_correct = data_dict["labels"] == torch.argmax(sout.F, 1).cpu()
         num_correct += is_correct.sum().item()
         tot_num += len(sout)
 
         if i % config.stat_freq == 0:
+            torch.cuda.empty_cache()
             logging.info(
                 f"{phase} set iter: {i} / {len(test_iter)}, Accuracy : {num_correct / tot_num:.3e}"
             )
@@ -478,11 +487,7 @@ def train(net, device, config):
         d = time() - s
 
         optimizer.zero_grad()
-        sin = ME.SparseTensor(
-            data_dict["coords"][:, :3] * config.voxel_size,
-            data_dict["coords"].int(),
-            device=device,
-        )
+        sin = ME.SparseTensor(data_dict["feats"], data_dict["coords"], device=device)
         sout = net(sin)
         loss = crit(sout.F, data_dict["labels"].to(device))
         loss.backward()
@@ -490,6 +495,7 @@ def train(net, device, config):
         t = time() - s
 
         if i % config.stat_freq == 0:
+            torch.cuda.empty_cache()
             logging.info(
                 f"Iter: {i}, Loss: {loss.item():.3e}, Data Loading Time: {d:.3e}, Tot Time: {t:.3e}"
             )

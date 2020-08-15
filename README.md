@@ -222,6 +222,15 @@ page](https://github.com/NVIDIA/MinkowskiEngine/issues).
 
 ## Known Issues
 
+### Too much GPU memory usage or Frequent Out of Memory
+
+MinkowskiEngine is a specialized library that can handle different number of points or different number of non-zero elements at every iteration during training, which is common in point cloud data.
+However, pytorch is implemented assuming that the number of point, or size of the activations do not change at every iteration. Thus, the GPU memory caching used by pytorch can result in unnecessarily large memory consumption.
+
+Specifically, pytorch caches chunks of memory spaces to speed up allocation used in every tensor creation. If it fails to find the memory space, it splits an existing cached memory or allocate new space if there's no cached memory large enough for the requested size. Thus, every time we use different number of point (number of non-zero elements) with pytorch, it either split existing cache or reserve new memory. If the cache is too fragmented and allocated all GPU space, it will raise out of memory error.
+
+To prevent this, you must clear the cache at regular interval with `torch.cuda.empty_cache()`.
+
 ### Running the MinkowskiEngine on nodes with a large number of CPUs
 
 The MinkowskiEngine uses OpenMP to parallelize the kernel map generation. However, when the number of threads used for parallelization is too large (e.g. OMP_NUM_THREADS=80), the efficiency drops rapidly as all threads simply wait for multithread locks to be released.
