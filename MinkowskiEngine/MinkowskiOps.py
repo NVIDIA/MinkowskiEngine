@@ -21,6 +21,8 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+from typing import Union
+
 import torch
 from torch.nn.modules import Module
 from MinkowskiSparseTensor import (
@@ -28,6 +30,7 @@ from MinkowskiSparseTensor import (
     COORDINATE_MANAGER_DIFFERENT_ERROR,
     COORDINATE_KEY_DIFFERENT_ERROR,
 )
+from MinkowskiTensorField import TensorField
 
 
 class MinkowskiLinear(Module):
@@ -35,13 +38,22 @@ class MinkowskiLinear(Module):
         super(MinkowskiLinear, self).__init__()
         self.linear = torch.nn.Linear(in_features, out_features, bias=bias)
 
-    def forward(self, input):
+    def forward(self, input: Union[SparseTensor, TensorField]):
         output = self.linear(input.F)
-        return SparseTensor(
-            output,
-            coordinate_map_key=input.coordinate_map_key,
-            coordinate_manager=input.coordinate_manager,
-        )
+        if isinstance(input, TensorField):
+            return input.__class__(
+                output,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+                inverse_mapping=input.inverse_mapping,
+                quantization_mode=input.quantization_mode,
+            )
+        else:
+            return input.__class__(
+                output,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+            )
 
     def __repr__(self):
         s = "(in_features={}, out_features={}, bias={})".format(

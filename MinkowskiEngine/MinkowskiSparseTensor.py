@@ -35,10 +35,7 @@ from MinkowskiEngineBackend._C import (
     CoordinateMapType,
     CoordinateMapKey,
 )
-from MinkowskiCoordinateManager import (
-    CoordinateManager,
-    _allocator_type,
-)
+from MinkowskiCoordinateManager import CoordinateManager
 from sparse_matrix_functions import spmm as _spmm
 
 
@@ -61,10 +58,12 @@ class SparseTensorQuantizationMode(Enum):
     `RANDOM_SUBSAMPLE`: Subsample one coordinate per each quantization block randomly.
     `UNWEIGHTED_AVERAGE`: average all features within a quantization block equally.
     `UNWEIGHTED_SUM`: sum all features within a quantization block equally.
+    `NO_QUANTIZATION`: No quantization is applied. Should not be used for normal operation.
     """
     RANDOM_SUBSAMPLE = 0
     UNWEIGHTED_AVERAGE = 1
     UNWEIGHTED_SUM = 2
+    NO_QUANTIZATION = 3
 
 
 _sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER
@@ -300,7 +299,7 @@ class SparseTensor:
         ##########################
         if coordinate_manager is None:
             # If set to share the coords man, use the global coords man
-            global _sparse_tensor_operation_mode, _global_coordinate_manager, _allocator_type
+            global _sparse_tensor_operation_mode, _global_coordinate_manager
             if (
                 _sparse_tensor_operation_mode
                 == SparseTensorOperationMode.SHARE_COORDINATE_MANAGER
@@ -361,8 +360,13 @@ class SparseTensor:
                         self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),
                     )
                     features /= nums
-            else:
+            elif (
+                self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE
+            ):
                 features = features[self.unique_index]
+            else:
+                # No quantization
+                pass
 
         elif coordinate_map_key is not None:
             assert (
@@ -540,9 +544,11 @@ class SparseTensor:
 
     def float(self):
         self._F = self._F.float()
+        return self
 
     def double(self):
         self._F = self._F.double()
+        return self
 
     def set_tensor_stride(self, s):
         ss = convert_to_int_list(s, self._D)
@@ -936,9 +942,9 @@ class SparseTensor:
            >>> print(len(sinput))  # 161890 quantization results in fewer voxels
            >>> soutput = network(sinput)
            >>> print(len(soutput))  # 161890 Output with the same resolution
-           >>> outputs = soutput.slice(sinput)
-           >>> assert(outputs, torch.Tensor)  # regular differentiable pytorch tensor
-           >>> len(outputs) == len(coords)  # recovers the original ordering and length
+           >>> output = soutput.slice(sinput)
+           >>> assert(output, torch.Tensor)  # regular differentiable pytorch tensor
+           >>> len(output) == len(coords)  # recovers the original ordering and length
         """
         # Currently only supports unweighted slice.
         assert X.quantization_mode in [
@@ -949,6 +955,43 @@ class SparseTensor:
             X.coordinate_map_key == self.coordinate_map_key
         ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
         return self.F[X.inverse_mapping]
+
+    def cat_slice(self, X, slicing_mode=0):
+        r"""
+
+        Args:
+           :attr:`X` (:attr:`MinkowskiEngine.SparseTensor`): a sparse tensor
+           that discretized the original input.
+
+           :attr:`slicing_mode`: For future updates.
+
+        Returns:
+           :attr:`sliced_feats` (:attr:`torch.Tensor`): the resulting feature
+           matrix that slices features on the discretized coordinates to the
+           original continuous coordinates that generated the input X.
+
+        Example::
+
+           >>> # coords, feats from a data loader
+           >>> print(len(coords))  # 227742
+           >>> sinput = ME.SparseTensor(coords=coords, feats=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+           >>> print(len(sinput))  # 161890 quantization results in fewer voxels
+           >>> soutput = network(sinput)
+           >>> print(len(soutput))  # 161890 Output with the same resolution
+           >>> output = soutput.cat_slice(sinput)
+           >>> assert(output, torch.Tensor)  # regular differentiable pytorch tensor
+           >>> len(output) == len(coords)  # recovers the original ordering and length
+           >>> assert output.F.size(1) + sinput.F.size(1) == outputs.size(1)  # concatenation of features
+        """
+        # Currently only supports unweighted slice.
+        assert X.quantization_mode in [
+            SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
+            SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+        ], "slice only available for sparse tensors with quantization RANDOM_SUBSAMPLE or UNWEIGHTED_AVERAGE"
+        assert (
+            X.coordinate_map_key == self.coordinate_map_key
+        ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
+        return torch.cat((self.F[X.inverse_mapping], X.F), dim=1)
 
     def features_at_coords(self, query_coords: torch.Tensor):
         r"""Extract features at the specified coordinate matrix.
