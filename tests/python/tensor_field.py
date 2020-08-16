@@ -26,9 +26,9 @@ import unittest
 import torch.nn as nn
 
 from MinkowskiEngine.utils import sparse_quantize
-from MinkowskiTensorField import TensorField, MinkowskiToSparseTensor
+from MinkowskiTensorField import TensorField
 from tests.python.common import load_file, batched_coordinates
-from MinkowskiOps import MinkowskiLinear
+from MinkowskiOps import MinkowskiLinear, MinkowskiToSparseTensor
 from MinkowskiNonlinearity import MinkowskiReLU
 from MinkowskiNormalization import MinkowskiBatchNorm
 from MinkowskiConvolution import MinkowskiConvolution, MinkowskiConvolutionTranspose
@@ -120,7 +120,7 @@ class TestTensorField(unittest.TestCase):
         otensor = network(tfield)
         ofield = otensor.slice(tfield)
         self.assertEqual(len(tfield), len(ofield))
-        self.assertEqual(ofield.size(1), otensor.F.size(1))
+        self.assertEqual(ofield.F.size(1), otensor.F.size(1))
         ofield = otensor.cat_slice(tfield)
         self.assertEqual(len(tfield), len(ofield))
-        self.assertEqual(ofield.size(1), (otensor.F.size(1) + tfield.F.size(1)))
+        self.assertEqual(ofield.F.size(1), (otensor.F.size(1) + tfield.F.size(1)))
