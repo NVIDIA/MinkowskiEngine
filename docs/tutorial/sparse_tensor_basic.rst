@@ -64,7 +64,7 @@ You can simply use the sparse tensor initialization for this. For example,
        coords=ME.utils.batched_coordinates([coordinates / voxel_size]),  # coordinates must be defined in a integer grid. If the scale
        quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE  # when used with continuous coordinates, average features in the same coordinate
    )
-   logits = model(sinput).slice(sinput)
+   logits = model(sinput).slice(sinput).F
 
 
 Please refer to `indoor semantic segmentation <https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/indoor.py>`_ for more detail.

@@ -911,9 +911,9 @@ class SparseTensor:
            :attr:`slicing_mode`: For future updates.
 
         Returns:
-           :attr:`sliced_feats` (:attr:`torch.Tensor`): the resulting feature
-           matrix that slices features on the discretized coordinates to the
-           original continuous coordinates that generated the input X.
+           :attr:`tensor_field` (:attr:`MinkowskiEngine.TensorField`): the
+           resulting tensor field contains features on the continuous
+           coordinates that generated the input X.
 
         Example::
 
@@ -923,9 +923,10 @@ class SparseTensor:
            >>> print(len(sinput))  # 161890 quantization results in fewer voxels
            >>> soutput = network(sinput)
            >>> print(len(soutput))  # 161890 Output with the same resolution
-           >>> output = soutput.slice(sinput)
-           >>> assert(output, torch.Tensor)  # regular differentiable pytorch tensor
-           >>> len(output) == len(coords)  # recovers the original ordering and length
+           >>> ofield = soutput.slice(sinput)
+           >>> assert isinstance(ofield, ME.TensorField)
+           >>> len(ofield) == len(coords)  # recovers the original ordering and length
+           >>> assert isinstance(ofield.F, torch.Tensor)  # .F returns the features
         """
         # Currently only supports unweighted slice.
         assert X.quantization_mode in [
@@ -935,7 +936,15 @@ class SparseTensor:
         assert (
             X.coordinate_map_key == self.coordinate_map_key
         ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
-        return self.F[X.inverse_mapping]
+        from MinkowskiTensorField import TensorField
+
+        return TensorField(
+            self.F[X.inverse_mapping],
+            coordinate_map_key=self.coordinate_map_key,
+            coordinate_manager=self.coordinate_manager,
+            inverse_mapping=X.inverse_mapping,
+            quantization_mode=X.quantization_mode,
+        )
 
     def cat_slice(self, X, slicing_mode=0):
         r"""
@@ -947,9 +956,10 @@ class SparseTensor:
            :attr:`slicing_mode`: For future updates.
 
         Returns:
-           :attr:`sliced_feats` (:attr:`torch.Tensor`): the resulting feature
-           matrix that slices features on the discretized coordinates to the
-           original continuous coordinates that generated the input X.
+           :attr:`tensor_field` (:attr:`MinkowskiEngine.TensorField`): the
+           resulting tensor field contains the concatenation of features on the
+           original continuous coordinates that generated the input X and the
+           self.
 
         Example::
 
@@ -959,10 +969,8 @@ class SparseTensor:
            >>> print(len(sinput))  # 161890 quantization results in fewer voxels
            >>> soutput = network(sinput)
            >>> print(len(soutput))  # 161890 Output with the same resolution
-           >>> output = soutput.cat_slice(sinput)
-           >>> assert(output, torch.Tensor)  # regular differentiable pytorch tensor
-           >>> len(output) == len(coords)  # recovers the original ordering and length
-           >>> assert output.F.size(1) + sinput.F.size(1) == outputs.size(1)  # concatenation of features
+           >>> ofield = soutput.cat_slice(sinput)
+           >>> assert soutput.F.size(1) + sinput.F.size(1) == ofield.F.size(1)  # concatenation of features
         """
         # Currently only supports unweighted slice.
         assert X.quantization_mode in [
@@ -972,7 +980,15 @@ class SparseTensor:
         assert (
             X.coordinate_map_key == self.coordinate_map_key
         ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
-        return torch.cat((self.F[X.inverse_mapping], X.F), dim=1)
+        from MinkowskiTensorField import TensorField
+
+        return TensorField(
+            torch.cat((self.F[X.inverse_mapping], X.F), dim=1),
+            coordinate_map_key=self.coordinate_map_key,
+            coordinate_manager=self.coordinate_manager,
+            inverse_mapping=X.inverse_mapping,
+            quantization_mode=X.quantization_mode,
+        )
 
     def features_at_coords(self, query_coords: torch.Tensor):
         r"""Extract features at the specified coordinate matrix.
