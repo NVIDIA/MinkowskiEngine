@@ -36,21 +36,16 @@ def spmm(
 ):
     if mat.is_cuda:
         assert rows.is_cuda and cols.is_cuda and vals.is_cuda
-        if MEB.cuda_version() < 11000:
-            rows = rows.int()
-            cols = cols.int()
-            return MEB.coo_spmm_int32(
-                rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
-            )
-        else:
-            if rows.dtype == torch.int32:
-                return MEB.coo_spmm_int32(
-                    rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
-                )
-            else:
-                return MEB.coo_spmm_int64(
-                    rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
-                )
+        rows = rows.int()
+        cols = cols.int()
+        return MEB.coo_spmm_int32(
+            rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
+        )
+
+        # coosort only supports int32
+        # return MEB.coo_spmm_int64(
+        #     rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
+        # )
     else:
         COO = torch.stack((rows, cols), 0,)
         torchSparseTensor = None

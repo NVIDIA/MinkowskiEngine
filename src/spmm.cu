@@ -25,11 +25,13 @@
  * of the code.
  */
 #include "gpu.cuh"
+#include "math_functions.hpp"
 
 #include <cusparse.h>
 
 #include <ATen/cuda/CUDAContext.h>
 #include <ATen/cuda/CUDAUtils.h>
+#include <c10/cuda/CUDACachingAllocator.h>
 #include <torch/extension.h>
 
 namespace minkowski {
@@ -104,7 +106,9 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
     TORCH_CHECK(false, "Invalid algorithm id.", spmm_algorithm_id);
     mm_alg = CUSPARSE_SPMM_ALG_DEFAULT;
   }
-  TORCH_CHECK(is_int32 || (is_int64 && (mm_alg == CUSPARSE_SPMM_COO_ALG4)));
+  TORCH_CHECK(is_int32, "int64 coosort not implemented");
+  // coosort not supported with int64 || (is_int64 && (mm_alg ==
+  // CUSPARSE_SPMM_COO_ALG4)));
 #endif
 
   at::ScalarType int_scalar_type = std::is_same<th_int_type, int32_t>::value
@@ -146,6 +150,29 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
   torch::Scalar beta = 0;
   torch::Scalar alpha = 1;
 
+  // Create tensors to view just the current set of matrices
+  int64_t const nnz = rows.numel();
+
+  cudaDataType cuda_data_type = getTensorCudaDataType(mat2_contig);
+  th_int_type *row_indices_ptr =
+      reinterpret_cast<th_int_type *>(rows.data_ptr());
+  th_int_type *col_indices_ptr =
+      reinterpret_cast<th_int_type *>(cols.data_ptr());
+
+  th_int_type *sorted_row_ptr =
+      (th_int_type *)c10::cuda::CUDACachingAllocator::raw_alloc(
+          2 * (nnz + 1) * sizeof(th_int_type));
+  th_int_type *sorted_col_ptr = sorted_row_ptr + nnz + 1;
+
+  // Copy the indices
+  CUDA_CHECK(cudaMemcpy(sorted_row_ptr, row_indices_ptr,
+                        nnz * sizeof(th_int_type), cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy(sorted_col_ptr, col_indices_ptr,
+                        nnz * sizeof(th_int_type), cudaMemcpyDeviceToDevice));
+
+  sort_coo_gpu(cusparse_handle, dim_i, dim_j, nnz, sorted_row_ptr,
+               sorted_col_ptr);
+
   size_t workspace_buffer_size = 0;
   void *workspace_buffer = nullptr;
 
@@ -155,23 +182,15 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
     scalar_t alpha_val = alpha.to<scalar_t>();
     scalar_t beta_val = beta.to<scalar_t>();
 
-    // Create tensors to view just the current set of matrices
-    int64_t sparse_nnz = rows.numel();
-
-    cudaDataType cuda_data_type = getTensorCudaDataType(mat2_contig);
-    th_int_type *row_indices_ptr =
-        reinterpret_cast<th_int_type *>(rows.data_ptr());
-    th_int_type *col_indices_ptr =
-        reinterpret_cast<th_int_type *>(cols.data_ptr());
     scalar_t *values_ptr = reinterpret_cast<scalar_t *>(vals.data_ptr());
     scalar_t *mat2_ptr = reinterpret_cast<scalar_t *>(mat2_contig.data_ptr());
     scalar_t *result_ptr = reinterpret_cast<scalar_t *>(result.data_ptr());
 
     cusparseSpMatDescr_t sparse_descr;
-    CUSPARSE_CHECK(cusparseCreateCoo(&sparse_descr,            //
-                                     dim_i, dim_j, sparse_nnz, //
-                                     reinterpret_cast<void *>(row_indices_ptr),
-                                     reinterpret_cast<void *>(col_indices_ptr),
+    CUSPARSE_CHECK(cusparseCreateCoo(&sparse_descr,     //
+                                     dim_i, dim_j, nnz, //
+                                     reinterpret_cast<void *>(sorted_row_ptr),
+                                     reinterpret_cast<void *>(sorted_col_ptr),
                                      reinterpret_cast<void *>(values_ptr), //
                                      std::is_same<th_int_type, int32_t>::value
                                          ? CUSPARSE_INDEX_32I
@@ -224,6 +243,7 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
     cudaFree(workspace_buffer);
   }
 
+  c10::cuda::CUDACachingAllocator::raw_delete((void *)sorted_row_ptr);
   CUDA_CHECK(cudaGetLastError());
 
   return result;
@@ -235,10 +255,10 @@ coo_spmm<int32_t>(torch::Tensor const &rows, torch::Tensor const &cols,
                   int64_t const dim_j, torch::Tensor const &mat2,
                   int64_t spmm_algorithm_id);
 
-template torch::Tensor
-coo_spmm<int64_t>(torch::Tensor const &rows, torch::Tensor const &cols,
-                  torch::Tensor const &vals, int64_t const dim_i,
-                  int64_t const dim_j, torch::Tensor const &mat2,
-                  int64_t spmm_algorithm_id);
+// template torch::Tensor
+// coo_spmm<int64_t>(torch::Tensor const &rows, torch::Tensor const &cols,
+//                   torch::Tensor const &vals, int64_t const dim_i,
+//                   int64_t const dim_j, torch::Tensor const &mat2,
+//                   int64_t spmm_algorithm_id);
 
 } // namespace minkowski
