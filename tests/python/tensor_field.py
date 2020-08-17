@@ -25,9 +25,9 @@ import torch
 import unittest
 import torch.nn as nn
 
-from MinkowskiEngine.utils import sparse_quantize
-from MinkowskiTensorField import TensorField
 from tests.python.common import load_file, batched_coordinates
+
+from MinkowskiTensorField import TensorField
 from MinkowskiOps import MinkowskiLinear, MinkowskiToSparseTensor
 from MinkowskiNonlinearity import MinkowskiReLU
 from MinkowskiNormalization import MinkowskiBatchNorm
@@ -102,8 +102,8 @@ class TestTensorField(unittest.TestCase):
         coords, colors, pcd = load_file("1.ply")
         voxel_size = 0.02
         colors = torch.from_numpy(colors)
-        bcoords = batched_coordinates([coords / voxel_size])
-        tfield = TensorField(colors, bcoords).float()
+        bcoords = batched_coordinates([coords / voxel_size], return_int=False)
+        tfield = TensorField(colors, bcoords)
 
         network = nn.Sequential(
             MinkowskiLinear(3, 16),
