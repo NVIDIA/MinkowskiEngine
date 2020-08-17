@@ -45,12 +45,13 @@ def load_file(file_name):
     return coords, colors, pcd
 
 
-def batched_coordinates(coords):
+def batched_coordinates(coords, return_int=True):
     D = np.unique(np.array([cs.shape[1] for cs in coords]))
     assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
     D = D[0]
     N = np.array([len(cs) for cs in coords]).sum()
-    bcoords = torch.IntTensor(N, D + 1)  # uninitialized batched coords
+    TensorType = torch.IntTensor if return_int else torch.FloatTensor
+    bcoords = TensorType(N, D + 1)  # uninitialized
 
     s = 0
     for batch_id, coord in enumerate(coords):
@@ -61,9 +62,10 @@ def batched_coordinates(coords):
                 coord, torch.Tensor
             ), "Coords must be of type numpy.ndarray or torch.Tensor"
         cn = coord.shape[0]
-        coord = coord.int()
-        bcoords[s : s + cn, 1:] = coord
-        bcoords[s : s + cn, 0] = batch_id
+        if return_int:
+            coord = coord.int()
+        bcoords[s: s + cn, 1:] = coord
+        bcoords[s: s + cn, 0] = batch_id
         s += cn
     return bcoords
 
@@ -81,7 +83,7 @@ def data_loader(nchannel=3, max_label=5, is_classification=True, seed=-1, batch_
     if seed >= 0:
         torch.manual_seed(seed)
 
-    data = ["   X   ", "  X X  ", " XXXXX "]  #  #
+    data = ["   X   ", "  X X  ", " XXXXX "]
 
     # Generate coordinates
     coords = [get_coords(data) for i in range(batch_size)]

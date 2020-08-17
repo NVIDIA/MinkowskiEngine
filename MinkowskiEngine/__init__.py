@@ -67,14 +67,15 @@ from MinkowskiKernelGenerator import (
     get_kernel_volume,
 )
 
-from MinkowskiSparseTensor import (
-    SparseTensor,
+from MinkowskiTensor import (
     SparseTensorOperationMode,
     SparseTensorQuantizationMode,
     set_sparse_tensor_operation_mode,
     sparse_tensor_operation_mode,
     clear_global_coordinate_mananager,
 )
+
+from MinkowskiSparseTensor import SparseTensor
 
 from MinkowskiTensorField import TensorField
 

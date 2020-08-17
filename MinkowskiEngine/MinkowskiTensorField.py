@@ -21,29 +21,25 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+import warnings
 import torch
 
-from MinkowskiCommon import convert_to_int_list, StrideType, MinkowskiModuleBase
+from MinkowskiCommon import StrideType
 from MinkowskiEngineBackend._C import (
     GPUMemoryAllocatorType,
     MinkowskiAlgorithm,
-    CoordinateMapType,
     CoordinateMapKey,
 )
-from MinkowskiCoordinateManager import (
-    CoordinateManager,
-    _allocator_type,
-)
-from MinkowskiSparseTensor import (
-    _global_coordinate_manager,
-    _sparse_tensor_operation_mode,
-    SparseTensor,
+from MinkowskiCoordinateManager import CoordinateManager
+from MinkowskiTensor import (
     SparseTensorQuantizationMode,
+    Tensor,
 )
+from MinkowskiSparseTensor import SparseTensor
 from sparse_matrix_functions import spmm as _spmm
 
 
-class TensorField(SparseTensor):
+class TensorField(Tensor):
     def __init__(
         self,
         features: torch.Tensor,
@@ -66,7 +62,7 @@ class TensorField(SparseTensor):
         ], "invalid quantization mode"
 
         # A tensor field is a shallow wrapper on a sparse tensor, but keeps the original data for element-wise operations
-        SparseTensor.__init__(
+        Tensor.__init__(
             self,
             features,
             coordinates,
@@ -83,6 +79,69 @@ class TensorField(SparseTensor):
         self.quantization_mode = quantization_mode
         if inverse_mapping is not None:
             self.inverse_mapping = inverse_mapping
+
+    def initialize_coordinates(self, coordinates, features, coordinate_map_key):
+        self._CC = coordinates
+        assert not isinstance(coordinates, (torch.IntTensor, torch.cuda.IntTensor))
+        int_coordinates = torch.floor(coordinates).int()
+
+        (
+            self.coordinate_map_key,
+            (unique_index, self.inverse_mapping),
+        ) = self._manager.insert_and_map(int_coordinates, *coordinate_map_key.get_key())
+        self.unique_index = unique_index.long()
+        int_coordinates = int_coordinates[self.unique_index]
+
+        if self.quantization_mode in [
+            SparseTensorQuantizationMode.UNWEIGHTED_SUM,
+            SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+        ]:
+            N = len(features)
+            cols = torch.arange(
+                N, dtype=self.inverse_mapping.dtype, device=self.inverse_mapping.device,
+            )
+            vals = torch.ones(N, dtype=features.dtype, device=features.device)
+            size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
+            features = _spmm(self.inverse_mapping, cols, vals, size, features)
+            if (
+                self.quantization_mode
+                == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+            ):
+                nums = _spmm(
+                    self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),
+                )
+                features /= nums
+        elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
+            features = features[self.unique_index]
+        else:
+            # No quantization
+            pass
+
+        return int_coordinates, features, coordinate_map_key
+
+    @property
+    def C(self):
+        r"""The alias of :attr:`coords`.
+        """
+        return self.coordinates
+
+    @property
+    def coordinates(self):
+        r"""
+        The coordinates of the current sparse tensor. The coordinates are
+        represented as a :math:`N \times (D + 1)` dimensional matrix where
+        :math:`N` is the number of points in the space and :math:`D` is the
+        dimension of the space (e.g. 3 for 3D, 4 for 3D + Time). Additional
+        dimension of the column of the matrix C is for batch indices which is
+        internally treated as an additional spatial dimension to disassociate
+        different instances in a batch.
+        """
+        if self._CC is None:
+            self._CC = self._get_continuous_coordinates()
+        return self._CC
+
+    def _get_continuous_coordinates(self):
+        return self._manager.get_continuous_coordinates(self.coordinate_map_key)
 
     def sparse(self):
         r"""Converts the current sparse tensor field to a sparse tensor."""
@@ -106,3 +165,16 @@ class TensorField(SparseTensor):
             coordinate_map_key=self.coordinate_map_key,
             coordinate_manager=self.coordinate_manager,
         )
+
+    __slots__ = (
+        "_C",
+        "_CC",
+        "_F",
+        "_D",
+        "coordinate_map_key",
+        "_manager",
+        "unique_index",
+        "inverse_mapping",
+        "quantization_mode",
+        "_batch_rows",
+    )

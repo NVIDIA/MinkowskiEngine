@@ -26,8 +26,8 @@ import numpy as np
 
 import torch
 from torch.nn.modules import Module
-from MinkowskiSparseTensor import (
-    SparseTensor,
+from MinkowskiSparseTensor import SparseTensor
+from MinkowskiTensor import (
     COORDINATE_MANAGER_DIFFERENT_ERROR,
     COORDINATE_KEY_DIFFERENT_ERROR,
 )
