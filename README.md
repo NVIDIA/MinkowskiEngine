@@ -7,6 +7,16 @@
 
 The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://nvidia.github.io/MinkowskiEngine/overview.html).
 
+## News
+
+- 2020-08-18 v0.5 beta now available! Please install with the following command. The migration guide from v0.4 to v0.5 is available at [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Migration-Guide-from-v0.4.x-to-0.5.x). Feel free to update the wiki page to add and update any discrepancies you see.
+
+```
+pip install git+https://github.com/NVIDIA/MinkowskiEngine.git@v0.5
+```
+
+Note: Union and Broadcasting functions not available currently.
+
 ## Example Networks
 
 The Minkowski Engine supports various functions that can be built on a sparse tensor. We list a few popular network architectures and applications here. To run the examples, please install the package and run the command in the package root directory.
@@ -112,7 +122,7 @@ conda activate py3-mink
 git clone https://github.com/NVIDIA/MinkowskiEngine.git
 cd MinkowskiEngine
 # use openblas instead of mkl if things don't work
-python setup.py install --install-option="--blas=mkl"
+python setup.py install --blas=openblas
 ```
 
 
@@ -221,6 +231,15 @@ an issue on the [github issue
 page](https://github.com/NVIDIA/MinkowskiEngine/issues).
 
 ## Known Issues
+
+### Too much GPU memory usage or Frequent Out of Memory
+
+MinkowskiEngine is a specialized library that can handle different number of points or different number of non-zero elements at every iteration during training, which is common in point cloud data.
+However, pytorch is implemented assuming that the number of point, or size of the activations do not change at every iteration. Thus, the GPU memory caching used by pytorch can result in unnecessarily large memory consumption.
+
+Specifically, pytorch caches chunks of memory spaces to speed up allocation used in every tensor creation. If it fails to find the memory space, it splits an existing cached memory or allocate new space if there's no cached memory large enough for the requested size. Thus, every time we use different number of point (number of non-zero elements) with pytorch, it either split existing cache or reserve new memory. If the cache is too fragmented and allocated all GPU space, it will raise out of memory error.
+
+To prevent this, you must clear the cache at regular interval with `torch.cuda.empty_cache()`.
 
 ### Running the MinkowskiEngine on nodes with a large number of CPUs
 
