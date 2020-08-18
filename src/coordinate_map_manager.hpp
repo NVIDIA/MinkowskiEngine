@@ -90,6 +90,14 @@ public:
   using index_type = default_types::index_type;
   using stride_type = default_types::stride_type;
   using map_type = CoordinateMapType<coordinate_type, TemplatedAllocator>;
+#ifndef CPU_ONLY
+  using coordinates_type = typename std::conditional<
+      detail::is_cpu_coordinate_map<CoordinateMapType>::value,
+      CoordinatesCPU<coordinate_type, TemplatedAllocator>,
+      CoordinatesGPU<coordinate_type, TemplatedAllocator>>::type;
+#else
+  using coordinates_type = CoordinatesCPU<coordinate_type, TemplatedAllocator>;
+#endif
   using self_type = CoordinateMapManager<coordinate_type, TemplatedAllocator,
                                          CoordinateMapType>;
   using map_collection_type = std::map<coordinate_map_key_type, map_type,
@@ -197,6 +205,11 @@ public:
     return py::cast(new CoordinateMapKey(map_key_bool.first.first.size() + 1,
                                          map_key_bool.first));
   }
+
+  /****************************************************************************
+   * Tensor field related operations
+   ****************************************************************************/
+  py::object insert(at::Tensor const &coordinates);
 
   /****************************************************************************
    * Coordinate management helper functions
@@ -381,7 +394,12 @@ private:
   std::map<coordinate_map_key_type, map_type, coordinate_map_key_comparator>
       m_coordinate_maps;
 
-  // CoordinateMapManager owns the tensors
+  // CoordinateMapManager managed coordinates
+  std::map<coordinate_map_key_type, coordinates_type,
+           coordinate_map_key_comparator>
+      m_coordinates;
+
+  // CoordinateMapManager owns the kernel maps
   std::unordered_map<kernel_map_key_type, kernel_map_type,
                      kernel_map_key_hasher<coordinate_map_key_hasher>>
       m_kernel_maps;

@@ -32,6 +32,57 @@
 
 namespace minkowski {
 
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator = std::allocator>
+class CoordinatesCPU
+    : public CoordinateMap<coordinate_type, TemplatedAllocator> {
+  // Coordinate wrapper
+public:
+  using base_type = CoordinateMap<coordinate_type, TemplatedAllocator>;
+  using self_type = CoordinatesCPU<coordinate_type, TemplatedAllocator>;
+  using size_type = typename base_type::size_type;
+  using index_type = typename base_type::index_type;
+  using stride_type = typename base_type::stride_type;
+  using byte_allocator_type = TemplatedAllocator<char>;
+
+public:
+  CoordinatesCPU() = delete;
+  CoordinatesCPU(size_type const number_of_coordinates,
+                 size_type const coordinate_size,
+                 stride_type const &stride = {1},
+                 byte_allocator_type alloc = byte_allocator_type())
+      : base_type(number_of_coordinates, coordinate_size, stride, alloc),
+        m_size(number_of_coordinates) {
+    base_type::reserve(number_of_coordinates);
+  }
+
+  /*
+   * @brief given a key iterator begin-end pair and a value iterator begin-end
+   * pair, insert all elements.
+   *
+   * @return none
+   */
+  void insert(coordinate_type const *coordinate_begin,
+              coordinate_type const *coordinate_end) {
+    size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
+    base_type::allocate(N);
+    // copy data directly to the ptr
+    std::copy_n(base_type::coordinate_data(), N * m_coordinate_size,
+                coordinate_begin);
+  }
+
+  void copy_coordinates(coordinate_type *dst_coordinate) const {
+    std::copy_n(dst_coordinate, size() * m_coordinate_size,
+                base_type::const_coordinate_data());
+  }
+
+  inline size_type size() const noexcept { return m_size; }
+
+private:
+  using base_type::m_coordinate_size;
+  size_type m_size;
+};
+
 /*
  * Inherit from the CoordinateMap for a specific map type.
  */
@@ -564,7 +615,7 @@ private:
 private:
   using base_type::m_coordinate_size;
   map_type m_map;
-}; // namespace minkowski
+};
 
 } // namespace minkowski
 
