@@ -61,7 +61,7 @@ logging.basicConfig(
 )
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--voxel_size", type=float, default=0.02)
+parser.add_argument("--voxel_size", type=float, default=0.01)
 parser.add_argument("--max_iter", type=int, default=120000)
 parser.add_argument("--val_freq", type=int, default=1000)
 parser.add_argument(
@@ -70,7 +70,7 @@ parser.add_argument(
     default=2000,
     help="use higher number for small voxel size",
 )
-parser.add_argument("--batch_size", default=256, type=int)
+parser.add_argument("--batch_size", default=128, type=int)
 parser.add_argument("--lr", default=1e-2, type=float)
 parser.add_argument("--momentum", type=float, default=0.9)
 parser.add_argument("--weight_decay", type=float, default=1e-4)
@@ -444,7 +444,7 @@ def train(net, device, config):
         momentum=config.momentum,
         weight_decay=config.weight_decay,
     )
-    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 0.95)
+    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 0.99)
 
     crit = torch.nn.CrossEntropyLoss()
 

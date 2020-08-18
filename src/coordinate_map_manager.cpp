@@ -708,34 +708,6 @@ CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapType>::
 /*
 template <typename MapType>
 uint64_t
-CoordsManager<MapType>::createPrunedCoords(at::Tensor use_feat,
-                                           py::object py_in_coords_key,
-                                           py::object py_out_coords_key) {
-  CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
-  CoordsKey *p_out_coords_key = py_out_coords_key.cast<CoordsKey *>();
-  const uint64_t in_coords_key = p_in_coords_key->getKey();
-
-  ASSERT(existsCoordsKey(in_coords_key),
-         "The coord map doesn't exist for the given coords_key: ",
-         to_string(in_coords_key), ".");
-
-  // set a random coords key
-  const uint64_t out_coords_key = getRandomCoordsKey();
-
-  // Set the pycoordskey
-  p_out_coords_key->setDimension(p_in_coords_key->getDimension());
-  p_out_coords_key->setKey(out_coords_key);
-  if (!p_out_coords_key->tensor_stride_set)
-    p_out_coords_key->setTensorStride(p_in_coords_key->getTensorStride());
-
-  coords_maps[out_coords_key] =
-      coords_maps[in_coords_key].prune(use_feat.data<bool>(), use_feat.size(0));
-
-  return out_coords_key;
-}
-
-template <typename MapType>
-uint64_t
 CoordsManager<MapType>::createUnionCoords(vector<py::object> py_in_coords_keys,
                                           py::object py_out_coords_key) {
   vector<CoordsKey *> p_in_coords_keys;
@@ -886,88 +858,6 @@ CoordsManager<MapType>::getUnionInOutMaps(vector<py::object> py_in_coords_keys,
   }
 
   return make_pair(ref(in_maps[map_key]), ref(out_maps[map_key]));
-}
-*/
-/*
- * Return row indices for each batch index
- */
-/*
-template <typename MapType>
-at::Tensor
-CoordsManager<MapType>::getRowIndicesAtBatchIndex(py::object py_in_coords_key,
-                                                  py::object py_out_coords_key,
-                                                  const int batch_index) {
-  // py_out_coords_key will be set after the above call.
-  CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
-  const auto in_coords_key = p_in_coords_key->getKey();
-  ASSERT(coords_maps.find(in_coords_key) != coords_maps.end(),
-         "The in_coords_key, ", to_string(in_coords_key), ", does not exist.");
-  // Find the batch index in the current batch indices.
-  const vector<int>::iterator batch_iter = std::find(
-      vec_batch_indices.begin(), vec_batch_indices.end(), batch_index);
-
-  // ASSERT(batch_iter != vec_batch_indices.end(),
-  //        "Invalid batch index:", batch_index,
-  //        " does not exist in the provided batch indices:",
-  //        ArrToString(vec_batch_indices));
-
-  // Return an empty list if not found.
-  if (batch_iter == vec_batch_indices.end()) {
-    at::Tensor in_rows =
-        torch::zeros({0}, torch::TensorOptions().dtype(torch::kInt64));
-    return in_rows;
-
-  } else {
-
-    const auto in_outs =
-        getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
-    const auto &in = in_outs.first[*batch_iter];
-
-    at::Tensor in_rows = torch::zeros(
-        {(long)in.size()}, torch::TensorOptions().dtype(torch::kInt64));
-
-    // copy all from a vector. int -> long
-    auto a_in_rows = in_rows.accessor<long, 1>();
-    for (auto i = 0; i < in.size(); i++)
-      a_in_rows[i] = in[i];
-
-    return in_rows;
-  }
-}
-*/
-/*
- * Return row indices per batch
- */
-/*
-template <typename MapType>
-vector<at::Tensor>
-CoordsManager<MapType>::getRowIndicesPerBatch(py::object py_in_coords_key,
-                                              py::object py_out_coords_key) {
-  // py_out_coords_key will be set after the above call.
-  CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
-  const auto in_coords_key = p_in_coords_key->getKey();
-  ASSERT(coords_maps.find(in_coords_key) != coords_maps.end(),
-         "The in_coords_key, ", to_string(in_coords_key), ", does not exist.");
-
-  const auto in_outs = getOriginInOutMaps(py_in_coords_key, py_out_coords_key);
-  const auto &ins = in_outs.first;
-
-  // Return index.
-  vector<at::Tensor> out_inds;
-  for (const auto &in : ins) {
-    at::Tensor mapping = torch::zeros(
-        {(long)in.size()}, torch::TensorOptions().dtype(torch::kInt64));
-
-    // copy all from a vector, int -> long
-    auto a_mapping = mapping.accessor<long, 1>();
-    for (auto i = 0; i < in.size(); i++)
-      a_mapping[i] = in[i];
-
-    // ::memcpy(mapping.data<int>(), in.data(), in.size() * sizeof(int));
-    out_inds.push_back(mapping);
-  }
-
-  return out_inds;
 }
 */
 

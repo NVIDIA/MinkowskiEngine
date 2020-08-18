@@ -112,7 +112,7 @@ conda activate py3-mink
 git clone https://github.com/NVIDIA/MinkowskiEngine.git
 cd MinkowskiEngine
 # use openblas instead of mkl if things don't work
-python setup.py install --install-option="--blas=mkl"
+python setup.py install --blas=openblas
 ```
 
 
