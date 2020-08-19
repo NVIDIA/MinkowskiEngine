@@ -585,7 +585,7 @@ class VAE(nn.Module):
         means, log_vars = self.encoder(sinput)
         zs = means
         if self.training:
-            zs += torch.exp(0.5 * log_vars.F) * torch.randn_like(log_vars.F)
+            zs = zs + torch.exp(0.5 * log_vars.F) * torch.randn_like(log_vars.F)
         out_cls, targets, sout = self.decoder(zs, gt_target)
         return out_cls, targets, sout, means, log_vars, zs
 
