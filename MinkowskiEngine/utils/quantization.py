@@ -35,8 +35,9 @@ def fnv_hash_vec(arr):
     # Floor first for negative coordinates
     arr = arr.copy()
     arr = arr.astype(np.uint64, copy=False)
-    hashed_arr = np.uint64(14695981039346656037) * \
-        np.ones(arr.shape[0], dtype=np.uint64)
+    hashed_arr = np.uint64(14695981039346656037) * np.ones(
+        arr.shape[0], dtype=np.uint64
+    )
     for j in range(arr.shape[1]):
         hashed_arr *= np.uint64(1099511628211)
         hashed_arr = np.bitwise_xor(hashed_arr, arr[:, j])
@@ -87,10 +88,13 @@ def quantize(coords):
        >>> print(coords[unique_map[inverse_map]] == coords)  # True, ..., True
 
     """
-    assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
-        "Invalid coords type"
+    assert isinstance(coords, np.ndarray) or isinstance(
+        coords, torch.Tensor
+    ), "Invalid coords type"
     if isinstance(coords, np.ndarray):
-        assert coords.dtype == np.int32, f"Invalid coords type {coords.dtype} != np.int32"
+        assert (
+            coords.dtype == np.int32
+        ), f"Invalid coords type {coords.dtype} != np.int32"
         return MEB.quantize_np(coords.astype(np.int32))
     else:
         # Type check done inside
@@ -98,12 +102,17 @@ def quantize(coords):
 
 
 def quantize_label(coords, labels, ignore_label):
-    assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
-        "Invalid coords type"
+    assert isinstance(coords, np.ndarray) or isinstance(
+        coords, torch.Tensor
+    ), "Invalid coords type"
     if isinstance(coords, np.ndarray):
         assert isinstance(labels, np.ndarray)
-        assert coords.dtype == np.int32, f"Invalid coords type {coords.dtype} != np.int32"
-        assert labels.dtype == np.int32, f"Invalid label type {labels.dtype} != np.int32"
+        assert (
+            coords.dtype == np.int32
+        ), f"Invalid coords type {coords.dtype} != np.int32"
+        assert (
+            labels.dtype == np.int32
+        ), f"Invalid label type {labels.dtype} != np.int32"
         return MEB.quantize_label_np(coords, labels, ignore_label)
     else:
         assert isinstance(labels, torch.Tensor)
@@ -111,13 +120,15 @@ def quantize_label(coords, labels, ignore_label):
         return MEB.quantize_label_th(coords, labels.int(), ignore_label)
 
 
-def sparse_quantize(coords,
-                    feats=None,
-                    labels=None,
-                    ignore_label=-100,
-                    return_index=False,
-                    return_inverse=False,
-                    quantization_size=None):
+def sparse_quantize(
+    coords,
+    feats=None,
+    labels=None,
+    ignore_label=-100,
+    return_index=False,
+    return_inverse=False,
+    quantization_size=None,
+):
     r"""Given coordinates, and features (optionally labels), the function
     generates quantized (voxelized) coordinates.
 
@@ -176,14 +187,17 @@ def sparse_quantize(coords,
 
 
     """
-    assert isinstance(coords, np.ndarray) or isinstance(coords, torch.Tensor), \
-        'Coords must be either np.array or torch.Tensor.'
+    assert isinstance(coords, np.ndarray) or isinstance(
+        coords, torch.Tensor
+    ), "Coords must be either np.array or torch.Tensor."
 
     use_label = labels is not None
     use_feat = feats is not None
 
-    assert coords.ndim == 2, \
-        "The coordinates must be a 2D matrix. The shape of the input is " + str(coords.shape)
+    assert coords.ndim == 2, (
+        "The coordinates must be a 2D matrix. The shape of the input is "
+        + str(coords.shape)
+    )
 
     if return_inverse:
         assert return_index, "return_reverse must be set with return_index"
@@ -199,9 +213,9 @@ def sparse_quantize(coords,
     # Quantize the coordinates
     if quantization_size is not None:
         if isinstance(quantization_size, (Sequence, np.ndarray, torch.Tensor)):
-            assert len(
-                quantization_size
-            ) == dimension, "Quantization size and coordinates size mismatch."
+            assert (
+                len(quantization_size) == dimension
+            ), "Quantization size and coordinates size mismatch."
             if isinstance(coords, np.ndarray):
                 quantization_size = np.array([i for i in quantization_size])
                 discrete_coords = np.floor(coords / quantization_size)
@@ -216,7 +230,7 @@ def sparse_quantize(coords,
             else:
                 discrete_coords = np.floor(coords / quantization_size)
         else:
-            raise ValueError('Not supported type for quantization_size.')
+            raise ValueError("Not supported type for quantization_size.")
     else:
         discrete_coords = coords
 
@@ -228,16 +242,15 @@ def sparse_quantize(coords,
 
     # Return values accordingly
     if use_label:
-        mapping, colabels = quantize_label(discrete_coords, labels,
-                                           ignore_label)
+        unique_map, colabels = quantize_label(discrete_coords, labels, ignore_label)
 
         if return_index:
-            return discrete_coords[unique_map], mapping, colabels
+            return discrete_coords[unique_map], unique_map, colabels
         else:
             if use_feat:
-                return discrete_coords[mapping], feats[mapping], colabels
+                return discrete_coords[unique_map], feats[unique_map], colabels
             else:
-                return discrete_coords[mapping], colabels
+                return discrete_coords[unique_map], colabels
 
     else:
         unique_map, inverse_map = quantize(discrete_coords)
@@ -245,7 +258,7 @@ def sparse_quantize(coords,
             if return_inverse:
                 return discrete_coords[unique_map], unique_map, inverse_map
             else:
-                return discrete_coords[unique_map], uunique_map
+                return discrete_coords[unique_map], unique_map
         else:
             if use_feat:
                 return discrete_coords[unique_map], feats[unique_map]

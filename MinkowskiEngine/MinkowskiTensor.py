@@ -559,7 +559,7 @@ class Tensor:
         return self._F.get_device()
 
     def _is_same_key(self, other):
-        assert isinstance(other, SparseTensor)
+        assert isinstance(other, self.__class__)
         assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
         assert (
             self.coordinate_map_key == other.coordinate_map_key
@@ -587,12 +587,12 @@ class Tensor:
         return self
 
     def _binary_functor(self, other, binary_fn):
-        assert isinstance(other, (SparseTensor, torch.Tensor))
-        if isinstance(other, SparseTensor):
+        assert isinstance(other, (self.__class__, torch.Tensor))
+        if isinstance(other, self.__class__):
             assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
 
             if self.coordinate_map_key == other.coordinate_map_key:
-                return SparseTensor(
+                return self.__class__(
                     binary_fn(self._F, other.F),
                     coordinate_map_key=self.coordinate_map_key,
                     coordinate_manager=self._manager,
@@ -609,11 +609,11 @@ class Tensor:
                 )
                 out_F[outs[0]] = self._F[ins[0]]
                 out_F[outs[1]] = binary_fn(out_F[outs[1]], other._F[ins[1]])
-                return SparseTensor(
+                return self.__class__(
                     out_F, coordinate_map_key=out_key, coords_manager=self._manager
                 )
         else:  # when it is a torch.Tensor
-            return SparseTensor(
+            return self.__class__(
                 binary_fn(self._F, other),
                 coordinate_map_key=self.coordinate_map_key,
                 coordinate_manager=self._manager,
@@ -659,7 +659,7 @@ class Tensor:
         return self._binary_functor(other, lambda x, y: x / y)
 
     def __power__(self, power):
-        return SparseTensor(
+        return self.__class__(
             self._F ** power,
             coordinate_map_key=self.coordinate_map_key,
             coordinate_manager=self._manager,

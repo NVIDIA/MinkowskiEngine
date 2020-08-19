@@ -25,7 +25,7 @@
 import torch
 import warnings
 
-from MinkowskiCommon import StrideType
+from MinkowskiCommon import convert_to_int_list, StrideType
 from MinkowskiEngineBackend._C import CoordinateMapKey
 from MinkowskiTensor import (
     SparseTensorQuantizationMode,
@@ -493,9 +493,15 @@ def _get_coordinate_map_key(
     if coordinates is not None:
         assert isinstance(coordinates, (CoordinateMapKey, torch.Tensor, SparseTensor))
         if isinstance(coordinates, torch.Tensor):
-            coordinate_map_key = input._manager.create_coordinate_map_key(
-                coordinates, tensor_stride=tensor_stride
+            assert coordinates.ndim == 2
+            coordinate_map_key = CoordinateMapKey(
+                convert_to_int_list(tensor_stride, coordinates.size(1) - 1), ""
             )
+
+            (
+                coordinate_map_key,
+                (unique_index, inverse_mapping),
+            ) = input._manager.insert_and_map(coordinates, *coordinate_map_key.get_key())
         elif isinstance(coordinates, SparseTensor):
             coordinate_map_key = coordinates.coordinate_map_key
         else:  # CoordinateMapKey type due to the previous assertion
