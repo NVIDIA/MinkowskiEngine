@@ -147,14 +147,15 @@ class CoordinateManager:
 
     def insert_and_map(
         self,
-        coordinates: torch.IntTensor,
-        tensor_stride: Union[int, Sequence, np.ndarray, torch.Tensor],
+        coordinates: torch.Tensor,
+        tensor_stride: Union[int, Sequence, np.ndarray],
         string_id: str = "",
     ) -> Tuple[CoordinateMapKey, Tuple[torch.IntTensor, torch.IntTensor]]:
         r"""create a new coordinate map and returns 
 
-        :attr:`coordinates`: `torch.IntTensor` (`CUDA` if coordinate_map_type
-        == `CoordinateMapType.GPU`) that defines the coordinates.
+        :attr:`coordinates`: `torch.Tensor` (Int tensor. `CUDA` if
+        coordinate_map_type == `CoordinateMapType.GPU`) that defines the
+        coordinates.
 
         Example::
 
@@ -167,6 +168,29 @@ class CoordinateManager:
 
         """
         return self._manager.insert_and_map(coordinates, tensor_stride, string_id)
+
+    def insert_field(
+        self,
+        coordinates: torch.Tensor,
+        tensor_stride: Union[int, Sequence, np.ndarray],
+        string_id: str = "",
+    ) -> Tuple[CoordinateMapKey, Tuple[torch.IntTensor, torch.IntTensor]]:
+        r"""create a new coordinate map and returns 
+
+        :attr:`coordinates`: `torch.FloatTensor` (`CUDA` if coordinate_map_type
+        == `CoordinateMapType.GPU`) that defines the coordinates.
+
+        Example::
+
+           >>> manager = CoordinateManager(D=1)
+           >>> coordinates = torch.FloatTensor([[0, 0.1], [0, 2.3], [0, 1.2], [0, 2.4]])
+           >>> key, (unique_map, inverse_map) = manager.insert(coordinates, [1])
+           >>> print(key) # key is tensor_stride, string_id [1]:""
+           >>> torch.all(coordinates[unique_map] == manager.get_coordinates(key)) # True
+           >>> torch.all(coordinates == coordinates[unique_map][inverse_map]) # True
+
+        """
+        return self._manager.insert_field(coordinates, tensor_stride, string_id)
 
     def stride(
         self,

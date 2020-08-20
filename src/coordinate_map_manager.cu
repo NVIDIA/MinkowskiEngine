@@ -42,15 +42,15 @@ __global__ void cuda_copy_n(src_type const *src, uint32_t N, dst_type *dst) {
   CUDA_KERNEL_LOOP(index, N) { dst[index] = src[index]; }
 }
 
-template <typename coordinate_type,
+template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator>
-struct insert_and_map_functor<coordinate_type, TemplatedAllocator,
-                              CoordinateMapGPU> {
+struct insert_and_map_functor<coordinate_type, coordinate_field_type,
+                              TemplatedAllocator, CoordinateMapGPU> {
 
-  std::pair<at::Tensor, at::Tensor>
-  operator()(coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
-             CoordinateMapManager<coordinate_type, TemplatedAllocator,
-                                  CoordinateMapGPU> &manager) {
+  std::pair<at::Tensor, at::Tensor> operator()(
+      coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
+      CoordinateMapManager<coordinate_type, coordinate_field_type,
+                           TemplatedAllocator, CoordinateMapGPU> &manager) {
     uint32_t const N = th_coordinate.size(0);
     uint32_t const coordinate_size = th_coordinate.size(1);
     coordinate_type *p_coordinate = th_coordinate.data_ptr<coordinate_type>();
@@ -106,6 +106,31 @@ struct insert_and_map_functor<coordinate_type, TemplatedAllocator,
     CUDA_CHECK(cudaStreamSynchronize(0));
 
     return std::make_pair(std::move(th_mapping), std::move(th_inverse_mapping));
+  }
+};
+
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator>
+struct insert_field_functor<
+    coordinate_type, coordinate_field_type, TemplatedAllocator,
+    CoordinateMapGPU,
+    CoordinateFieldMapGPU<coordinate_field_type, TemplatedAllocator>> {
+
+  void operator()(
+      coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
+      CoordinateMapManager<coordinate_type, coordinate_field_type,
+                           TemplatedAllocator, CoordinateMapGPU> &manager) {
+    LOG_DEBUG("insert field");
+    uint32_t const N = th_coordinate.size(0);
+    uint32_t const coordinate_size = th_coordinate.size(1);
+    coordinate_field_type *p_coordinate =
+        th_coordinate.data_ptr<coordinate_field_type>();
+    auto map = CoordinateFieldMapGPU<coordinate_field_type, TemplatedAllocator>(
+        N, coordinate_size, map_key.first);
+    map.insert(p_coordinate, p_coordinate + N * coordinate_size);
+
+    LOG_DEBUG("insert map with tensor_stride", map_key.first);
+    manager.insert_field_map(map_key, map);
   }
 };
 
@@ -270,9 +295,11 @@ struct origin_map_functor<
 
 } // namespace detail
 
-template class CoordinateMapManager<int32_t, detail::default_allocator,
-                                    CoordinateMapGPU>;
-template class CoordinateMapManager<int32_t, detail::c10_allocator,
-                                    CoordinateMapGPU>;
+template class CoordinateMapManager<
+    default_types::dcoordinate_type, default_types::ccoordinate_type,
+    detail::default_allocator, CoordinateMapGPU>;
+template class CoordinateMapManager<default_types::dcoordinate_type,
+                                    default_types::ccoordinate_type,
+                                    detail::c10_allocator, CoordinateMapGPU>;
 
 } // end namespace minkowski

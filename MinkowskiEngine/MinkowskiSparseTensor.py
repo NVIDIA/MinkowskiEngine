@@ -384,13 +384,24 @@ class SparseTensor(Tensor):
         ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
         from MinkowskiTensorField import TensorField
 
-        return TensorField(
-            self.F[X.inverse_mapping],
-            coordinate_map_key=self.coordinate_map_key,
-            coordinate_manager=self.coordinate_manager,
-            inverse_mapping=X.inverse_mapping,
-            quantization_mode=X.quantization_mode,
-        )
+        if isinstance(X, TensorField):
+            return TensorField(
+                self.F[X.inverse_mapping],
+                coordinate_map_key=X.coordinate_map_key,
+                coordinate_field_map_key=X.coordinate_field_map_key,
+                coordinate_manager=X.coordinate_manager,
+                inverse_mapping=X.inverse_mapping,
+                quantization_mode=X.quantization_mode,
+            )
+        else:
+            return TensorField(
+                self.F[X.inverse_mapping],
+                coordinates=self.C[X.inverse_mapping],
+                coordinate_map_key=X.coordinate_map_key,
+                coordinate_manager=X.coordinate_manager,
+                inverse_mapping=X.inverse_mapping,
+                quantization_mode=X.quantization_mode,
+            )
 
     def cat_slice(self, X, slicing_mode=0):
         r"""
@@ -428,13 +439,25 @@ class SparseTensor(Tensor):
         ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
         from MinkowskiTensorField import TensorField
 
-        return TensorField(
-            torch.cat((self.F[X.inverse_mapping], X.F), dim=1),
-            coordinate_map_key=self.coordinate_map_key,
-            coordinate_manager=self.coordinate_manager,
-            inverse_mapping=X.inverse_mapping,
-            quantization_mode=X.quantization_mode,
-        )
+        features = torch.cat((self.F[X.inverse_mapping], X.F), dim=1)
+        if isinstance(X, TensorField):
+            return TensorField(
+                features,
+                coordinate_map_key=X.coordinate_map_key,
+                coordinate_field_map_key=X.coordinate_field_map_key,
+                coordinate_manager=X.coordinate_manager,
+                inverse_mapping=X.inverse_mapping,
+                quantization_mode=X.quantization_mode,
+            )
+        else:
+            return TensorField(
+                features,
+                coordinates=self.C[X.inverse_mapping],
+                coordinate_map_key=X.coordinate_map_key,
+                coordinate_manager=X.coordinate_manager,
+                inverse_mapping=X.inverse_mapping,
+                quantization_mode=X.quantization_mode,
+            )
 
     def features_at_coords(self, query_coords: torch.Tensor):
         r"""Extract features at the specified coordinate matrix.
@@ -501,7 +524,9 @@ def _get_coordinate_map_key(
             (
                 coordinate_map_key,
                 (unique_index, inverse_mapping),
-            ) = input._manager.insert_and_map(coordinates, *coordinate_map_key.get_key())
+            ) = input._manager.insert_and_map(
+                coordinates, *coordinate_map_key.get_key()
+            )
         elif isinstance(coordinates, SparseTensor):
             coordinate_map_key = coordinates.coordinate_map_key
         else:  # CoordinateMapKey type due to the previous assertion

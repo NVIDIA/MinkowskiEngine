@@ -1364,14 +1364,14 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::copy_coordinates(
 }
 
 // Template instantiation
-template class CoordinatesGPU<default_types::dcoordinate_type,
-                              detail::default_allocator>;
-template class CoordinatesGPU<default_types::dcoordinate_type,
-                              detail::c10_allocator>;
-template class CoordinatesGPU<default_types::ccoordinate_type,
-                              detail::default_allocator>;
-template class CoordinatesGPU<default_types::ccoordinate_type,
-                              detail::c10_allocator>;
+template class CoordinateFieldMapGPU<default_types::dcoordinate_type,
+                                     detail::default_allocator>;
+template class CoordinateFieldMapGPU<default_types::dcoordinate_type,
+                                     detail::c10_allocator>;
+template class CoordinateFieldMapGPU<default_types::ccoordinate_type,
+                                     detail::default_allocator>;
+template class CoordinateFieldMapGPU<default_types::ccoordinate_type,
+                                     detail::c10_allocator>;
 
 template class CoordinateMapGPU<default_types::dcoordinate_type,
                                 detail::default_allocator>;

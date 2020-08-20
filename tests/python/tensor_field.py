@@ -101,8 +101,8 @@ class TestTensorField(unittest.TestCase):
     def slice(self):
         coords, colors, pcd = load_file("1.ply")
         voxel_size = 0.02
-        colors = torch.from_numpy(colors)
-        bcoords = batched_coordinates([coords / voxel_size], return_int=False)
+        colors = torch.from_numpy(colors).float()
+        bcoords = batched_coordinates([coords / voxel_size], return_int=False).float()
         tfield = TensorField(colors, bcoords)
 
         network = nn.Sequential(
