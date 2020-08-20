@@ -564,6 +564,7 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
            py::overload_cast<minkowski::CoordinateMapKey const *>(
                &manager_type::to_string, py::const_))
       .def("insert_and_map", &manager_type::insert_and_map)
+      .def("insert_field", &manager_type::insert_field)
       .def("stride", &manager_type::py_stride)
       .def("origin", &manager_type::py_origin)
       .def("get_coordinates", &manager_type::get_coordinates)

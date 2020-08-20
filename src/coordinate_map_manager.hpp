@@ -80,7 +80,7 @@ default_types::stride_type _fill_vec(size_t const len) {
 
 } // namespace detail
 
-template <typename coordinate_type,
+template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
           class CoordinateMapType>
@@ -91,15 +91,16 @@ public:
   using stride_type = default_types::stride_type;
   using map_type = CoordinateMapType<coordinate_type, TemplatedAllocator>;
 #ifndef CPU_ONLY
-  using coordinates_type = typename std::conditional<
+  using field_map_type = typename std::conditional<
       detail::is_cpu_coordinate_map<CoordinateMapType>::value,
-      CoordinatesCPU<coordinate_type, TemplatedAllocator>,
-      CoordinatesGPU<coordinate_type, TemplatedAllocator>>::type;
+      CoordinateFieldMapCPU<coordinate_field_type, TemplatedAllocator>,
+      CoordinateFieldMapGPU<coordinate_field_type, TemplatedAllocator>>::type;
 #else
-  using coordinates_type = CoordinatesCPU<coordinate_type, TemplatedAllocator>;
+  using field_map_type =
+      CoordinateFieldMapCPU<coordinate_field_type, TemplatedAllocator>;
 #endif
-  using self_type = CoordinateMapManager<coordinate_type, TemplatedAllocator,
-                                         CoordinateMapType>;
+  using self_type = CoordinateMapManager<coordinate_type, coordinate_field_type,
+                                         TemplatedAllocator, CoordinateMapType>;
   using map_collection_type = std::map<coordinate_map_key_type, map_type,
                                        coordinate_map_key_comparator>;
   using kernel_map_type =
@@ -155,10 +156,9 @@ public:
   /****************************************************************************
    * Coordinate generation, modification, and initialization entry functions
    ****************************************************************************/
-  // TODO
-  // py::object insert(at::Tensor const &th_coordinate,
-  //                  stride_type const tensor_stride,
-  //                  std::string const string_id = "");
+  py::object insert_field(at::Tensor const &th_coordinate,
+                          stride_type const tensor_stride,
+                          std::string const string_id = "");
 
   /*
    * New coordinate map initialzation function.
@@ -223,6 +223,15 @@ public:
     return result.second;
   }
 
+  bool insert_field_map(coordinate_map_key_type map_key, field_map_type &map) {
+    LOG_DEBUG("insert map with tensor_stride", map_key.first);
+    auto result = m_field_coordinates.insert(
+        std::make_pair<coordinate_map_key_type, field_map_type>(
+            std::move(map_key), std::move(map)));
+    LOG_DEBUG("map insertion", result.second);
+    return result.second;
+  }
+
   typename map_collection_type::iterator
   find(coordinate_map_key_type const &map_key) {
     return m_coordinate_maps.find(map_key);
@@ -259,6 +268,8 @@ public:
   }
 
   at::Tensor get_coordinates(CoordinateMapKey const *p_key) const;
+
+  at::Tensor get_coordinate_field(CoordinateMapKey const *p_key) const;
 
   std::vector<py::object>
   get_coordinate_map_keys(stride_type const tensor_stride) const {
@@ -395,9 +406,9 @@ private:
       m_coordinate_maps;
 
   // CoordinateMapManager managed coordinates
-  std::map<coordinate_map_key_type, coordinates_type,
+  std::map<coordinate_map_key_type, field_map_type,
            coordinate_map_key_comparator>
-      m_coordinates;
+      m_field_coordinates;
 
   // CoordinateMapManager owns the kernel maps
   std::unordered_map<kernel_map_key_type, kernel_map_type,
@@ -417,16 +428,29 @@ private:
 
 namespace detail {
 
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType,
+          typename field_map_type>
+struct insert_field_functor {
+
+  void operator()(
+      coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
+      CoordinateMapManager<coordinate_type, coordinate_field_type,
+                           TemplatedAllocator, CoordinateMapType> &manager);
+};
+
 // a partial specialization functor for insertion
-template <typename coordinate_type,
+template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
           class CoordinateMapType>
 struct insert_and_map_functor {
-  std::pair<at::Tensor, at::Tensor>
-  operator()(coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
-             CoordinateMapManager<coordinate_type, TemplatedAllocator,
-                                  CoordinateMapType> &manager);
+  std::pair<at::Tensor, at::Tensor> operator()(
+      coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
+      CoordinateMapManager<coordinate_type, coordinate_field_type,
+                           TemplatedAllocator, CoordinateMapType> &manager);
 };
 
 // a partial specialization functor for kernel map generation
@@ -482,13 +506,15 @@ struct origin_map_functor {
 // type defs
 template <typename coordinate_type>
 using cpu_manager_type =
-    CoordinateMapManager<coordinate_type, std::allocator, CoordinateMapCPU>;
+    CoordinateMapManager<coordinate_type, default_types::ccoordinate_type,
+                         std::allocator, CoordinateMapCPU>;
 
 #ifndef CPU_ONLY
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 using gpu_manager_type =
-    CoordinateMapManager<coordinate_type, TemplatedAllocator, CoordinateMapGPU>;
+    CoordinateMapManager<coordinate_type, default_types::ccoordinate_type,
+                         TemplatedAllocator, CoordinateMapGPU>;
 
 template <typename coordinate_type>
 using gpu_default_manager_type =

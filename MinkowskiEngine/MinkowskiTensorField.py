@@ -48,6 +48,7 @@ class TensorField(Tensor):
         # optional coordinate related arguments
         tensor_stride: StrideType = 1,
         coordinate_map_key: CoordinateMapKey = None,
+        coordinate_field_map_key: CoordinateMapKey = None,
         coordinate_manager: CoordinateManager = None,
         quantization_mode: SparseTensorQuantizationMode = SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
         # optional manager related arguments
@@ -80,10 +81,20 @@ class TensorField(Tensor):
         if inverse_mapping is not None:
             self.inverse_mapping = inverse_mapping
 
+        self.coordinate_field_map_key = coordinate_field_map_key
+        if coordinate_field_map_key is None:
+            assert coordinates is not None
+            self._CC = coordinates.float()
+            self.coordinate_field_map_key = self._manager.insert_field(
+                self._CC, *self.coordinate_map_key.get_key()
+            )
+
     def initialize_coordinates(self, coordinates, features, coordinate_map_key):
-        self._CC = coordinates
-        assert not isinstance(coordinates, (torch.IntTensor, torch.cuda.IntTensor))
-        int_coordinates = torch.floor(coordinates).int()
+
+        if not isinstance(coordinates, (torch.IntTensor, torch.cuda.IntTensor)):
+            int_coordinates = torch.floor(coordinates).int()
+        else:
+            int_coordinates = coordinates
 
         (
             self.coordinate_map_key,
@@ -137,11 +148,11 @@ class TensorField(Tensor):
         different instances in a batch.
         """
         if self._CC is None:
-            self._CC = self._get_continuous_coordinates()
+            self._CC = self._get_coordinate_field()
         return self._CC
 
-    def _get_continuous_coordinates(self):
-        return self._manager.get_continuous_coordinates(self.coordinate_map_key)
+    def _get_coordinate_field(self):
+        return self._manager.get_coordinate_field(self.coordinate_field_map_key)
 
     def sparse(self):
         r"""Converts the current sparse tensor field to a sparse tensor."""
@@ -172,6 +183,7 @@ class TensorField(Tensor):
         "_F",
         "_D",
         "coordinate_map_key",
+        "coordinate_field_map_key",
         "_manager",
         "unique_index",
         "inverse_mapping",
