@@ -27,8 +27,8 @@
 #ifndef GPU_POOLING_AVG
 #define GPU_POOLING_AVG
 
-#include <limits>
 #include <cusparse.h>
+#include <limits>
 
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
@@ -159,9 +159,9 @@ void NonzeroAvgPoolingForwardKernelGPU(
                             ) *
                            sizeof(Dtype);
   static_assert(is_int32, "sort_coo supports int32");
-  sort_coo_gpu(cushandle, out_nrows, in_nrows, sparse_nnzs,
-               (int *)kernel_map.out_maps.begin(),
-               (int *)kernel_map.in_maps.begin());
+  sort_coo_gpu<ByteAllocator>(cushandle, out_nrows, in_nrows, sparse_nnzs,
+                              (int *)kernel_map.out_maps.begin(),
+                              (int *)kernel_map.in_maps.begin(), allocator);
 
   // one vector.
   d_ones = (Dtype *)allocator.allocate(one_vector_size);
@@ -182,11 +182,11 @@ void NonzeroAvgPoolingForwardKernelGPU(
 
 #ifdef DEBUG
   std::cout << "sparse_nnzs: " << sparse_nnzs << "\n";
-  Itype *p_scr = (Itype *)std::malloc((sparse_nnzs) * 2 * sizeof(Itype));
-  CUDA_CHECK(cudaMemcpy(p_scr, kernel_map.out_maps.begin(), sparse_nnzs * sizeof(Itype),
-                        cudaMemcpyDeviceToHost));
-  CUDA_CHECK(cudaMemcpy(p_scr + sparse_nnzs, kernel_map.in_maps.begin(), sparse_nnzs * sizeof(Itype),
-                        cudaMemcpyDeviceToHost));
+  Itype *p_scr = (Itype *)std::malloc((sparse_nnzs)*2 * sizeof(Itype));
+  CUDA_CHECK(cudaMemcpy(p_scr, kernel_map.out_maps.begin(),
+                        sparse_nnzs * sizeof(Itype), cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaMemcpy(p_scr + sparse_nnzs, kernel_map.in_maps.begin(),
+                        sparse_nnzs * sizeof(Itype), cudaMemcpyDeviceToHost));
 
   Itype step = std::max<Itype>(sparse_nnzs / 100, 1);
   Itype i = 0;
@@ -387,7 +387,6 @@ void NonzeroAvgPoolingBackwardKernelGPU(
             kernel_map.in_maps.cdata(), kernel_map.out_maps.cdata());
   }
 
-  CUDA_CHECK(cudaGetLastError());
   CUDA_CHECK(cudaDeviceSynchronize());
 }
 

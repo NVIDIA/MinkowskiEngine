@@ -105,6 +105,7 @@ def _argparse(pattern, argv, is_flag=True):
             return arr[0].split("=")[1], argv
 
 
+run_command("rm", "-rf", "build")
 run_command("pip", "uninstall", "MinkowskiEngine", "-y")
 
 # For cpu only build
