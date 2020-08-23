@@ -142,7 +142,7 @@ void NonzeroAvgPoolingForwardKernelGPU(
 #if defined(CUDART_VERSION) && (CUDART_VERSION < 10010)
   ASSERT(false, "spmm sparse-dense requires CUDA 10.1 or greater");
 #elif defined(CUDART_VERSION) && (CUDART_VERSION >= 10010) &&                  \
-    (CUDART_VERSION < 11000)
+    (CUDART_VERSION < 11100)
   mm_alg = CUSPARSE_COOMM_ALG1;
   static_assert(is_int32, "int64 cusparseSpMM requires CUDA 11.1 or greater");
 #elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11100)
@@ -179,6 +179,32 @@ void NonzeroAvgPoolingForwardKernelGPU(
     fill<Dtype><<<GET_BLOCKS(sparse_nnzs, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
                   0, stream>>>(sparse_nnzs, d_coo_val, (Dtype)1.);
   }
+
+#ifdef DEBUG
+  std::cout << "sparse_nnzs: " << sparse_nnzs << "\n";
+  Itype *p_scr = (Itype *)std::malloc((sparse_nnzs) * 2 * sizeof(Itype));
+  CUDA_CHECK(cudaMemcpy(p_scr, kernel_map.out_maps.begin(), sparse_nnzs * sizeof(Itype),
+                        cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaMemcpy(p_scr + sparse_nnzs, kernel_map.in_maps.begin(), sparse_nnzs * sizeof(Itype),
+                        cudaMemcpyDeviceToHost));
+
+  Itype step = std::max<Itype>(sparse_nnzs / 100, 1);
+  Itype i = 0;
+  for (; i < sparse_nnzs;) {
+    std::cout << i;
+    std::cout << " out_map: " << p_scr[i]
+              << ", in_map: " << p_scr[i + sparse_nnzs] << "\n";
+    i += step;
+  }
+  i -= step;
+  for (; i < sparse_nnzs; ++i) {
+    std::cout << i;
+    std::cout << " out_map: " << p_scr[i]
+              << ", in_map: " << p_scr[i + sparse_nnzs] << "\n";
+  }
+  std::free(p_scr);
+  std::cout << "done printing\n";
+#endif
 
   //  +---------+ +---+
   //  | spm     | | i |

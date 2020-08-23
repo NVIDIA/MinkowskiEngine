@@ -271,7 +271,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         if self.use_mm:
             # If the kernel_size == 1, the convolution is simply a matrix
             # multiplication
-            out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
+            out_coordinate_map_key = input.coordinate_map_key
             outfeat = input.F.mm(self.kernel)
         else:
             # Get a new coordinate_map_key or extract one from the coords
