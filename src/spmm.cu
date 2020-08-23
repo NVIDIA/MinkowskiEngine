@@ -24,6 +24,7 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
+#include "allocators.cuh"
 #include "gpu.cuh"
 #include "math_functions.hpp"
 
@@ -170,8 +171,10 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
   CUDA_CHECK(cudaMemcpy(sorted_col_ptr, col_indices_ptr,
                         nnz * sizeof(th_int_type), cudaMemcpyDeviceToDevice));
 
+  // allocator
+  auto allocator = detail::c10_allocator<char>();
   sort_coo_gpu(cusparse_handle, dim_i, dim_j, nnz, sorted_row_ptr,
-               sorted_col_ptr);
+               sorted_col_ptr, allocator);
 
   size_t workspace_buffer_size = 0;
   void *workspace_buffer = nullptr;

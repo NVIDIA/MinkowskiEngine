@@ -42,6 +42,7 @@ def spmm(
             rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
         )
 
+        # WARNING: TODO: not soring the vals. Should not be used for generic SPMM
         # coosort only supports int32
         # return MEB.coo_spmm_int64(
         #     rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg

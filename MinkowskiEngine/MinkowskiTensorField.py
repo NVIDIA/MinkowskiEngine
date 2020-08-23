@@ -57,6 +57,11 @@ class TensorField(Tensor):
         device=None,
     ):
 
+        # To device
+        if device is not None:
+            features = features.to(device)
+            coordinates = coordinates.to(device)
+
         assert quantization_mode in [
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
             SparseTensorQuantizationMode.UNWEIGHTED_SUM,
