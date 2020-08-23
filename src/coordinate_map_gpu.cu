@@ -1137,7 +1137,8 @@ stride_map_kernel(map_type const __restrict__ in_map,                      //
                   index_type const *const __restrict__ stride,             //
                   index_type *__restrict__ p_in_maps,                      //
                   index_type *__restrict__ p_out_maps,
-                  size_type const coordinate_size) {
+                  size_type const coordinate_size,
+                  index_type const unused_key) {
   extern __shared__ coordinate_type sh_all[];
 
   auto const tx = threadIdx.x;
@@ -1173,9 +1174,12 @@ stride_map_kernel(map_type const __restrict__ in_map,                      //
   }
 
   auto out_iter = out_map.find(coordinate<coordinate_type>(sh_tmp));
-
-  p_in_maps[x] = in_value.second;
-  p_out_maps[x] = out_iter->second;
+  if (out_iter == out_map.end()) {
+    p_in_maps[x] = unused_key;
+  } else {
+    p_in_maps[x] = in_value.second;
+    p_out_maps[x] = out_iter->second;
+  }
 }
 
 } // namespace detail
@@ -1191,6 +1195,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_map(
   thrust::device_vector<size_type> d_out_tensor_stride(
       out_tensor_stride.begin(), out_tensor_stride.end());
 
+  index_type unused_key = std::numeric_limits<index_type>::max();
   // (THREAD * D +  D) * 4
   uint32_t const shared_memory_size_in_bytes =
       m_coordinate_size * sizeof(index_type) +                  // stride
@@ -1203,10 +1208,13 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_map(
   LOG_DEBUG("threads dim", thread_dim);
   LOG_DEBUG("num threads", num_threads);
 
-  kernel_map_type kernel_map(in_size, base_type::m_byte_allocator,
-                             false /* reserve_kernel_index */);
-  CUDA_CHECK(cudaStreamSynchronize(0));
-  LOG_DEBUG("Allocated kernel_map.");
+  index_type *in_out_map = (index_type *)base_type::m_byte_allocator.allocate(
+      2 * (in_size + 1) * sizeof(index_type));
+  index_type *ins = in_out_map;
+  index_type *outs =
+      in_out_map + in_size + 1; // for __restrict__ collision prevention
+
+  LOG_DEBUG("Allocated temporary memory");
 
   detail::stride_map_kernel<coordinate_type, size_type, index_type, map_type>
       <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
@@ -1215,9 +1223,29 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_map(
           thrust::raw_pointer_cast(m_valid_map_index.data()),   //
           num_threads,                                          //
           thrust::raw_pointer_cast(d_out_tensor_stride.data()), //
-          kernel_map.in_maps.begin(),                           //
-          kernel_map.out_maps.begin(),                          //
-          m_coordinate_size);
+          ins,                                                  //
+          outs,                                                 //
+          m_coordinate_size,                                    //
+          unused_key);
+
+  auto begin = thrust::make_zip_iterator(thrust::make_tuple(ins, outs));
+  auto const valid_size =
+      thrust::remove_if(thrust::device, begin,
+                        thrust::make_zip_iterator(
+                            thrust::make_tuple(ins + in_size, outs + in_size)),
+                        detail::is_first<index_type>(unused_key)) -
+      begin;
+
+  LOG_DEBUG("Valid size:", valid_size);
+  kernel_map_type kernel_map(valid_size, base_type::m_byte_allocator, false);
+  CUDA_CHECK(cudaMemcpy(kernel_map.in_maps.data(), ins,
+                        valid_size * sizeof(index_type),
+                        cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy(kernel_map.out_maps.data(), outs,
+                        valid_size * sizeof(index_type),
+                        cudaMemcpyDeviceToDevice));
+  base_type::m_byte_allocator.deallocate(
+      (char *)in_out_map, 2 * (in_size + 1) * sizeof(index_type));
 
   return kernel_map;
 }

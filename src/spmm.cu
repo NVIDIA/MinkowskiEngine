@@ -72,7 +72,7 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
 #if defined(CUDART_VERSION) && (CUDART_VERSION < 10010)
   TORCH_CHECK(false, "spmm sparse-dense requires CUDA 10.1 or greater");
 #elif defined(CUDART_VERSION) && (CUDART_VERSION >= 10010) &&                  \
-    (CUDART_VERSION < 11000)
+    (CUDART_VERSION < 11100)
   switch (spmm_algorithm_id) {
   case 1:
     mm_alg = CUSPARSE_COOMM_ALG1;
