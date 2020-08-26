@@ -152,7 +152,7 @@ class TensorField(Tensor):
         internally treated as an additional spatial dimension to disassociate
         different instances in a batch.
         """
-        if self._CC is None:
+        if not hasattr(self, '_CC') or self._CC is None:
             self._CC = self._get_coordinate_field()
         return self._CC
 

@@ -265,6 +265,10 @@ class CoordinateManager:
         key = self._get_coordinate_map_key(coords_key_or_tensor_strides)
         return self._manager.get_coordinates(key)
 
+    def get_coordinate_field(self, coords_key_or_tensor_strides):
+        key = self._get_coordinate_map_key(coords_key_or_tensor_strides)
+        return self._manager.get_coordinate_field(key)
+
     def number_of_unique_batch_indices(self):
         return self._manager.origin_map_size()
 
