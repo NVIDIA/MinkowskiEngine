@@ -365,11 +365,12 @@ class SparseTensor(Tensor):
 
            >>> # coords, feats from a data loader
            >>> print(len(coords))  # 227742
-           >>> sinput = ME.SparseTensor(coords=coords, feats=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
-           >>> print(len(sinput))  # 161890 quantization results in fewer voxels
-           >>> soutput = network(sinput)
+           >>> tfield = ME.TensorField(coords=coords, feats=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+           >>> print(len(tfield))  # 227742
+           >>> sinput = tfield.sparse() # 161890 quantization results in fewer voxels
+           >>> soutput = MinkUNet(sinput)
            >>> print(len(soutput))  # 161890 Output with the same resolution
-           >>> ofield = soutput.slice(sinput)
+           >>> ofield = soutput.slice(tfield)
            >>> assert isinstance(ofield, ME.TensorField)
            >>> len(ofield) == len(coords)  # recovers the original ordering and length
            >>> assert isinstance(ofield.F, torch.Tensor)  # .F returns the features

@@ -122,12 +122,19 @@ if __name__ == '__main__':
     with torch.no_grad():
         voxel_size = 0.02
         # Feed-forward pass and get the prediction
-        sinput = ME.SparseTensor(
-            features=torch.from_numpy(colors).float().to(device),
-            coordinates=ME.utils.batched_coordinates([coords / voxel_size]).to(device),
-            quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+        in_field = ME.TensorField(
+            features=torch.from_numpy(colors).float(),
+            coordinates=ME.utils.batched_coordinates([coords / voxel_size], return_int=False),
+            quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+            device=device,
         )
-        logits = model(sinput).slice(sinput)
+        # Convert to a sparse tensor
+        sinput = in_field.sparse()
+        # Output sparse tensor
+        soutput = model(sinput)
+        # get the prediction on the input tensor field
+        out_field = soutput.slice(in_field)
+        logits = out_field.F
 
     _, pred = logits.max(1)
     pred = pred.cpu().numpy()

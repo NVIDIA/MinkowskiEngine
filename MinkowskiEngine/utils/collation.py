@@ -76,7 +76,7 @@ def batched_coordinates(coords, return_int=True):
             cs = cs.int()
         else:
             if isinstance(cs, np.ndarray):
-                cs = torch.from_numpy(np.floor(cs))
+                cs = torch.from_numpy(cs)
 
         cn = len(cs)
         # BATCH_FIRST:
