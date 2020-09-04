@@ -309,6 +309,7 @@ class Tensor:
                         if coordinates.is_cuda
                         else CoordinateMapType.CPU,
                         allocator_type=allocator_type,
+                        minkowski_algorithm=minkowski_algorithm,
                     )
                 coordinate_manager = _global_coordinate_manager
             else:

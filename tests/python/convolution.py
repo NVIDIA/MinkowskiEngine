@@ -31,6 +31,7 @@ import MinkowskiEngineBackend._C as _C
 
 from MinkowskiEngine import (
     SparseTensor,
+    MinkowskiAlgorithm,
     MinkowskiConvolution,
     MinkowskiConvolutionFunction,
     MinkowskiConvolutionTranspose,
@@ -43,6 +44,36 @@ from utils.gradcheck import gradcheck
 
 
 class TestConvolution(unittest.TestCase):
+    def test_kernel_map(self):
+        print(f"{self.__class__.__name__}: test_gpu")
+        if not torch.cuda.is_available():
+            return
+        in_channels, out_channels, D = 2, 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+
+        # Initialize context
+        conv1 = MinkowskiConvolution(
+            in_channels, out_channels, kernel_size=2, stride=2, bias=True, dimension=D
+        ).double()
+        conv2 = MinkowskiConvolution(
+            in_channels, out_channels, kernel_size=3, stride=2, bias=True, dimension=D
+        ).double()
+
+        device = torch.device("cuda")
+        input = SparseTensor(
+            feats,
+            coordinates=coords,
+            device=device,
+            minkowski_algorithm=MinkowskiAlgorithm.SPEED_OPTIMIZED,
+        )
+        print(input)
+        conv1 = conv1.to(device)
+        conv2 = conv2.to(device)
+        output = conv2(conv1(input))
+        print(output)
+
     def test_gpu(self):
         print(f"{self.__class__.__name__}: test_gpu")
         if not torch.cuda.is_available():
