@@ -230,6 +230,29 @@ public:
     return m_is_transpose;
   }
 
+  MINK_CUDA_HOST_DEVICE void
+  coordinate_at(index_type kernel_index, coordinate_type const *src_coordinate,
+                coordinate_type *dst_coordinate) const {
+    // only for hypercube
+    dst_coordinate[0] = src_coordinate[0];
+    for (index_type i = 0; i < m_coordinate_size - 1; ++i) {
+      auto const curr_kernel_size = m_kernel_size[i];
+      auto const curr_kernel_index = kernel_index % curr_kernel_size;
+
+      if (m_kernel_size[i] % 2 == 0) {
+        dst_coordinate[i + 1] =
+            src_coordinate[i + 1] +
+            m_dilation[i] * m_tensor_stride[i] * curr_kernel_index;
+      } else {
+        dst_coordinate[i + 1] =
+            src_coordinate[i + 1] +
+            (curr_kernel_index - int(curr_kernel_size / 2)) * m_dilation[i] *
+                m_tensor_stride[i];
+      }
+      kernel_index /= curr_kernel_size;
+    }
+  }
+
 private:
   MINK_CUDA_HOST_DEVICE void set_volume() {
 #ifndef __CUDA_ARCH__
@@ -298,6 +321,7 @@ public:
   using base_type::cbegin;
   using base_type::end;
 
+  using base_type::coordinate_at;
   using base_type::coordinate_size;
   using base_type::is_transpose;
   using base_type::num_offset;
@@ -396,6 +420,7 @@ template <typename coordinate_type = default_types::dcoordinate_type>
 class gpu_kernel_region : kernel_region<coordinate_type> {
 public:
   using base_type = kernel_region<coordinate_type>;
+  using size_type = typename base_type::size_type;
 
 public:
   // The input kernel_region should have initialized the m_d_tensor_stride ...
@@ -405,12 +430,28 @@ public:
       : base_type{other.region_type(),          other.coordinate_size(),
                   other.device_tensor_stride(), other.device_kernel_size(),
                   other.device_dilation(),      other.volume(),
-                  other.device_offset(),        other.num_offset()} {}
+                  other.device_offset(),        other.num_offset(),
+                  other.is_transpose()} {}
+
+  MINK_CUDA_HOST_DEVICE gpu_kernel_region(
+      gpu_kernel_region<coordinate_type> const &other,
+      size_type const *device_tensor_stride, // stride size between points
+      size_type const *device_kernel_size,   // size of the kernel or region
+      size_type const *device_dilation,      // stride / dilation within kernel,
+      coordinate_type const *device_offset =
+          nullptr // m_coordinate_size * n_offset
+      )
+      : base_type{other.region_type(),  other.coordinate_size(),
+                  device_tensor_stride, device_kernel_size,
+                  device_dilation,      other.volume(),
+                  device_offset,        other.num_offset(),
+                  other.is_transpose()} {}
 
   using base_type::begin;
   using base_type::cbegin;
   using base_type::end;
 
+  using base_type::coordinate_at;
   using base_type::coordinate_size;
   using base_type::num_offset;
   using base_type::offset;
@@ -424,6 +465,7 @@ public:
 
 protected:
   using base_type::m_coordinate_size;
+  using base_type::m_is_transpose;
   using base_type::m_num_offset;
   using base_type::m_region_type;
   using base_type::m_volume;

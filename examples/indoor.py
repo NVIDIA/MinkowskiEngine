@@ -126,6 +126,7 @@ if __name__ == '__main__':
             features=torch.from_numpy(colors).float(),
             coordinates=ME.utils.batched_coordinates([coords / voxel_size], return_int=False),
             quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+            minkowski_algorithm=ME.MinkowskiAlgorithm.SPEED_OPTIMIZED,
             device=device,
         )
         # Convert to a sparse tensor

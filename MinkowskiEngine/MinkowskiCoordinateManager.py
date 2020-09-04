@@ -138,6 +138,7 @@ class CoordinateManager:
             )
 
         self.D = D
+        self.minkowski_algorithm = minkowski_algorithm
         self._CoordinateManagerClass = getattr(_C, "CoordinateMapManager" + postfix)
         self._manager = self._CoordinateManagerClass(minkowski_algorithm, num_threads)
 
@@ -468,5 +469,5 @@ class CoordinateManager:
 
     def __repr__(self):
         return (
-            self._CoordinateManagerClass.__name__ + "(\n" + str(self._manager) + "  )\n"
+            self._CoordinateManagerClass.__name__ + "(\n" + str(self._manager) + f"\talgorithm={self.minkowski_algorithm}\n  )\n"
         )
