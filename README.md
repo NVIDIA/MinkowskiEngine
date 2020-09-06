@@ -257,6 +257,40 @@ If you use the Minkowski Engine, please cite:
 }
 ```
 
+For multi-threaded kernel map generation, please cite:
+
+```
+@inproceedings{choy2019fully,
+  title={Fully Convolutional Geometric Features},
+  author={Choy, Christopher and Park, Jaesik and Koltun, Vladlen},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={8958--8966},
+  year={2019}
+}
+```
+
+For strided pooling layers for high-dimensional convolutions, please cite:
+
+```
+@inproceedings{choy2020high,
+  title={High-dimensional Convolutional Networks for Geometric Pattern Recognition},
+  author={Choy, Christopher and Lee, Junha and Ranftl, Rene and Park, Jaesik and Koltun, Vladlen},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  year={2020}
+}
+```
+
+For generative transposed convolution, please cite:
+
+```
+@inproceedings{gwak2020gsdn,
+  title={Generative Sparse Detection Networks for 3D Single-shot Object Detection},
+  author={Gwak, JunYoung and Choy, Christopher B and Savarese, Silvio},
+  booktitle={European conference on computer vision},
+  year={2020}
+}
+```
+
 ## Projects using Minkowski Engine
 
 Please feel free to update [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Usage) to add your projects!

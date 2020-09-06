@@ -500,6 +500,15 @@ class MinkowskiGenerativeConvolutionTranspose(MinkowskiConvolutionBase):
     ):
         r"""a generalized sparse transposed convolution layer that creates new coordinates.
 
+        Please refer to `Generative Sparse Detection Networks for 3D Single-shot Object Detection <https://arxiv.org/abs/2006.12356>`_ for more detail. Also, please cite the following paper if you use this function.
+
+        >> @inproceedings{gwak2020gsdn,
+        >>   title={Generative Sparse Detection Networks for 3D Single-shot Object Detection},
+        >>   author={Gwak, JunYoung and Choy, Christopher B and Savarese, Silvio},
+        >>   booktitle={European conference on computer vision},
+        >>   year={2020}
+        >> }
+
         Args:
             :attr:`in_channels` (int): the number of input channels in the
             input tensor.
