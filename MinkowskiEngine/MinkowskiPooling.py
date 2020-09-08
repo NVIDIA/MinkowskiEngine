@@ -706,7 +706,7 @@ class MinkowskiGlobalPooling(MinkowskiModuleBase):
         )
 
     def __repr__(self):
-        return self.__class__.__name__ + f"(mode={str(self.mode)})"
+        return self.__class__.__name__ + f"(mode={str(self.pooling_mode)})"
 
 
 class MinkowskiGlobalSumPooling(MinkowskiGlobalPooling):
