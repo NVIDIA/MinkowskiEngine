@@ -101,9 +101,9 @@ void AvgPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                           at::Tensor offsets, py::object py_in_coords_key,
                           py::object py_out_coords_key,
                           py::object py_coords_manager, bool use_avg) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const auto &in_out = p_coords_manager->getInOutMapsGPU(
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
+  const InOutMapKey map_key = p_coords_manager->getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, false, true);
 
@@ -124,7 +124,10 @@ void AvgPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   NonzeroAvgPoolingForwardKernelGPU<Dtype, int>(
       in_feat.template data<Dtype>(), in_feat.size(0),
       out_feat.template data<Dtype>(), out_nrows, num_nonzero_data,
-      in_feat.size(1), in_out.first, in_out.second, use_avg, handle,
+      in_feat.size(1),
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key],
+      use_avg, handle,
       at::cuda::getCurrentCUDAStream());
 }
 
@@ -136,8 +139,8 @@ void AvgPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                            int region_type, py::object py_in_coords_key,
                            py::object py_out_coords_key,
                            py::object py_coords_manager, bool use_avg) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   const InOutMapKey map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
       py_in_coords_key, py_out_coords_key, false, true);
@@ -153,8 +156,8 @@ void AvgPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       grad_in_feat.template data<Dtype>(), in_feat.size(0),
       grad_out_feat.template data<Dtype>(), grad_out_feat.size(0),
       num_nonzero.template data<Dtype>(), in_feat.size(1),
-      p_coords_manager->d_in_maps[map_key],
-      p_coords_manager->d_out_maps[map_key], use_avg,
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key], use_avg,
       at::cuda::getCurrentCUDAStream());
 }
 #endif
@@ -188,28 +191,28 @@ template void AvgPoolingBackwardCPU<CoordsToIndexMap, double>(
     py::object py_coords_manager, bool use_avg);
 
 #ifndef CPU_ONLY
-template void AvgPoolingForwardGPU<CoordsToIndexMap, float>(
+template void AvgPoolingForwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void AvgPoolingForwardGPU<CoordsToIndexMap, double>(
+template void AvgPoolingForwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void AvgPoolingBackwardGPU<CoordsToIndexMap, float>(
+template void AvgPoolingBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template void AvgPoolingBackwardGPU<CoordsToIndexMap, double>(
+template void AvgPoolingBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,

@@ -46,49 +46,47 @@ __global__ void copy_in_out_map(const int n, const Dtype *in_feat,
 template <typename Dtype, typename Itype>
 void PruningForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                              const int nchannel,
-                             const pInOutMaps<Itype> &in_maps,
-                             const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                              cudaStream_t stream) {
-  const int nnz = in_maps[0].size();
+  const int nnz = in_maps[0].size(0);
 
   copy_in_out_map<Dtype, Itype>
       <<<GET_BLOCKS(nnz), CUDA_NUM_THREADS, 0, stream>>>(
-          nnz, d_in_feat, d_out_feat, nchannel, in_maps[0].data(),
-          out_maps[0].data());
+          nnz, d_in_feat, d_out_feat, nchannel, in_maps[0].data<Itype>(),
+          out_maps[0].data<Itype>());
 }
 
 template <typename Dtype, typename Itype>
 void PruningBackwardKernelGPU(Dtype *d_grad_in_feat,
                               const Dtype *d_grad_out_feat, int nchannel,
-                              const pInOutMaps<Itype> &in_maps,
-                              const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                               cudaStream_t stream) {
-  const int nnz = in_maps[0].size();
+  const int nnz = in_maps[0].size(0);
 
   copy_in_out_map<Dtype, Itype>
       <<<GET_BLOCKS(nnz), CUDA_NUM_THREADS, 0, stream>>>(
-          nnz, d_grad_out_feat, d_grad_in_feat, nchannel, out_maps[0].data(),
-          in_maps[0].data());
+          nnz, d_grad_out_feat, d_grad_in_feat, nchannel, out_maps[0].data<Itype>(),
+          in_maps[0].data<Itype>());
 }
 
 template void PruningForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, float *d_out_feat, int nchannel,
-    const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cudaStream_t stream);
 
 template void PruningBackwardKernelGPU<float, int32_t>(
     float *d_grad_in_feat, const float *d_grad_out_feat, int nchannel,
-    const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cudaStream_t stream);
 
 template void PruningForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_out_feat, int nchannel,
-    const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cudaStream_t stream);
 
 template void PruningBackwardKernelGPU<double, int32_t>(
     double *d_grad_in_feat, const double *d_grad_out_feat, int nchannel,
-    const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cudaStream_t stream);
 
 } // end namespace minkowski

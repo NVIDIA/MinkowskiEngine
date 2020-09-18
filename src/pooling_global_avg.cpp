@@ -134,8 +134,8 @@ vector<at::Tensor> GlobalPoolingForwardGPU(at::Tensor in_feat,
                                            py::object py_out_coords_key,
                                            py::object py_coords_manager,
                                            bool use_avg, int pooling_mode) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   const auto batch_size = p_coords_manager->getBatchSize();
 
   if (batch_size == 1) {
@@ -173,7 +173,7 @@ vector<at::Tensor> GlobalPoolingForwardGPU(at::Tensor in_feat,
       }
     } break;
     case 2: {
-      const auto &in_outs = p_coords_manager->getOriginInOutMapsGPU(
+      const InOutMapKey map_key = p_coords_manager->getOriginInOutMaps(
           py_in_coords_key, py_out_coords_key);
 
       cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
@@ -182,8 +182,10 @@ vector<at::Tensor> GlobalPoolingForwardGPU(at::Tensor in_feat,
       NonzeroAvgPoolingForwardKernelGPU<Dtype, int>(
           in_feat.template data<Dtype>(), in_feat.size(0),
           out_feat.template data<Dtype>(), batch_size,
-          num_nonzero.template data<Dtype>(), in_feat.size(1), in_outs.first,
-          in_outs.second, use_avg, handle, at::cuda::getCurrentCUDAStream());
+          num_nonzero.template data<Dtype>(), in_feat.size(1),
+          p_coords_manager->in_maps[map_key],
+          p_coords_manager->out_maps[map_key],
+          use_avg, handle, at::cuda::getCurrentCUDAStream());
 
     } break;
     default:
@@ -199,8 +201,8 @@ GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_out_feat,
                          at::Tensor num_nonzero, py::object py_in_coords_key,
                          py::object py_out_coords_key,
                          py::object py_coords_manager, bool use_avg) {
-  CoordsManager<MapType> *p_coords_man =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_man =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   const auto batch_size = p_coords_man->getBatchSize();
 
   auto grad_in_feat = torch::empty_like(in_feat);
@@ -218,15 +220,13 @@ GlobalPoolingBackwardGPU(at::Tensor in_feat, at::Tensor grad_out_feat,
         p_coords_man->existsInOutMapKey(map_key),
         "The in-out map doesn't exist for backward. Did you run forward pass?");
 
-    p_coords_man->copyInOutMapsToGPU(map_key);
-
     grad_in_feat.zero_();
 
     NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
         grad_in_feat.template data<Dtype>(), in_feat.size(0),
         grad_out_feat.template data<Dtype>(), grad_out_feat.size(0),
         num_nonzero.template data<Dtype>(), in_feat.size(1),
-        p_coords_man->d_in_maps[map_key], p_coords_man->d_out_maps[map_key],
+        p_coords_man->in_maps[map_key], p_coords_man->out_maps[map_key],
         use_avg, at::cuda::getCurrentCUDAStream());
   }
   return grad_in_feat;
@@ -254,22 +254,22 @@ template at::Tensor GlobalPoolingBackwardCPU<CoordsToIndexMap, double>(
     py::object py_coords_manager, bool use_avg);
 
 #ifndef CPU_ONLY
-template vector<at::Tensor> GlobalPoolingForwardGPU<CoordsToIndexMap, float>(
+template vector<at::Tensor> GlobalPoolingForwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg,
     int pooling_mode);
 
-template vector<at::Tensor> GlobalPoolingForwardGPU<CoordsToIndexMap, double>(
+template vector<at::Tensor> GlobalPoolingForwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager, bool use_avg,
     int pooling_mode);
 
-template at::Tensor GlobalPoolingBackwardGPU<CoordsToIndexMap, float>(
+template at::Tensor GlobalPoolingBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor grad_out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);
 
-template at::Tensor GlobalPoolingBackwardGPU<CoordsToIndexMap, double>(
+template at::Tensor GlobalPoolingBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor grad_out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool use_avg);

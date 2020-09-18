@@ -122,9 +122,9 @@ void PoolingTransposeForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                                 py::object py_in_coords_key,
                                 py::object py_out_coords_key,
                                 py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const auto &in_out = p_coords_manager->getInOutMapsGPU(
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
+  const InOutMapKey map_key = p_coords_manager->getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true, true);
 
@@ -140,8 +140,10 @@ void PoolingTransposeForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   NonzeroAvgPoolingForwardKernelGPU<Dtype, int>(
       in_feat.template data<Dtype>(), in_feat.size(0),
       out_feat.template data<Dtype>(), out_nrows,
-      num_nonzero.template data<Dtype>(), in_feat.size(1), get<0>(in_out),
-      get<1>(in_out), false, handle, at::cuda::getCurrentCUDAStream());
+      num_nonzero.template data<Dtype>(), in_feat.size(1),
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key],
+      false, handle, at::cuda::getCurrentCUDAStream());
 }
 
 template <typename MapType, typename Dtype>
@@ -151,8 +153,8 @@ void PoolingTransposeBackwardGPU(
     vector<int> kernel_sizes, vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   bool reverse_map = false;
   const InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
@@ -171,29 +173,29 @@ void PoolingTransposeBackwardGPU(
 
   if (!reverse_map) {
     ASSERT(
-        p_coords_manager->d_in_maps.find(map_key) !=
-            p_coords_manager->d_in_maps.end(),
+        p_coords_manager->in_maps.find(map_key) !=
+            p_coords_manager->in_maps.end(),
         "The in-out map doesn't exist for backward. Did you run forward pass?");
 
     NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
         grad_in_feat.template data<Dtype>(), in_feat.size(0),
         grad_out_feat.template data<Dtype>(), grad_out_feat.size(0),
         num_nonzero.template data<Dtype>(), in_feat.size(1),
-        p_coords_manager->d_in_maps[map_key],
-        p_coords_manager->d_out_maps[map_key], false,
+        p_coords_manager->in_maps[map_key],
+        p_coords_manager->out_maps[map_key], false,
         at::cuda::getCurrentCUDAStream());
   } else {
     ASSERT(
-        p_coords_manager->d_in_maps.find(rev_map_key) !=
-            p_coords_manager->d_in_maps.end(),
+        p_coords_manager->in_maps.find(rev_map_key) !=
+            p_coords_manager->in_maps.end(),
         "The in-out map doesn't exist for backward. Did you run forward pass?");
 
     NonzeroAvgPoolingBackwardKernelGPU<Dtype, int>(
         grad_in_feat.template data<Dtype>(), in_feat.size(0),
         grad_out_feat.template data<Dtype>(), grad_out_feat.size(0),
         num_nonzero.template data<Dtype>(), in_feat.size(1),
-        p_coords_manager->d_out_maps[rev_map_key],
-        p_coords_manager->d_in_maps[rev_map_key], false,
+        p_coords_manager->out_maps[rev_map_key],
+        p_coords_manager->in_maps[rev_map_key], false,
         at::cuda::getCurrentCUDAStream());
   }
 }
@@ -229,28 +231,28 @@ template void PoolingTransposeBackwardCPU<CoordsToIndexMap, double>(
 
 #ifndef CPU_ONLY
 
-template void PoolingTransposeForwardGPU<CoordsToIndexMap, float>(
+template void PoolingTransposeForwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void PoolingTransposeForwardGPU<CoordsToIndexMap, double>(
+template void PoolingTransposeForwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void PoolingTransposeBackwardGPU<CoordsToIndexMap, float>(
+template void PoolingTransposeBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void PoolingTransposeBackwardGPU<CoordsToIndexMap, double>(
+template void PoolingTransposeBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, vector<int> tensor_strides, vector<int> strides,
     vector<int> kernel_sizes, vector<int> dilations, int region_type,

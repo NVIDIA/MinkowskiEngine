@@ -77,6 +77,7 @@ public:
 
   pInOutMaps<int> copyInOutMapToGPU(const InOutMaps<int> &map);
 
+// TODO(ljm): support multi-thread here
   void clear_tmp() {
     for (auto p_buffer : tmp_vec_ptr) {
       cudaFree(p_buffer);
@@ -107,10 +108,14 @@ public:
     }
     case PYTORCH: {
       // std::cout << "Malloc PYTORCH: " << device_id << std::endl;
+      std::cout << "not support currently: " << device_id << std::endl;
+      //
+      /*
       CUDA_CHECK(cudaSetDevice(device_id));
       p_buffer = c10::cuda::CUDACachingAllocator::raw_alloc_with_stream(
           size, at::cuda::getCurrentCUDAStream());
       persist_vec_ptr.push_back(p_buffer);
+      */
       break;
     }
     }

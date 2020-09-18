@@ -22,8 +22,8 @@
  * Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
  * of the code.
  */
-#ifndef COORDS_MAN
-#define COORDS_MAN
+#ifndef GPU_COORDS_MAN
+#define GPU_COORDS_MAN
 
 #include <algorithm>
 #include <array>
@@ -38,9 +38,14 @@
 
 #include <torch/extension.h>
 
-#include "coordsmap.hpp"
+#include "gpu_coordsmap.hpp"
 #include "types.hpp"
 #include "utils.hpp"
+
+#ifndef CPU_ONLY
+#include "gpu_memory_manager.hpp"
+#include <ATen/cuda/CUDAContext.h>
+#endif // CPU_ONLY
 
 namespace minkowski {
 
@@ -53,34 +58,7 @@ using std::string;
 using std::to_string;
 using std::unordered_map;
 
-template <typename VType> int getInOutMapsSize(const VType &map) {
-  // can't use ::accumulate as pVector template instantiation requires a bit
-  // dirty syntax
-  int n = 0;
-  for (auto cmap = begin(map); cmap != end(map); ++cmap)
-    n += cmap->size();
-  return n;
-}
-
-inline long computeKernelVolume(int region_type, const vector<int> &kernel_size,
-                                int n_offset) {
-  int kernel_volume;
-  if (region_type == 0) { // Hypercube
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume *= k;
-  } else if (region_type == 1) { // Hypercross
-    kernel_volume = 1;
-    for (auto k : kernel_size)
-      kernel_volume += k - 1;
-  } else if (region_type == 2) {
-    kernel_volume = n_offset;
-  } else {
-    throw std::invalid_argument("Invalid region type");
-  }
-  return kernel_volume;
-}
-
+/*
 inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
                                           const vector<int> &strides,
                                           bool is_transpose) {
@@ -100,36 +78,52 @@ inline vector<int> computeOutTensorStride(const vector<int> &tensor_strides,
   }
   return out_tensor_strides;
 }
+*/
 
-template <typename MapType = CoordsToIndexMap> class CoordsManager {
+#ifndef CPU_ONLY
+
+template <typename VType> int getInOutMapsSizeGPU(const VType &map) {
+  int n = 0;
+  for (auto cmap = begin(map); cmap != end(map); ++cmap)
+    n += cmap->size(0);
+  return n;
+}
+
+template <typename MapType = CoordsToIndexMapGPU> class GPUCoordsManager {
 public:
   // Variables
   //
   // Coordinate hash key to coordinate hash map
-  unordered_map<uint64_t, CoordsMap<MapType>> coords_maps;
+  unordered_map<uint64_t, std::shared_ptr<GPUCoordsMap<MapType>>> coords_maps;
 
-  // Track whether the batch indices are set
-  bool is_batch_indices_set = false;
   set<int> batch_indices;
-  vector<int> vec_batch_indices;
+  int batch_size;
+  int D;
+  int device_id;
+  c10::Device device;
+  int min_nrows;
+  uint64_t min_coords_key;
+
+  std::shared_ptr<GPUMemoryManager> gpu_memory_manager;
 
   // In to out index mapping for each kernel, pooling
-  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> in_maps;
-  unordered_map<InOutMapKey, InOutMaps<int>, InOutMapKeyHash> out_maps;
+  unordered_map<InOutMapKey, vector<at::Tensor>, InOutMapKeyHash> in_maps;
+  unordered_map<InOutMapKey, vector<at::Tensor>, InOutMapKeyHash> out_maps;
 
-  CoordsManager(int num_threads, MemoryManagerBackend backend) {
-    if (num_threads > 0) {
-      omp_set_dynamic(0);
-      omp_set_num_threads(num_threads);
-    }
+  GPUCoordsManager(int D,
+                   int device_id,
+                   MemoryManagerBackend backend) : batch_size(-1), device(c10::DeviceType::CUDA, 0) {
+    gpu_memory_manager = std::make_shared<GPUMemoryManager>(backend);
+    this->device_id = device_id;
+    this->D = D;
+    min_nrows = INT_MAX;
   }
-  CoordsManager(int num_threads): CoordsManager(num_threads, PYTORCH) {}
-  CoordsManager(): CoordsManager(-1, PYTORCH) {}
+  ~GPUCoordsManager() { clear(); }
 
-  ~CoordsManager() { clear(); }
+// TODO(ljm): implement GPUCoordsMap<MapType>::print
+//  void printDiagnostics(py::object py_coords_key) const;
 
-  void printDiagnostics(py::object py_coords_key) const;
-
+  uint64_t getCoordsKey(const vector<int> &tensor_strides) const;
   bool existsCoordsKey(uint64_t coords_key) const;
   bool existsCoordsKey(py::object py_coords_key) const;
   bool existsInOutMapKey(const InOutMapKey &map_key) const {
@@ -137,13 +131,20 @@ public:
   }
   int getCoordsSize(uint64_t coords_key) const;
   int getCoordsSize(py::object py_coords_key) const;
-  uint64_t getCoordsKey(const vector<int> &tensor_strides) const;
-  long int getBatchSize() const { return batch_indices.size(); }
-  set<int> getBatchIndices() const { return batch_indices; }
+  uint64_t getRandomCoordsKey();
+  long int getBatchSize();
+  set<int> getBatchIndices() {
+    if (batch_indices.empty()) {
+      for (int b = 0; b != getBatchSize(); ++b) batch_indices.insert(b);
+    }
+    ASSERT((int)batch_indices.size() == getBatchSize(),
+           "batch_indices.size() must be equal to getBatchSize()");
+    return batch_indices;
+  }
   void getCoords(at::Tensor coords, py::object py_coords_key) const;
   vector<vector<at::Tensor>>
-  getKernelMap(vector<int> tensor_strides, vector<int> strides,
-               vector<int> kernel_sizes, vector<int> dilations, int region_type,
+  getKernelMap(const vector<int>& tensor_strides, const vector<int>& strides,
+               const vector<int>& kernel_sizes, const vector<int>& dilations, int region_type,
                at::Tensor offsets, py::object py_in_coords_key,
                py::object py_out_coords_key, bool is_transpose, bool is_pool);
   // TODO make this function non-const with ability to generate a new map
@@ -180,7 +181,7 @@ public:
       const vector<int> &strides, vector<int> kernel_sizes,
       vector<int> dilations, int region_type, at::Tensor offsets,
       bool force_creation);
-  uint64_t createPrunedCoords(at::Tensor use_feat, py::object py_in_coords_key,
+  uint64_t createPruningCoords(at::Tensor use_feat, py::object py_in_coords_key,
                               py::object py_out_coords_key);
   uint64_t createOriginCoords(const int D);
   uint64_t createUnionCoords(vector<py::object> py_in_coords_keys,
@@ -199,7 +200,7 @@ public:
                                        py::object py_out_coords_key) const;
 
   // Wrapper functions for setting up coords and returning maps
-  const InOutMapsRefPair<int>
+  const InOutMapKey
   getInOutMaps(const vector<int> &tensor_strides, const vector<int> &strides,
                const vector<int> &kernel_sizes, const vector<int> &dilations,
                int region_type, const at::Tensor &offsets,
@@ -207,37 +208,61 @@ public:
                bool is_transpose, bool is_pool = false,
                bool generate_new_coords = false);
 
-  const InOutMapsRefPair<int> getOriginInOutMaps(py::object py_in_coords_key,
-                                                 py::object py_out_coords_key);
+  const InOutMapKey getOriginInOutMaps(py::object py_in_coords_key,
+                                    py::object py_out_coords_key);
 
-  const InOutMapsRefPair<int> getPruningInOutMaps(at::Tensor use_feat,
+  const InOutMapKey getPruningInOutMaps(at::Tensor use_feat,
                                                   py::object py_in_coords_key,
                                                   py::object py_out_coords_key);
 
-  const InOutMapsRefPair<int>
+  const InOutMapKey
   getUnionInOutMaps(vector<py::object> py_in_coords_keys,
                     py::object py_out_coords_key);
 
-  int getMapSize(const InOutMaps<int> &in_maps) {
-    int n = 0;
-    for (auto &map : in_maps)
-      n += (int)(map.size());
-    return n;
-  }
+  const InOutMapKey
+  getStridedInOutMaps(
+      py::object py_in_coords_key, py::object py_out_coords_key,
+      const vector<int>& tensor_strides, const vector<int>& strides,
+      const vector<int>& kernel_sizes, const vector<int>& dilations, int region_type,
+      bool is_transpose, bool is_pool,
+      bool force_creation);
 
-  int getMaxMapSize(const InOutMaps<int> &in_maps) {
-    int max_n_active = -1;
-    for (auto &map : in_maps)
-      if (max_n_active < (int)(map.size()))
-        max_n_active = (int)(map.size());
-    return max_n_active;
-  }
+  const InOutMapKey
+  createStridedInOutMaps(
+      py::object py_in_coords_key, py::object py_out_coords_key,
+      const vector<int> &tensor_strides,
+      const vector<int> &strides,
+      vector<int> kernel_sizes, vector<int> dilations, int region_type,
+      bool is_transpose, bool is_pool,
+      bool force_creation);
 
-  int getMaxMapSize(const pair<InOutMaps<int> &, InOutMaps<int> &> &in_out) {
-    return getMaxMapSize(in_out.first);
-  }
+  const InOutMapKey
+  getTransposedStridedRegionInOutMaps(
+      py::object py_in_coords_key, py::object py_out_coords_key,
+      const vector<int>& tensor_strides,
+      const vector<int>& strides, const vector<int>& kernel_sizes, const vector<int>& dilations,
+      int region_type,
+      bool is_transpose, bool is_pool,
+      at::Tensor offsets,
+      bool force_creation);
 
-  uint64_t getRandomCoordsKey();
+  const InOutMapKey
+  createTransposedStridedRegionInOutMaps(
+      py::object py_in_coords_key, py::object py_out_coords_key,
+      const vector<int>& tensor_strides,
+      const vector<int>& strides, const vector<int>& kernel_sizes, const vector<int>& dilations,
+      int region_type,
+      bool is_transpose, bool is_pool,
+      at::Tensor offsets, bool force_creation);
+
+  const InOutMapKey
+  createUnionInOutMaps(const vector<py::object>& py_in_coords_keys,
+                       py::object py_out_coords_key);
+
+  const InOutMapKey
+  createPruningInOutMaps(at::Tensor use_feat,
+                         py::object py_in_coords_key,
+                         py::object py_out_coords_key);
 
   string toString() const;
   void clear() {
@@ -252,8 +277,15 @@ public:
   vector<at::Tensor> getRowIndicesPerBatch(py::object py_in_coords_key,
                                            py::object py_out_coords_key);
 
-};     // coordsmanager
+  void *getScratchGPUMemory(size_t size) {
+    return gpu_memory_manager.get()->tmp_data(size);
+  }
+
+  void clearScratchGPUMemory() { gpu_memory_manager.get()->clear_tmp(); }
+
+};     // gpucoordsmanager
+#endif
 
 } // namespace minkowski
 
-#endif // COORDS_MAN
+#endif // GPU_COORDS_MAN

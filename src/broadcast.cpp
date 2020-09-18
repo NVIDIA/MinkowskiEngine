@@ -88,11 +88,11 @@ at::Tensor BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
                                int op, py::object py_in_coords_key,
                                py::object py_glob_coords_key,
                                py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   // Both coords must exist
   // Use the global pooling mapping
-  const auto &in_out = p_coords_manager->getOriginInOutMapsGPU(
+  const InOutMapKey map_key = p_coords_manager->getOriginInOutMaps(
       py_in_coords_key, py_glob_coords_key);
 
   auto out_feat =
@@ -104,7 +104,9 @@ at::Tensor BroadcastForwardGPU(at::Tensor in_feat, at::Tensor in_feat_glob,
   BroadcastForwardKernelGPU<Dtype, int>(
       in_feat.data<Dtype>(), in_feat.size(0), in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), out_feat.data<Dtype>(), in_feat.size(1), op,
-      in_out.first, in_out.second, handle, at::cuda::getCurrentCUDAStream());
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key],
+      handle, at::cuda::getCurrentCUDAStream());
 
   return out_feat;
 }
@@ -116,13 +118,13 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
                           py::object py_in_coords_key,
                           py::object py_glob_coords_key,
                           py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_glob_coords_key);
 
-  ASSERT(p_coords_manager->d_in_maps.find(map_key) !=
-             p_coords_manager->d_in_maps.end(),
+  ASSERT(p_coords_manager->in_maps.find(map_key) !=
+             p_coords_manager->in_maps.end(),
          "The in-out map doesn't exist for backward. Did you run forward pass?")
 
   grad_in_feat.resize_as_(in_feat);
@@ -137,8 +139,8 @@ void BroadcastBackwardGPU(at::Tensor in_feat, at::Tensor grad_in_feat,
       in_feat.data<Dtype>(), grad_in_feat.data<Dtype>(), in_feat.size(0),
       in_feat_glob.data<Dtype>(), grad_in_feat_glob.data<Dtype>(),
       in_feat_glob.size(0), grad_out_feat.data<Dtype>(), in_feat.size(1), op,
-      p_coords_manager->d_in_maps[map_key],
-      p_coords_manager->d_out_maps[map_key], handle,
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key], handle,
       at::cuda::getCurrentCUDAStream());
 }
 #endif
@@ -166,23 +168,23 @@ template void BroadcastBackwardCPU<CoordsToIndexMap, double>(
     py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template at::Tensor BroadcastForwardGPU<CoordsToIndexMap, float>(
+template at::Tensor BroadcastForwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor in_feat_glob, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template at::Tensor BroadcastForwardGPU<CoordsToIndexMap, double>(
+template at::Tensor BroadcastForwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor in_feat_glob, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void BroadcastBackwardGPU<CoordsToIndexMap, float>(
+template void BroadcastBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void BroadcastBackwardGPU<CoordsToIndexMap, double>(
+template void BroadcastBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor in_feat_glob,
     at::Tensor grad_in_feat_glob, at::Tensor grad_out_feat, int op,
     py::object py_in_coords_key, py::object py_out_coords_key,

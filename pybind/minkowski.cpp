@@ -31,11 +31,13 @@
 
 #include "extern.hpp"
 #include "src/common.hpp"
+#include "src/types.hpp"
 
 namespace py = pybind11;
 
 namespace mink = minkowski;
 
+/*
 template <typename MapType, typename Dtype>
 void instantiate_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
@@ -188,6 +190,153 @@ void instantiate_func(py::module &m, const std::string &dtypestr) {
         py::call_guard<py::gil_scoped_release>());
 #endif
 }
+*/
+
+template <typename MapType, typename Dtype>
+void instantiate_func(py::module &m, const std::string &dtypestr) {
+  m.def((std::string("ConvolutionForwardCPU") + dtypestr).c_str(),
+        &mink::ConvolutionForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionBackwardCPU") + dtypestr).c_str(),
+        &mink::ConvolutionBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("ConvolutionTransposeForwardCPU") + dtypestr).c_str(),
+        &mink::ConvolutionTransposeForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionTransposeBackwardCPU") + dtypestr).c_str(),
+        &mink::ConvolutionTransposeBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("AvgPoolingForwardCPU") + dtypestr).c_str(),
+        &mink::AvgPoolingForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("AvgPoolingBackwardCPU") + dtypestr).c_str(),
+        &mink::AvgPoolingBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("MaxPoolingForwardCPU") + dtypestr).c_str(),
+        &mink::MaxPoolingForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("MaxPoolingBackwardCPU") + dtypestr).c_str(),
+        &mink::MaxPoolingBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("PoolingTransposeForwardCPU") + dtypestr).c_str(),
+        &mink::PoolingTransposeForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("PoolingTransposeBackwardCPU") + dtypestr).c_str(),
+        &mink::PoolingTransposeBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("GlobalPoolingForwardCPU") + dtypestr).c_str(),
+        &mink::GlobalPoolingForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("GlobalPoolingBackwardCPU") + dtypestr).c_str(),
+        &mink::GlobalPoolingBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("GlobalMaxPoolingForwardCPU") + dtypestr).c_str(),
+        &mink::GlobalMaxPoolingForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("GlobalMaxPoolingBackwardCPU") + dtypestr).c_str(),
+        &mink::GlobalMaxPoolingBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
+        &mink::BroadcastForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
+        &mink::BroadcastBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("PruningForwardCPU") + dtypestr).c_str(),
+        &mink::PruningForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("PruningBackwardCPU") + dtypestr).c_str(),
+        &mink::PruningBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("UnionForwardCPU") + dtypestr).c_str(),
+        &mink::UnionForwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("UnionBackwardCPU") + dtypestr).c_str(),
+        &mink::UnionBackwardCPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+}
+
+template <typename MapType, typename Dtype>
+void instantiate_func_gpu(py::module &m, const std::string &dtypestr) {
+  m.def((std::string("ConvolutionForwardGPU") + dtypestr).c_str(),
+        &mink::ConvolutionForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionBackwardGPU") + dtypestr).c_str(),
+        &mink::ConvolutionBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("ConvolutionTransposeForwardGPU") + dtypestr).c_str(),
+        &mink::ConvolutionTransposeForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("ConvolutionTransposeBackwardGPU") + dtypestr).c_str(),
+        &mink::ConvolutionTransposeBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("AvgPoolingForwardGPU") + dtypestr).c_str(),
+        &mink::AvgPoolingForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("AvgPoolingBackwardGPU") + dtypestr).c_str(),
+        &mink::AvgPoolingBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("MaxPoolingForwardGPU") + dtypestr).c_str(),
+        &mink::MaxPoolingForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("MaxPoolingBackwardGPU") + dtypestr).c_str(),
+        &mink::MaxPoolingBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("PoolingTransposeForwardGPU") + dtypestr).c_str(),
+        &mink::PoolingTransposeForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("PoolingTransposeBackwardGPU") + dtypestr).c_str(),
+        &mink::PoolingTransposeBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
+        &mink::GlobalPoolingForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("GlobalPoolingBackwardGPU") + dtypestr).c_str(),
+        &mink::GlobalPoolingBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("GlobalMaxPoolingForwardGPU") + dtypestr).c_str(),
+        &mink::GlobalMaxPoolingForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("GlobalMaxPoolingBackwardGPU") + dtypestr).c_str(),
+        &mink::GlobalMaxPoolingBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
+        &mink::BroadcastForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
+        &mink::BroadcastBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("PruningForwardGPU") + dtypestr).c_str(),
+        &mink::PruningForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
+        &mink::PruningBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("UnionForwardGPU") + dtypestr).c_str(),
+        &mink::UnionForwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("UnionBackwardGPU") + dtypestr).c_str(),
+        &mink::UnionBackwardGPU<MapType, Dtype>,
+        py::call_guard<py::gil_scoped_release>());
+}
 
 template <typename MapType> void instantiate_coordsman(py::module &m) {
   std::string coords_name = std::string("CoordsManager");
@@ -199,9 +348,6 @@ template <typename MapType> void instantiate_coordsman(py::module &m) {
                mink::CoordsManager<MapType>::existsCoordsKey)
       .def("getCoordsKey", &mink::CoordsManager<MapType>::getCoordsKey)
       .def("getKernelMap", &mink::CoordsManager<MapType>::getKernelMap)
-#ifndef CPU_ONLY
-      .def("getKernelMapGPU", &mink::CoordsManager<MapType>::getKernelMapGPU)
-#endif
       .def("getCoordsMap", &mink::CoordsManager<MapType>::getCoordsMap)
       .def("getUnionMap", &mink::CoordsManager<MapType>::getUnionMap)
       .def("getCoordsSize",
@@ -235,10 +381,59 @@ template <typename MapType> void instantiate_coordsman(py::module &m) {
            [](const mink::CoordsManager<MapType> &a) { return a.toString(); });
 }
 
+template <typename MapType> void instantiate_coordsman_gpu(py::module &m) {
+  std::string coords_name = std::string("GPUCoordsManager");
+  py::class_<mink::GPUCoordsManager<MapType>>(m, coords_name.c_str())
+//      .def(py::init<int>())
+      .def(py::init<int, int, mink::MemoryManagerBackend>())
+      .def("existsCoordsKey",
+           (bool (mink::GPUCoordsManager<MapType>::*)(py::object) const) &
+               mink::GPUCoordsManager<MapType>::existsCoordsKey)
+      .def("getCoordsKey", &mink::GPUCoordsManager<MapType>::getCoordsKey)
+      .def("getKernelMap", &mink::GPUCoordsManager<MapType>::getKernelMap)
+      .def("getCoordsMap", &mink::GPUCoordsManager<MapType>::getCoordsMap)
+      .def("getUnionMap", &mink::GPUCoordsManager<MapType>::getUnionMap)
+      .def("getCoordsSize",
+           (int (mink::GPUCoordsManager<MapType>::*)(py::object) const) &
+               mink::GPUCoordsManager<MapType>::getCoordsSize)
+      .def("getCoords", &mink::GPUCoordsManager<MapType>::getCoords)
+      .def("getBatchSize", &mink::GPUCoordsManager<MapType>::getBatchSize)
+      .def("getBatchIndices", &mink::GPUCoordsManager<MapType>::getBatchIndices)
+      .def("getRowIndicesAtBatchIndex",
+           &mink::GPUCoordsManager<MapType>::getRowIndicesAtBatchIndex)
+      .def("getRowIndicesPerBatch",
+           &mink::GPUCoordsManager<MapType>::getRowIndicesPerBatch)
+      .def("setOriginCoordsKey",
+           &mink::GPUCoordsManager<MapType>::setOriginCoordsKey)
+      .def("initializeCoords",
+           (uint64_t(mink::GPUCoordsManager<MapType>::*)(
+               at::Tensor, at::Tensor, at::Tensor, py::object, const bool,
+               const bool, const bool, const bool)) &
+               mink::GPUCoordsManager<MapType>::initializeCoords,
+           py::call_guard<py::gil_scoped_release>())
+      .def("createStridedCoords",
+           &mink::GPUCoordsManager<MapType>::createStridedCoords)
+      .def("createTransposedStridedRegionCoords",
+           &mink::GPUCoordsManager<MapType>::createTransposedStridedRegionCoords)
+      .def("createPrunedCoords",
+           &mink::GPUCoordsManager<MapType>::createPruningCoords)
+      .def("createOriginCoords",
+           &mink::GPUCoordsManager<MapType>::createOriginCoords)
+//      .def("printDiagnostics", &mink::GPUCoordsManager<MapType>::printDiagnostics)
+      .def("__repr__",
+           [](const mink::GPUCoordsManager<MapType> &a) { return a.toString(); });
+}
+
 template <typename MapType> void instantiate(py::module &m) {
   instantiate_coordsman<MapType>(m);
   instantiate_func<MapType, float>(m, std::string("f"));
   instantiate_func<MapType, double>(m, std::string("d"));
+}
+
+template <typename MapType> void instantiate_gpu(py::module &m) {
+  instantiate_coordsman_gpu<MapType>(m);
+  instantiate_func_gpu<MapType, float>(m, std::string("f"));
+  instantiate_func_gpu<MapType, double>(m, std::string("d"));
 }
 
 template <typename MapType> void bind_native(py::module &m) {
@@ -256,6 +451,7 @@ template <typename MapType> void bind_native(py::module &m) {
       .def("__repr__", [](const mink::CoordsKey &a) { return a.toString(); });
 
   // Quantization
+  // TODO(ljm): quantize_np and quantize_th only support CPU currently.
   m.def("quantize_np", &mink::quantize_np<MapType>);
   m.def("quantize_th", &mink::quantize_th<MapType>);
   m.def("quantize_label_np", &mink::quantize_label_np);
@@ -271,4 +467,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   bind_native<mink::CoordsToIndexMap>(m);
   instantiate<mink::CoordsToIndexMap>(m);
+#ifndef CPU_ONLY
+  instantiate_gpu<mink::CoordsToIndexMapGPU>(m);
+#endif
 }

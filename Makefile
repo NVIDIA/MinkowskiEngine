@@ -8,7 +8,7 @@ Q ?= @
 # CPU_ONLY := 1
 
 CXX ?= g++
-PYTHON ?= python
+PYTHON ?= python3.6
 
 EXTENSION_NAME := minkowski
 
@@ -66,17 +66,27 @@ ifneq ($(CPU_ONLY), 1)
 endif
 
 SRC_DIR := ./src
+SRC_GPU_COORDS_MAP_DIR := ./src/3rdparty/gpu_coords_map/include
+SRC_SLAB_HASH_DIR := ./src/3rdparty/gpu_coords_map/include/slab_hash
 OBJ_DIR := ./objs
 CPP_SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+CPP_SRCS_GPU_COORDS_MAP := $(wildcard $(SRC_GPU_COORDS_MAP_DIR)/*.cpp)
+CPP_SRCS_SLAB_HASH:= $(wildcard $(SRC_SLAB_HASH_DIR)/*.cpp)
 CU_SRCS := $(wildcard $(SRC_DIR)/*.cu)
+CU_SRCS_GPU_COORDS_MAP := $(wildcard $(SRC_GPU_COORDS_MAP_DIR)/*.cu)
+CU_SRCS_SLAB_HASH:= $(wildcard $(SRC_SLAB_HASH_DIR)/*.cu)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_SRCS))
+OBJS_GPU_COORDS_MAP := $(patsubst $(SRC_GPU_COORDS_MAP_DIR)/%.cpp,$(OBJ_DIR)/3rdparty/gpu_coords_map/include/%.o,$(CPP_SRCS_GPU_COORDS_MAP))
+OBJS_SLAB_HASH := $(patsubst $(SRC_SLAB_HASH_DIR)/%.cpp,$(OBJ_DIR)/3rdparty/gpu_coords_map/include/slab_hash/%.o,$(CPP_SRCS_SLAB_HASH))
 CU_OBJS := $(patsubst $(SRC_DIR)/%.cu,$(OBJ_DIR)/cuda/%.o,$(CU_SRCS))
+CU_OBJS_GPU_COORDS_MAP := $(patsubst $(SRC_GPU_COORDS_MAP_DIR)/%.cu,$(OBJ_DIR)/3rdparty/gpu_coords_map/include/cuda/%.o,$(CU_SRCS_GPU_COORDS_MAP))
+CU_OBJS_SLAB_HASH := $(patsubst $(SRC_SLAB_HASH_DIR)/%.cu,$(OBJ_DIR)/3rdparty/gpu_coords_map/include/slab_hash/cuda/%.o,$(CU_SRCS_SLAB_HASH))
 STATIC_LIB := $(OBJ_DIR)/lib$(EXTENSION_NAME).a
 
 # We will also explicitly add stdc++ to the link target.
 LIBRARIES := stdc++ c10 caffe2 torch torch_python _C
 ifneq ($(CPU_ONLY), 1)
-	LIBRARIES += cudart cublas cusparse caffe2_gpu c10_cuda
+	LIBRARIES += cudadevrt cudart cudadevrt cublas cudadevrt cusparse cudadevrt caffe2_gpu cudadevrt c10_cuda cudadevrt
 	CUDA_ARCH := -gencode arch=compute_30,code=sm_30 \
 			-gencode arch=compute_35,code=sm_35 \
 			-gencode=arch=compute_50,code=sm_50 \
@@ -118,6 +128,7 @@ ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
 	# https://gcoe-dresden.de/reaching-the-shore-with-a-fog-warning-my-eurohack-day-4-morning-session/
 	NVCCFLAGS := -g -G # -rdc true
+	# NVCCFLAGS := -g -G -rdc true
 else
 	COMMON_FLAGS += -DNDEBUG -O3
 endif
@@ -140,6 +151,7 @@ COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir)) \
 
 CXXFLAGS += -fopenmp -fPIC -fwrapv -std=c++14 $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -std=c++14 -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
+NVCCFLAGS += -rdc true
 LINKFLAGS += -pthread -fPIC $(WARNINGS) -Wl,-rpath=$(PYTHON_LIB_DIR) -Wl,--no-as-needed -Wl,--sysroot=/
 LDFLAGS += $(foreach librarydir,$(LIBRARY_DIRS),-L$(librarydir)) \
 	   $(foreach library,$(LIBRARIES),-l$(library))
@@ -148,7 +160,7 @@ ifeq ($(CPU_ONLY), 1)
 	ALL_OBJS := $(OBJS)
 	CXXFLAGS += -DCPU_ONLY
 else
-	ALL_OBJS := $(OBJS) $(CU_OBJS)
+	ALL_OBJS := $(OBJS) $(OBJS_GPU_COORDS_MAP) $(OBJS_SLAB_HASH) $(CU_OBJS) $(CU_OBJS_GPU_COORDS_MAP) $(CU_OBJS_SLAB_HASH)
 endif
 
 all: $(STATIC_LIB)
@@ -157,8 +169,19 @@ all: $(STATIC_LIB)
 $(OBJ_DIR):
 	@ mkdir -p $@
 	@ mkdir -p $@/cuda
+	@ mkdir -p $@/3rdparty/gpu_coords_map/include/cuda
+	@ mkdir -p $@/3rdparty/gpu_coords_map/include/slab_hash/cuda
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+	@ echo CXX $<
+	@ echo $(CXXFLAGS)
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@
+
+$(OBJ_DIR)/3rdparty/gpu_coords_map/include/%.o: $(SRC_GPU_COORDS_MAP_DIR)/%.cpp | $(OBJ_DIR)
+	@ echo CXX $<
+	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@
+
+$(OBJ_DIR)/3rdparty/gpu_coords_map/include/slab_hash/%.o: $(SRC_SLAB_HASH_DIR)/%.cpp | $(OBJ_DIR)
 	@ echo CXX $<
 	$(Q)$(CXX) $< $(CXXFLAGS) -c -o $@
 
@@ -168,8 +191,23 @@ $(OBJ_DIR)/cuda/%.o: $(SRC_DIR)/%.cu | $(OBJ_DIR)
 		-odir $(@D)
 	$(Q)$(NVCC) $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
 
+$(OBJ_DIR)/3rdparty/gpu_coords_map/include/cuda/%.o: $(SRC_GPU_COORDS_MAP_DIR)/%.cu | $(OBJ_DIR)
+	@ echo NVCC $<
+	$(Q)$(NVCC) $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+		-odir $(@D)
+	$(Q)$(NVCC) $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+
+$(OBJ_DIR)/3rdparty/gpu_coords_map/include/slab_hash/cuda/%.o: $(SRC_SLAB_HASH_DIR)/%.cu| $(OBJ_DIR)
+	@ echo NVCC $<
+	$(Q)$(NVCC) $(NVCCFLAGS) $(CUDA_ARCH) -M $< -o ${@:.o=.d} \
+		-odir $(@D)
+	$(Q)$(NVCC) $(NVCCFLAGS) $(CUDA_ARCH) -c $< -o $@
+
 $(STATIC_LIB): $(ALL_OBJS) | $(OBJ_DIR)
 	$(RM) -f $(STATIC_LIB)
+	@ echo $(LINKFLAGS)
+	@ echo $(LDFLAGS)
+	@ echo $(CXXFLAGS)
 	@ echo LD -o $@
 	ar rc $(STATIC_LIB) $(ALL_OBJS)
 

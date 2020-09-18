@@ -102,24 +102,24 @@ namespace minkowski {
 template <typename Dtype, typename Itype>
 void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 int out_nrows, Itype *d_max_index, int nchannel,
-                                const pInOutMaps<Itype> &in_maps,
-                                const pInOutMaps<Itype> &out_maps, Itype *d_scr,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+                                Itype *d_scr,
                                 cudaStream_t stream) {
   int nmap = 0;
 
   // Copy all maps to one vector
   for (const auto &map : in_maps)
-    nmap += map.size();
+    nmap += map.size(0);
 
   Itype *d_in_map = d_scr, *d_out_map = d_scr + nmap;
 
   CUDA_CHECK(cudaMemcpy(d_in_map,
-                        in_maps[0].data(), // in_maps are contiguous of size nnz
+                        in_maps[0].data<Itype>(), // in_maps are contiguous of size nnz
                         nmap * sizeof(int), cudaMemcpyDeviceToDevice));
 
   CUDA_CHECK(
       cudaMemcpy(d_out_map,
-                 out_maps[0].data(), // out_maps are contiguous of size nnz
+                 out_maps[0].data<Itype>(), // out_maps are contiguous of size nnz
                  nmap * sizeof(int), cudaMemcpyDeviceToDevice));
 
   // First, sort d_out_map and d_in_map with the d_out_map so that in_feat are
@@ -171,13 +171,15 @@ void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
 
 template void MaxPoolingForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, float *d_out_feat, int out_nrows,
-    int32_t *d_max_index, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int32_t *d_scr, cudaStream_t stream);
+    int32_t *d_max_index, int nchannel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    int32_t *d_scr, cudaStream_t stream);
 
 template void MaxPoolingForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_out_feat, int out_nrows,
-    int32_t *d_max_index, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int32_t *d_scr, cudaStream_t stream);
+    int32_t *d_max_index, int nchannel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    int32_t *d_scr, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void MaxPoolingBackwardKernelGPU(Dtype *d_grad_in_feat, int in_nrows,

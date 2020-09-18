@@ -119,8 +119,8 @@ at::Tensor UnionForwardGPU(vector<at::Tensor> in_feats,
                            vector<py::object> py_in_coords_keys,
                            py::object py_out_coords_key,
                            py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   // Basic assertions
   ASSERT(in_feats.size() > 1, "The number of input tensors must be > 1.");
   const size_t n_in = in_feats.size();
@@ -139,7 +139,7 @@ at::Tensor UnionForwardGPU(vector<at::Tensor> in_feats,
   }
 
   // Create new out map and get the in-out map
-  const auto in_out = p_coords_manager->getUnionInOutMapsGPU(py_in_coords_keys,
+  const InOutMapKey map_key = p_coords_manager->getUnionInOutMaps(py_in_coords_keys,
                                                              py_out_coords_key);
 
   // Out feat memory alloc
@@ -155,7 +155,9 @@ at::Tensor UnionForwardGPU(vector<at::Tensor> in_feats,
 
   UnionForwardKernelGPU<Dtype, int>(
       p_in_feats, out_feat.template data<Dtype>(), in_feats[0].size(1),
-      in_out.first, in_out.second, at::cuda::getCurrentCUDAStream());
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key],
+      at::cuda::getCurrentCUDAStream());
 
   return out_feat;
 }
@@ -164,8 +166,8 @@ template <typename MapType, typename Dtype>
 vector<at::Tensor>
 UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
                  py::object py_out_coords_key, py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   const int nchannel = grad_out_feat.size(1);
   const size_t n_in = py_in_coords_keys.size();
 
@@ -192,8 +194,8 @@ UnionBackwardGPU(at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
 
   UnionBackwardKernelGPU<Dtype, int>(
       p_grad_in_feats, grad_out_feat.template data<Dtype>(), nchannel,
-      p_coords_manager->d_in_maps[map_key],
-      p_coords_manager->d_out_maps[map_key], at::cuda::getCurrentCUDAStream());
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key], at::cuda::getCurrentCUDAStream());
 
   return grad_in_feats;
 }
@@ -216,19 +218,19 @@ template vector<at::Tensor> UnionBackwardCPU<CoordsToIndexMap, double>(
     py::object py_out_coords_key, py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template at::Tensor UnionForwardGPU<CoordsToIndexMap, float>(
+template at::Tensor UnionForwardGPU<CoordsToIndexMapGPU, float>(
     vector<at::Tensor> in_feats, vector<py::object> py_in_coords_keys,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template at::Tensor UnionForwardGPU<CoordsToIndexMap, double>(
+template at::Tensor UnionForwardGPU<CoordsToIndexMapGPU, double>(
     vector<at::Tensor> in_feats, vector<py::object> py_in_coords_keys,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template vector<at::Tensor> UnionBackwardGPU<CoordsToIndexMap, float>(
+template vector<at::Tensor> UnionBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor grad_out_feat, vector<py::object> py_in_coords_keys,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template vector<at::Tensor> UnionBackwardGPU<CoordsToIndexMap, double>(
+template vector<at::Tensor> UnionBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor grad_out_feat, vector<py::object> py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
