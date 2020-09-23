@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Sparse Tensor Basics &mdash; MinkowskiEngine 0.4.2 documentation</title>
+  <title>Sparse Tensor Basics &mdash; MinkowskiEngine 0.4.3 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -25,15 +30,11 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Training Pipeline" href="../demo/training.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.4.2
+                0.4.3
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -139,6 +141,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -177,7 +180,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Sparse Tensor Basics</li>
     
@@ -201,7 +204,7 @@
             
   <div class="section" id="sparse-tensor-basics">
 <h1>Sparse Tensor Basics<a class="headerlink" href="#sparse-tensor-basics" title="Permalink to this headline">¶</a></h1>
-<p>A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. Please refer to the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/terminology.html">terminology page</a> for more details.</p>
+<p>A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. Please refer to the <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/terminology.html">terminology page</a> for more details.</p>
 <div class="section" id="data-generation">
 <h2>Data Generation<a class="headerlink" href="#data-generation" title="Permalink to this headline">¶</a></h2>
 <p>One can generate data directly by extracting non-zero elements. Here, we present a simple 2D array with 5 non-zero elements at the center.</p>
@@ -224,7 +227,7 @@
 <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">training demo page</a>.</p>
+<p>Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/demo/training.html">training demo page</a>.</p>
 </div>
 <div class="section" id="sparse-tensor-initialization">
 <h2>Sparse Tensor Initialization<a class="headerlink" href="#sparse-tensor-initialization" title="Permalink to this headline">¶</a></h2>
@@ -251,7 +254,7 @@ You can simply use the sparse tensor initialization for this. For example,</p>
 <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Please refer to <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/indoor.py">indoor semantic segmentation</a> for more detail.</p>
+<p>Please refer to <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/indoor.py">indoor semantic segmentation</a> for more detail.</p>
 </div>
 <div class="section" id="sparse-tensor-arithmetics">
 <h2>Sparse Tensor Arithmetics<a class="headerlink" href="#sparse-tensor-arithmetics" title="Permalink to this headline">¶</a></h2>
@@ -325,7 +328,7 @@ To decompose the outputs, you can use a couple function and attributes.</p>
 <span class="n">feats</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">features_at</span><span class="p">(</span><span class="n">batch_index</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>For more information, please refer to <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py">examples/sparse_tensor_basic.py</a>.</p>
+<p>For more information, please refer to <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py">examples/sparse_tensor_basic.py</a>.</p>
 </div>
 </div>
 
@@ -333,7 +336,7 @@ To decompose the outputs, you can use a couple function and attributes.</p>
            </div>
            
           </div>
-<a href="https://github.com/StanfordVL/MinkowskiEngine">
+<a href="https://github.com/NVIDIA/MinkowskiEngine">
     <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
 </a>
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -363,11 +366,19 @@ To decompose the outputs, you can use a couple function and attributes.</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -378,7 +389,6 @@ To decompose the outputs, you can use a couple function and attributes.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

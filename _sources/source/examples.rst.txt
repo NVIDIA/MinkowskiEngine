@@ -44,14 +44,6 @@ examples.indoor module
    :undoc-members:
    :show-inheritance:
 
-examples.issue98 module
------------------------
-
-.. automodule:: examples.issue98
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 examples.minkunet module
 ------------------------
 
@@ -131,7 +123,6 @@ examples.vae module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Coordinate Management &mdash; MinkowskiEngine 0.4.2 documentation</title>
+  <title>Coordinate Management &mdash; MinkowskiEngine 0.4.3 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -25,15 +30,11 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Utility Functions and Classes" href="utils.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.4.2
+                0.4.3
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -136,6 +138,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -174,7 +177,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Coordinate Management</li>
     
@@ -250,7 +253,7 @@
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordsManager.create_coords_key">
-<code class="sig-name descname">create_coords_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">torch.IntTensor</span></em>, <em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">force_remap</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">allow_duplicate_coords</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; MinkowskiCoords.CoordsKey<a class="headerlink" href="#MinkowskiEngine.CoordsManager.create_coords_key" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">create_coords_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">torch.IntTensor</span></em>, <em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">force_remap</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">allow_duplicate_coords</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><a class="headerlink" href="#MinkowskiEngine.CoordsManager.create_coords_key" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -324,7 +327,7 @@
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordsManager.get_union_map">
-<code class="sig-name descname">get_union_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_keys</span><span class="p">:</span> <span class="n">List<span class="p">[</span>MinkowskiCoords.CoordsKey<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">out_key</span><span class="p">:</span> <span class="n">MinkowskiCoords.CoordsKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_union_map" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_union_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_keys</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">out_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_union_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a union of coordinate sets and returns the mapping from input sets to the new output coordinates.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_keys</span></code> (List[CoordsKey]): A list of coordinate keys to
@@ -350,7 +353,7 @@ the generated union coords hash map.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordsManager.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">torch.IntTensor</span></em>, <em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n">MinkowskiCoords.CoordsKey</span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">force_remap</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">allow_duplicate_coords</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_inverse</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; torch.LongTensor<a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">torch.IntTensor</span></em>, <em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">force_remap</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">allow_duplicate_coords</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_inverse</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; torch.LongTensor<a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -360,7 +363,7 @@ the generated union coords hash map.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordsManager.print_diagnostics">
-<code class="sig-name descname">print_diagnostics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n">MinkowskiCoords.CoordsKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.print_diagnostics" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">print_diagnostics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.print_diagnostics" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -370,17 +373,17 @@ the generated union coords hash map.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordsManager.set_origin_coords_key">
-<code class="sig-name descname">set_origin_coords_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n">MinkowskiCoords.CoordsKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.set_origin_coords_key" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_origin_coords_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.set_origin_coords_key" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordsManager.stride">
-<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n">MinkowskiCoords.CoordsKey</span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordsManager.transposed_stride">
-<code class="sig-name descname">transposed_stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n">MinkowskiCoords.CoordsKey</span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">dilation</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.transposed_stride" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">transposed_stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">dilation</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.transposed_stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -431,7 +434,7 @@ than allocating GPU directly using raw CUDA calls.</p>
            </div>
            
           </div>
-<a href="https://github.com/StanfordVL/MinkowskiEngine">
+<a href="https://github.com/NVIDIA/MinkowskiEngine">
     <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
 </a>
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -461,11 +464,19 @@ than allocating GPU directly using raw CUDA calls.</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -476,7 +487,6 @@ than allocating GPU directly using raw CUDA calls.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -10,7 +10,7 @@ more layers.
 .. image:: ../images/classification_3d_net.png
 
 Before we proceed, please go over `the training and data loading tutorial
-<https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ first.
+<https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_ first.
 
 
 Making a ModelNet40 data loader
@@ -193,7 +193,7 @@ When you assemble all the code blocks, you can run your own ModelNet40 classific
 
 
 The entire code can be found at `example/modelnet40.py
-<https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/modelnet40.py>`_.
+<https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/modelnet40.py>`_.
 
 .. warning::
 

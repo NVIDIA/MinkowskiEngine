@@ -124,14 +124,6 @@ tests.strided\_conv module
    :undoc-members:
    :show-inheritance:
 
-tests.strided\_pool module
---------------------------
-
-.. automodule:: tests.strided_pool
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 tests.union module
 ------------------
 
@@ -139,7 +131,6 @@ tests.union module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------

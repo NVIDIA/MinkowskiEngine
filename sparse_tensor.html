@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SparseTensor &mdash; MinkowskiEngine 0.4.2 documentation</title>
+  <title>SparseTensor &mdash; MinkowskiEngine 0.4.3 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -25,15 +30,11 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MinkowskiConvolution" href="convolution.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.4.2
+                0.4.3
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -135,6 +137,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -173,7 +176,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>SparseTensor</li>
     
@@ -205,7 +208,7 @@
 <dd><p>A sparse tensor class. Can be accessed via
 <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>.</p>
 <p>The <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. For
-the definition of a sparse tensor, please visit <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/terminology.html#sparse-tensor">the terminology page</a>.
+the definition of a sparse tensor, please visit <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/terminology.html#sparse-tensor">the terminology page</a>.
 We use the COOrdinate (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
 representation is simply a concatenation of coordinates in a matrix
 <span class="math notranslate nohighlight">\(C\)</span> and associated features <span class="math notranslate nohighlight">\(F\)</span>.</p>
@@ -281,7 +284,7 @@ generate a new unique set of coordinates and use features of at the
 corresponding unique coordinates. In general, setting
 <cite>allow_duplicate_coords=True</cite> is not recommended as it could hide
 obvious errors in your data loading and preprocessing steps. Please
-refer to the quantization and data loading tutorial on <a class="reference external" href="https://stanfordvl.github.io/MinkowskiEngine/demo/training.html">here</a>
+refer to the quantization and data loading tutorial on <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/demo/training.html">here</a>
 for more details.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">quantizatino_mode</span></code>
 (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorQuantizationMode</span></code>): Defines the
@@ -577,7 +580,7 @@ defining the stride between tensor elements.</p>
 <h2>Sparse Tensor Operation Mode<a class="headerlink" href="#sparse-tensor-operation-mode" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.SparseTensor.SparseTensorOperationMode">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensorOperationMode</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensorOperationMode" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensorOperationMode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensorOperationMode" title="Permalink to this definition">¶</a></dt>
 <dd><p><cite>SEPARATE_COORDS_MANAGER</cite>: always create a new coordinate manager.
 <cite>SHARE_COORDS_MANAGER</cite>: always use the globally defined coordinate manager. Must clear the coordinate manager manually by <a class="reference internal" href="#MinkowskiEngine.SparseTensor.clear_global_coords_man" title="MinkowskiEngine.SparseTensor.clear_global_coords_man"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.clear_global_coords_man</span></code></a></p>
 </dd></dl>
@@ -628,7 +631,7 @@ you must explicitly clear the coordinate manager after each feed forward/backwar
            </div>
            
           </div>
-<a href="https://github.com/StanfordVL/MinkowskiEngine">
+<a href="https://github.com/NVIDIA/MinkowskiEngine">
     <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
 </a>
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -658,11 +661,19 @@ you must explicitly clear the coordinate manager after each feed forward/backwar
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -673,7 +684,6 @@ you must explicitly clear the coordinate manager after each feed forward/backwar
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Working with Pytorch Layers &mdash; MinkowskiEngine 0.4.2 documentation</title>
+  <title>Working with Pytorch Layers &mdash; MinkowskiEngine 0.4.3 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -25,15 +30,11 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Multi-GPU Training" href="multigpu.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.4.2
+                0.4.3
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -134,6 +136,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -172,7 +175,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Working with Pytorch Layers</li>
     
@@ -208,6 +211,7 @@ layer.</p>
 a min-batch.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
+
 
 <span class="k">class</span> <span class="nc">ExampleNetwork</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 
@@ -260,7 +264,7 @@ accessing the features of the sparse tensor
     <span class="n">loss</span> <span class="o">=</span> <span class="n">criterion</span><span class="p">(</span><span class="n">out_feats</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Please refer to <a class="reference external" href="https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/example.py">examples/example.py</a>
+<p>Please refer to <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/example.py">examples/example.py</a>
 for the complete demo.</p>
 </div>
 </div>
@@ -269,7 +273,7 @@ for the complete demo.</p>
            </div>
            
           </div>
-<a href="https://github.com/StanfordVL/MinkowskiEngine">
+<a href="https://github.com/NVIDIA/MinkowskiEngine">
     <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
 </a>
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -299,11 +303,19 @@ for the complete demo.</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -314,7 +326,6 @@ for the complete demo.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

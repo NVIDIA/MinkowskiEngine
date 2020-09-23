@@ -17,7 +17,7 @@ diagram, but the details might differ.
 
 
 Before we proceed, please go over `the training and data loading tutorial
-<https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_ first.
+<https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_ first.
 
 
 Making a Sparsity Pattern Reconstruction Network
@@ -63,4 +63,4 @@ The program will visualize two 3D shapes. One on the left is the target 3D
 shape, one on the right is the reconstructed network prediction.
 
 The entire code can be found at `example/reconstruction.py
-<https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/reconstruction.py>`_.
+<https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/reconstruction.py>`_.

@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiEngine &mdash; MinkowskiEngine 0.4.2 documentation</title>
+  <title>MinkowskiEngine &mdash; MinkowskiEngine 0.4.3 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -25,15 +30,11 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
 </head>
@@ -49,7 +50,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
           
 
           
@@ -59,7 +60,7 @@
             
             
               <div class="version">
-                0.4.2
+                0.4.3
               </div>
             
           
@@ -76,6 +77,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -129,6 +131,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -167,7 +170,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>MinkowskiEngine</li>
     
@@ -239,7 +242,6 @@
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-convolution-module">examples.convolution module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-example-module">examples.example module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-indoor-module">examples.indoor module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#examples-issue98-module">examples.issue98 module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-minkunet-module">examples.minkunet module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-modelnet40-module">examples.modelnet40 module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#examples-multigpu-module">examples.multigpu module</a></li>
@@ -253,6 +255,7 @@
 <li class="toctree-l2"><a class="reference internal" href="examples.html#module-contents">Module contents</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="ratio.html">ratio module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">setup module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">tests package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tests.html#submodules">Submodules</a></li>
@@ -271,7 +274,6 @@
 <li class="toctree-l2"><a class="reference internal" href="tests.html#tests-quantization-module">tests.quantization module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tests.html#tests-sparse-tensor-module">tests.sparse_tensor module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tests.html#tests-strided-conv-module">tests.strided_conv module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tests.html#tests-strided-pool-module">tests.strided_pool module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tests.html#tests-union-module">tests.union module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tests.html#module-contents">Module contents</a></li>
 </ul>
@@ -284,7 +286,7 @@
            </div>
            
           </div>
-<a href="https://github.com/StanfordVL/MinkowskiEngine">
+<a href="https://github.com/NVIDIA/MinkowskiEngine">
     <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
 </a>
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -305,11 +307,19 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -320,7 +330,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

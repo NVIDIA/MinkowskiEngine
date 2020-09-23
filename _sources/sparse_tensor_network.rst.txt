@@ -45,7 +45,7 @@ conventional dense convolutions. We list some of characteristics and application
 
 - Sparse tensors for convolution kernels allow high-dimensional convolutions with specialized kernels `[3] <https://arxiv.org/abs/1904.08755>`_
 - Arbitrary input coordinates generalized convolution encompasses all discrete convolutions
-- Arbitrary output coordinates allows dynamic coordinate generation and generative networks `[reconstruction and completion networks] <https://github.com/StanfordVL/MinkowskiEngine#example-networks>`_
+- Arbitrary output coordinates allows dynamic coordinate generation and generative networks `[reconstruction and completion networks] <https://github.com/NVIDIA/MinkowskiEngine#example-networks>`_
 
 Let :math:`x^{\text{in}}_\mathbf{u} \in
 \mathbb{R}^{N^\text{in}}` be an :math:`N^\text{in}`-dimensional input feature

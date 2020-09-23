@@ -1,7 +1,7 @@
 Sparse Tensor Basics
 ====================
 
-A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. Please refer to the `terminology page <https://stanfordvl.github.io/MinkowskiEngine/terminology.html>`_ for more details.
+A sparse tensor is a high-dimensional extension of a sparse matrix where non-zero elements are represented as a set of indices and associated values. Please refer to the `terminology page <https://nvidia.github.io/MinkowskiEngine/terminology.html>`_ for more details.
 
 
 Data Generation
@@ -30,7 +30,7 @@ One can generate data directly by extracting non-zero elements. Here, we present
    to_sparse_coo(data)
 
 
-Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the `training demo page <https://stanfordvl.github.io/MinkowskiEngine/demo/training.html>`_.
+Note that we extract coordinates along with features. This is a simple example and quite inefficient and artificial. In many real applications, it is unlikely that you will get discretized coordinates. For quantizing and extracting discrete values efficiently, please refer to the `training demo page <https://nvidia.github.io/MinkowskiEngine/demo/training.html>`_.
 
 
 Sparse Tensor Initialization
@@ -67,7 +67,7 @@ You can simply use the sparse tensor initialization for this. For example,
    logits = model(sinput).slice(sinput)
 
 
-Please refer to `indoor semantic segmentation <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/indoor.py>`_ for more detail.
+Please refer to `indoor semantic segmentation <https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/indoor.py>`_ for more detail.
 
 
 Sparse Tensor Arithmetics
@@ -158,4 +158,4 @@ To decompose the outputs, you can use a couple function and attributes.
    feats = B.features_at(batch_index)
 
 
-For more information, please refer to `examples/sparse_tensor_basic.py <https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py>`_.
+For more information, please refer to `examples/sparse_tensor_basic.py <https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/sparse_tensor_basic.py>`_.

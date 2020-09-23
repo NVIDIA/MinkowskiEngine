@@ -20,7 +20,6 @@ MinkowskiEngine.modules.senet\_block module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 

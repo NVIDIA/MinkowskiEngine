@@ -20,4 +20,4 @@ to define
 2. Convolutions with kernel size > 1.
 3. Convolutions with stride > 1.
 
-Please refer to the [complete pointnet example](https://github.com/StanfordVL/MinkowskiEngine/blob/master/examples/pointnet.py) for more detail.
+Please refer to the [complete pointnet example](https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/pointnet.py) for more detail.

@@ -6,5 +6,6 @@ MinkowskiEngine
 
    MinkowskiEngine
    examples
+   ratio
    setup
    tests

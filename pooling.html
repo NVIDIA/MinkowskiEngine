@@ -1,15 +1,18 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.4.2 documentation</title>
+  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.4.3 documentation</title>
   
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
 
   
   
@@ -17,7 +20,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -25,15 +30,11 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MinkowskiBroadcast" href="broadcast.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.4.2
+                0.4.3
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -138,6 +140,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -176,7 +179,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>MinkowskiPooling</li>
     
@@ -255,7 +258,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.cpu">
-<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.cpu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.cpu" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the CPU.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -265,7 +268,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.cuda">
-<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.cuda" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>torch.device<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.cuda" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the GPU.</p>
 <p>This also makes associated parameters and buffers different objects. So
 it should be called before constructing optimizer if the module will
@@ -283,7 +286,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.double">
-<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.double" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">double</span></code> datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -293,7 +296,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.float">
-<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.float" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to float datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -303,7 +306,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n">SparseTensor.SparseTensor</span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiCoords.CoordsKey<span class="p">, </span>SparseTensor.SparseTensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
@@ -397,7 +400,7 @@ only argument)</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.type">
-<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.dtype<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</p>
 <dl class="simple">
 <dt>Arguments:</dt><dd><p>dst_type (type or string): the desired type</p>
@@ -477,7 +480,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.cpu">
-<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.cpu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.cpu" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the CPU.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -487,7 +490,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.cuda">
-<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.cuda" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>torch.device<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.cuda" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the GPU.</p>
 <p>This also makes associated parameters and buffers different objects. So
 it should be called before constructing optimizer if the module will
@@ -505,7 +508,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.double">
-<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.double" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">double</span></code> datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -515,7 +518,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.float">
-<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.float" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to float datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -525,7 +528,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n">SparseTensor.SparseTensor</span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiCoords.CoordsKey<span class="p">, </span>SparseTensor.SparseTensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
@@ -619,7 +622,7 @@ only argument)</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.type">
-<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.dtype<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</p>
 <dl class="simple">
 <dt>Arguments:</dt><dd><p>dst_type (type or string): the desired type</p>
@@ -699,7 +702,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.cpu">
-<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.cpu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.cpu" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the CPU.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -709,7 +712,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.cuda">
-<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.cuda" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>torch.device<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.cuda" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the GPU.</p>
 <p>This also makes associated parameters and buffers different objects. So
 it should be called before constructing optimizer if the module will
@@ -727,7 +730,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.double">
-<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.double" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">double</span></code> datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -737,7 +740,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.float">
-<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.float" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to float datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -747,7 +750,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n">SparseTensor.SparseTensor</span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiCoords.CoordsKey<span class="p">, </span>SparseTensor.SparseTensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
@@ -841,7 +844,7 @@ only argument)</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.type">
-<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.dtype<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</p>
 <dl class="simple">
 <dt>Arguments:</dt><dd><p>dst_type (type or string): the desired type</p>
@@ -891,7 +894,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.cpu">
-<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.cpu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.cpu" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the CPU.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -901,7 +904,7 @@ in a 2D space, meshes and 3D shapes are in a 3D space.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.cuda">
-<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.cuda" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>torch.device<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.cuda" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the GPU.</p>
 <p>This also makes associated parameters and buffers different objects. So
 it should be called before constructing optimizer if the module will
@@ -919,7 +922,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.double">
-<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.double" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">double</span></code> datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -929,7 +932,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.float">
-<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.float" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to float datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -939,7 +942,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n">SparseTensor.SparseTensor</span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiCoords.CoordsKey<span class="p">, </span>SparseTensor.SparseTensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
@@ -1033,7 +1036,7 @@ only argument)</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.type">
-<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.dtype<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</p>
 <dl class="simple">
 <dt>Arguments:</dt><dd><p>dst_type (type or string): the desired type</p>
@@ -1071,7 +1074,7 @@ not, return the sum of all input features.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.cpu">
-<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.cpu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.cpu" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the CPU.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -1081,7 +1084,7 @@ not, return the sum of all input features.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.cuda">
-<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.cuda" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cuda</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>int<span class="p">, </span>torch.device<span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.cuda" title="Permalink to this definition">¶</a></dt>
 <dd><p>Moves all model parameters and buffers to the GPU.</p>
 <p>This also makes associated parameters and buffers different objects. So
 it should be called before constructing optimizer if the module will
@@ -1099,7 +1102,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.double">
-<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.double" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.double" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">double</span></code> datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -1109,7 +1112,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.float">
-<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.float" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all floating point parameters and buffers to float datatype.</p>
 <dl class="simple">
 <dt>Returns:</dt><dd><p>Module: self</p>
@@ -1120,16 +1123,7 @@ live on GPU while being optimized.</p>
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.to">
@@ -1217,7 +1211,7 @@ only argument)</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.type">
-<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">type</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_type</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.dtype<span class="p">, </span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; T<a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</p>
 <dl class="simple">
 <dt>Arguments:</dt><dd><p>dst_type (type or string): the desired type</p>
@@ -1236,7 +1230,7 @@ only argument)</p>
            </div>
            
           </div>
-<a href="https://github.com/StanfordVL/MinkowskiEngine">
+<a href="https://github.com/NVIDIA/MinkowskiEngine">
     <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub">
 </a>
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -1266,11 +1260,19 @@ only argument)</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2020, Chris Choy
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1281,7 +1283,6 @@ only argument)</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
