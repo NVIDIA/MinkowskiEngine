@@ -469,8 +469,6 @@ void non_templated_cpu_func(py::module &m) {
 void non_templated_gpu_func(py::module &m) {
   m.def("coo_spmm_int32", &minkowski::coo_spmm<int32_t>,
         py::call_guard<py::gil_scoped_release>());
-  // m.def("coo_spmm_int64", &minkowski::coo_spmm<int64_t>,
-  //       py::call_guard<py::gil_scoped_release>());
 }
 #endif
 

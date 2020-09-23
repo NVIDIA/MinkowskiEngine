@@ -165,3 +165,5 @@ import MinkowskiFunctional
 import MinkowskiEngine.utils as utils
 
 import MinkowskiEngine.modules as modules
+
+from sparse_matrix_functions import spmm, MinkowskiSPMMFunction

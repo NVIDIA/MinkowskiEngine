@@ -31,7 +31,7 @@ from MinkowskiTensor import (
     SparseTensorQuantizationMode,
     Tensor,
 )
-from sparse_matrix_functions import spmm as _spmm
+from sparse_matrix_functions import MinkowskiSPMMFunction
 
 
 class SparseTensor(Tensor):
@@ -126,18 +126,19 @@ class SparseTensor(Tensor):
             SparseTensorQuantizationMode.UNWEIGHTED_SUM,
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
         ]:
+            spmm = MinkowskiSPMMFunction()
             N = len(features)
             cols = torch.arange(
                 N, dtype=self.inverse_mapping.dtype, device=self.inverse_mapping.device,
             )
             vals = torch.ones(N, dtype=features.dtype, device=features.device)
             size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
-            features = _spmm(self.inverse_mapping, cols, vals, size, features)
+            features = spmm.apply(self.inverse_mapping, cols, vals, size, features)
             if (
                 self.quantization_mode
                 == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
             ):
-                nums = _spmm(
+                nums = spmm.apply(
                     self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),
                 )
                 features /= nums
