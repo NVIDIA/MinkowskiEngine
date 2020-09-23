@@ -160,7 +160,7 @@ else:
 if "darwin" in platform:
     CC_FLAGS += ["-stdlib=libc++"]
 
-NVCC_FLAGS += ["--extended-lambda"]
+NVCC_FLAGS += ["--expt-extended-lambda"]
 
 BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise
