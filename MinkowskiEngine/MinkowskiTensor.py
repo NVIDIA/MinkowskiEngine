@@ -412,6 +412,32 @@ class Tensor:
         return self._batch_rows
 
     @property
+    def _sorted_batchwise_row_indices(self):
+        if self._sorted_batch_rows is None:
+            batch_rows = self._batchwise_row_indices
+            with torch.no_grad():
+                self._sorted_batch_rows = [t.sort()[0] for t in batch_rows]
+        return self._sorted_batch_rows
+
+    @property
+    def decomposition_permutations(self):
+        r"""Returns a list of indices per batch that where indices defines the permutation of the batch-wise decomposition.
+
+       Example::
+
+           >>> # coords, feats, labels are given. All follow the same order
+           >>> stensor = ME.SparseTensor(feats, coords)
+           >>> conv = ME.MinkowskiConvolution(in_channels=3, out_nchannel=3, kernel_size=3, dimension=3)
+           >>> list_of_featurs = stensor.decomposed_features
+           >>> list_of_permutations = stensor.decomposition_permutations
+           >>> # list_of_features == [feats[inds] for inds in list_of_permutations]
+           >>> list_of_decomposed_labels = [labels[inds] for inds in list_of_permutations]
+           >>> for curr_feats, curr_labels in zip(list_of_features, list_of_decomposed_labels):
+           >>>     loss += torch.functional.mse_loss(curr_feats, curr_labels)
+        """
+        return self._batchwise_row_indices
+
+    @property
     def decomposed_coordinates(self):
         r"""Returns a list of coordinates per batch.
 
@@ -419,6 +445,15 @@ class Tensor:
         \times D}` coordinates per batch where :math:`N_i` is the number of non
         zero elements in the :math:`i`th batch index in :math:`D` dimensional
         space.
+
+        .. note::
+
+           The order of coordinates is non-deterministic within each batch. Use
+           :attr:`decomposed_coordinates_and_features` to retrieve both
+           coordinates features with the same order. To retrieve the order the
+           decomposed coordinates is generated, use
+           :attr:`decomposition_permutations`.
+
         """
         return [self.C[row_inds, 1:] for row_inds in self._batchwise_row_indices]
 
@@ -429,6 +464,15 @@ class Tensor:
         \times D}` coordinates at the specified batch index where :math:`N_i`
         is the number of non zero elements in the :math:`i`th batch index in
         :math:`D` dimensional space.
+
+        .. note::
+
+           The order of coordinates is non-deterministic within each batch. Use
+           :attr:`decomposed_coordinates_and_features` to retrieve both
+           coordinates features with the same order. To retrieve the order the
+           decomposed coordinates is generated, use
+           :attr:`decomposition_permutations`.
+
         """
         return self.C[self._batchwise_row_indices[batch_index], 1:]
 
@@ -440,6 +484,15 @@ class Tensor:
         \times N_F}` features per batch where :math:`N_i` is the number of non
         zero elements in the :math:`i`th batch index in :math:`D` dimensional
         space.
+
+        .. note::
+
+           The order of features is non-deterministic within each batch. Use
+           :attr:`decomposed_coordinates_and_features` to retrieve both
+           coordinates features with the same order. To retrieve the order the
+           decomposed features is generated, use
+           :attr:`decomposition_permutations`.
+
         """
         return [self._F[row_inds] for row_inds in self._batchwise_row_indices]
 
@@ -450,6 +503,15 @@ class Tensor:
         \times N_F}` feature matrix :math:`N` is the number of non
         zero elements in the specified batch index and :math:`N_F` is the
         number of channels.
+
+        .. note::
+
+           The order of features is non-deterministic within each batch. Use
+           :attr:`decomposed_coordinates_and_features` to retrieve both
+           coordinates features with the same order. To retrieve the order the
+           decomposed features is generated, use
+           :attr:`decomposition_permutations`.
+
         """
         return self._F[self._batchwise_row_indices[batch_index]]
 
@@ -463,6 +525,13 @@ class Tensor:
         matrix is a torch.Tensor :math:`C \in \mathcal{R}^{N \times N_F}`
         matrix :math:`N` is the number of non zero elements in the specified
         batch index and :math:`N_F` is the number of channels.
+
+        .. note::
+
+           The order of features is non-deterministic within each batch. To
+           retrieve the order the decomposed features is generated, use
+           :attr:`decomposition_permutations`.
+
         """
         row_inds = self._batchwise_row_indices[batch_index]
         return self.C[row_inds, 1:], self._F[row_inds]
@@ -470,6 +539,13 @@ class Tensor:
     @property
     def decomposed_coordinates_and_features(self):
         r"""Returns a list of coordinates and a list of features per batch.abs
+
+        .. note::
+
+           The order of decomposed coordinates and features is
+           non-deterministic within each batch. To retrieve the order the
+           decomposed features is generated, use
+           :attr:`decomposition_permutations`.
 
         """
         row_inds_list = self._batchwise_row_indices

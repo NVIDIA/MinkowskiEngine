@@ -461,18 +461,19 @@ class SparseTensor(Tensor):
                 quantization_mode=X.quantization_mode,
             )
 
-    def features_at_coords(self, query_coords: torch.Tensor):
+    def features_at_coordinates(self, query_coordinates: torch.Tensor):
         r"""Extract features at the specified coordinate matrix.
 
         Args:
-           :attr:`query_coords` (:attr:`torch.IntTensor`): a coordinate matrix
-           of size :math:`N \times (D + 1)` where :math:`D` is the size of the
-           spatial dimension.
+           :attr:`query_coordinates` (:attr:`torch.IntTensor`): a coordinate
+           matrix of size :math:`N \times (D + 1)` where :math:`D` is the size
+           of the spatial dimension.
 
         Returns:
-           :attr:`query_feats` (:attr:`torch.Tensor`): a feature matrix of size
-           :math:`N \times D_F` where :math:`D_F` is the number of channels in
-           the feature. Features for the coordinates that are not found, it will be zero.
+           :attr:`queried_features` (:attr:`torch.Tensor`): a feature matrix of
+           size :math:`N \times D_F` where :math:`D_F` is the number of
+           channels in the feature. For coordinates not present in the current
+           sparse tensor, corresponding feature rows will be zeros.
 
            :attr:`valid_rows` (:attr:`list`): a list of row indices that
            contain valid values. The rest of the rows that are not found in the
