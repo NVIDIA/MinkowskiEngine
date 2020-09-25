@@ -632,6 +632,10 @@ class Tensor:
     def dtype(self):
         return self._F.dtype
 
+    def detach(self):
+        self._F = self._F.detach()
+        return self
+
     def get_device(self):
         return self._F.get_device()
 

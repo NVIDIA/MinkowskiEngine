@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -29,7 +30,7 @@ from torch.autograd import Function
 from MinkowskiSparseTensor import SparseTensor
 from MinkowskiTensorField import TensorField
 
-# from MinkowskiPooling import MinkowskiGlobalPooling
+from MinkowskiPooling import MinkowskiGlobalAvgPooling
 # from MinkowskiBroadcast import (
 #     MinkowskiBroadcastAddition,
 #     MinkowskiBroadcastMultiplication,

@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -21,98 +22,111 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-from enum import Enum
+from typing import Union
 
 import torch
 from torch.nn import Module
 from torch.autograd import Function
 
-from SparseTensor import SparseTensor
-from Common import get_minkowski_function
-
-
-class OperationType(Enum):
-    ADDITION = 0
-    MULTIPLICATION = 1
-
-
-op_to_int = {i: i.value for i in OperationType}
-
-
-def operation_type_to_int(op):
-    assert isinstance(op, OperationType)
-    return op_to_int[op]
+from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType, BroadcastMode
+from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
+from MinkowskiCoordinateManager import CoordinateManager
+from MinkowskiCommon import (
+    MinkowskiModuleBase,
+    get_minkowski_function,
+)
 
 
 class MinkowskiBroadcastFunction(Function):
-
     @staticmethod
-    def forward(ctx, input_features, input_features_global, operation_type,
-                in_coords_key, glob_coords_key, coords_manager):
-        assert input_features.shape[1] == input_features_global.shape[1]
-        assert input_features.type() == input_features_global.type()
-        assert isinstance(operation_type, OperationType)
-        if not input_features.is_contiguous():
-            input_features = input_features.contiguous()
-        if not input_features_global.is_contiguous():
-            input_features_global = input_features_global.contiguous()
+    def forward(
+        ctx,
+        input_features: torch.Tensor,
+        input_features_global: torch.Tensor,
+        operation_type: BroadcastMode,
+        in_coords_key: CoordinateMapKey,
+        glob_coords_key: CoordinateMapKey,
+        coords_manager: CoordinateManager,
+    ):
+        assert isinstance(operation_type, BroadcastMode)
 
-        ctx.op = operation_type_to_int(operation_type)
+        ctx.saved_vars = (
+            input_features,
+            input_features_global,
+            operation_type,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager,
+        )
 
-        ctx.in_feat = input_features
-        ctx.in_feat_glob = input_features_global
-        ctx.in_coords_key = in_coords_key
-        ctx.glob_coords_key = glob_coords_key
-        ctx.coords_manager = coords_manager
-
-        fw_fn = get_minkowski_function('BroadcastForward', input_features)
-        out_feat = fw_fn(ctx.in_feat, ctx.in_feat_glob, ctx.op,
-                         ctx.in_coords_key.CPPCoordsKey,
-                         ctx.glob_coords_key.CPPCoordsKey,
-                         ctx.coords_manager.CPPCoordsManager)
-        return out_feat
+        fw_fn = get_minkowski_function("BroadcastForward", input_features)
+        return fw_fn(
+            input_features,
+            input_features_global,
+            operation_type,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
+        )
 
     @staticmethod
     def backward(ctx, grad_out_feat):
         if not grad_out_feat.is_contiguous():
             grad_out_feat = grad_out_feat.contiguous()
 
-        grad_in_feat = grad_out_feat.new()
-        grad_in_feat_glob = grad_out_feat.new()
-        bw_fn = get_minkowski_function('BroadcastBackward', grad_out_feat)
-        bw_fn(ctx.in_feat, grad_in_feat, ctx.in_feat_glob, grad_in_feat_glob,
-              grad_out_feat, ctx.op, ctx.in_coords_key.CPPCoordsKey,
-              ctx.glob_coords_key.CPPCoordsKey,
-              ctx.coords_manager.CPPCoordsManager)
+        (
+            input_features,
+            input_features_global,
+            operation_type,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager,
+        ) = ctx.saved_vars
+
+        bw_fn = get_minkowski_function("BroadcastBackward", grad_out_feat)
+        grad_in_feat, grad_in_feat_glob = bw_fn(
+            input_features,
+            input_features_global,
+            grad_out_feat,
+            operation_type,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
+        )
         return grad_in_feat, grad_in_feat_glob, None, None, None, None
 
 
-class AbstractMinkowskiBroadcast(Module):
-
+class MinkowskiBroadcastBase(MinkowskiModuleBase):
     def __init__(self, operation_type):
-        super(AbstractMinkowskiBroadcast, self).__init__()
-        assert isinstance(operation_type, OperationType)
+        MinkowskiModuleBase.__init__(self)
+        assert isinstance(operation_type, BroadcastMode)
 
         self.operation_type = operation_type
 
         self.broadcast = MinkowskiBroadcastFunction()
 
-    def forward(self, input, input_glob):
+    def forward(self, input: SparseTensor, input_glob: SparseTensor):
         assert isinstance(input, SparseTensor)
 
-        output = self.broadcast.apply(input.F, input_glob.F,
-                                      self.operation_type, input.coords_key,
-                                      input_glob.coords_key, input.coords_man)
+        output = self.broadcast.apply(
+            input.F,
+            input_glob.F,
+            self.operation_type,
+            input.coordinate_map_key,
+            input_glob.coordinate_map_key,
+            input.coordinate_manager,
+        )
         return SparseTensor(
             output,
-            coords_key=input.coords_key,
-            coords_manager=input.coords_man)
+            coordinate_map_key=input.coordinate_map_key,
+            coordinate_manager=input.coordinate_manager,
+        )
 
     def __repr__(self):
         return self.__class__.__name__
 
 
-class MinkowskiBroadcastAddition(AbstractMinkowskiBroadcast):
+class MinkowskiBroadcastAddition(MinkowskiBroadcastBase):
     r"""Broadcast the reduced features to all input coordinates.
 
     .. math::
@@ -133,10 +147,10 @@ class MinkowskiBroadcastAddition(AbstractMinkowskiBroadcast):
     """
 
     def __init__(self):
-        AbstractMinkowskiBroadcast.__init__(self, OperationType.ADDITION)
+        MinkowskiBroadcastBase.__init__(self, BroadcastMode.ELEMENTWISE_ADDITON)
 
 
-class MinkowskiBroadcastMultiplication(AbstractMinkowskiBroadcast):
+class MinkowskiBroadcastMultiplication(MinkowskiBroadcastBase):
     r"""Broadcast reduced features to all input coordinates.
 
     .. math::
@@ -157,7 +171,7 @@ class MinkowskiBroadcastMultiplication(AbstractMinkowskiBroadcast):
     """
 
     def __init__(self):
-        AbstractMinkowskiBroadcast.__init__(self, OperationType.MULTIPLICATION)
+        MinkowskiBroadcastBase.__init__(self, BroadcastMode.ELEMENTWISE_MULTIPLICATION)
 
 
 class MinkowskiBroadcast(Module):
@@ -185,19 +199,20 @@ class MinkowskiBroadcast(Module):
     def __repr__(self):
         return self.__class__.__name__
 
-    def forward(self, input, input_glob):
+    def forward(self, input: SparseTensor, input_glob: SparseTensor):
         assert isinstance(input, SparseTensor)
         assert isinstance(input_glob, SparseTensor)
 
         broadcast_feat = input.F.new(len(input), input_glob.size()[1])
-        row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)
-        for b, row_ind in enumerate(row_inds):
-            broadcast_feat[row_ind] = input_glob.F[b]
+        batch_indices, batch_rows = input.coordinate_manager.origin_map(input.coordinate_map_key)
+        for b, rows in zip(batch_indices, batch_rows):
+            broadcast_feat[rows] = input_glob.F[b]
 
         return SparseTensor(
             broadcast_feat,
-            coords_key=input.coords_key,
-            coords_manager=input.coords_man)
+            coordinate_map_key=input.coordinate_map_key,
+            coordinate_manager=input.coordinate_manager,
+        )
 
 
 class MinkowskiBroadcastConcatenation(MinkowskiBroadcast):
@@ -221,17 +236,18 @@ class MinkowskiBroadcastConcatenation(MinkowskiBroadcast):
 
     """
 
-    def forward(self, input, input_glob):
+    def forward(self, input: SparseTensor, input_glob: SparseTensor):
         assert isinstance(input, SparseTensor)
         assert isinstance(input_glob, SparseTensor)
 
         broadcast_feat = input.F.new(len(input), input_glob.size()[1])
-        row_inds = input.coords_man.get_row_indices_per_batch(input.coords_key)
-        for b, row_ind in enumerate(row_inds):
+        batch_indices, batch_rows = input.coordinate_manager.origin_map(input.coordinate_map_key)
+        for b, row_ind in zip(batch_indices, batch_rows):
             broadcast_feat[row_ind] = input_glob.F[b]
 
         broadcast_cat = torch.cat((input.F, broadcast_feat), dim=1)
         return SparseTensor(
             broadcast_cat,
-            coords_key=input.coords_key,
-            coords_manager=input.coords_man)
+            coordinate_map_key=input.coordinate_map_key,
+            coordinate_manager=input.coordinate_manager,
+        )

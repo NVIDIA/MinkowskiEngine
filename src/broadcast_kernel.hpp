@@ -26,6 +26,7 @@
 #define CPU_BROADCAST
 
 #include "math_functions.hpp"
+#include "types.hpp"
 #include "utils.hpp"
 
 namespace minkowski {
@@ -34,9 +35,9 @@ template <typename Dtype, typename Itype>
 void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
                                const Dtype *p_in_feat_global,
                                int in_nrows_global, Dtype *p_out_feat,
-                               int nchannel, int op,
-                               const InOutMaps<Itype> &in_maps,
-                               const InOutMaps<Itype> &glob_maps) {
+                               int nchannel, BroadcastMode::Type const op,
+                               const cpu_in_maps &in_maps,
+                               const cpu_out_maps &glob_maps) {
   Dtype *p_curr_out_feat;
   const Dtype *p_curr_in_feat_global;
 
@@ -52,7 +53,7 @@ void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
 
   // To speed up, put switch outside for loops
   switch (op) {
-  case 0: // +
+  case BroadcastMode::ELEMENTWISE_ADDITON: // +
     for (int k = 0; k < in_maps.size(); ++k) {
       for (int row = 0; row < in_maps[k].size(); ++row) {
         p_curr_out_feat = p_out_feat + in_maps[k][row] * nchannel;
@@ -62,7 +63,7 @@ void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
       }
     }
     break;
-  case 1: // *
+  case BroadcastMode::ELEMENTWISE_MULTIPLICATION: // *
     for (int k = 0; k < in_maps.size(); ++k) {
       for (int row = 0; row < in_maps[k].size(); ++row) {
         p_curr_out_feat = p_out_feat + in_maps[k][row] * nchannel;
@@ -91,15 +92,16 @@ void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
 }
 
 template <typename Dtype, typename Itype>
-void BroadcastBackwardKernelCPU(const Dtype *p_in_feat, /* */
-                                Dtype *p_grad_in_feat, int in_nrows,
+void BroadcastBackwardKernelCPU(const Dtype *p_in_feat,              //
+                                Dtype *p_grad_in_feat, int in_nrows, //
                                 const Dtype *p_in_feat_global,
                                 Dtype *p_grad_in_feat_global,
-                                int in_nrows_global,
-                                const Dtype *p_grad_out_feat, /* */
-                                int nchannel, int op,         /*         */
-                                const InOutMaps<Itype> &in_maps,
-                                const InOutMaps<Itype> &glob_maps) {
+                                int in_nrows_global,          //
+                                const Dtype *p_grad_out_feat, //
+                                int nchannel,
+                                BroadcastMode::Type const op, //
+                                const cpu_in_maps &in_maps,
+                                const cpu_out_maps &glob_maps) {
   Dtype *p_curr_grad_in_feat, *p_curr_grad_in_feat_global;
   const Dtype *p_curr_in_feat_global, *p_curr_in_feat, *p_curr_grad_out_feat;
 
@@ -108,15 +110,15 @@ void BroadcastBackwardKernelCPU(const Dtype *p_in_feat, /* */
   // Clear grad memory
   std::memset(p_grad_in_feat_global, 0,
               sizeof(Dtype) * in_nrows_global * nchannel);
+  */
 
   // Initialize the grad_in_feat as grad_out_feat
   std::memcpy(p_grad_in_feat, p_grad_out_feat,
               sizeof(Dtype) * in_nrows * nchannel);
-  */
 
   // To speed up, put switch outside for loops
   switch (op) {
-  case 0: // +
+  case BroadcastMode::ELEMENTWISE_ADDITON: // +
     // For p_grad_in_feat, copy all grad_out
     for (int k = 0; k < in_maps.size(); ++k) {
       for (int row = 0; row < in_maps[k].size(); ++row) {
@@ -128,7 +130,7 @@ void BroadcastBackwardKernelCPU(const Dtype *p_in_feat, /* */
       }
     }
     break;
-  case 1: // *
+  case BroadcastMode::ELEMENTWISE_MULTIPLICATION: // *
     for (int k = 0; k < in_maps.size(); ++k) {
       for (int row = 0; row < in_maps[k].size(); ++row) {
         // In feat global

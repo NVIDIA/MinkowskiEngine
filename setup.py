@@ -160,7 +160,7 @@ else:
 if "darwin" in platform:
     CC_FLAGS += ["-stdlib=libc++"]
 
-NVCC_FLAGS += ["--expt-extended-lambda"]
+NVCC_FLAGS += ["--expt-relaxed-constexpr", "--expt-extended-lambda", "--use_fast_math"]
 
 BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise
@@ -207,6 +207,7 @@ SOURCE_SETS = {
             "convolution_transpose_cpu.cpp",
             "local_pooling_cpu.cpp",
             "global_pooling_cpu.cpp",
+            "broadcast_cpu.cpp",
             "pruning_cpu.cpp",
             "quantization.cpp",
         ],
@@ -227,6 +228,8 @@ SOURCE_SETS = {
             "pooling_max_kernel.cu",
             "local_pooling_gpu.cu",
             "global_pooling_gpu.cu",
+            "broadcast_kernel.cu",
+            "broadcast_gpu.cu",
             "pruning_gpu.cu",
             "spmm.cu",
             "gpu.cu",
@@ -243,12 +246,16 @@ USE_NINJA = os.getenv("USE_NINJA") == "0"
 HERE = Path(os.path.dirname(__file__)).absolute()
 SRC_PATH = HERE / "src"
 
-# distutils only checks CC not CXX
-try:
-    CC = os.environ["CC"]
+if "CC" in os.environ or "CXX" in os.environ:
+    # distutils only checks CC not CXX
+    if "CXX" in os.environ:
+        os.environ["CC"] = os.environ["CXX"]
+        CC = os.environ["CXX"]
+    else:
+        CC = os.environ["CC"]
     print(f"Using {CC} for c++ compilation")
     NVCC_FLAGS += [f"-ccbin={CC}"]
-except:
+else:
     print("Using the default compiler")
 
 if debug:

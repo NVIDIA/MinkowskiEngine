@@ -24,26 +24,34 @@
 import torch
 import unittest
 
-from MinkowskiEngine import SparseTensor, MinkowskiGlobalPooling, \
-    MinkowskiBroadcastFunction, MinkowskiBroadcastAddition, \
-    MinkowskiBroadcastMultiplication, MinkowskiBroadcast, \
-    MinkowskiBroadcastConcatenation, OperationType
+from MinkowskiEngine import (
+    SparseTensor,
+    MinkowskiGlobalSumPooling,
+    MinkowskiBroadcastFunction,
+    MinkowskiBroadcastAddition,
+    MinkowskiBroadcastMultiplication,
+    MinkowskiBroadcast,
+    MinkowskiBroadcastConcatenation,
+    BroadcastMode,
+)
 
 from utils.gradcheck import gradcheck
-from tests.common import data_loader
+from tests.python.common import data_loader
 
 
 class TestBroadcast(unittest.TestCase):
-
     def test_broadcast_gpu(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels)
         coords, feats_glob, labels = data_loader(in_channels)
         feats = feats.double()
         feats_glob = feats_glob.double()
-        input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalPooling()
-        input_glob = pool(input)
+        feats.requires_grad_()
+        feats_glob.requires_grad_()
+
+        input = SparseTensor(feats, coords)
+        pool = MinkowskiGlobalSumPooling()
+        input_glob = pool(input).detach()
         input_glob.F.requires_grad_()
         broadcast_add = MinkowskiBroadcastAddition()
         broadcast_mul = MinkowskiBroadcastMultiplication()
@@ -55,10 +63,10 @@ class TestBroadcast(unittest.TestCase):
         # Check backward
         fn = MinkowskiBroadcastFunction()
 
-        device = torch.device('cuda')
+        device = torch.device("cuda")
 
-        input = input.to(device)
-        input_glob = input_glob.to(device)
+        input = SparseTensor(feats, coords, device=device)
+        input_glob = pool(input).detach()
         gpu_add = broadcast_add(input, input_glob)
         gpu_mul = broadcast_mul(input, input_glob)
         gpu_cat = broadcast_cat(input, input_glob)
@@ -70,14 +78,30 @@ class TestBroadcast(unittest.TestCase):
         self.assertTrue(
             gradcheck(
                 fn,
-                (input.F, input_glob.F, OperationType.ADDITION,
-                 input.coords_key, input_glob.coords_key, input.coords_man)))
+                (
+                    input.F,
+                    input_glob.F,
+                    broadcast_add.operation_type,
+                    input.coordinate_map_key,
+                    input_glob.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
         self.assertTrue(
             gradcheck(
                 fn,
-                (input.F, input_glob.F, OperationType.MULTIPLICATION,
-                 input.coords_key, input_glob.coords_key, input.coords_man)))
+                (
+                    input.F,
+                    input_glob.F,
+                    broadcast_mul.operation_type,
+                    input.coordinate_map_key,
+                    input_glob.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
     def test_broadcast(self):
         in_channels, D = 2, 2
@@ -85,10 +109,12 @@ class TestBroadcast(unittest.TestCase):
         coords, feats_glob, labels = data_loader(in_channels)
         feats = feats.double()
         feats_glob = feats_glob.double()
-        input = SparseTensor(feats, coords=coords)
-        pool = MinkowskiGlobalPooling()
-        input_glob = pool(input)
-        input_glob.F.requires_grad_()
+        feats.requires_grad_()
+        feats_glob.requires_grad_()
+        input = SparseTensor(feats, coords)
+        pool = MinkowskiGlobalSumPooling()
+        input_glob = pool(input).detach()
+        input_glob.requires_grad_()
         broadcast = MinkowskiBroadcast()
         broadcast_cat = MinkowskiBroadcastConcatenation()
         broadcast_add = MinkowskiBroadcastAddition()
@@ -104,19 +130,34 @@ class TestBroadcast(unittest.TestCase):
 
         # Check backward
         fn = MinkowskiBroadcastFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    input_glob.F,
+                    broadcast_add.operation_type,
+                    input.coordinate_map_key,
+                    input_glob.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
         self.assertTrue(
             gradcheck(
                 fn,
-                (input.F, input_glob.F, OperationType.ADDITION,
-                 input.coords_key, input_glob.coords_key, input.coords_man)))
+                (
+                    input.F,
+                    input_glob.F,
+                    broadcast_mul.operation_type,
+                    input.coordinate_map_key,
+                    input_glob.coordinate_map_key,
+                    input.coordinate_manager,
+                ),
+            )
+        )
 
-        self.assertTrue(
-            gradcheck(
-                fn,
-                (input.F, input_glob.F, OperationType.MULTIPLICATION,
-                 input.coords_key, input_glob.coords_key, input.coords_man)))
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
