@@ -730,7 +730,6 @@ struct origin_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
     LOG_DEBUG("Iterating over", origin_map.first.size(), "unique maps");
     for (uint32_t out_row_index = 0; out_row_index < origin_map.first.size();
          ++out_row_index) {
-      LOG_DEBUG(out_row_index);
       auto const &in_map = origin_map.first[out_row_index];
       int32_t const curr_size = in_map.size();
       ASSERT(curr_size > 0, "invalid kernel map");

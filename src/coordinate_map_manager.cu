@@ -241,6 +241,7 @@ struct origin_map_functor<
     int64_t *d_batch_indices = batch_indices.data_ptr<int64_t>();
 
     LOG_DEBUG("manager origin map strided_copy");
+    // GPU batch indices are sorted
     detail::strided_copy<int64_t, default_types::dcoordinate_type,
                          default_types::size_type>
         <<<GET_BLOCKS(out_size, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(

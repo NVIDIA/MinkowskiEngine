@@ -276,6 +276,44 @@ at::Tensor GlobalPoolingBackwardGPU(
 #endif
 
 /*************************************
+ * Broadcast
+ *************************************/
+template <typename coordinate_type>
+at::Tensor
+BroadcastForwardCPU(at::Tensor const &in_feat, at::Tensor const &in_feat_glob,
+                    BroadcastMode::Type const broadcast_mode,
+                    CoordinateMapKey *p_in_map_key,   //
+                    CoordinateMapKey *p_glob_map_key, //
+                    cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type>
+std::pair<at::Tensor, at::Tensor>
+BroadcastBackwardCPU(at::Tensor const &in_feat, at::Tensor const &in_feat_glob,
+                     at::Tensor const &grad_out_feat,
+                     BroadcastMode::Type const op,
+                     CoordinateMapKey *p_in_map_key,   //
+                     CoordinateMapKey *p_glob_map_key, //
+                     cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor BroadcastForwardGPU(
+    at::Tensor const &in_feat, at::Tensor const &in_feat_glob,
+    BroadcastMode::Type const broadcast_mode,
+    CoordinateMapKey *p_in_map_key,   //
+    CoordinateMapKey *p_glob_map_key, //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+std::pair<at::Tensor, at::Tensor> BroadcastBackwardGPU(
+    at::Tensor const &in_feat, at::Tensor const &in_feat_glob,
+    at::Tensor const &grad_out_feat, BroadcastMode::Type const op,
+    CoordinateMapKey *p_in_map_key,   //
+    CoordinateMapKey *p_glob_map_key, //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+
+/*************************************
  * Pruning
  *************************************/
 template <typename coordinate_type>
@@ -385,16 +423,14 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::PruningBackwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
+  m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
+        &minkowski::BroadcastForwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
+        &minkowski::BroadcastBackwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+
   /*
-    m.def((std::string("BroadcastForwardCPU") + dtypestr).c_str(),
-          &mink::BroadcastForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("BroadcastBackwardCPU") + dtypestr).c_str(),
-          &mink::BroadcastBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-
-
-
     m.def((std::string("UnionForwardCPU") + dtypestr).c_str(),
           &mink::UnionForwardCPU<MapType, Dtype>,
           py::call_guard<py::gil_scoped_release>());
@@ -456,6 +492,13 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
         py::call_guard<py::gil_scoped_release>());
   m.def((std::string("PruningBackwardGPU") + dtypestr).c_str(),
         &minkowski::PruningBackwardGPU<coordinate_type, TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("BroadcastForwardGPU") + dtypestr).c_str(),
+        &minkowski::BroadcastForwardGPU<coordinate_type, TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
+        &minkowski::BroadcastBackwardGPU<coordinate_type, TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
 }
 #endif
@@ -531,6 +574,13 @@ void initialize_non_templated_classes(py::module &m) {
              minkowski::PoolingMode::Type::GLOBAL_AVG_POOLING_PYTORCH_INDEX)
       .value("GLOBAL_MAX_POOLING_PYTORCH_INDEX",
              minkowski::PoolingMode::Type::GLOBAL_MAX_POOLING_PYTORCH_INDEX)
+      .export_values();
+
+  py::enum_<minkowski::BroadcastMode::Type>(m, "BroadcastMode")
+      .value("ELEMENTWISE_ADDITON",
+             minkowski::BroadcastMode::Type::ELEMENTWISE_ADDITON)
+      .value("ELEMENTWISE_MULTIPLICATION",
+             minkowski::BroadcastMode::Type::ELEMENTWISE_MULTIPLICATION)
       .export_values();
 
   // Classes

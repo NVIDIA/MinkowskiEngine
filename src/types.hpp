@@ -153,6 +153,13 @@ enum Type {
 };
 }
 
+namespace BroadcastMode {
+enum Type {
+  ELEMENTWISE_ADDITON,
+  ELEMENTWISE_MULTIPLICATION,
+};
+}
+
 /* Key for KernelMap
  *
  * A tuple of (CoordinateMapKey (input),
