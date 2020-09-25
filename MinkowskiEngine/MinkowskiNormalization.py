@@ -31,15 +31,21 @@ from MinkowskiSparseTensor import SparseTensor
 from MinkowskiTensorField import TensorField
 
 from MinkowskiPooling import MinkowskiGlobalAvgPooling
-# from MinkowskiBroadcast import (
-#     MinkowskiBroadcastAddition,
-#     MinkowskiBroadcastMultiplication,
-#     OperationType,
-#     operation_type_to_int,
-# )
-# from MinkowskiEngineBackend._C import CoordinateMapKey
+from MinkowskiBroadcast import (
+    MinkowskiBroadcastAddition,
+    MinkowskiBroadcastMultiplication,
+)
+from MinkowskiEngineBackend._C import (
+    CoordinateMapKey,
+    BroadcastMode,
+    PoolingMode,
+)
+from MinkowskiCoordinateManager import CoordinateManager
 
-from MinkowskiCommon import get_minkowski_function, GlobalPoolingMode
+from MinkowskiCommon import (
+    MinkowskiModuleBase,
+    get_minkowski_function,
+)
 
 
 class MinkowskiBatchNorm(Module):
@@ -184,56 +190,45 @@ class MinkowskiInstanceNormFunction(Function):
     @staticmethod
     def forward(
         ctx,
-        in_feat,
-        mode=GlobalPoolingMode.AUTO,
-        in_coords_key=None,
-        glob_coords_key=None,
-        coords_manager=None,
+        in_feat: torch.Tensor,
+        in_coords_key: CoordinateMapKey,
+        glob_coords_key: CoordinateMapKey = None,
+        coords_manager: CoordinateManager = None,
     ):
-        assert isinstance(
-            mode, GlobalPoolingMode
-        ), f"Mode must be an instance of GlobalPoolingMode, {mode}"
         if glob_coords_key is None:
-            glob_coords_key = CoordsKey(in_coords_key.D)
+            glob_coords_key = CoordinateMapKey(
+                in_coords_key.get_coordinate_size()
+            )
 
-        gpool_forward = get_minkowski_function("GlobalPoolingForward", in_feat)
+        gpooling_mode = PoolingMode.GLOBAL_AVG_POOLING_KERNEL
+        gpool_avg_forward = get_minkowski_function("GlobalPoolingForward", in_feat)
         broadcast_forward = get_minkowski_function("BroadcastForward", in_feat)
-        add = operation_type_to_int(OperationType.ADDITION)
-        multiply = operation_type_to_int(OperationType.MULTIPLICATION)
 
-        mean = in_feat.new()
-        num_nonzero = in_feat.new()
-
-        cpp_in_coords_key = in_coords_key.CPPCoordsKey
-        cpp_glob_coords_key = glob_coords_key.CPPCoordsKey
-        cpp_coords_manager = coords_manager.CPPCoordsManager
-
-        mean, num_nonzero = gpool_forward(
+        mean, num_nonzero = gpool_avg_forward(
             in_feat,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
-            True,
-            mode.value,
+            gpooling_mode,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
+
         # X - \mu
         centered_feat = broadcast_forward(
             in_feat,
             -mean,
-            add,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
+            BroadcastMode.ELEMENTWISE_ADDITON,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
         # Variance = 1/N \sum (X - \mu) ** 2
-        variance, num_nonzero = gpool_forward(
+        variance, num_nonzero = gpool_avg_forward(
             centered_feat ** 2,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
-            True,
-            mode.value,
+            gpooling_mode,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
         # norm_feat = (X - \mu) / \sigma
@@ -241,15 +236,13 @@ class MinkowskiInstanceNormFunction(Function):
         norm_feat = broadcast_forward(
             centered_feat,
             inv_std,
-            multiply,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
+            BroadcastMode.ELEMENTWISE_MULTIPLICATION,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
-        ctx.mode = mode
-        ctx.in_coords_key, ctx.glob_coords_key = in_coords_key, glob_coords_key
-        ctx.coords_manager = coords_manager
+        ctx.saved_vars = (in_coords_key, glob_coords_key, coords_manager)
         # For GPU tensors, must use save_for_backward.
         ctx.save_for_backward(inv_std, norm_feat)
         return norm_feat
@@ -257,73 +250,65 @@ class MinkowskiInstanceNormFunction(Function):
     @staticmethod
     def backward(ctx, out_grad):
         # https://kevinzakka.github.io/2016/09/14/batch_normalization/
-        in_coords_key, glob_coords_key = ctx.in_coords_key, ctx.glob_coords_key
-        coords_manager = ctx.coords_manager
+        in_coords_key, glob_coords_key, coords_manager = ctx.saved_vars
 
         # To prevent the memory leakage, compute the norm again
         inv_std, norm_feat = ctx.saved_tensors
 
-        gpool_forward = get_minkowski_function("GlobalPoolingForward", out_grad)
+        gpooling_mode = PoolingMode.GLOBAL_AVG_POOLING_KERNEL
+        gpool_avg_forward = get_minkowski_function("GlobalPoolingForward", out_grad)
         broadcast_forward = get_minkowski_function("BroadcastForward", out_grad)
-        add = operation_type_to_int(OperationType.ADDITION)
-        multiply = operation_type_to_int(OperationType.MULTIPLICATION)
-
-        cpp_in_coords_key = in_coords_key.CPPCoordsKey
-        cpp_glob_coords_key = glob_coords_key.CPPCoordsKey
-        cpp_coords_manager = coords_manager.CPPCoordsManager
 
         # 1/N \sum dout
-        mean_dout, num_nonzero = gpool_forward(
+        mean_dout, num_nonzero = gpool_avg_forward(
             out_grad,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
-            True,
-            ctx.mode.value,
+            gpooling_mode,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
         # 1/N \sum (dout * out)
-        mean_dout_feat, num_nonzero = gpool_forward(
+        mean_dout_feat, num_nonzero = gpool_avg_forward(
             out_grad * norm_feat,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
-            True,
-            ctx.mode.value,
+            gpooling_mode,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
         # out * 1/N \sum (dout * out)
         feat_mean_dout_feat = broadcast_forward(
             norm_feat,
             mean_dout_feat,
-            multiply,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
+            BroadcastMode.ELEMENTWISE_MULTIPLICATION,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
         unnorm_din = broadcast_forward(
             out_grad - feat_mean_dout_feat,
             -mean_dout,
-            add,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
+            BroadcastMode.ELEMENTWISE_ADDITON,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
         norm_din = broadcast_forward(
             unnorm_din,
             inv_std,
-            multiply,
-            cpp_in_coords_key,
-            cpp_glob_coords_key,
-            cpp_coords_manager,
+            BroadcastMode.ELEMENTWISE_MULTIPLICATION,
+            in_coords_key,
+            glob_coords_key,
+            coords_manager._manager,
         )
 
         return norm_din, None, None, None, None
 
 
-class MinkowskiStableInstanceNorm(Module):
+class MinkowskiStableInstanceNorm(MinkowskiModuleBase):
     def __init__(self, num_features):
         Module.__init__(self)
         self.num_features = num_features
@@ -331,10 +316,10 @@ class MinkowskiStableInstanceNorm(Module):
         self.weight = nn.Parameter(torch.ones(1, num_features))
         self.bias = nn.Parameter(torch.zeros(1, num_features))
 
-        self.mean_in = MinkowskiGlobalPooling()
+        self.mean_in = MinkowskiGlobalAvgPooling()
         self.glob_sum = MinkowskiBroadcastAddition()
         self.glob_sum2 = MinkowskiBroadcastAddition()
-        self.glob_mean = MinkowskiGlobalPooling()
+        self.glob_mean = MinkowskiGlobalAvgPooling()
         self.glob_times = MinkowskiBroadcastMultiplication()
         self.reset_parameters()
 
@@ -353,14 +338,14 @@ class MinkowskiStableInstanceNorm(Module):
         centered_in = self.glob_sum(x, neg_mean_in)
         temp = SparseTensor(
             centered_in.F ** 2,
-            coords_key=centered_in.coords_key,
-            coords_manager=centered_in.coords_man,
+            coordinate_map_key=centered_in.coordinate_map_key,
+            coordinate_manager=centered_in.coordinate_manager,
         )
         var_in = self.glob_mean(temp)
         instd_in = SparseTensor(
             1 / (var_in.F + self.eps).sqrt(),
-            coords_key=var_in.coords_key,
-            coords_manager=var_in.coords_man,
+            coordinate_map_key=var_in.coordinate_map_key,
+            coordinate_manager=var_in.coordinate_manager,
         )
 
         x = self.glob_times(self.glob_sum2(x, neg_mean_in), instd_in)
@@ -371,12 +356,12 @@ class MinkowskiStableInstanceNorm(Module):
         )
 
 
-class MinkowskiInstanceNorm(Module):
+class MinkowskiInstanceNorm(MinkowskiModuleBase):
     r"""A instance normalization layer for a sparse tensor.
 
     """
 
-    def __init__(self, num_features, mode=GlobalPoolingMode.AUTO):
+    def __init__(self, num_features):
         r"""
         Args:
 
@@ -389,7 +374,6 @@ class MinkowskiInstanceNorm(Module):
         self.weight = nn.Parameter(torch.ones(1, num_features))
         self.bias = nn.Parameter(torch.zeros(1, num_features))
         self.reset_parameters()
-        self.mode = mode
         self.inst_norm = MinkowskiInstanceNormFunction()
 
     def __repr__(self):
@@ -400,11 +384,11 @@ class MinkowskiInstanceNorm(Module):
         self.weight.data.fill_(1)
         self.bias.data.zero_()
 
-    def forward(self, input):
+    def forward(self, input: SparseTensor):
         assert isinstance(input, SparseTensor)
 
         output = self.inst_norm.apply(
-            input.F, self.mode, input.coords_key, None, input.coords_man
+            input.F, input.coordinate_map_key, None, input.coordinate_manager
         )
         output = output * self.weight + self.bias
 
