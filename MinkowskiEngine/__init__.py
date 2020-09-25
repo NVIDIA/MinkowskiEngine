@@ -109,8 +109,8 @@ from MinkowskiPooling import (
     MinkowskiSumPooling,
     MinkowskiAvgPooling,
     MinkowskiMaxPooling,
-    MinkowskiPoolingTransposeFunction,
-    MinkowskiPoolingTranspose,
+    # MinkowskiPoolingTransposeFunction,
+    # MinkowskiPoolingTranspose,
     MinkowskiGlobalPoolingFunction,
     MinkowskiGlobalPooling,
     MinkowskiGlobalSumPooling,
@@ -142,9 +142,9 @@ from MinkowskiNonlinearity import (
 from MinkowskiNormalization import (
     MinkowskiBatchNorm,
     MinkowskiSyncBatchNorm,
-    # MinkowskiInstanceNorm,
-    # MinkowskiInstanceNormFunction,
-    # MinkowskiStableInstanceNorm,
+    MinkowskiInstanceNorm,
+    MinkowskiInstanceNormFunction,
+    MinkowskiStableInstanceNorm,
 )
 
 

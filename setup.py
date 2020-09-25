@@ -53,6 +53,7 @@ try:
 except ImportError:
     raise ImportError("Pytorch not found. Please install pytorch first.")
 
+import warnings
 import codecs
 import os
 import re
