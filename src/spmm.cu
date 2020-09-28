@@ -189,8 +189,8 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
                           cudaMemcpyDeviceToDevice));
 
     thrust::sort_by_key(thrust::device,            //
-                        row_indices_ptr,           // key begin
-                        row_indices_ptr + nnz,     // key end
+                        sorted_row_ptr,            // key begin
+                        sorted_row_ptr + nnz,      // key end
                         thrust::make_zip_iterator( // value begin
                             thrust::make_tuple(    //
                                 sorted_col_ptr,    //
