@@ -36,7 +36,7 @@ from MinkowskiTensor import (
     Tensor,
 )
 from MinkowskiSparseTensor import SparseTensor
-from sparse_matrix_functions import spmm as _spmm
+from sparse_matrix_functions import MinkowskiSPMMFunction
 
 
 class TensorField(Tensor):
@@ -112,18 +112,19 @@ class TensorField(Tensor):
             SparseTensorQuantizationMode.UNWEIGHTED_SUM,
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
         ]:
+            spmm = MinkowskiSPMMFunction()
             N = len(features)
             cols = torch.arange(
                 N, dtype=self.inverse_mapping.dtype, device=self.inverse_mapping.device,
             )
             vals = torch.ones(N, dtype=features.dtype, device=features.device)
             size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
-            features = _spmm(self.inverse_mapping, cols, vals, size, features)
+            features = spmm.apply(self.inverse_mapping, cols, vals, size, features)
             if (
                 self.quantization_mode
                 == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
             ):
-                nums = _spmm(
+                nums = spmm.apply(
                     self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),
                 )
                 features /= nums
@@ -161,6 +162,7 @@ class TensorField(Tensor):
 
     def sparse(self):
         r"""Converts the current sparse tensor field to a sparse tensor."""
+        spmm = MinkowskiSPMMFunction()
         N = len(self._F)
         assert N == len(self.inverse_mapping), "invalid inverse mapping"
         cols = torch.arange(
@@ -170,10 +172,10 @@ class TensorField(Tensor):
         size = torch.Size(
             [self._manager.size(self.coordinate_map_key), len(self.inverse_mapping)]
         )
-        features = _spmm(self.inverse_mapping, cols, vals, size, self._F)
+        features = spmm.apply(self.inverse_mapping, cols, vals, size, self._F)
         # int_inverse_mapping = self.inverse_mapping.int()
         if self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
-            nums = _spmm(self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),)
+            nums = spmm.apply(self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),)
             features /= nums
 
         return SparseTensor(
