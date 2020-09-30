@@ -75,7 +75,7 @@ from MinkowskiNetwork import MinkowskiNetwork
 
 import MinkowskiOps
 
-from MinkowskiOps import MinkowskiLinear, cat
+from MinkowskiOps import MinkowskiLinear, cat, cat_union
 
 import MinkowskiFunctional
 
