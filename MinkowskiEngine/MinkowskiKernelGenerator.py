@@ -234,7 +234,7 @@ class KernelGenerator:
         "dimension",
         "kernel_volume",
         "requires_strided_coordinates",
-        "generate_new_coordinates",
+        "expand_coordinates",
     )
 
     def __init__(
@@ -245,7 +245,7 @@ class KernelGenerator:
         is_transpose: bool = False,
         region_type: RegionType = RegionType.HYPER_CUBE,
         region_offsets: torch.Tensor = None,
-        generate_new_coordinates: bool = False,
+        expand_coordinates: bool = False,
         axis_types=None,
         dimension=-1,
     ):
@@ -287,7 +287,7 @@ class KernelGenerator:
         self.requires_strided_coordinates = reduce(
             lambda s1, s2: s1 == 1 and s2 == 1, kernel_stride
         )
-        self.generate_new_coordinates = generate_new_coordinates
+        self.expand_coordinates = expand_coordinates
 
     def get_kernel(self, tensor_stride, is_transpose):
         assert len(tensor_stride) == self.dimension

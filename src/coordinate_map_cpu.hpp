@@ -32,6 +32,21 @@
 
 namespace minkowski {
 
+namespace detail {
+
+template <typename coordinate_type,
+          typename stride_type = default_types::stride_type>
+bool is_coordinate_aligned(coordinate<coordinate_type> const &point,
+                           stride_type const &stride) {
+  for (uint32_t i = 0; i < stride.size(); ++i) {
+    if (point[i + 1] % stride[i] != 0)
+      return false;
+  }
+  return true;
+}
+
+} // namespace detail
+
 template <typename coordinate_type,
           template <typename T> class TemplatedAllocator = std::allocator>
 class CoordinateFieldMapCPU
@@ -260,20 +275,34 @@ public:
                          out_tensor_stride, base_type::m_byte_allocator);
 
     auto ckernel = cpu_kernel_region<coordinate_type>(kernel);
-    std::vector<coordinate_type> lb(m_coordinate_size), ub(m_coordinate_size),
-        tmp(m_coordinate_size);
+    std::vector<coordinate_type> tmp(m_coordinate_size);
+    coordinate<coordinate_type> point(tmp.data());
 
     index_type num_used{0};
-    for (auto iter_in = m_map.begin(); iter_in != m_map.end(); ++iter_in) {
+    if (kernel.is_transpose()) {
+      for (auto iter_in = m_map.begin(); iter_in != m_map.end(); ++iter_in) {
 
-      // set the bounds for the current region
-      ckernel.set_bounds(iter_in->first.data(), lb.data(), ub.data(),
-                         tmp.data());
-
-      // For elements in the current region
-      for (const auto &point : ckernel) {
-        auto const result = stride_map.insert(point, num_used);
-        num_used += result.second;
+        // For elements in the current region
+        for (auto kernel_ind = 0; kernel_ind < ckernel.volume(); ++kernel_ind) {
+          ckernel.coordinate_at(kernel_ind, iter_in->first.data(), tmp.data());
+          auto const result = stride_map.insert(point, num_used);
+          num_used += result.second;
+        }
+      }
+    } else {
+      LOG_DEBUG("stride_region with no transpose");
+      // Expand coordinates with regular conv
+      for (auto iter_in = m_map.begin(); iter_in != m_map.end(); ++iter_in) {
+        // For elements in the current region
+        for (auto kernel_ind = 0; kernel_ind < ckernel.volume(); ++kernel_ind) {
+          // TODO replace with more efficient code
+          ckernel.coordinate_at(kernel_ind, iter_in->first.data(), tmp.data());
+          if (detail::is_coordinate_aligned<coordinate_type, stride_type>(
+                  point, out_tensor_stride)) {
+            auto const result = stride_map.insert(point, num_used);
+            num_used += result.second;
+          }
+        }
       }
     }
     return stride_map;
@@ -384,8 +413,8 @@ public:
       for (index_type n = 0; n < N; n++) {
         auto ckernel = cpu_kernel_region<coordinate_type>(kernel);
         // temporary variables for each thread
-        std::vector<coordinate_type> lb(m_coordinate_size),
-            ub(m_coordinate_size), tmp(m_coordinate_size);
+        std::vector<coordinate_type> tmp(m_coordinate_size);
+        coordinate<coordinate_type> curr_kernel_coordinate(tmp.data());
 
         index_type kernel_ind, curr_index_begin;
         for (auto iter_out = out_mmap.begin(stride * n);
@@ -393,15 +422,13 @@ public:
              std::min(stride, out_map_num_elements - n * stride);
              ++iter_out) {
 
-          // set the bounds for the current region
-          ckernel.set_bounds(iter_out->first.data(), lb.data(), ub.data(),
-                             tmp.data());
-
           // For elements in the current region
-          kernel_ind = 0;
-          for (const auto &point : ckernel) {
+          for (auto kernel_ind = 0; kernel_ind < ckernel.volume();
+               ++kernel_ind) {
             // If the input coord exists
-            const auto iter_in = m_map.find(point);
+            ckernel.coordinate_at(kernel_ind, iter_out->first.data(),
+                                  tmp.data());
+            const auto iter_in = m_map.find(curr_kernel_coordinate);
             // LOG_DEBUG(kernel_ind, ":",
             //           PtrToString(iter_out->first.data(), m_coordinate_size),
             //           "->", PtrToString(point.data(), m_coordinate_size));
@@ -421,8 +448,6 @@ public:
               //           PtrToString(iter_out->first.data(),
               //           m_coordinate_size));
             }
-            // Post processings
-            kernel_ind++;
           }
         }
       }

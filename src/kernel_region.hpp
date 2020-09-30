@@ -158,43 +158,6 @@ public:
       set_volume();
   }
 
-  /*
-   * initialize memory and set the bounds
-   */
-  MINK_CUDA_HOST_DEVICE void
-  set_bounds(coordinate_type const *p_center,
-             coordinate_type *p_lb, // lower bound temporary memory space.
-                                    // Management should be done outside.
-             coordinate_type *p_ub, coordinate_type *p_tmp) {
-    m_tmp = p_tmp;
-    m_lb = p_lb;
-    m_ub = p_ub;
-    m_lb[0] = p_center[0]; // set the batch index
-    constexpr index_type batch_offset = 1;
-
-    for (index_type i = 0; i < m_coordinate_size - 1; ++i) {
-      // If the current kernel size is even, [0, 1, 2, 3] --> [0] for kernel
-      // size 4.
-      if (m_kernel_size[i] % 2 == 0) {
-        m_lb[i + batch_offset] = p_center[i + batch_offset];
-        m_ub[i + batch_offset] =
-            p_center[i + batch_offset] +
-            (m_kernel_size[i] - 1) * m_dilation[i] * m_tensor_stride[i];
-      } else {
-        m_lb[i + batch_offset] =
-            p_center[i + batch_offset] -
-            int(m_kernel_size[i] / 2) * m_dilation[i] * m_tensor_stride[i];
-        m_ub[i + batch_offset] =
-            p_center[i + batch_offset] +
-            int(m_kernel_size[i] / 2) * m_dilation[i] * m_tensor_stride[i];
-      }
-    }
-    // LOG_DEBUG("KernelRegion lower bound:",
-    //           PtrToString(m_lb, m_coordinate_size));
-    // LOG_DEBUG("KernelRegion upper bound:",
-    //           PtrToString(m_ub, m_coordinate_size));
-  }
-
   MINK_CUDA_HOST_DEVICE iterator begin() { return iterator(m_tmp, *this); }
   MINK_CUDA_HOST_DEVICE const_iterator cbegin() const {
     return const_iterator(m_tmp, *this);
@@ -327,7 +290,6 @@ public:
   using base_type::num_offset;
   using base_type::offset;
   using base_type::region_type;
-  using base_type::set_bounds;
   using base_type::tensor_stride;
   using base_type::volume;
 
@@ -456,8 +418,8 @@ public:
   using base_type::num_offset;
   using base_type::offset;
   using base_type::region_type;
-  using base_type::set_bounds;
   using base_type::volume;
+  using base_type::is_transpose;
 
   using base_type::dilation;
   using base_type::kernel_size;

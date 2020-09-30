@@ -375,6 +375,17 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
 
 namespace detail {
 
+template <typename coordinate_type, typename index_type>
+__device__ bool is_coordinate_aligned(coordinate_type *point,
+                                      index_type *out_tensor_stride,
+                                      uint32_t const size) {
+  for (uint32_t i = 0; i < size - 1; ++i) {
+    if (point[i + 1] % out_tensor_stride[i] != 0)
+      return false;
+  }
+  return true;
+}
+
 template <typename coordinate_type, //
           typename size_type,       //
           typename index_type,      //
@@ -388,6 +399,7 @@ __global__ void kernel_region_insert(
     index_type *__restrict__ out_valid_map_index,               //
     size_type const num_threads,                                //
     gpu_kernel_region<coordinate_type> kernel,                  //
+    size_type const *const __restrict__ out_tensor_stride,      //
     index_type const unused_key) {                              //
   extern __shared__ coordinate_type sh_all[];
 
@@ -404,17 +416,17 @@ __global__ void kernel_region_insert(
   size_type *sh_tensor_stride = sh_size;
   size_type *sh_kernel_size   = sh_tensor_stride + coordinate_size;
   size_type *sh_dilation      = sh_kernel_size   + coordinate_size;
+  size_type *sh_out_tensor_stride = sh_dilation  + coordinate_size;
 
-  coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_dilation + coordinate_size);
+  coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_out_tensor_stride + coordinate_size);
   coordinate_type *sh_tmp = sh_coordinate +                   tx  * coordinate_size;
-  coordinate_type *sh_lb  = sh_coordinate + (1 * blockDim.x + tx) * coordinate_size;
-  coordinate_type *sh_ub  = sh_coordinate + (2 * blockDim.x + tx) * coordinate_size;
   // clang-format on
 
   for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x) {
     sh_tensor_stride[i] = kernel.tensor_stride()[i];
     sh_kernel_size[i] = kernel.kernel_size()[i];
     sh_dilation[i] = kernel.dilation()[i];
+    sh_out_tensor_stride[i] = out_tensor_stride[i];
   }
 
   __syncthreads();
@@ -422,32 +434,65 @@ __global__ void kernel_region_insert(
   auto sh_kernel = gpu_kernel_region<coordinate_type>(
       kernel, sh_tensor_stride, sh_kernel_size, sh_dilation);
 
+  coordinate<coordinate_type> curr_coordinate(sh_tmp);
   if (x < num_threads) {
     // iterate over values
     index_type out_index = x * volume;
     // set bounds for the valid keys
-    sh_kernel.set_bounds(
-        &p_in_coordinates[in_valid_row_index[x] * coordinate_size], sh_lb,
-        sh_ub, sh_tmp);
-    for (auto const &curr_coordinate : sh_kernel) {
-      // initialize out coordinate
-      for (uint32_t i = 0; i < coordinate_size; ++i)
-        p_out_coordinates[out_index * coordinate_size + i] = curr_coordinate[i];
+    for (uint32_t kernel_ind = 0; kernel_ind < volume; ++kernel_ind) {
+      sh_kernel.coordinate_at(
+          kernel_ind,
+          &p_in_coordinates[in_valid_row_index[x] * coordinate_size], sh_tmp);
 
-      auto const result = out_map.insert(thrust::make_pair(
-          coordinate<coordinate_type>{
-              &p_out_coordinates[out_index * coordinate_size]},
-          out_index));
+      // Creating generative conv transpose
+      if (kernel.is_transpose()) {
+        // initialize out coordinate
+        for (uint32_t i = 0; i < coordinate_size; ++i)
+          p_out_coordinates[out_index * coordinate_size + i] =
+              curr_coordinate[i];
 
-      if (result.second) {
-        // row index in the out_coordinates
-        out_valid_row_index[out_index] = x;
-        // offset in the coordinate map
-        out_valid_map_index[out_index] = result.first.offset();
+        auto const result = out_map.insert(thrust::make_pair(
+            coordinate<coordinate_type>{
+                &p_out_coordinates[out_index * coordinate_size]},
+            out_index));
+
+        if (result.second) {
+          // row index in the out_coordinates
+          out_valid_row_index[out_index] = x;
+          // offset in the coordinate map
+          out_valid_map_index[out_index] = result.first.offset();
+        } else {
+          out_valid_row_index[out_index] = unused_key;
+        }
+        ++out_index;
       } else {
-        out_valid_row_index[out_index] = unused_key;
+        // skip if the coordinate is not aligned
+        if (!is_coordinate_aligned(sh_tmp, sh_out_tensor_stride,
+                                   coordinate_size)) {
+          out_valid_row_index[out_index] = unused_key;
+          ++out_index;
+        } else {
+          // initialize out coordinate
+          for (uint32_t i = 0; i < coordinate_size; ++i)
+            p_out_coordinates[out_index * coordinate_size + i] =
+                curr_coordinate[i];
+
+          auto const result = out_map.insert(thrust::make_pair(
+              coordinate<coordinate_type>{
+                  &p_out_coordinates[out_index * coordinate_size]},
+              out_index));
+
+          if (result.second) {
+            // row index in the out_coordinates
+            out_valid_row_index[out_index] = x;
+            // offset in the coordinate map
+            out_valid_map_index[out_index] = result.first.offset();
+          } else {
+            out_valid_row_index[out_index] = unused_key;
+          }
+          ++out_index;
+        }
       }
-      ++out_index;
     }
   }
 }
@@ -479,6 +524,9 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_region(
                        out_tensor_stride, m_map_allocator,
                        base_type::m_byte_allocator);
 
+  thrust::device_vector<size_type> d_out_tensor_stride(
+      out_tensor_stride.begin(), out_tensor_stride.end());
+
   auto &out_valid_row_index = stride_map.m_valid_row_index;
   auto &out_valid_map_index = stride_map.m_valid_map_index;
 
@@ -486,11 +534,10 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_region(
   out_valid_map_index.resize(N_out);
 
   index_type const unused_key = std::numeric_limits<index_type>::max();
-  // (THREAD * 3 * D +  3 * D) * 4
+  // (THREAD * D +  3 * D) * 4
   uint32_t const shared_memory_size_in_bytes =
-      3 * m_coordinate_size * sizeof(index_type) + // stride, kernel, dilation
-      3 * CUDA_NUM_THREADS * m_coordinate_size *
-          sizeof(coordinate_type); // tmp, lb, ub
+      4 * m_coordinate_size * sizeof(index_type) + // stride, kernel, dilation
+      CUDA_NUM_THREADS * m_coordinate_size * sizeof(coordinate_type); // tmp
 
   detail::kernel_region_insert<coordinate_type, size_type, index_type, map_type>
       <<<GET_BLOCKS(N_in, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
@@ -503,6 +550,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_region(
           thrust::raw_pointer_cast(out_valid_map_index.data()), //
           N_in,                                                 //
           gpu_kernel,                                           //
+          thrust::raw_pointer_cast(d_out_tensor_stride.data()), //
           unused_key);                                          //
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("kernel_region_insert done");
@@ -861,8 +909,6 @@ count_kernel(map_type const __restrict__ in_map,                       //
 
   coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_dilation + coordinate_size);
   coordinate_type *sh_tmp = sh_coordinate +                   tx  * coordinate_size;
-  coordinate_type *sh_lb  = sh_coordinate + (1 * blockDim.x + tx) * coordinate_size;
-  coordinate_type *sh_ub  = sh_coordinate + (2 * blockDim.x + tx) * coordinate_size;
   // clang-format on
 
   auto const equal = out_map.get_key_equal();
@@ -879,6 +925,7 @@ count_kernel(map_type const __restrict__ in_map,                       //
   auto sh_kernel = gpu_kernel_region<coordinate_type>(
       kernel, sh_tensor_stride, sh_kernel_size, sh_dilation);
 
+  coordinate<coordinate_type> point(sh_tmp);
   auto const unused_key = out_map.get_unused_key();
   if (x < num_threads) {
     size_type count = 0;
@@ -886,10 +933,9 @@ count_kernel(map_type const __restrict__ in_map,                       //
         out_map.data()[out_valid_map_index[x]];
     // valid_index guarantees that it contains a valid value
     if (!equal(out_value.first, unused_key)) {
-      // set bounds for the valid keys
-      sh_kernel.set_bounds(out_value.first.data(), sh_lb, sh_ub, sh_tmp);
-      for (auto const &coordinate : sh_kernel) {
-        if (in_map.find(coordinate) != in_map.end()) {
+      for (auto kernel_ind = 0; kernel_ind < volume; ++kernel_ind) {
+        sh_kernel.coordinate_at(kernel_ind, out_value.first.data(), sh_tmp);
+        if (in_map.find(point) != in_map.end()) {
           ++count;
         }
       }
@@ -930,8 +976,6 @@ __global__ void preallocated_kernel_map_iteration(
 
   coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_dilation + coordinate_size);
   coordinate_type *sh_tmp = sh_coordinate +                   tx  * coordinate_size;
-  coordinate_type *sh_lb  = sh_coordinate + (1 * blockDim.x + tx) * coordinate_size;
-  coordinate_type *sh_ub  = sh_coordinate + (2 * blockDim.x + tx) * coordinate_size;
   // clang-format on
 
   auto const equal = out_map.get_key_equal();
@@ -946,7 +990,7 @@ __global__ void preallocated_kernel_map_iteration(
 
   auto sh_kernel = gpu_kernel_region<coordinate_type>(
       kernel, sh_tensor_stride, sh_kernel_size, sh_dilation);
-
+  coordinate<coordinate_type> curr_coordinate(sh_tmp);
   auto const unused_key = out_map.get_unused_key();
   if (x < num_threads) {
     // iterate over values
@@ -957,10 +1001,9 @@ __global__ void preallocated_kernel_map_iteration(
         out_map.data()[out_valid_map_index[x]];
     if (!equal(out_value.first, unused_key)) {
       // set bounds for the valid keys
-      sh_kernel.set_bounds(out_value.first.data(), sh_lb, sh_ub, sh_tmp);
-      kernel_index = 0;
-      for (auto const &coordinate : sh_kernel) {
-        auto const &in_result = in_map.find(coordinate);
+      for (uint32_t kernel_index = 0; kernel_index < volume; ++kernel_index) {
+        sh_kernel.coordinate_at(kernel_index, out_value.first.data(), sh_tmp);
+        auto const &in_result = in_map.find(curr_coordinate);
         if (in_result != in_map.end()) {
           // insert to
           p_kernels[kernel_map_index] = kernel_index;
@@ -968,7 +1011,6 @@ __global__ void preallocated_kernel_map_iteration(
           p_out_maps[kernel_map_index] = out_value.second;
           ++kernel_map_index;
         }
-        ++kernel_index;
       }
     }
   }
@@ -1131,11 +1173,10 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map(
     return kernel_map;
   } else if (kernel_map_mode == CUDAKernelMapMode::MEMORY_EFFICIENT &&
              kernel.region_type() != RegionType::CUSTOM) {
-    // (THREAD * 3 * D +  3 * D) * 4
+    // (THREAD * D +  3 * D) * 4
     uint32_t const shared_memory_size_in_bytes =
         3 * m_coordinate_size * sizeof(index_type) + // stride, kernel, dilation
-        3 * thread_dim * m_coordinate_size *
-            sizeof(coordinate_type); // tmp, lb, ub
+        thread_dim * m_coordinate_size * sizeof(coordinate_type); // tmp
     // clang-format on
     size_type const num_threads = out_size;
     auto const num_blocks = GET_BLOCKS(num_threads, thread_dim);

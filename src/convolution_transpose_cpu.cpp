@@ -72,7 +72,7 @@ at::Tensor ConvolutionTransposeForwardCPU(
   ASSERT(in_feat.size(0) == p_map_manager->size(in_key), "Invalid in_feat size",
          in_feat.size(0), "!=", p_map_manager->size(in_key));
 
-  if (!p_out_map_key->is_key_set() || generate_new_coordinates) {
+  if (!p_out_map_key->is_key_set()) {
     auto map_it = p_map_manager->find(p_in_map_key->get_key());
     ASSERT(map_it != p_map_manager->map_end(), ERROR_MAP_NOT_FOUND);
     auto const &in_map = (*map_it).second;
@@ -91,7 +91,7 @@ at::Tensor ConvolutionTransposeForwardCPU(
     );
 
     coordinate_map_key_type out_key = std::get<0>(p_map_manager->stride_region(
-        in_key, kernel_region, generate_new_coordinates));
+        in_key, kernel_region, out_tensor_stride, generate_new_coordinates));
     p_out_map_key->set_key(out_key);
   }
 
