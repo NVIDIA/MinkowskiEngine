@@ -48,6 +48,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       default_types::stride_type const &kernel_dilation, //
                       RegionType::Type const region_type,                //
                       at::Tensor const &offset,                          //
+                      bool const expand_coordinates,                     //
                       CoordinateMapKey *p_in_map_key,                    //
                       CoordinateMapKey *p_out_map_key,                   //
                       cpu_manager_type<coordinate_type> *p_map_manager) {
@@ -74,9 +75,35 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
          in_feat.size(0), "!=", p_map_manager->size(in_key));
 
   if (!p_out_map_key->is_key_set()) {
-    coordinate_map_key_type out_key =
-        std::get<0>(p_map_manager->stride(in_key, kernel_stride));
-    p_out_map_key->set_key(out_key);
+    if (expand_coordinates) {
+      auto map_it = p_map_manager->find(p_in_map_key->get_key());
+      ASSERT(map_it != p_map_manager->map_end(), ERROR_MAP_NOT_FOUND);
+      auto const &in_map = (*map_it).second;
+
+      auto out_tensor_stride = detail::stride_tensor_stride(
+          in_map.get_tensor_stride(), kernel_stride, false /* is_transpose */);
+
+      LOG_DEBUG("Coordinate Expansion");
+      auto kernel_region = cpu_kernel_region<coordinate_type>(
+          region_type,                       //
+          in_map.coordinate_size(),          //
+          in_map.get_tensor_stride().data(), //
+          kernel_size.data(),                //
+          kernel_dilation.data(),            //
+          0, // volume. Will be initialized automatically
+          offset.data_ptr<coordinate_type>(), offset.size(0),
+          false // is_transpose
+      );
+
+      coordinate_map_key_type out_key =
+          std::get<0>(p_map_manager->stride_region(
+              in_key, kernel_region, out_tensor_stride, expand_coordinates));
+      p_out_map_key->set_key(out_key);
+    } else {
+      coordinate_map_key_type out_key =
+          std::get<0>(p_map_manager->stride(in_key, kernel_stride));
+      p_out_map_key->set_key(out_key);
+    }
   }
 
   cpu_kernel_map const &in_out = p_map_manager->kernel_map(
@@ -178,6 +205,7 @@ template at::Tensor ConvolutionForwardCPU<default_types::dcoordinate_type>(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
+    bool const expand_coordinates,                     //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);

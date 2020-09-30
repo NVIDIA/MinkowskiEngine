@@ -161,7 +161,10 @@ else:
 if "darwin" in platform:
     CC_FLAGS += ["-stdlib=libc++"]
 
-NVCC_FLAGS += ["--expt-relaxed-constexpr", "--expt-extended-lambda", "--use_fast_math"]
+NVCC_FLAGS += ["--expt-relaxed-constexpr", "--expt-extended-lambda"]
+FAST_MATH, argv = _argparse("--fast_math", argv)
+if FAST_MATH:
+    NVCC_FLAGS.append("--use_fast_math")
 
 BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise

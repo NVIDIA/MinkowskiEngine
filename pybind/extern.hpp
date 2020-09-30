@@ -58,6 +58,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       default_types::stride_type const &kernel_dilation, //
                       RegionType::Type const region_type,                //
                       at::Tensor const &offset,                          //
+                      bool const expand_coordinates,                     //
                       CoordinateMapKey *p_in_map_key,                    //
                       CoordinateMapKey *p_out_map_key,                   //
                       cpu_manager_type<coordinate_type> *p_map_manager);
@@ -87,6 +88,7 @@ at::Tensor ConvolutionForwardGPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
+    bool const expand_coordinates,                     //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
@@ -119,7 +121,7 @@ at::Tensor ConvolutionTransposeForwardCPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    bool generate_new_coordinates,                     //
+    bool const expand_coordinates,                     //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<coordinate_type> *p_map_manager);
@@ -149,7 +151,7 @@ at::Tensor ConvolutionTransposeForwardGPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
-    bool generate_new_coordinates,                     //
+    bool const expand_coordinates,                     //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);

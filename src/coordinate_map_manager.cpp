@@ -366,17 +366,19 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
                      CoordinateMapType>::
     stride_region(coordinate_map_key_type const &in_map_key,
                   cpu_kernel_region<coordinate_type> &kernel,
-                  bool generate_new_map) {
+                  stride_type const &out_tensor_stride,
+                  bool const expand_coordinates) {
   ASSERT(exists(in_map_key), ERROR_MAP_NOT_FOUND);
   LOG_DEBUG("stride_region");
   // kernel.tensor_stride must be set to out tensor stride.
-  stride_type out_tensor_stride{kernel.tensor_stride(),
-                                kernel.tensor_stride() +
-                                    kernel.coordinate_size() - 1};
+  // stride_type out_tensor_stride{kernel.tensor_stride(),
+  //                               kernel.tensor_stride() +
+  //                                   kernel.coordinate_size() - 1};
+
   // check if the key exists.
   coordinate_map_key_type out_map_key(out_tensor_stride, "");
   bool const exists_out_map = exists(out_map_key);
-  if (!exists_out_map || generate_new_map) {
+  if (!exists_out_map || expand_coordinates) {
     LOG_DEBUG("Create a new stride region map for tensor_stride:",
               out_tensor_stride);
     map_type const &in_map = m_coordinate_maps.find(in_map_key)->second;
@@ -389,7 +391,7 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
     insert(out_map_key, out_map);
   }
   // (key, new map generated flag)
-  return std::make_pair(out_map_key, !exists_out_map || generate_new_map);
+  return std::make_pair(out_map_key, !exists_out_map || expand_coordinates);
 }
 
 template <typename coordinate_type, typename coordinate_field_type,

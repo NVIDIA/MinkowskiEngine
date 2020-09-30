@@ -513,10 +513,11 @@ def _get_coordinate_map_key(
     input: SparseTensor,
     coordinates: torch.Tensor = None,
     tensor_stride: StrideType = 1,
+    expand_coordinates: bool = False,
 ):
-    r"""Process coords according to its type.
+    r"""Returns the coordinates map key.
     """
-    if coordinates is not None:
+    if coordinates is not None and not expand_coordinates:
         assert isinstance(coordinates, (CoordinateMapKey, torch.Tensor, SparseTensor))
         if isinstance(coordinates, torch.Tensor):
             assert coordinates.ndim == 2

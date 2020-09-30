@@ -37,6 +37,7 @@ from MinkowskiEngine import (
     MinkowskiConvolutionTranspose,
     MinkowskiConvolutionTransposeFunction,
     MinkowskiGenerativeConvolutionTranspose,
+    KernelGenerator,
 )
 
 from tests.python.common import data_loader, load_file, batched_coordinates
@@ -44,6 +45,46 @@ from utils.gradcheck import gradcheck
 
 
 class TestConvolution(unittest.TestCase):
+    def test_expansion(self):
+        print(f"{self.__class__.__name__}: test_expansion")
+        in_channels, out_channels, D = 2, 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+
+        # Initialize context
+        conv = MinkowskiConvolution(
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=2,
+            bias=False,
+            expand_coordinates=True,
+            dimension=D,
+        ).double()
+
+        input = SparseTensor(
+            feats,
+            coordinates=coords,
+            minkowski_algorithm=MinkowskiAlgorithm.SPEED_OPTIMIZED,
+        )
+        print(input)
+        output = conv(input)
+        print(output)
+        if not torch.cuda.is_available():
+            return
+
+        input = SparseTensor(
+            feats,
+            coordinates=coords,
+            minkowski_algorithm=MinkowskiAlgorithm.SPEED_OPTIMIZED,
+            device="cuda",
+        )
+        conv = conv.to("cuda")
+        print(input)
+        output = conv(input)
+        print(output)
+
     def test_kernel_map(self):
         print(f"{self.__class__.__name__}: test_gpu")
         if not torch.cuda.is_available():
@@ -158,6 +199,15 @@ class TestConvolution(unittest.TestCase):
                 ),
             )
         )
+
+        if torch.cuda.is_available():
+            input = SparseTensor(feats, coordinates=coords, device="cuda")
+            conv = conv.cuda()
+            output_gpu = conv(input)
+            self.assertTrue(torch.allclose(output_gpu.F.var(0).cpu(), output.F.var(0)))
+            self.assertTrue(
+                torch.allclose(output_gpu.F.mean(0).cpu(), output.F.mean(0))
+            )
 
     def test_analytic(self):
         print(f"{self.__class__.__name__}: test")
@@ -461,6 +511,13 @@ class TestPCD(unittest.TestCase):
 
         # size, in, out
         kernel = torch.rand(np.prod(kernel_size), IC, OC).to(0)
+        kernel_generator = KernelGenerator(
+            kernel_size=kernel_size,
+            stride=kernel_stride,
+            dilation=kernel_dilation,
+            expand_coordinates=False,
+            dimension=3,
+        )
 
         for batch_size in [1, 5, 10, 20, 40]:
             for voxel_size in [0.05, 0.035, 0.02]:
@@ -483,11 +540,12 @@ class TestPCD(unittest.TestCase):
                     out_features = _C.ConvolutionForwardGPU(
                         in_feats,
                         kernel,
-                        kernel_size,
-                        kernel_stride,
-                        kernel_dilation,
-                        _C.RegionType.HYPER_CUBE,
-                        torch.IntTensor(),
+                        kernel_generator.kernel_size,
+                        kernel_generator.kernel_stride,
+                        kernel_generator.kernel_dilation,
+                        kernel_generator.region_type,
+                        kernel_generator.region_offsets,
+                        kernel_generator.expand_coordinates,
                         in_key,
                         out_key,
                         manager,

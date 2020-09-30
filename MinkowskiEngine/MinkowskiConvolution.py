@@ -76,6 +76,7 @@ class MinkowskiConvolutionFunction(Function):
             kernel_generator.kernel_dilation,
             kernel_generator.region_type,
             kernel_generator.region_offsets,
+            kernel_generator.expand_coordinates,
             ctx.in_coordinate_map_key,
             ctx.out_coordinate_map_key,
             ctx.coordinate_manager._manager,
@@ -144,7 +145,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
             kernel_generator.kernel_dilation,
             kernel_generator.region_type,
             kernel_generator.region_offsets,
-            kernel_generator.generate_new_coordinates,
+            kernel_generator.expand_coordinates,
             ctx.in_coordinate_map_key,
             ctx.out_coordinate_map_key,
             ctx.coordinate_manager._manager,
@@ -200,6 +201,7 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         bias=False,
         kernel_generator=None,
         is_transpose=False,  # only the base class has this argument
+        expand_coordinates=False,
         dimension=-1,
     ):
         r"""
@@ -218,8 +220,11 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
+                expand_coordinates=expand_coordinates,
                 dimension=dimension,
             )
+        else:
+            kernel_generator.expand_coordinates = expand_coordinates
 
         self.is_transpose = is_transpose
         self.in_channels = in_channels
@@ -275,7 +280,9 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
             outfeat = input.F.mm(self.kernel)
         else:
             # Get a new coordinate_map_key or extract one from the coords
-            out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
+            out_coordinate_map_key = _get_coordinate_map_key(
+                input, coordinates, self.kernel_generator.expand_coordinates
+            )
             outfeat = self.conv.apply(
                 input.F,
                 self.kernel,
@@ -348,6 +355,7 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
         dilation=1,
         bias=False,
         kernel_generator=None,
+        expand_coordinates=False,
         dimension=None,
     ):
         r"""convolution on a sparse tensor
@@ -381,6 +389,11 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): defines custom kernel shape.
 
+            :attr:`expand_coordinates` (bool, optional): Force generation of
+            new coordinates. When True, the output coordinates will be the
+            outer product of the kernel shape and the input coordinates.
+            `False` by default.
+
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
             in a 2D space, meshes and 3D shapes are in a 3D space.
@@ -396,6 +409,7 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             bias,
             kernel_generator,
             is_transpose=False,
+            expand_coordinates=expand_coordinates,
             dimension=dimension,
         )
         self.reset_parameters()
@@ -414,6 +428,7 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
         dilation=1,
         bias=False,
         kernel_generator=None,
+        expand_coordinates=False,
         dimension=None,
     ):
         r"""a generalized sparse transposed convolution layer.
@@ -447,10 +462,10 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): defines custom kernel shape.
 
-            :attr:`generate_new_coords` (bool, optional): Force generation of
+            :attr:`expand_coordinates` (bool, optional): Force generation of
             new coordinates. When True, the output coordinates will be the
             outer product of the kernel shape and the input coordinates.
-            `False` by defaul.
+            `False` by default.
 
             :attr:`dimension` (int): the spatial dimension of the space where
             all the inputs and the network are defined. For example, images are
@@ -478,13 +493,15 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             bias,
             kernel_generator,
             is_transpose=True,
+            expand_coordinates=expand_coordinates,
             dimension=dimension,
         )
         self.reset_parameters(True)
 
 
 class MinkowskiGenerativeConvolutionTranspose(MinkowskiConvolutionBase):
-    r"""A generalized sparse transposed convolution or deconvolution layer that generates new coordinates.
+    r"""A generalized sparse transposed convolution or deconvolution layer that
+    generates new coordinates.
     """
 
     def __init__(
@@ -538,7 +555,7 @@ class MinkowskiGenerativeConvolutionTranspose(MinkowskiConvolutionBase):
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
             optional): defines custom kernel shape.
 
-            :attr:`generate_new_coords` (bool, optional): Force generation of
+            :attr:`expand_coordinates` (bool, optional): Force generation of
             new coordinates. When True, the output coordinates will be the
             outer product of the kernel shape and the input coordinates.
             `False` by defaul.
@@ -556,11 +573,11 @@ class MinkowskiGenerativeConvolutionTranspose(MinkowskiConvolutionBase):
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
-                generate_new_coordinates=True,
+                expand_coordinates=True,
                 dimension=dimension,
             )
         else:
-            kernel_generator.generate_new_coordinates = True
+            kernel_generator.expand_coordinates = True
 
         MinkowskiConvolutionBase.__init__(
             self,
