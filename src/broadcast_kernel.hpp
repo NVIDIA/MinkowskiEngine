@@ -32,17 +32,17 @@
 namespace minkowski {
 
 template <typename Dtype, typename Itype>
-void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
+void BroadcastForwardKernelCPU(const Dtype *p_in_feat, uint32_t in_nrows,
                                const Dtype *p_in_feat_global,
-                               int in_nrows_global, Dtype *p_out_feat,
-                               int nchannel, BroadcastMode::Type const op,
+                               uint32_t in_nrows_global, Dtype *p_out_feat,
+                               uint32_t nchannel, BroadcastMode::Type const op,
                                const cpu_in_maps &in_maps,
                                const cpu_out_maps &glob_maps) {
   Dtype *p_curr_out_feat;
   const Dtype *p_curr_in_feat_global;
 
   // Compute the size
-  int num_map = 0;
+  uint32_t num_map = 0;
   for (const auto &in_map : in_maps)
     num_map += in_map.size();
   ASSERT(num_map == in_nrows, "The number of in-out map,", num_map,
@@ -54,8 +54,8 @@ void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
   // To speed up, put switch outside for loops
   switch (op) {
   case BroadcastMode::ELEMENTWISE_ADDITON: // +
-    for (int k = 0; k < in_maps.size(); ++k) {
-      for (int row = 0; row < in_maps[k].size(); ++row) {
+    for (uint32_t k = 0; k < in_maps.size(); ++k) {
+      for (uint32_t row = 0; row < in_maps[k].size(); ++row) {
         p_curr_out_feat = p_out_feat + in_maps[k][row] * nchannel;
         p_curr_in_feat_global = p_in_feat_global + glob_maps[k][row] * nchannel;
         cpu_add<Dtype>(nchannel, p_curr_in_feat_global, p_curr_out_feat,
@@ -64,8 +64,8 @@ void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
     }
     break;
   case BroadcastMode::ELEMENTWISE_MULTIPLICATION: // *
-    for (int k = 0; k < in_maps.size(); ++k) {
-      for (int row = 0; row < in_maps[k].size(); ++row) {
+    for (uint32_t k = 0; k < in_maps.size(); ++k) {
+      for (uint32_t row = 0; row < in_maps[k].size(); ++row) {
         p_curr_out_feat = p_out_feat + in_maps[k][row] * nchannel;
         p_curr_in_feat_global = p_in_feat_global + glob_maps[k][row] * nchannel;
         cpu_mul<Dtype>(nchannel, p_curr_in_feat_global, p_curr_out_feat,
@@ -92,13 +92,13 @@ void BroadcastForwardKernelCPU(const Dtype *p_in_feat, int in_nrows,
 }
 
 template <typename Dtype, typename Itype>
-void BroadcastBackwardKernelCPU(const Dtype *p_in_feat,              //
-                                Dtype *p_grad_in_feat, int in_nrows, //
+void BroadcastBackwardKernelCPU(const Dtype *p_in_feat,                   //
+                                Dtype *p_grad_in_feat, uint32_t in_nrows, //
                                 const Dtype *p_in_feat_global,
                                 Dtype *p_grad_in_feat_global,
-                                int in_nrows_global,          //
+                                uint32_t in_nrows_global,     //
                                 const Dtype *p_grad_out_feat, //
-                                int nchannel,
+                                uint32_t nchannel,
                                 BroadcastMode::Type const op, //
                                 const cpu_in_maps &in_maps,
                                 const cpu_out_maps &glob_maps) {
@@ -120,8 +120,8 @@ void BroadcastBackwardKernelCPU(const Dtype *p_in_feat,              //
   switch (op) {
   case BroadcastMode::ELEMENTWISE_ADDITON: // +
     // For p_grad_in_feat, copy all grad_out
-    for (int k = 0; k < in_maps.size(); ++k) {
-      for (int row = 0; row < in_maps[k].size(); ++row) {
+    for (uint32_t k = 0; k < in_maps.size(); ++k) {
+      for (uint32_t row = 0; row < in_maps[k].size(); ++row) {
         p_curr_grad_out_feat = p_grad_out_feat + in_maps[k][row] * nchannel;
         p_curr_grad_in_feat_global =
             p_grad_in_feat_global + glob_maps[k][row] * nchannel;
@@ -131,8 +131,8 @@ void BroadcastBackwardKernelCPU(const Dtype *p_in_feat,              //
     }
     break;
   case BroadcastMode::ELEMENTWISE_MULTIPLICATION: // *
-    for (int k = 0; k < in_maps.size(); ++k) {
-      for (int row = 0; row < in_maps[k].size(); ++row) {
+    for (uint32_t k = 0; k < in_maps.size(); ++k) {
+      for (uint32_t row = 0; row < in_maps[k].size(); ++row) {
         // In feat global
         p_curr_in_feat = p_in_feat + in_maps[k][row] * nchannel;
         p_curr_grad_in_feat = p_grad_in_feat + in_maps[k][row] * nchannel;
@@ -145,7 +145,7 @@ void BroadcastBackwardKernelCPU(const Dtype *p_in_feat,              //
         cpu_mul<Dtype>(nchannel, p_curr_in_feat_global, p_curr_grad_out_feat,
                        p_curr_grad_in_feat);
         // In feat glob
-        for (int j = 0; j < nchannel; j++) {
+        for (uint32_t j = 0; j < nchannel; j++) {
           p_curr_grad_in_feat_global[j] +=
               p_curr_grad_out_feat[j] * p_curr_in_feat[j];
         }

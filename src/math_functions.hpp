@@ -47,6 +47,9 @@ void cpu_mul(const int N, const Dtype *a, const Dtype *b, Dtype *y);
 template <typename Dtype>
 void cpu_div(const int N, const Dtype *a, const Dtype *b, Dtype *y);
 
+template <typename Dtype>
+void cpu_axpy(const int N, const Dtype alpha, const Dtype *X, Dtype *Y);
+
 #ifndef CPU_ONLY
 template <typename Dtype>
 void gpu_gemm(cublasHandle_t handle, const CBLAS_TRANSPOSE TransA,

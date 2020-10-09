@@ -103,8 +103,6 @@ GlobalPoolingForwardCPU(at::Tensor const &in_feat,
     //   pooling_mode = in_feat.size(0) / batch_size > 100 ? 1 : 2;
 
     // origin kernel map
-    cpu_kernel_map const &kernel_map = p_map_manager->origin_map(p_in_map_key);
-
     if (pooling_mode == PoolingMode::GLOBAL_SUM_POOLING_KERNEL ||
         pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_KERNEL ||
         pooling_mode == PoolingMode::GLOBAL_SUM_POOLING_PYTORCH_INDEX ||

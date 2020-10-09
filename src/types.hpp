@@ -48,6 +48,7 @@ struct type_wrapper {
   using size_type                = uint_type;
   using dcoordinate_type         = int_type;
   using ccoordinate_type         = float_type;
+  using feature_type             = float_type;
   using coordinate_map_hash_type = uint64_t;
   using index_vector_type        = std::vector<index_type>;
 };
