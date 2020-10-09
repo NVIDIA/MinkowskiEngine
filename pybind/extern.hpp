@@ -297,6 +297,7 @@ BroadcastBackwardCPU(at::Tensor const &in_feat, at::Tensor const &in_feat_glob,
                      CoordinateMapKey *p_glob_map_key, //
                      cpu_manager_type<coordinate_type> *p_map_manager);
 
+#ifndef CPU_ONLY
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 at::Tensor BroadcastForwardGPU(
@@ -314,6 +315,7 @@ std::pair<at::Tensor, at::Tensor> BroadcastBackwardGPU(
     CoordinateMapKey *p_in_map_key,   //
     CoordinateMapKey *p_glob_map_key, //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+#endif
 
 /*************************************
  * Pruning
@@ -350,6 +352,48 @@ at::Tensor PruningBackwardGPU(
     CoordinateMapKey *p_out_map_key, //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 #endif
+
+/*************************************
+ * Interpolation
+ *************************************/
+template <typename coordinate_type>
+std::vector<at::Tensor>
+InterpolationForwardCPU(at::Tensor const &in_feat,             //
+                        at::Tensor const &tfield,              //
+                        CoordinateMapKey *p_in_map_key,        //
+                        CoordinateMapKey *p_out_field_map_key, //
+                        cpu_manager_type<coordinate_type> *p_map_manager);
+
+template <typename coordinate_type>
+at::Tensor
+InterpolationBackwardCPU(at::Tensor &grad_out_feat,      //
+                         at::Tensor const &in_map,       //
+                         at::Tensor const &out_map,      //
+                         at::Tensor const &weight,       //
+                         CoordinateMapKey *p_in_map_key, //
+                         cpu_manager_type<coordinate_type> *p_map_manager);
+
+#ifndef CPU_ONLY
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+std::vector<at::Tensor> InterpolationForwardGPU(
+    at::Tensor const &in_feat,             //
+    at::Tensor const &tfield,              //
+    CoordinateMapKey *p_in_map_key,        //
+    CoordinateMapKey *p_out_field_map_key, //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+at::Tensor InterpolationBackwardGPU(
+    at::Tensor &grad_out_feat,      //
+    at::Tensor const &in_maps,      //
+    at::Tensor const &out_maps,     //
+    at::Tensor const &weights,      //
+    CoordinateMapKey *p_in_map_key, //
+    gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
+#endif
+
 /*************************************
  * Quantization
  *************************************/
@@ -448,6 +492,14 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
           py::call_guard<py::gil_scoped_release>());
   #endif
   */
+
+  m.def((std::string("InterpolationForwardCPU") + dtypestr).c_str(),
+        &minkowski::InterpolationForwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def((std::string("InterpolationBackwardCPU") + dtypestr).c_str(),
+        &minkowski::InterpolationBackwardCPU<coordinate_type>,
+        py::call_guard<py::gil_scoped_release>());
 }
 
 #ifndef CPU_ONLY
@@ -502,6 +554,15 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
   m.def((std::string("BroadcastBackwardGPU") + dtypestr).c_str(),
         &minkowski::BroadcastBackwardGPU<coordinate_type, TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
+
+  m.def(
+      (std::string("InterpolationForwardGPU") + dtypestr).c_str(),
+      &minkowski::InterpolationForwardGPU<coordinate_type, TemplatedAllocator>,
+      py::call_guard<py::gil_scoped_release>());
+  m.def(
+      (std::string("InterpolationBackwardGPU") + dtypestr).c_str(),
+      &minkowski::InterpolationBackwardGPU<coordinate_type, TemplatedAllocator>,
+      py::call_guard<py::gil_scoped_release>());
 }
 #endif
 

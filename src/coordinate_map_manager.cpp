@@ -586,8 +586,7 @@ CoordinateMapManager<
     auto const &in_map = in_map_it->second;
     auto const &out_map = out_map_it->second;
 
-    auto const D = in_map.coordinate_size();
-    LOG_DEBUG("coordinate_size:", D,
+    LOG_DEBUG("coordinate_size:", in_map.coordinate_size(),
               "in tensor_stride:", in_map.get_tensor_stride(),
               "out tensor_stride:", out_map.get_tensor_stride());
 
@@ -722,7 +721,7 @@ struct origin_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
         *std::max_element(p_batch_indices, p_batch_indices + out_size);
 
     std::vector<at::Tensor> in_maps;
-    for (uint32_t i = 0; i <= max_batch_index; ++i) {
+    for (auto i = 0; i <= max_batch_index; ++i) {
       at::Tensor row_indices = torch::empty({0}, options);
       in_maps.push_back(std::move(row_indices));
     }
@@ -744,7 +743,7 @@ struct origin_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
 
       LOG_DEBUG("Copying", curr_size, "elements to batch index",
                 curr_batch_index, "and row index", out_row_index);
-      for (default_types::index_type i = 0; i < curr_size; ++i) {
+      for (auto i = 0; i < curr_size; ++i) {
         p_row_indices[i] = in_map[i];
       }
     }
@@ -797,6 +796,29 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   return detail::origin_map_functor<coordinate_type, TemplatedAllocator,
                                     CoordinateMapType, kernel_map_type>()(
       origin_map, kernel_map);
+}
+
+// Interpolation map
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::vector<at::Tensor>
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::
+    interpolation_map_weight(at::Tensor const &tfield,
+                             CoordinateMapKey const *p_in_map_key,
+                             CoordinateMapKey *p_out_field_map_key) {
+  ASSERT(exists(p_in_map_key), ERROR_MAP_NOT_FOUND);
+
+  // set the field key if not set
+  if (!p_out_field_map_key->is_key_set()) {
+    auto out_key = get_random_string_id(p_in_map_key->get_key().first, "");
+    p_out_field_map_key->set_key(out_key);
+  }
+
+  return m_coordinate_maps.find(p_in_map_key->get_key())
+      ->second.interpolation_map_weight(tfield);
 }
 
 /*********************************/
