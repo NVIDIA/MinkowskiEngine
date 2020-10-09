@@ -1591,7 +1591,7 @@ interpolation_kernel(map_type __restrict__ in_map,                   //
     uint32_t neighbor_ind = x % neighbor_volume;
 
     // batch index
-    sh_tmp[0] = sh_tfield[0];
+    sh_tmp[0] = lrint(sh_tfield[0]);
     uint32_t mask = 1;
     for (uint32_t j = coordinate_size - 1; j > 0; --j) {
       index_type curr_tensor_stride = sh_tensor_stride[j - 1];
