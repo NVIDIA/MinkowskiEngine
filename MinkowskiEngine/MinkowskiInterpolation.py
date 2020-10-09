@@ -27,10 +27,9 @@ from typing import Union
 import torch
 from torch.autograd import Function
 
-from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType, PoolingMode
-from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
+from MinkowskiEngineBackend._C import CoordinateMapKey
+from MinkowskiSparseTensor import SparseTensor
 from MinkowskiCoordinateManager import CoordinateManager
-from MinkowskiKernelGenerator import KernelGenerator, save_ctx
 from MinkowskiCommon import (
     MinkowskiModuleBase,
     get_minkowski_function,
@@ -67,10 +66,12 @@ class MinkowskiInterpolationFunction(Function):
             in_coordinate_map_key,
             coordinate_manager,
         )
-        return out_feat
+        return out_feat, in_map, out_map, weights
 
     @staticmethod
-    def backward(ctx, grad_out_feat):
+    def backward(
+        ctx, grad_out_feat=None, grad_in_map=None, grad_out_map=None, grad_weights=None
+    ):
         bw_fn = get_minkowski_function("InterpolationBackward", grad_out_feat)
         (
             in_map,
@@ -91,37 +92,42 @@ class MinkowskiInterpolationFunction(Function):
 
 
 class MinkowskiInterpolation(MinkowskiModuleBase):
-    r"""Pool all input features to one output.
-
-    .. math::
-
-        \mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \sum_{\mathbf{i} \in
-        \mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}
-
+    r"""Sample linearly interpolated features at the provided points.
     """
 
-    def __init__(self):
-        r"""Reduces sparse coords into points at origin, i.e. reduce each point
-        cloud into a point at the origin, returning batch_size number of points
-        [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
-        of the coords is the batch index.
+    def __init__(self, return_kernel_map=False, return_weights=False):
+        r"""Sample linearly interpolated features at the specified coordinates.
 
         Args:
-            :attr:`mode` (PoolingMode):
+            :attr:`return_kernel_map` (bool): In addition to the sampled
+            features, the layer returns the kernel map as a pair of input row
+            indices and output row indices. False by default.
 
+            :attr:`return_weights` (bool): When True, return the linear
+            interpolation weights. False by default.
         """
         MinkowskiModuleBase.__init__(self)
+        self.return_kernel_map = return_kernel_map
+        self.return_weights = return_weights
         self.interp = MinkowskiInterpolationFunction()
 
     def forward(
         self, input: SparseTensor, tfield: torch.Tensor,
     ):
         # Get a new coordinate map key or extract one from the coordinates
-        output = self.interp.apply(
+        out_feat, in_map, out_map, weights = self.interp.apply(
             input.F, tfield, input.coordinate_map_key, None, input._manager,
         )
 
-        return output
+        return_args = [out_feat]
+        if self.return_kernel_map:
+            return_args.append((in_map, out_map))
+        if self.return_weights:
+            return_args.append(weights)
+        if len(return_args) > 1:
+            return tuple(return_args)
+        else:
+            return out_feat
 
     def __repr__(self):
         return self.__class__.__name__ + "()"

@@ -44,8 +44,8 @@ class TestInterpolation(unittest.TestCase):
         tfield = torch.Tensor([[0, 0.1, 2.7], [0, 0.3, 2], [1, 1.5, 2.5],]).double()
         feats.requires_grad_()
         input = SparseTensor(feats, coordinates=coords)
-        interp = MinkowskiInterpolation()
-        output = interp(input, tfield)
+        interp = MinkowskiInterpolation(return_kernel_map=True, return_weights=False)
+        output, (in_map, out_map) = interp(input, tfield)
         print(input)
         print(output)
 
