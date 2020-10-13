@@ -264,7 +264,9 @@ class Tensor:
         # To device
         if device is not None:
             features = features.to(device)
-            coordinates = coordinates.to(device)
+            if coordinates is not None:
+                # assertion check for the map key done later
+                coordinates = coordinates.to(device)
 
         # Coordinate Management
         self._D = 0  # coordinate size - 1
