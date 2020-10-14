@@ -658,22 +658,18 @@ class MinkowskiGlobalPoolingFunction(Function):
 
 class MinkowskiGlobalPooling(MinkowskiModuleBase):
     r"""Pool all input features to one output.
-
-    .. math::
-
-        \mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \sum_{\mathbf{i} \in
-        \mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}
-
     """
 
-    def __init__(self, mode: PoolingMode):
+    def __init__(self, mode: PoolingMode = PoolingMode.GLOBAL_AVG_POOLING_DEFAULT):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
-        of the coords is the batch index.
+        of the coords is the batch index. The reduction function should be
+        provided as the mode.
 
         Args:
-            :attr:`mode` (PoolingMode):
+            :attr:`mode` (PoolingMode): Reduction function mode. E.g.
+            `PoolingMode.GLOBAL_SUM_POOLING_DEFAULT`
 
         """
         super(MinkowskiGlobalPooling, self).__init__()

@@ -152,7 +152,7 @@ class CoordinateManager:
         tensor_stride: Union[int, Sequence, np.ndarray],
         string_id: str = "",
     ) -> Tuple[CoordinateMapKey, Tuple[torch.IntTensor, torch.IntTensor]]:
-        r"""create a new coordinate map and returns 
+        r"""create a new coordinate map and returns (key, (map, inverse_map)).
 
         :attr:`coordinates`: `torch.Tensor` (Int tensor. `CUDA` if
         coordinate_map_type == `CoordinateMapType.GPU`) that defines the
