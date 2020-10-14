@@ -684,7 +684,8 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("size", py::overload_cast<minkowski::CoordinateMapKey const *>(
                        &manager_type::size, py::const_))
       .def("origin_map_size", &manager_type::origin_map_size)
-      .def("origin_map", &manager_type::origin_map_th);
+      .def("origin_map", &manager_type::origin_map_th)
+      .def("interpolation_map_weight", &manager_type::interpolation_map_weight);
 }
 
 bool is_cuda_available() {

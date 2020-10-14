@@ -381,6 +381,16 @@ class CoordinateManager:
     def origin_map(self, key: CoordinateMapKey):
         return self._manager.origin_map(key)
 
+    def interpolation_map_weight(
+        self,
+        key: CoordinateMapKey,
+        samples: torch.Tensor,
+        sample_key: CoordinateMapKey = None,
+    ):
+        if sample_key is None:
+            sample_key = CoordinateMapKey(key.get_coordinate_size())
+        return self._manager.interpolation_map_weight(samples, key, sample_key)
+
     # def get_coords_map(self, in_key_or_tensor_strides, out_key_or_tensor_strides):
     #     r"""Extract input coords indices that maps to output coords indices.
 
@@ -469,5 +479,9 @@ class CoordinateManager:
 
     def __repr__(self):
         return (
-            self._CoordinateManagerClass.__name__ + "(\n" + str(self._manager) + f"\talgorithm={self.minkowski_algorithm}\n  )\n"
+            self._CoordinateManagerClass.__name__
+            + "(\n"
+            + str(self._manager)
+            + f"\talgorithm={self.minkowski_algorithm}\n  )\n"
         )
+

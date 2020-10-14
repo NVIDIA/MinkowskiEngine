@@ -555,8 +555,8 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_region(
           unused_key);                                          //
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("kernel_region_insert done");
-  LOG_DEBUG("valid row index", out_valid_row_index);
-  LOG_DEBUG("valid map offset", out_valid_map_index);
+  // LOG_DEBUG("valid row index", out_valid_row_index);
+  // LOG_DEBUG("valid map offset", out_valid_map_index);
 
   // remove unused_keys
   auto valid_begin = thrust::make_zip_iterator(
