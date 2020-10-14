@@ -33,6 +33,7 @@ from MinkowskiTensor import (
 )
 from MinkowskiTensorField import TensorField
 from MinkowskiCommon import MinkowskiModuleBase
+from MinkowskiEngineBackend._C import CoordinateMapKey
 
 
 class MinkowskiLinear(Module):

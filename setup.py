@@ -126,6 +126,7 @@ CUDA_HOME, argv = _argparse("--cuda_home", argv, False)
 BLAS, argv = _argparse("--blas", argv, False)
 BLAS_INCLUDE_DIRS, argv = _argparse("--blas_include_dirs", argv, False)
 BLAS_LIBRARY_DIRS, argv = _argparse("--blas_library_dirs", argv, False)
+MAX_COMPILATION_THREADS = 8
 
 Extension = CUDAExtension
 extra_link_args = []
@@ -267,6 +268,10 @@ if debug:
 else:
     CC_FLAGS += ["-O3"]
     NVCC_FLAGS += ["-O3"]
+
+if "MAX_JOBS" not in os.environ and os.cpu_count() > MAX_COMPILATION_THREADS:
+    # Clip the num compilation thread to 8
+    os.environ["MAX_JOBS"] = MAX_COMPILATION_THREADS
 
 target = "cpu" if CPU_ONLY else "gpu"
 
