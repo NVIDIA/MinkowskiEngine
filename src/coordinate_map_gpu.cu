@@ -123,6 +123,16 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
   size_type const N = key_last - key_first;
   LOG_DEBUG("key iterator length", N);
 
+  thrust::device_vector<bool> success(N);
+  m_valid_row_index.resize(N);
+  m_valid_map_index.resize(N);
+  m_inverse_row_index.resize(N);
+
+  if (N == 0) {
+    m_size = 0;
+    return;
+  }
+
   // Copy the coordinates to m_coordinate
   base_type::reserve(N);
   CUDA_CHECK(
@@ -132,12 +142,6 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
                  cudaMemcpyDeviceToDevice));
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("Reserved and copied", N, "x", m_coordinate_size, "coordinates");
-
-  //
-  thrust::device_vector<bool> success(N);
-  m_valid_row_index.resize(N);
-  m_valid_map_index.resize(N);
-  m_inverse_row_index.resize(N);
 
   // compute cuda kernel call params
   size_type const num_threads = N;

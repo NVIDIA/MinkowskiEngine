@@ -155,7 +155,7 @@ at::Tensor PruningBackwardGPU(
   if (!grad_out_feat.is_contiguous())
     grad_out_feat = grad_out_feat.contiguous();
 
-  ASSERT(grad_out_feat.is_cuda(), "grad_out_feat must be CPU");
+  ASSERT(grad_out_feat.is_cuda(), "grad_out_feat must be on CUDA");
 
   ASSERT(grad_out_feat.dim() == 2, "grad_out_feat.dim():", grad_out_feat.dim());
 
