@@ -151,7 +151,10 @@ if KEEP_OBJS:
 BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise
     assert BLAS in BLAS_LIST
-    libraries.append(BLAS)
+    if BLAS == "mkl":
+        libraries.append("mkl_rt")
+    else:
+        libraries.append(BLAS)
     if not (BLAS_INCLUDE_DIRS is False):
         compile_args += [f"BLAS_INCLUDE_DIRS={BLAS_INCLUDE_DIRS}"]
     if not (BLAS_LIBRARY_DIRS is False):
