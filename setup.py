@@ -271,7 +271,7 @@ else:
 
 if "MAX_JOBS" not in os.environ and os.cpu_count() > MAX_COMPILATION_THREADS:
     # Clip the num compilation thread to 8
-    os.environ["MAX_JOBS"] = MAX_COMPILATION_THREADS
+    os.environ["MAX_JOBS"] = str(MAX_COMPILATION_THREADS)
 
 target = "cpu" if CPU_ONLY else "gpu"
 
