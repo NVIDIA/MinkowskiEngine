@@ -176,12 +176,14 @@ public:
   // returns out_map_key and flag which is true if a new map is created
   std::pair<coordinate_map_key_type, bool>
   stride(coordinate_map_key_type const &in_map_key,
-         stride_type const &kernel_stride);
+         stride_type const &kernel_stride, std::string const string_id = "");
 
   // python-side stride function
   py::object py_stride(CoordinateMapKey const *in_map_key,
-                       stride_type const &kernel_stride) {
-    auto key = std::get<0>(stride(in_map_key->get_key(), kernel_stride));
+                       stride_type const &kernel_stride,
+                       std::string const string_id = "") {
+    auto key =
+        std::get<0>(stride(in_map_key->get_key(), kernel_stride, string_id));
     return py::cast(new CoordinateMapKey(key.first.size() + 1, key));
   }
 
