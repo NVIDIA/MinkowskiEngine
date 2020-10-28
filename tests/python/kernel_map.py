@@ -44,36 +44,38 @@ class TestKernelMap(unittest.TestCase):
             feats,
             coordinates=coords,
             minkowski_algorithm=MinkowskiAlgorithm.SPEED_OPTIMIZED,
+            device="cuda",
         )
-        cm = input.coordinate_manager
-        print("Input coords: ")
-
-        print("Convolution: ")
 
         # Initialize context
-        conv = MinkowskiConvolution(
-            in_channels,
-            out_channels,
-            kernel_size=3,
-            stride=2,
-            bias=True,
-            dimension=D,
-        ).double()
+        conv = (
+            MinkowskiConvolution(
+                in_channels,
+                out_channels,
+                kernel_size=3,
+                stride=2,
+                bias=True,
+                dimension=D,
+            )
+            .double()
+            .cuda()
+        )
         output = conv(input)
 
-        iC = input.C.numpy()
-        oC = output.C.numpy()
+        iC = input.C.cpu().numpy()
+        oC = output.C.cpu().numpy()
         print(iC)
         print(oC)
-        in_maps, out_maps = output.coordinate_manager.get_kernel_map(
-            1, 2, stride=2, kernel_size=3, on_gpu=True
+        kernel_maps = output.coordinate_manager.get_kernel_map(
+            1,
+            2,
+            stride=2,
+            kernel_size=3,
         )
-        kernel_index = 0
-        for in_map, out_map in zip(in_maps, out_maps):
-            for i, o in zip(in_map, out_map):
+        for kernel_index, in_out_map in kernel_maps.items():
+            for i, o in zip(in_out_map[0], in_out_map[1]):
                 print(kernel_index, iC[i], "->", oC[o])
-            kernel_index += 1
-        self.assertTrue(sum(len(in_map) for in_map in in_maps) == 26)
+        self.assertTrue(sum(len(in_map[0]) for k, in_map in kernel_maps.items()) == 16)
 
     def test_kernelmap(self):
         print(f"{self.__class__.__name__}: test_kernelmap")
@@ -82,10 +84,6 @@ class TestKernelMap(unittest.TestCase):
         feats = feats.double()
         feats.requires_grad_()
         input = SparseTensor(feats, coordinates=coords)
-        cm = input.coordinate_manager
-        print("Input coords: ")
-
-        print("Convolution: ")
 
         # Initialize context
         conv = MinkowskiConvolution(
@@ -102,16 +100,10 @@ class TestKernelMap(unittest.TestCase):
         oC = output.C.numpy()
         print(iC)
         print(oC)
-        in_maps, out_maps = output.coordinate_manager.get_kernel_map(
+        kernel_maps = output.coordinate_manager.get_kernel_map(
             1, 2, stride=2, kernel_size=3
         )
-        kernel_index = 0
-        for in_map, out_map in zip(in_maps, out_maps):
-            for i, o in zip(in_map, out_map):
+        for kernel_index, in_out_map in kernel_maps.items():
+            for i, o in zip(in_out_map[0], in_out_map[1]):
                 print(kernel_index, iC[i], "->", oC[o])
-            kernel_index += 1
-        self.assertTrue(sum(len(in_map) for in_map in in_maps) == 26)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertTrue(sum(len(in_map[0]) for k, in_map in kernel_maps.items()) == 16)

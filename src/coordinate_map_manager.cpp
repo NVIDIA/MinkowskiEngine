@@ -32,6 +32,7 @@
 
 #include <pybind11/pybind11.h>
 #include <string>
+#include <unordered_map>
 
 namespace py = pybind11;
 
@@ -1009,6 +1010,66 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   // copy to the out coords
   map.copy_coordinates(coordinates.template data_ptr<coordinate_type>());
   return coordinates;
+}
+
+namespace detail {
+
+template <typename coordinate_type>
+struct kernel_map_to_tensors<coordinate_type, std::allocator, CoordinateMapCPU,
+                             cpu_kernel_map> {
+
+  std::unordered_map<int64_t, at::Tensor>
+  operator()(cpu_kernel_map const &kernel_map) {
+
+    const auto &in_maps = kernel_map.first;
+    const auto &out_maps = kernel_map.second;
+
+    auto options =
+        torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
+
+    std::unordered_map<int64_t, at::Tensor> th_kernel_maps;
+    for (auto k = 0; k < in_maps.size(); ++k) {
+      const auto &in_map = in_maps[k];
+      const auto &out_map = out_maps[k];
+      const long N = in_map.size();
+      if (N > 0) {
+        at::Tensor kernel_map = torch::empty({2, N}, options);
+        int32_t *p_kernel_map = kernel_map.data_ptr<int32_t>();
+        std::copy_n(&in_map[0], N, p_kernel_map);
+        std::copy_n(&out_map[0], N, p_kernel_map + N);
+        th_kernel_maps[k] = std::move(kernel_map);
+      }
+    }
+
+    return th_kernel_maps;
+  }
+};
+
+} // namespace detail
+
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::unordered_map<int64_t, at::Tensor> CoordinateMapManager<
+    coordinate_type, coordinate_field_type, TemplatedAllocator,
+    CoordinateMapType>::get_kernel_map(CoordinateMapKey const *p_in_map_key,
+                                       CoordinateMapKey const *p_out_map_key,
+                                       stride_type const &kernel_size, //
+                                       stride_type const &kernel_stride,
+                                       stride_type const &kernel_dilation,
+                                       RegionType::Type const region_type,
+                                       at::Tensor const &offset,
+                                       bool is_transpose, bool is_pool) {
+
+  auto const &curr_kernel_map =
+      kernel_map(p_in_map_key, p_out_map_key,                 // maps
+                 kernel_size, kernel_stride, kernel_dilation, // kernels
+                 region_type, offset, is_transpose, is_pool);
+
+  return detail::kernel_map_to_tensors<coordinate_type, TemplatedAllocator,
+                                       CoordinateMapType, kernel_map_type>()(
+      curr_kernel_map);
 }
 
 template <typename coordinate_type, typename coordinate_field_type,
