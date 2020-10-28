@@ -134,9 +134,11 @@ from MinkowskiNonlinearity import (
     MinkowskiELU,
     MinkowskiSELU,
     MinkowskiCELU,
+    MinkowskiGELU,
     MinkowskiDropout,
     MinkowskiThreshold,
     MinkowskiTanh,
+    MinkowskiSinusoidal,
 )
 
 from MinkowskiNormalization import (

@@ -46,7 +46,7 @@ import numpy as np
 from scipy.linalg import expm, norm
 
 import MinkowskiEngine as ME
-from examples.resnet import ResNet50
+import examples.resnet as resnets
 
 assert (
     int(o3d.__version__.split(".")[1]) >= 8
@@ -64,6 +64,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--voxel_size", type=float, default=0.01)
 parser.add_argument("--max_iter", type=int, default=120000)
 parser.add_argument("--val_freq", type=int, default=1000)
+parser.add_argument("--empty_freq", type=int, default=10)
 parser.add_argument(
     "--sample_density",
     type=int,
@@ -78,6 +79,12 @@ parser.add_argument("--num_workers", type=int, default=1)
 parser.add_argument("--stat_freq", type=int, default=50)
 parser.add_argument("--weights", type=str, default="modelnet.pth")
 parser.add_argument("--load_optimizer", type=str, default="true")
+parser.add_argument(
+    "--network",
+    type=str,
+    default="ResFieldNet50",
+    help="options: ResFieldNet14, ResFieldNet18, ResFieldNet34, ResFieldNet50, ResFieldNet101",
+)
 
 if not os.path.exists("ModelNet40"):
     logging.info("Downloading the fixed ModelNet40 dataset...")
@@ -195,7 +202,7 @@ def collate_pointcloud_fn(list_data):
     eff_num_batch = len(coords)
     assert len(labels) == eff_num_batch
 
-    coords_batch = ME.utils.batched_coordinates(coords)
+    coords_batch = ME.utils.batched_coordinates(coords, return_int=False)
     feats_batch = torch.from_numpy(np.vstack(feats)).float()
 
     # Concatenate all lists
@@ -423,17 +430,20 @@ def test(net, test_iter, config, phase="val"):
     num_correct, tot_num = 0, 0
     for i in range(len(test_iter)):
         data_dict = test_iter.next()
-        sin = ME.SparseTensor(data_dict["feats"], data_dict["coords"], device=device)
-        sout = net(sin)
+        tfield = ME.TensorField(data_dict["feats"], data_dict["coords"], device=device)
+        sout = net(tfield)
         is_correct = data_dict["labels"] == torch.argmax(sout.F, 1).cpu()
         num_correct += is_correct.sum().item()
         tot_num += len(sout)
 
-        if i % config.stat_freq == 0:
+        if i % config.empty_freq == 0:
             torch.cuda.empty_cache()
+
+        if i % config.stat_freq == 0:
             logging.info(
                 f"{phase} set iter: {i} / {len(test_iter)}, Accuracy : {num_correct / tot_num:.3e}"
             )
+
     logging.info(f"{phase} set accuracy : {num_correct / tot_num:.3e}")
 
 
@@ -444,7 +454,10 @@ def train(net, device, config):
         momentum=config.momentum,
         weight_decay=config.weight_decay,
     )
-    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 0.99)
+    scheduler = optim.lr_scheduler.ExponentialLR(
+        optimizer,
+        0.999,
+    )
 
     crit = torch.nn.CrossEntropyLoss()
 
@@ -487,15 +500,17 @@ def train(net, device, config):
         d = time() - s
 
         optimizer.zero_grad()
-        sin = ME.SparseTensor(data_dict["feats"], data_dict["coords"], device=device)
+        sin = ME.TensorField(data_dict["feats"], data_dict["coords"], device=device)
         sout = net(sin)
         loss = crit(sout.F, data_dict["labels"].to(device))
         loss.backward()
         optimizer.step()
         t = time() - s
 
-        if i % config.stat_freq == 0:
+        if i % config.empty_freq == 0:
             torch.cuda.empty_cache()
+
+        if i % config.stat_freq == 0:
             logging.info(
                 f"Iter: {i}, Loss: {loss.item():.3e}, Data Loading Time: {d:.3e}, Tot Time: {t:.3e}"
             )
@@ -515,10 +530,12 @@ def train(net, device, config):
             logging.info("Validation")
             test(net, val_iter, config, "val")
 
-            scheduler.step()
             logging.info(f"LR: {scheduler.get_lr()}")
 
             net.train()
+
+            # one epoch
+            scheduler.step()
 
 
 if __name__ == "__main__":
@@ -529,7 +546,7 @@ if __name__ == "__main__":
     config = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    net = ResNet50(3, 40, D=3)
+    net = getattr(resnets, config.network)(3, 40, D=3)
     net.to(device)
 
     train(net, device, config)

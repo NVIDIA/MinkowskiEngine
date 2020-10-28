@@ -21,7 +21,10 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+from typing import Union
+
 import torch
+import torch.nn as nn
 
 from MinkowskiCommon import MinkowskiModuleBase
 from MinkowskiSparseTensor import SparseTensor
@@ -77,6 +80,10 @@ class MinkowskiCELU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.CELU
 
 
+class MinkowskiGELU(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.GELU
+
+
 class MinkowskiDropout(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Dropout
 
@@ -95,3 +102,33 @@ class MinkowskiTanh(MinkowskiNonlinearityBase):
 
 class MinkowskiSoftmax(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Softmax
+
+
+class MinkowskiSinusoidal(MinkowskiModuleBase):
+    def __init__(self, in_channel, out_channel):
+        MinkowskiModuleBase.__init__(self)
+        self.in_channel = in_channel
+        self.out_channel = out_channel
+        self.kernel = nn.Parameter(torch.rand(in_channel, out_channel))
+        self.bias = nn.Parameter(torch.rand(1, out_channel))
+        self.coef = nn.Parameter(torch.rand(1, out_channel))
+
+    def forward(self, input: Union[SparseTensor, TensorField]):
+
+        out_F = torch.sin(input.F.mm(self.kernel) + self.bias) * self.coef
+
+        if isinstance(input, TensorField):
+            return TensorField(
+                out_F,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_field_map_key=input.coordinate_field_map_key,
+                coordinate_manager=input.coordinate_manager,
+                inverse_mapping=input.inverse_mapping,
+                quantization_mode=input.quantization_mode,
+            )
+        else:
+            return SparseTensor(
+                out_F,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+            )

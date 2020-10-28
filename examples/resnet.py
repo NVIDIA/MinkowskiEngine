@@ -50,7 +50,7 @@ class ResNetBase(nn.Module):
         self.inplanes = self.INIT_DIM
         self.conv1 = nn.Sequential(
             ME.MinkowskiConvolution(
-                in_channels, self.inplanes, kernel_size=5, stride=2, dimension=D
+                in_channels, self.inplanes, kernel_size=3, stride=2, dimension=D
             ),
             ME.MinkowskiBatchNorm(self.inplanes),
             ME.MinkowskiReLU(inplace=True),
@@ -71,14 +71,15 @@ class ResNetBase(nn.Module):
         )
 
         self.conv5 = nn.Sequential(
+            ME.MinkowskiDropout(),
             ME.MinkowskiConvolution(
                 self.inplanes, self.inplanes, kernel_size=3, stride=3, dimension=D
             ),
             ME.MinkowskiBatchNorm(self.inplanes),
-            ME.MinkowskiReLU(inplace=True),
+            ME.MinkowskiGELU(),
         )
 
-        self.glob_avg = ME.MinkowskiGlobalMaxPooling()
+        self.glob_pool = ME.MinkowskiGlobalMaxPooling()
 
         self.final = ME.MinkowskiLinear(self.inplanes, out_channels, bias=True)
 
@@ -132,8 +133,7 @@ class ResNetBase(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.conv5(x)
-
-        x = self.glob_avg(x)
+        x = self.glob_pool(x)
         return self.final(x)
 
 
@@ -158,6 +158,62 @@ class ResNet50(ResNetBase):
 
 
 class ResNet101(ResNetBase):
+    BLOCK = Bottleneck
+    LAYERS = (3, 4, 23, 3)
+
+
+class ResFieldNetBase(ResNetBase):
+    def network_initialization(self, in_channels, out_channels, D):
+        field_ch = 32
+        field_ch2 = 64
+        self.field_network = nn.Sequential(
+            ME.MinkowskiSinusoidal(in_channels, field_ch),
+            ME.MinkowskiBatchNorm(field_ch),
+            ME.MinkowskiReLU(inplace=True),
+            ME.MinkowskiLinear(field_ch, field_ch),
+            ME.MinkowskiBatchNorm(field_ch),
+            ME.MinkowskiReLU(inplace=True),
+            ME.MinkowskiToSparseTensor(),
+        )
+        self.field_network2 = nn.Sequential(
+            ME.MinkowskiSinusoidal(field_ch + in_channels, field_ch2),
+            ME.MinkowskiBatchNorm(field_ch2),
+            ME.MinkowskiReLU(inplace=True),
+            ME.MinkowskiLinear(field_ch2, field_ch2),
+            ME.MinkowskiBatchNorm(field_ch2),
+            ME.MinkowskiReLU(inplace=True),
+            ME.MinkowskiToSparseTensor(),
+        )
+
+        ResNetBase.network_initialization(self, field_ch2, out_channels, D)
+
+    def forward(self, x):
+        otensor = self.field_network(x)
+        otensor2 = self.field_network2(otensor.cat_slice(x))
+        return ResNetBase.forward(self, otensor2)
+
+
+class ResFieldNet14(ResFieldNetBase):
+    BLOCK = BasicBlock
+    LAYERS = (1, 1, 1, 1)
+
+
+class ResFieldNet18(ResFieldNetBase):
+    BLOCK = BasicBlock
+    LAYERS = (2, 2, 2, 2)
+
+
+class ResFieldNet34(ResFieldNetBase):
+    BLOCK = BasicBlock
+    LAYERS = (3, 4, 6, 3)
+
+
+class ResFieldNet50(ResFieldNetBase):
+    BLOCK = Bottleneck
+    LAYERS = (3, 4, 6, 3)
+
+
+class ResFieldNet101(ResFieldNetBase):
     BLOCK = Bottleneck
     LAYERS = (3, 4, 23, 3)
 
