@@ -149,7 +149,7 @@ class CoordinateManager:
     def insert_and_map(
         self,
         coordinates: torch.Tensor,
-        tensor_stride: Union[int, Sequence, np.ndarray],
+        tensor_stride: Union[int, Sequence, np.ndarray] = 1,
         string_id: str = "",
     ) -> Tuple[CoordinateMapKey, Tuple[torch.IntTensor, torch.IntTensor]]:
         r"""create a new coordinate map and returns (key, (map, inverse_map)).
@@ -168,6 +168,7 @@ class CoordinateManager:
            >>> torch.all(coordinates == coordinates[unique_map][inverse_map]) # True
 
         """
+        tensor_stride = convert_to_int_list(tensor_stride, self.D)
         return self._manager.insert_and_map(coordinates, tensor_stride, string_id)
 
     def insert_field(
@@ -197,6 +198,7 @@ class CoordinateManager:
         self,
         coordinate_map_key: CoordinateMapKey,
         stride: Union[int, Sequence, np.ndarray, torch.Tensor],
+        string_id: str = "",
     ) -> CoordinateMapKey:
         r"""Generate a new coordinate map and returns the key.
 
@@ -206,7 +208,7 @@ class CoordinateManager:
         :attr:`stride`: stride size.
         """
         stride = convert_to_int_list(stride, self.D)
-        return self._manager.stride(coordinate_map_key, stride)
+        return self._manager.stride(coordinate_map_key, stride, string_id)
 
     def origin(self):
         return self._manager.origin()
@@ -328,11 +330,11 @@ class CoordinateManager:
         if isinstance(kernel_size, torch.Tensor):
             assert (kernel_size > 0).all(), f"Invalid kernel size: {kernel_size}"
             if (kernel_size == 1).all() == 1:
-                region_type = 0
+                region_type = RegionType.HYPER_CUBE
         elif isinstance(kernel_size, int):
             assert kernel_size > 0, f"Invalid kernel size: {kernel_size}"
             if kernel_size == 1:
-                region_type = 0
+                region_type = RegionType.HYPER_CUBE
 
         in_key = self._get_coordinate_map_key(in_key)
         out_key = self._get_coordinate_map_key(out_key)

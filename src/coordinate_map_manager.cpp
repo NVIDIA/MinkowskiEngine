@@ -338,13 +338,15 @@ template <typename coordinate_type, typename coordinate_field_type,
 std::pair<coordinate_map_key_type, bool> CoordinateMapManager<
     coordinate_type, coordinate_field_type, TemplatedAllocator,
     CoordinateMapType>::stride(coordinate_map_key_type const &in_map_key,
-                               stride_type const &kernel_stride) {
+                               stride_type const &kernel_stride,
+                               std::string const string_id) {
   ASSERT(exists(in_map_key), ERROR_MAP_NOT_FOUND);
   // check if the key exists.
   LOG_DEBUG("In tensor stride:", in_map_key.first,
             "kernel stride:", kernel_stride);
   coordinate_map_key_type out_map_key(
-      detail::stride_tensor_stride(in_map_key.first, kernel_stride, false), "");
+      detail::stride_tensor_stride(in_map_key.first, kernel_stride, false),
+      string_id);
   LOG_DEBUG("Out stride map key:", out_map_key);
   bool const exists_out_map = exists(out_map_key);
   if (!exists_out_map) {
