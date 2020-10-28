@@ -30,6 +30,8 @@
 
 #include <ATen/cuda/CUDAContext.h>
 #include <pybind11/pybind11.h>
+#include <torch/extension.h>
+#include <unordered_map>
 
 namespace py = pybind11;
 
@@ -186,6 +188,7 @@ struct swap_in_out_map_functor<gpu_kernel_map<
     return std::move(swapped_kernel_map);
   }
 };
+
 template <>
 struct swap_in_out_map_functor<
     gpu_kernel_map<default_types::index_type, detail::c10_allocator<char>>> {
@@ -198,6 +201,39 @@ struct swap_in_out_map_functor<
               swapped_kernel_map.out_maps.begin() -
                   swapped_kernel_map.in_maps.begin());
     return std::move(swapped_kernel_map);
+  }
+};
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+struct kernel_map_to_tensors<
+    coordinate_type, TemplatedAllocator, CoordinateMapGPU,
+    gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>>> {
+  using index_type = default_types::index_type;
+
+  std::unordered_map<int64_t, at::Tensor> operator()(
+      gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>> const
+          &kernel_map) {
+    auto curr_device = at::cuda::current_device();
+    auto options = torch::TensorOptions({at::kCUDA, curr_device})
+                       .dtype(torch::kInt)
+                       .requires_grad(false);
+
+    std::unordered_map<int64_t, at::Tensor> kernel_map_th;
+    for (auto it = kernel_map.key_cbegin(); it != kernel_map.key_cend(); ++it) {
+      auto const &key = it->first;
+      long const N = kernel_map.size(key);
+      at::Tensor curr_map = torch::empty({2, N}, options);
+      int32_t *p_map = curr_map.data_ptr<int32_t>();
+      CUDA_CHECK(cudaMemcpy(p_map, kernel_map.in_maps.begin(key),
+                            sizeof(int32_t) * N, cudaMemcpyDeviceToDevice));
+      CUDA_CHECK(cudaMemcpy(p_map + N, kernel_map.out_maps.begin(key),
+                            sizeof(int32_t) * N, cudaMemcpyDeviceToDevice));
+
+      kernel_map_th[key] = std::move(curr_map);
+    }
+
+    return kernel_map_th;
   }
 };
 

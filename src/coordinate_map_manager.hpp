@@ -279,7 +279,8 @@ public:
          ++it) {
       coordinate_map_key_type const &key = it->first;
       if (key.first == tensor_stride) {
-        keys.push_back(py::cast(new CoordinateMapKey(key.first.size(), key)));
+        keys.push_back(
+            py::cast(new CoordinateMapKey(key.first.size() + 1, key)));
       }
     }
     return keys;
@@ -334,6 +335,17 @@ public:
                                     CoordinateMapKey const *py_out_coords_key);
 
   kernel_map_type const &origin_map(CoordinateMapKey const *py_out_coords_key);
+
+  // return kernel map. for cpu it is {in maps, out maps}.
+  // For gpu it could be {in maps, out maps}, or {kernel index, in map, out map}
+  std::unordered_map<int64_t, at::Tensor>
+  get_kernel_map(CoordinateMapKey const *py_in_coords_key,  //
+                 CoordinateMapKey const *py_out_coords_key, //
+                 stride_type const &kernel_size,            //
+                 stride_type const &kernel_stride,          //
+                 stride_type const &kernel_dilation,        //
+                 RegionType::Type const region_type,        //
+                 at::Tensor const &offsets, bool is_transpose, bool is_pool);
 
   // interpolation map
   std::vector<at::Tensor>
@@ -506,6 +518,18 @@ struct origin_map_functor {
   operator()(CoordinateMapType<coordinate_type, TemplatedAllocator> const
                  &origin_coordinate_map,
              kernel_map_type const &origin_map);
+};
+
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType,
+          typename kernel_map_type>
+struct kernel_map_to_tensors {
+  using index_type = default_types::index_type;
+
+  std::unordered_map<int64_t, at::Tensor>
+  operator()(kernel_map_type const &kernel_map);
 };
 
 } // namespace detail
