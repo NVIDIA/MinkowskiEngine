@@ -72,12 +72,10 @@ __global__ void
 insert_and_map_kernel(map_type __restrict__ map,                       //
                       coordinate_type const *__restrict__ coordinates, //
                       index_type *__restrict__ valid_map_index,        //
-                      // index_type *__restrict__ inverse_row_index,      //
-                      index_type *__restrict__ valid_row_index, //
-                      bool *__restrict__ success,               //
-                      size_type const num_threads,              //
-                      size_type const coordinate_size           //
-) {
+                      index_type *__restrict__ valid_row_index,        //
+                      size_type const num_threads,                     //
+                      size_type const coordinate_size,                 //
+                      index_type const unused_key) {
   auto const tx = threadIdx.x;
   auto const bx = blockIdx.x;
   auto const x = blockDim.x * bx + tx;
@@ -89,8 +87,14 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
         coordinate<coordinate_type>{&coordinates[x * coordinate_size]}, x));
 
     // for unique_mapping. remove failed valid_row_index with success
-    success[x] = result.second;
-    valid_row_index[x] = x;
+    // success[x] = result.second;
+    if (result.second) {
+      valid_row_index[x] = x;
+      // success map index. remove failed insertion with success.
+      valid_map_index[x] = result.first.offset();
+    } else {
+      valid_map_index[x] = unused_key;
+    }
     // for inverse_mapping.
     // if (result.second)
     //   inverse_row_index[x] = x;
@@ -98,8 +102,6 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
     //   auto it = result.first;
     //   inverse_row_index[x] = it->second;
     // }
-    // success map index. remove failed insertion with success.
-    valid_map_index[x] = result.first.offset();
   }
 }
 
@@ -123,7 +125,6 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
   size_type const N = key_last - key_first;
   LOG_DEBUG("key iterator length", N);
 
-  thrust::device_vector<bool> success(N);
   m_valid_row_index.resize(N);
   m_valid_map_index.resize(N);
   m_inverse_row_index.resize(N);
@@ -146,28 +147,26 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
   // compute cuda kernel call params
   size_type const num_threads = N;
   size_type const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
+  index_type const unused_key = std::numeric_limits<index_type>::max();
 
   detail::insert_and_map_kernel<coordinate_type, size_type, index_type,
                                 map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
       *m_map, const_coordinate_data(),                    //
       thrust::raw_pointer_cast(m_valid_map_index.data()), //
-      // thrust::raw_pointer_cast(m_inverse_row_index.data()), //
       thrust::raw_pointer_cast(m_valid_row_index.data()), //
-      thrust::raw_pointer_cast(success.data()),           //
-      num_threads, m_coordinate_size);
+      num_threads, m_coordinate_size, unused_key);
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("Map size:", m_map->size());
 
   // Valid row index
-  auto valid_begin = thrust::make_zip_iterator(thrust::make_tuple(
-      success.begin(), m_valid_row_index.begin(), m_valid_map_index.begin()));
+  auto valid_begin = thrust::make_zip_iterator(
+      thrust::make_tuple(m_valid_map_index.begin(), m_valid_row_index.begin()));
 
   size_type const number_of_valid =
-      thrust::remove_if(
-          thrust::device, valid_begin,
-          thrust::make_zip_iterator(thrust::make_tuple(
-              success.end(), m_valid_row_index.end(), m_valid_map_index.end())),
-          detail::is_first<bool>(false)) -
+      thrust::remove_if(thrust::device, valid_begin,
+                        thrust::make_zip_iterator(thrust::make_tuple(
+                            m_valid_map_index.end(), m_valid_row_index.end())),
+                        detail::is_first<index_type>(unused_key)) -
       valid_begin;
 
   m_valid_row_index.resize(number_of_valid);
@@ -464,7 +463,7 @@ __global__ void kernel_region_insert(
 
         if (result.second) {
           // row index in the out_coordinates
-          out_valid_row_index[out_index] = x;
+          out_valid_row_index[out_index] = out_index;
           // offset in the coordinate map
           out_valid_map_index[out_index] = result.first.offset();
         } else {
@@ -490,7 +489,7 @@ __global__ void kernel_region_insert(
 
           if (result.second) {
             // row index in the out_coordinates
-            out_valid_row_index[out_index] = x;
+            out_valid_row_index[out_index] = out_index;
             // offset in the coordinate map
             out_valid_map_index[out_index] = result.first.offset();
           } else {
@@ -1774,11 +1773,12 @@ template <typename coordinate_type, //
           typename size_type,       //
           typename index_type,      //
           typename map_type>
-__global__ void copy_coordinates(map_type __restrict__ map,                  //
-                                 coordinate_type *__restrict__ coordinates,  //
-                                 index_type const *__restrict__ map_offsets, //
-                                 size_type const num_threads,                //
-                                 size_type const coordinate_size             //
+__global__ void
+copy_coordinates_by_offset(map_type __restrict__ map,                  //
+                           coordinate_type *__restrict__ coordinates,  //
+                           index_type const *__restrict__ map_offsets, //
+                           size_type const num_threads,                //
+                           size_type const coordinate_size             //
 ) {
   auto const tx = threadIdx.x;
   auto const bx = blockIdx.x;
@@ -1794,6 +1794,31 @@ __global__ void copy_coordinates(map_type __restrict__ map,                  //
   }
 }
 
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void copy_coordinates_by_valid_row(
+    map_type __restrict__ map,                          //
+    coordinate_type const *__restrict__ in_coordinates, //
+    coordinate_type *__restrict__ out_coordinates,      //
+    index_type const *__restrict__ valid_row,           //
+    size_type const num_threads,                        //
+    size_type const coordinate_size                     //
+) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    // Compute Capabilities 3.5 or newer
+    index_type const row_index = x / coordinate_size;
+    index_type const col_index = x % coordinate_size;
+    out_coordinates[row_index * coordinate_size + col_index] =
+        in_coordinates[valid_row[row_index] * coordinate_size + col_index];
+  }
+}
+
 } // namespace detail
 
 // Helper functions
@@ -1803,17 +1828,31 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::copy_coordinates(
     coordinate_type *dst_coordinate) const {
 
   size_type const num_threads = size();
-  if (num_threads > 0) {
-    size_type const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
+  if (num_threads <= 0)
+    return;
 
-    detail::copy_coordinates<coordinate_type, size_type, index_type, map_type>
-        <<<num_blocks, CUDA_NUM_THREADS>>>(
-            *m_map,                                             //
-            dst_coordinate,                                     //
-            thrust::raw_pointer_cast(m_valid_map_index.data()), //
-            num_threads,                                        //
-            m_coordinate_size);
-  }
+  // Copy by offset
+  // size_type const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
+  // detail::copy_coordinates_by_offset<coordinate_type, size_type, index_type,
+  //                                    map_type>
+  //     <<<num_blocks, CUDA_NUM_THREADS>>>(
+  //         *m_map,                                             //
+  //         dst_coordinate,                                     //
+  //         thrust::raw_pointer_cast(m_valid_map_index.data()), //
+  //         num_threads,                                        //
+  //         m_coordinate_size);
+
+  size_type const num_blocks =
+      GET_BLOCKS(num_threads * m_coordinate_size, CUDA_NUM_THREADS);
+  detail::copy_coordinates_by_valid_row<coordinate_type, size_type, index_type,
+                                        map_type>
+      <<<num_blocks, CUDA_NUM_THREADS>>>(
+          *m_map,                                             //
+          const_coordinate_data(),                            //
+          dst_coordinate,                                     //
+          thrust::raw_pointer_cast(m_valid_row_index.data()), //
+          num_threads * m_coordinate_size,                    //
+          m_coordinate_size);
 }
 
 // Template instantiation
