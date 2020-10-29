@@ -397,13 +397,13 @@ template <typename coordinate_type, //
           typename index_type,      //
           typename map_type>
 __global__ void kernel_region_insert(
+    size_type const num_threads,                                //
     map_type __restrict__ out_map,                              //
     coordinate_type const *const __restrict__ p_in_coordinates, //
     index_type const *const __restrict__ in_valid_row_index,    //
     coordinate_type *__restrict__ p_out_coordinates,            //
     index_type *__restrict__ out_valid_row_index,               //
     index_type *__restrict__ out_valid_map_index,               //
-    size_type const num_threads,                                //
     gpu_kernel_region<coordinate_type> kernel,                  //
     size_type const *const __restrict__ out_tensor_stride,      //
     index_type const unused_key) {                              //
@@ -548,18 +548,19 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_region(
   detail::kernel_region_insert<coordinate_type, size_type, index_type, map_type>
       <<<GET_BLOCKS(N_in, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
          shared_memory_size_in_bytes>>>(
+          N_in,                                                 //
           *stride_map.m_map,                                    //
           const_coordinate_data(),                              //
           thrust::raw_pointer_cast(m_valid_row_index.data()),   //
           stride_map.coordinate_data(),                         //
           thrust::raw_pointer_cast(out_valid_row_index.data()), //
           thrust::raw_pointer_cast(out_valid_map_index.data()), //
-          N_in,                                                 //
           gpu_kernel,                                           //
           thrust::raw_pointer_cast(d_out_tensor_stride.data()), //
           unused_key);                                          //
   CUDA_CHECK(cudaStreamSynchronize(0));
   LOG_DEBUG("kernel_region_insert done");
+
   // LOG_DEBUG("valid row index", out_valid_row_index);
   // LOG_DEBUG("valid map offset", out_valid_map_index);
 
@@ -754,23 +755,28 @@ __global__ void prune_copy_and_insert(
   auto const x = blockDim.x * bx + tx;
 
   if (x < num_threads) {
-    auto out_row_index = (x < 1) ? 0 : inclusive_scan_keep[x - 1];
-    coordinate_type const *curr_in_coord =
-        &in_coordinates[in_valid_row_index[x] * coordinate_size];
-    coordinate_type *curr_out_coord =
-        &out_coordinates[out_row_index * coordinate_size];
-    for (index_type i = 0; i < coordinate_size; ++i)
-      curr_out_coord[i] = curr_in_coord[i];
-
-    // insert to the out_map
-    auto coord = coordinate<coordinate_type>{curr_out_coord};
-    // remap the value in the next kernel call
-    auto result = out_map.insert(thrust::make_pair(coord, 0));
-    out_valid_row_index[x] = x;
-    if (result.second)
-      out_valid_map_offset[x] = result.first.offset();
-    else
+    if (!keep_begin[x]) {
       out_valid_map_offset[x] = unused_map_offset;
+    } else {
+      // If keep,
+      auto out_row_index = (x < 1) ? 0 : inclusive_scan_keep[x - 1];
+      coordinate_type const *curr_in_coord =
+          &in_coordinates[in_valid_row_index[x] * coordinate_size];
+      coordinate_type *curr_out_coord =
+          &out_coordinates[out_row_index * coordinate_size];
+      for (index_type i = 0; i < coordinate_size; ++i)
+        curr_out_coord[i] = curr_in_coord[i];
+
+      // insert to the out_map
+      auto coord = coordinate<coordinate_type>{curr_out_coord};
+      // remap the value in the next kernel call
+      auto result = out_map.insert(thrust::make_pair(coord, 0));
+      out_valid_row_index[x] = out_row_index;
+      if (result.second)
+        out_valid_map_offset[x] = result.first.offset();
+      else
+        out_valid_map_offset[x] = unused_map_offset;
+    }
   }
 }
 

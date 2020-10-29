@@ -126,7 +126,7 @@ CUDA_HOME, argv = _argparse("--cuda_home", argv, False)
 BLAS, argv = _argparse("--blas", argv, False)
 BLAS_INCLUDE_DIRS, argv = _argparse("--blas_include_dirs", argv, False)
 BLAS_LIBRARY_DIRS, argv = _argparse("--blas_library_dirs", argv, False)
-MAX_COMPILATION_THREADS = 8
+MAX_COMPILATION_THREADS = 12
 
 Extension = CUDAExtension
 extra_link_args = []
