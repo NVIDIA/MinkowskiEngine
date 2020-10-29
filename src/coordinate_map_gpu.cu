@@ -156,6 +156,7 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
       thrust::raw_pointer_cast(success.data()),           //
       num_threads, m_coordinate_size);
   CUDA_CHECK(cudaStreamSynchronize(0));
+  LOG_DEBUG("Map size:", m_map->size());
 
   // Valid row index
   auto valid_begin = thrust::make_zip_iterator(thrust::make_tuple(
@@ -832,7 +833,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::prune(
   LOG_DEBUG("Pruned N:", N_pruned);
 
   // create a coordinate_map
-  self_type pruned_map(N_pruned, m_coordinate_size, m_hashtable_occupancy,
+  self_type pruned_map(N, m_coordinate_size, m_hashtable_occupancy,
                        base_type::m_tensor_stride, m_map_allocator,
                        base_type::m_byte_allocator);
 
@@ -855,6 +856,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::prune(
           thrust::raw_pointer_cast(out_valid_map_offset.data()));
   CUDA_CHECK(cudaStreamSynchronize(0));
 
+  LOG_DEBUG("Pruned hash map size:", pruned_map.size());
   // Remove not inserted rows
   auto valid_begin = thrust::make_zip_iterator(thrust::make_tuple(
       out_valid_map_offset.begin(), out_valid_row_index.begin()));
@@ -866,6 +868,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::prune(
           detail::is_first<index_type>(unused_map_offset)) -
       valid_begin;
 
+  LOG_DEBUG("number of valid rows:", number_of_valid);
   out_valid_map_offset.resize(number_of_valid);
   out_valid_row_index.resize(number_of_valid);
 

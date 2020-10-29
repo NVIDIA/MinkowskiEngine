@@ -26,6 +26,7 @@
 #include <cudf/utilities/error.hpp>
 
 #include <thrust/pair.h>
+#include <thrust/count.h>
 
 #include <functional>
 #include <memory>
@@ -95,6 +96,20 @@ union pair_packer<pair_type, std::enable_if_t<is_packable<pair_type>()>> {
   __device__ pair_packer(packed_type _packed) : packed{_packed} {}
 };
 }  // namespace
+
+template <typename Key, typename Element, typename Equality> struct _is_used {
+  using value_type = thrust::pair<Key, Element>;
+
+  _is_used(Key const &unused, Equality const &equal)
+      : m_unused_key(unused), m_equal(equal) {}
+
+  __host__ __device__ bool operator()(value_type const &x) {
+    return !m_equal(x.first, m_unused_key);
+  }
+
+  Key const m_unused_key;
+  Equality const m_equal;
+};
 
 /**
  * Supports concurrent insert, but not concurrent insert and find.
@@ -471,16 +486,22 @@ class concurrent_unordered_map {
   void clear_async(cudaStream_t stream = 0)
   {
     constexpr int block_size = 128;
-    init_hashtbl<<<((m_capacity - 1) / block_size) + 1, block_size, 0, stream>>>(
+    init_hashtbl<<<((m_capacity + block_size - 1) / block_size), block_size, 0, stream>>>(
       m_hashtbl_values, m_capacity, m_unused_key, m_unused_element);
   }
 
-  void print()
+  void print() const
   {
     for (size_type i = 0; i < m_capacity; ++i) {
       std::cout << i << ": " << m_hashtbl_values[i].first << "," << m_hashtbl_values[i].second
                 << std::endl;
     }
+  }
+
+  size_t size() const
+  {
+    return thrust::count_if(thrust::device, m_hashtbl_values, m_hashtbl_values + m_capacity,
+                            _is_used<Key, Element, Equality>(get_unused_key(), get_key_equal()));
   }
 
   gdf_error prefetch(const int dev_id, cudaStream_t stream = 0)
@@ -569,7 +590,7 @@ class concurrent_unordered_map {
       }
     }
 
-    init_hashtbl<<<((m_capacity - 1) / block_size) + 1, block_size, 0, stream>>>(
+    init_hashtbl<<<((m_capacity + block_size - 1) / block_size), block_size, 0, stream>>>(
       m_hashtbl_values, m_capacity, m_unused_key, m_unused_element);
     CUDA_TRY(cudaGetLastError());
   }
