@@ -58,11 +58,11 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 ## Requirements
 
-- Ubuntu 14.04 or higher
-- CUDA 10.1.243 or higher (CUDA 11 not supported yet)
-- pytorch 1.5 or higher
-- python 3.6 or higher
-- GCC 7 or higher
+- Ubuntu >= 14.04
+- CUDA >= 10.1.243
+- pytorch >= 1.5 and pytorch < 1.7
+- python >= 3.6
+- GCC >= 7
 
 
 ## Installation
