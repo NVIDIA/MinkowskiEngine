@@ -91,6 +91,6 @@ def data_loader(nchannel=3, max_label=5, is_classification=True, seed=-1, batch_
 
     # features and labels
     N = len(coords)
-    feats = torch.randn(N, nchannel)
+    feats = torch.arange(N * nchannel).view(N, nchannel)
     label = (torch.rand(2 if is_classification else N) * max_label).long()
     return coords, feats, label
