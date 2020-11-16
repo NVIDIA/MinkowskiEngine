@@ -301,13 +301,14 @@ class MinkowskiConvolutionBase(MinkowskiModuleBase):
         )
 
     def reset_parameters(self, is_transpose=False):
-        n = (
-            self.out_channels if is_transpose else self.in_channels
-        ) * self.kernel_generator.kernel_volume
-        stdv = 1.0 / math.sqrt(n)
-        self.kernel.data.uniform_(-stdv, stdv)
-        if self.bias is not None:
-            self.bias.data.uniform_(-stdv, stdv)
+        with torch.no_grad():
+            n = (
+                self.out_channels if is_transpose else self.in_channels
+            ) * self.kernel_generator.kernel_volume
+            stdv = 1.0 / math.sqrt(n)
+            self.kernel.data.uniform_(-stdv, stdv)
+            if self.bias is not None:
+                self.bias.data.uniform_(-stdv, stdv)
 
     def __repr__(self):
         s = "(in={}, out={}, region_type={}, ".format(

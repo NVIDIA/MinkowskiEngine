@@ -59,8 +59,8 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 ## Requirements
 
 - Ubuntu >= 14.04
-- CUDA >= 10.1.243
-- pytorch >= 1.5 and pytorch < 1.7
+- 11.1 > CUDA >= 10.1.243
+- pytorch >= 1.5
 - python >= 3.6
 - GCC >= 7
 

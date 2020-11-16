@@ -28,8 +28,6 @@ from torch.optim import SGD
 import MinkowskiEngine as ME
 from MinkowskiEngine.modules.resnet_block import BasicBlock, Bottleneck
 
-from tests.python.common import data_loader
-
 
 class ResNetBase(nn.Module):
     BLOCK = None
@@ -220,6 +218,8 @@ class ResFieldNet101(ResFieldNetBase):
 
 if __name__ == "__main__":
     # loss and network
+    from tests.python.common import data_loader
+
     criterion = nn.CrossEntropyLoss()
     net = ResNet14(in_channels=3, out_channels=5, D=2)
     print(net)

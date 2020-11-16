@@ -29,7 +29,6 @@ import MinkowskiEngine as ME
 
 from MinkowskiEngine.modules.resnet_block import BasicBlock, Bottleneck
 
-from tests.python.common import data_loader
 from examples.resnet import ResNetBase
 
 
@@ -247,6 +246,7 @@ class MinkUNet34C(MinkUNet34):
 
 
 if __name__ == '__main__':
+    from tests.python.common import data_loader
     # loss and network
     criterion = nn.CrossEntropyLoss()
     net = MinkUNet14A(in_channels=3, out_channels=5, D=2)
