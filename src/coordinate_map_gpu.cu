@@ -1612,7 +1612,8 @@ interpolation_kernel(map_type __restrict__ in_map,                   //
             floor(sh_tfield[j] / curr_tensor_stride) * curr_tensor_stride;
       else
         sh_tmp[j] =
-            ceil(sh_tfield[j] / curr_tensor_stride) * curr_tensor_stride;
+            floor(sh_tfield[j] / curr_tensor_stride) * curr_tensor_stride +
+            curr_tensor_stride;
       mask = mask << 1;
     }
 
