@@ -54,8 +54,8 @@ class MinkowskiConvolutionFunction(Function):
             out_coordinate_map_key = CoordinateMapKey(
                 in_coordinate_map_key.get_coordinate_size()
             )
-        if not input_features.is_contiguous():
-            input_features = input_features.contiguous()
+
+        input_features = input_features.contiguous()
 
         ctx.input_features = input_features
         ctx.kernel_weights = kernel_weights
@@ -84,6 +84,8 @@ class MinkowskiConvolutionFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat: torch.Tensor):
+        grad_out_feat = grad_out_feat.contiguous()
+
         bw_fn = get_minkowski_function("ConvolutionBackward", grad_out_feat)
         grad_in_feat, grad_kernel = bw_fn(
             ctx.input_features,
@@ -123,9 +125,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
             out_coordinate_map_key = CoordinateMapKey(
                 in_coordinate_map_key.get_coordinate_size()
             )
-        if not input_features.is_contiguous():
-            input_features = input_features.contiguous()
-
+        input_features = input_features.contiguous()
         ctx.input_features = input_features
         ctx.kernel_weights = kernel_weights
         ctx = save_ctx(
@@ -153,6 +153,7 @@ class MinkowskiConvolutionTransposeFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat: torch.Tensor):
+        grad_out_feat = grad_out_feat.contiguous()
         bw_fn = get_minkowski_function("ConvolutionTransposeBackward", grad_out_feat)
         grad_in_feat, grad_kernel = bw_fn(
             ctx.input_features,

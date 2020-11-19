@@ -53,6 +53,7 @@ class MinkowskiLocalPoolingFunction(Function):
                 in_coordinate_map_key.get_coordinate_size()
             )
 
+        input_features = input_features.contiguous()
         ctx.input_features = input_features
         ctx = save_ctx(
             ctx,
@@ -81,6 +82,7 @@ class MinkowskiLocalPoolingFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
+        grad_out_feat = grad_out_feat.contiguous()
         bw_fn = get_minkowski_function("LocalPoolingBackward", grad_out_feat)
         grad_in_feat = bw_fn(
             ctx.input_features,
@@ -619,8 +621,7 @@ class MinkowskiGlobalPoolingFunction(Function):
             out_coordinate_map_key = CoordinateMapKey(
                 in_coordinate_map_key.get_coordinate_size()
             )
-        if not input_features.is_contiguous():
-            input_features = input_features.contiguous()
+        input_features = input_features.contiguous()
 
         ctx.input_features = input_features
         ctx.in_coords_key = in_coordinate_map_key
@@ -643,6 +644,7 @@ class MinkowskiGlobalPoolingFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat):
+        grad_out_feat = grad_out_feat.contiguous()
         bw_fn = get_minkowski_function("GlobalPoolingBackward", grad_out_feat)
         grad_in_feat = bw_fn(
             ctx.input_features,

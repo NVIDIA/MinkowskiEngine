@@ -49,6 +49,7 @@ class MinkowskiPruningFunction(Function):
         ctx.out_coords_key = out_coords_key
         ctx.coords_manager = coords_manager
 
+        in_feat = in_feat.contiguous()
         fw_fn = get_minkowski_function("PruningForward", in_feat)
         return fw_fn(
             in_feat,
@@ -60,6 +61,7 @@ class MinkowskiPruningFunction(Function):
 
     @staticmethod
     def backward(ctx, grad_out_feat: torch.Tensor):
+        grad_out_feat = grad_out_feat.contiguous()
         bw_fn = get_minkowski_function("PruningBackward", grad_out_feat)
         grad_in_feat = bw_fn(
             grad_out_feat,

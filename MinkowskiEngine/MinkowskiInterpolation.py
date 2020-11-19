@@ -48,8 +48,7 @@ class MinkowskiInterpolationFunction(Function):
     ):
         if tfield_key is None:
             tfield_key = CoordinateMapKey(in_coordinate_map_key.get_coordinate_size())
-        if not input_features.is_contiguous():
-            input_features = input_features.contiguous()
+        input_features = input_features.contiguous()
 
         fw_fn = get_minkowski_function("InterpolationForward", input_features)
         out_feat, in_map, out_map, weights = fw_fn(
@@ -72,6 +71,7 @@ class MinkowskiInterpolationFunction(Function):
     def backward(
         ctx, grad_out_feat=None, grad_in_map=None, grad_out_map=None, grad_weights=None
     ):
+        grad_out_feat = grad_out_feat.contiguous()
         bw_fn = get_minkowski_function("InterpolationBackward", grad_out_feat)
         (
             in_map,
