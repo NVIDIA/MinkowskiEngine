@@ -150,11 +150,18 @@ class SparseTensorTestCase(unittest.TestCase):
         self.assertEqual(len(coords[1]), 0)
         self.assertEqual(len(coords[2]), 2)
 
-        # feats, valid_inds = X.features_at_coords(torch.IntTensor([[0, 0], [2, 2], [-1, -1]]))
-        # self.assertTrue(feats[0, 0] == 1.1)
-        # self.assertTrue(feats[1, 0] == 5.1)
-        # self.assertTrue(feats[2, 0] == 0)
-        # self.assertTrue(len(valid_inds) == 2)
+    def test_features_at_coordinates(self):
+        coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
+        feats = torch.FloatTensor([[1.1, 2.1, 3.1, 4.1, 5.1]]).t()
+
+        X = SparseTensor(features=feats, coordinates=coords)
+        feats = X.features_at_coordinates(
+            torch.FloatTensor([[0, 0], [0, 1], [0, 2], [2, 2], [0, 0], [0, 0.5]])
+        ).flatten()
+
+        self.assertTrue(feats[0] == 1.1)
+        self.assertTrue(feats[3] == 5.1)
+        self.assertTrue(feats[4] == 1.1)
 
     def test_decomposition(self):
         coords, colors, pcd = load_file("1.ply")
