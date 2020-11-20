@@ -42,7 +42,7 @@ if not os.path.isfile('1.ply'):
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_name', type=str, default='1.ply')
 parser.add_argument('--voxel_size', type=float, default=0.02)
-parser.add_argument('--batch_size', type=int, default=1)
+parser.add_argument('--batch_size', type=int, default=2)
 parser.add_argument('--max_kernel_size', type=int, default=7)
 
 
@@ -52,9 +52,8 @@ def load_file(file_name, voxel_size):
     feats = np.array(pcd.colors)
 
     quantized_coords = np.floor(coords / voxel_size)
-    inds = ME.utils.sparse_quantize(quantized_coords, return_index=True)
-
-    return quantized_coords[inds], feats[inds], pcd
+    unique_coords, unique_feats = ME.utils.sparse_quantize(quantized_coords, feats)
+    return unique_coords, unique_feats, pcd
 
 
 def generate_input_sparse_tensor(file_name, voxel_size=0.05, batch_size=1):
@@ -79,8 +78,7 @@ if __name__ == '__main__':
         config.file_name,
         voxel_size=config.voxel_size,
         batch_size=config.batch_size)
-
-    pool = ME.MinkowskiGlobalPooling(mode=ME.GlobalPoolingMode.AUTO)
+    pool = ME.MinkowskiGlobalAvgPooling()
 
     # Measure time
     print('Forward')
@@ -90,7 +88,7 @@ if __name__ == '__main__':
 
         # Feed-forward pass and get the prediction
         for i in range(20):
-            sinput = ME.SparseTensor(features, coords=coordinates).to(device)
+            sinput = ME.SparseTensor(features, coordinates=coordinates, device=device)
 
             timer.tic()
             soutput = pool(sinput)
