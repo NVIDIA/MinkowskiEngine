@@ -274,44 +274,12 @@ class CoordinateManager:
     def number_of_unique_batch_indices(self):
         return self._manager.origin_map_size()
 
-    # def get_batch_indices(self):
-    #     return self.CPPCoordsManager.getBatchIndices()
+    def get_unique_coordinate_map_key(self, tensor_stride: Union[int, list]):
+        """
+        Returns a unique coordinate_map_key for a given tensor stride.
 
-    # def set_origin_coords_key(self, coords_key: CoordsKey):
-    #     self.CPPCoordsManager.setOriginCoordsKey(coords_key.CPPCoordsKey)
-
-    # def get_row_indices_per_batch(self, coords_key, out_coords_key=None):
-    #     r"""Return a list of lists of row indices per batch.
-
-    #     The corresponding batch indices are accessible by `get_batch_indices`.
-
-    #     .. code-block:: python
-
-    #        sp_tensor = ME.SparseTensor(features, coords=coordinates)
-    #        row_indices = sp_tensor.coords_man.get_row_indices_per_batch(sp_tensor.coords_key)
-
-    #     """
-    #     assert isinstance(coords_key, CoordsKey)
-    #     if out_coords_key is None:
-    #         out_coords_key = CoordsKey(self.D)
-    #     return self.CPPCoordsManager.getRowIndicesPerBatch(
-    #         coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey
-    #     )
-
-    # def get_row_indices_at(self, coords_key, batch_index):
-    #     r"""Return an torch.LongTensor of row indices for the specified batch index
-
-    #     .. code-block:: python
-
-    #        sp_tensor = ME.SparseTensor(features, coords=coordinates)
-    #        row_indices = sp_tensor.coords_man.get_row_indices_at(sp_tensor.coords_key, batch_index)
-
-    #     """
-    #     assert isinstance(coords_key, CoordsKey)
-    #     out_coords_key = CoordsKey(self.D)
-    #     return self.CPPCoordsManager.getRowIndicesAtBatchIndex(
-    #         coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey, batch_index
-    #     )
+        """
+        return self._manager.get_random_string_id(tensor_stride, "")
 
     def get_kernel_map(
         self,
@@ -372,29 +340,6 @@ class CoordinateManager:
             sample_key = CoordinateMapKey(key.get_coordinate_size())
         return self._manager.interpolation_map_weight(samples, key, sample_key)
 
-    # def get_coords_map(self, in_key_or_tensor_strides, out_key_or_tensor_strides):
-    #     r"""Extract input coords indices that maps to output coords indices.
-
-    #     .. code-block:: python
-
-    #        sp_tensor = ME.SparseTensor(features, coords=coordinates)
-    #        out_sp_tensor = stride_2_conv(sp_tensor)
-
-    #        cm = sp_tensor.coords_man
-    #        # cm = out_sp_tensor.coords_man  # doesn't matter which tensor you pick
-    #        ins, outs = cm.get_coords_map(1,  # in stride
-    #                                      2)  # out stride
-    #        for i, o in zip(ins, outs):
-    #           print(f"{i} -> {o}")
-
-    #     """
-    #     in_coords_key = self._get_coordinate_map_key(in_key_or_tensor_strides)
-    #     out_coords_key = self._get_coordinate_map_key(out_key_or_tensor_strides)
-
-    #     return self.CPPCoordsManager.getCoordsMap(
-    #         in_coords_key.CPPCoordsKey, out_coords_key.CPPCoordsKey
-    #     )
-
     # def get_union_map(self, in_keys: List[CoordsKey], out_key: CoordsKey):
     #     r"""Generates a union of coordinate sets and returns the mapping from input sets to the new output coordinates.
 
@@ -424,15 +369,6 @@ class CoordinateManager:
     #         [key.CPPCoordsKey for key in in_keys], out_key.CPPCoordsKey
     #     )
 
-    # def get_coords_size_by_coords_key(self, coords_key):
-    #     assert isinstance(coords_key, CoordsKey)
-    #     return self.CPPCoordsManager.getCoordsSize(coords_key.CPPCoordsKey)
-
-    # def get_mapping_by_tensor_strides(self, in_tensor_strides, out_tensor_strides):
-    #     in_key = self._get_coordinate_map_key(in_tensor_strides)
-    #     out_key = self._get_coordinate_map_key(out_tensor_strides)
-    #     return self.get_mapping_by_coords_key(in_key, out_key)
-
     # def permute_label(
     #     self, label, max_label, target_tensor_stride, label_tensor_stride=1
     # ):
@@ -453,10 +389,6 @@ class CoordinateManager:
     #     counter = np.zeros((nrows, max_label), dtype="int32")
     #     np.add.at(counter, (permutation, label), 1)
     #     return torch.from_numpy(np.argmax(counter, 1))
-
-    # def print_diagnostics(self, coords_key: CoordsKey):
-    #     assert isinstance(coords_key, CoordsKey)
-    #     self.CPPCoordsManager.printDiagnostics(coords_key.CPPCoordsKey)
 
     def __repr__(self):
         return (

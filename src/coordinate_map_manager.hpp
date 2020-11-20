@@ -363,6 +363,20 @@ public:
     return m_coordinate_maps.find(key)->second.size();
   }
 
+  coordinate_map_key_type get_random_string_id(stride_type const &tensor_stride,
+                                               std::string string_id) {
+    coordinate_map_key_type key = std::make_pair(
+        tensor_stride, string_id.size() > 0 ? string_id + '-' + random_string(5)
+                                            : random_string(5));
+    while (m_coordinate_maps.find(key) != m_coordinate_maps.end()) {
+      key =
+          std::make_pair(tensor_stride, string_id.size() > 0
+                                            ? string_id + '-' + random_string(5)
+                                            : random_string(5));
+    }
+    return key;
+  }
+
 private:
   void coordinate_map_key_check(CoordinateMapKey const *p_map_key) const {
     ASSERT(p_map_key != nullptr, "Input coordinate map key not defined.");
@@ -382,20 +396,6 @@ private:
     std::string str(length, 0);
     std::generate_n(str.begin(), length, randchar);
     return str;
-  }
-
-  coordinate_map_key_type get_random_string_id(stride_type const &tensor_stride,
-                                               std::string string_id) {
-    coordinate_map_key_type key = std::make_pair(
-        tensor_stride, string_id.size() > 0 ? string_id + '-' + random_string(5)
-                                            : random_string(5));
-    while (m_coordinate_maps.find(key) != m_coordinate_maps.end()) {
-      key =
-          std::make_pair(tensor_stride, string_id.size() > 0
-                                            ? string_id + '-' + random_string(5)
-                                            : random_string(5));
-    }
-    return key;
   }
 
   kernel_map_key_type

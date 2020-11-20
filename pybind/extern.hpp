@@ -658,6 +658,9 @@ void initialize_non_templated_classes(py::module &m) {
       .def("set_key", (void (minkowski::CoordinateMapKey::*)(
                           minkowski::default_types::stride_type, std::string)) &
                           minkowski::CoordinateMapKey::set_key)
+      .def("set_key", (void (minkowski::CoordinateMapKey::*)(
+                          minkowski::coordinate_map_key_type const &)) &
+                          minkowski::CoordinateMapKey::set_key)
       .def("get_tensor_stride", &minkowski::CoordinateMapKey::get_tensor_stride)
       .def(py::self == py::self);
 }
@@ -683,6 +686,7 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("get_coordinate_map_keys", &manager_type::get_coordinate_map_keys)
       .def("size", py::overload_cast<minkowski::CoordinateMapKey const *>(
                        &manager_type::size, py::const_))
+      .def("get_random_string_id", &manager_type::get_random_string_id)
       .def("origin_map_size", &manager_type::origin_map_size)
       .def("origin_map", &manager_type::origin_map_th)
       .def("get_kernel_map", &manager_type::get_kernel_map)
