@@ -83,7 +83,6 @@ from MinkowskiTensorField import TensorField
 from MinkowskiCommon import (
     convert_to_int_tensor,
     MinkowskiModuleBase,
-    GlobalPoolingMode,
 )
 
 from MinkowskiCoordinateManager import (
