@@ -356,16 +356,14 @@ class Tensor:
         r"""
         This function is not recommended to be used directly.
         """
-        p = convert_to_int_list(p, self._D)
-        self.coordinate_map_key.set_tensor_stride(p)
+        raise SyntaxError("Direct modification of tensor_stride is not permitted")
 
     def _get_coordinates(self):
         return self._manager.get_coordinates(self.coordinate_map_key)
 
     @property
     def C(self):
-        r"""The alias of :attr:`coords`.
-        """
+        r"""The alias of :attr:`coords`."""
         return self.coordinates
 
     @property
@@ -393,8 +391,7 @@ class Tensor:
 
     @property
     def F(self):
-        r"""The alias of :attr:`feats`.
-        """
+        r"""The alias of :attr:`feats`."""
         return self._F
 
     @property
@@ -425,17 +422,17 @@ class Tensor:
     def decomposition_permutations(self):
         r"""Returns a list of indices per batch that where indices defines the permutation of the batch-wise decomposition.
 
-       Example::
+        Example::
 
-           >>> # coords, feats, labels are given. All follow the same order
-           >>> stensor = ME.SparseTensor(feats, coords)
-           >>> conv = ME.MinkowskiConvolution(in_channels=3, out_nchannel=3, kernel_size=3, dimension=3)
-           >>> list_of_featurs = stensor.decomposed_features
-           >>> list_of_permutations = stensor.decomposition_permutations
-           >>> # list_of_features == [feats[inds] for inds in list_of_permutations]
-           >>> list_of_decomposed_labels = [labels[inds] for inds in list_of_permutations]
-           >>> for curr_feats, curr_labels in zip(list_of_features, list_of_decomposed_labels):
-           >>>     loss += torch.functional.mse_loss(curr_feats, curr_labels)
+            >>> # coords, feats, labels are given. All follow the same order
+            >>> stensor = ME.SparseTensor(feats, coords)
+            >>> conv = ME.MinkowskiConvolution(in_channels=3, out_nchannel=3, kernel_size=3, dimension=3)
+            >>> list_of_featurs = stensor.decomposed_features
+            >>> list_of_permutations = stensor.decomposition_permutations
+            >>> # list_of_features == [feats[inds] for inds in list_of_permutations]
+            >>> list_of_decomposed_labels = [labels[inds] for inds in list_of_permutations]
+            >>> for curr_feats, curr_labels in zip(list_of_features, list_of_decomposed_labels):
+            >>>     loss += torch.functional.mse_loss(curr_feats, curr_labels)
         """
         return self._batchwise_row_indices
 
@@ -558,8 +555,7 @@ class Tensor:
 
     @property
     def dimension(self):
-        r"""Alias of attr:`D`
-        """
+        r"""Alias of attr:`D`"""
         return self._D
 
     @dimension.setter
@@ -568,8 +564,7 @@ class Tensor:
 
     @property
     def D(self):
-        r"""Alias of attr:`D`
-        """
+        r"""Alias of attr:`D`"""
         return self._D
 
     @D.setter
@@ -590,10 +585,6 @@ class Tensor:
     def double(self):
         self._F = self._F.double()
         return self
-
-    def set_tensor_stride(self, s):
-        ss = convert_to_int_list(s, self._D)
-        self.coordinate_map_key.set_tensor_stride(ss)
 
     def __repr__(self):
         return (

@@ -51,6 +51,14 @@ class SparseTensorTestCase(unittest.TestCase):
         input = SparseTensor(feats, coordinates=coords)
         print(input)
 
+    def test_tensor_stride(self):
+        print(f"{self.__class__.__name__}: test_tensor_stride SparseTensor")
+        feats = torch.FloatTensor(4, 16)
+        coords = torch.IntTensor(4, 4)
+        input = SparseTensor(feats, coordinates=coords, tensor_stride=4)
+        self.assertEqual(input.tensor_stride, [4, 4, 4])
+        print(input)
+
     def test_force_creation(self):
         print(f"{self.__class__.__name__}: test_force_creation")
         coords, feats, labels = data_loader(nchannel=2)

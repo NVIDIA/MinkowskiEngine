@@ -87,7 +87,7 @@ public:
     m_key_set = true;
   }
 
-  void set_key(coordinate_map_key_type key) {
+  void set_key(coordinate_map_key_type const &key) {
     ASSERT(m_coordinate_size - 1 == key.first.size(),
            "Invalid tensor_stride size:", key.first,
            "coordinate_size:", m_coordinate_size);

@@ -258,7 +258,7 @@ if "CC" in os.environ or "CXX" in os.environ:
     else:
         CC = os.environ["CC"]
     print(f"Using {CC} for c++ compilation")
-    if torch.__version__ < "1.7.0"
+    if torch.__version__ < "1.7.0":
         NVCC_FLAGS += [f"-ccbin={CC}"]
 else:
     print("Using the default compiler")
