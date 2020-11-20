@@ -325,7 +325,10 @@ class CoordinateManager:
         is_transpose=False,
         is_pool=False,
     ):
-        r"""Get kernel in-out maps for the specified coords keys or tensor strides."""
+        r"""Get kernel in-out maps for the specified coords keys or tensor strides.
+
+        returns dict{kernel_index: in_out_tensor} where in_out_tensor[0] is the input row indices that correspond to in_out_tensor[1], which is the row indices for output.
+        """
         # region type 1 iteration with kernel_size 1 is invalid
         if isinstance(kernel_size, torch.Tensor):
             assert (kernel_size > 0).all(), f"Invalid kernel size: {kernel_size}"

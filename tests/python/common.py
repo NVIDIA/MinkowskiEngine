@@ -29,16 +29,16 @@ import MinkowskiEngine as ME
 
 from urllib.request import urlretrieve
 
-try:
-    import open3d as o3d
-except ImportError:
-    raise ImportError("Please install open3d with `pip install open3d`.")
-
 if not os.path.isfile("1.ply"):
     urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", "1.ply")
 
 
 def load_file(file_name):
+    try:
+        import open3d as o3d
+    except ImportError:
+        raise ImportError("Please install open3d with `pip install open3d`.")
+
     pcd = o3d.io.read_point_cloud(file_name)
     coords = np.array(pcd.points)
     colors = np.array(pcd.colors)

@@ -129,7 +129,9 @@ class SparseTensor(Tensor):
             spmm = MinkowskiSPMMFunction()
             N = len(features)
             cols = torch.arange(
-                N, dtype=self.inverse_mapping.dtype, device=self.inverse_mapping.device,
+                N,
+                dtype=self.inverse_mapping.dtype,
+                device=self.inverse_mapping.device,
             )
             vals = torch.ones(N, dtype=features.dtype, device=features.device)
             size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
@@ -139,7 +141,11 @@ class SparseTensor(Tensor):
                 == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
             ):
                 nums = spmm.apply(
-                    self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),
+                    self.inverse_mapping,
+                    cols,
+                    vals,
+                    size,
+                    vals.reshape(N, 1),
                 )
                 features /= nums
         elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
@@ -462,10 +468,10 @@ class SparseTensor(Tensor):
             )
 
     def features_at_coordinates(self, query_coordinates: torch.Tensor):
-        r"""Extract features at the specified coordinate matrix.
+        r"""Extract features at the specified continuous coordinate matrix.
 
         Args:
-           :attr:`query_coordinates` (:attr:`torch.IntTensor`): a coordinate
+           :attr:`query_coordinates` (:attr:`torch.FloatTensor`): a coordinate
            matrix of size :math:`N \times (D + 1)` where :math:`D` is the size
            of the spatial dimension.
 
@@ -474,27 +480,23 @@ class SparseTensor(Tensor):
            size :math:`N \times D_F` where :math:`D_F` is the number of
            channels in the feature. For coordinates not present in the current
            sparse tensor, corresponding feature rows will be zeros.
-
-           :attr:`valid_rows` (:attr:`list`): a list of row indices that
-           contain valid values. The rest of the rows that are not found in the
-           `query_feats` will be 0.
-
         """
-        cm = self._manager
+        from MinkowskiInterpolation import MinkowskiInterpolationFunction
 
-        self_key = self.coordinate_map_key
-        query_key = cm.create_coordinate_map_key(query_coords)
+        assert (
+            self.dtype == query_coordinates.dtype
+        ), "Invalid query_coordinates dtype. use {self.dtype}"
 
-        self_indices, query_indices = cm.get_kernel_map(
-            self_key, query_key, kernel_size=1
-        )
-        query_feats = torch.zeros(
-            (len(query_coords), self._F.size(1)), dtype=self.dtype, device=self.device
-        )
-
-        if len(self_indices[0]) > 0:
-            query_feats[query_indices[0]] = self._F[self_indices[0]]
-        return query_feats, query_indices[0]
+        assert (
+            query_coordinates.device == self.device
+        ), "query coordinates device ({query_coordinates.device}) does not match the sparse tensor device ({self.device})."
+        return MinkowskiInterpolationFunction().apply(
+            self._F,
+            query_coordinates,
+            self.coordinate_map_key,
+            None,
+            self.coordinate_manager,
+        )[0]
 
     __slots__ = (
         "_C",
@@ -515,8 +517,7 @@ def _get_coordinate_map_key(
     tensor_stride: StrideType = 1,
     expand_coordinates: bool = False,
 ):
-    r"""Returns the coordinates map key.
-    """
+    r"""Returns the coordinates map key."""
     if coordinates is not None and not expand_coordinates:
         assert isinstance(coordinates, (CoordinateMapKey, torch.Tensor, SparseTensor))
         if isinstance(coordinates, torch.Tensor):
