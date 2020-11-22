@@ -155,6 +155,7 @@ class TestConvolution(unittest.TestCase):
                     input.F,
                     conv.kernel,
                     conv.kernel_generator,
+                    conv.convolution_mode,
                     input.coordinate_map_key,
                     None,
                     input.coordinate_manager,
@@ -193,6 +194,7 @@ class TestConvolution(unittest.TestCase):
                     input.F,
                     conv.kernel,
                     conv.kernel_generator,
+                    conv.convolution_mode,
                     input.coordinate_map_key,
                     output.coordinate_map_key,
                     input.coordinate_manager,
@@ -229,6 +231,59 @@ class TestConvolution(unittest.TestCase):
         conv.kernel[:] = torch.FloatTensor([[[1, 2], [2, 1]], [[0, 1], [1, 0]]])
         output = conv(input)
         print(output)
+
+
+class TestConvolutionMode(unittest.TestCase):
+    def test_gpu(self):
+        print(f"{self.__class__.__name__}: test_gpu")
+        if not torch.cuda.is_available():
+            return
+        in_channels, out_channels, D = 3, 2, 2
+        coords, feats, labels = data_loader(in_channels, batch_size=20)
+        feats = feats.double()
+        feats.requires_grad_()
+        device = torch.device("cuda")
+        conv = (
+            MinkowskiConvolution(
+                in_channels,
+                out_channels,
+                kernel_size=2,
+                stride=1,
+                bias=False,
+                dimension=D,
+            )
+            .to(device)
+            .double()
+        )
+        # Initialize context
+        for mode in [_C.ConvolutionMode.DIRECT_GEMM, _C.ConvolutionMode.COPY_GEMM]:
+            conv.convolution_mode = mode
+            input = SparseTensor(feats, coordinates=coords, device=device)
+            print(mode, input.F.numel(), len(input), input)
+            output = conv(input)
+            print(output)
+
+            # Check backward
+            fn = MinkowskiConvolutionFunction()
+
+            grad = output.F.clone().zero_()
+            grad[0] = 1
+            output.F.backward(grad)
+
+            self.assertTrue(
+                gradcheck(
+                    fn,
+                    (
+                        input.F,
+                        conv.kernel,
+                        conv.kernel_generator,
+                        conv.convolution_mode,
+                        input.coordinate_map_key,
+                        None,
+                        input.coordinate_manager,
+                    ),
+                )
+            )
 
 
 class TestConvolutionTranspose(unittest.TestCase):
@@ -283,6 +338,7 @@ class TestConvolutionTranspose(unittest.TestCase):
                     tr_input.F,
                     conv_tr.kernel,
                     conv_tr.kernel_generator,
+                    conv_tr.convolution_mode,
                     tr_input.coordinate_map_key,
                     output.coordinate_map_key,
                     tr_input.coordinate_manager,
@@ -323,6 +379,7 @@ class TestConvolutionTranspose(unittest.TestCase):
                     input.F,
                     conv_tr.kernel,
                     conv_tr.kernel_generator,
+                    conv_tr.convolution_mode,
                     input.coordinate_map_key,
                     output.coordinate_map_key,
                     input.coordinate_manager,
@@ -453,6 +510,7 @@ class TestGenerativeConvolutionTranspose(unittest.TestCase):
                     tr_input.F,
                     conv_tr.kernel,
                     conv_tr.kernel_generator,
+                    conv_tr.convolution_mode,
                     tr_input.coordinate_map_key,
                     output.coordinate_map_key,
                     tr_input.coordinate_manager,
@@ -493,6 +551,7 @@ class TestGenerativeConvolutionTranspose(unittest.TestCase):
                     input.F,
                     conv_tr.kernel,
                     conv_tr.kernel_generator,
+                    conv_tr.convolution_mode,
                     input.coordinate_map_key,
                     output.coordinate_map_key,
                     input.coordinate_manager,
@@ -502,56 +561,121 @@ class TestGenerativeConvolutionTranspose(unittest.TestCase):
 
 
 class TestPCD(unittest.TestCase):
-    def test_conv(self):
-        IC, OC = 3, 16
+    def test_forward(self):
         coords, colors, pcd = load_file("1.ply")
-        kernel_size = [3, 3, 3]
-        kernel_stride = [2, 2, 2]
-        kernel_dilation = [1, 1, 1]
+        device = "cuda"
 
-        # size, in, out
-        kernel = torch.rand(np.prod(kernel_size), IC, OC).to(0)
-        kernel_generator = KernelGenerator(
-            kernel_size=kernel_size,
-            stride=kernel_stride,
-            dilation=kernel_dilation,
-            expand_coordinates=False,
-            dimension=3,
-        )
+        X = []
+        Y = []
+        W = []
+        for IC in [3, 8, 16, 24, 32, 48, 64, 96, 128]:
+            for OC in [3, 8, 16, 24, 32, 48, 64, 96, 128, 192, 256]:
+                for batch_size in [1, 5, 10, 15, 20]:
+                    for voxel_size in [0.2, 0.1, 0.075, 0.05, 0.025]:
+                        min_times = []
+                        for mode in [
+                            _C.ConvolutionMode.DIRECT_GEMM,
+                            _C.ConvolutionMode.COPY_GEMM,
+                        ]:
+                            min_time = 100000
+                            dcoords = torch.from_numpy(
+                                np.floor(coords / voxel_size)
+                            ).int()
+                            bcoords = batched_coordinates(
+                                [dcoords for i in range(batch_size)]
+                            )
+                            in_feats = torch.rand(len(bcoords), IC).to(0)
+                            sinput = SparseTensor(
+                                in_feats, coordinates=bcoords, device=device
+                            )
+                            conv = MinkowskiConvolution(
+                                in_channels=IC,
+                                out_channels=OC,
+                                kernel_size=3,
+                                stride=2,
+                                convolution_mode=mode,
+                                dimension=3,
+                            ).to(device)
+                            soutput = conv(sinput)
+                            loss = soutput.F.sum()
+                            for i in range(10):
+                                stime = time.time()
+                                loss.backward()
+                                min_time = min(time.time() - stime, min_time)
+                            min_times.append(min_time)
 
-        for batch_size in [1, 5, 10, 20, 40]:
-            for voxel_size in [0.05, 0.035, 0.02]:
-                min_time = 100000
+                        X.append(
+                            [
+                                IC,
+                                OC,
+                                len(sinput),
+                                len(soutput),
+                            ]
+                        )
+                        Y.append(np.argmin(min_times))
+                        W.append(np.abs(min_times[0] - min_times[1]))
+                        print(X[-1], Y[-1], W[-1])
 
-                dcoords = torch.from_numpy(np.floor(coords / voxel_size)).int()
-                bcoords = batched_coordinates([dcoords for i in range(batch_size)])
+        import pickle as pkl
 
-                for i in range(10):
-                    manager = _C.CoordinateMapManagerGPU_c10()
+        with open("forward-speed.pkl", "wb") as f:
+            pkl.dump([X, Y, W], f)
 
-                    # batch insert
-                    in_key, (unique_map, inverse_map) = manager.insert_and_map(
-                        bcoords.to(0), [1, 1, 1], ""
-                    )
-                    in_feats = torch.rand(manager.size(in_key), IC).to(0)
-                    out_key = _C.CoordinateMapKey(4)
+    def test_backward(self):
+        coords, colors, pcd = load_file("1.ply")
+        device = "cuda"
 
-                    stime = time.time()
-                    out_features = _C.ConvolutionForwardGPU(
-                        in_feats,
-                        kernel,
-                        kernel_generator.kernel_size,
-                        kernel_generator.kernel_stride,
-                        kernel_generator.kernel_dilation,
-                        kernel_generator.region_type,
-                        kernel_generator.region_offsets,
-                        kernel_generator.expand_coordinates,
-                        in_key,
-                        out_key,
-                        manager,
-                    )
-                    min_time = min(time.time() - stime, min_time)
+        X = []
+        Y = []
+        W = []
+        for IC in [8, 16, 24, 32, 48, 64, 96, 128]:
+            for OC in [8, 16, 24, 32, 48, 64, 96, 128, 192, 256]:
+                for batch_size in [1, 5, 10, 15, 20]:
+                    for voxel_size in [0.2, 0.1, 0.075, 0.05, 0.025]:
+                        min_times = []
+                        for mode in [
+                            _C.ConvolutionMode.DIRECT_GEMM,
+                            _C.ConvolutionMode.COPY_GEMM,
+                        ]:
+                            min_time = 100000
+                            dcoords = torch.from_numpy(
+                                np.floor(coords / voxel_size)
+                            ).int()
+                            bcoords = batched_coordinates(
+                                [dcoords for i in range(batch_size)]
+                            )
+                            in_feats = torch.rand(len(bcoords), IC).to(0)
+                            sinput = SparseTensor(
+                                in_feats, coordinates=bcoords, device=device
+                            )
+                            conv = MinkowskiConvolution(
+                                in_channels=IC,
+                                out_channels=OC,
+                                kernel_size=3,
+                                stride=2,
+                                convolution_mode=mode,
+                                dimension=3,
+                            ).to(device)
+                            soutput = conv(sinput)
+                            loss = soutput.F.sum()
+                            for i in range(5):
+                                stime = time.time()
+                                loss.backward()
+                                min_time = min(time.time() - stime, min_time)
+                            min_times.append(min_time)
 
-                print(
-                    f"{batch_size}\t{manager.size(in_key)}\t{manager.size(out_key)}\t{min_time}"
-                )
+                        X.append(
+                            [
+                                IC,
+                                OC,
+                                len(sinput),
+                                len(soutput),
+                            ]
+                        )
+                        Y.append(np.argmin(min_times))
+                        W.append(np.abs(min_times[0] - min_times[1]))
+                        print(X[-1], Y[-1], W[-1])
+        import pickle as pkl
+
+        with open("backward-speed.pkl", "wb") as f:
+            pkl.dump([X, Y, W], f)

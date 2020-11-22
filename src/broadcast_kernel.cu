@@ -29,7 +29,7 @@
 
 #include "allocators.cuh"
 #include "broadcast_kernel.cuh"
-#include "math_functions.hpp"
+#include "math_functions.cuh"
 
 namespace minkowski {
 

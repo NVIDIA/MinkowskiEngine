@@ -133,6 +133,9 @@ if __name__ == "__main__":
         )
 
     print("Backward")
+    sinput = ME.SparseTensor(
+        features.to(device), coordinates=coordinates.to(device)
+    )
     for k, conv in all_convs.items():
         timer = Timer()
         sinput._F = torch.rand(len(sinput), k[1]).to(device)
