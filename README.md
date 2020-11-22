@@ -291,6 +291,11 @@ For generative transposed convolution, please cite:
 }
 ```
 
+
+## Unittest
+
+For unittests and gradcheck, use torch >= 1.7
+
 ## Projects using Minkowski Engine
 
 Please feel free to update [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Usage) to add your projects!
