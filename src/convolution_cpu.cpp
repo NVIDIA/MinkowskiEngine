@@ -49,6 +49,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       RegionType::Type const region_type,                //
                       at::Tensor const &offset,                          //
                       bool const expand_coordinates,                     //
+                      ConvolutionMode::Type const convolution_mode,      //
                       CoordinateMapKey *p_in_map_key,                    //
                       CoordinateMapKey *p_out_map_key,                   //
                       cpu_manager_type<coordinate_type> *p_map_manager) {
@@ -141,6 +142,7 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
                        default_types::stride_type const &kernel_dilation, //
                        RegionType::Type const region_type,                //
                        at::Tensor const &offset,                          //
+                       ConvolutionMode::Type const convolution_mode,      //
                        CoordinateMapKey *p_in_map_key,                    //
                        CoordinateMapKey *p_out_map_key,                   //
                        cpu_manager_type<coordinate_type> *p_map_manager) {
@@ -206,6 +208,7 @@ template at::Tensor ConvolutionForwardCPU<default_types::dcoordinate_type>(
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
     bool const expand_coordinates,                     //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);
@@ -220,6 +223,7 @@ ConvolutionBackwardCPU<default_types::dcoordinate_type>(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offsets,                         //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<default_types::dcoordinate_type> *p_map_manager);

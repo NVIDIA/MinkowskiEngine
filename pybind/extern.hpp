@@ -59,6 +59,7 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
                       RegionType::Type const region_type,                //
                       at::Tensor const &offset,                          //
                       bool const expand_coordinates,                     //
+                      ConvolutionMode::Type const convolution_mode,      //
                       CoordinateMapKey *p_in_map_key,                    //
                       CoordinateMapKey *p_out_map_key,                   //
                       cpu_manager_type<coordinate_type> *p_map_manager);
@@ -73,6 +74,7 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
                        default_types::stride_type const &kernel_dilation, //
                        RegionType::Type const region_type,                //
                        at::Tensor const &offsets,                         //
+                      ConvolutionMode::Type const convolution_mode,      //
                        CoordinateMapKey *p_in_map_key,                    //
                        CoordinateMapKey *p_out_map_key,                   //
                        cpu_manager_type<coordinate_type> *p_map_manager);
@@ -89,6 +91,7 @@ at::Tensor ConvolutionForwardGPU(
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
     bool const expand_coordinates,                     //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
@@ -104,6 +107,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
@@ -122,6 +126,7 @@ at::Tensor ConvolutionTransposeForwardCPU(
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
     bool const expand_coordinates,                     //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<coordinate_type> *p_map_manager);
@@ -136,6 +141,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardCPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offsets,                         //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     cpu_manager_type<coordinate_type> *p_map_manager);
@@ -152,6 +158,7 @@ at::Tensor ConvolutionTransposeForwardGPU(
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
     bool const expand_coordinates,                     //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
@@ -167,6 +174,7 @@ std::pair<at::Tensor, at::Tensor> ConvolutionTransposeBackwardGPU(
     default_types::stride_type const &kernel_dilation, //
     RegionType::Type const region_type,                //
     at::Tensor const &offset,                          //
+    ConvolutionMode::Type const convolution_mode,      //
     CoordinateMapKey *p_in_map_key,                    //
     CoordinateMapKey *p_out_map_key,                   //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
@@ -644,6 +652,15 @@ void initialize_non_templated_classes(py::module &m) {
              minkowski::BroadcastMode::Type::ELEMENTWISE_ADDITON)
       .value("ELEMENTWISE_MULTIPLICATION",
              minkowski::BroadcastMode::Type::ELEMENTWISE_MULTIPLICATION)
+      .export_values();
+
+  py::enum_<minkowski::ConvolutionMode::Type>(m, "ConvolutionMode")
+      .value("DEFAULT",
+             minkowski::ConvolutionMode::Type::DEFAULT)
+      .value("DIRECT_GEMM",
+             minkowski::ConvolutionMode::Type::DIRECT_GEMM)
+      .value("COPY_GEMM",
+             minkowski::ConvolutionMode::Type::COPY_GEMM)
       .export_values();
 
   // Classes

@@ -25,7 +25,7 @@
  * of the code.
  */
 #include "gpu.cuh"
-#include "math_functions.hpp"
+#include "math_functions.cuh"
 
 #include <cusparse.h>
 

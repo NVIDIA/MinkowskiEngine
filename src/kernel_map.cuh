@@ -260,6 +260,8 @@ public:
     return nmap;
   }
 
+  size_type volume() const { return m_kernel_size_map.size(); }
+
   size_type max_size() const {
     size_type nmap = 0;
     for (auto const &k : m_kernel_size_map) {

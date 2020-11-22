@@ -161,6 +161,15 @@ enum Type {
 };
 }
 
+namespace ConvolutionMode {
+enum Type {
+  DEFAULT,
+  DIRECT_GEMM,
+  COPY_GEMM,
+};
+}
+
+
 /* Key for KernelMap
  *
  * A tuple of (CoordinateMapKey (input),

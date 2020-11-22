@@ -31,7 +31,7 @@
 
 #include "gpu.cuh"
 #include "kernel_map.cuh"
-#include "math_functions.hpp"
+#include "math_functions.cuh"
 #include "types.hpp"
 
 namespace minkowski {

@@ -25,7 +25,7 @@
  * of the code.
  */
 #include "allocators.cuh"
-#include "math_functions.hpp"
+#include "math_functions.cuh"
 
 namespace minkowski {
 
@@ -193,4 +193,5 @@ template void sort_coo_gpu<detail::default_allocator<char>>(
 template void sort_coo_gpu<detail::c10_allocator<char>>(
     cusparseHandle_t handle, const int m, const int n, const int nnz,
     int *d_coo_row, int *d_coo_col, detail::c10_allocator<char> &allocator);
+
 } // end namespace minkowski
