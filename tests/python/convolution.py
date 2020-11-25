@@ -40,8 +40,11 @@ from MinkowskiEngine import (
     KernelGenerator,
 )
 
-from tests.python.common import data_loader, load_file, batched_coordinates
+from MinkowskiEngine.utils import batched_coordinates
+from tests.python.common import data_loader, load_file
 from utils.gradcheck import gradcheck
+
+LEAK_TEST_ITER = 10000000
 
 
 class TestConvolution(unittest.TestCase):
@@ -177,8 +180,18 @@ class TestConvolution(unittest.TestCase):
         conv = conv.double()
         output = conv(input)
         print(output)
+
         self.assertEqual(input.coordinate_map_key.get_tensor_stride(), [1, 1])
         self.assertEqual(output.coordinate_map_key.get_tensor_stride(), [2, 2])
+
+        if torch.cuda.is_available():
+            input_gpu = SparseTensor(feats, coordinates=coords, device="cuda")
+            conv_gpu = conv.cuda()
+            output_gpu = conv_gpu(input_gpu)
+            self.assertTrue(torch.allclose(output_gpu.F.var(0).cpu(), output.F.var(0)))
+            self.assertTrue(
+                torch.allclose(output_gpu.F.mean(0).cpu(), output.F.mean(0))
+            )
 
         # kernel_map = input.coords_man.get_kernel_map(
         #     1, 2, stride=2, kernel_size=3)
@@ -187,6 +200,7 @@ class TestConvolution(unittest.TestCase):
         # Check backward
         fn = MinkowskiConvolutionFunction()
 
+        conv = conv.cpu()
         self.assertTrue(
             gradcheck(
                 fn,
@@ -202,14 +216,9 @@ class TestConvolution(unittest.TestCase):
             )
         )
 
-        if torch.cuda.is_available():
-            input = SparseTensor(feats, coordinates=coords, device="cuda")
-            conv = conv.cuda()
-            output_gpu = conv(input)
-            self.assertTrue(torch.allclose(output_gpu.F.var(0).cpu(), output.F.var(0)))
-            self.assertTrue(
-                torch.allclose(output_gpu.F.mean(0).cpu(), output.F.mean(0))
-            )
+        for i in range(LEAK_TEST_ITER):
+            input = SparseTensor(feats, coordinates=coords)
+            conv(input).F.sum().backward()
 
     def test_analytic(self):
         print(f"{self.__class__.__name__}: test")
