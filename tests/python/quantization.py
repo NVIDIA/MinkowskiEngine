@@ -30,7 +30,6 @@ import MinkowskiEngineBackend._C as MEB
 
 
 class TestQuantization(unittest.TestCase):
-
     def test(self):
         N = 16575
         ignore_label = 255
@@ -45,25 +44,43 @@ class TestQuantization(unittest.TestCase):
         coords[:3] = 0
         labels[:3] = 2
         quantized_coords, quantized_feats, quantized_labels = sparse_quantize(
-            coords.astype(np.int32), feats, labels, ignore_label)
+            coords.astype(np.int32), feats, labels, ignore_label
+        )
 
         print(quantized_labels)
+
+    def test_device(self):
+        N = 16575
+        coords = np.random.rand(N, 3) * 100
+
+        # Make duplicates
+        coords[:3] = 0
+        unique_map = sparse_quantize(
+            coords.astype(np.int32), return_maps_only=True, device="cpu"
+        )
+
+        print(len(unique_map))
+        unique_map = sparse_quantize(
+            coords.astype(np.int32), return_maps_only=True, device="cuda"
+        )
+        print(len(unique_map))
 
     def test_mapping(self):
         N = 16575
         coords = (np.random.rand(N, 3) * 100).astype(np.int32)
         mapping, inverse_mapping = MEB.quantize_np(coords)
-        print('N unique:', len(mapping), 'N:', N)
+        print("N unique:", len(mapping), "N:", N)
         self.assertTrue((coords == coords[mapping][inverse_mapping]).all())
         self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
         coords = torch.from_numpy(coords)
         mapping, inverse_mapping = MEB.quantize_th(coords)
-        print('N unique:', len(mapping), 'N:', N)
+        print("N unique:", len(mapping), "N:", N)
         self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
         index, reverse_index = sparse_quantize(
-            coords, return_index=True, return_inverse=True)
+            coords, return_index=True, return_inverse=True
+        )
         self.assertTrue((coords == coords[mapping[inverse_mapping]]).all())
 
     def test_label(self):
@@ -81,18 +98,16 @@ class TestQuantization(unittest.TestCase):
         labels[:3] = 2
 
         mapping, colabels = MEB.quantize_label_np(coords, labels, ignore_label)
-        print('Unique labels and counts:',
-              np.unique(colabels, return_counts=True))
-        print('N unique:', len(mapping), 'N:', N)
+        print("Unique labels and counts:", np.unique(colabels, return_counts=True))
+        print("N unique:", len(mapping), "N:", N)
 
         mapping, colabels = MEB.quantize_label_th(
-            torch.from_numpy(coords), torch.from_numpy(labels), ignore_label)
-        print('Unique labels and counts:',
-              np.unique(colabels, return_counts=True))
-        print('N unique:', len(mapping), 'N:', N)
+            torch.from_numpy(coords), torch.from_numpy(labels), ignore_label
+        )
+        print("Unique labels and counts:", np.unique(colabels, return_counts=True))
+        print("N unique:", len(mapping), "N:", N)
 
-        qcoords, qfeats, qlabels = sparse_quantize(coords, feats, labels,
-                                                   ignore_label)
+        qcoords, qfeats, qlabels = sparse_quantize(coords, feats, labels, ignore_label)
         self.assertTrue(len(mapping) == len(qcoords))
 
     def test_collision(self):
@@ -100,7 +115,8 @@ class TestQuantization(unittest.TestCase):
         labels = np.array([0, 1, 2, 3], dtype=np.int32)
 
         unique_coords, colabels = sparse_quantize(
-            coords, labels=labels, ignore_label=255)
+            coords, labels=labels, ignore_label=255
+        )
         self.assertTrue(len(unique_coords) == 2)
         self.assertTrue([0, 0] in unique_coords)
         self.assertTrue([0, 1] in unique_coords)
@@ -111,18 +127,16 @@ class TestQuantization(unittest.TestCase):
         discrete_coords = sparse_quantize(coords)
         self.assertTrue((discrete_coords == unique_coords).all())
         discrete_coords = sparse_quantize(torch.from_numpy(coords))
-        self.assertTrue(
-            (discrete_coords == torch.from_numpy(unique_coords)).all())
+        self.assertTrue((discrete_coords == torch.from_numpy(unique_coords)).all())
 
     def test_feature_average(self):
         coords = torch.IntTensor([[0, 0], [0, 0], [0, 0], [0, 1]])
         feats = torch.FloatTensor([[0, 1, 2, 3]]).t()
         mapping, inverse_mapping = MEB.quantize_th(coords)
         # inverse_mapping is the output map , range is the out map
-        avg_feat = MEB.quantization_average_features(feats,
-                                                     torch.arange(len(feats)),
-                                                     inverse_mapping,
-                                                     len(mapping), 0)
+        avg_feat = MEB.quantization_average_features(
+            feats, torch.arange(len(feats)), inverse_mapping, len(mapping), 0
+        )
         self.assertTrue(1 in avg_feat)
         self.assertTrue(3 in avg_feat)
 
@@ -131,10 +145,9 @@ class TestQuantization(unittest.TestCase):
         feats = torch.randn((1000, 10), dtype=torch.float)
         res = sparse_quantize(coords, feats, quantization_size=0.1)
         print(res[0].shape, res[1].shape)
-        res = sparse_quantize(
-            coords.numpy(), feats.numpy(), quantization_size=0.1)
+        res = sparse_quantize(coords.numpy(), feats.numpy(), quantization_size=0.1)
         print(res[0].shape, res[1].shape)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

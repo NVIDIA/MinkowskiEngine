@@ -127,7 +127,9 @@ def sparse_quantize(
     ignore_label=-100,
     return_index=False,
     return_inverse=False,
+    return_maps_only=False,
     quantization_size=None,
+    device="cpu",
 ):
     r"""Given coordinates, and features (optionally labels), the function
     generates quantized (voxelized) coordinates.
@@ -159,6 +161,18 @@ def sparse_quantize(
         :attr:`return_inverse` (:attr:`bool`, optional): set True if you want
         the indices that can recover the discretized original coordinates.
         False by default. `return_index` must be True when `return_reverse` is True.
+
+        :attr:`return_maps_only` (:attr:`bool`, optional): if set, return the
+        unique_map or optionally inverse map, but not the coordinates. Can be
+        used if you don't care about final coordinates or if you use
+        device==cuda and you don't need coordinates on GPU. This returns either
+        unique_map alone or (unique_map, inverse_map) if return_inverse is set.
+
+        :attr:`quantization_size` (attr:`float`, optional): if set, will use
+        the quanziation size to define the smallest distance between
+        coordinates.
+
+        :attr:`device` (attr:`str`, optional): Either 'cpu' or 'cuda'.
 
         Example::
 
@@ -194,9 +208,10 @@ def sparse_quantize(
     use_label = labels is not None
     use_feat = feats is not None
 
-    assert coords.ndim == 2, (
-        "The coordinates must be a 2D matrix. The shape of the input is "
-        + str(coords.shape)
+    assert (
+        coords.ndim == 2
+    ), "The coordinates must be a 2D matrix. The shape of the input is " + str(
+        coords.shape
     )
 
     if return_inverse:
@@ -240,9 +255,18 @@ def sparse_quantize(
     else:
         discrete_coords = discrete_coords.int()
 
+    assert device in ["cpu", "cuda"], "Invalid device. ['cpu', 'cuda']"
+
     # Return values accordingly
     if use_label:
         unique_map, colabels = quantize_label(discrete_coords, labels, ignore_label)
+
+        assert (
+            device == "cpu"
+        ), "CUDA accelerated quantization with labels not supported currently"
+
+        if return_maps_only:
+            return unique_map
 
         if return_index:
             return discrete_coords[unique_map], unique_map, colabels
@@ -251,9 +275,29 @@ def sparse_quantize(
                 return discrete_coords[unique_map], feats[unique_map], colabels
             else:
                 return discrete_coords[unique_map], colabels
-
     else:
-        unique_map, inverse_map = quantize(discrete_coords)
+        if device == "cpu":
+            manager = MEB.CoordinateMapManagerCPU()
+        elif device == "cuda":
+            manager = MEB.CoordinateMapManagerGPU_c10()
+        else:
+            raise ValueError("Invalid device")
+
+        tensor_stride = [1 for i in range(discrete_coords.shape[1] - 1)]
+        discrete_coords = (
+            discrete_coords.to(device)
+            if isinstance(discrete_coords, torch.Tensor)
+            else torch.from_numpy(discrete_coords).to(device)
+        )
+        _, (unique_map, inverse_map) = manager.insert_and_map(
+            discrete_coords, tensor_stride, ""
+        )
+        if return_maps_only:
+            if return_inverse:
+                return unique_map, inverse_map
+            else:
+                return unique_map
+
         if return_index:
             if return_inverse:
                 return discrete_coords[unique_map], unique_map, inverse_map
@@ -261,6 +305,10 @@ def sparse_quantize(
                 return discrete_coords[unique_map], unique_map
         else:
             if use_feat:
+                if device == "cuda":
+                    assert isinstance(
+                        feats, torch.Tensor
+                    ), "For device==cuda, feature must be a torch Tensor"
                 return discrete_coords[unique_map], feats[unique_map]
             else:
                 return discrete_coords[unique_map]
