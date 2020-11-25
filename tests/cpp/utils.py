@@ -43,25 +43,3 @@ def load_file(file_name):
     coords = np.array(pcd.points)
     colors = np.array(pcd.colors)
     return coords, colors, pcd
-
-
-def batched_coordinates(coords):
-    D = np.unique(np.array([cs.shape[1] for cs in coords]))
-    assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
-    D = D[0]
-    N = np.array([len(cs) for cs in coords]).sum()
-    bcoords = torch.IntTensor(N, D + 1)  # uninitialized batched coords
-
-    s = 0
-    for batch_id, coord in enumerate(coords):
-        if isinstance(coord, np.ndarray):
-            coord = torch.from_numpy(coord)
-        else:
-            assert isinstance(coord, torch.Tensor), \
-                "Coords must be of type numpy.ndarray or torch.Tensor"
-        cn = coord.shape[0]
-        coord = coord.int()
-        bcoords[s:s + cn, 1:] = coord
-        bcoords[s:s + cn, 0] = batch_id
-        s += cn
-    return bcoords
