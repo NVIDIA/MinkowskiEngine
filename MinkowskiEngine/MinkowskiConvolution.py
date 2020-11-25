@@ -60,13 +60,13 @@ class MinkowskiConvolutionFunction(Function):
 
         ctx.input_features = input_features
         ctx.kernel_weights = kernel_weights
-        ctx.misc = (
+        ctx.misc = [
             kernel_generator,
             convolution_mode,
             in_coordinate_map_key,
             out_coordinate_map_key,
             coordinate_manager,
-        )
+        ]
 
         fw_fn = get_minkowski_function("ConvolutionForward", input_features)
         return fw_fn(

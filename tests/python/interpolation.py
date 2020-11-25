@@ -35,13 +35,21 @@ from MinkowskiEngine import (
 from utils.gradcheck import gradcheck
 from tests.python.common import data_loader
 
+LEAK_TEST_ITER = 10000000
+
 
 class TestInterpolation(unittest.TestCase):
     def test(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels, batch_size=2)
         feats = feats.double()
-        tfield = torch.Tensor([[0, 0.1, 2.7], [0, 0.3, 2], [1, 1.5, 2.5],]).double()
+        tfield = torch.Tensor(
+            [
+                [0, 0.1, 2.7],
+                [0, 0.3, 2],
+                [1, 1.5, 2.5],
+            ]
+        ).double()
         feats.requires_grad_()
         input = SparseTensor(feats, coordinates=coords)
         interp = MinkowskiInterpolation(return_kernel_map=True, return_weights=False)
@@ -49,20 +57,45 @@ class TestInterpolation(unittest.TestCase):
         print(input)
         print(output)
 
-        output.sum().backward()
         # Check backward
+        output.sum().backward()
         fn = MinkowskiInterpolationFunction()
         self.assertTrue(
             gradcheck(
-                fn, (input.F, tfield, input.coordinate_map_key, None, input._manager,),
+                fn,
+                (
+                    input.F,
+                    tfield,
+                    input.coordinate_map_key,
+                    None,
+                    input._manager,
+                ),
             )
         )
+
+        for i in range(LEAK_TEST_ITER):
+            input = SparseTensor(feats, coordinates=coords)
+            tfield = torch.DoubleTensor(
+                [
+                    [0, 0.1, 2.7],
+                    [0, 0.3, 2],
+                    [1, 1.5, 2.5],
+                ],
+            )
+            output, _ = interp(input, tfield)
+            output.sum().backward()
 
     def test_gpu(self):
         in_channels, D = 2, 2
         coords, feats, labels = data_loader(in_channels, batch_size=2)
         feats = feats.double()
-        tfield = torch.cuda.DoubleTensor([[0, 0.1, 2.7], [0, 0.3, 2], [1, 1.5, 2.5],],)
+        tfield = torch.cuda.DoubleTensor(
+            [
+                [0, 0.1, 2.7],
+                [0, 0.3, 2],
+                [1, 1.5, 2.5],
+            ],
+        )
         feats.requires_grad_()
         input = SparseTensor(feats, coordinates=coords, device="cuda")
         interp = MinkowskiInterpolation()
@@ -75,13 +108,38 @@ class TestInterpolation(unittest.TestCase):
         fn = MinkowskiInterpolationFunction()
         self.assertTrue(
             gradcheck(
-                fn, (input.F, tfield, input.coordinate_map_key, None, input._manager,),
+                fn,
+                (
+                    input.F,
+                    tfield,
+                    input.coordinate_map_key,
+                    None,
+                    input._manager,
+                ),
             )
         )
 
+        for i in range(LEAK_TEST_ITER):
+            input = SparseTensor(feats, coordinates=coords, device="cuda")
+            tfield = torch.cuda.DoubleTensor(
+                [
+                    [0, 0.1, 2.7],
+                    [0, 0.3, 2],
+                    [1, 1.5, 2.5],
+                ],
+            )
+            output = interp(input, tfield)
+            output.sum().backward()
+
     def test_strided_tensor(self):
         in_channels, D = 2, 2
-        tfield = torch.Tensor([[0, 0.1, 2.7], [0, 0.3, 2], [1, 1.5, 2.5],])
+        tfield = torch.Tensor(
+            [
+                [0, 0.1, 2.7],
+                [0, 0.3, 2],
+                [1, 1.5, 2.5],
+            ]
+        )
 
         coords = torch.IntTensor([[0, 0, 2], [0, 0, 4], [0, 2, 4]])
         feats = torch.rand(len(coords), 1)

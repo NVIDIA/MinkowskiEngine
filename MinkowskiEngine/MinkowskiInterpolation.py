@@ -58,10 +58,8 @@ class MinkowskiInterpolationFunction(Function):
             tfield_key,
             coordinate_manager._manager,
         )
+        ctx.save_for_backward(in_map, out_map, weights)
         ctx.inputs = (
-            in_map,
-            out_map,
-            weights,
             in_coordinate_map_key,
             coordinate_manager,
         )
@@ -74,12 +72,11 @@ class MinkowskiInterpolationFunction(Function):
         grad_out_feat = grad_out_feat.contiguous()
         bw_fn = get_minkowski_function("InterpolationBackward", grad_out_feat)
         (
-            in_map,
-            out_map,
-            weights,
             in_coordinate_map_key,
             coordinate_manager,
         ) = ctx.inputs
+        in_map, out_map, weights = ctx.saved_tensors
+
         grad_in_feat = bw_fn(
             grad_out_feat,
             in_map,
@@ -92,8 +89,7 @@ class MinkowskiInterpolationFunction(Function):
 
 
 class MinkowskiInterpolation(MinkowskiModuleBase):
-    r"""Sample linearly interpolated features at the provided points.
-    """
+    r"""Sample linearly interpolated features at the provided points."""
 
     def __init__(self, return_kernel_map=False, return_weights=False):
         r"""Sample linearly interpolated features at the specified coordinates.
@@ -112,11 +108,17 @@ class MinkowskiInterpolation(MinkowskiModuleBase):
         self.interp = MinkowskiInterpolationFunction()
 
     def forward(
-        self, input: SparseTensor, tfield: torch.Tensor,
+        self,
+        input: SparseTensor,
+        tfield: torch.Tensor,
     ):
         # Get a new coordinate map key or extract one from the coordinates
         out_feat, in_map, out_map, weights = self.interp.apply(
-            input.F, tfield, input.coordinate_map_key, None, input._manager,
+            input.F,
+            tfield,
+            input.coordinate_map_key,
+            None,
+            input._manager,
         )
 
         return_args = [out_feat]
