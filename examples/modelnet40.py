@@ -202,7 +202,7 @@ def collate_pointcloud_fn(list_data):
     eff_num_batch = len(coords)
     assert len(labels) == eff_num_batch
 
-    coords_batch = ME.utils.batched_coordinates(coords, return_int=False)
+    coords_batch = ME.utils.batched_coordinates(coords, dtype=torch.float32)
     feats_batch = torch.from_numpy(np.vstack(feats)).float()
 
     # Concatenate all lists

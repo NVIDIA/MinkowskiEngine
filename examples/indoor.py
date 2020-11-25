@@ -124,7 +124,7 @@ if __name__ == '__main__':
         # Feed-forward pass and get the prediction
         in_field = ME.TensorField(
             features=torch.from_numpy(colors).float(),
-            coordinates=ME.utils.batched_coordinates([coords / voxel_size], return_int=False),
+            coordinates=ME.utils.batched_coordinates([coords / voxel_size], dtype=torch.float32),
             quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
             minkowski_algorithm=ME.MinkowskiAlgorithm.SPEED_OPTIMIZED,
             device=device,

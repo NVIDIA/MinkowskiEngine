@@ -27,7 +27,7 @@ import logging
 import collections.abc
 
 
-def batched_coordinates(coords, return_int=True):
+def batched_coordinates(coords, dtype=torch.int32, device=None):
     r"""Create a `ME.SparseTensor` coordinates from a sequence of coordinates
 
     Given a list of either numpy or pytorch tensor coordinates, return the
@@ -37,11 +37,10 @@ def batched_coordinates(coords, return_int=True):
         :attr:`coords` (a sequence of `torch.Tensor` or `numpy.ndarray`): a
         list of coordinates.
 
-        :attr:`return_int` (bool): if True, return an int tensor. True by
-        default.
+        :attr:`dtype`: torch data type of the return tensor. torch.int32 by default.
 
     Returns:
-        :attr:`coords` (`torch.IntTensor`): a batched coordinates.
+        :attr:`batched_coordindates` (`torch.Tensor`): a batched coordinates.
 
     .. warning::
 
@@ -57,15 +56,25 @@ def batched_coordinates(coords, return_int=True):
     D = np.unique(np.array([cs.shape[1] for cs in coords]))
     assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
     D = D[0]
+    if device is None:
+        if isinstance(coords, torch.Tensor):
+            device = coords[0].device
+        else:
+            device = 'cpu'
+    assert dtype in [
+        torch.int32,
+        torch.float32,
+    ], "Only torch.int32, torch.float32 supported for coordinates."
 
     # Create a batched coordinates
     N = np.array([len(cs) for cs in coords]).sum()
-    TensorType = torch.IntTensor if return_int else torch.FloatTensor
-    bcoords = TensorType(N, D + 1)  # uninitialized
+    bcoords = torch.zeros(
+        (N, D + 1), dtype=dtype, device=device
+    )  # uninitialized
 
     s = 0
     for b, cs in enumerate(coords):
-        if return_int:
+        if dtype == torch.int32:
             if isinstance(cs, np.ndarray):
                 cs = torch.from_numpy(np.floor(cs))
             elif not (
