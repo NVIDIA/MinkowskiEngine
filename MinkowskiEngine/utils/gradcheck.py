@@ -22,6 +22,8 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import torch
+assert torch.__version__ >= "1.7.0", "Gradcheck requires pytorch 1.7 or higher"
+
 from torch.types import _TensorOrTensors
 from torch._six import container_abcs, istuple
 import torch.testing
@@ -31,9 +33,6 @@ import warnings
 from typing import Callable, Union, Optional
 
 from torch.autograd.gradcheck import _as_tuple, _differentiable_outputs, get_analytical_jacobian, get_numerical_jacobian, iter_tensors
-
-
-assert torch.__version__ >= "1.7.0"
 
 
 def gradcheck(

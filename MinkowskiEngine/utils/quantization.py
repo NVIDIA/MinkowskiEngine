@@ -312,3 +312,40 @@ def sparse_quantize(
                 return discrete_coords[unique_map], feats[unique_map]
             else:
                 return discrete_coords[unique_map]
+
+
+from typing import Union, List, Tuple
+from collections import Sequence
+from MinkowskiCommon import convert_to_int_list
+import MinkowskiEngineBackend._C as _C
+
+
+def unique_coordinate_map(
+    coordinates: torch.Tensor,
+    tensor_stride: Union[int, Sequence, np.ndarray] = 1,
+) -> Tuple[torch.IntTensor, torch.IntTensor]:
+    r"""Returns the unique indices and the inverse indices of the coordinates.
+
+    :attr:`coordinates`: `torch.Tensor` (Int tensor. `CUDA` if
+    coordinate_map_type == `CoordinateMapType.GPU`) that defines the
+    coordinates.
+
+    Example::
+
+       >>> coordinates = torch.IntTensor([[0, 0], [0, 0], [0, 1], [0, 2]])
+       >>> unique_map, inverse_map = unique_coordinates_map(coordinates)
+       >>> coordinates[unique_map] # unique coordinates
+       >>> torch.all(coordinates == coordinates[unique_map][inverse_map]) # True
+
+    """
+    assert coordinates.ndim == 2, "Coordinates must be a matrix"
+    assert isinstance(coordinates, torch.Tensor)
+    if not coordinates.is_cuda:
+        manager = _C.CoordinateMapManagerCPU()
+    else:
+        manager = _C.CoordinateMapManagerGPU_c10()
+    tensor_stride = convert_to_int_list(tensor_stride, coordinates.shape[-1] - 1)
+    key, (unique_map, inverse_map) = manager.insert_and_map(
+        coordinates, tensor_stride, ""
+    )
+    return unique_map, inverse_map

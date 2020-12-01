@@ -60,7 +60,7 @@ def batched_coordinates(coords, dtype=torch.int32, device=None):
         if isinstance(coords, torch.Tensor):
             device = coords[0].device
         else:
-            device = 'cpu'
+            device = "cpu"
     assert dtype in [
         torch.int32,
         torch.float32,
@@ -68,9 +68,7 @@ def batched_coordinates(coords, dtype=torch.int32, device=None):
 
     # Create a batched coordinates
     N = np.array([len(cs) for cs in coords]).sum()
-    bcoords = torch.zeros(
-        (N, D + 1), dtype=dtype, device=device
-    )  # uninitialized
+    bcoords = torch.zeros((N, D + 1), dtype=dtype, device=device)  # uninitialized
 
     s = 0
     for b, cs in enumerate(coords):
