@@ -21,7 +21,7 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-from .quantization import sparse_quantize, ravel_hash_vec, fnv_hash_vec
+from .quantization import sparse_quantize, ravel_hash_vec, fnv_hash_vec, unique_coordinate_map
 from .collation import SparseCollation, batched_coordinates, sparse_collate, batch_sparse_collate
 from .coords import get_coords_map
 from .init import kaiming_normal_

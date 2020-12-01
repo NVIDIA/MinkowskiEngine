@@ -148,3 +148,8 @@ class CoordinateManagerTestCase(unittest.TestCase):
             coordinate_map_type=ME.CoordinateMapType.CPU,
             allocator_type=ME.GPUMemoryAllocatorType.CUDA,
         )
+
+    def test_unique(self):
+        coordinates = torch.IntTensor([[0, 0], [0, 0], [0, 1], [0, 2]])
+        unique_map, inverse_map = ME.utils.unique_coordinate_map(coordinates)
+        self.assertTrue(len(unique_map) == 3)
