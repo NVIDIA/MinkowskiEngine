@@ -484,23 +484,6 @@ void instantiate_cpu_func(py::module &m, const std::string &dtypestr) {
         &minkowski::BroadcastBackwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
 
-  /*
-    m.def((std::string("UnionForwardCPU") + dtypestr).c_str(),
-          &mink::UnionForwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("UnionBackwardCPU") + dtypestr).c_str(),
-          &mink::UnionBackwardCPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #ifndef CPU_ONLY
-    m.def((std::string("UnionForwardGPU") + dtypestr).c_str(),
-          &mink::UnionForwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-    m.def((std::string("UnionBackwardGPU") + dtypestr).c_str(),
-          &mink::UnionBackwardGPU<MapType, Dtype>,
-          py::call_guard<py::gil_scoped_release>());
-  #endif
-  */
-
   m.def((std::string("InterpolationForwardCPU") + dtypestr).c_str(),
         &minkowski::InterpolationForwardCPU<coordinate_type>,
         py::call_guard<py::gil_scoped_release>());
@@ -706,6 +689,7 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("get_random_string_id", &manager_type::get_random_string_id)
       .def("origin_map_size", &manager_type::origin_map_size)
       .def("origin_map", &manager_type::origin_map_th)
+      .def("union_map", &manager_type::union_map_th)
       .def("get_kernel_map", &manager_type::get_kernel_map)
       .def("interpolation_map_weight", &manager_type::interpolation_map_weight);
 }

@@ -981,6 +981,80 @@ CoordsManager<MapType>::getUnionInOutMaps(vector<py::object> py_in_coords_keys,
 }
 */
 
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+coordinate_map_key_type
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::
+    merge(std::vector<coordinate_map_key_type> const &map_keys) {
+  ASSERT(map_keys.size() > 1, "Got one or zero map. Merge at least 2 maps.");
+  // Aggregate all coords maps
+  std::vector<std::reference_wrapper<map_type>> maps;
+  auto const tensor_stride_size = map_keys[0].first.size();
+  stride_type merged_map_tensor_stride{map_keys[0].first};
+  for (const auto &key : map_keys) {
+    ASSERT(exists(key), ERROR_MAP_NOT_FOUND);
+    auto &map = m_coordinate_maps.find(key)->second;
+    maps.push_back(map);
+    for (int k = 0; k < tensor_stride_size; ++k) {
+      merged_map_tensor_stride[k] =
+          std::min(merged_map_tensor_stride[k], map.get_tensor_stride()[k]);
+    }
+  }
+
+  // Create a merged map with the smallest tensor stride
+  coordinate_map_key_type merged_map_key(merged_map_tensor_stride, "merge");
+  map_type const &map = m_coordinate_maps.find(map_keys[0])->second;
+  map_type merged_map = map.merge(maps);
+  insert(merged_map_key, merged_map);
+  return merged_map_key;
+}
+
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<coordinate_map_key_type, std::vector<at::Tensor>>
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::
+    union_map(std::vector<coordinate_map_key_type> const &map_keys) {
+  // Create a merged map
+  auto const merged_key = merge(map_keys);
+  map_type const &merged_map = m_coordinate_maps.find(merged_key)->second;
+
+  std::vector<std::reference_wrapper<map_type>> maps;
+  for (const auto &key : map_keys) {
+    ASSERT(exists(key), ERROR_MAP_NOT_FOUND);
+    maps.push_back(std::ref(m_coordinate_maps.find(key)->second));
+  }
+
+  return std::make_pair(merged_key, merged_map.union_map(maps));
+}
+
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::vector<at::Tensor>
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::
+    union_map_th(std::vector<CoordinateMapKey *> const &p_map_keys,
+                 CoordinateMapKey *p_out_key) {
+  ASSERT(!p_out_key->is_key_set(),
+         "Out coordinate map key should be uninitialized");
+
+  std::vector<coordinate_map_key_type> map_keys;
+  map_keys.reserve(p_map_keys.size());
+  std::for_each(
+      p_map_keys.begin(), p_map_keys.end(),
+      [&](CoordinateMapKey *p_key) { map_keys.push_back(p_key->get_key()); });
+  auto union_pair = union_map(map_keys);
+  p_out_key->set_key(union_pair.first);
+  return union_pair.second;
+}
+
 /* Helper functions */
 template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator,

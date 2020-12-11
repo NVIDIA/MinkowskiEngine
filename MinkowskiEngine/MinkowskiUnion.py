@@ -21,44 +21,65 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+import torch
 from torch.nn import Module
 from torch.autograd import Function
 
-from MinkowskiCoords import CoordsKey
-from SparseTensor import SparseTensor
-from Common import get_minkowski_function
+from MinkowskiEngineBackend._C import CoordinateMapKey
+from MinkowskiSparseTensor import SparseTensor
+from MinkowskiCoordinateManager import CoordinateManager
 
 
 class MinkowskiUnionFunction(Function):
-
     @staticmethod
-    def forward(ctx, in_coords_keys, out_coords_key, coords_manager, *in_feats):
-        assert isinstance(in_feats, list) or isinstance(in_feats, tuple), \
-            "Input must be a list or a set of Tensors"
-        assert len(in_feats) > 1, \
-            "input must be a set with at least 2 Tensors"
+    def forward(
+        ctx,
+        in_coords_keys: list,
+        out_coords_key: CoordinateMapKey,
+        coordinate_manager: CoordinateManager,
+        *in_feats,
+    ):
+        assert isinstance(
+            in_feats, (list, tuple)
+        ), "Input must be a collection of Tensors"
+        assert len(in_feats) > 1, "input must be a set with at least 2 Tensors"
+        assert len(in_feats) == len(
+            in_coords_keys
+        ), "The input features and keys must have the same length"
 
-        in_feats = [in_feat.contiguous() for in_feat in in_feats]
-
-        ctx.in_coords_keys = in_coords_keys
-        ctx.out_coords_key = out_coords_key
-        ctx.coords_manager = coords_manager
-
-        fw_fn = get_minkowski_function('UnionForward', in_feats[0])
-        return fw_fn(in_feats, [key.CPPCoordsKey for key in ctx.in_coords_keys],
-                     ctx.out_coords_key.CPPCoordsKey,
-                     ctx.coords_manager.CPPCoordsManager)
+        union_maps = coordinate_manager.union_map(in_coords_keys, out_coords_key)
+        out_feat = torch.zeros(
+            (coordinate_manager.size(out_coords_key), in_feats[0].shape[1]),
+            dtype=in_feats[0].dtype,
+            device=in_feats[0].device,
+        )
+        for in_feat, union_map in zip(in_feats, union_maps):
+            out_feat[union_map[1]] += in_feat[union_map[0]]
+        ctx.keys = (in_coords_keys, coordinate_manager)
+        ctx.save_for_backward(*union_maps)
+        return out_feat
 
     @staticmethod
     def backward(ctx, grad_out_feat):
         if not grad_out_feat.is_contiguous():
             grad_out_feat = grad_out_feat.contiguous()
 
-        bw_fn = get_minkowski_function('UnionBackward', grad_out_feat)
-        grad_in_feats = bw_fn(grad_out_feat,
-                              [key.CPPCoordsKey for key in ctx.in_coords_keys],
-                              ctx.out_coords_key.CPPCoordsKey,
-                              ctx.coords_manager.CPPCoordsManager)
+        union_maps = ctx.saved_tensors
+        in_coords_keys, coordinate_manager = ctx.keys
+        num_ch, dtype, device = (
+            grad_out_feat.shape[1],
+            grad_out_feat.dtype,
+            grad_out_feat.device,
+        )
+        grad_in_feats = []
+        for in_coords_key, union_map in zip(in_coords_keys, union_maps):
+            grad_in_feat = torch.zeros(
+                (coordinate_manager.size(in_coords_key), num_ch),
+                dtype=dtype,
+                device=device,
+            )
+            grad_in_feat[union_map[0]] = grad_out_feat[union_map[1]]
+            grad_in_feats.append(grad_in_feat)
         return (None, None, None, *grad_in_feats)
 
 
@@ -96,26 +117,34 @@ class MinkowskiUnion(Module):
             >>> input2 = SparseTensor(
             >>>     torch.rand(N, in_channels, dtype=torch.double),
             >>>     coords=coords + 1,
-            >>>     coords_manager=input1.coords_man,  # Must use same coords manager
+            >>>     coords_manager=input1.coordinate_manager,  # Must use same coords manager
             >>>     force_creation=True  # The tensor stride [1, 1] already exists.
             >>> )
             >>> union = MinkowskiUnion()
             >>> output = union(input1, iput2)
 
         """
+        assert isinstance(inputs, (list, tuple)), "The input must be a list or tuple"
         for s in inputs:
             assert isinstance(s, SparseTensor), "Inputs must be sparse tensors."
-        assert len(inputs) > 1, \
-            "input must be a set with at least 2 SparseTensors"
+        assert len(inputs) > 1, "input must be a set with at least 2 SparseTensors"
 
-        out_coords_key = CoordsKey(inputs[0].coords_key.D)
-        output = self.union.apply([input.coords_key for input in inputs],
-                                  out_coords_key, inputs[0].coords_man,
-                                  *[input.F for input in inputs])
+        in_coordinate_map_key = inputs[0].coordinate_map_key
+        coordinate_manager = inputs[0].coordinate_manager
+        out_coordinate_map_key = CoordinateMapKey(
+            in_coordinate_map_key.get_coordinate_size()
+        )
+        output = self.union.apply(
+            [input.coordinate_map_key for input in inputs],
+            out_coordinate_map_key,
+            coordinate_manager,
+            *[input.F for input in inputs],
+        )
         return SparseTensor(
             output,
-            coords_key=out_coords_key,
-            coords_manager=inputs[0].coords_man)
+            coordinate_map_key=out_coordinate_map_key,
+            coordinate_manager=coordinate_manager,
+        )
 
     def __repr__(self):
-        return self.__class__.__name__ + '()'
+        return self.__class__.__name__ + "()"

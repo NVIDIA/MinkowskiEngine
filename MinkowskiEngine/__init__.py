@@ -151,7 +151,7 @@ from MinkowskiNormalization import (
 
 from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
 
-# from MinkowskiUnion import MinkowskiUnion, MinkowskiUnionFunction
+from MinkowskiUnion import MinkowskiUnion, MinkowskiUnionFunction
 
 from MinkowskiInterpolation import MinkowskiInterpolation, MinkowskiInterpolationFunction
 

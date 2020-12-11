@@ -1,3 +1,4 @@
+# Copyright (c) 2020 NVIDIA CORPORATION.
 # Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -29,24 +30,25 @@ from MinkowskiEngine import SparseTensor, MinkowskiUnion
 
 
 class TestUnion(unittest.TestCase):
-
     def test_union(self):
         coords1 = torch.IntTensor([[0, 0], [0, 1]])
         coords2 = torch.IntTensor([[0, 1], [1, 1]])
         feats1 = torch.DoubleTensor([[1], [2]])
         feats2 = torch.DoubleTensor([[3], [4]])
-        input1 = SparseTensor(coords=ME.utils.batched_coordinates([coords1]), feats=feats1)
+        union = MinkowskiUnion()
+
+        input1 = SparseTensor(
+            coordinates=ME.utils.batched_coordinates([coords1]), features=feats1
+        )
 
         input2 = SparseTensor(
-            feats=feats2,
-            coords=ME.utils.batched_coordinates([coords2]),
-            coords_manager=input1.coords_man,  # Must use same coords manager
-            force_creation=True  # The tensor stride [1, 1] already exists.
+            coordinates=ME.utils.batched_coordinates([coords2]),
+            features=feats2,
+            coordinate_manager=input1.coordinate_manager,  # Must use same coords manager
         )
 
         input1.requires_grad_()
         input2.requires_grad_()
-        union = MinkowskiUnion()
         output = union(input1, input2)
         print(output)
 
@@ -58,9 +60,16 @@ class TestUnion(unittest.TestCase):
         self.assertTrue(torch.prod(input1.F.grad) == 1)
         self.assertTrue(torch.prod(input2.F.grad) == 1)
 
-        device = torch.device('cuda')
         with torch.cuda.device(0):
-            input1, input2 = input1.to(device), input2.to(device)
+            device = torch.device("cuda")
+            input1 = SparseTensor(feats1, coords1, device=device, requires_grad=True)
+            input2 = SparseTensor(
+                feats2,
+                coords2,
+                device=device,
+                coordinate_manager=input1.coordinate_manager,
+                requires_grad=True,
+            )
             output = union(input1, input2)
 
             output.F.sum().backward()
@@ -69,5 +78,5 @@ class TestUnion(unittest.TestCase):
             self.assertTrue(5 in output.F)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -330,6 +330,9 @@ class CoordinateManager:
     def origin_map(self, key: CoordinateMapKey):
         return self._manager.origin_map(key)
 
+    def union_map(self, in_keys: list, out_key):
+        return self._manager.union_map(in_keys, out_key)
+
     def interpolation_map_weight(
         self,
         key: CoordinateMapKey,
