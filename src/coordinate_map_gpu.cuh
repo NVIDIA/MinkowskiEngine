@@ -210,6 +210,8 @@ public:
                           stride_type const &out_tensor_stride) const;
   self_type origin() const;
   self_type prune(bool const *keep_begin, bool const *keep_end) const;
+  self_type
+  merge(std::vector<std::reference_wrapper<self_type>> const &maps) const;
 
   kernel_map_type kernel_map(self_type const &out_coordinate_map,
                              gpu_kernel_region<coordinate_type> const &kernel,
@@ -222,6 +224,9 @@ public:
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
   std::vector<at::Tensor>
   interpolation_map_weight(at::Tensor const &tfield) const;
+  std::vector<at::Tensor>
+  union_map(std::vector<std::reference_wrapper<self_type>> const &maps,
+            uint32_t thread_dim = CUDA_NUM_THREADS) const;
 
   // Returns the number of elements in the coordinate map
   inline size_type size() const { return m_size; }

@@ -500,6 +500,34 @@ public:
     return pruned_map;
   }
 
+  self_type merge(const self_type &other) const {
+    std::vector<std::reference_wrapper<self_type>> maps{*this, other};
+    // maps.push_back(*this);
+    // maps.push_back(other);
+    return merge(maps);
+  }
+
+  self_type
+  merge(const std::vector<std::reference_wrapper<self_type>> &maps) const {
+    // merge all input maps
+    size_t all_size = std::accumulate(
+        maps.begin(), maps.end(), 0,
+        [](size_t sum, const self_type &map) { return sum + map.size(); });
+    self_type merged_map(all_size, m_coordinate_size,
+                         base_type::m_tensor_stride,
+                         base_type::m_byte_allocator);
+    // Push all coordinates
+    index_type c = 0;
+    for (self_type const &map : maps) {
+      for (auto const &kv : map.m_map) {
+        auto result = merged_map.insert(kv.first, c);
+        c += result.second;
+      }
+    }
+
+    return merged_map;
+  }
+
   /*****************************************************************************
    * Kernel map
    ****************************************************************************/
@@ -678,9 +706,9 @@ public:
     // There's a trade-off between the thread initialization overhead and the
     // job sizes. If some jobs finish earlier than others due to imbalance in
     // hash distribution, these threads will be idle.
-    const size_t in_map_num_elements = m_map.capacity();
+    size_t const in_map_num_elements = m_map.capacity();
     size_t N = 2 * omp_get_max_threads();
-    const size_t stride = (in_map_num_elements + N - 1) / N;
+    size_t const stride = (in_map_num_elements + N - 1) / N;
     N = (in_map_num_elements + stride - 1) / stride;
     LOG_DEBUG("kernel map with", N, "chunks.");
 
@@ -754,6 +782,46 @@ public:
     default:
       ASSERT(false, "Unsupported float type");
     }
+  }
+
+  /*****************************************************************************
+   * Union Map
+   ****************************************************************************/
+
+  /*
+   * Find mapping from all inputs to self. The mapping is a list of 2xN tensors
+   */
+  std::vector<at::Tensor> union_map(
+      std::vector<std::reference_wrapper<self_type>> const &in_maps) const {
+    std::vector<at::Tensor> in_out_maps;
+
+    for (self_type const &in_map : in_maps) {
+      size_type const N = in_map.size();
+      size_type const capacity = in_map.m_map.capacity();
+      auto curr_map = torch::empty(
+          {2, N},
+          torch::TensorOptions().dtype(torch::kInt64).requires_grad(false));
+      int64_t *p_in_rows = curr_map.template data_ptr<int64_t>();
+      std::fill_n(p_in_rows, 2 * N, -1);
+      int64_t *p_union_rows = p_in_rows + N;
+
+      index_type offset{0};
+      for (auto iter_in = in_map.m_map.begin(); iter_in.num_steps() < capacity;
+           ++iter_in) {
+        p_in_rows[offset] = iter_in->second;
+        // WARNING: This assumes that the union map has a corresponding
+        // coordinate for speed. This will results in an unexpected behavior
+        // if the union map does not contain the coordinate.
+        p_union_rows[offset] = find(iter_in->first)->second;
+        LOG_DEBUG("offset:", offset, " in:", p_in_rows[offset],
+                  " out:", p_union_rows[offset]);
+        offset++;
+      }
+
+      in_out_maps.push_back(std::move(curr_map));
+    }
+
+    return in_out_maps;
   }
 
   inline size_type size() const noexcept { return m_map.size(); }

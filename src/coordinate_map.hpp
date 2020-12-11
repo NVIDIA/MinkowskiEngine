@@ -153,43 +153,6 @@ public:
     ASSERT(false, "Not implemented"); // no virtual members for a templated class
   }
 
-  // self_type stride_region(Region const &region) const {
-  //   ASSERT(false, "Not implemented");
-  // }
-
-  /*
-  CoordinateMap<MapType> prune(bool const *p_keep,
-                               size_type num_keep_coordinates) const {
-    ASSERT(false, "Not implemented");
-  }
-  // class method
-  static CoordinateMap<MapType>
-  union_coords(const vector<reference_wrapper<CoordsMap<MapType>>> &maps) {
-    ASSERT(false, "Not implemented");
-  }
-
-  */
-  // Generate in-out kernel maps
-  // std::pair<index_vector_type, index_vector_type>
-  // kernel_map(self_type const &out_coords_map,
-  //            kernel_region const &region) const{
-  //   ASSERT(false, "Not implemented"); // no virtual members for a templated class
-  // }
-
-  /*
-  InOutMapsPair<int>
-  pruned_kernel_map(const CoordsMap<MapType> &out_coords_map) const;
-  InOutMapsPair<int>
-  global_reduction_map(const CoordsMap<MapType> &gout_coords_map,
-                       bool return_per_batch = true) const;
-  InOutMapsPair<int> stride_map(const CoordsMap &out_coords_map,
-                                const vector<int> &tensor_strides) const;
-  static InOutMapsPair<int>
-  union_map(const vector<reference_wrapper<CoordsMap>> &in_maps,
-            const CoordsMap &out_map);
-
-  */
-
   // clang-format on
 
   coordinate_type *coordinate_data() { return m_coordinates.get(); }

@@ -208,6 +208,7 @@ class Tensor:
         # optional manager related arguments
         allocator_type: GPUMemoryAllocatorType = None,
         minkowski_algorithm: MinkowskiAlgorithm = None,
+        requires_grad=None,
         device=None,
     ):
         r"""
@@ -240,6 +241,8 @@ class Tensor:
             (:attr:`MinkowskiEngine.SparseTensorQuantizationMode`): Defines how
             continuous coordinates will be quantized to define a sparse tensor.
             Please refer to :attr:`SparseTensorQuantizationMode` for details.
+
+            :attr:`requires_grad` (:attr:`bool`): Set the requires_grad flag.
 
             :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
             :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
@@ -338,6 +341,9 @@ class Tensor:
                 coordinate_map_key.is_key_set()
             ), "The coordinate key must be a valid key."
             self.coordinate_map_key = coordinate_map_key
+
+        if requires_grad is not None:
+            features.requires_grad_()
 
         self._F = features
         self._C = coordinates
@@ -673,18 +679,22 @@ class Tensor:
                 )
             else:
                 # Generate union maps
-                out_key = CoordinateMapKey(self._manager.D)
-                ins, outs = self._manager.get_union_map(
-                    (self.coordinate_map_key, other.coordinate_map_key), out_key
+                out_key = CoordinateMapKey(
+                    self.coordinate_map_key.get_coordinate_size()
                 )
-                N_out = self._manager.get_coords_size_by_coordinate_map_key(out_key)
+                union_maps = self.coordinate_manager.union_map(
+                    [self.coordinate_map_key, other.coordinate_map_key], out_key
+                )
+                N_out = self.coordinate_manager.size(out_key)
                 out_F = torch.zeros(
                     (N_out, self._F.size(1)), dtype=self.dtype, device=self.device
                 )
-                out_F[outs[0]] = self._F[ins[0]]
-                out_F[outs[1]] = binary_fn(out_F[outs[1]], other._F[ins[1]])
+                out_F[union_maps[0][1]] = self._F[union_maps[0][0]]
+                out_F[union_maps[1][1]] = binary_fn(
+                    out_F[union_maps[1][1]], other._F[union_maps[1][0]]
+                )
                 return self.__class__(
-                    out_F, coordinate_map_key=out_key, coords_manager=self._manager
+                    out_F, coordinate_map_key=out_key, coordinate_manager=self._manager
                 )
         else:  # when it is a torch.Tensor
             return self.__class__(

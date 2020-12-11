@@ -209,6 +209,15 @@ public:
                                          map_key_bool.first));
   }
 
+  // Merge
+  coordinate_map_key_type
+  merge(std::vector<coordinate_map_key_type> const &map_keys);
+  std::pair<coordinate_map_key_type, std::vector<at::Tensor>>
+  union_map(std::vector<coordinate_map_key_type> const &map_keys);
+  std::vector<at::Tensor>
+  union_map_th(std::vector<CoordinateMapKey *> const &map_keys,
+               CoordinateMapKey *p_out_key);
+
   /****************************************************************************
    * Tensor field related operations
    ****************************************************************************/

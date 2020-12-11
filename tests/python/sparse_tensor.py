@@ -34,7 +34,8 @@ from MinkowskiEngine import (
     is_cuda_available,
 )
 
-from tests.python.common import data_loader, load_file, batched_coordinates
+from MinkowskiEngine.utils import batched_coordinates
+from tests.python.common import data_loader, load_file
 
 
 class SparseTensorTestCase(unittest.TestCase):
