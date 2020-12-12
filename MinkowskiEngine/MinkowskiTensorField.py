@@ -65,6 +65,7 @@ class TensorField(Tensor):
         assert quantization_mode in [
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
             SparseTensorQuantizationMode.UNWEIGHTED_SUM,
+            SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
         ], "invalid quantization mode"
 
         # A tensor field is a shallow wrapper on a sparse tensor, but keeps the original data for element-wise operations
