@@ -46,7 +46,7 @@ class SparseTensorOperationMode(Enum):
 
     :attr:`SHARE_COORDINATE_MANAGER`: always use the globally defined coordinate
     manager. Must clear the coordinate manager manually by
-    :attr:`MinkowskiEngine.SparseTensor.clear_global_coordinate_mananager`.
+    :attr:`MinkowskiEngine.SparseTensor.clear_global_coordinate_manager`.
 
     """
     SEPARATE_COORDINATE_MANAGER = 0
@@ -82,7 +82,7 @@ def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
     :attr:`MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER`, you
     can share the coordinate manager globally with other sparse tensors.
     However, you must explicitly clear the coordinate manger after use. Please
-    refer to :attr:`MinkowskiEngine.clear_global_coordinate_mananager`.
+    refer to :attr:`MinkowskiEngine.clear_global_coordinate_manager`.
 
     Args:
         :attr:`operation_mode`
@@ -98,7 +98,7 @@ def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
         >>> a = ME.SparseTensor(...)
         >>> b = ME.SparseTensor(...)  # coords_man shared
         >>> ...  # one feed forward and backward
-        >>> ME.clear_global_coordinate_mananager()  # Must use to clear the coordinates after one forward/backward
+        >>> ME.clear_global_coordinate_manager()  # Must use to clear the coordinates after one forward/backward
 
     """
     assert isinstance(
@@ -113,7 +113,7 @@ def sparse_tensor_operation_mode():
     return copy.deepcopy(_sparse_tensor_operation_mode)
 
 
-def clear_global_coordinate_mananager():
+def clear_global_coordinate_manager():
     r"""Clear the global coordinate manager cache.
 
     When you use the operation mode:
