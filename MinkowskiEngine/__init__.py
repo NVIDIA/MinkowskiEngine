@@ -73,7 +73,7 @@ from MinkowskiTensor import (
     SparseTensorQuantizationMode,
     set_sparse_tensor_operation_mode,
     sparse_tensor_operation_mode,
-    clear_global_coordinate_mananager,
+    clear_global_coordinate_manager,
 )
 
 from MinkowskiSparseTensor import SparseTensor
