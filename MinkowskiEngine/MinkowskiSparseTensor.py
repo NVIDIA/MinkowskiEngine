@@ -71,7 +71,8 @@ class SparseTensor(Tensor):
         >>> A = ME.SparseTensor(features=feats, coordinates=coords)
         >>> B = ME.SparseTensor(features=feats, coordinate_map_key=A.coordiante_map_key, coordinate_manager=A.coordinate_manager)
         >>> C = ME.SparseTensor(features=feats, coordinates=coords, quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
-        >>> D = ME.SparseTensor(features=feats, coordinates=coords, tensor_stride=2)
+        >>> D = ME.SparseTensor(features=feats, coordinates=coords, quantization_mode=ME.SparseTensorQuantizationMode.RANDOM_SUBSAMPLE)
+        >>> E = ME.SparseTensor(features=feats, coordinates=coords, tensor_stride=2)
 
     .. warning::
 
