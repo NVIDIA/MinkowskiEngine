@@ -36,6 +36,10 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
+/////////////
+// TODO(ljm): fix offset logic BUG, though MAX_GRID is large enough
+//
+/////////////
 template <typename Dtype, typename Itype, int BLOCK_SIZE>
 __global__ void matmul(const Dtype *A, const int wA, const int hA,
                        const Dtype *B, const int wB, const int hB, Dtype *C,
@@ -213,8 +217,7 @@ template <typename Dtype, typename Itype>
 void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
                                  Dtype *d_out_feat, int out_nchannel,
                                  const Dtype *d_kernel,
-                                 const pInOutMaps<Itype> &in_maps,
-                                 const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                                  int out_nrows, cublasHandle_t cuhandle,
                                  cudaStream_t stream) {
 
@@ -240,7 +243,7 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
 
   // Iterate through each spatial kernel and get indices for in_map and out_map
   for (int k = 0; k < in_maps.size(); k++) {
-    n_active_in_volume = in_maps[k].size();
+    n_active_in_volume = in_maps[k].size(0);
     if (n_active_in_volume == 0)
       continue;
 
@@ -258,25 +261,25 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
         matmul<Dtype, Itype, 32><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       case 24:
         matmul<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       case 16:
         matmul<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       case 8:
         matmul<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
             d_in_feat, in_nchannel, curr_num_active,
             &d_kernel[k * in_nchannel * out_nchannel], out_nchannel,
-            in_nchannel, d_out_feat, in_maps[k].data(), out_maps[k].data());
+            in_nchannel, d_out_feat, in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       }
     }
@@ -287,14 +290,16 @@ void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
 
 template void ConvolutionForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nchannel, float *d_out_feat,
-    int out_nchannel, const float *d_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    int out_nchannel, const float *d_kernel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    int out_nrows, cublasHandle_t cuhandle,
     cudaStream_t stream);
 
 template void ConvolutionForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nchannel, double *d_out_feat,
-    int out_nchannel, const double *d_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    int out_nchannel, const double *d_kernel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    int out_nrows, cublasHandle_t cuhandle,
     cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
@@ -302,8 +307,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
                                   int in_nchannel, const Dtype *d_grad_out_feat,
                                   int out_nchannel, const Dtype *d_kernel,
                                   Dtype *d_grad_kernel,
-                                  const pInOutMaps<Itype> &in_maps,
-                                  const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                                   int out_nrows, cublasHandle_t cuhandle,
                                   cudaStream_t stream) {
 
@@ -328,7 +332,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
   dim3 threads(shared_mem_size, shared_mem_size);
 
   for (int k = 0; k < in_maps.size(); k++) {
-    n_active_in_volume = in_maps[k].size();
+    n_active_in_volume = in_maps[k].size(0);
     if (n_active_in_volume == 0)
       continue;
 
@@ -350,7 +354,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       case 24:
         matmul2<Dtype, Itype, 24><<<grid, threads, 0, stream>>>(
@@ -360,7 +364,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       case 16:
         matmul2<Dtype, Itype, 16><<<grid, threads, 0, stream>>>(
@@ -370,7 +374,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       case 8:
         matmul2<Dtype, Itype, 8><<<grid, threads, 0, stream>>>(
@@ -380,7 +384,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
             d_in_feat, in_nchannel, curr_num_active,        // D
             d_grad_in_feat,                                 // C
             &d_grad_kernel[k * in_nchannel * out_nchannel], // E
-            in_maps[k].data(), out_maps[k].data());
+            in_maps[k].data<Itype>(), out_maps[k].data<Itype>());
         break;
       }
     }
@@ -392,15 +396,17 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
 template void ConvolutionBackwardKernelGPU<float, int32_t>(
     const float *d_in_feat, float *d_grad_in_feat, int in_nchannel,
     const float *d_grad_out_feat, int out_nchannel, const float *d_kernel,
-    float *p_grad_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    float *p_grad_kernel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    int out_nrows, cublasHandle_t cuhandle,
     cudaStream_t stream);
 
 template void ConvolutionBackwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_grad_in_feat, int in_nchannel,
     const double *d_grad_out_feat, int out_nchannel, const double *d_kernel,
-    double *p_grad_kernel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, int out_nrows, cublasHandle_t cuhandle,
+    double *p_grad_kernel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    int out_nrows, cublasHandle_t cuhandle,
     cudaStream_t stream);
 
 } // end namespace minkowski

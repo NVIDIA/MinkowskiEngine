@@ -106,11 +106,17 @@ def _argparse(pattern, argv, is_flag=True):
             return arr[0].split("=")[1], argv
 
 
+print("argv: ")
+print(argv)
 # For cpu only build
 CPU_ONLY, argv = _argparse("--cpu_only", argv)
 CPU_ONLY = CPU_ONLY or not torch.cuda.is_available()
 KEEP_OBJS, argv = _argparse("--keep_objs", argv)
 FORCE_CUDA, argv = _argparse("--force_cuda", argv)
+print("CPU_ONLY: ")
+print(CPU_ONLY)
+print("FORCE_CUDA: ")
+print(FORCE_CUDA)
 
 # args with return value
 CUDA_HOME, argv = _argparse("--cuda_home", argv, False)
@@ -125,7 +131,8 @@ compile_args = [
     "PYTHON=" + sys.executable,  # curr python
 ]
 
-extra_compile_args = ["-Wno-deprecated-declarations"]
+extra_compile_args = []
+#extra_compile_args = ["-Wno-deprecated-declarations"]
 extra_link_args = []
 libraries = ["minkowski"]
 
@@ -140,6 +147,7 @@ if CPU_ONLY and not FORCE_CUDA:
 else:
     # system python installation
     libraries.append("cusparse")
+    libraries.append("cudadevrt")
 
 if not (CUDA_HOME is False):  # False when not set, str otherwise
     print(f"Using CUDA_HOME={CUDA_HOME}")
@@ -190,6 +198,20 @@ if not KEEP_OBJS:
 
 run_command(*compile_args)
 
+'''
+print("extra_compile_args: ")
+print(extra_compile_args)
+print("extra_link_args: ")
+print(extra_link_args)
+extra_compile_args = {
+        #'cxx': ['-DBATCH_FIRST=1',],
+        'cxx': ['-DBATCH_FIRST=1', '-MMD', '-MP', '-ffast-math', '-funsafe-math-optimizations', '-fno-math-errno', '-DBATCH_FIRST=1', '-fopenmp', '-fPIC', '-fwrapv', '-std=c++14', '-DNDEBUG', '-O3', '-DTORCH_API_INCLUDE_EXTENSION_H', '-DTORCH_EXTENSION_NAME=minkowski', '-D_GLIBCXX_USE_CXX11_ABI=0', '-Wall', '-Wcomment', '-Wno-sign-compare', '-Wno-deprecated-declarations',],
+                        'nvcc': ['-DBATCH_FIRST=1', '-arch=sm_61', '-rdc=true', '--compiler-options', '-fPIC'],
+                        'nvcclink': ['-arch=sm_61', '--device-link', '--compiler-options', '-fPIC'],
+        }
+#extra_link_args = ['-pthread', '--device-link', '--compiler-options', '-fPIC', '-Wall', '-Wcomment', '-Wno-sign-compare', '-Wno-deprecated-declarations']
+extra_link_args = ['-pthread', '-fPIC', '-Wall', '-Wcomment', '-Wno-sign-compare', '-Wno-deprecated-declarations']
+'''
 # Python interface
 setup(
     name="MinkowskiEngine",
@@ -202,8 +224,9 @@ setup(
             name="MinkowskiEngineBackend",
             include_dirs=[here, get_python_inc() + "/.."],
             library_dirs=["objs"],
-            sources=["pybind/minkowski.cpp",],
-            libraries=libraries,
+            sources=["pybind/minkowski.cpp",
+                ],
+            libraries=libraries + ["cudart", "cudadevrt"],
             extra_compile_args=extra_compile_args,
             extra_link_args=extra_link_args,
         )
@@ -246,3 +269,37 @@ setup(
     ],
     python_requires=">=3.6",
 )
+
+'''
+                     "src/convolution.cpp",
+                     "src/math_functions.cpp",
+                     "src/coordsmap.cpp",
+                     "src/gpu_coordsmap.cpp",
+                     "src/pooling_max.cpp",
+                     "src/coords_key.cpp",
+                     "src/pooling_avg.cpp",
+                     "src/pooling_global_avg.cpp",
+                     "src/quantization.cpp",
+                     "src/pooling_global_max.cpp",
+                     "src/pruning.cpp",
+                     "src/3rdparty/gpu_coords_map/include/cuda_unordered_map.cpp",
+                     "src/broadcast.cpp",
+                     "src/coords_manager.cpp",
+                     "src/gpu_coords_manager.cpp",
+                     "src/region.cpp",
+                     "src/pooling_transpose.cpp",
+                     "src/convolution_transpose.cpp",
+                     "src/union.cpp",
+                     "src/pooling_avg.cu",
+                     "src/union.cu",
+                     "src/pooling_max.cu",
+                     "src/math_functions.cu",
+                     "src/pruning.cu",
+                     "src/3rdparty/gpu_coords_map/include/slab_hash/slab_hash.cu",
+                     "src/3rdparty/gpu_coords_map/include/slab_hash/slab_alloc.cu",
+                     "src/3rdparty/gpu_coords_map/include/coordinate.cu",
+                     "src/broadcast.cu",
+                     "src/gpu.cu",
+                     "src/convolution.cu",
+                ],
+'''

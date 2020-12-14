@@ -27,6 +27,7 @@
 
 #include <array>
 #include <vector>
+#include <torch/extension.h>
 
 #include "gpu.cuh"
 #include "math_functions.hpp"
@@ -37,8 +38,8 @@ namespace minkowski {
 template <typename Dtype, typename Itype>
 void MaxPoolingForwardKernelGPU(const Dtype *d_in_feat, Dtype *d_out_feat,
                                 int out_nrows, Itype *d_max_index, int nchannel,
-                                const pInOutMaps<Itype> &in_map,
-                                const pInOutMaps<Itype> &out_map, Itype *d_scr,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+                                Itype *d_scr,
                                 cudaStream_t stream);
 
 template <typename Dtype, typename Itype>

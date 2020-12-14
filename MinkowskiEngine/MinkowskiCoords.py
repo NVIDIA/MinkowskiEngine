@@ -35,7 +35,8 @@ CPU_COUNT = os.cpu_count()
 if 'OMP_NUM_THREADS' in os.environ:
     CPU_COUNT = int(os.environ['OMP_NUM_THREADS'])
 
-_memory_manager_backend = MemoryManagerBackend.PYTORCH
+#_memory_manager_backend = MemoryManagerBackend.PYTORCH
+_memory_manager_backend = MemoryManagerBackend.CUDA
 
 
 def set_memory_manager_backend(backend: MemoryManagerBackend):
@@ -102,7 +103,8 @@ class CoordsManager():
     def __init__(self,
                  num_threads: int = -1,
                  memory_manager_backend: MemoryManagerBackend = None,
-                 D: int = -1):
+                 D: int = -1,
+                 device: str = 'cuda'):
         if D < 1:
             raise ValueError(f"Invalid dimension {D}")
         self.D = D
@@ -111,7 +113,9 @@ class CoordsManager():
         if memory_manager_backend is None:
             global _memory_manager_backend
             memory_manager_backend = _memory_manager_backend
-        coords_man = MEB.CoordsManager(num_threads, memory_manager_backend)
+        coords_man = MEB.CoordsManager(num_threads, memory_manager_backend) \
+                     if device == 'cpu' else \
+                     MEB.GPUCoordsManager(D, 0, memory_manager_backend)
         self.CPPCoordsManager = coords_man
 
     def initialize(self,
@@ -120,14 +124,15 @@ class CoordsManager():
                    force_creation: bool = False,
                    force_remap: bool = False,
                    allow_duplicate_coords: bool = False,
-                   return_inverse: bool = False) -> torch.LongTensor:
+                   return_inverse: bool = False) -> torch.IntTensor:
         assert isinstance(coords_key, CoordsKey)
-        unique_index = torch.LongTensor()
-        inverse_mapping = torch.LongTensor()
+        # TODO(ljm): Adjust cpu interface from long to int acoordingly
+        unique_index = torch.IntTensor()
+        inverse_mapping = torch.IntTensor()
         self.CPPCoordsManager.initializeCoords(
             coords, unique_index, inverse_mapping, coords_key.CPPCoordsKey,
             force_creation, force_remap, allow_duplicate_coords, return_inverse)
-        return unique_index, inverse_mapping
+        return unique_index.long(), inverse_mapping.long()
 
     def create_coords_key(self,
                           coords: torch.IntTensor,
@@ -171,6 +176,9 @@ class CoordsManager():
     def reduce(self):
         origin_key = CoordsKey(self.D)
         origin_key.setTensorStride(convert_to_int_list(0, self.D))
+        # TODO(ljm): Get batch_size by createOriginCoords
+        # TODO(ljm): Find a better way to get batch_size
+        # Notice(ljm): It can be concluded that the batch indices are contigous by GetCoordsAt
         origin_key.setKey(self.CPPCoordsManager.createOriginCoords(self.D))
         return origin_key
 
@@ -321,6 +329,9 @@ class CoordsManager():
             out_coords_key.CPPCoordsKey,
             is_transpose,
             is_pool)
+
+        kernel_map[0] = kernel_map[0].long()
+        kernel_map[1] = kernel_map[1].long()
 
         return kernel_map
 

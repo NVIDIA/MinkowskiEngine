@@ -116,8 +116,7 @@ template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
                                        Dtype *d_out_feat, int out_nrows,
                                        Dtype *d_num_nonzero, int nchannel,
-                                       const pInOutMaps<Itype> &in_maps,
-                                       const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                                        bool use_avg, cusparseHandle_t cushandle,
                                        cudaStream_t stream) {
   int nmaps = 0;
@@ -129,7 +128,7 @@ void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
 
   // Copy all maps to one vector
   for (const auto &map : in_maps)
-    nmaps += map.size();
+    nmaps += map.size(0);
 
   /* Map prep */
   // Create d in map
@@ -139,10 +138,10 @@ void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
   d_out_map = d_scr + nmaps;     // n_maps
   d_csr_row = d_scr + 2 * nmaps; // out_nrows + 1
 
-  CUDA_CHECK(cudaMemcpy(d_in_map, in_maps[0].data(), nmaps * sizeof(int),
+  CUDA_CHECK(cudaMemcpy(d_in_map, in_maps[0].data<Itype>(), nmaps * sizeof(int),
                         cudaMemcpyDeviceToDevice));
 
-  CUDA_CHECK(cudaMemcpy(d_out_map, out_maps[0].data(), nmaps * sizeof(int),
+  CUDA_CHECK(cudaMemcpy(d_out_map, out_maps[0].data<Itype>(), nmaps * sizeof(int),
                         cudaMemcpyDeviceToDevice));
 
   /* sparse mm prep */
@@ -235,38 +234,40 @@ void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
 
 template void NonzeroAvgPoolingForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, float *d_out_feat, int out_nrows,
-    float *d_num_nonzero, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, bool use_avg,
+    float *d_num_nonzero, int nchannel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    bool use_avg,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 template void NonzeroAvgPoolingForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nrows, double *d_out_feat, int out_nrows,
-    double *d_num_nonzero, int nchannel, const pInOutMaps<int32_t> &in_map,
-    const pInOutMaps<int32_t> &out_map, bool use_avg,
+    double *d_num_nonzero, int nchannel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    bool use_avg,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingBackwardKernelGPU(
     Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
     int out_nrows, const Dtype *d_num_nonzero, int nchannel,
-    const pInOutMaps<Itype> &in_maps, const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     bool use_avg, cudaStream_t stream) {
   // d_grad_in_feat must be all set to 0
 
   int nmaps = 0;
   for (const auto &map : in_maps)
-    nmaps += map.size();
+    nmaps += map.size(0);
 
   if (use_avg) {
     set_gradient_nonzero_avg<Dtype>
         <<<GET_BLOCKS(nmaps * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
             nmaps * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
-            d_num_nonzero, in_maps[0].data(), out_maps[0].data());
+            d_num_nonzero, in_maps[0].data<Itype>(), out_maps[0].data<Itype>());
   } else {
     set_gradient_nonzero<Dtype>
         <<<GET_BLOCKS(nmaps * nchannel), CUDA_NUM_THREADS, 0, stream>>>(
             nmaps * nchannel, d_grad_out_feat, d_grad_in_feat, nchannel,
-            in_maps[0].data(), out_maps[0].data());
+            in_maps[0].data<Itype>(), out_maps[0].data<Itype>());
   }
 
   CUDA_CHECK(cudaGetLastError());
@@ -276,13 +277,13 @@ void NonzeroAvgPoolingBackwardKernelGPU(
 template void NonzeroAvgPoolingBackwardKernelGPU<float, int32_t>(
     float *d_grad_in_feat, int in_nrows, const float *d_grad_out_feat,
     int out_nrows, const float *d_num_nonzero, int nchannel,
-    const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     bool use_avg, cudaStream_t stream);
 
 template void NonzeroAvgPoolingBackwardKernelGPU<double, int32_t>(
     double *d_grad_in_feat, int in_nrows, const double *d_grad_out_feat,
     int out_nrows, const double *d_num_nonzero, int nchannel,
-    const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     bool use_avg, cudaStream_t stream);
 
 } // end namespace minkowski

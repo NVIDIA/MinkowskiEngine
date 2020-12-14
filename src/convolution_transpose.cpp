@@ -122,9 +122,9 @@ void ConvolutionTransposeForwardGPU(
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool generate_new_coords) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const auto &in_out = p_coords_manager->getInOutMapsGPU(
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
+  const InOutMapKey map_key = p_coords_manager->getInOutMaps(
       tensor_strides, strides, kernel_sizes, dilations, region_type, offsets,
       py_in_coords_key, py_out_coords_key, true, false, generate_new_coords);
 
@@ -141,7 +141,10 @@ void ConvolutionTransposeForwardGPU(
   ConvolutionForwardKernelGPU<Dtype, int>(
       in_feat.template data<Dtype>(), in_feat.size(1),
       out_feat.template data<Dtype>(), out_feat.size(1),
-      kernel.template data<Dtype>(), in_out.first, in_out.second, out_nrows,
+      kernel.template data<Dtype>(),
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key],
+      out_nrows,
       handle, at::cuda::getCurrentCUDAStream());
 }
 
@@ -152,8 +155,8 @@ void ConvolutionTransposeBackwardGPU(
     vector<int> strides, vector<int> kernel_sizes, vector<int> dilations,
     int region_type, py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
   bool reverse_map = false;
   const InOutMapKey rev_map_key = p_coords_manager->getMapHashKey(
       tensor_strides, strides, kernel_sizes, dilations, region_type,
@@ -177,8 +180,8 @@ void ConvolutionTransposeBackwardGPU(
 
   if (!reverse_map) {
     ASSERT(
-        p_coords_manager->d_in_maps.find(map_key) !=
-            p_coords_manager->d_in_maps.end(),
+        p_coords_manager->in_maps.find(map_key) !=
+            p_coords_manager->in_maps.end(),
         "The in-out map doesn't exist for backward. Did you run forward pass?");
 
     ConvolutionBackwardKernelGPU<Dtype, int>(
@@ -186,13 +189,13 @@ void ConvolutionTransposeBackwardGPU(
         in_feat.size(1), grad_out_feat.template data<Dtype>(),
         grad_out_feat.size(1), kernel.template data<Dtype>(),
         grad_kernel.template data<Dtype>(),
-        p_coords_manager->d_in_maps[map_key],
-        p_coords_manager->d_out_maps[map_key], grad_out_feat.size(0), handle,
+        p_coords_manager->in_maps[map_key],
+        p_coords_manager->out_maps[map_key], grad_out_feat.size(0), handle,
         at::cuda::getCurrentCUDAStream());
   } else {
     ASSERT(
-        p_coords_manager->d_in_maps.find(rev_map_key) !=
-            p_coords_manager->d_in_maps.end(),
+        p_coords_manager->in_maps.find(rev_map_key) !=
+            p_coords_manager->in_maps.end(),
         "The in-out map doesn't exist for backward. Did you run forward pass?");
 
     ConvolutionBackwardKernelGPU<Dtype, int>(
@@ -200,8 +203,8 @@ void ConvolutionTransposeBackwardGPU(
         in_feat.size(1), grad_out_feat.template data<Dtype>(),
         grad_out_feat.size(1), kernel.template data<Dtype>(),
         grad_kernel.template data<Dtype>(),
-        p_coords_manager->d_out_maps[rev_map_key],
-        p_coords_manager->d_in_maps[rev_map_key], grad_out_feat.size(0), handle,
+        p_coords_manager->out_maps[rev_map_key],
+        p_coords_manager->in_maps[rev_map_key], grad_out_feat.size(0), handle,
         at::cuda::getCurrentCUDAStream());
   }
 }
@@ -236,28 +239,28 @@ template void ConvolutionTransposeBackwardCPU<CoordsToIndexMap, double>(
     py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template void ConvolutionTransposeForwardGPU<CoordsToIndexMap, float>(
+template void ConvolutionTransposeForwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool generate_new_coords);
 
-template void ConvolutionTransposeForwardGPU<CoordsToIndexMap, double>(
+template void ConvolutionTransposeForwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor kernel,
     vector<int> tensor_strides, vector<int> strides, vector<int> kernel_sizes,
     vector<int> dilations, int region_type, at::Tensor offsets,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager, bool generate_new_coords);
 
-template void ConvolutionTransposeBackwardGPU<CoordsToIndexMap, float>(
+template void ConvolutionTransposeBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor kernel, at::Tensor grad_kernel, vector<int> tensor_strides,
     vector<int> strides, vector<int> kernel_sizes, vector<int> dilations,
     int region_type, py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void ConvolutionTransposeBackwardGPU<CoordsToIndexMap, double>(
+template void ConvolutionTransposeBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor kernel, at::Tensor grad_kernel, vector<int> tensor_strides,
     vector<int> strides, vector<int> kernel_sizes, vector<int> dilations,

@@ -27,6 +27,7 @@
 
 #include <array>
 #include <vector>
+#include <torch/extension.h>
 
 #include "types.hpp"
 
@@ -34,15 +35,14 @@ namespace minkowski {
 
 template <typename Dtype, typename Itype>
 void UnionForwardKernelGPU(const vector<Dtype *> d_in_feats, Dtype *d_out_feat,
-                           int nchannel, const pInOutMaps<Itype> &in_maps,
-                           const pInOutMaps<Itype> &out_maps,
+                           int nchannel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                            cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
 void UnionBackwardKernelGPU(vector<Dtype *> d_grad_in_feats,
                             const Dtype *d_grad_out_feat, int nchannel,
-                            const pInOutMaps<Itype> &in_maps,
-                            const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                             cudaStream_t stream);
 
 } // namespace minkowski

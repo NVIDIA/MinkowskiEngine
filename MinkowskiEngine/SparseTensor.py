@@ -229,6 +229,7 @@ class SparseTensor():
             of the current sparse tensor. By default, it is 1.
 
         """
+        print(coords)
         assert isinstance(feats,
                           torch.Tensor), "Features must be a torch.Tensor"
         assert feats.ndim == 2, f"The feature should be a matrix, The input feature is an order-{feats.ndim} tensor."
@@ -254,12 +255,14 @@ class SparseTensor():
             assert isinstance(coords, torch.Tensor), \
                 "Coordinate must be of type torch.Tensor"
 
+            print(isinstance(coords, torch.IntTensor))
             if not isinstance(coords, torch.IntTensor):
                 warnings.warn(
                     'Coords implicitly converted to torch.IntTensor. ' +
                     'To remove this warning, use `.int()` to convert the ' +
                     'coords into an torch.IntTensor')
-                coords = torch.floor(coords).int()
+                print(isinstance(coords, torch.IntTensor))
+#                coords = torch.floor(coords).int()
 
             if coords.device.type != 'cpu':
                 warnings.warn(
@@ -283,7 +286,9 @@ class SparseTensor():
                 if _global_coords_man is None:
                     _global_coords_man = CoordsManager(
                         memory_manager_backend=memory_manager_backend,
-                        D=coords.size(1) - 1)
+                        D=coords.size(1) - 1,
+                        device=coords.device.type if coords is not None else 'cuda')
+                        #  TODO(ljm): handle device when coords is None
                 coords_manager = _global_coords_man
             else:
                 assert coords is not None, "Initial coordinates must be given"

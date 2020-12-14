@@ -86,9 +86,9 @@ void GlobalMaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
                                 py::object py_in_coords_key,
                                 py::object py_out_coords_key,
                                 py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const auto &in_out = p_coords_manager->getOriginInOutMapsGPU(
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
+  const InOutMapKey map_key = p_coords_manager->getOriginInOutMaps(
       py_in_coords_key, py_out_coords_key);
 
   const int out_nrows = p_coords_manager->getCoordsSize(py_out_coords_key);
@@ -99,14 +99,16 @@ void GlobalMaxPoolingForwardGPU(at::Tensor in_feat, at::Tensor out_feat,
   num_nonzero.zero_();
 
   // Compute the scratch space
-  const int nmap = getInOutMapsSize(in_out.first);
+  const int nmap = getInOutMapsSizeGPU(p_coords_manager->in_maps[map_key]);
   int *d_scr =
       (int *)p_coords_manager->getScratchGPUMemory(5 * nmap * sizeof(int));
 
   MaxPoolingForwardKernelGPU<Dtype, int>(
       in_feat.template data<Dtype>(), out_feat.template data<Dtype>(),
-      out_nrows, num_nonzero.template data<int>(), nchannel, get<0>(in_out),
-      get<1>(in_out), d_scr, at::cuda::getCurrentCUDAStream());
+      out_nrows, num_nonzero.template data<int>(), nchannel,
+      p_coords_manager->in_maps[map_key],
+      p_coords_manager->out_maps[map_key],
+      d_scr, at::cuda::getCurrentCUDAStream());
 
   p_coords_manager->clearScratchGPUMemory();
 }
@@ -150,22 +152,22 @@ template void GlobalMaxPoolingBackwardCPU<CoordsToIndexMap, double>(
     py::object py_out_coords_key, py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template void GlobalMaxPoolingForwardGPU<CoordsToIndexMap, float>(
+template void GlobalMaxPoolingForwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void GlobalMaxPoolingForwardGPU<CoordsToIndexMap, double>(
+template void GlobalMaxPoolingForwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor num_nonzero,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void GlobalMaxPoolingBackwardGPU<CoordsToIndexMap, float>(
+template void GlobalMaxPoolingBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);
 
-template void GlobalMaxPoolingBackwardGPU<CoordsToIndexMap, double>(
+template void GlobalMaxPoolingBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     at::Tensor num_nonzero, py::object py_in_coords_key,
     py::object py_out_coords_key, py::object py_coords_manager);

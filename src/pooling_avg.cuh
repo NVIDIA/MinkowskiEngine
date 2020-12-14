@@ -27,6 +27,7 @@
 
 #include <array>
 #include <vector>
+#include <torch/extension.h>
 
 #include "gpu.cuh"
 #include "math_functions.hpp"
@@ -38,8 +39,7 @@ template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
                                        Dtype *d_out_feat, int out_nrows,
                                        Dtype *d_num_nonzero, int nchannel,
-                                       const pInOutMaps<Itype> &in_map,
-                                       const pInOutMaps<Itype> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                                        bool use_avg, cusparseHandle_t cushandle,
                                        cudaStream_t stream);
 
@@ -47,7 +47,7 @@ template <typename Dtype, typename Itype>
 void NonzeroAvgPoolingBackwardKernelGPU(
     Dtype *d_grad_in_feat, int in_nrows, const Dtype *d_grad_out_feat,
     int out_nrows, const Dtype *d_num_nonzero, int nchannel,
-    const pInOutMaps<Itype> &in_map, const pInOutMaps<Itype> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     bool use_avg, cudaStream_t stream);
 
 } // end namespace minkowski

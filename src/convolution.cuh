@@ -27,6 +27,7 @@
 
 #include <array>
 #include <vector>
+#include <torch/extension.h>
 
 #include "gpu.cuh"
 #include "math_functions.hpp"
@@ -48,8 +49,7 @@ template <typename Dtype, typename Itype>
 void ConvolutionForwardKernelGPU(const Dtype *d_in_feat, int in_nchannel,
                                  Dtype *d_out_feat, int out_nchannel,
                                  const Dtype *d_kernel,
-                                 const pInOutMaps<Itype> &in_map,
-                                 const pInOutMaps<Itype> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                                  int out_nrows, cublasHandle_t cuhandle,
                                  cudaStream_t stream);
 
@@ -58,8 +58,7 @@ void ConvolutionBackwardKernelGPU(const Dtype *d_in_feat, Dtype *d_grad_in_feat,
                                   int in_nchannel, const Dtype *d_grad_out_feat,
                                   int out_nchannel, const Dtype *d_kernel,
                                   Dtype *d_grad_kernel,
-                                  const pInOutMaps<Itype> &in_map,
-                                  const pInOutMaps<Itype> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                                   int out_nrows, cublasHandle_t cuhandle,
                                   cudaStream_t stream);
 } //end namespace minkowski

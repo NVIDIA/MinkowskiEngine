@@ -47,6 +47,7 @@ public:
   vector<int> operator*() { return point; };
 };
 
+// TODO(ljm): remove stride, stride will not affect region
 class Region {
 public:
   Region(const Region &region_);

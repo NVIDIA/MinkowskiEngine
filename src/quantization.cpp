@@ -230,21 +230,6 @@ template <typename Dtype> InOutMaps<Dtype> CopyToInOutMap(at::Tensor th_map) {
   return vec_map;
 }
 
-#ifndef CPU_ONLY
-template <typename Dtype>
-pInOutMaps<Dtype> CopyToInOutMapGPU(at::Tensor th_map) {
-  pInOutMaps<Dtype> vec_map;
-
-  Dtype *d_scr;
-  CUDA_CHECK(cudaMalloc(&d_scr, th_map.size(0) * sizeof(Dtype)));
-  CUDA_CHECK(cudaMemcpy(d_scr, th_map.template data<Dtype>(),
-                        th_map.size(0) * sizeof(Dtype),
-                        cudaMemcpyHostToDevice));
-  vec_map.push_back(pVector<Dtype>(d_scr, th_map.size(0)));
-  return vec_map;
-}
-#endif
-
 /**
  * A collection of feature averaging methods
  * mode == 0: non-weighted average
@@ -278,22 +263,19 @@ at::Tensor quantization_average_features(
   if (th_in_map.dtype() == torch::kInt64) {
     if (th_in_feat.is_cuda()) {
 #ifndef CPU_ONLY
-      auto vec_in_map = CopyToInOutMapGPU<int>(th_in_map);
-      auto vec_out_map = CopyToInOutMapGPU<int>(th_out_map);
-
       if (th_in_feat.dtype() == torch::kFloat32) {
         NonzeroAvgPoolingForwardKernelGPU<float, int>(
             th_in_feat.template data<float>(), th_in_feat.size(0),
             th_out_feat.template data<float>(), out_nrows,
             th_num_nonzero.template data<float>(), th_in_feat.size(1),
-            vec_in_map, vec_out_map, true, handle,
+            {th_in_map}, {th_out_map}, true, handle,
             at::cuda::getCurrentCUDAStream());
       } else if (th_in_feat.dtype() == torch::kFloat64) {
         NonzeroAvgPoolingForwardKernelGPU<float, int>(
             th_in_feat.template data<float>(), th_in_feat.size(0),
             th_out_feat.template data<float>(), out_nrows,
             th_num_nonzero.template data<float>(), th_in_feat.size(1),
-            vec_in_map, vec_out_map, true, handle,
+            {th_in_map}, {th_out_map}, true, handle,
             at::cuda::getCurrentCUDAStream());
       } else {
         throw std::runtime_error("Dtype not supported.");
@@ -324,22 +306,19 @@ at::Tensor quantization_average_features(
   } else if (th_in_map.dtype() == torch::kInt32) {
     if (th_in_feat.is_cuda()) {
 #ifndef CPU_ONLY
-      auto vec_in_map = CopyToInOutMapGPU<int>(th_in_map);
-      auto vec_out_map = CopyToInOutMapGPU<int>(th_out_map);
-
       if (th_in_feat.dtype() == torch::kFloat32) {
         NonzeroAvgPoolingForwardKernelGPU<float, int>(
             th_in_feat.template data<float>(), th_in_feat.size(0),
             th_out_feat.template data<float>(), out_nrows,
             th_num_nonzero.template data<float>(), th_in_feat.size(1),
-            vec_in_map, vec_out_map, true, handle,
+            {th_in_map}, {th_out_map}, true, handle,
             at::cuda::getCurrentCUDAStream());
       } else if (th_in_feat.dtype() == torch::kFloat64) {
         NonzeroAvgPoolingForwardKernelGPU<float, int>(
             th_in_feat.template data<float>(), th_in_feat.size(0),
             th_out_feat.template data<float>(), out_nrows,
             th_num_nonzero.template data<float>(), th_in_feat.size(1),
-            vec_in_map, vec_out_map, true, handle,
+            {th_in_map}, {th_out_map}, true, handle,
             at::cuda::getCurrentCUDAStream());
       } else {
         throw std::runtime_error("Dtype not supported.");

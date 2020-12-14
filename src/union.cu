@@ -23,7 +23,7 @@
  *  of the code.
  */
 #include "gpu.cuh"
-#include "pruning.cuh"
+#include "union.cuh"
 
 namespace minkowski {
 
@@ -62,53 +62,53 @@ __global__ void copy_in_out_map(const int n, const Dtype *in_feat,
 
 template <typename Dtype, typename Itype>
 void UnionForwardKernelGPU(const vector<Dtype *> d_in_feats, Dtype *d_out_feat,
-                           const int nchannel, const pInOutMaps<Itype> &in_maps,
-                           const pInOutMaps<Itype> &out_maps,
+                           const int nchannel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                            cudaStream_t stream) {
 
   for (size_t k = 0; k < in_maps.size(); k++) {
-    const size_t nnz = in_maps[k].size();
+    const size_t nnz = in_maps[k].size(0);
     add_in_out_map<Dtype, Itype>
         <<<GET_BLOCKS(nnz), CUDA_NUM_THREADS, 0, stream>>>(
-            nnz, d_in_feats[k], d_out_feat, nchannel, in_maps[k].data(),
-            out_maps[k].data());
+            nnz, d_in_feats[k], d_out_feat, nchannel, in_maps[k].data<Itype>(),
+            out_maps[k].data<Itype>());
   }
 }
 
 template <typename Dtype, typename Itype>
 void UnionBackwardKernelGPU(vector<Dtype *> d_grad_in_feats,
                             const Dtype *d_grad_out_feat, int nchannel,
-                            const pInOutMaps<Itype> &in_maps,
-                            const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                             cudaStream_t stream) {
 
   for (size_t k = 0; k < in_maps.size(); k++) {
-    const int nnz = in_maps[k].size();
+    const int nnz = in_maps[k].size(0);
     copy_in_out_map<Dtype, Itype>
         <<<GET_BLOCKS(nnz), CUDA_NUM_THREADS, 0, stream>>>(
             nnz, d_grad_out_feat, d_grad_in_feats[k], nchannel,
-            out_maps[k].data(), in_maps[k].data());
+            out_maps[k].data<Itype>(), in_maps[k].data<Itype>());
   }
 }
 
 template void UnionForwardKernelGPU<float, int32_t>(
     const vector<float *> d_in_feats, float *d_out_feat, int nchannel,
-    const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cudaStream_t stream);
 
 template void UnionBackwardKernelGPU<float, int32_t>(
     vector<float *> d_grad_in_feats, const float *d_grad_out_feat, int nchannel,
-    const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cudaStream_t stream);
 
 template void UnionForwardKernelGPU<double, int32_t>(
     const vector<double *> d_in_feats, double *d_out_feat, int nchannel,
-    const pInOutMaps<int32_t> &in_maps, const pInOutMaps<int32_t> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cudaStream_t stream);
 
 template void UnionBackwardKernelGPU<double, int32_t>(
     vector<double *> d_grad_in_feats, const double *d_grad_out_feat,
-    int nchannel, const pInOutMaps<int32_t> &in_maps,
-    const pInOutMaps<int32_t> &out_maps, cudaStream_t stream);
+    int nchannel,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
+    cudaStream_t stream);
 
 } // end namespace minkowski

@@ -32,6 +32,7 @@
 #include <torch/extension.h>
 
 #include "coords_manager.hpp"
+#include "gpu_coords_manager.hpp"
 #include "types.hpp"
 #include "utils.hpp"
 

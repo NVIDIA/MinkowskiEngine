@@ -98,9 +98,9 @@ void PruningForwardGPU(at::Tensor in_feat,  // GPU feat
                        py::object py_in_coords_key,
                        py::object py_out_coords_key,
                        py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
-  const auto &in_out = p_coords_manager->getPruningInOutMapsGPU(
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
+  const InOutMapKey map_key = p_coords_manager->getPruningInOutMaps(
       use_feat, py_in_coords_key, py_out_coords_key);
 
   // Get the total number of coords
@@ -115,7 +115,9 @@ void PruningForwardGPU(at::Tensor in_feat,  // GPU feat
 
     PruningForwardKernelGPU<Dtype, int>(
         in_feat.template data<Dtype>(), out_feat.template data<Dtype>(),
-        in_feat.size(1), get<0>(in_out), get<1>(in_out),
+        in_feat.size(1),
+        p_coords_manager->in_maps[map_key],
+        p_coords_manager->out_maps[map_key],
         at::cuda::getCurrentCUDAStream());
   }
 }
@@ -126,14 +128,14 @@ void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
                         py::object py_in_coords_key,
                         py::object py_out_coords_key,
                         py::object py_coords_manager) {
-  CoordsManager<MapType> *p_coords_manager =
-      py_coords_manager.cast<CoordsManager<MapType> *>();
+  GPUCoordsManager<MapType> *p_coords_manager =
+      py_coords_manager.cast<GPUCoordsManager<MapType> *>();
 
   const InOutMapKey map_key = p_coords_manager->getOriginMapHashKey(
       py_in_coords_key, py_out_coords_key);
 
-  ASSERT(p_coords_manager->d_in_maps.find(map_key) !=
-             p_coords_manager->d_in_maps.end(),
+  ASSERT(p_coords_manager->in_maps.find(map_key) !=
+             p_coords_manager->in_maps.end(),
          "The in-out map doesn't exist for backward. Did you run forward pass?")
 
   const int in_nrows = p_coords_manager->getCoordsSize(py_in_coords_key);
@@ -145,8 +147,8 @@ void PruningBackwardGPU(at::Tensor grad_in_feat,  // GPU feat
     PruningBackwardKernelGPU<Dtype, int>(grad_in_feat.template data<Dtype>(),
                                          grad_out_feat.template data<Dtype>(),
                                          nchannel,
-                                         p_coords_manager->d_in_maps[map_key],
-                                         p_coords_manager->d_out_maps[map_key],
+                                         p_coords_manager->in_maps[map_key],
+                                         p_coords_manager->out_maps[map_key],
                                          at::cuda::getCurrentCUDAStream());
   else
     WARNING(true, "MinkowskiPruning: Backprop from a size-0 sparse tensor.");
@@ -174,22 +176,22 @@ template void PruningBackwardCPU<CoordsToIndexMap, double>(
     py::object py_coords_manager);
 
 #ifndef CPU_ONLY
-template void PruningForwardGPU<CoordsToIndexMap, float>(
+template void PruningForwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void PruningForwardGPU<CoordsToIndexMap, double>(
+template void PruningForwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor in_feat, at::Tensor out_feat, at::Tensor use_feat,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void PruningBackwardGPU<CoordsToIndexMap, float>(
+template void PruningBackwardGPU<CoordsToIndexMapGPU, float>(
     at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);
 
-template void PruningBackwardGPU<CoordsToIndexMap, double>(
+template void PruningBackwardGPU<CoordsToIndexMapGPU, double>(
     at::Tensor grad_in_feat, at::Tensor grad_out_feat,
     py::object py_in_coords_key, py::object py_out_coords_key,
     py::object py_coords_manager);

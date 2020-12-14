@@ -28,6 +28,7 @@
 #include <array>
 #include <cusparse_v2.h>
 #include <vector>
+#include <torch/extension.h>
 
 #include "gpu.cuh"
 #include "gpu_memory_manager.hpp"
@@ -41,8 +42,7 @@ void BroadcastForwardKernelGPU(const Dtype *d_in_feat, int in_nrows,
                                const Dtype *d_in_feat_global,
                                int in_nrows_global, Dtype *d_out_feat,
                                int nchannel, int op,
-                               const pInOutMaps<Itype> &d_in_map,
-                               const pInOutMaps<Itype> &d_out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
                                cusparseHandle_t cushandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
@@ -50,7 +50,7 @@ void BroadcastBackwardKernelGPU(
     const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nrows,
     const Dtype *d_in_feat_global, Dtype *d_grad_in_feat_global,
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
-    const pInOutMaps<Itype> &d_in_map, const pInOutMaps<Itype> &d_out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 } // namespace minkowski

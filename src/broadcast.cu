@@ -80,13 +80,13 @@ template <typename Dtype, typename Itype>
 void BroadcastForwardKernelGPU(
     const Dtype *d_in_feat, int in_nrows, const Dtype *d_in_feat_global,
     int in_nrows_global, Dtype *d_out_feat, int nchannel, int op,
-    const pInOutMaps<Itype> &in_maps, const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cusparseHandle_t cushandle, cudaStream_t stream) {
 
   // Sum all sizes
   int num_map = 0;
   for (const auto &in_map : in_maps)
-    num_map += in_map.size();
+    num_map += in_map.size(0);
   if (num_map != in_nrows)
     throw std::invalid_argument("Invalid in_map");
 
@@ -100,14 +100,14 @@ void BroadcastForwardKernelGPU(
   case 0: // +
     channelwise_addition<Dtype, Itype>
         <<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
-            in_nrows, nchannel, d_in_feat_global, in_maps[0].data(),
-            out_maps[0].data(), d_out_feat);
+            in_nrows, nchannel, d_in_feat_global, in_maps[0].data<Itype>(),
+            out_maps[0].data<Itype>(), d_out_feat);
     break;
   case 1: // *
     channelwise_multiplication<Dtype, Itype>
         <<<GET_BLOCKS(in_nrows), CUDA_NUM_THREADS, 0, stream>>>(
-            in_nrows, nchannel, d_in_feat_global, in_maps[0].data(),
-            out_maps[0].data(), d_out_feat);
+            in_nrows, nchannel, d_in_feat_global, in_maps[0].data<Itype>(),
+            out_maps[0].data<Itype>(), d_out_feat);
     break;
   default:
     throw std::invalid_argument(Formatter() << "Operation not supported: "
@@ -121,13 +121,13 @@ void BroadcastForwardKernelGPU(
 template void BroadcastForwardKernelGPU<float, int32_t>(
     const float *d_in_feat, int in_nrows, const float *d_in_feat_global,
     int in_nrows_global, float *d_out_feat, int nchannel, int op,
-    const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cusparseHandle_t cuhandle, cudaStream_t stream);
 
 template void BroadcastForwardKernelGPU<double, int32_t>(
     const double *d_in_feat, int in_nrows, const double *d_in_feat_global,
     int in_nrows_global, double *d_out_feat, int nchannel, int op,
-    const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cusparseHandle_t cuhandle, cudaStream_t stream);
 
 template <typename Dtype, typename Itype>
@@ -135,7 +135,7 @@ void BroadcastBackwardKernelGPU(
     const Dtype *d_in_feat, Dtype *d_grad_in_feat, int in_nrows,
     const Dtype *d_in_feat_global, Dtype *d_grad_in_feat_global,
     int in_nrows_global, const Dtype *d_grad_out_feat, int nchannel, int op,
-    const pInOutMaps<Itype> &in_maps, const pInOutMaps<Itype> &out_maps,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cusparseHandle_t cushandle, cudaStream_t stream) {
   Itype *d_scr, *d_in_map, *d_out_map, *d_csr_row;
   Dtype *d_dtype, *d_csr_val, *d_tmp_grad_in_feat_global, *d_tmp_grad_in_feat;
@@ -155,7 +155,7 @@ void BroadcastBackwardKernelGPU(
   // Sum all sizes
   int num_map = 0;
   for (const auto &in_map : in_maps)
-    num_map += in_map.size();
+    num_map += in_map.size(0);
   if (num_map != in_nrows)
     throw std::invalid_argument("Invalid in_map");
 
@@ -175,12 +175,12 @@ void BroadcastBackwardKernelGPU(
   d_csr_row = d_scr + 2 * nnz; // in_nrows_global + 1
 
   CUDA_CHECK(cudaMemcpy(d_in_map,
-                        in_maps[0].data(), // in_maps are contiguous of size nnz
+                        in_maps[0].data<Itype>(), // in_maps are contiguous of size nnz
                         nnz * sizeof(int), cudaMemcpyDeviceToDevice));
 
   CUDA_CHECK(
       cudaMemcpy(d_out_map,
-                 out_maps[0].data(), // out_maps are contiguous of size nnz
+                 out_maps[0].data<Itype>(), // out_maps are contiguous of size nnz
                  nnz * sizeof(int), cudaMemcpyDeviceToDevice));
 
   /* tmp in out feat */
@@ -311,14 +311,14 @@ template void BroadcastBackwardKernelGPU<float, int32_t>(
     const float *d_in_feat, float *d_grad_in_feat, int in_nrows,
     const float *d_in_feat_global, float *d_grad_in_feat_global,
     int in_nrows_global, const float *d_grad_out_feat, int nchannel, int op,
-    const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 template void BroadcastBackwardKernelGPU<double, int32_t>(
     const double *d_in_feat, double *d_grad_in_feat, int in_nrows,
     const double *d_in_feat_global, double *d_grad_in_feat_global,
     int in_nrows_global, const double *d_grad_out_feat, int nchannel, int op,
-    const pInOutMaps<int32_t> &in_map, const pInOutMaps<int32_t> &out_map,
+    const vector<at::Tensor>& in_maps, const vector<at::Tensor>& out_maps,
     cusparseHandle_t cushandle, cudaStream_t stream);
 
 } // namespace minkowski
