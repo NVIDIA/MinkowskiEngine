@@ -622,6 +622,7 @@ class MinkowskiGenerativeConvolutionTranspose(MinkowskiConvolutionBase):
             bias,
             kernel_generator,
             is_transpose=True,
+            expand_coordinates=True,
             convolution_mode=convolution_mode,
             dimension=dimension,
         )
