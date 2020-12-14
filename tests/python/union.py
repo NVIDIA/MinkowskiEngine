@@ -60,22 +60,30 @@ class TestUnion(unittest.TestCase):
         self.assertTrue(torch.prod(input1.F.grad) == 1)
         self.assertTrue(torch.prod(input2.F.grad) == 1)
 
-        with torch.cuda.device(0):
-            device = torch.device("cuda")
-            input1 = SparseTensor(feats1, coords1, device=device, requires_grad=True)
-            input2 = SparseTensor(
-                feats2,
-                coords2,
-                device=device,
-                coordinate_manager=input1.coordinate_manager,
-                requires_grad=True,
-            )
-            output = union(input1, input2)
+    def test_union_gpu(self):
+        device = torch.device("cuda")
 
-            output.F.sum().backward()
-            print(output)
-            self.assertTrue(len(output) == 3)
-            self.assertTrue(5 in output.F)
+        coords1 = torch.IntTensor([[0, 0], [0, 1]])
+        coords2 = torch.IntTensor([[0, 1], [1, 1]])
+        feats1 = torch.DoubleTensor([[1], [2]])
+        feats2 = torch.DoubleTensor([[3], [4]])
+        union = MinkowskiUnion()
+
+        input1 = SparseTensor(feats1, coords1, device=device, requires_grad=True)
+        input2 = SparseTensor(
+            feats2,
+            coords2,
+            device=device,
+            coordinate_manager=input1.coordinate_manager,
+            requires_grad=True,
+        )
+        output_gpu = union(input1, input2)
+        output_gpu.F.sum().backward()
+        print(output_gpu)
+        self.assertTrue(len(output_gpu) == 3)
+        self.assertTrue(1 in output_gpu.F)
+        self.assertTrue(5 in output_gpu.F)
+        self.assertTrue(4 in output_gpu.F)
 
 
 if __name__ == "__main__":

@@ -1013,6 +1013,12 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::merge(
                         detail::is_first<index_type>(unused_key)) -
       valid_begin;
 
+  // remap the final map values
+  detail::remap<coordinate_type, size_type, index_type, map_type>
+      <<<GET_BLOCKS(number_of_valid, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
+          number_of_valid, *(merged_map.m_map),
+          thrust::raw_pointer_cast(merged_map.m_valid_map_index.data()));
+
   merged_map.m_valid_row_index.resize(number_of_valid);
   merged_map.m_valid_map_index.resize(number_of_valid);
   merged_map.m_size = number_of_valid;
