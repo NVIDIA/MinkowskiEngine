@@ -22,7 +22,7 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-__version__ = "0.5.0c"
+__version__ = "0.5.0"
 
 import os
 import sys
