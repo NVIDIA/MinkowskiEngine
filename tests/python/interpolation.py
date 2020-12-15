@@ -67,7 +67,6 @@ class TestInterpolation(unittest.TestCase):
                     input.F,
                     tfield,
                     input.coordinate_map_key,
-                    None,
                     input._manager,
                 ),
             )
@@ -113,7 +112,6 @@ class TestInterpolation(unittest.TestCase):
                     input.F,
                     tfield,
                     input.coordinate_map_key,
-                    None,
                     input._manager,
                 ),
             )

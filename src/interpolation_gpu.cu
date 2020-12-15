@@ -42,10 +42,9 @@ namespace minkowski {
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::vector<at::Tensor> InterpolationForwardGPU(
-    at::Tensor const &in_feat,             //
-    at::Tensor const &tfield,              //
-    CoordinateMapKey *p_in_map_key,        //
-    CoordinateMapKey *p_out_field_map_key, //
+    at::Tensor const &in_feat,      //
+    at::Tensor const &tfield,       //
+    CoordinateMapKey *p_in_map_key, //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager) {
 
   ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
@@ -68,8 +67,8 @@ std::vector<at::Tensor> InterpolationForwardGPU(
   ASSERT(in_feat.size(0) == p_map_manager->size(in_key), "Invalid in_feat size",
          in_feat.size(0), "!=", p_map_manager->size(in_key));
 
-  auto map_weight = p_map_manager->interpolation_map_weight(
-      tfield, p_in_map_key, p_out_field_map_key);
+  auto map_weight =
+      p_map_manager->interpolation_map_weight(tfield, p_in_map_key);
 
   auto const &in_maps = map_weight[0];
   auto const &out_maps = map_weight[1];
@@ -111,20 +110,18 @@ at::Tensor InterpolationBackwardGPU(
 template std::vector<at::Tensor>
 InterpolationForwardGPU<default_types::dcoordinate_type,
                         detail::default_allocator>(
-    at::Tensor const &in_feat,             //
-    at::Tensor const &tfield,              //
-    CoordinateMapKey *p_in_map_key,        //
-    CoordinateMapKey *p_out_field_map_key, //
+    at::Tensor const &in_feat,      //
+    at::Tensor const &tfield,       //
+    CoordinateMapKey *p_in_map_key, //
     gpu_manager_type<default_types::dcoordinate_type, detail::default_allocator>
         *p_map_manager);
 
 template std::vector<at::Tensor>
 InterpolationForwardGPU<default_types::dcoordinate_type,
                         detail::c10_allocator>(
-    at::Tensor const &in_feat,             //
-    at::Tensor const &tfield,              //
-    CoordinateMapKey *p_in_map_key,        //
-    CoordinateMapKey *p_out_field_map_key, //
+    at::Tensor const &in_feat,      //
+    at::Tensor const &tfield,       //
+    CoordinateMapKey *p_in_map_key, //
     gpu_manager_type<default_types::dcoordinate_type, detail::c10_allocator>
         *p_map_manager);
 

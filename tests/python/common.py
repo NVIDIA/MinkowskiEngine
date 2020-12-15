@@ -54,7 +54,14 @@ def get_coords(data):
     return np.array(coords)
 
 
-def data_loader(nchannel=3, max_label=5, is_classification=True, seed=-1, batch_size=2):
+def data_loader(
+    nchannel=3,
+    max_label=5,
+    is_classification=True,
+    seed=-1,
+    batch_size=2,
+    dtype=torch.float32,
+):
     if seed >= 0:
         torch.manual_seed(seed)
 
@@ -66,6 +73,6 @@ def data_loader(nchannel=3, max_label=5, is_classification=True, seed=-1, batch_
 
     # features and labels
     N = len(coords)
-    feats = torch.arange(N * nchannel).view(N, nchannel)
+    feats = torch.arange(N * nchannel).view(N, nchannel).to(dtype)
     label = (torch.rand(2 if is_classification else N) * max_label).long()
     return coords, feats, label

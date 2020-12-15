@@ -83,7 +83,7 @@ class SparseTensorTestCase(unittest.TestCase):
         st = SparseTensor(feats, coords, device=feats.device)
         print(st)
 
-    def test_duplicate_coords(self):
+    def test_quantization(self):
         print(f"{self.__class__.__name__}: test_duplicate_coords")
         coords, feats, labels = data_loader(nchannel=2)
         # create duplicate coords
@@ -110,6 +110,44 @@ class SparseTensorTestCase(unittest.TestCase):
             features=feats,
             quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
         )
+        self.assertTrue(len(sinput) == 4)
+        self.assertTrue(0.5 in sinput.features)
+        self.assertTrue(2.5 in sinput.features)
+        self.assertTrue(5.5 in sinput.features)
+        self.assertTrue(7 in sinput.features)
+        self.assertTrue(len(sinput.slice(sinput)) == len(coords))
+
+    def test_quantization_gpu(self):
+        print(f"{self.__class__.__name__}: test_duplicate_coords")
+        coords, feats, labels = data_loader(nchannel=2)
+        # create duplicate coords
+        coords[0] = coords[1]
+        coords[2] = coords[3]
+        input = SparseTensor(feats, coordinates=coords)
+        self.assertTrue(len(input) == len(coords) - 2)
+        input = SparseTensor(
+            feats,
+            coordinates=coords,
+            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+            device="cuda",
+        )
+        self.assertTrue(len(coords) == 16)
+        self.assertTrue(len(input) == 14)
+        print(input)
+
+        # 1D
+        coords = torch.IntTensor(
+            [[0, 1], [0, 1], [0, 2], [0, 2], [1, 0], [1, 0], [1, 1]]
+        )
+        feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T
+        # 0.5, 2.5, 5.5, 7
+        sinput = SparseTensor(
+            coordinates=coords,
+            features=feats,
+            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+            device="cuda",
+        )
+        print(sinput)
         self.assertTrue(len(sinput) == 4)
         self.assertTrue(0.5 in sinput.features)
         self.assertTrue(2.5 in sinput.features)

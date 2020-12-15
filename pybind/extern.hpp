@@ -74,7 +74,7 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
                        default_types::stride_type const &kernel_dilation, //
                        RegionType::Type const region_type,                //
                        at::Tensor const &offsets,                         //
-                      ConvolutionMode::Type const convolution_mode,      //
+                       ConvolutionMode::Type const convolution_mode,      //
                        CoordinateMapKey *p_in_map_key,                    //
                        CoordinateMapKey *p_out_map_key,                   //
                        cpu_manager_type<coordinate_type> *p_map_manager);
@@ -366,10 +366,9 @@ at::Tensor PruningBackwardGPU(
  *************************************/
 template <typename coordinate_type>
 std::vector<at::Tensor>
-InterpolationForwardCPU(at::Tensor const &in_feat,             //
-                        at::Tensor const &tfield,              //
-                        CoordinateMapKey *p_in_map_key,        //
-                        CoordinateMapKey *p_out_field_map_key, //
+InterpolationForwardCPU(at::Tensor const &in_feat,      //
+                        at::Tensor const &tfield,       //
+                        CoordinateMapKey *p_in_map_key, //
                         cpu_manager_type<coordinate_type> *p_map_manager);
 
 template <typename coordinate_type>
@@ -385,10 +384,9 @@ InterpolationBackwardCPU(at::Tensor &grad_out_feat,      //
 template <typename coordinate_type,
           template <typename C> class TemplatedAllocator>
 std::vector<at::Tensor> InterpolationForwardGPU(
-    at::Tensor const &in_feat,             //
-    at::Tensor const &tfield,              //
-    CoordinateMapKey *p_in_map_key,        //
-    CoordinateMapKey *p_out_field_map_key, //
+    at::Tensor const &in_feat,      //
+    at::Tensor const &tfield,       //
+    CoordinateMapKey *p_in_map_key, //
     gpu_manager_type<coordinate_type, TemplatedAllocator> *p_map_manager);
 
 template <typename coordinate_type,
@@ -638,12 +636,9 @@ void initialize_non_templated_classes(py::module &m) {
       .export_values();
 
   py::enum_<minkowski::ConvolutionMode::Type>(m, "ConvolutionMode")
-      .value("DEFAULT",
-             minkowski::ConvolutionMode::Type::DEFAULT)
-      .value("DIRECT_GEMM",
-             minkowski::ConvolutionMode::Type::DIRECT_GEMM)
-      .value("COPY_GEMM",
-             minkowski::ConvolutionMode::Type::COPY_GEMM)
+      .value("DEFAULT", minkowski::ConvolutionMode::Type::DEFAULT)
+      .value("DIRECT_GEMM", minkowski::ConvolutionMode::Type::DIRECT_GEMM)
+      .value("COPY_GEMM", minkowski::ConvolutionMode::Type::COPY_GEMM)
       .export_values();
 
   // Classes

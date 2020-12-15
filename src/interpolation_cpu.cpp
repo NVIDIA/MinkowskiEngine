@@ -40,10 +40,9 @@ namespace minkowski {
 
 template <typename coordinate_type>
 std::vector<at::Tensor>
-InterpolationForwardCPU(at::Tensor const &in_feat,             //
-                        at::Tensor const &tfield,              //
-                        CoordinateMapKey *p_in_map_key,        //
-                        CoordinateMapKey *p_out_field_map_key, //
+InterpolationForwardCPU(at::Tensor const &in_feat,      //
+                        at::Tensor const &tfield,       //
+                        CoordinateMapKey *p_in_map_key, //
                         cpu_manager_type<coordinate_type> *p_map_manager) {
 
   ASSERT(in_feat.is_contiguous(), "in_feat must be contiguous");
@@ -63,8 +62,8 @@ InterpolationForwardCPU(at::Tensor const &in_feat,             //
   ASSERT(in_feat.size(0) == p_map_manager->size(in_key), "Invalid in_feat size",
          in_feat.size(0), "!=", p_map_manager->size(in_key));
 
-  auto map_weight = p_map_manager->interpolation_map_weight(
-      tfield, p_in_map_key, p_out_field_map_key);
+  auto map_weight =
+      p_map_manager->interpolation_map_weight(tfield, p_in_map_key);
 
   LOG_DEBUG("out_feat with size", tfield.size(0), in_feat.size(1));
   auto out_feat =
@@ -128,10 +127,9 @@ InterpolationBackwardCPU(at::Tensor &grad_out_feat,      //
 }
 
 template std::vector<at::Tensor>
-InterpolationForwardCPU<int32_t>(at::Tensor const &in_feat,             //
-                                 at::Tensor const &tfield,              //
-                                 CoordinateMapKey *p_in_map_key,        //
-                                 CoordinateMapKey *p_out_field_map_key, //
+InterpolationForwardCPU<int32_t>(at::Tensor const &in_feat,      //
+                                 at::Tensor const &tfield,       //
+                                 CoordinateMapKey *p_in_map_key, //
                                  cpu_manager_type<int32_t> *p_map_manager);
 
 template at::Tensor

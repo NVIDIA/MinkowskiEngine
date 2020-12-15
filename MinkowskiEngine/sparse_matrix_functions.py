@@ -62,7 +62,7 @@ def spmm(
         elif vals.dtype == torch.float32:
             torchSparseTensor = torch.sparse.FloatTensor
         else:
-            raise ValueError("Unsupported data type")
+            raise ValueError(f"Unsupported data type: {vals.dtype}")
 
         sp = torchSparseTensor(COO, vals, size)
         return sp.matmul(mat)

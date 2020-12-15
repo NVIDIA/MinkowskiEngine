@@ -43,19 +43,16 @@ class MinkowskiInterpolationFunction(Function):
         input_features: torch.Tensor,
         tfield: torch.Tensor,
         in_coordinate_map_key: CoordinateMapKey,
-        tfield_key: CoordinateMapKey = None,
         coordinate_manager: CoordinateManager = None,
     ):
-        if tfield_key is None:
-            tfield_key = CoordinateMapKey(in_coordinate_map_key.get_coordinate_size())
         input_features = input_features.contiguous()
-
+        # in_map, out_map, weights = coordinate_manager.interpolation_map_weight(
+        #     in_coordinate_map_key, tfield)
         fw_fn = get_minkowski_function("InterpolationForward", input_features)
         out_feat, in_map, out_map, weights = fw_fn(
             input_features,
             tfield,
             in_coordinate_map_key,
-            tfield_key,
             coordinate_manager._manager,
         )
         ctx.save_for_backward(in_map, out_map, weights)
@@ -85,7 +82,7 @@ class MinkowskiInterpolationFunction(Function):
             in_coordinate_map_key,
             coordinate_manager._manager,
         )
-        return grad_in_feat, None, None, None, None
+        return grad_in_feat, None, None, None
 
 
 class MinkowskiInterpolation(MinkowskiModuleBase):
@@ -117,7 +114,6 @@ class MinkowskiInterpolation(MinkowskiModuleBase):
             input.F,
             tfield,
             input.coordinate_map_key,
-            None,
             input._manager,
         )
 

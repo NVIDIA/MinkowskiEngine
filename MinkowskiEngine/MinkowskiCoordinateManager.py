@@ -337,11 +337,8 @@ class CoordinateManager:
         self,
         key: CoordinateMapKey,
         samples: torch.Tensor,
-        sample_key: CoordinateMapKey = None,
     ):
-        if sample_key is None:
-            sample_key = CoordinateMapKey(key.get_coordinate_size())
-        return self._manager.interpolation_map_weight(samples, key, sample_key)
+        return self._manager.interpolation_map_weight(samples, key)
 
     # def get_union_map(self, in_keys: List[CoordsKey], out_key: CoordsKey):
     #     r"""Generates a union of coordinate sets and returns the mapping from input sets to the new output coordinates.

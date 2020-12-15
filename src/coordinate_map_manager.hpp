@@ -361,8 +361,7 @@ public:
   // interpolation map
   std::vector<at::Tensor>
   interpolation_map_weight(at::Tensor const &tfield,
-                           CoordinateMapKey const *py_in_coords_key,
-                           CoordinateMapKey *p_out_field_map_key);
+                           CoordinateMapKey const *py_in_coords_key);
 
   std::pair<at::Tensor, std::vector<at::Tensor>>
   origin_map_th(CoordinateMapKey const *py_out_coords_key);

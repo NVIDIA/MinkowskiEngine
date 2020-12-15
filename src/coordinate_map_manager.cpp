@@ -312,8 +312,8 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   // generate the map_key
   coordinate_map_key_type map_key = std::make_pair(tensor_stride, string_id);
   if (m_coordinate_maps.find(map_key) != m_coordinate_maps.end()) {
-    WARNING(true, "CoordinateMapKey collision detected:", map_key,
-            "generating new string id.");
+    LOG_DEBUG("CoordinateMapKey collision detected:", map_key,
+              "generating new string id.");
     map_key = get_random_string_id(tensor_stride, string_id);
   }
 
@@ -810,16 +810,8 @@ std::vector<at::Tensor>
 CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
                      CoordinateMapType>::
     interpolation_map_weight(at::Tensor const &tfield,
-                             CoordinateMapKey const *p_in_map_key,
-                             CoordinateMapKey *p_out_field_map_key) {
+                             CoordinateMapKey const *p_in_map_key) {
   ASSERT(exists(p_in_map_key), ERROR_MAP_NOT_FOUND);
-
-  // set the field key if not set
-  if (!p_out_field_map_key->is_key_set()) {
-    auto out_key = get_random_string_id(p_in_map_key->get_key().first, "");
-    p_out_field_map_key->set_key(out_key);
-  }
-
   return m_coordinate_maps.find(p_in_map_key->get_key())
       ->second.interpolation_map_weight(tfield);
 }
