@@ -142,10 +142,10 @@ void NonzeroAvgPoolingForwardKernelGPU(
 #if defined(CUDART_VERSION) && (CUDART_VERSION < 10010)
   ASSERT(false, "spmm sparse-dense requires CUDA 10.1 or greater");
 #elif defined(CUDART_VERSION) && (CUDART_VERSION >= 10010) &&                  \
-    (CUDART_VERSION < 11100)
+    (CUDART_VERSION < 11010)
   mm_alg = CUSPARSE_COOMM_ALG1;
   static_assert(is_int32, "int64 cusparseSpMM requires CUDA 11.1 or greater");
-#elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11100)
+#elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11010)
   mm_alg = CUSPARSE_SPMM_COO_ALG1;
   static_assert(is_int32 || is_int64, "Invalid index type");
 #endif
