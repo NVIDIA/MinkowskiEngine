@@ -235,7 +235,7 @@ if __name__ == "__main__":
 
         # Get new data
         coords, feat, label = data_loader()
-        input = ME.SparseTensor(feat, coords=coords).to(device)
+        input = ME.SparseTensor(feat, coords, device=device)
         label = label.to(device)
 
         # Forward

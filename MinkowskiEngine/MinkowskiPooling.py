@@ -181,7 +181,9 @@ class MinkowskiPoolingBase(MinkowskiModuleBase):
 
     def __repr__(self):
         s = "(kernel_size={}, stride={}, dilation={})".format(
-            self.kernel_size, self.stride, self.dilation
+            self.kernel_generator.kernel_size,
+            self.kernel_generator.kernel_stride,
+            self.kernel_generator.kernel_dilation,
         )
         return self.__class__.__name__ + s
 
@@ -659,8 +661,7 @@ class MinkowskiGlobalPoolingFunction(Function):
 
 
 class MinkowskiGlobalPooling(MinkowskiModuleBase):
-    r"""Pool all input features to one output.
-    """
+    r"""Pool all input features to one output."""
 
     def __init__(self, mode: PoolingMode = PoolingMode.GLOBAL_AVG_POOLING_DEFAULT):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
