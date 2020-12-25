@@ -9,10 +9,11 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 ## News
 
+- 2020-12-24 v0.5 version is now available!
 - 2020-08-18 v0.5 beta version is now available! [The speedup compared with v0.4.3 ranges from x2 to x5 depending on the network architectures](https://github.com/chrischoy/MinkowskiEngineBenchmark). Please install with the following command. The migration guide from v0.4 to v0.5 is available at [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Migration-Guide-from-v0.4.x-to-0.5.x). Feel free to update the wiki page to add and update any discrepancies you see.
 
 ```
-pip install git+https://github.com/NVIDIA/MinkowskiEngine.git@v0.5
+pip install git+https://github.com/NVIDIA/MinkowskiEngine.git
 ```
 
 Note: Union and Broadcasting functions not available currently.

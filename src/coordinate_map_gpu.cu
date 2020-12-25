@@ -86,8 +86,6 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
     auto const result = map.insert(thrust::make_pair(
         coordinate<coordinate_type>{&coordinates[x * coordinate_size]}, x));
 
-    // for unique_mapping. remove failed valid_row_index with success
-    // success[x] = result.second;
     if (result.second) {
       valid_row_index[x] = x;
       // success map index. remove failed insertion with success.
@@ -95,13 +93,6 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
     } else {
       valid_map_index[x] = unused_key;
     }
-    // for inverse_mapping.
-    // if (result.second)
-    //   inverse_row_index[x] = x;
-    // else {
-    //   auto it = result.first;
-    //   inverse_row_index[x] = it->second;
-    // }
   }
 }
 
@@ -943,6 +934,39 @@ __global__ void copy_coordinates_by_valid_row(
   }
 }
 
+template <typename coordinate_type, //
+          typename size_type,       //
+          typename index_type,      //
+          typename map_type>
+__global__ void insert_and_map_kernel_with_offset(
+    map_type __restrict__ map,                       //
+    coordinate_type const *__restrict__ coordinates, //
+    index_type const coordinate_row_offset,          //
+    index_type *__restrict__ valid_map_index,        //
+    index_type *__restrict__ valid_row_index,        //
+    size_type const num_threads,                     //
+    size_type const coordinate_size,                 //
+    index_type const unused_key) {
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (x < num_threads) {
+    // m_map.insert(pair);
+    // Returns pair<iterator, (bool)insert_success>
+    auto const result = map.insert(thrust::make_pair(
+        coordinate<coordinate_type>{&coordinates[x * coordinate_size]}, x));
+
+    if (result.second) {
+      valid_row_index[x] = x + coordinate_row_offset;
+      // success map index. remove failed insertion with success.
+      valid_map_index[x] = result.first.offset();
+    } else {
+      valid_map_index[x] = unused_key;
+    }
+  }
+}
+
 } // namespace detail
 
 template <typename coordinate_type,
@@ -969,6 +993,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::merge(
   index_type *curr_valid_row_index =
       thrust::raw_pointer_cast(merged_map.m_valid_row_index.data());
   index_type const unused_key = std::numeric_limits<index_type>::max();
+  index_type row_offset{0};
   for (self_type const &map : maps) {
     size_type const num_threads = map.size();
     if (num_threads == 0)
@@ -985,11 +1010,22 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::merge(
             num_threads * m_coordinate_size,                        //
             m_coordinate_size);
 
+#ifdef DEBUG
+    // Copy coordinates to CPU
+    std::vector<coordinate_type> curr_coords(num_threads * m_coordinate_size);
+    CUDA_CHECK(cudaMemcpy(curr_coords.data(), map.const_coordinate_data(),
+        num_threads * m_coordinate_size * sizeof(coordinate_type),
+        cudaMemcpyDeviceToHost);
+    for (int i = 0; i < num_threads; ++i)
+      LOG_DEBUG(PtrToString(&curr_coords[i * m_coordinate_size], m_coordinate_size));
+#endif
+
     // TODO: add offset to the out row index
-    detail::insert_and_map_kernel<coordinate_type, size_type, index_type,
+    detail::insert_and_map_kernel_with_offset<coordinate_type, size_type, index_type,
                                   map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
         *(merged_map.m_map),
         curr_coordinates,      //
+        row_offset,            //
         curr_valid_map_offset, //
         curr_valid_row_index,  //
         num_threads, m_coordinate_size, unused_key);
@@ -998,6 +1034,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::merge(
     curr_coordinates += num_threads * m_coordinate_size;
     curr_valid_map_offset += num_threads;
     curr_valid_row_index += num_threads;
+    row_offset += num_threads;
   }
 
   // Remove invalid maps
@@ -1013,7 +1050,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::merge(
                         detail::is_first<index_type>(unused_key)) -
       valid_begin;
 
-  // remap the final map values
+  // remap the final map row index and the map offset
   detail::remap<coordinate_type, size_type, index_type, map_type>
       <<<GET_BLOCKS(number_of_valid, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
           number_of_valid, *(merged_map.m_map),
