@@ -128,6 +128,12 @@ class MinkowskiUnion(Module):
         for s in inputs:
             assert isinstance(s, SparseTensor), "Inputs must be sparse tensors."
         assert len(inputs) > 1, "input must be a set with at least 2 SparseTensors"
+        # Assert the same coordinate manager
+        ref_coordinate_manager = inputs[0].coordinate_manager
+        for s in inputs:
+            assert (
+                ref_coordinate_manager == s.coordinate_manager
+            ), "Invalid coordinate manager. All inputs must have the same coordinate manager."
 
         in_coordinate_map_key = inputs[0].coordinate_map_key
         coordinate_manager = inputs[0].coordinate_manager
