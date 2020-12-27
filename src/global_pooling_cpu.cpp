@@ -225,15 +225,19 @@ GlobalPoolingBackwardCPU(at::Tensor const &in_feat, at::Tensor &grad_out_feat,
   // if (pooling_mode == 0)
   //   pooling_mode = in_feat.size(0) / batch_size > 100 ? 1 : 2;
 
-  if (pooling_mode == PoolingMode::GLOBAL_SUM_POOLING_KERNEL ||
+  if (pooling_mode == PoolingMode::GLOBAL_SUM_POOLING_DEFAULT ||
+      pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_DEFAULT ||
+      pooling_mode == PoolingMode::GLOBAL_SUM_POOLING_KERNEL ||
       pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_KERNEL ||
       pooling_mode == PoolingMode::GLOBAL_SUM_POOLING_PYTORCH_INDEX ||
       pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_PYTORCH_INDEX) {
 
+    LOG_DEBUG("GLOBAL_POOLING");
     if (batch_size == 1) {
-      if (use_avg)
+      if (use_avg) {
+        LOG_DEBUG("Copying grad_out_feat. size:", in_feat.size(0));
         grad_in_feat.copy_(grad_out_feat / in_feat.size(0));
-      else
+      } else
         grad_in_feat.copy_(grad_out_feat);
     } else {
       const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
