@@ -27,7 +27,7 @@ from torch.optim import SGD
 
 import MinkowskiEngine as ME
 
-from tests.common import data_loader
+from tests.python.common import data_loader
 
 
 class ExampleNetwork(ME.MinkowskiNetwork):
@@ -41,7 +41,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
                 kernel_size=3,
                 stride=2,
                 dilation=1,
-                has_bias=False,
+                bias=False,
                 dimension=D), ME.MinkowskiBatchNorm(64), ME.MinkowskiReLU(),
             ME.MinkowskiConvolution(
                 in_channels=64,
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
         # Get new data
         coords, feat, label = data_loader()
-        input = ME.SparseTensor(feat, coords=coords).to(device)
+        input = ME.SparseTensor(feat, coords, device=device)
         label = label.to(device)
 
         # Forward

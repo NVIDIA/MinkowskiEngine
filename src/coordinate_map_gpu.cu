@@ -1010,17 +1010,6 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::merge(
             num_threads * m_coordinate_size,                        //
             m_coordinate_size);
 
-#ifdef DEBUG
-    // Copy coordinates to CPU
-    std::vector<coordinate_type> curr_coords(num_threads * m_coordinate_size);
-    CUDA_CHECK(cudaMemcpy(curr_coords.data(), map.const_coordinate_data(),
-        num_threads * m_coordinate_size * sizeof(coordinate_type),
-        cudaMemcpyDeviceToHost);
-    for (int i = 0; i < num_threads; ++i)
-      LOG_DEBUG(PtrToString(&curr_coords[i * m_coordinate_size], m_coordinate_size));
-#endif
-
-    // TODO: add offset to the out row index
     detail::insert_and_map_kernel_with_offset<coordinate_type, size_type, index_type,
                                   map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
         *(merged_map.m_map),

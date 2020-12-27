@@ -346,7 +346,7 @@ std::pair<coordinate_map_key_type, bool> CoordinateMapManager<
             "kernel stride:", kernel_stride);
   coordinate_map_key_type out_map_key(
       detail::stride_tensor_stride(in_map_key.first, kernel_stride, false),
-      string_id);
+      string_id == "" ? in_map_key.second : string_id);
   LOG_DEBUG("Out stride map key:", out_map_key);
   bool const exists_out_map = exists(out_map_key);
   if (!exists_out_map) {
