@@ -25,6 +25,8 @@ import torch
 import numpy as np
 from collections import Sequence
 import MinkowskiEngineBackend._C as MEB
+from typing import Union, Tuple
+from MinkowskiCommon import convert_to_int_list
 
 
 def fnv_hash_vec(arr):
@@ -121,8 +123,8 @@ def quantize_label(coords, labels, ignore_label):
 
 
 def sparse_quantize(
-    coords,
-    feats=None,
+    coordinates,
+    features=None,
     labels=None,
     ignore_label=-100,
     return_index=False,
@@ -135,11 +137,11 @@ def sparse_quantize(
     generates quantized (voxelized) coordinates.
 
     Args:
-        :attr:`coords` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`): a
+        :attr:`coordinates` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`): a
         matrix of size :math:`N \times D` where :math:`N` is the number of
         points in the :math:`D` dimensional space.
 
-        :attr:`feats` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`, optional): a
+        :attr:`features` (:attr:`numpy.ndarray` or :attr:`torch.Tensor`, optional): a
         matrix of size :math:`N \times D_F` where :math:`N` is the number of
         points and :math:`D_F` is the dimension of the features. Must have the
         same container as `coords` (i.e. if `coords` is a torch.Tensor, `feats`
@@ -201,65 +203,79 @@ def sparse_quantize(
 
 
     """
-    assert isinstance(coords, np.ndarray) or isinstance(
-        coords, torch.Tensor
+    assert isinstance(
+        coordinates, (np.ndarray, torch.Tensor)
     ), "Coords must be either np.array or torch.Tensor."
 
     use_label = labels is not None
-    use_feat = feats is not None
+    use_feat = features is not None
 
     assert (
-        coords.ndim == 2
+        coordinates.ndim == 2
     ), "The coordinates must be a 2D matrix. The shape of the input is " + str(
-        coords.shape
+        coordinates.shape
     )
 
     if return_inverse:
         assert return_index, "return_reverse must be set with return_index"
 
     if use_feat:
-        assert feats.ndim == 2
-        assert coords.shape[0] == feats.shape[0]
+        assert features.ndim == 2
+        assert coordinates.shape[0] == features.shape[0]
 
     if use_label:
-        assert coords.shape[0] == len(labels)
+        assert coordinates.shape[0] == len(labels)
 
-    dimension = coords.shape[1]
+    dimension = coordinates.shape[1]
     # Quantize the coordinates
     if quantization_size is not None:
         if isinstance(quantization_size, (Sequence, np.ndarray, torch.Tensor)):
             assert (
                 len(quantization_size) == dimension
             ), "Quantization size and coordinates size mismatch."
-            if isinstance(coords, np.ndarray):
+            if isinstance(coordinates, np.ndarray):
                 quantization_size = np.array([i for i in quantization_size])
-                discrete_coords = np.floor(coords / quantization_size)
+                discrete_coordinates = np.floor(coordinates / quantization_size)
             else:
                 quantization_size = torch.Tensor([i for i in quantization_size])
-                discrete_coords = (coords / quantization_size).floor()
+                discrete_coordinates = (coordinates / quantization_size).floor()
 
         elif np.isscalar(quantization_size):  # Assume that it is a scalar
 
             if quantization_size == 1:
-                discrete_coords = coords
+                discrete_coordinates = coordinates
             else:
-                discrete_coords = np.floor(coords / quantization_size)
+                discrete_coordinates = np.floor(coordinates / quantization_size)
         else:
             raise ValueError("Not supported type for quantization_size.")
     else:
-        discrete_coords = coords
+        discrete_coordinates = coordinates
 
-    discrete_coords = np.floor(discrete_coords)
-    if isinstance(coords, np.ndarray):
-        discrete_coords = discrete_coords.astype(np.int32)
+    discrete_coordinates = np.floor(discrete_coordinates)
+    if isinstance(coordinates, np.ndarray):
+        discrete_coordinates = discrete_coordinates.astype(np.int32)
     else:
-        discrete_coords = discrete_coords.int()
+        discrete_coordinates = discrete_coordinates.int()
 
-    assert device in ["cpu", "cuda"], "Invalid device. ['cpu', 'cuda']"
+    if device == "cpu":
+        manager = MEB.CoordinateMapManagerCPU()
+    elif "cuda" in device:
+        manager = MEB.CoordinateMapManagerGPU_c10()
+    else:
+        raise ValueError("Invalid device")
 
     # Return values accordingly
     if use_label:
-        unique_map, colabels = quantize_label(discrete_coords, labels, ignore_label)
+        # unique_map, colabels = quantize_label(discrete_coordinates, labels, ignore_label)
+        tensor_stride = [1 for i in range(discrete_coordinates.shape[1] - 1)]
+        discrete_coordinates = (
+            discrete_coordinates.to(device)
+            if isinstance(discrete_coordinates, torch.Tensor)
+            else torch.from_numpy(discrete_coordinates).to(device)
+        )
+        _, (unique_map, inverse_map) = manager.insert_and_map(
+            discrete_coordinates, tensor_stride, ""
+        )
 
         assert (
             device == "cpu"
@@ -269,28 +285,25 @@ def sparse_quantize(
             return unique_map
 
         if return_index:
-            return discrete_coords[unique_map], unique_map, colabels
+            return discrete_coordinates[unique_map], labels[unique_map], unique_map
         else:
             if use_feat:
-                return discrete_coords[unique_map], feats[unique_map], colabels
+                return (
+                    discrete_coordinates[unique_map],
+                    features[unique_map],
+                    labels[unique_map],
+                )
             else:
-                return discrete_coords[unique_map], colabels
+                return discrete_coordinates[unique_map], labels[unique_map]
     else:
-        if device == "cpu":
-            manager = MEB.CoordinateMapManagerCPU()
-        elif device == "cuda":
-            manager = MEB.CoordinateMapManagerGPU_c10()
-        else:
-            raise ValueError("Invalid device")
-
-        tensor_stride = [1 for i in range(discrete_coords.shape[1] - 1)]
-        discrete_coords = (
-            discrete_coords.to(device)
-            if isinstance(discrete_coords, torch.Tensor)
-            else torch.from_numpy(discrete_coords).to(device)
+        tensor_stride = [1 for i in range(discrete_coordinates.shape[1] - 1)]
+        discrete_coordinates = (
+            discrete_coordinates.to(device)
+            if isinstance(discrete_coordinates, torch.Tensor)
+            else torch.from_numpy(discrete_coordinates).to(device)
         )
         _, (unique_map, inverse_map) = manager.insert_and_map(
-            discrete_coords, tensor_stride, ""
+            discrete_coordinates, tensor_stride, ""
         )
         if return_maps_only:
             if return_inverse:
@@ -300,24 +313,18 @@ def sparse_quantize(
 
         if return_index:
             if return_inverse:
-                return discrete_coords[unique_map], unique_map, inverse_map
+                return discrete_coordinates[unique_map], unique_map, inverse_map
             else:
-                return discrete_coords[unique_map], unique_map
+                return discrete_coordinates[unique_map], unique_map
         else:
             if use_feat:
                 if device == "cuda":
                     assert isinstance(
-                        feats, torch.Tensor
+                        features, torch.Tensor
                     ), "For device==cuda, feature must be a torch Tensor"
-                return discrete_coords[unique_map], feats[unique_map]
+                return discrete_coordinates[unique_map], features[unique_map]
             else:
-                return discrete_coords[unique_map]
-
-
-from typing import Union, List, Tuple
-from collections import Sequence
-from MinkowskiCommon import convert_to_int_list
-import MinkowskiEngineBackend._C as _C
+                return discrete_coordinates[unique_map]
 
 
 def unique_coordinate_map(
@@ -341,9 +348,9 @@ def unique_coordinate_map(
     assert coordinates.ndim == 2, "Coordinates must be a matrix"
     assert isinstance(coordinates, torch.Tensor)
     if not coordinates.is_cuda:
-        manager = _C.CoordinateMapManagerCPU()
+        manager = MEB.CoordinateMapManagerCPU()
     else:
-        manager = _C.CoordinateMapManagerGPU_c10()
+        manager = MEB.CoordinateMapManagerGPU_c10()
     tensor_stride = convert_to_int_list(tensor_stride, coordinates.shape[-1] - 1)
     key, (unique_map, inverse_map) = manager.insert_and_map(
         coordinates, tensor_stride, ""
