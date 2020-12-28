@@ -285,7 +285,15 @@ def sparse_quantize(
             return unique_map
 
         if return_index:
-            return discrete_coordinates[unique_map], labels[unique_map], unique_map
+            if use_feat:
+                return (
+                    discrete_coordinates[unique_map],
+                    features[unique_map],
+                    labels[unique_map],
+                    unique_map,
+                )
+            else:
+                return discrete_coordinates[unique_map], labels[unique_map], unique_map
         else:
             if use_feat:
                 return (
