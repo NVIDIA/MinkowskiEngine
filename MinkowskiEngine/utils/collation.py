@@ -93,7 +93,7 @@ def batched_coordinates(coords, dtype=torch.int32, device=None):
     return bcoords
 
 
-def sparse_collate(coords, feats, labels=None):
+def sparse_collate(coords, feats, labels=None, dtype=torch.int32, device=None):
     r"""Create input arguments for a sparse tensor `the documentation
     <https://nvidia.github.io/MinkowskiEngine/sparse_tensor.html>`_.
 
@@ -120,6 +120,15 @@ def sparse_collate(coords, feats, labels=None):
     D = np.unique(np.array([cs.shape[1] for cs in coords]))
     assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
     D = D[0]
+    if device is None:
+        if isinstance(coords, torch.Tensor):
+            device = coords[0].device
+        else:
+            device = "cpu"
+    assert dtype in [
+        torch.int32,
+        torch.float32,
+    ], "Only torch.int32, torch.float32 supported for coordinates."
 
     if use_label:
         assert isinstance(
@@ -132,7 +141,7 @@ def sparse_collate(coords, feats, labels=None):
 
     batch_id = 0
     s = 0  # start index
-    bcoords = torch.IntTensor(N, D + 1)  # uninitialized batched coords
+    bcoords = torch.zeros((N, D + 1), dtype=dtype, device=device)  # uninitialized
     for coord, feat in zip(coords, feats):
         if isinstance(coord, np.ndarray):
             coord = torch.from_numpy(coord)
@@ -140,7 +149,8 @@ def sparse_collate(coords, feats, labels=None):
             assert isinstance(
                 coord, torch.Tensor
             ), "Coords must be of type numpy.ndarray or torch.Tensor"
-        coord = coord.int()
+        if dtype == torch.int32:
+            coord = coord.floor()
 
         if isinstance(feat, np.ndarray):
             feat = torch.from_numpy(feat)
@@ -178,7 +188,7 @@ def sparse_collate(coords, feats, labels=None):
         return bcoords, feats_batch
 
 
-def batch_sparse_collate(data):
+def batch_sparse_collate(data, dtype=torch.int32, device=None):
     r"""The wrapper function that can be used in in conjunction with
     `torch.utils.data.DataLoader` to generate inputs for a sparse tensor.
 
@@ -190,7 +200,7 @@ def batch_sparse_collate(data):
         :attr:`data`: list of (coordinates, features, labels) tuples.
 
     """
-    return sparse_collate(*list(zip(*data)))
+    return sparse_collate(*list(zip(*data)), dtype=dtype, device=device)
 
 
 class SparseCollation:
@@ -216,8 +226,10 @@ class SparseCollation:
 
     """
 
-    def __init__(self, limit_numpoints=-1):
+    def __init__(self, limit_numpoints=-1, dtype=torch.int32, device=None):
         self.limit_numpoints = limit_numpoints
+        self.dtype = dtype
+        self.device = device
 
     def __call__(self, list_data):
         coords, feats, labels = list(zip(*list_data))
@@ -242,4 +254,10 @@ class SparseCollation:
             labels_batch.append(labels[batch_id])
 
         # Concatenate all lists
-        return sparse_collate(coords_batch, feats_batch, labels_batch)
+        return sparse_collate(
+            coords_batch,
+            feats_batch,
+            labels_batch,
+            dtype=self.dtype,
+            device=self.device,
+        )
