@@ -149,7 +149,7 @@ def sparse_collate(coords, feats, labels=None, dtype=torch.int32, device=None):
             assert isinstance(
                 coord, torch.Tensor
             ), "Coords must be of type numpy.ndarray or torch.Tensor"
-        if dtype == torch.int32:
+        if dtype == torch.int32 and coord.dtype in [torch.float32, torch.float64]:
             coord = coord.floor()
 
         if isinstance(feat, np.ndarray):
