@@ -262,7 +262,7 @@ def sparse_quantize(
     elif "cuda" in device:
         manager = MEB.CoordinateMapManagerGPU_c10()
     else:
-        raise ValueError("Invalid device")
+        raise ValueError("Invalid device. Only `cpu` or `cuda` supported.")
 
     # Return values accordingly
     if use_label:
@@ -277,32 +277,29 @@ def sparse_quantize(
             discrete_coordinates, tensor_stride, ""
         )
 
-        assert (
-            device == "cpu"
-        ), "CUDA accelerated quantization with labels not supported currently"
+        # assert (
+        #     device == "cpu"
+        # ), "CUDA accelerated quantization with labels not supported currently"
 
         if return_maps_only:
-            return unique_map
+            if return_inverse:
+                return unique_map, inverse_map
+            else:
+                return unique_map
 
+        return_args = [discrete_coordinates[unique_map]]
+        if use_feat:
+            return_args.append(features[unique_map])
+        return_args.append(labels[unique_map])
         if return_index:
-            if use_feat:
-                return (
-                    discrete_coordinates[unique_map],
-                    features[unique_map],
-                    labels[unique_map],
-                    unique_map,
-                )
-            else:
-                return discrete_coordinates[unique_map], labels[unique_map], unique_map
+            return_args.append(unique_map)
+        if return_inverse:
+            return_args.append(inverse_map)
+
+        if len(return_args) == 1:
+            return return_args[0]
         else:
-            if use_feat:
-                return (
-                    discrete_coordinates[unique_map],
-                    features[unique_map],
-                    labels[unique_map],
-                )
-            else:
-                return discrete_coordinates[unique_map], labels[unique_map]
+            return tuple(return_args)
     else:
         tensor_stride = [1 for i in range(discrete_coordinates.shape[1] - 1)]
         discrete_coordinates = (
@@ -319,20 +316,18 @@ def sparse_quantize(
             else:
                 return unique_map
 
+        return_args = [discrete_coordinates[unique_map]]
+        if use_feat:
+            return_args.append(features[unique_map])
         if return_index:
-            if return_inverse:
-                return discrete_coordinates[unique_map], unique_map, inverse_map
-            else:
-                return discrete_coordinates[unique_map], unique_map
+            return_args.append(unique_map)
+        if return_inverse:
+            return_args.append(inverse_map)
+
+        if len(return_args) == 1:
+            return return_args[0]
         else:
-            if use_feat:
-                if device == "cuda":
-                    assert isinstance(
-                        features, torch.Tensor
-                    ), "For device==cuda, feature must be a torch Tensor"
-                return discrete_coordinates[unique_map], features[unique_map]
-            else:
-                return discrete_coordinates[unique_map]
+            return tuple(return_args)
 
 
 def unique_coordinate_map(

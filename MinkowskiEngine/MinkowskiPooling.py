@@ -514,7 +514,13 @@ class MinkowskiPoolingTranspose(MinkowskiPoolingBase):
     """
 
     def __init__(
-        self, kernel_size, stride, dilation=1, kernel_generator=None, expand_coordinates=False, dimension=None
+        self,
+        kernel_size,
+        stride,
+        dilation=1,
+        kernel_generator=None,
+        expand_coordinates=False,
+        dimension=None,
     ):
         r"""a high-dimensional unpooling layer for sparse tensors.
 
@@ -624,7 +630,9 @@ class MinkowskiGlobalPoolingFunction(Function):
 class MinkowskiGlobalPooling(MinkowskiModuleBase):
     r"""Pool all input features to one output."""
 
-    def __init__(self, mode: PoolingMode = PoolingMode.GLOBAL_AVG_POOLING_DEFAULT):
+    def __init__(
+        self, mode: PoolingMode = PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX
+    ):
         r"""Reduces sparse coords into points at origin, i.e. reduce each point
         cloud into a point at the origin, returning batch_size number of points
         [[0, 0, ..., 0], [0, 0, ..., 1],, [0, 0, ..., 2]] where the last elem
