@@ -170,6 +170,9 @@ class MinkowskiSegmentationModule(LightningModule):
         stensor = ME.SparseTensor(
             coordinates=batch["coordinates"], features=batch["features"]
         )
+        # Must clear cache at regular interval
+        if self.global_step % 10 == 0:
+            torch.cuda.empty_cache()
         return self.criterion(self(stensor).F, batch["labels"].long())
 
     def validation_step(self, batch, batch_idx):

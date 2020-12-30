@@ -87,7 +87,7 @@ if __name__ == "__main__":
     num_devices = min(config.max_ngpu, num_devices)
     devices = list(range(num_devices))
     print("''''''''''''''''''''''''''''''''''''''''''''''''''''''''''")
-    print("' WARNING: This example is deprecated.                   '"
+    print("' WARNING: This example is deprecated.                   '")
     print("' Please use DistributedDataParallel or pytorch-lightning'")
     print("''''''''''''''''''''''''''''''''''''''''''''''''''''''''''")
     print(
@@ -132,12 +132,16 @@ if __name__ == "__main__":
             criterions, tuple(zip(out_features, all_labels)), devices=devices
         )
         loss = parallel.gather(losses, target_device, dim=0).mean()
+        # Gradient
+        loss.backward()
+        optimizer.step()
+
         t = time() - st
         min_time = min(t, min_time)
         print(
             f"Iteration: {iteration}, Loss: {loss.item()}, Time: {t}, Min time: {min_time}"
         )
 
-        # Gradient
-        loss.backward()
-        optimizer.step()
+        # Must clear cache at regular interval
+        if iteration % 10 == 0:
+            torch.cuda.empty_cache()

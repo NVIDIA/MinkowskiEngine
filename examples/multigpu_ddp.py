@@ -124,6 +124,10 @@ def main_worker(gpu, ngpus_per_node, args):
             f"Iteration: {iteration}, Loss: {loss.item()}, Time: {t.detach().item()}, Min time: {min_time}"
         )
 
+        # Must clear cache at regular interval
+        if iteration % 10 == 0:
+            torch.cuda.empty_cache()
+
 
 if __name__ == "__main__":
     main()
