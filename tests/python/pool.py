@@ -32,8 +32,8 @@ from MinkowskiEngine import (
     MinkowskiSumPooling,
     MinkowskiAvgPooling,
     MinkowskiMaxPooling,
-    # MinkowskiPoolingTransposeFunction,
-    # MinkowskiPoolingTranspose,
+    MinkowskiLocalPoolingTransposeFunction,
+    MinkowskiPoolingTranspose,
     MinkowskiGlobalPoolingFunction,
     MinkowskiGlobalPooling,
     MinkowskiGlobalSumPooling,
@@ -233,35 +233,30 @@ class TestPoolingTranspose(unittest.TestCase):
         print(output)
 
         # Check backward
-        fn = MinkowskiPoolingTransposeFunction()
+        fn = MinkowskiLocalPoolingTransposeFunction()
 
         self.assertTrue(
             gradcheck(
                 fn,
                 (
                     input.F,
-                    input.tensor_stride,
-                    unpool.stride,
-                    unpool.kernel_size,
-                    unpool.dilation,
-                    unpool.region_type_,
-                    unpool.region_offset_,
-                    False,
-                    input.coords_key,
+                    unpool.pooling_mode,
+                    unpool.kernel_generator,
+                    input.coordinate_map_key,
                     None,
-                    input.coords_man,
+                    input.coordinate_manager,
                 ),
             )
         )
 
-    def test_unpooling_gpu(self):
+    def test_unpool_gpu(self):
         if not torch.cuda.is_available():
             return
 
         in_channels, out_channels, D = 2, 3, 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
-        input = SparseTensor(feats, coords=coords)
+        input = SparseTensor(feats, coords)
         conv = MinkowskiConvolution(
             in_channels, out_channels, kernel_size=3, stride=2, dimension=D
         )
@@ -271,30 +266,27 @@ class TestPoolingTranspose(unittest.TestCase):
         output = unpool(input)
         print(output)
         # Check backward
-        fn = MinkowskiPoolingTransposeFunction()
+        fn = MinkowskiLocalPoolingTransposeFunction()
 
         self.assertTrue(
             gradcheck(
                 fn,
                 (
                     input.F,
-                    input.tensor_stride,
-                    unpool.stride,
-                    unpool.kernel_size,
-                    unpool.dilation,
-                    unpool.region_type_,
-                    unpool.region_offset_,
-                    False,
-                    input.coords_key,
+                    unpool.pooling_mode,
+                    unpool.kernel_generator,
+                    input.coordinate_map_key,
                     None,
-                    input.coords_man,
+                    input.coordinate_manager,
                 ),
             )
         )
 
-        device = torch.device("cuda")
         with torch.cuda.device(0):
-            input = input.to(device)
+            conv = conv.to("cuda")
+            input = SparseTensor(feats, coords, device="cuda")
+            input = conv(input)
+            input.requires_grad_()
             output = unpool(input)
             print(output)
 
@@ -304,26 +296,22 @@ class TestPoolingTranspose(unittest.TestCase):
                 fn,
                 (
                     input.F,
-                    input.tensor_stride,
-                    unpool.stride,
-                    unpool.kernel_size,
-                    unpool.dilation,
-                    unpool.region_type_,
-                    unpool.region_offset_,
-                    True,
-                    input.coords_key,
+                    unpool.pooling_mode,
+                    unpool.kernel_generator,
+                    input.coordinate_map_key,
                     None,
-                    input.coords_man,
+                    input.coordinate_manager,
                 ),
             )
         )
+
 
 class TestGlobalAvgPooling(unittest.TestCase):
     def test_gpu(self):
         if not torch.cuda.is_available():
             return
 
-        in_channels, D = 2, 2
+        in_channels = 2
         coords, feats, labels = data_loader(in_channels)
         feats = feats.double()
         feats.requires_grad_()
@@ -378,6 +366,7 @@ class TestGlobalAvgPooling(unittest.TestCase):
                 ),
             )
         )
+
 
 class TestGlobalMaxPooling(unittest.TestCase):
     def test_gpu(self):

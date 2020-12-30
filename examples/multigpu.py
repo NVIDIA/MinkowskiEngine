@@ -86,6 +86,10 @@ if __name__ == "__main__":
     num_devices = torch.cuda.device_count()
     num_devices = min(config.max_ngpu, num_devices)
     devices = list(range(num_devices))
+    print("''''''''''''''''''''''''''''''''''''''''''''''''''''''''''")
+    print("' WARNING: This example is deprecated.                   '"
+    print("' Please use DistributedDataParallel or pytorch-lightning'")
+    print("''''''''''''''''''''''''''''''''''''''''''''''''''''''''''")
     print(
         f"Testing {num_devices} GPUs. Total batch size: {num_devices * config.batch_size}"
     )
