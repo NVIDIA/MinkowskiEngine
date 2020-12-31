@@ -116,7 +116,9 @@ class TensorField(Tensor):
             spmm = MinkowskiSPMMFunction()
             N = len(features)
             cols = torch.arange(
-                N, dtype=self.inverse_mapping.dtype, device=self.inverse_mapping.device,
+                N,
+                dtype=self.inverse_mapping.dtype,
+                device=self.inverse_mapping.device,
             )
             vals = torch.ones(N, dtype=features.dtype, device=features.device)
             size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
@@ -126,7 +128,11 @@ class TensorField(Tensor):
                 == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
             ):
                 nums = spmm.apply(
-                    self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),
+                    self.inverse_mapping,
+                    cols,
+                    vals,
+                    size,
+                    vals.reshape(N, 1),
                 )
                 features /= nums
         elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
@@ -139,8 +145,7 @@ class TensorField(Tensor):
 
     @property
     def C(self):
-        r"""The alias of :attr:`coords`.
-        """
+        r"""The alias of :attr:`coords`."""
         return self.coordinates
 
     @property
@@ -154,9 +159,16 @@ class TensorField(Tensor):
         internally treated as an additional spatial dimension to disassociate
         different instances in a batch.
         """
-        if not hasattr(self, '_CC') or self._CC is None:
+        if not hasattr(self, "_CC") or self._CC is None:
             self._CC = self._get_coordinate_field()
         return self._CC
+
+    @property
+    def _batchwise_row_indices(self):
+        if self._batch_rows is None:
+            batch_inds = torch.unique(self._CC[:, 0])
+            self._batch_rows = [self._CC[:, 0] == b for b in batch_inds]
+        return self._batch_rows
 
     def _get_coordinate_field(self):
         return self._manager.get_coordinate_field(self.coordinate_field_map_key)
@@ -167,7 +179,9 @@ class TensorField(Tensor):
         N = len(self._F)
         assert N == len(self.inverse_mapping), "invalid inverse mapping"
         cols = torch.arange(
-            N, dtype=self.inverse_mapping.dtype, device=self.inverse_mapping.device,
+            N,
+            dtype=self.inverse_mapping.dtype,
+            device=self.inverse_mapping.device,
         )
         vals = torch.ones(N, dtype=self._F.dtype, device=self._F.device)
         size = torch.Size(
@@ -176,7 +190,13 @@ class TensorField(Tensor):
         features = spmm.apply(self.inverse_mapping, cols, vals, size, self._F)
         # int_inverse_mapping = self.inverse_mapping.int()
         if self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
-            nums = spmm.apply(self.inverse_mapping, cols, vals, size, vals.reshape(N, 1),)
+            nums = spmm.apply(
+                self.inverse_mapping,
+                cols,
+                vals,
+                size,
+                vals.reshape(N, 1),
+            )
             features /= nums
 
         return SparseTensor(
