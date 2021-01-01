@@ -36,7 +36,7 @@ from MinkowskiCommon import (
     get_minkowski_function,
 )
 from MinkowskiCoordinateManager import CoordinateManager
-from MinkowskiKernelGenerator import KernelGenerator, save_ctx
+from MinkowskiKernelGenerator import KernelGenerator
 
 
 class MinkowskiConvolutionFunction(Function):
@@ -413,7 +413,7 @@ class MinkowskiConvolution(MinkowskiConvolutionBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`has_bias` (bool, optional): if True, the convolution layer
+            :attr:`bias` (bool, optional): if True, the convolution layer
             has a bias.
 
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
@@ -487,7 +487,7 @@ class MinkowskiConvolutionTranspose(MinkowskiConvolutionBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`has_bias` (bool, optional): if True, the convolution layer
+            :attr:`bias` (bool, optional): if True, the convolution layer
             has a bias.
 
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
@@ -582,7 +582,7 @@ class MinkowskiGenerativeConvolutionTranspose(MinkowskiConvolutionBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`has_bias` (bool, optional): if True, the convolution layer
+            :attr:`bias` (bool, optional): if True, the convolution layer
             has a bias.
 
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,

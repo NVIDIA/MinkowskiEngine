@@ -120,9 +120,15 @@ def convert_region_type(
     up_stride: stride for conv_transpose, otherwise set it as 1
     """
     if region_type == RegionType.HYPER_CUBE:
-        assert (
-            region_offset is None
-        ), "Region offset must be None when region_type is given"
+        if isinstance(region_offset, torch.Tensor):
+            assert (
+                region_offset.numel() == 0
+            ), "Region offset must be empty when region_type is given"
+        else:
+            assert (
+                region_offset is None
+            ), "Region offset must be None when region_type is given"
+
         assert axis_types is None, "Axis types must be None when region_type is given"
         # Typical convolution kernel
         assert reduce(
@@ -147,10 +153,21 @@ def convert_region_type(
         assert reduce(
             lambda k1, k2: k1 > 0 and k2 > 0, kernel_size
         ), "kernel_size must be positive"
-        assert (
-            region_offset is None
-        ), "region_offset must be None when region_type is HYBRID"
-        region_offset = [[0,] * dimension]
+        if isinstance(region_offset, torch.Tensor):
+            assert (
+                region_offset.numel() == 0
+            ), "Region offset must be empty when region_type is given"
+        else:
+            assert (
+                region_offset is None
+            ), "Region offset must be None when region_type is given"
+
+        region_offset = [
+            [
+                0,
+            ]
+            * dimension
+        ]
         kernel_size_list = kernel_size.tolist()
         # First HYPER_CUBE
         for axis_type, curr_kernel_size, d in zip(
@@ -185,7 +202,9 @@ def convert_region_type(
                     off_center = (
                         int(math.floor((curr_kernel_size - 1) / 2)) if center else 0
                     )
-                    offset = [0,] * dimension
+                    offset = [
+                        0,
+                    ] * dimension
                     # Exclude the coord (0, 0, ..., 0)
                     if curr_offset == off_center:
                         continue
@@ -250,21 +269,21 @@ class KernelGenerator:
         dimension=-1,
     ):
         r"""
-            :attr:`region_type` (RegionType, optional): defines the kernel
-            shape. Please refer to MinkowskiEngine.Comon for details.
+        :attr:`region_type` (RegionType, optional): defines the kernel
+        shape. Please refer to MinkowskiEngine.Comon for details.
 
-            :attr:`region_offset` (torch.IntTensor, optional): when the
-            :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
-            kernel uses the provided `region_offset` to define offsets. It
-            should be a matrix of size :math:`N \times D` where :math:`N` is
-            the number of offsets and :math:`D` is the dimension of the
-            space.
+        :attr:`region_offset` (torch.IntTensor, optional): when the
+        :attr:`region_type` is :attr:`RegionType.CUSTOM`, the convolution
+        kernel uses the provided `region_offset` to define offsets. It
+        should be a matrix of size :math:`N \times D` where :math:`N` is
+        the number of offsets and :math:`D` is the dimension of the
+        space.
 
-            :attr:`axis_types` (list of RegionType, optional): If given, it
-            uses different methods to create a kernel for each axis. e.g., when
-            it is `[RegionType.HYPER_CUBE, RegionType.HYPER_CUBE,
-            RegionType.HYPER_CROSS]`, the kernel would be rectangular for the
-            first two dimensions and cross shaped for the thrid dimension.
+        :attr:`axis_types` (list of RegionType, optional): If given, it
+        uses different methods to create a kernel for each axis. e.g., when
+        it is `[RegionType.HYPER_CUBE, RegionType.HYPER_CUBE,
+        RegionType.HYPER_CROSS]`, the kernel would be rectangular for the
+        first two dimensions and cross shaped for the thrid dimension.
         """
         assert dimension > 0
         assert isinstance(region_type, RegionType)
@@ -293,7 +312,14 @@ class KernelGenerator:
         assert len(tensor_stride) == self.dimension
         if tuple(tensor_stride) not in self.cache:
             up_stride = (
-                self.stride if is_transpose else torch.Tensor([1,] * self.dimension)
+                self.stride
+                if is_transpose
+                else torch.Tensor(
+                    [
+                        1,
+                    ]
+                    * self.dimension
+                )
             )
 
             self.cache[tuple(tensor_stride)] = convert_region_type(
@@ -308,6 +334,13 @@ class KernelGenerator:
             )
 
         return self.cache[tuple(tensor_stride)]
+
+    def __repr__(self):
+        return (
+            self.__class__.__name__
+            + f"(kernel_size={self.kernel_size}, kernel_stride={self.kernel_stride}, kernel_dilation={self.kernel_dilation}, "
+            + f"region_type={self.region_type}, expand_coordinates={self.expand_coordinates}, dimension={self.dimension})"
+        )
 
 
 class KernelRegion(

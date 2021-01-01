@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -27,13 +28,24 @@ from typing import Union
 import torch
 from torch.nn import Parameter
 
-from SparseTensor import SparseTensor
-from Common import RegionType, MinkowskiModuleBase, KernelGenerator, \
-    prep_args, convert_to_int_list, convert_to_int_tensor
-from MinkowskiCoords import CoordsKey
+from MinkowskiSparseTensor import SparseTensor
+from MinkowskiEngineBackend._C import CoordinateMapKey, RegionType
+from MinkowskiCommon import MinkowskiModuleBase
+from MinkowskiKernelGenerator import KernelGenerator
 
 
 class MinkowskiChannelwiseConvolution(MinkowskiModuleBase):
+
+    __slots__ = (
+        "in_channels",
+        "out_channels",
+        "kernel_generator",
+        "dimension",
+        "kernel",
+        "bias",
+        "conv",
+    )
+
     r"""Channelwise (Depthwise) Convolution layer for a sparse tensor.
 
 
@@ -57,14 +69,16 @@ class MinkowskiChannelwiseConvolution(MinkowskiModuleBase):
 
     """
 
-    def __init__(self,
-                 in_channels,
-                 kernel_size=-1,
-                 stride=1,
-                 dilation=1,
-                 has_bias=False,
-                 kernel_generator=None,
-                 dimension=-1):
+    def __init__(
+        self,
+        in_channels,
+        kernel_size=-1,
+        stride=1,
+        dilation=1,
+        bias=False,
+        kernel_generator=None,
+        dimension=-1,
+    ):
         r"""convolution on a sparse tensor
 
         Args:
@@ -87,7 +101,7 @@ class MinkowskiChannelwiseConvolution(MinkowskiModuleBase):
             convolution kernel. When a list is given, the length must be D and
             each element is an axis specific dilation. All elements must be > 0.
 
-            :attr:`has_bias` (bool, optional): if True, the convolution layer
+            :attr:`bias` (bool, optional): if True, the convolution layer
             has a bias.
 
             :attr:`kernel_generator` (:attr:`MinkowskiEngine.KernelGenerator`,
@@ -107,97 +121,93 @@ class MinkowskiChannelwiseConvolution(MinkowskiModuleBase):
                 kernel_size=kernel_size,
                 stride=stride,
                 dilation=dilation,
-                dimension=dimension)
-        else:
-            kernel_size = kernel_generator.kernel_size
+                dimension=dimension,
+            )
 
-        stride = convert_to_int_tensor(stride, dimension)
-        kernel_size = convert_to_int_tensor(kernel_size, dimension)
-        dilation = convert_to_int_tensor(dilation, dimension)
-
-        kernel_volume = kernel_generator.kernel_volume
+        self.kernel_generator = kernel_generator
 
         self.in_channels = in_channels
-        self.kernel_size = kernel_size
-        self.kernel_volume = kernel_volume
-        self.stride = stride
-        self.dilation = dilation
-        self.kernel_generator = kernel_generator
         self.dimension = dimension
-        self.use_mm = False  # use matrix multiplication when kernel is 1
+
+        self.kernel_shape = (kernel_generator.kernel_volume, self.in_channels)
 
         Tensor = torch.FloatTensor
-        self.kernel_shape = (self.kernel_volume, self.in_channels)
-
         self.kernel = Parameter(Tensor(*self.kernel_shape))
-        self.bias = Parameter(Tensor(1, in_channels)) if has_bias else None
-        self.has_bias = has_bias
+        self.bias = Parameter(Tensor(1, in_channels)) if bias else None
+
         self.reset_parameters()
 
-    def forward(self,
-                input: SparseTensor,
-                coords: Union[torch.IntTensor, CoordsKey, SparseTensor] = None):
+    def forward(
+        self,
+        input: SparseTensor,
+        coords: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
+    ):
         r"""
         :attr:`input` (`MinkowskiEngine.SparseTensor`): Input sparse tensor to apply a
         convolution on.
 
-        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordsKey`,
+        :attr:`coords` ((`torch.IntTensor`, `MinkowskiEngine.CoordinateMapKey`,
         `MinkowskiEngine.SparseTensor`), optional): If provided, generate
         results on the provided coordinates. None by default.
 
         """
         assert isinstance(input, SparseTensor)
         assert input.D == self.dimension
+        assert (
+            self.in_channels == input.shape[1]
+        ), f"Channel size mismatch {self.in_channels} != {input.shape[1]}"
 
         # Create a region_offset
-        self.region_type_, self.region_offset_, _ = \
-            self.kernel_generator.get_kernel(input.tensor_stride, False)
+        region_type_, region_offset_, _ = self.kernel_generator.get_kernel(
+            input.tensor_stride, False
+        )
 
-        cm = input.coords_man
-        in_key = input.coords_key
-        on_gpu = input.device.type != 'cpu'
+        cm = input.coordinate_manager
+        in_key = input.coordinate_map_key
 
-        out_key = cm.stride(in_key, self.stride)
-        N_out = cm.get_coords_size_by_coords_key(out_key)
+        out_key = cm.stride(in_key, self.kernel_generator.kernel_stride)
+        N_out = cm.size(out_key)
         out_F = input._F.new(N_out, self.in_channels).zero_()
 
-        in_maps, out_maps = cm.get_kernel_map(
+        kernel_map = cm.get_kernel_map(
             in_key,
             out_key,
-            self.stride,
-            self.kernel_size,
-            self.dilation,
-            self.region_type_,
-            self.region_offset_,
-            is_transpose=False,
-            is_pool=False,
-            on_gpu=on_gpu)
+            self.kernel_generator.kernel_stride,
+            self.kernel_generator.kernel_size,
+            self.kernel_generator.kernel_dilation,
+            region_type=region_type_,
+            region_offset=region_offset_,
+        )
 
-        for k in range(self.kernel_volume):
-            out_F[out_maps[k]] += input.F[in_maps[k]] * self.kernel[k]
+        for k, in_out in kernel_map.items():
+            in_out = in_out.long().to(input.device)
+            out_F[in_out[1]] += input.F[in_out[0]] * self.kernel[k]
 
-        if self.has_bias:
+        if self.bias is not None:
             out_F += self.bias
 
-        return SparseTensor(out_F, coords_key=out_key, coords_manager=cm)
+        return SparseTensor(out_F, coordinate_map_key=out_key, coordinate_manager=cm)
 
     def reset_parameters(self, is_transpose=False):
-        n = (self.out_channels
-             if is_transpose else self.in_channels) * self.kernel_volume
-        stdv = 1. / math.sqrt(n)
-        self.kernel.data.uniform_(-stdv, stdv)
-        if self.bias is not None:
-            self.bias.data.uniform_(-stdv, stdv)
+        with torch.no_grad():
+            n = (
+                self.out_channels if is_transpose else self.in_channels
+            ) * self.kernel_generator.kernel_volume
+            stdv = 1.0 / math.sqrt(n)
+            self.kernel.data.uniform_(-stdv, stdv)
+            if self.bias is not None:
+                self.bias.data.uniform_(-stdv, stdv)
 
     def __repr__(self):
-        s = '(in={}, region_type={}, '.format(self.in_channels,
-                                              self.kernel_generator.region_type)
-        if self.kernel_generator.region_type in [
-                RegionType.HYBRID, RegionType.CUSTOM
-        ]:
-            s += 'kernel_volume={}, '.format(self.kernel_volume)
+        s = "(in={}, region_type={}, ".format(
+            self.in_channels, self.kernel_generator.region_type
+        )
+        if self.kernel_generator.region_type in [RegionType.CUSTOM]:
+            s += "kernel_volume={}, ".format(self.kernel_generator.kernel_volume)
         else:
-            s += 'kernel_size={}, '.format(self.kernel_size.tolist())
-        s += 'stride={}, dilation={})'.format(self.stride.tolist(),
-                                              self.dilation.tolist())
+            s += "kernel_size={}, ".format(self.kernel_generator.kernel_size)
+        s += "stride={}, dilation={})".format(
+            self.kernel_generator.kernel_stride,
+            self.kernel_generator.kernel_dilation,
+        )
         return self.__class__.__name__ + s

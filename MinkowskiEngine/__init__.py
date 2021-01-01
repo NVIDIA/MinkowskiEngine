@@ -100,9 +100,9 @@ from MinkowskiConvolution import (
     MinkowskiGenerativeConvolutionTranspose,
 )
 
-#
-# from MinkowskiChannelwiseConvolution import MinkowskiChannelwiseConvolution
-#
+
+from MinkowskiChannelwiseConvolution import MinkowskiChannelwiseConvolution
+
 from MinkowskiPooling import (
     MinkowskiLocalPoolingFunction,
     MinkowskiSumPooling,
@@ -153,7 +153,10 @@ from MinkowskiPruning import MinkowskiPruning, MinkowskiPruningFunction
 
 from MinkowskiUnion import MinkowskiUnion, MinkowskiUnionFunction
 
-from MinkowskiInterpolation import MinkowskiInterpolation, MinkowskiInterpolationFunction
+from MinkowskiInterpolation import (
+    MinkowskiInterpolation,
+    MinkowskiInterpolationFunction,
+)
 
 from MinkowskiNetwork import MinkowskiNetwork
 

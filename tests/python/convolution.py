@@ -37,6 +37,7 @@ from MinkowskiEngine import (
     MinkowskiConvolutionTranspose,
     MinkowskiConvolutionTransposeFunction,
     MinkowskiGenerativeConvolutionTranspose,
+    MinkowskiChannelwiseConvolution,
     KernelGenerator,
 )
 
@@ -567,6 +568,26 @@ class TestGenerativeConvolutionTranspose(unittest.TestCase):
                 ),
             )
         )
+
+
+class TestChannelwiseConvolution(unittest.TestCase):
+    def test(self):
+        print(f"{self.__class__.__name__}: test")
+        in_channels, out_channels, D = 2, 3, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coordinates=coords)
+        # Initialize context
+        conv = MinkowskiChannelwiseConvolution(
+            in_channels, kernel_size=3, stride=2, bias=True, dimension=D
+        )
+        conv = conv.double()
+        output = conv(input)
+        print(output)
+
+        self.assertEqual(input.coordinate_map_key.get_tensor_stride(), [1, 1])
+        self.assertEqual(output.coordinate_map_key.get_tensor_stride(), [2, 2])
 
 
 class TestPCD(unittest.TestCase):

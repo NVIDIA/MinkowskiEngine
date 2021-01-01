@@ -210,10 +210,10 @@ class CoordinateManager:
         stride = convert_to_int_list(stride, self.D)
         return self._manager.stride(coordinate_map_key, stride, string_id)
 
-    def origin(self):
+    def origin(self) -> CoordinateMapKey:
         return self._manager.origin()
 
-    def size(self, coordinate_map_key: CoordinateMapKey):
+    def size(self, coordinate_map_key: CoordinateMapKey) -> int:
         return self._manager.size(coordinate_map_key)
 
     # def transposed_stride(
@@ -249,7 +249,7 @@ class CoordinateManager:
     #     )
     #     return strided_key
 
-    def _get_coordinate_map_key(self, key_or_tensor_strides):
+    def _get_coordinate_map_key(self, key_or_tensor_strides) -> CoordinateMapKey:
         r"""Helper function that retrieves the first coordinate map key for the given tensor stride."""
         assert isinstance(key_or_tensor_strides, CoordinateMapKey) or isinstance(
             key_or_tensor_strides, (Sequence, np.ndarray, torch.IntTensor, int)
@@ -263,18 +263,20 @@ class CoordinateManager:
             assert len(keys) > 0
             return keys[0]
 
-    def get_coordinates(self, coords_key_or_tensor_strides):
+    def get_coordinates(self, coords_key_or_tensor_strides) -> torch.Tensor:
         key = self._get_coordinate_map_key(coords_key_or_tensor_strides)
         return self._manager.get_coordinates(key)
 
-    def get_coordinate_field(self, coords_key_or_tensor_strides):
+    def get_coordinate_field(self, coords_key_or_tensor_strides) -> torch.Tensor:
         key = self._get_coordinate_map_key(coords_key_or_tensor_strides)
         return self._manager.get_coordinate_field(key)
 
-    def number_of_unique_batch_indices(self):
+    def number_of_unique_batch_indices(self) -> int:
         return self._manager.origin_map_size()
 
-    def get_unique_coordinate_map_key(self, tensor_stride: Union[int, list]):
+    def get_unique_coordinate_map_key(
+        self, tensor_stride: Union[int, list]
+    ) -> CoordinateMapKey:
         """
         Returns a unique coordinate_map_key for a given tensor stride.
 
@@ -292,7 +294,7 @@ class CoordinateManager:
         region_offset=None,
         is_transpose=False,
         is_pool=False,
-    ):
+    ) -> dict:
         r"""Get kernel in-out maps for the specified coords keys or tensor strides.
 
         returns dict{kernel_index: in_out_tensor} where in_out_tensor[0] is the input row indices that correspond to in_out_tensor[1], which is the row indices for output.
