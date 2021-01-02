@@ -594,12 +594,13 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
       py::call_guard<py::gil_scoped_release>());
 
   m.def((std::string("LocalPoolingTransposeForwardGPU") + dtypestr).c_str(),
-        &minkowski::LocalPoolingTransposeForwardGPU<coordinate_type, TemplatedAllocator>,
+        &minkowski::LocalPoolingTransposeForwardGPU<coordinate_type,
+                                                    TemplatedAllocator>,
         py::call_guard<py::gil_scoped_release>());
-  m.def(
-      (std::string("LocalPoolingTransposeBackwardGPU") + dtypestr).c_str(),
-      &minkowski::LocalPoolingTransposeBackwardGPU<coordinate_type, TemplatedAllocator>,
-      py::call_guard<py::gil_scoped_release>());
+  m.def((std::string("LocalPoolingTransposeBackwardGPU") + dtypestr).c_str(),
+        &minkowski::LocalPoolingTransposeBackwardGPU<coordinate_type,
+                                                     TemplatedAllocator>,
+        py::call_guard<py::gil_scoped_release>());
 
   m.def(
       (std::string("GlobalPoolingForwardGPU") + dtypestr).c_str(),
@@ -757,7 +758,7 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("stride", &manager_type::py_stride)
       .def("origin", &manager_type::py_origin)
       .def("get_coordinates", &manager_type::get_coordinates)
-      .def("get_coordinate_field", &manager_type::get_coordinates)
+      .def("get_coordinate_field", &manager_type::get_coordinate_field)
       .def("get_coordinate_map_keys", &manager_type::get_coordinate_map_keys)
       .def("size", py::overload_cast<minkowski::CoordinateMapKey const *>(
                        &manager_type::size, py::const_))

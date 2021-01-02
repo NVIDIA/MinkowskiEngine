@@ -23,20 +23,11 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import os
-import warnings
 import torch
 import copy
 from enum import Enum
 
-from MinkowskiCommon import convert_to_int_list, StrideType
-from MinkowskiEngineBackend._C import (
-    GPUMemoryAllocatorType,
-    MinkowskiAlgorithm,
-    CoordinateMapType,
-    CoordinateMapKey,
-)
-from MinkowskiCoordinateManager import CoordinateManager
-from sparse_matrix_functions import spmm as _spmm
+from MinkowskiEngineBackend._C import CoordinateMapKey
 
 
 class SparseTensorOperationMode(Enum):
@@ -111,6 +102,16 @@ def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
 def sparse_tensor_operation_mode():
     global _sparse_tensor_operation_mode
     return copy.deepcopy(_sparse_tensor_operation_mode)
+
+
+def global_coordinate_manager():
+    global _global_coordinate_manager
+    return _global_coordinate_manager
+
+
+def set_global_coordinate_manager(coordinate_manager):
+    global _global_coordinate_manager
+    _global_coordinate_manager = coordinate_manager
 
 
 def clear_global_coordinate_manager():
@@ -195,159 +196,6 @@ class Tensor:
            >>> list_of_coords, list_of_featurs = A.decomposed_coordinates_and_features
 
     """
-
-    def __init__(
-        self,
-        features: torch.Tensor,
-        coordinates: torch.Tensor = None,
-        # optional coordinate related arguments
-        tensor_stride: StrideType = 1,
-        coordinate_map_key: CoordinateMapKey = None,
-        coordinate_manager: CoordinateManager = None,
-        quantization_mode: SparseTensorQuantizationMode = SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
-        # optional manager related arguments
-        allocator_type: GPUMemoryAllocatorType = None,
-        minkowski_algorithm: MinkowskiAlgorithm = None,
-        requires_grad=None,
-        device=None,
-    ):
-        r"""
-
-        Args:
-            :attr:`features` (:attr:`torch.FloatTensor`,
-            :attr:`torch.DoubleTensor`, :attr:`torch.cuda.FloatTensor`, or
-            :attr:`torch.cuda.DoubleTensor`): The features of a sparse
-            tensor.
-
-            :attr:`coordinates` (:attr:`torch.IntTensor`): The coordinates
-            associated to the features. If not provided, :attr:`coordinate_map_key`
-            must be provided.
-
-            :attr:`coordinate_map_key`
-            (:attr:`MinkowskiEngine.CoordinateMapKey`): When the coordinates
-            are already cached in the MinkowskiEngine, we could reuse the same
-            coordinate map by simply providing the coordinate map key. In most
-            case, this process is done automatically. When you provide a
-            `coordinate_map_key`, `coordinates` will be be ignored.
-
-            :attr:`coordinate_manager`
-            (:attr:`MinkowskiEngine.CoordinateManager`): The MinkowskiEngine
-            manages all coordinate maps using the `_C.CoordinateMapManager`. If
-            not provided, the MinkowskiEngine will create a new computation
-            graph. In most cases, this process is handled automatically and you
-            do not need to use this.
-
-            :attr:`quantization_mode`
-            (:attr:`MinkowskiEngine.SparseTensorQuantizationMode`): Defines how
-            continuous coordinates will be quantized to define a sparse tensor.
-            Please refer to :attr:`SparseTensorQuantizationMode` for details.
-
-            :attr:`requires_grad` (:attr:`bool`): Set the requires_grad flag.
-
-            :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
-            :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
-            of the current sparse tensor. By default, it is 1.
-
-        """
-        # Type checks
-        assert isinstance(features, torch.Tensor), "Features must be a torch.Tensor"
-        assert (
-            features.ndim == 2
-        ), f"The feature should be a matrix, The input feature is an order-{features.ndim} tensor."
-        assert isinstance(quantization_mode, SparseTensorQuantizationMode)
-        self.quantization_mode = quantization_mode
-
-        if coordinates is not None:
-            assert isinstance(coordinates, torch.Tensor)
-        if coordinate_map_key is not None:
-            assert isinstance(coordinate_map_key, CoordinateMapKey)
-        if coordinate_manager is not None:
-            assert isinstance(coordinate_manager, CoordinateManager)
-
-        # To device
-        if device is not None:
-            features = features.to(device)
-            if coordinates is not None:
-                # assertion check for the map key done later
-                coordinates = coordinates.to(device)
-
-        # Coordinate Management
-        self._D = 0  # coordinate size - 1
-        if coordinates is None and (
-            coordinate_map_key is None or coordinate_manager is None
-        ):
-            raise ValueError(
-                "Either coordinates or (coordinate_map_key, coordinate_manager) pair must be provided."
-            )
-        elif coordinates is not None:
-            assert (
-                features.shape[0] == coordinates.shape[0]
-            ), "The number of rows in features and coordinates must match."
-
-            assert (
-                features.is_cuda == coordinates.is_cuda
-            ), "Features and coordinates must have the same backend."
-
-            self._D = coordinates.size(1) - 1
-
-            coordinate_map_key = CoordinateMapKey(
-                convert_to_int_list(tensor_stride, self._D), ""
-            )
-        else:
-            # not (coordinate_map_key is None or coordinate_manager is None)
-            self._D = coordinate_manager.D
-
-        ##########################
-        # Setup CoordsManager
-        ##########################
-        if coordinate_manager is None:
-            # If set to share the coords man, use the global coords man
-            global _sparse_tensor_operation_mode, _global_coordinate_manager
-            if (
-                _sparse_tensor_operation_mode
-                == SparseTensorOperationMode.SHARE_COORDINATE_MANAGER
-            ):
-                if _global_coordinate_manager is None:
-                    _global_coordinate_manager = CoordinateManager(
-                        D=self._D,
-                        coordinate_map_type=CoordinateMapType.CUDA
-                        if coordinates.is_cuda
-                        else CoordinateMapType.CPU,
-                        allocator_type=allocator_type,
-                        minkowski_algorithm=minkowski_algorithm,
-                    )
-                coordinate_manager = _global_coordinate_manager
-            else:
-                coordinate_manager = CoordinateManager(
-                    D=coordinates.size(1) - 1,
-                    coordinate_map_type=CoordinateMapType.CUDA
-                    if coordinates.is_cuda
-                    else CoordinateMapType.CPU,
-                    allocator_type=allocator_type,
-                    minkowski_algorithm=minkowski_algorithm,
-                )
-        self._manager = coordinate_manager
-
-        ##########################
-        # Initialize coords
-        ##########################
-        if coordinates is not None:
-            coordinates, features, coordinate_map_key = self.initialize_coordinates(
-                coordinates, features, coordinate_map_key
-            )
-
-        elif coordinate_map_key is not None:
-            assert (
-                coordinate_map_key.is_key_set()
-            ), "The coordinate key must be a valid key."
-            self.coordinate_map_key = coordinate_map_key
-
-        if requires_grad is not None:
-            features.requires_grad_()
-
-        self._F = features
-        self._C = coordinates
-        self._batch_rows = None
 
     @property
     def coordinate_manager(self):
@@ -591,27 +439,6 @@ class Tensor:
     def double(self):
         self._F = self._F.double()
         return self
-
-    def __repr__(self):
-        return (
-            self.__class__.__name__
-            + "("
-            + os.linesep
-            + "  coordinates="
-            + str(self.C)
-            + os.linesep
-            + "  features="
-            + str(self.F)
-            + os.linesep
-            + "  coordinate_map_key="
-            + str(self.coordinate_map_key)
-            + os.linesep
-            + "  coordinate_manager="
-            + str(self._manager)
-            + "  spatial dimension="
-            + str(self._D)
-            + ")"
-        )
 
     def __len__(self):
         return len(self._F)

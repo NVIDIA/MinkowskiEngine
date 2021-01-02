@@ -233,6 +233,11 @@ public:
   }
 
   inline size_type size() const noexcept { return m_size; }
+  std::string to_string() const {
+    Formatter o;
+    o << "CoordinateFieldMapCPU:" << size() << "x" << m_coordinate_size;
+    return o.str();
+  }
 
 private:
   using base_type::m_coordinate_size;

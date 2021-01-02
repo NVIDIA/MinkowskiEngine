@@ -253,8 +253,8 @@ py::object CoordinateMapManager<coordinate_type, coordinate_field_type,
   // generate the map_key
   coordinate_map_key_type map_key = std::make_pair(tensor_stride, string_id);
   if (m_field_coordinates.find(map_key) != m_field_coordinates.end()) {
-    WARNING(true, "CoordinateMapKey collision detected:", map_key,
-            "generating new string id.");
+    LOG_DEBUG("CoordinateMapKey collision detected:", map_key,
+              "generating new string id.");
     map_key = get_random_string_id(tensor_stride, string_id);
   }
 
@@ -1147,7 +1147,6 @@ template <typename coordinate_type, typename coordinate_field_type,
 at::Tensor CoordinateMapManager<coordinate_type, coordinate_field_type,
                                 TemplatedAllocator, CoordinateMapType>::
     get_coordinate_field(CoordinateMapKey const *p_key) const {
-  ASSERT(exists(p_key), ERROR_MAP_NOT_FOUND);
   auto const it = m_field_coordinates.find(p_key->get_key());
   ASSERT(it != m_field_coordinates.end(), ERROR_MAP_NOT_FOUND);
   auto const &map = it->second;

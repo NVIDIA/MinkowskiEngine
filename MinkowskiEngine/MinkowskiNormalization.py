@@ -76,10 +76,8 @@ class MinkowskiBatchNorm(Module):
         if isinstance(input, TensorField):
             return TensorField(
                 output,
-                coordinate_map_key=input.coordinate_map_key,
                 coordinate_field_map_key=input.coordinate_field_map_key,
                 coordinate_manager=input.coordinate_manager,
-                inverse_mapping=input.inverse_mapping,
                 quantization_mode=input.quantization_mode,
             )
         else:

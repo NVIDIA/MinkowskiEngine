@@ -25,8 +25,9 @@ import torch
 import unittest
 import torch.nn as nn
 
-from tests.python.common import load_file, batched_coordinates
-
+from tests.python.common import load_file
+from MinkowskiEngine.utils import batched_coordinates
+from MinkowskiTensor import SparseTensorQuantizationMode
 from MinkowskiTensorField import TensorField
 from MinkowskiOps import MinkowskiLinear, MinkowskiToSparseTensor
 from MinkowskiNonlinearity import MinkowskiReLU
@@ -43,9 +44,13 @@ class TestTensorField(unittest.TestCase):
         sfield = TensorField(feats, coords, device=feats.device)
 
         # Convert to a sparse tensor
-        stensor = sfield.sparse()
+        stensor = sfield.sparse(
+            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+        )
         print(stensor)
-        self.assertTrue({0.5, 2.5, 5.5, 7} == {a for a in stensor.F.squeeze().numpy()})
+        self.assertTrue(
+            {0.5, 2.5, 5.5, 7} == {a for a in stensor.F.squeeze().detach().numpy()}
+        )
 
     def test_pcd(self):
         coords, colors, pcd = load_file("1.ply")

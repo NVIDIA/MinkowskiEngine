@@ -257,10 +257,20 @@ public:
     return m_coordinate_maps.find(key) != m_coordinate_maps.end();
   }
 
+  inline bool exists_field(coordinate_map_key_type const &key) const noexcept {
+    return m_field_coordinates.find(key) != m_field_coordinates.end();
+  }
+
   // when the key is the python coordinate map key
   inline bool exists(CoordinateMapKey const *p_key) const {
     // key set exception
     return exists(p_key->get_key());
+  }
+
+  // when the key is the python coordinate map key
+  inline bool exists_field(CoordinateMapKey const *p_key) const {
+    // key set exception
+    return exists_field(p_key->get_key());
   }
 
   inline size_type size(coordinate_map_key_type const &key) const {
@@ -317,6 +327,14 @@ public:
       o << "\t" << print_key(kv.first) << ":\t" << kv.second.to_string()
         << "\n";
     }
+
+    if (m_field_coordinates.size() > 0) {
+      for (auto const &kv : m_field_coordinates) {
+        o << "\tTensorField " << print_key(kv.first) << ":\t"
+          << kv.second.to_string() << "\n";
+      }
+    }
+
     for (auto const &kv : m_kernel_maps) {
       o << "\t" << print_key(std::get<0>(kv.first)) << "->"
         << print_key(std::get<1>(kv.first)) << ":\t" << kv.second << "\n";

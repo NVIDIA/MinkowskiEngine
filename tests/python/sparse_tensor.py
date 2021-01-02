@@ -31,6 +31,7 @@ from MinkowskiEngine import (
     SparseTensorOperationMode,
     SparseTensorQuantizationMode,
     set_sparse_tensor_operation_mode,
+    clear_global_coordinate_manager,
     is_cuda_available,
 )
 
@@ -55,7 +56,10 @@ class SparseTensorTestCase(unittest.TestCase):
     def test_tensor_stride(self):
         print(f"{self.__class__.__name__}: test_tensor_stride SparseTensor")
         feats = torch.FloatTensor(4, 16)
-        coords = torch.IntTensor(4, 4)
+        coords = torch.IntTensor(
+            [[0, 4, 2, 1], [0, 4, 0, 0], [0, 4, 4, 4], [0, 4, 4, 7]]
+        )
+        print(coords)
         input = SparseTensor(feats, coordinates=coords, tensor_stride=4)
         self.assertEqual(input.tensor_stride, [4, 4, 4])
         print(input)
@@ -70,6 +74,7 @@ class SparseTensorTestCase(unittest.TestCase):
         print(input1.coordinate_map_key, input2.coordinate_map_key)
 
     def test_device(self):
+        print(f"{self.__class__.__name__}: test_device SparseTensor")
         if not is_cuda_available():
             return
         coords = torch.IntTensor(
@@ -84,7 +89,7 @@ class SparseTensorTestCase(unittest.TestCase):
         print(st)
 
     def test_quantization(self):
-        print(f"{self.__class__.__name__}: test_duplicate_coords")
+        print(f"{self.__class__.__name__}: test_quantization")
         coords, feats, labels = data_loader(nchannel=2)
         # create duplicate coords
         coords[0] = coords[1]
@@ -118,7 +123,7 @@ class SparseTensorTestCase(unittest.TestCase):
         self.assertTrue(len(sinput.slice(sinput)) == len(coords))
 
     def test_quantization_gpu(self):
-        print(f"{self.__class__.__name__}: test_duplicate_coords")
+        print(f"{self.__class__.__name__}: test_quantization_gpu")
         coords, feats, labels = data_loader(nchannel=2)
         # create duplicate coords
         coords[0] = coords[1]
@@ -156,6 +161,7 @@ class SparseTensorTestCase(unittest.TestCase):
         self.assertTrue(len(sinput.slice(sinput)) == len(coords))
 
     def test_extraction(self):
+        print(f"{self.__class__.__name__}: test_extraction")
         coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
         feats = torch.FloatTensor([[1.1, 2.1, 3.1, 4.1, 5.1]]).t()
         X = SparseTensor(feats, coords)
@@ -198,6 +204,7 @@ class SparseTensorTestCase(unittest.TestCase):
         self.assertEqual(len(coords[2]), 2)
 
     def test_features_at_coordinates(self):
+        print(f"{self.__class__.__name__}: test_features_at_coordinates")
         coords = torch.IntTensor([[0, 0], [0, 1], [0, 2], [2, 0], [2, 2]])
         feats = torch.FloatTensor([[1.1, 2.1, 3.1, 4.1, 5.1]]).t()
 
@@ -211,6 +218,7 @@ class SparseTensorTestCase(unittest.TestCase):
         self.assertTrue(feats[4] == 1.1)
 
     def test_decomposition(self):
+        print(f"{self.__class__.__name__}: test_decomposition")
         coords, colors, pcd = load_file("1.ply")
         colors = torch.from_numpy(colors)
         for batch_size in [1, 5, 10, 20, 40]:
@@ -229,6 +237,7 @@ class SparseTensorTestCase(unittest.TestCase):
                 self.assertEqual(len(decomposed_feats), batch_size)
 
     def test_decomposition_gpu(self):
+        print(f"{self.__class__.__name__}: test_decomposition_gpu")
         if not torch.cuda.is_available():
             return
 
@@ -251,6 +260,7 @@ class SparseTensorTestCase(unittest.TestCase):
                 self.assertEqual(len(decomposed_feats), batch_size)
 
     def test_operation_mode(self):
+        print(f"{self.__class__.__name__}: test_operation_mode")
         # Set to use the global sparse tensor coords manager by default
         set_sparse_tensor_operation_mode(
             SparseTensorOperationMode.SHARE_COORDINATE_MANAGER
@@ -291,3 +301,7 @@ class SparseTensorTestCase(unittest.TestCase):
         A -= D
         A *= D
         A /= D
+        clear_global_coordinate_manager()
+        set_sparse_tensor_operation_mode(
+            SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER
+        )
