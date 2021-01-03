@@ -83,28 +83,70 @@ def cat(*sparse_tensors):
        >>> sout2 = ME.cat(sin, sin2, sout)  # Can concatenate multiple sparse tensors
 
     """
-    for s in sparse_tensors:
-        assert isinstance(s, SparseTensor), "Inputs must be sparse tensors."
-    coordinate_manager = sparse_tensors[0].coordinate_manager
-    coordinate_map_key = sparse_tensors[0].coordinate_map_key
-    for s in sparse_tensors:
-        assert (
-            coordinate_manager == s.coordinate_manager
-        ), COORDINATE_MANAGER_DIFFERENT_ERROR
-        assert coordinate_map_key == s.coordinate_map_key, (
-            COORDINATE_KEY_DIFFERENT_ERROR
-            + str(coordinate_map_key)
-            + " != "
-            + str(s.coordinate_map_key)
+    assert (
+        len(sparse_tensors) > 1
+    ), f"Invalid number of inputs. The input must be at least two len(sparse_tensors) > 1"
+
+    if isinstance(sparse_tensors[0], SparseTensor):
+        device = sparse_tensors[0].device
+        coordinate_manager = sparse_tensors[0].coordinate_manager
+        coordinate_map_key = sparse_tensors[0].coordinate_map_key
+        for s in sparse_tensors:
+            assert isinstance(
+                s, SparseTensor
+            ), "Inputs must be either SparseTensors or TensorFields."
+            assert (
+                device == s.device
+            ), f"Device must be the same. {device} != {s.device}"
+            assert (
+                coordinate_manager == s.coordinate_manager
+            ), COORDINATE_MANAGER_DIFFERENT_ERROR
+            assert coordinate_map_key == s.coordinate_map_key, (
+                COORDINATE_KEY_DIFFERENT_ERROR
+                + str(coordinate_map_key)
+                + " != "
+                + str(s.coordinate_map_key)
+            )
+        tens = []
+        for s in sparse_tensors:
+            tens.append(s.F)
+        return SparseTensor(
+            torch.cat(tens, dim=1),
+            coordinate_map_key=coordinate_map_key,
+            coordinate_manager=coordinate_manager,
         )
-    tens = []
-    for s in sparse_tensors:
-        tens.append(s.F)
-    return SparseTensor(
-        torch.cat(tens, dim=1),
-        coordinate_map_key=coordinate_map_key,
-        coordinate_manager=coordinate_manager,
-    )
+    elif isinstance(sparse_tensors[0], TensorField):
+        device = sparse_tensors[0].device
+        coordinate_manager = sparse_tensors[0].coordinate_manager
+        coordinate_field_map_key = sparse_tensors[0].coordinate_field_map_key
+        for s in sparse_tensors:
+            assert isinstance(
+                s, TensorField
+            ), "Inputs must be either SparseTensors or TensorFields."
+            assert (
+                device == s.device
+            ), f"Device must be the same. {device} != {s.device}"
+            assert (
+                coordinate_manager == s.coordinate_manager
+            ), COORDINATE_MANAGER_DIFFERENT_ERROR
+            assert coordinate_field_map_key == s.coordinate_field_map_key, (
+                COORDINATE_KEY_DIFFERENT_ERROR
+                + str(coordinate_field_map_key)
+                + " != "
+                + str(s.coordinate_field_map_key)
+            )
+        tens = []
+        for s in sparse_tensors:
+            tens.append(s.F)
+        return TensorField(
+            torch.cat(tens, dim=1),
+            coordinate_field_map_key=coordinate_field_map_key,
+            coordinate_manager=coordinate_manager,
+        )
+    else:
+        raise ValueError(
+            "Invalid data type. The input must be either a list of sparse tensors or a list of tensor fields."
+        )
 
 
 def dense_coordinates(shape: Union[list, torch.Size]):
@@ -131,7 +173,7 @@ def dense_coordinates(shape: Union[list, torch.Size]):
                 for s in np.meshgrid(
                     np.linspace(0, B - 1, B),
                     *(np.linspace(0, s - 1, s) for s in size[2:]),
-                    indexing="ij"
+                    indexing="ij",
                 )
             ],
             1,
