@@ -512,14 +512,12 @@ class SparseTensor(Tensor):
         tensor_stride = torch.IntTensor(self.tensor_stride)
         return dense_F, min_coordinate, tensor_stride
 
-    def slice(self, X, slicing_mode=0):
+    def slice(self, X):
         r"""
 
         Args:
            :attr:`X` (:attr:`MinkowskiEngine.SparseTensor`): a sparse tensor
            that discretized the original input.
-
-           :attr:`slicing_mode`: For future updates.
 
         Returns:
            :attr:`tensor_field` (:attr:`MinkowskiEngine.TensorField`): the
@@ -530,7 +528,7 @@ class SparseTensor(Tensor):
 
            >>> # coords, feats from a data loader
            >>> print(len(coords))  # 227742
-           >>> tfield = ME.TensorField(coords=coords, feats=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+           >>> tfield = ME.TensorField(coordinates=coords, features=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
            >>> print(len(tfield))  # 227742
            >>> sinput = tfield.sparse() # 161890 quantization results in fewer voxels
            >>> soutput = MinkUNet(sinput)
@@ -545,9 +543,7 @@ class SparseTensor(Tensor):
             SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
         ], "slice only available for sparse tensors with quantization RANDOM_SUBSAMPLE or UNWEIGHTED_AVERAGE"
-        assert (
-            X.coordinate_map_key == self.coordinate_map_key
-        ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
+
         from MinkowskiTensorField import TensorField
 
         if isinstance(X, TensorField):
@@ -557,22 +553,27 @@ class SparseTensor(Tensor):
                 coordinate_manager=X.coordinate_manager,
                 quantization_mode=X.quantization_mode,
             )
-        else:
+        elif isinstance(X, SparseTensor):
+            assert (
+                X.coordinate_map_key == self.coordinate_map_key
+            ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
             return TensorField(
                 self.F[X.inverse_mapping],
                 coordinates=self.C[X.inverse_mapping],
-                coordinate_manager=X.coordinate_manager,
-                quantization_mode=X.quantization_mode,
+                coordinate_manager=self.coordinate_manager,
+                quantization_mode=self.quantization_mode,
+            )
+        else:
+            raise ValueError(
+                "Invalid input. The input must be an instance of TensorField or SparseTensor."
             )
 
-    def cat_slice(self, X, slicing_mode=0):
+    def cat_slice(self, X):
         r"""
 
         Args:
            :attr:`X` (:attr:`MinkowskiEngine.SparseTensor`): a sparse tensor
            that discretized the original input.
-
-           :attr:`slicing_mode`: For future updates.
 
         Returns:
            :attr:`tensor_field` (:attr:`MinkowskiEngine.TensorField`): the
@@ -584,7 +585,7 @@ class SparseTensor(Tensor):
 
            >>> # coords, feats from a data loader
            >>> print(len(coords))  # 227742
-           >>> sinput = ME.SparseTensor(coords=coords, feats=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
+           >>> sinput = ME.SparseTensor(coordinates=coords, features=feats, quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE)
            >>> print(len(sinput))  # 161890 quantization results in fewer voxels
            >>> soutput = network(sinput)
            >>> print(len(soutput))  # 161890 Output with the same resolution
@@ -596,29 +597,30 @@ class SparseTensor(Tensor):
             SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
         ], "slice only available for sparse tensors with quantization RANDOM_SUBSAMPLE or UNWEIGHTED_AVERAGE"
-        assert (
-            X.coordinate_map_key == self.coordinate_map_key
-        ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
+
         from MinkowskiTensorField import TensorField
 
         features = torch.cat((self.F[X.inverse_mapping], X.F), dim=1)
         if isinstance(X, TensorField):
             return TensorField(
                 features,
-                coordinate_map_key=X.coordinate_map_key,
                 coordinate_field_map_key=X.coordinate_field_map_key,
                 coordinate_manager=X.coordinate_manager,
-                inverse_mapping=X.inverse_mapping,
                 quantization_mode=X.quantization_mode,
             )
-        else:
+        elif isinstance(X, SparseTensor):
+            assert (
+                X.coordinate_map_key == self.coordinate_map_key
+            ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
             return TensorField(
                 features,
                 coordinates=self.C[X.inverse_mapping],
-                coordinate_map_key=X.coordinate_map_key,
-                coordinate_manager=X.coordinate_manager,
-                inverse_mapping=X.inverse_mapping,
-                quantization_mode=X.quantization_mode,
+                coordinate_manager=self.coordinate_manager,
+                quantization_mode=self.quantization_mode,
+            )
+        else:
+            raise ValueError(
+                "Invalid input. The input must be an instance of TensorField or SparseTensor."
             )
 
     def features_at_coordinates(self, query_coordinates: torch.Tensor):

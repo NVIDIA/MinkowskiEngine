@@ -234,12 +234,24 @@ class TensorField(Tensor):
         if quantization_mode is None:
             quantization_mode = self.quantization_mode
 
-        return SparseTensor(
+        sparse_tensor = SparseTensor(
             self._F,
             coordinates=self.coordinates,
             quantization_mode=quantization_mode,
             coordinate_manager=self.coordinate_manager,
         )
+
+        # Save the inverse mapping
+        self._inverse_mapping = sparse_tensor.inverse_mapping
+        return sparse_tensor
+
+    @property
+    def inverse_mapping(self):
+        if not hasattr(self, "_inverse_mapping"):
+            raise ValueError(
+                "Did you run SparseTensor.slice? The slice must take a tensor field that returned TensorField.space."
+            )
+        return self._inverse_mapping
 
     def __repr__(self):
         return (
@@ -269,5 +281,6 @@ class TensorField(Tensor):
         "coordinate_field_map_key",
         "_manager",
         "quantization_mode",
+        "_inverse_mapping",
         "_batch_rows",
     )
