@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.5.0 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.0
               </div>
             
           
@@ -105,7 +107,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -175,6 +177,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -186,7 +190,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/pooling.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -306,10 +310,10 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiMaxPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
 <cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
 results on the provided coordinates. None by default.</p>
 </dd></dl>
@@ -528,10 +532,10 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiAvgPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiAvgPooling.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
 <cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
 results on the provided coordinates. None by default.</p>
 </dd></dl>
@@ -750,10 +754,10 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiSumPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSumPooling.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
 <cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
 results on the provided coordinates. None by default.</p>
 </dd></dl>
@@ -861,13 +865,13 @@ only argument)</p>
 <h2>MinkowskiPoolingTranspose<a class="headerlink" href="#minkowskipoolingtranspose" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kernel_size</span></em>, <em class="sig-param"><span class="n">stride</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">kernel_generator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPoolingTranspose</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kernel_size</span></em>, <em class="sig-param"><span class="n">stride</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">kernel_generator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand_coordinates</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose" title="Permalink to this definition">¶</a></dt>
 <dd><p>A pooling transpose layer for a sparse tensor.</p>
 <p>Unpool the features and divide it by the number of non zero elements that
 contributed.</p>
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kernel_size</span></em>, <em class="sig-param"><span class="n">stride</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">kernel_generator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kernel_size</span></em>, <em class="sig-param"><span class="n">stride</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">kernel_generator</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand_coordinates</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>a high-dimensional unpooling layer for sparse tensors.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_size</span></code> (int, optional): the size of the kernel in the
@@ -885,6 +889,10 @@ convolution kernel. When a list is given, the length must be D and
 each element is an axis specific dilation. All elements must be &gt; 0.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kernel_generator</span></code> (<a class="reference internal" href="common.html#MinkowskiEngine.KernelGenerator" title="MinkowskiEngine.KernelGenerator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.KernelGenerator</span></code></a>,
 optional): define custom kernel shape.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">expand_coordinates</span></code> (bool, optional): Force generation of
+new coordinates. When True, the output coordinates will be the
+outer product of the kernel shape and the input coordinates.
+<cite>False</cite> by default.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dimension</span></code> (int): the spatial dimension of the space where
 all the inputs and the network are defined. For example, images are
 in a 2D space, meshes and 3D shapes are in a 3D space.</p>
@@ -942,10 +950,10 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPoolingTranspose.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>torch.IntTensor<span class="p">, </span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor">SparseTensor.SparseTensor</a><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPoolingTranspose.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<cite>MinkowskiEngine.SparseTensor</cite>): Input sparse tensor to apply a
 convolution on.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code> ((<cite>torch.IntTensor</cite>, <cite>MinkowskiEngine.CoordsKey</cite>,
 <cite>MinkowskiEngine.SparseTensor</cite>), optional): If provided, generate
 results on the provided coordinates. None by default.</p>
 </dd></dl>
@@ -1053,21 +1061,19 @@ only argument)</p>
 <h2>MinkowskiGlobalPooling<a class="headerlink" href="#minkowskiglobalpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalPooling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.PoolingMode</span> <span class="o">=</span> <span class="default_value">PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pool all input features to one output.</p>
-<div class="math notranslate nohighlight">
-\[\mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \sum_{\mathbf{i} \in
-\mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}\]</div>
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">average=True</em>, <em class="sig-param">mode=&lt;GlobalPoolingMode.AUTO: 0&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.PoolingMode</span> <span class="o">=</span> <span class="default_value">PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reduces sparse coords into points at origin, i.e. reduce each point
 cloud into a point at the origin, returning batch_size number of points
 [[0, 0, …, 0], [0, 0, …, 1],, [0, 0, …, 2]] where the last elem
-of the coords is the batch index.</p>
+of the coords is the batch index. The reduction function should be
+provided as the mode.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">average</span></code> (bool): when True, return the averaged output. If
-not, return the sum of all input features.</p>
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mode</span></code> (PoolingMode): Reduction function mode. E.g.
+<cite>PoolingMode.GLOBAL_SUM_POOLING_DEFAULT</cite></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1122,8 +1128,17 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalPooling.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalPooling.to">
@@ -1245,37 +1260,29 @@ only argument)</p>
 
 
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="broadcast.html" class="btn btn-neutral float-right" title="MinkowskiBroadcast" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="convolution.html" class="btn btn-neutral float-left" title="MinkowskiConvolution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="broadcast.html" class="btn btn-neutral float-right" title="MinkowskiBroadcast" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="convolution.html" class="btn btn-neutral float-left" title="MinkowskiConvolution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

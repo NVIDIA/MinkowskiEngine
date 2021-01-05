@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>SparseTensor &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>SparseTensor &mdash; MinkowskiEngine 0.5.0 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.0
               </div>
             
           
@@ -105,7 +107,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -172,6 +174,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -183,7 +187,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/sparse_tensor.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -203,11 +207,11 @@
 <div class="section" id="id1">
 <h2>SparseTensor<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">allow_duplicate_coords=False</em>, <em class="sig-param">quantization_mode=&lt;SparseTensorQuantizationMode.RANDOM_SUBSAMPLE: 0&gt;</em>, <em class="sig-param">memory_manager_backend: MinkowskiEngineBackend.MemoryManagerBackend = None</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiSparseTensor.</code><code class="sig-name descname">SparseTensor</code><span class="sig-paren">(</span><em class="sig-param">features: torch.Tensor</em>, <em class="sig-param">coordinates: Optional[torch.Tensor] = None</em>, <em class="sig-param">tensor_stride: Union[int</em>, <em class="sig-param">collections.abc.Sequence</em>, <em class="sig-param">numpy.ndarray</em>, <em class="sig-param">torch.IntTensor] = 1</em>, <em class="sig-param">coordinate_map_key: Optional[MinkowskiEngineBackend._C.CoordinateMapKey] = None</em>, <em class="sig-param">coordinate_manager: Optional[MinkowskiCoordinateManager.CoordinateManager] = None</em>, <em class="sig-param">quantization_mode: MinkowskiTensor.SparseTensorQuantizationMode = &lt;SparseTensorQuantizationMode.RANDOM_SUBSAMPLE: 0&gt;</em>, <em class="sig-param">allocator_type: Optional[MinkowskiEngineBackend._C.GPUMemoryAllocatorType] = None</em>, <em class="sig-param">minkowski_algorithm: Optional[MinkowskiEngineBackend._C.MinkowskiAlgorithm] = None</em>, <em class="sig-param">requires_grad=None</em>, <em class="sig-param">device=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>A sparse tensor class. Can be accessed via
-<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>.</p>
-<p>The <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. For
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
+<p>The <a class="reference internal" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensor</span></code></a> class is the basic tensor in MinkowskiEngine. For
 the definition of a sparse tensor, please visit <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/terminology.html#sparse-tensor">the terminology page</a>.
 We use the COOrdinate (COO) format to save a sparse tensor <a class="reference external" href="http://groups.csail.mit.edu/commit/papers/2016/parker-thesis.pdf">[1]</a>. This
 representation is simply a concatenation of coordinates in a matrix
@@ -228,6 +232,24 @@ batch index. <span class="math notranslate nohighlight">\(N\)</span> is the numb
 tensor, each with the coordinate <span class="math notranslate nohighlight">\((b_i, x_i^1, x_i^1, \cdots,
 x_i^D)\)</span>, and the associated feature <span class="math notranslate nohighlight">\(\mathbf{f}_i\)</span>. Internally, we
 handle the batch index as an additional spatial dimension.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">([</span><span class="n">coords_batch0</span><span class="p">,</span> <span class="n">coords_batch1</span><span class="p">],</span> <span class="p">[</span><span class="n">feats_batch0</span><span class="p">,</span> <span class="n">feats_batch1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">coordinate_map_key</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coordiante_map_key</span><span class="p">,</span> <span class="n">coordinate_manager</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coordinate_manager</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">UNWEIGHTED_AVERAGE</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">RANDOM_SUBSAMPLE</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">tensor_stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>To use the GPU-backend for coordinate management, the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code> must be a torch tensor on GPU. Applying <cite>to(device)</cite>
+after <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> initialization with a CPU
+<cite>coordinates</cite> will waste time and computation on creating an unnecessary
+CPU CoordinateMap since the GPU CoordinateMap will be created from
+scratch as well.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Before MinkowskiEngine version 0.4, we put the batch indices on the last
@@ -251,300 +273,181 @@ a sparse tensor. Or to access all batch-wise coordinates and features,
 </div>
 </div>
 <dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">feats</em>, <em class="sig-param">coords=None</em>, <em class="sig-param">coords_key=None</em>, <em class="sig-param">coords_manager=None</em>, <em class="sig-param">force_creation=False</em>, <em class="sig-param">allow_duplicate_coords=False</em>, <em class="sig-param">quantization_mode=&lt;SparseTensorQuantizationMode.RANDOM_SUBSAMPLE: 0&gt;</em>, <em class="sig-param">memory_manager_backend: MinkowskiEngineBackend.MemoryManagerBackend = None</em>, <em class="sig-param">tensor_stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">features: torch.Tensor</em>, <em class="sig-param">coordinates: Optional[torch.Tensor] = None</em>, <em class="sig-param">tensor_stride: Union[int</em>, <em class="sig-param">collections.abc.Sequence</em>, <em class="sig-param">numpy.ndarray</em>, <em class="sig-param">torch.IntTensor] = 1</em>, <em class="sig-param">coordinate_map_key: Optional[MinkowskiEngineBackend._C.CoordinateMapKey] = None</em>, <em class="sig-param">coordinate_manager: Optional[MinkowskiCoordinateManager.CoordinateManager] = None</em>, <em class="sig-param">quantization_mode: MinkowskiTensor.SparseTensorQuantizationMode = &lt;SparseTensorQuantizationMode.RANDOM_SUBSAMPLE: 0&gt;</em>, <em class="sig-param">allocator_type: Optional[MinkowskiEngineBackend._C.GPUMemoryAllocatorType] = None</em>, <em class="sig-param">minkowski_algorithm: Optional[MinkowskiEngineBackend._C.MinkowskiAlgorithm] = None</em>, <em class="sig-param">requires_grad=None</em>, <em class="sig-param">device=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
-<dt>Args:</dt><dd><p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="MinkowskiEngine.SparseTensor.SparseTensor.feats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.FloatTensor</span></code>,
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">features</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.FloatTensor</span></code>,
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.DoubleTensor</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.cuda.FloatTensor</span></code>, or
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.cuda.DoubleTensor</span></code>): The features of the sparse
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.cuda.DoubleTensor</span></code>): The features of a sparse
 tensor.</p>
-<p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="MinkowskiEngine.SparseTensor.SparseTensor.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.IntTensor</span></code>): The coordinates
-associated to the features. If not provided, <code class="xref py py-attr docutils literal notranslate"><span class="pre">coords_key</span></code>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.IntTensor</span></code>): The coordinates
+associated to the features. If not provided, <a class="reference internal" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinate_map_key</span></code></a>
 must be provided.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords_key</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsKey" title="MinkowskiEngine.CoordsKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsKey</span></code></a>): When the
-coordinates are already cached in the MinkowskiEngine, we could
-reuse the same coordinates by simply providing the coordinate hash
-key. In most case, this process is done automatically. When you
-provide a <cite>coords_key</cite>, all other arguments will be be ignored.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords_manager</span></code> (<a class="reference internal" href="coords.html#MinkowskiEngine.CoordsManager" title="MinkowskiEngine.CoordsManager"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordsManager</span></code></a>): The
-MinkowskiEngine creates a dynamic computation graph and all
-coordinates inside the same computation graph are managed by a
-CoordsManager object. If not provided, the MinkowskiEngine will
-create a new computation graph. In most cases, this process is
-handled automatically and you do not need to use this. When you use
-it, make sure you understand what you are doing.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">force_creation</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>): Force creation of the
-coordinates. This allows generating a new set of coordinates even
-when there exists another set of coordinates with the same
-tensor stride. This could happen when you manually feed the same
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">coords_manager</span></code>.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">allow_duplicate_coords</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>): Allow duplicate
-coordinates when creating the sparse tensor. Internally, it will
-generate a new unique set of coordinates and use features of at the
-corresponding unique coordinates. In general, setting
-<cite>allow_duplicate_coords=True</cite> is not recommended as it could hide
-obvious errors in your data loading and preprocessing steps. Please
-refer to the quantization and data loading tutorial on <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/demo/training.html">here</a>
-for more details.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">quantizatino_mode</span></code>
-(<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorQuantizationMode</span></code>): Defines the
-quantization method and how to define features of a sparse tensor.
-Please refer to <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensorQuantizationMode" title="MinkowskiEngine.SparseTensor.SparseTensorQuantizationMode"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensorQuantizationMode</span></code></a> for details.</p>
-<p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>,
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>,
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">numpy.array</span></code>, or <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor.Tensor</span></code>): The tensor stride
 of the current sparse tensor. By default, it is 1.</p>
+<p><a class="reference internal" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinate_map_key</span></code></a>
+(<a class="reference internal" href="coords.html#MinkowskiEngine.CoordinateMapKey" title="MinkowskiEngine.CoordinateMapKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordinateMapKey</span></code></a>): When the coordinates
+are already cached in the MinkowskiEngine, we could reuse the same
+coordinate map by simply providing the coordinate map key. In most
+case, this process is done automatically. When you provide a
+<cite>coordinate_map_key</cite>, <cite>coordinates</cite> will be be ignored.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinate_manager</span></code>
+(<a class="reference internal" href="coords.html#MinkowskiEngine.CoordinateManager" title="MinkowskiEngine.CoordinateManager"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordinateManager</span></code></a>): The MinkowskiEngine
+manages all coordinate maps using the <cite>_C.CoordinateMapManager</cite>. If
+not provided, the MinkowskiEngine will create a new computation
+graph. In most cases, this process is handled automatically and you
+do not need to use this.</p>
+<p><a class="reference internal" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.quantization_mode" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.quantization_mode"><code class="xref py py-attr docutils literal notranslate"><span class="pre">quantization_mode</span></code></a>
+(<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorQuantizationMode</span></code>): Defines how
+continuous coordinates will be quantized to define a sparse tensor.
+Please refer to <code class="xref py py-attr docutils literal notranslate"><span class="pre">SparseTensorQuantizationMode</span></code> for details.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">allocator_type</span></code>
+(<a class="reference internal" href="coords.html#MinkowskiEngine.GPUMemoryAllocatorType" title="MinkowskiEngine.GPUMemoryAllocatorType"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.GPUMemoryAllocatorType</span></code></a>): Defines the GPU
+memory allocator type. By default, it uses the c10 allocator.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">minkowski_algorithm</span></code>
+(<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiAlgorithm</span></code>): Controls the mode the
+minkowski engine runs, Use
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiAlgorithm.MEMORY_EFFICIENT</span></code> if you want to reduce
+the memory footprint. Or use
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiAlgorithm.SPEED_OPTIMIZED</span></code> if you want to make it
+run fasterat the cost of more memory.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">requires_grad</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">bool</span></code>): Set the requires_grad flag.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">device</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.device</span></code>): Set the device the sparse
+tensor is defined.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.C">
-<em class="property">property </em><code class="sig-name descname">C</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.C" title="Permalink to this definition">¶</a></dt>
-<dd><p>The alias of <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="MinkowskiEngine.SparseTensor.SparseTensor.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a>.</p>
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.cat_slice">
+<code class="sig-name descname">cat_slice</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.cat_slice" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">X</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>): a sparse tensor
+that discretized the original input.</p>
+</dd>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_field</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.TensorField</span></code>): the
+resulting tensor field contains the concatenation of features on the
+original continuous coordinates that generated the input X and the
+self.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># coords, feats from a data loader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>  <span class="c1"># 227742</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinput</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">UNWEIGHTED_AVERAGE</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sinput</span><span class="p">))</span>  <span class="c1"># 161890 quantization results in fewer voxels</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">soutput</span> <span class="o">=</span> <span class="n">network</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">soutput</span><span class="p">))</span>  <span class="c1"># 161890 Output with the same resolution</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ofield</span> <span class="o">=</span> <span class="n">soutput</span><span class="o">.</span><span class="n">cat_slice</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">soutput</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">sinput</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">ofield</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># concatenation of features</span>
+</pre></div>
+</div>
 </dd></dl>
 
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.D">
-<em class="property">property </em><code class="sig-name descname">D</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.D" title="Permalink to this definition">¶</a></dt>
-<dd><p>The spatial dimension of the sparse tensor. This is equal to the number
-of columns of <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.C" title="MinkowskiEngine.SparseTensor.SparseTensor.C"><code class="xref py py-attr docutils literal notranslate"><span class="pre">C</span></code></a> minus 1.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.F">
-<em class="property">property </em><code class="sig-name descname">F</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.F" title="Permalink to this definition">¶</a></dt>
-<dd><p>The alias of <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="MinkowskiEngine.SparseTensor.SparseTensor.feats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code></a>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.coordinates_and_features_at">
-<code class="sig-name descname">coordinates_and_features_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">batch_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coordinates_and_features_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a coordinate and feature matrix at the specified batch index.</p>
-<p>Returns a coordinate and feature matrix at the specified <cite>batch_index</cite>.
-The coordinate matrix is a torch.IntTensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N
-\times D}\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of non zero elements in the
-specified batch index in <span class="math notranslate nohighlight">\(D\)</span> dimensional space. The feature
-matrix is a torch.Tensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N \times N_F}\)</span>
-matrix <span class="math notranslate nohighlight">\(N\)</span> is the number of non zero elements in the specified
-batch index and <span class="math notranslate nohighlight">\(N_F\)</span> is the number of channels.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.coordinates_at">
-<code class="sig-name descname">coordinates_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">batch_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coordinates_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return coordinates at the specified batch index.</p>
-<p>Returns a torch.IntTensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N_i
-\times D}\)</span> coordinates at the specified batch index where <span class="math notranslate nohighlight">\(N_i\)</span>
-is the number of non zero elements in the <span class="math notranslate nohighlight">\(i\)</span> dimensional space.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.coords">
-<em class="property">property </em><code class="sig-name descname">coords</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="Permalink to this definition">¶</a></dt>
-<dd><p>The coordinates of the current sparse tensor. The coordinates are
-represented as a <span class="math notranslate nohighlight">\(N \times (D + 1)\)</span> dimensional matrix where
-<span class="math notranslate nohighlight">\(N\)</span> is the number of points in the space and <span class="math notranslate nohighlight">\(D\)</span> is the
-dimension of the space (e.g. 3 for 3D, 4 for 3D + Time). Additional
-dimension of the column of the matrix C is for batch indices which is
-internally treated as an additional spatial dimension to disassociate
-different instances in a batch.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.cpu">
-<code class="sig-name descname">cpu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.cpu" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key">
+<code class="sig-name descname">coordinate_map_key</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates">
-<em class="property">property </em><code class="sig-name descname">decomposed_coordinates</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of coordinates per batch.</p>
-<p>Returns a list of torch.IntTensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N_i
-\times D}\)</span> coordinates per batch where <span class="math notranslate nohighlight">\(N_i\)</span> is the number of non
-zero elements in the <span class="math notranslate nohighlight">\(i\)</span> dimensional
-space.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates_and_features">
-<em class="property">property </em><code class="sig-name descname">decomposed_coordinates_and_features</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.decomposed_coordinates_and_features" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of coordinates and a list of features per batch.abs</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.decomposed_features">
-<em class="property">property </em><code class="sig-name descname">decomposed_features</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.decomposed_features" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of features per batch.</p>
-<p>Returns a list of torch.Tensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N_i
-\times N_F}\)</span> features per batch where <span class="math notranslate nohighlight">\(N_i\)</span> is the number of non
-zero elements in the <span class="math notranslate nohighlight">\(i\)</span> dimensional
-space.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.dense">
-<code class="sig-name descname">dense</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_coords</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_coords</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contract_coords</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.dense" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert the <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> to a torch dense
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.dense">
+<code class="sig-name descname">dense</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">min_coordinate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contract_stride</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.dense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> to a torch dense
 tensor.</p>
 <dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> (torch.IntTensor, optional): The min
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">shape</span></code> (torch.Size, optional): The size of the output tensor.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coordinate</span></code> (torch.IntTensor, optional): The min
 coordinates of the output sparse tensor. Must be divisible by the
-current <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a>.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_coords</span></code> (torch.IntTensor, optional): The max coordinates
-of the output sparse tensor (inclusive). Must be divisible by the
-current <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a>.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">contract_coords</span></code> (bool, optional): Given True, the output
-coordinates will be divided by the tensor stride to make features
-contiguous.</p>
+current <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code>. If 0 is given, it will use the origin for the min coordinate.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">contract_stride</span></code> (bool, optional): The output coordinates
+will be divided by the tensor stride to make features spatially
+contiguous. True by default.</p>
 </dd>
-<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">spare_tensor</span></code> (torch.sparse.Tensor): the torch sparse tensor
-representation of the self in <cite>[Batch Dim, Feature Dim, Spatial
-Dim…, Spatial Dim]</cite>. The coordinate of each feature can be
-accessed via <cite>min_coord + tensor_stride * [the coordinate of the
-dense tensor]</cite>.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> (torch.IntTensor): the D-dimensional vector
-defining the minimum coordinate of the output sparse tensor. If
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">contract_coords</span></code> is True, the <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> will also
-be contracted.</p>
-<p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a> (torch.IntTensor): the D-dimensional vector
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor</span></code> (torch.Tensor): the torch tensor with size <cite>[Batch
+Dim, Feature Dim, Spatial Dim…, Spatial Dim]</cite>. The coordinate of
+each feature can be accessed via <cite>min_coordinate + tensor_stride *
+[the coordinate of the dense tensor]</cite>.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coordinate</span></code> (torch.IntTensor): the D-dimensional vector
+defining the minimum coordinate of the output tensor.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> (torch.IntTensor): the D-dimensional vector
 defining the stride between tensor elements.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.device">
-<em class="property">property </em><code class="sig-name descname">device</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.device" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.dimension">
-<em class="property">property </em><code class="sig-name descname">dimension</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.dimension" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias of attr:<cite>D</cite></p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.double">
-<code class="sig-name descname">double</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.double" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.dtype">
-<em class="property">property </em><code class="sig-name descname">dtype</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.dtype" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.feats">
-<em class="property">property </em><code class="sig-name descname">feats</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.feats" title="Permalink to this definition">¶</a></dt>
-<dd><p>The features of the current sparse tensor. The features are <span class="math notranslate nohighlight">\(N
-\times D_F\)</span> where <span class="math notranslate nohighlight">\(N\)</span> is the number of points in the space and
-<span class="math notranslate nohighlight">\(D_F\)</span> is the dimension of each feature vector. Please refer to
-<a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.coords" title="MinkowskiEngine.SparseTensor.SparseTensor.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> to access the associated coordinates.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.features_at">
-<code class="sig-name descname">features_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">batch_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.features_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a feature matrix at the specified batch index.</p>
-<p>Returns a torch.Tensor <span class="math notranslate nohighlight">\(C \in \mathcal{R}^{N
-\times N_F}\)</span> feature matrix <span class="math notranslate nohighlight">\(N\)</span> is the number of non
-zero elements in the specified batch index and <span class="math notranslate nohighlight">\(N_F\)</span> is the
-number of channels.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.features_at_coords">
-<code class="sig-name descname">features_at_coords</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query_coords</span><span class="p">:</span> <span class="n">torch.Tensor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.features_at_coords" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract features at the specified coordinate matrix.</p>
-<dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">query_coords</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.IntTensor</span></code>): a coordinate matrix
-of size <span class="math notranslate nohighlight">\(N \times (D + 1)\)</span> where <span class="math notranslate nohighlight">\(D\)</span> is the size of the
-spatial dimension.</p>
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.features_at_coordinates">
+<code class="sig-name descname">features_at_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query_coordinates</span><span class="p">:</span> <span class="n">torch.Tensor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.features_at_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract features at the specified continuous coordinate matrix.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">query_coordinates</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.FloatTensor</span></code>): a coordinate
+matrix of size <span class="math notranslate nohighlight">\(N \times (D + 1)\)</span> where <span class="math notranslate nohighlight">\(D\)</span> is the size
+of the spatial dimension.</p>
 </dd>
-<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">query_feats</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a feature matrix of size
-<span class="math notranslate nohighlight">\(N \times D_F\)</span> where <span class="math notranslate nohighlight">\(D_F\)</span> is the number of channels in
-the feature. Features for the coordinates that are not found, it will be zero.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">valid_rows</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">list</span></code>): a list of row indices that
-contain valid values. The rest of the rows that are not found in the
-<cite>query_feats</cite> will be 0.</p>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">queried_features</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a feature matrix of
+size <span class="math notranslate nohighlight">\(N \times D_F\)</span> where <span class="math notranslate nohighlight">\(D_F\)</span> is the number of
+channels in the feature. For coordinates not present in the current
+sparse tensor, corresponding feature rows will be zeros.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.float">
-<code class="sig-name descname">float</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.float" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.initialize_coordinates">
+<code class="sig-name descname">initialize_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span></em>, <em class="sig-param"><span class="n">features</span></em>, <em class="sig-param"><span class="n">coordinate_map_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.initialize_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.inverse_mapping">
+<code class="sig-name descname">inverse_mapping</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.inverse_mapping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.quantization_mode">
+<code class="sig-name descname">quantization_mode</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.quantization_mode" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.get_device">
-<code class="sig-name descname">get_device</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.get_device" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.requires_grad">
-<em class="property">property </em><code class="sig-name descname">requires_grad</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.requires_grad" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.requires_grad_">
-<code class="sig-name descname">requires_grad_</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">requires_grad</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.requires_grad_" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.set_tensor_stride">
-<code class="sig-name descname">set_tensor_stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.set_tensor_stride" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.shape">
-<em class="property">property </em><code class="sig-name descname">shape</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.shape" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.size">
-<code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.size" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.slice">
-<code class="sig-name descname">slice</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">slicing_mode</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.slice" title="Permalink to this definition">¶</a></dt>
-<dd><dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">X</span></code> (<a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>): a sparse tensor
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.slice">
+<code class="sig-name descname">slice</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.slice" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">X</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>): a sparse tensor
 that discretized the original input.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">slicing_mode</span></code>: For future updates.</p>
 </dd>
-<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">sliced_feats</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): the resulting feature
-matrix that slices features on the discretized coordinates to the
-original continuous coordinates that generated the input X.</p>
+<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_field</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.TensorField</span></code>): the
+resulting tensor field contains features on the continuous
+coordinates that generated the input X.</p>
 </dd>
 </dl>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># coords, feats from a data loader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>  <span class="c1"># 227742</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sinput</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">UNWEIGHTED_AVERAGE</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sinput</span><span class="p">))</span>  <span class="c1"># 161890 quantization results in fewer voxels</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">soutput</span> <span class="o">=</span> <span class="n">network</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tfield</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span><span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">UNWEIGHTED_AVERAGE</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tfield</span><span class="p">))</span>  <span class="c1"># 227742</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sinput</span> <span class="o">=</span> <span class="n">tfield</span><span class="o">.</span><span class="n">sparse</span><span class="p">()</span> <span class="c1"># 161890 quantization results in fewer voxels</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">soutput</span> <span class="o">=</span> <span class="n">MinkUNet</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">soutput</span><span class="p">))</span>  <span class="c1"># 161890 Output with the same resolution</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="n">soutput</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>  <span class="c1"># regular differentiable pytorch tensor</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>  <span class="c1"># recovers the original ordering and length</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ofield</span> <span class="o">=</span> <span class="n">soutput</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">tfield</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ofield</span><span class="p">,</span> <span class="n">ME</span><span class="o">.</span><span class="n">TensorField</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">ofield</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>  <span class="c1"># recovers the original ordering and length</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ofield</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>  <span class="c1"># .F returns the features</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.sparse">
-<code class="sig-name descname">sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_coords</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_coords</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contract_coords</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.sparse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert the <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> to a torch sparse
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.sparse">
+<code class="sig-name descname">sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">min_coords</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_coords</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">contract_coords</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> to a torch sparse
 tensor.</p>
 <dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> (torch.IntTensor, optional): The min
 coordinates of the output sparse tensor. Must be divisible by the
-current <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a>.</p>
+current <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">max_coords</span></code> (torch.IntTensor, optional): The max coordinates
 of the output sparse tensor (inclusive). Must be divisible by the
-current <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a>.</p>
+current <code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code>.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">contract_coords</span></code> (bool, optional): Given True, the output
 coordinates will be divided by the tensor stride to make features
 contiguous.</p>
@@ -557,20 +460,15 @@ Dim]</cite>. The coordinate of each feature can be accessed via
 defining the minimum coordinate of the output sparse tensor. If
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">contract_coords</span></code> is True, the <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_coords</span></code> will also
 be contracted.</p>
-<p><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code></a> (torch.IntTensor): the D-dimensional vector
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> (torch.IntTensor): the D-dimensional vector
 defining the stride between tensor elements.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride">
-<em class="property">property </em><code class="sig-name descname">tensor_stride</code><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.tensor_stride" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensor.to">
-<code class="sig-name descname">to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensor.to" title="Permalink to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt id="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.unique_index">
+<code class="sig-name descname">unique_index</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.unique_index" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -579,48 +477,80 @@ defining the stride between tensor elements.</p>
 <div class="section" id="sparse-tensor-operation-mode">
 <h2>Sparse Tensor Operation Mode<a class="headerlink" href="#sparse-tensor-operation-mode" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="MinkowskiEngine.SparseTensor.SparseTensorOperationMode">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">SparseTensorOperationMode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.SparseTensorOperationMode" title="Permalink to this definition">¶</a></dt>
-<dd><p><cite>SEPARATE_COORDS_MANAGER</cite>: always create a new coordinate manager.
-<cite>SHARE_COORDS_MANAGER</cite>: always use the globally defined coordinate manager. Must clear the coordinate manager manually by <a class="reference internal" href="#MinkowskiEngine.SparseTensor.clear_global_coords_man" title="MinkowskiEngine.SparseTensor.clear_global_coords_man"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.clear_global_coords_man</span></code></a></p>
+<dt id="MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">SparseTensorOperationMode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enum class for SparseTensor internal instantiation modes.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">SEPARATE_COORDINATE_MANAGER</span></code>: always create a new coordinate manager.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">SHARE_COORDINATE_MANAGER</span></code>: always use the globally defined coordinate
+manager. Must clear the coordinate manager manually by
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.clear_global_coordinate_manager</span></code>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">SparseTensorQuantizationMode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>RANDOM_SUBSAMPLE</cite>: Subsample one coordinate per each quantization block randomly.
+<cite>UNWEIGHTED_AVERAGE</cite>: average all features within a quantization block equally.
+<cite>UNWEIGHTED_SUM</cite>: sum all features within a quantization block equally.
+<cite>NO_QUANTIZATION</cite>: No quantization is applied. Should not be used for normal operation.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="MinkowskiEngine.SparseTensor.set_sparse_tensor_operation_mode">
-<code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">set_sparse_tensor_operation_mode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">operation_mode</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensorOperationMode" title="MinkowskiEngine.SparseTensor.SparseTensorOperationMode">MinkowskiEngine.SparseTensor.SparseTensorOperationMode</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.set_sparse_tensor_operation_mode" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.MinkowskiTensor.set_sparse_tensor_operation_mode">
+<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">set_sparse_tensor_operation_mode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">operation_mode</span><span class="p">:</span> <span class="n"><a class="reference internal" href="#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode" title="MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode">MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.set_sparse_tensor_operation_mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define the sparse tensor coordinate manager operation mode.</p>
-<p>By default, a <a class="reference internal" href="#MinkowskiEngine.SparseTensor.SparseTensor" title="MinkowskiEngine.SparseTensor.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.SparseTensor</span></code></a>
+<p>By default, a <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.SparseTensor</span></code>
 instantiation creates a new coordinate manager that is not shared with
 other sparse tensors. By setting this function with
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDS_MANAGER</span></code>, you
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER</span></code>, you
 can share the coordinate manager globally with other sparse tensors.
 However, you must explicitly clear the coordinate manger after use. Please
-refer to <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.clear_global_coords_man</span></code>.</p>
+refer to <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.clear_global_coordinate_manager</span></code>.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">operation_mode</span></code>
 (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorOperationMode</span></code>): The operation mode
 for the sparse tensor coordinate manager. By default
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorOperationMode.SEPARATE_COORDS_MANAGER</span></code>.</p>
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER</span></code>.</p>
 </dd>
 </dl>
 <p>Example:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">set_sparse_tensor_operation_mode</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensorOperationMode</span><span class="o">.</span><span class="n">SHARE_COORDS_MANAGER</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">set_sparse_tensor_operation_mode</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensorOperationMode</span><span class="o">.</span><span class="n">SHARE_COORDINATE_MANAGER</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">A_C</span><span class="p">,</span> <span class="n">feats</span><span class="o">=</span><span class="n">A_F</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">B_C</span><span class="p">,</span> <span class="n">feats</span><span class="o">=</span><span class="n">B_C</span><span class="p">)</span>  <span class="c1"># coords_man shared</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># coords_man shared</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>  <span class="c1"># one feed forward and backward</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">clear_global_coords_man</span><span class="p">()</span>  <span class="c1"># Must use to clear the coordinates after one forward/backward</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">clear_global_coordinate_manager</span><span class="p">()</span>  <span class="c1"># Must use to clear the coordinates after one forward/backward</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py function">
-<dt id="MinkowskiEngine.SparseTensor.clear_global_coords_man">
-<code class="sig-prename descclassname">MinkowskiEngine.SparseTensor.</code><code class="sig-name descname">clear_global_coords_man</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.SparseTensor.clear_global_coords_man" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.MinkowskiTensor.sparse_tensor_operation_mode">
+<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">sparse_tensor_operation_mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode" title="MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode">MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode</a><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.sparse_tensor_operation_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current sparse tensor operation mode.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="MinkowskiEngine.MinkowskiTensor.global_coordinate_manager">
+<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">global_coordinate_manager</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.global_coordinate_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current global coordinate manager</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="MinkowskiEngine.MinkowskiTensor.set_global_coordinate_manager">
+<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">set_global_coordinate_manager</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinate_manager</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.set_global_coordinate_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the global coordinate manager.</p>
+<p><a class="reference internal" href="coords.html#MinkowskiEngine.CoordinateManager" title="MinkowskiEngine.CoordinateManager"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordinateManager</span></code></a> The coordinate manager which will
+be set to the global coordinate manager.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="MinkowskiEngine.MinkowskiTensor.clear_global_coordinate_manager">
+<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">clear_global_coordinate_manager</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.clear_global_coordinate_manager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear the global coordinate manager cache.</p>
 <p>When you use the operation mode:
-<a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER" title="MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDS_MANAGER</span></code></a>,
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER</span></code>,
 you must explicitly clear the coordinate manager after each feed forward/backward.</p>
 </dd></dl>
 
@@ -646,37 +576,29 @@ you must explicitly clear the coordinate manager after each feed forward/backwar
 
 
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="convolution.html" class="btn btn-neutral float-right" title="MinkowskiConvolution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="demo/pointnet.html" class="btn btn-neutral float-left" title="PointNet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="convolution.html" class="btn btn-neutral float-right" title="MinkowskiConvolution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="demo/pointnet.html" class="btn btn-neutral float-left" title="PointNet" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

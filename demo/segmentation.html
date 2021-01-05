@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Semantic Segmentation &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>Semantic Segmentation &mdash; MinkowskiEngine 0.5.0 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
@@ -52,7 +54,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.0
               </div>
             
           
@@ -108,7 +110,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -171,6 +173,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -182,7 +186,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/demo/segmentation.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -209,35 +213,33 @@ python -m examples.indoor
 <h2>Segmentation of a hotel room<a class="headerlink" href="#segmentation-of-a-hotel-room" title="Permalink to this headline">¶</a></h2>
 <p>When you run the example, you will see a hotel room and semantic segmentation
 of the room. You can interactively rotate the visualization when you run the
-example.</p>
-<p>First, we load the data and voxelize (quantize) the data. The voxelization is
-done by calling <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_quantize" title="MinkowskiEngine.utils.sparse_quantize"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_quantize</span></code></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pcd</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">read_point_cloud</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
-<span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
-<span class="n">feats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">colors</span><span class="p">)</span>
-
-<span class="n">quantized_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">coords</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">)</span>
-<span class="n">inds</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_quantize</span><span class="p">(</span><span class="n">quantized_coords</span><span class="p">)</span>
+example. First, we load the data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">load_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+    <span class="n">pcd</span> <span class="o">=</span> <span class="n">o3d</span><span class="o">.</span><span class="n">read_point_cloud</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pcd</span><span class="o">.</span><span class="n">colors</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">coords</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">pcd</span>
 </pre></div>
 </div>
-<p>Once you prepare a voxelized coordinates and features, we should wrap it with
-the <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>. Before we do that, we should create a
-batch by calling <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a>. This function
-takes a set of coordinates and features and concatenate the set. Also it append
-the batch index to the coordinates. Finally, we pseudo-normalize the features
-by subtracting 0.5 from the colors.</p>
+<p>You can provide a quantized coordinates that ensures there would be only one point per voxel, or you can use the new <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.TensorField</span></code> that does not require quantized coordinates to process point clouds. However, since it does the quanization in the main training process instead of delegating the quantization to the data loading processes, it could slow down the training.
+Next, you should create a batched coordinates by calling <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a batch, this process is done in a data loader during training in parallel.</span>
-<span class="n">batch</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_file</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)]</span>
-<span class="n">coordinates_</span><span class="p">,</span> <span class="n">featrues_</span><span class="p">,</span> <span class="n">pcds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">))</span>
-<span class="n">coordinates</span><span class="p">,</span> <span class="n">features</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span><span class="n">coordinates_</span><span class="p">,</span> <span class="n">featrues_</span><span class="p">)</span>
-
-<span class="c1"># Normalize features and create a sparse tensor</span>
-<span class="n">sinput</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">in_field</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">TensorField</span><span class="p">(</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span>
+    <span class="n">coordinates</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">batched_coordinates</span><span class="p">([</span><span class="n">coords</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="n">quantization_mode</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">UNWEIGHTED_AVERAGE</span><span class="p">,</span>
+    <span class="n">minkowski_algorithm</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiAlgorithm</span><span class="o">.</span><span class="n">SPEED_OPTIMIZED</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>Finally, we feed-forward the sparse tensor into the network and get the predictions.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">soutput</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
-<span class="n">_</span><span class="p">,</span> <span class="n">pred</span> <span class="o">=</span> <span class="n">soutput</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert to a sparse tensor</span>
+<span class="n">sinput</span> <span class="o">=</span> <span class="n">in_field</span><span class="o">.</span><span class="n">sparse</span><span class="p">()</span>
+<span class="c1"># Output sparse tensor</span>
+<span class="n">soutput</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
+<span class="c1"># get the prediction on the input tensor field</span>
+<span class="n">out_field</span> <span class="o">=</span> <span class="n">soutput</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">in_field</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>After doing some post-processing. We can color the labels and visualize the
@@ -270,37 +272,29 @@ for more detail.</p>
 
 
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="sparse_tensor_reconstruction.html" class="btn btn-neutral float-right" title="3D Sparsity Pattern Reconstruction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="modelnet40_classification.html" class="btn btn-neutral float-left" title="ModelNet40 Classification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="sparse_tensor_reconstruction.html" class="btn btn-neutral float-right" title="3D Sparsity Pattern Reconstruction" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="modelnet40_classification.html" class="btn btn-neutral float-left" title="ModelNet40 Classification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

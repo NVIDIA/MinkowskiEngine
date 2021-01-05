@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>MinkowskiPruning &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>MinkowskiPruning &mdash; MinkowskiEngine 0.5.0 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.0
               </div>
             
           
@@ -105,7 +107,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -171,6 +173,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -182,7 +186,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/pruning.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -204,7 +208,7 @@
 <dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiPruning">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiPruning</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove specified coordinates from a <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a>.</p>
+<dd><p>Remove specified coordinates from a <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPruning.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.__init__" title="Permalink to this definition">¶</a></dt>
@@ -213,14 +217,14 @@
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiPruning.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em>, <em class="sig-param"><span class="n">mask</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">mask</span><span class="p">:</span> <span class="n">torch.Tensor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiPruning.forward" title="Permalink to this definition">¶</a></dt>
 <dd><dl>
 <dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">input</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEnigne.SparseTensor</span></code>): a sparse tensor
 to remove coordinates from.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mask</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.BoolTensor</span></code>): mask vector that specifies
 which one to keep. Coordinates with False will be removed.</p>
 </dd>
-<dt>Returns:</dt><dd><p>A <a class="reference internal" href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> with C = coordinates
+<dt>Returns:</dt><dd><p>A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> with C = coordinates
 corresponding to <cite>mask == True</cite> F = copy of the features from <cite>mask ==
 True</cite>.</p>
 </dd>
@@ -265,37 +269,29 @@ True</cite>.</p>
 
 
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="union.html" class="btn btn-neutral float-right" title="MinkowskiUnion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="nonlinearity.html" class="btn btn-neutral float-left" title="MinkowskiNonlinearities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="union.html" class="btn btn-neutral float-right" title="MinkowskiUnion" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="nonlinearity.html" class="btn btn-neutral float-left" title="MinkowskiNonlinearities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

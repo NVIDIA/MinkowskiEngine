@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Sparse Tensor Basics &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>Sparse Tensor Basics &mdash; MinkowskiEngine 0.5.0 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
@@ -52,7 +54,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.0
               </div>
             
           
@@ -113,7 +115,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -176,6 +178,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -187,7 +191,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/tutorial/sparse_tensor_basic.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -231,14 +235,14 @@
 </div>
 <div class="section" id="sparse-tensor-initialization">
 <h2>Sparse Tensor Initialization<a class="headerlink" href="#sparse-tensor-initialization" title="Permalink to this headline">¶</a></h2>
-<p>The next step in the pipeline is initializing a sparse tensor. A <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> requires coordinates with batch indices; this results in a sparse tensor with <span class="math notranslate nohighlight">\(D+1\)</span> spatial dimensions if the original coordinates have <span class="math notranslate nohighlight">\(D\)</span> dimensions.</p>
+<p>The next step in the pipeline is initializing a sparse tensor. A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> requires coordinates with batch indices; this results in a sparse tensor with <span class="math notranslate nohighlight">\(D+1\)</span> spatial dimensions if the original coordinates have <span class="math notranslate nohighlight">\(D\)</span> dimensions.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coords0</span><span class="p">,</span> <span class="n">feats0</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_0</span><span class="p">)</span>
 <span class="n">coords1</span><span class="p">,</span> <span class="n">feats1</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_1</span><span class="p">)</span>
 <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span>
-    <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">coords0</span><span class="p">,</span> <span class="n">coords1</span><span class="p">],</span> <span class="n">feats</span><span class="o">=</span><span class="p">[</span><span class="n">feats0</span><span class="p">,</span> <span class="n">feats1</span><span class="p">])</span>
+    <span class="n">coordinates</span><span class="o">=</span><span class="p">[</span><span class="n">coords0</span><span class="p">,</span> <span class="n">coords1</span><span class="p">],</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="n">feats0</span><span class="p">,</span> <span class="n">feats1</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Here, we used <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> function, but you can use <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> to convert a list of coordinates to <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor" title="MinkowskiEngine.SparseTensor"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code></a> compatible coordinates.</p>
+<p>Here, we used <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.sparse_collate" title="MinkowskiEngine.utils.sparse_collate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.sparse_collate</span></code></a> function, but you can use <a class="reference internal" href="../utils.html#MinkowskiEngine.utils.batched_coordinates" title="MinkowskiEngine.utils.batched_coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.utils.batched_coordinates</span></code></a> to convert a list of coordinates to <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> compatible coordinates.</p>
 </div>
 <div class="section" id="sparse-tensor-for-continuous-coordinates">
 <h2>Sparse Tensor for Continuous Coordinates<a class="headerlink" href="#sparse-tensor-for-continuous-coordinates" title="Permalink to this headline">¶</a></h2>
@@ -247,11 +251,11 @@ However, sparse tensors used in sparse tensor networks are defined in a discrete
 To convert the features in continuous coordinates to discrete coordinates, we provide feature averaging functions that convert features in continuous coordinates to discrete coordinates.
 You can simply use the sparse tensor initialization for this. For example,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sinput</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span>
-    <span class="n">feats</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">colors</span><span class="p">),</span> <span class="c1"># Convert to a tensor</span>
-    <span class="n">coords</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">batched_coordinates</span><span class="p">([</span><span class="n">coordinates</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">]),</span>  <span class="c1"># coordinates must be defined in a integer grid. If the scale</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">colors</span><span class="p">),</span> <span class="c1"># Convert to a tensor</span>
+    <span class="n">coordinates</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">batched_coordinates</span><span class="p">([</span><span class="n">coordinates</span> <span class="o">/</span> <span class="n">voxel_size</span><span class="p">]),</span>  <span class="c1"># coordinates must be defined in a integer grid. If the scale</span>
     <span class="n">quantization_mode</span><span class="o">=</span><span class="n">ME</span><span class="o">.</span><span class="n">SparseTensorQuantizationMode</span><span class="o">.</span><span class="n">UNWEIGHTED_AVERAGE</span>  <span class="c1"># when used with continuous coordinates, average features in the same coordinate</span>
 <span class="p">)</span>
-<span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">sinput</span><span class="p">)</span><span class="o">.</span><span class="n">F</span>
 </pre></div>
 </div>
 <p>Please refer to <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/indoor.py">indoor semantic segmentation</a> for more detail.</p>
@@ -260,12 +264,11 @@ You can simply use the sparse tensor initialization for this. For example,</p>
 <h2>Sparse Tensor Arithmetics<a class="headerlink" href="#sparse-tensor-arithmetics" title="Permalink to this headline">¶</a></h2>
 <p>You can use the initialized sparse tensor with a simple feed-forward neural network, but in many cases, you need to do some unconventional operations, and that is why you came to use this library :) Here, we provide some simple operations that allow binary operations between sparse tensors and concatenation along the feature dimension.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># sparse tensors</span>
-<span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">)</span>
 <span class="n">B</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span>
-    <span class="n">coords</span><span class="o">=</span><span class="n">new_coords</span><span class="p">,</span>
-    <span class="n">feats</span><span class="o">=</span><span class="n">new_feats</span><span class="p">,</span>
-    <span class="n">coords_manager</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coords_man</span><span class="p">,</span>  <span class="c1"># must share the same coordinate manager</span>
-    <span class="n">force_creation</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># must force creation since tensor stride [1] exists</span>
+    <span class="n">coordinates</span><span class="o">=</span><span class="n">new_coords</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">new_feats</span><span class="p">,</span>
+    <span class="n">coordinate_manager</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coordinate_manager</span><span class="p">,</span>  <span class="c1"># must share the same coordinate manager</span>
 <span class="p">)</span>
 
 <span class="n">C</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span>
@@ -274,16 +277,16 @@ You can simply use the sparse tensor initialization for this. For example,</p>
 <span class="n">C</span> <span class="o">=</span> <span class="n">A</span> <span class="o">/</span> <span class="n">B</span>
 </pre></div>
 </div>
-<p>Here, we create two sparse tensors with different sparsity patterns. However, we forced the second sparse tensor <cite>B</cite> to share the <cite>coords_man</cite>, a coordinate manager. This allows sharing the computation graph between two sparse tensors. The semantics is rather ugly for now, but will be hidden in the future.</p>
+<p>Here, we create two sparse tensors with different sparsity patterns. However, we forced the second sparse tensor <cite>B</cite> to share the <cite>coordinate_manager</cite>, a coordinate manager. This allows sharing the computation graph between two sparse tensors. The semantics is rather ugly for now, but will be hidden in the future.</p>
 <p>If you add two sparse tensors, this will add two features. In case where there is a non-zero element, but not on the other sparse tensor at a specific coordinate, we assume <cite>0</cite> for the non-existing value since a sparse tensor saves non-zero elements only. Anything that we do not specify is <cite>0</cite> by definition. Same goes for all other binary operations.</p>
 <p>However, for in-place operations, we force the coordinates to have the same sparsity pattern.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># in place operations</span>
-<span class="c1"># Note that it requires the same coords_key (no need to feed coords)</span>
+<span class="c1"># Note that it requires the same coordinate_map_key (no need to feed coords)</span>
 <span class="n">D</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span>
-    <span class="c1"># coords=coords,  not required</span>
-    <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span>
-    <span class="n">coords_manager</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coords_man</span><span class="p">,</span>  <span class="c1"># must share the same coordinate manager</span>
-    <span class="n">coords_key</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coords_key</span>  <span class="c1"># For inplace, must share the same coords key</span>
+    <span class="c1"># coordinates=coords,  not required</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span>
+    <span class="n">coordinate_manager</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coordinate_manager</span><span class="p">,</span>  <span class="c1"># must share the same coordinate manager</span>
+    <span class="n">coordinate_map_key</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">coordinate_map_key</span>  <span class="c1"># For inplace, must share the same coords key</span>
 <span class="p">)</span>
 
 <span class="n">A</span> <span class="o">+=</span> <span class="n">D</span>
@@ -292,12 +295,12 @@ You can simply use the sparse tensor initialization for this. For example,</p>
 <span class="n">A</span> <span class="o">/=</span> <span class="n">D</span>
 </pre></div>
 </div>
-<p>Note that we use the same <cite>coords_key</cite> for the sparse tensor <cite>D</cite>. It will give you an assertion error if you try to use a sparse tensor with different <cite>coords_key</cite>.</p>
+<p>Note that we use the same <cite>coordinate_map_key</cite> for the sparse tensor <cite>D</cite>. It will give you an assertion error if you try to use a sparse tensor with different <cite>coordinate_map_key</cite>.</p>
 </div>
 <div class="section" id="feature-concatenation">
 <h2>Feature Concatenation<a class="headerlink" href="#feature-concatenation" title="Permalink to this headline">¶</a></h2>
-<p>You can concatenate two sparse tensors along the feature dimension if they share the same <cite>coords_key</cite>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you have two or more sparse tensors with the same coords_key, you can concatenate features</span>
+<p>You can concatenate two sparse tensors along the feature dimension if they share the same <cite>coordinate_map_key</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you have two or more sparse tensors with the same coordinate_map_key, you can concatenate features</span>
 <span class="n">E</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -309,10 +312,10 @@ To decompose the outputs, you can use a couple function and attributes.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coords0</span><span class="p">,</span> <span class="n">feats0</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_0</span><span class="p">)</span>
 <span class="n">coords1</span><span class="p">,</span> <span class="n">feats1</span> <span class="o">=</span> <span class="n">to_sparse_coo</span><span class="p">(</span><span class="n">data_batch_1</span><span class="p">)</span>
 <span class="n">coords</span><span class="p">,</span> <span class="n">feats</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">sparse_collate</span><span class="p">(</span>
-    <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">coords0</span><span class="p">,</span> <span class="n">coords1</span><span class="p">],</span> <span class="n">feats</span><span class="o">=</span><span class="p">[</span><span class="n">feats0</span><span class="p">,</span> <span class="n">feats1</span><span class="p">])</span>
+    <span class="n">coordinates</span><span class="o">=</span><span class="p">[</span><span class="n">coords0</span><span class="p">,</span> <span class="n">coords1</span><span class="p">],</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="n">feats0</span><span class="p">,</span> <span class="n">feats1</span><span class="p">])</span>
 
 <span class="c1"># sparse tensors</span>
-<span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">feats</span><span class="o">=</span><span class="n">feats</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">coordinates</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">)</span>
 <span class="n">conv</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiConvolution</span><span class="p">(</span>
     <span class="n">in_channels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out_channels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">B</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
@@ -351,37 +354,29 @@ To decompose the outputs, you can use a couple function and attributes.</p>
 
 
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="../demo/training.html" class="btn btn-neutral float-right" title="Training Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="../terminology.html" class="btn btn-neutral float-left" title="Definitions and Terminology" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="../demo/training.html" class="btn btn-neutral float-right" title="Training Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../terminology.html" class="btn btn-neutral float-left" title="Definitions and Terminology" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

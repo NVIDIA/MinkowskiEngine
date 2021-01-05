@@ -4,7 +4,7 @@ SparseTensor
 SparseTensor
 ------------
 
-.. autoclass:: MinkowskiEngine.SparseTensor.SparseTensor
+.. autoclass:: MinkowskiEngine.MinkowskiSparseTensor.SparseTensor
     :members:
     :undoc-members:
 
@@ -14,9 +14,18 @@ SparseTensor
 Sparse Tensor Operation Mode
 ----------------------------
 
-.. autoclass:: MinkowskiEngine.SparseTensor.SparseTensorOperationMode
+.. autoclass:: MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode
     :members:
 
-.. autofunction:: MinkowskiEngine.SparseTensor.set_sparse_tensor_operation_mode
+.. autoclass:: MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode
+    :members:
 
-.. autofunction:: MinkowskiEngine.SparseTensor.clear_global_coords_man
+.. autofunction:: MinkowskiEngine.MinkowskiTensor.set_sparse_tensor_operation_mode
+
+.. autofunction:: MinkowskiEngine.MinkowskiTensor.sparse_tensor_operation_mode
+
+.. autofunction:: MinkowskiEngine.MinkowskiTensor.global_coordinate_manager
+
+.. autofunction:: MinkowskiEngine.MinkowskiTensor.set_global_coordinate_manager
+
+.. autofunction:: MinkowskiEngine.MinkowskiTensor.clear_global_coordinate_manager

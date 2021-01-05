@@ -1,6 +1,6 @@
 # Benchmark
 
-We report the feed forward and backward pass time of a convolution layer, and a small U-network. Note that the kernel map can be reused for other layers with the same tensor-stride, stride, and kernel offsets, thus the time reported in this page can be amortized across all layers used in a large nueral network.
+We report the feed forward and backward pass time of a convolution layer, and a small U-network for v0.4.3. Note that the kernel map can be reused for other layers with the same tensor-stride, stride, and kernel offsets, thus the time reported in this page can be amortized across all layers used in a large nueral network.
 
 We use a Titan X for the experiments.
 

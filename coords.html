@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Coordinate Management &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>Coordinate Management &mdash; MinkowskiEngine 0.5.0 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.0
               </div>
             
           
@@ -105,7 +107,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -119,9 +121,9 @@
 <li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Coordinate Management</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#coordskey">CoordsKey</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coordsmanager">CoordsManager</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#coordinate-gpu-memory-manager">Coordinate GPU Memory Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinatemapkey">CoordinateMapKey</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinatemanager">CoordinateManager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpu-memory-allocator">GPU Memory Allocator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
@@ -173,6 +175,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -184,7 +188,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/coords.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -201,214 +205,185 @@
             
   <div class="section" id="coordinate-management">
 <h1>Coordinate Management<a class="headerlink" href="#coordinate-management" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="coordskey">
-<h2>CoordsKey<a class="headerlink" href="#coordskey" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="coordinatemapkey">
+<h2>CoordinateMapKey<a class="headerlink" href="#coordinatemapkey" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="MinkowskiEngine.CoordsKey">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">CoordsKey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsKey" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateMapKey">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">CoordinateMapKey</code><a class="headerlink" href="#MinkowskiEngine.CoordinateMapKey" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
-<dt id="MinkowskiEngine.CoordsKey.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsKey.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="MinkowskiEngine.CoordinateMapKey.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateMapKey.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>__init__(self: MinkowskiEngineBackend._C.CoordinateMapKey, arg0: int) -&gt; None</p></li>
+<li><p>__init__(self: MinkowskiEngineBackend._C.CoordinateMapKey, arg0: List[int], arg1: str) -&gt; None</p></li>
+</ol>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsKey.getKey">
-<code class="sig-name descname">getKey</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsKey.getKey" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateMapKey.get_coordinate_size">
+<code class="sig-name descname">get_coordinate_size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#MinkowskiEngine.CoordinateMapKey.get_coordinate_size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsKey.getTensorStride">
-<code class="sig-name descname">getTensorStride</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsKey.getTensorStride" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateMapKey.get_key">
+<code class="sig-name descname">get_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>List<span class="p">[</span>int<span class="p">]</span><span class="p">, </span>str<span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.CoordinateMapKey.get_key" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsKey.isKeySet">
-<code class="sig-name descname">isKeySet</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsKey.isKeySet" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateMapKey.get_tensor_stride">
+<code class="sig-name descname">get_tensor_stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>int<span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.CoordinateMapKey.get_tensor_stride" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsKey.setKey">
-<code class="sig-name descname">setKey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsKey.setKey" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateMapKey.is_key_set">
+<code class="sig-name descname">is_key_set</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">self</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#MinkowskiEngine.CoordinateMapKey.is_key_set" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsKey.setTensorStride">
-<code class="sig-name descname">setTensorStride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tensor_stride</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsKey.setTensorStride" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="MinkowskiEngine.CoordinateMapKey.set_key">
+<code class="sig-name descname">set_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateMapKey.set_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>set_key(self: MinkowskiEngineBackend._C.CoordinateMapKey, arg0: List[int], arg1: str) -&gt; None</p></li>
+<li><p>set_key(self: MinkowskiEngineBackend._C.CoordinateMapKey, arg0: Tuple[List[int], str]) -&gt; None</p></li>
+</ol>
+</dd></dl>
 
 </dd></dl>
 
 </div>
-<div class="section" id="coordsmanager">
-<h2>CoordsManager<a class="headerlink" href="#coordsmanager" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="coordinatemanager">
+<h2>CoordinateManager<a class="headerlink" href="#coordinatemanager" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="MinkowskiEngine.CoordsManager">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">CoordsManager</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_threads</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">memory_manager_backend</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend.MemoryManagerBackend</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">D</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">CoordinateManager</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">num_threads</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">coordinate_map_type</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allocator_type</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MinkowskiEngineBackend._C.GPUMemoryAllocatorType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">minkowski_algorithm</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MinkowskiEngineBackend._C.MinkowskiAlgorithm<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_threads</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">memory_manager_backend</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend.MemoryManagerBackend</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">D</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+<dt id="MinkowskiEngine.CoordinateManager.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">D</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em>, <em class="sig-param"><span class="n">num_threads</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">coordinate_map_type</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">allocator_type</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MinkowskiEngineBackend._C.GPUMemoryAllocatorType<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">minkowski_algorithm</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MinkowskiEngineBackend._C.MinkowskiAlgorithm<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">D</span></code>: The order, or dimension of the coordinates.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.create_coords_key">
-<code class="sig-name descname">create_coords_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">torch.IntTensor</span></em>, <em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">force_remap</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">allow_duplicate_coords</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><a class="headerlink" href="#MinkowskiEngine.CoordsManager.create_coords_key" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.get_coordinate_field">
+<code class="sig-name descname">get_coordinate_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key_or_tensor_strides</span></em><span class="sig-paren">)</span> &#x2192; torch.Tensor<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_coordinate_field" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_batch_indices">
-<code class="sig-name descname">get_batch_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_batch_indices" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.get_coordinates">
+<code class="sig-name descname">get_coordinates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key_or_tensor_strides</span></em><span class="sig-paren">)</span> &#x2192; torch.Tensor<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_coordinates" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_batch_size">
-<code class="sig-name descname">get_batch_size</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_batch_size" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_coords">
-<code class="sig-name descname">get_coords</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key_or_tensor_strides</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_coords" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_coords_map">
-<code class="sig-name descname">get_coords_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_key_or_tensor_strides</span></em>, <em class="sig-param"><span class="n">out_key_or_tensor_strides</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_coords_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract input coords indices that maps to output coords indices.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
-<span class="n">out_sp_tensor</span> <span class="o">=</span> <span class="n">stride_2_conv</span><span class="p">(</span><span class="n">sp_tensor</span><span class="p">)</span>
-
-<span class="n">cm</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span>
-<span class="c1"># cm = out_sp_tensor.coords_man  # doesn&#39;t matter which tensor you pick</span>
-<span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_coords_map</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># in stride</span>
-                              <span class="mi">2</span><span class="p">)</span>  <span class="c1"># out stride</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span><span class="p">):</span>
-   <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">o</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_coords_size_by_coords_key">
-<code class="sig-name descname">get_coords_size_by_coords_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_coords_size_by_coords_key" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_kernel_map">
-<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_key_or_tensor_strides</span></em>, <em class="sig-param"><span class="n">out_key_or_tensor_strides</span></em>, <em class="sig-param"><span class="n">stride</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">region_type</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">region_offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_transpose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_pool</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">on_gpu</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.get_kernel_map">
+<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">out_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">stride</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">region_type</span><span class="o">=</span><span class="default_value">RegionType.HYPER_CUBE</span></em>, <em class="sig-param"><span class="n">region_offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_transpose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_pool</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get kernel in-out maps for the specified coords keys or tensor strides.</p>
+<p>returns dict{kernel_index: in_out_tensor} where in_out_tensor[0] is the input row indices that correspond to in_out_tensor[1], which is the row indices for output.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_mapping_by_tensor_strides">
-<code class="sig-name descname">get_mapping_by_tensor_strides</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_tensor_strides</span></em>, <em class="sig-param"><span class="n">out_tensor_strides</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_mapping_by_tensor_strides" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_row_indices_at">
-<code class="sig-name descname">get_row_indices_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span></em>, <em class="sig-param"><span class="n">batch_index</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_row_indices_at" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return an torch.LongTensor of row indices for the specified batch index</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
-<span class="n">row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_at</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">batch_index</span><span class="p">)</span>
-</pre></div>
-</div>
+<dt id="MinkowskiEngine.CoordinateManager.get_unique_coordinate_map_key">
+<code class="sig-name descname">get_unique_coordinate_map_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>list<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; MinkowskiEngineBackend._C.CoordinateMapKey<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_unique_coordinate_map_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a unique coordinate_map_key for a given tensor stride.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_row_indices_per_batch">
-<code class="sig-name descname">get_row_indices_per_batch</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span></em>, <em class="sig-param"><span class="n">out_coords_key</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_row_indices_per_batch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of lists of row indices per batch.</p>
-<p>The corresponding batch indices are accessible by <cite>get_batch_indices</cite>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sp_tensor</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
-<span class="n">row_indices</span> <span class="o">=</span> <span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_man</span><span class="o">.</span><span class="n">get_row_indices_per_batch</span><span class="p">(</span><span class="n">sp_tensor</span><span class="o">.</span><span class="n">coords_key</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.get_union_map">
-<code class="sig-name descname">get_union_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_keys</span><span class="p">:</span> <span class="n">List<span class="p">[</span><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">out_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.get_union_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a union of coordinate sets and returns the mapping from input sets to the new output coordinates.</p>
-<dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_keys</span></code> (List[CoordsKey]): A list of coordinate keys to
-create a union on.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">out_key</span></code> (CoordsKey): the placeholder for the coords key of
-the generated union coords hash map.</p>
-</dd>
-<dt>Returns:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">in_maps</span></code> (List[Tensor[int]]): A list of long tensors that contain mapping from inputs to the union output. Please see the example for more details.
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">out_maps</span></code> (List[Tensor[int]]): A list of long tensors that contain a mapping from input to the union output. Please see the example for more details.</p>
-</dd>
-</dl>
+<dt id="MinkowskiEngine.CoordinateManager.insert_and_map">
+<code class="sig-name descname">insert_and_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">torch.Tensor</span></em>, <em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">string_id</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span>Tuple<span class="p">[</span>torch.IntTensor<span class="p">, </span>torch.IntTensor<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.insert_and_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a new coordinate map and returns (key, (map, inverse_map)).</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code>: <cite>torch.Tensor</cite> (Int tensor. <cite>CUDA</cite> if
+coordinate_map_type == <cite>CoordinateMapType.GPU</cite>) that defines the
+coordinates.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Adding two sparse tensors: A, B</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">out_key</span> <span class="o">=</span> <span class="n">CoordsKey</span><span class="p">(</span><span class="n">coords_man</span><span class="o">.</span><span class="n">D</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ins</span><span class="p">,</span> <span class="n">outs</span> <span class="o">=</span> <span class="n">coords_man</span><span class="o">.</span><span class="n">get_union_map</span><span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">coords_key</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">coords_key</span><span class="p">),</span> <span class="n">out_key</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">coords_man</span><span class="o">.</span><span class="n">get_coords_size_by_coords_key</span><span class="p">(</span><span class="n">out_key</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">out_F</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">F</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">out_F</span><span class="p">[</span><span class="n">outs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">ins</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">out_F</span><span class="p">[</span><span class="n">outs</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">B</span><span class="o">.</span><span class="n">F</span><span class="p">[</span><span class="n">ins</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">CoordinateManager</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">unique_map</span><span class="p">,</span> <span class="n">inverse_map</span><span class="p">)</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># key is tensor_stride, string_id [1]:&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coordinates</span><span class="p">[</span><span class="n">unique_map</span><span class="p">]</span> <span class="o">==</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="n">key</span><span class="p">))</span> <span class="c1"># True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coordinates</span> <span class="o">==</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">unique_map</span><span class="p">][</span><span class="n">inverse_map</span><span class="p">])</span> <span class="c1"># True</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.initialize">
-<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span><span class="p">:</span> <span class="n">torch.IntTensor</span></em>, <em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">force_remap</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">allow_duplicate_coords</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">return_inverse</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; torch.LongTensor<a class="headerlink" href="#MinkowskiEngine.CoordsManager.initialize" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.insert_field">
+<code class="sig-name descname">insert_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">torch.Tensor</span></em>, <em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">string_id</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span>Tuple<span class="p">[</span>torch.IntTensor<span class="p">, </span>torch.IntTensor<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.insert_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a new coordinate map and returns</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code>: <cite>torch.FloatTensor</cite> (<cite>CUDA</cite> if coordinate_map_type
+== <cite>CoordinateMapType.GPU</cite>) that defines the coordinates.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">CoordinateManager</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">unique_map</span><span class="p">,</span> <span class="n">inverse_map</span><span class="p">)</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="c1"># key is tensor_stride, string_id [1]:&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coordinates</span><span class="p">[</span><span class="n">unique_map</span><span class="p">]</span> <span class="o">==</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_coordinates</span><span class="p">(</span><span class="n">key</span><span class="p">))</span> <span class="c1"># True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">torch</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">coordinates</span> <span class="o">==</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">unique_map</span><span class="p">][</span><span class="n">inverse_map</span><span class="p">])</span> <span class="c1"># True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.interpolation_map_weight">
+<code class="sig-name descname">interpolation_map_weight</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">samples</span><span class="p">:</span> <span class="n">torch.Tensor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.interpolation_map_weight" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.permute_label">
-<code class="sig-name descname">permute_label</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">label</span></em>, <em class="sig-param"><span class="n">max_label</span></em>, <em class="sig-param"><span class="n">target_tensor_stride</span></em>, <em class="sig-param"><span class="n">label_tensor_stride</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.permute_label" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.number_of_unique_batch_indices">
+<code class="sig-name descname">number_of_unique_batch_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.number_of_unique_batch_indices" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.print_diagnostics">
-<code class="sig-name descname">print_diagnostics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.print_diagnostics" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.origin">
+<code class="sig-name descname">origin</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; MinkowskiEngineBackend._C.CoordinateMapKey<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.origin" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.reduce">
-<code class="sig-name descname">reduce</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.reduce" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.origin_map">
+<code class="sig-name descname">origin_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.origin_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.set_origin_coords_key">
-<code class="sig-name descname">set_origin_coords_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.set_origin_coords_key" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.size">
+<code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinate_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.stride">
-<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.stride" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="MinkowskiEngine.CoordinateManager.stride">
+<code class="sig-name descname">stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinate_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">string_id</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; MinkowskiEngineBackend._C.CoordinateMapKey<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.stride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a new coordinate map and returns the key.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinate_map_key</span></code> (<a class="reference internal" href="#MinkowskiEngine.CoordinateMapKey" title="MinkowskiEngine.CoordinateMapKey"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.CoordinateMapKey</span></code></a>):
+input map to generate the strided map from.</p>
+<p><a class="reference internal" href="#MinkowskiEngine.CoordinateManager.stride" title="MinkowskiEngine.CoordinateManager.stride"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stride</span></code></a>: stride size.</p>
+</dd></dl>
 
 <dl class="py method">
-<dt id="MinkowskiEngine.CoordsManager.transposed_stride">
-<code class="sig-name descname">transposed_stride</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key</span><span class="p">:</span> <span class="n"><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoords.CoordsKey" title="MinkowskiEngine.MinkowskiCoords.CoordsKey">MinkowskiCoords.CoordsKey</a></span></em>, <em class="sig-param"><span class="n">stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">dilation</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">, </span>torch.Tensor<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">force_creation</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordsManager.transposed_stride" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.CoordinateManager.union_map">
+<code class="sig-name descname">union_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_keys</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">out_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.union_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </div>
-<div class="section" id="coordinate-gpu-memory-manager">
-<h2>Coordinate GPU Memory Manager<a class="headerlink" href="#coordinate-gpu-memory-manager" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gpu-memory-allocator">
+<h2>GPU Memory Allocator<a class="headerlink" href="#gpu-memory-allocator" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="MinkowskiEngine.MemoryManagerBackend">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MemoryManagerBackend</code><a class="headerlink" href="#MinkowskiEngine.MemoryManagerBackend" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.GPUMemoryAllocatorType">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">GPUMemoryAllocatorType</code><a class="headerlink" href="#MinkowskiEngine.GPUMemoryAllocatorType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Members:</p>
-<p>CUDA</p>
 <p>PYTORCH</p>
+<p>CUDA</p>
 <dl class="py method">
-<dt id="MinkowskiEngine.MemoryManagerBackend.name">
-<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#MinkowskiEngine.MemoryManagerBackend.name" title="Permalink to this definition">¶</a></dt>
+<dt id="MinkowskiEngine.GPUMemoryAllocatorType.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#MinkowskiEngine.GPUMemoryAllocatorType.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>(self: handle) -&gt; str</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
-<dt id="MinkowskiEngine.MinkowskiCoords.set_memory_manager_backend">
-<code class="sig-prename descclassname">MinkowskiEngine.MinkowskiCoords.</code><code class="sig-name descname">set_memory_manager_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backend</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend.MemoryManagerBackend</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiCoords.set_memory_manager_backend" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the GPU memory manager backend</p>
+<dt id="MinkowskiEngine.set_gpu_allocator">
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">set_gpu_allocator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backend</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.GPUMemoryAllocatorType</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.set_gpu_allocator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the GPU memory allocator</p>
 <p>By default, the Minkowski Engine will use the pytorch memory pool to
 allocate temporary GPU memory slots. This allows the pytorch backend to
 effectively reuse the memory pool shared between the pytorch backend and
@@ -416,13 +391,13 @@ the Minkowski Engine. It tends to allow training with larger batch sizes
 given a fixed GPU memory. However, pytorch memory manager tend to be slower
 than allocating GPU directly using raw CUDA calls.</p>
 <p>By default, the Minkowski Engine uses
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">ME.MemoryManagerBackend.PYTORCH</span></code> for memory management.</p>
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">ME.GPUMemoryAllocatorType.PYTORCH</span></code> for memory management.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set the GPU memory manager backend to raw CUDA calls</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">set_memory_manager_backend</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MemoryManagerBackend</span><span class="o">.</span><span class="n">CUDA</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set the GPU memory manager backend to the pytorch memory pool</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">set_memory_manager_backend</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">MemoryManagerBackend</span><span class="o">.</span><span class="n">PYTORCH</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">set_gpu_allocator</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">GPUMemoryAllocatorType</span><span class="o">.</span><span class="n">CUDA</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Set the GPU memory manager backend to the pytorch c10 allocator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ME</span><span class="o">.</span><span class="n">set_gpu_allocator</span><span class="p">(</span><span class="n">ME</span><span class="o">.</span><span class="n">GPUMemoryAllocatorType</span><span class="o">.</span><span class="n">PYTORCH</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -449,37 +424,29 @@ than allocating GPU directly using raw CUDA calls.</p>
 
 
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="utils.html" class="btn btn-neutral float-right" title="Utility Functions and Classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="union.html" class="btn btn-neutral float-left" title="MinkowskiUnion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="utils.html" class="btn btn-neutral float-right" title="Utility Functions and Classes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="union.html" class="btn btn-neutral float-left" title="MinkowskiUnion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

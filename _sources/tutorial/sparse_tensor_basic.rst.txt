@@ -43,7 +43,7 @@ The next step in the pipeline is initializing a sparse tensor. A :attr:`Minkowsk
    coords0, feats0 = to_sparse_coo(data_batch_0)
    coords1, feats1 = to_sparse_coo(data_batch_1)
    coords, feats = ME.utils.sparse_collate(
-       coords=[coords0, coords1], feats=[feats0, feats1])
+       coordinates=[coords0, coords1], features=[feats0, feats1])
 
 
 Here, we used :attr:`MinkowskiEngine.utils.sparse_collate` function, but you can use :attr:`MinkowskiEngine.utils.batched_coordinates` to convert a list of coordinates to :attr:`MinkowskiEngine.SparseTensor` compatible coordinates.
@@ -60,11 +60,11 @@ You can simply use the sparse tensor initialization for this. For example,
 .. code-block:: python
 
    sinput = ME.SparseTensor(
-       feats=torch.from_numpy(colors), # Convert to a tensor
-       coords=ME.utils.batched_coordinates([coordinates / voxel_size]),  # coordinates must be defined in a integer grid. If the scale
+       features=torch.from_numpy(colors), # Convert to a tensor
+       coordinates=ME.utils.batched_coordinates([coordinates / voxel_size]),  # coordinates must be defined in a integer grid. If the scale
        quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE  # when used with continuous coordinates, average features in the same coordinate
    )
-   logits = model(sinput).slice(sinput)
+   logits = model(sinput).slice(sinput).F
 
 
 Please refer to `indoor semantic segmentation <https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/indoor.py>`_ for more detail.
@@ -78,12 +78,11 @@ You can use the initialized sparse tensor with a simple feed-forward neural netw
 .. code-block:: python
 
    # sparse tensors
-   A = ME.SparseTensor(coords=coords, feats=feats)
+   A = ME.SparseTensor(coordinates=coords, features=feats)
    B = ME.SparseTensor(
-       coords=new_coords,
-       feats=new_feats,
-       coords_manager=A.coords_man,  # must share the same coordinate manager
-       force_creation=True  # must force creation since tensor stride [1] exists
+       coordinates=new_coords,
+       features=new_feats,
+       coordinate_manager=A.coordinate_manager,  # must share the same coordinate manager
    )
 
    C = A + B
@@ -92,7 +91,7 @@ You can use the initialized sparse tensor with a simple feed-forward neural netw
    C = A / B
 
 
-Here, we create two sparse tensors with different sparsity patterns. However, we forced the second sparse tensor `B` to share the `coords_man`, a coordinate manager. This allows sharing the computation graph between two sparse tensors. The semantics is rather ugly for now, but will be hidden in the future.
+Here, we create two sparse tensors with different sparsity patterns. However, we forced the second sparse tensor `B` to share the `coordinate_manager`, a coordinate manager. This allows sharing the computation graph between two sparse tensors. The semantics is rather ugly for now, but will be hidden in the future.
 
 If you add two sparse tensors, this will add two features. In case where there is a non-zero element, but not on the other sparse tensor at a specific coordinate, we assume `0` for the non-existing value since a sparse tensor saves non-zero elements only. Anything that we do not specify is `0` by definition. Same goes for all other binary operations.
 
@@ -101,12 +100,12 @@ However, for in-place operations, we force the coordinates to have the same spar
 .. code-block:: python
 
    # in place operations
-   # Note that it requires the same coords_key (no need to feed coords)
+   # Note that it requires the same coordinate_map_key (no need to feed coords)
    D = ME.SparseTensor(
-       # coords=coords,  not required
-       feats=feats,
-       coords_manager=A.coords_man,  # must share the same coordinate manager
-       coords_key=A.coords_key  # For inplace, must share the same coords key
+       # coordinates=coords,  not required
+       features=feats,
+       coordinate_manager=A.coordinate_manager,  # must share the same coordinate manager
+       coordinate_map_key=A.coordinate_map_key  # For inplace, must share the same coords key
    )
 
    A += D
@@ -114,17 +113,17 @@ However, for in-place operations, we force the coordinates to have the same spar
    A *= D
    A /= D
 
-Note that we use the same `coords_key` for the sparse tensor `D`. It will give you an assertion error if you try to use a sparse tensor with different `coords_key`.
+Note that we use the same `coordinate_map_key` for the sparse tensor `D`. It will give you an assertion error if you try to use a sparse tensor with different `coordinate_map_key`.
 
 
 Feature Concatenation
 ---------------------
 
-You can concatenate two sparse tensors along the feature dimension if they share the same `coords_key`.
+You can concatenate two sparse tensors along the feature dimension if they share the same `coordinate_map_key`.
 
 .. code-block:: python
 
-   # If you have two or more sparse tensors with the same coords_key, you can concatenate features
+   # If you have two or more sparse tensors with the same coordinate_map_key, you can concatenate features
    E = ME.cat(A, D)
 
 
@@ -139,10 +138,10 @@ To decompose the outputs, you can use a couple function and attributes.
    coords0, feats0 = to_sparse_coo(data_batch_0)
    coords1, feats1 = to_sparse_coo(data_batch_1)
    coords, feats = ME.utils.sparse_collate(
-       coords=[coords0, coords1], feats=[feats0, feats1])
+       coordinates=[coords0, coords1], features=[feats0, feats1])
 
    # sparse tensors
-   A = ME.SparseTensor(coords=coords, feats=feats)
+   A = ME.SparseTensor(coordinates=coords, features=feats)
    conv = ME.MinkowskiConvolution(
        in_channels=1, out_channels=2, kernel_size=3, stride=2, dimension=2)
    B = conv(A)

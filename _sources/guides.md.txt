@@ -39,7 +39,7 @@ conv = ME.MinkowskiConvolution(
       kernel_size=kernel_size,
       stride=stride,
       dilation=dilation,
-      has_bias=has_bias,
+      bias=bias,
       kernel_generator=kernel_generator,
       dimension=dimension)
 ```

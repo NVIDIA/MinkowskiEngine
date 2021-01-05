@@ -17,16 +17,16 @@ $ echo $CUDA_HOME
 /usr/local/cuda
 
 $ ls -al $CUDA_HOME
-..... /usr/local/cuda -> /usr/local/cuda-9.0
+..... /usr/local/cuda -> /usr/local/cuda-10.2
 
 $ ls /usr/local/
-bin cuda cuda-9.0 cuda-10.0 ...
+bin cuda cuda-10.2 cuda-11.0 ...
 ```
 
 In this case, make sure you set the environment variable `CUDA_HOME` to the right path and install the MinkowskiEngine.
 
 ```
-export CUDA_HOME=/usr/local/cuda-10.0; python setup.py install
+export CUDA_HOME=/usr/local/cuda-10.2; python setup.py install
 ```
 
 
@@ -120,6 +120,23 @@ make clean
 python setup.py install --force
 ```
 
+## GPU Out-Of-Memory during training
+
+Unlike neural networks with dense tensors where the input batches always require the same bytes, the sparse tensors have different number of non-zero elements or length for different batches, which results in new memory allocation if the current batch is larger than the allocated memory. Such repeated memory allocation will result in Out-Of-Memory error and thus one must clear the GPU cache at a regular interval.
+
+
+```python
+def training(...):
+    ...
+    sinput = ME.SparseTensor(...)
+    loss = criterion(...)
+    loss.backward()
+    optimizer.step()
+
+    ...
+
+    torch.cuda.empty_cache()
+```
 
 ## Issues not listed
 

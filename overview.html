@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Minkowski Engine &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>Minkowski Engine &mdash; MinkowskiEngine 0.5.0 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.0
               </div>
             
           
@@ -90,18 +92,14 @@
               <p class="caption"><span class="caption-text">Introduction</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Minkowski Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#news">News</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-networks">Example Networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sparse-tensor-networks-neural-networks-for-spatially-sparse-tensors">Sparse Tensor Networks: Neural Networks for Spatially Sparse Tensors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pip">Pip</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pip-from-the-latest-source">Pip from the latest source</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#anaconda">Anaconda</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#create-a-conda-virtual-environment-and-install-requirements">1. Create a conda virtual environment and install requirements.</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#compilation-and-installation">2. Compilation and installation</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#anaconda">Anaconda</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#system-python">System Python</a></li>
 </ul>
 </li>
@@ -113,10 +111,12 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#discussion-and-documentation">Discussion and Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#known-issues">Known Issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#too-much-gpu-memory-usage-or-frequent-out-of-memory">Too much GPU memory usage or Frequent Out of Memory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#running-the-minkowskiengine-on-nodes-with-a-large-number-of-cpus">Running the MinkowskiEngine on nodes with a large number of CPUs</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#citing-minkowski-engine">Citing Minkowski Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unittest">Unittest</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#projects-using-minkowski-engine">Projects using Minkowski Engine</a></li>
 </ul>
 </li>
@@ -135,7 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
@@ -198,6 +198,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -209,7 +211,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/overview.md.txt" rel="nofollow"> View page source</a>
           
         
@@ -228,6 +230,16 @@
 <h1>Minkowski Engine<a class="headerlink" href="#minkowski-engine" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://pypi.org/project/MinkowskiEngine/"><img alt="PyPI Version" src="https://badge.fury.io/py/MinkowskiEngine.svg" /></a> <a class="reference external" href="https://gitter.im/MinkowskiEngineGitter/general"><img alt="Join the chat at https://gitter.im/MinkowskiEngineGitter/general" src="https://badges.gitter.im/Join%20Chat.svg" /></a></p>
 <p>The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit <a class="reference external" href="http://nvidia.github.io/MinkowskiEngine/overview.html">the documentation page</a>.</p>
+<div class="section" id="news">
+<h2>News<a class="headerlink" href="#news" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>2020-12-24 v0.5 is now available! Try with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/NVIDIA/MinkowskiEngine.git</span></code>.</p></li>
+<li><p>2020-08-18 v0.5 beta version is now available! <a class="reference external" href="https://github.com/chrischoy/MinkowskiEngineBenchmark">The speedup compared with v0.4.3 ranges from x2 to x5 depending on the network architectures</a>. Please install with the following command. The migration guide from v0.4 to v0.5 is available at <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/wiki/Migration-Guide-from-v0.4.x-to-0.5.x">the wiki page</a>. Feel free to update the wiki page to add and update any discrepancies you see.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">NVIDIA</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="example-networks">
 <h2>Example Networks<a class="headerlink" href="#example-networks" title="Permalink to this headline">¶</a></h2>
 <p>The Minkowski Engine supports various functions that can be built on a sparse tensor. We list a few popular network architectures and applications here. To run the examples, please install the package and run the command in the package root directory.</p>
@@ -297,17 +309,22 @@
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Ubuntu 14.04 or higher</p></li>
-<li><p>CUDA 10.1.243 or higher (CUDA 11 not supported yet)</p></li>
-<li><p>pytorch 1.5 or higher</p></li>
-<li><p>python 3.6 or higher</p></li>
-<li><p>GCC 7 or higher</p></li>
+<li><p>Ubuntu &gt;= 14.04</p></li>
+<li><p>11.1 &gt; CUDA &gt;= 10.1.243</p></li>
+<li><p>pytorch &gt;= 1.5</p></li>
+<li><p>python &gt;= 3.6</p></li>
+<li><p>GCC &gt;= 7</p></li>
 </ul>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>You can install the Minkowski Engine with <code class="docutils literal notranslate"><span class="pre">pip</span></code>, with anaconda, or on the system directly. If you experience issues installing the package, please checkout the <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/wiki/Installation">the installation wiki page</a>.
 If you cannot find a relevant problem, please report the issue on <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/issues">the github issue page</a>.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine#pip">PIP</a> installation</p></li>
+<li><p><a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine#anaconda">Conda</a> installation</p></li>
+<li><p><a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine#system-python">Python</a> installation</p></li>
+</ul>
 <div class="section" id="pip">
 <h3>Pip<a class="headerlink" href="#pip" title="Permalink to this headline">¶</a></h3>
 <p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.
@@ -315,16 +332,13 @@ First, install pytorch following the <a class="reference external" href="https:/
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span> <span class="o">--</span><span class="n">install</span><span class="o">-</span><span class="n">option</span><span class="o">=</span><span class="s2">&quot;--blas=openblas&quot;</span> <span class="o">-</span><span class="n">v</span>
+
+<span class="c1"># For pip installation from the latest source</span>
+<span class="c1"># pip install -U git+https://github.com/NVIDIA/MinkowskiEngine</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="pip-from-the-latest-source">
-<h3>Pip from the latest source<a class="headerlink" href="#pip-from-the-latest-source" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span>
-<span class="n">export</span> <span class="n">CXX</span><span class="o">=</span><span class="n">g</span><span class="o">++-</span><span class="mi">7</span>
-
-<span class="c1"># Uncomment some options if things don&#39;t work</span>
+<p>If you want to specify arguments for the setup script, please refer to the following command.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Uncomment some options if things don&#39;t work</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">NVIDIA</span><span class="o">/</span><span class="n">MinkowskiEngine</span> \
 <span class="c1">#                           \ # uncomment the following line if you want to force cuda installation</span>
 <span class="c1">#                           --install-option=&quot;--force_cuda&quot; \</span>
@@ -339,25 +353,14 @@ First, install pytorch following the <a class="reference external" href="https:/
 </div>
 <div class="section" id="anaconda">
 <h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h3>
-<p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation.</p>
-<div class="section" id="create-a-conda-virtual-environment-and-install-requirements">
-<h4>1. Create a conda virtual environment and install requirements.<a class="headerlink" href="#create-a-conda-virtual-environment-and-install-requirements" title="Permalink to this headline">¶</a></h4>
-<p>First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span>
+<p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation.
+First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
+<span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.8</span>
 <span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">mkl</span><span class="o">-</span><span class="n">include</span> <span class="n">pytorch</span> <span class="n">cudatoolkit</span><span class="o">=</span><span class="mf">10.2</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">mkl</span><span class="o">-</span><span class="n">include</span> <span class="n">pytorch</span> <span class="n">cudatoolkit</span><span class="o">=</span><span class="mf">11.0</span> <span class="o">-</span><span class="n">c</span> <span class="n">pytorch</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">NVIDIA</span><span class="o">/</span><span class="n">MinkowskiEngine</span>
 </pre></div>
-</div>
-</div>
-<div class="section" id="compilation-and-installation">
-<h4>2. Compilation and installation<a class="headerlink" href="#compilation-and-installation" title="Permalink to this headline">¶</a></h4>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">activate</span> <span class="n">py3</span><span class="o">-</span><span class="n">mink</span>
-<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">NVIDIA</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
-<span class="n">cd</span> <span class="n">MinkowskiEngine</span>
-<span class="c1"># use openblas instead of mkl if things don&#39;t work</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span> <span class="o">--</span><span class="n">install</span><span class="o">-</span><span class="n">option</span><span class="o">=</span><span class="s2">&quot;--blas=mkl&quot;</span>
-</pre></div>
-</div>
 </div>
 </div>
 <div class="section" id="system-python">
@@ -377,6 +380,8 @@ First, install pytorch following the <a class="reference external" href="https:/
 <span class="n">cd</span> <span class="n">MinkowskiEngine</span>
 
 <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+<span class="c1"># To specify blas, CUDA_HOME and force CUDA installation, use the following command</span>
+<span class="c1"># python setup.py install --blas=openblas --cuda_home=/usr/local/cuda --force_cuda</span>
 </pre></div>
 </div>
 </div>
@@ -408,7 +413,7 @@ function (<code class="docutils literal notranslate"><span class="pre">Minkowski
                 <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                 <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                 <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">has_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">dimension</span><span class="o">=</span><span class="n">D</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span>
             <span class="n">ME</span><span class="o">.</span><span class="n">MinkowskiReLU</span><span class="p">())</span>
@@ -462,10 +467,17 @@ page</a>.</p>
 </div>
 <div class="section" id="known-issues">
 <h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="too-much-gpu-memory-usage-or-frequent-out-of-memory">
+<h3>Too much GPU memory usage or Frequent Out of Memory<a class="headerlink" href="#too-much-gpu-memory-usage-or-frequent-out-of-memory" title="Permalink to this headline">¶</a></h3>
+<p>MinkowskiEngine is a specialized library that can handle different number of points or different number of non-zero elements at every iteration during training, which is common in point cloud data.
+However, pytorch is implemented assuming that the number of point, or size of the activations do not change at every iteration. Thus, the GPU memory caching used by pytorch can result in unnecessarily large memory consumption.</p>
+<p>Specifically, pytorch caches chunks of memory spaces to speed up allocation used in every tensor creation. If it fails to find the memory space, it splits an existing cached memory or allocate new space if there’s no cached memory large enough for the requested size. Thus, every time we use different number of point (number of non-zero elements) with pytorch, it either split existing cache or reserve new memory. If the cache is too fragmented and allocated all GPU space, it will raise out of memory error.</p>
+<p><strong>To prevent this, you must clear the cache at regular interval with <code class="docutils literal notranslate"><span class="pre">torch.cuda.empty_cache()</span></code>.</strong></p>
+</div>
 <div class="section" id="running-the-minkowskiengine-on-nodes-with-a-large-number-of-cpus">
 <h3>Running the MinkowskiEngine on nodes with a large number of CPUs<a class="headerlink" href="#running-the-minkowskiengine-on-nodes-with-a-large-number-of-cpus" title="Permalink to this headline">¶</a></h3>
-<p>The MinkowskiEngine uses OpenMP to parallelize the kernel map generation. However, when the number of threads used for parallelization is too large (e.g. OMP_NUM_THREADS=80), the efficiency drops rapidly as all threads simply wait for multithread locks to be released.</p>
-<p>In such cases, set the number of threads used for OpenMP. Usually, any number below 24 would be fine, but search for the optimal setup on your system.</p>
+<p>The MinkowskiEngine uses OpenMP to parallelize the kernel map generation. However, when the number of threads used for parallelization is too large (e.g. OMP_NUM_THREADS=80), the efficiency drops rapidly as all threads simply wait for multithread locks to be released.
+In such cases, set the number of threads used for OpenMP. Usually, any number below 24 would be fine, but search for the optimal setup on your system.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">OMP_NUM_THREADS</span><span class="o">=&lt;</span><span class="n">number</span> <span class="n">of</span> <span class="n">threads</span> <span class="n">to</span> <span class="n">use</span><span class="o">&gt;</span><span class="p">;</span> <span class="n">python</span> <span class="o">&lt;</span><span class="n">your_program</span><span class="o">.</span><span class="n">py</span><span class="o">&gt;</span>
 </pre></div>
 </div>
@@ -486,6 +498,38 @@ page</a>.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>For multi-threaded kernel map generation, please cite:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">choy2019fully</span><span class="p">,</span>
+  <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Fully</span> <span class="n">Convolutional</span> <span class="n">Geometric</span> <span class="n">Features</span><span class="p">},</span>
+  <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Choy</span><span class="p">,</span> <span class="n">Christopher</span> <span class="ow">and</span> <span class="n">Park</span><span class="p">,</span> <span class="n">Jaesik</span> <span class="ow">and</span> <span class="n">Koltun</span><span class="p">,</span> <span class="n">Vladlen</span><span class="p">},</span>
+  <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="n">IEEE</span> <span class="n">International</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Computer</span> <span class="n">Vision</span><span class="p">},</span>
+  <span class="n">pages</span><span class="o">=</span><span class="p">{</span><span class="mi">8958</span><span class="o">--</span><span class="mi">8966</span><span class="p">},</span>
+  <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2019</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For strided pooling layers for high-dimensional convolutions, please cite:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">choy2020high</span><span class="p">,</span>
+  <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">High</span><span class="o">-</span><span class="n">dimensional</span> <span class="n">Convolutional</span> <span class="n">Networks</span> <span class="k">for</span> <span class="n">Geometric</span> <span class="n">Pattern</span> <span class="n">Recognition</span><span class="p">},</span>
+  <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Choy</span><span class="p">,</span> <span class="n">Christopher</span> <span class="ow">and</span> <span class="n">Lee</span><span class="p">,</span> <span class="n">Junha</span> <span class="ow">and</span> <span class="n">Ranftl</span><span class="p">,</span> <span class="n">Rene</span> <span class="ow">and</span> <span class="n">Park</span><span class="p">,</span> <span class="n">Jaesik</span> <span class="ow">and</span> <span class="n">Koltun</span><span class="p">,</span> <span class="n">Vladlen</span><span class="p">},</span>
+  <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="n">IEEE</span> <span class="n">Conference</span> <span class="n">on</span> <span class="n">Computer</span> <span class="n">Vision</span> <span class="ow">and</span> <span class="n">Pattern</span> <span class="n">Recognition</span><span class="p">},</span>
+  <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2020</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For generative transposed convolution, please cite:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">gwak2020gsdn</span><span class="p">,</span>
+  <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Generative</span> <span class="n">Sparse</span> <span class="n">Detection</span> <span class="n">Networks</span> <span class="k">for</span> <span class="mi">3</span><span class="n">D</span> <span class="n">Single</span><span class="o">-</span><span class="n">shot</span> <span class="n">Object</span> <span class="n">Detection</span><span class="p">},</span>
+  <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Gwak</span><span class="p">,</span> <span class="n">JunYoung</span> <span class="ow">and</span> <span class="n">Choy</span><span class="p">,</span> <span class="n">Christopher</span> <span class="n">B</span> <span class="ow">and</span> <span class="n">Savarese</span><span class="p">,</span> <span class="n">Silvio</span><span class="p">},</span>
+  <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="n">European</span> <span class="n">conference</span> <span class="n">on</span> <span class="n">computer</span> <span class="n">vision</span><span class="p">},</span>
+  <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2020</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="unittest">
+<h2>Unittest<a class="headerlink" href="#unittest" title="Permalink to this headline">¶</a></h2>
+<p>For unittests and gradcheck, use torch &gt;= 1.7</p>
 </div>
 <div class="section" id="projects-using-minkowski-engine">
 <h2>Projects using Minkowski Engine<a class="headerlink" href="#projects-using-minkowski-engine" title="Permalink to this headline">¶</a></h2>
@@ -498,6 +542,7 @@ page</a>.</p>
 <li><p>3D Registration: <a class="reference external" href="https://arxiv.org/abs/2004.11540">Deep Global Registration, CVPR’20</a></p></li>
 <li><p>Pattern Recognition: <a class="reference external" href="https://arxiv.org/abs/2005.08144">High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR’20</a></p></li>
 <li><p>Detection: <a class="reference external" href="https://arxiv.org/abs/2006.12356">Generative Sparse Detection Networks for 3D Single-shot Object Detection, ECCV’20</a></p></li>
+<li><p>Image matching: <a class="reference external" href="https://www.di.ens.fr/willow/research/sparse-ncnet/">Sparse Neighbourhood Consensus Networks, ECCV’20</a></p></li>
 </ul>
 </div>
 </div>
@@ -521,37 +566,29 @@ page</a>.</p>
 
 
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="sparse_tensor_network.html" class="btn btn-neutral float-right" title="Sparse Tensor Networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MinkowskiEngine’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="sparse_tensor_network.html" class="btn btn-neutral float-right" title="Sparse Tensor Networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MinkowskiEngine’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

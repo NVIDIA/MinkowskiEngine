@@ -1,10 +1,10 @@
 Coordinate Management
 =====================
 
-CoordsKey
----------
+CoordinateMapKey
+----------------
 
-.. autoclass:: MinkowskiEngine.CoordsKey
+.. autoclass:: MinkowskiEngine.CoordinateMapKey
     :members:
     :undoc-members:
     :exclude-members: __repr__
@@ -12,10 +12,10 @@ CoordsKey
     .. automethod:: __init__
 
 
-CoordsManager
--------------
+CoordinateManager
+-----------------
 
-.. autoclass:: MinkowskiEngine.CoordsManager
+.. autoclass:: MinkowskiEngine.CoordinateManager
     :members:
     :undoc-members:
     :exclude-members: __repr__
@@ -23,10 +23,10 @@ CoordsManager
     .. automethod:: __init__
 
 
-Coordinate GPU Memory Manager
------------------------------
+GPU Memory Allocator
+--------------------
 
-.. autoclass:: MinkowskiEngine.MemoryManagerBackend
+.. autoclass:: MinkowskiEngine.GPUMemoryAllocatorType
     :members:
 
-.. autofunction:: MinkowskiEngine.MinkowskiCoords.set_memory_manager_backend
+.. autofunction:: MinkowskiEngine.set_gpu_allocator
