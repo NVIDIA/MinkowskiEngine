@@ -7,6 +7,15 @@
 
 The Minkowski Engine is an auto-differentiation library for sparse tensors. It supports all standard neural network layers such as convolution, pooling, unpooling, and broadcasting operations for sparse tensors. For more information, please visit [the documentation page](http://nvidia.github.io/MinkowskiEngine/overview.html).
 
+## News
+
+- 2020-12-24 v0.5 is now available! Try with `pip install git+https://github.com/NVIDIA/MinkowskiEngine.git`.
+- 2020-08-18 v0.5 beta version is now available! [The speedup compared with v0.4.3 ranges from x2 to x5 depending on the network architectures](https://github.com/chrischoy/MinkowskiEngineBenchmark). Please install with the following command. The migration guide from v0.4 to v0.5 is available at [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Migration-Guide-from-v0.4.x-to-0.5.x). Feel free to update the wiki page to add and update any discrepancies you see.
+
+```
+pip install git+https://github.com/NVIDIA/MinkowskiEngine.git
+```
+
 ## Example Networks
 
 The Minkowski Engine supports various functions that can be built on a sparse tensor. We list a few popular network architectures and applications here. To run the examples, please install the package and run the command in the package root directory.
@@ -48,17 +57,21 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 ## Requirements
 
-- Ubuntu 14.04 or higher
-- CUDA 10.1.243 or higher (CUDA 11 not supported yet)
-- pytorch 1.5 or higher
-- python 3.6 or higher
-- GCC 7 or higher
+- Ubuntu >= 14.04
+- 11.1 > CUDA >= 10.1.243
+- pytorch >= 1.5
+- python >= 3.6
+- GCC >= 7
 
 
 ## Installation
 
 You can install the Minkowski Engine with `pip`, with anaconda, or on the system directly. If you experience issues installing the package, please checkout the [the installation wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Installation).
 If you cannot find a relevant problem, please report the issue on [the github issue page](https://github.com/NVIDIA/MinkowskiEngine/issues).
+
+- [PIP](https://github.com/NVIDIA/MinkowskiEngine#pip) installation
+- [Conda](https://github.com/NVIDIA/MinkowskiEngine#anaconda) installation
+- [Python](https://github.com/NVIDIA/MinkowskiEngine#system-python) installation
 
 ### Pip
 
@@ -69,15 +82,14 @@ First, install pytorch following the [instruction](https://pytorch.org). Next, i
 sudo apt install libopenblas-dev
 pip install torch
 pip install -U MinkowskiEngine --install-option="--blas=openblas" -v
+
+# For pip installation from the latest source
+# pip install -U git+https://github.com/NVIDIA/MinkowskiEngine
 ```
 
-### Pip from the latest source
+If you want to specify arguments for the setup script, please refer to the following command.
 
 ```
-sudo apt install libopenblas-dev
-pip install torch
-export CXX=g++-7
-
 # Uncomment some options if things don't work
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine \
 #                           \ # uncomment the following line if you want to force cuda installation
@@ -93,28 +105,15 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine \
 ### Anaconda
 
 We recommend `python>=3.6` for installation.
-
-
-#### 1. Create a conda virtual environment and install requirements.
-
 First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
 
 ```
-conda create -n py3-mink python=3.7
+sudo apt install libopenblas-dev
+conda create -n py3-mink python=3.8
 conda activate py3-mink
-conda install numpy mkl-include pytorch cudatoolkit=10.2 -c pytorch
+conda install numpy mkl-include pytorch cudatoolkit=11.0 -c pytorch
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine
 ```
-
-#### 2. Compilation and installation
-
-```
-conda activate py3-mink
-git clone https://github.com/NVIDIA/MinkowskiEngine.git
-cd MinkowskiEngine
-# use openblas instead of mkl if things don't work
-python setup.py install --install-option="--blas=mkl"
-```
-
 
 ### System Python
 
@@ -135,6 +134,8 @@ git clone https://github.com/NVIDIA/MinkowskiEngine.git
 cd MinkowskiEngine
 
 python setup.py install
+# To specify blas, CUDA_HOME and force CUDA installation, use the following command
+# python setup.py install --blas=openblas --cuda_home=/usr/local/cuda --force_cuda
 ```
 
 
@@ -169,7 +170,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
                 kernel_size=3,
                 stride=2,
                 dilation=1,
-                has_bias=False,
+                bias=False,
                 dimension=D),
             ME.MinkowskiBatchNorm(64),
             ME.MinkowskiReLU())
@@ -220,12 +221,22 @@ For issues not listed on the API and feature requests, feel free to submit
 an issue on the [github issue
 page](https://github.com/NVIDIA/MinkowskiEngine/issues).
 
+
 ## Known Issues
+
+### Too much GPU memory usage or Frequent Out of Memory
+
+MinkowskiEngine is a specialized library that can handle different number of points or different number of non-zero elements at every iteration during training, which is common in point cloud data.
+However, pytorch is implemented assuming that the number of point, or size of the activations do not change at every iteration. Thus, the GPU memory caching used by pytorch can result in unnecessarily large memory consumption.
+
+Specifically, pytorch caches chunks of memory spaces to speed up allocation used in every tensor creation. If it fails to find the memory space, it splits an existing cached memory or allocate new space if there's no cached memory large enough for the requested size. Thus, every time we use different number of point (number of non-zero elements) with pytorch, it either split existing cache or reserve new memory. If the cache is too fragmented and allocated all GPU space, it will raise out of memory error.
+
+**To prevent this, you must clear the cache at regular interval with `torch.cuda.empty_cache()`.**
+
 
 ### Running the MinkowskiEngine on nodes with a large number of CPUs
 
 The MinkowskiEngine uses OpenMP to parallelize the kernel map generation. However, when the number of threads used for parallelization is too large (e.g. OMP_NUM_THREADS=80), the efficiency drops rapidly as all threads simply wait for multithread locks to be released.
-
 In such cases, set the number of threads used for OpenMP. Usually, any number below 24 would be fine, but search for the optimal setup on your system.
 
 ```
@@ -248,6 +259,45 @@ If you use the Minkowski Engine, please cite:
 }
 ```
 
+For multi-threaded kernel map generation, please cite:
+
+```
+@inproceedings{choy2019fully,
+  title={Fully Convolutional Geometric Features},
+  author={Choy, Christopher and Park, Jaesik and Koltun, Vladlen},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision},
+  pages={8958--8966},
+  year={2019}
+}
+```
+
+For strided pooling layers for high-dimensional convolutions, please cite:
+
+```
+@inproceedings{choy2020high,
+  title={High-dimensional Convolutional Networks for Geometric Pattern Recognition},
+  author={Choy, Christopher and Lee, Junha and Ranftl, Rene and Park, Jaesik and Koltun, Vladlen},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
+  year={2020}
+}
+```
+
+For generative transposed convolution, please cite:
+
+```
+@inproceedings{gwak2020gsdn,
+  title={Generative Sparse Detection Networks for 3D Single-shot Object Detection},
+  author={Gwak, JunYoung and Choy, Christopher B and Savarese, Silvio},
+  booktitle={European conference on computer vision},
+  year={2020}
+}
+```
+
+
+## Unittest
+
+For unittests and gradcheck, use torch >= 1.7
+
 ## Projects using Minkowski Engine
 
 Please feel free to update [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Usage) to add your projects!
@@ -260,3 +310,4 @@ Please feel free to update [the wiki page](https://github.com/NVIDIA/MinkowskiEn
 - 3D Registration: [Deep Global Registration, CVPR'20](https://arxiv.org/abs/2004.11540)
 - Pattern Recognition: [High-Dimensional Convolutional Networks for Geometric Pattern Recognition, CVPR'20](https://arxiv.org/abs/2005.08144)
 - Detection: [Generative Sparse Detection Networks for 3D Single-shot Object Detection, ECCV'20](https://arxiv.org/abs/2006.12356)
+- Image matching: [Sparse Neighbourhood Consensus Networks, ECCV'20](https://www.di.ens.fr/willow/research/sparse-ncnet/)

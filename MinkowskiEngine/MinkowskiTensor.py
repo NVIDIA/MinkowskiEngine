@@ -99,17 +99,26 @@ def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
     _sparse_tensor_operation_mode = operation_mode
 
 
-def sparse_tensor_operation_mode():
+def sparse_tensor_operation_mode() -> SparseTensorOperationMode:
+    r"""Return the current sparse tensor operation mode.
+    """
     global _sparse_tensor_operation_mode
     return copy.deepcopy(_sparse_tensor_operation_mode)
 
 
 def global_coordinate_manager():
+    r"""Return the current global coordinate manager
+    """
     global _global_coordinate_manager
     return _global_coordinate_manager
 
 
 def set_global_coordinate_manager(coordinate_manager):
+    r"""Set the global coordinate manager.
+
+    :attr:`MinkowskiEngine.CoordinateManager` The coordinate manager which will
+    be set to the global coordinate manager.
+    """
     global _global_coordinate_manager
     _global_coordinate_manager = coordinate_manager
 

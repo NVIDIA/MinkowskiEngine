@@ -71,7 +71,7 @@ def set_gpu_allocator(backend: GPUMemoryAllocatorType):
     than allocating GPU directly using raw CUDA calls.
 
     By default, the Minkowski Engine uses
-    :attr:`ME.MemoryManagerBackend.PYTORCH` for memory management.
+    :attr:`ME.GPUMemoryAllocatorType.PYTORCH` for memory management.
 
     Example::
 
@@ -84,7 +84,7 @@ def set_gpu_allocator(backend: GPUMemoryAllocatorType):
     """
     assert isinstance(
         backend, GPUMemoryAllocatorType
-    ), f"Input must be an instance of MemoryManagerBackend not {backend}"
+    ), f"Input must be an instance of GPUMemoryAllocatorType not {backend}"
     global _allocator_type
     _allocator_type = backend
 

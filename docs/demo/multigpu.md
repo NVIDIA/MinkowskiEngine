@@ -1,149 +1,186 @@
-Multi-GPU Training
-==================
+Multi-GPU with Pytorch-Lightning
+================================
 
 Currently, the MinkowskiEngine supports Multi-GPU training through data parallelization. In data parallelization, we have a set of mini batches that will be fed into a set of replicas of a network.
 
-Let's define a network first.
+There are currently multiple multi-gpu [examples](https://github.com/NVIDIA/MinkowskiEngine/tree/master/examples), but DistributedDataParallel (DDP) and Pytorch-lightning examples are recommended.
+
+In this tutorial, we will cover the pytorch-lightning multi-gpu example. We will go over how to define a dataset, a data loader, and a network first.
+
+
+Dataset
+-------
+
+Let's create a dummy dataset that reads a point cloud.
 
 ```python
-import MinkowskiEngine as ME
-from examples.minkunet import MinkUNet34C
+class DummyDataset(Dataset):
 
-# Copy the network to GPU
-net = MinkUNet34C(3, 20, D=3)
-net = net.to(target_device)
+    ...
+
+    def __getitem__(self, i):
+        filename = self.filenames[i]
+        pcd = o3d.io.read_point_cloud(filename)
+        quantized_coords, feats = ME.utils.sparse_quantize(
+            np.array(pcd.points, dtype=np.float32),
+            np.array(pcd.colors, dtype=np.float32),
+            quantization_size=self.voxel_size,
+        )
+        random_labels = torch.zeros(len(feats))
+        return {
+            "coordinates": quantized_coords,
+            "features": feats,
+            "labels": random_labels,
+        }
 ```
 
-Synchronized Batch Norm
------------------------
-
-Next, we create a new network with `ME.MinkowskiSynchBatchNorm` that replaces all `ME.MinkowskiBatchNorm`. This allows the network to use the large batch size and to maintain the same performance with a single-gpu training.
-
-```
-# Synchronized batch norm
-net = ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm(net);
-```
-
-Next, we need to create replicas of the network and the final loss layer (if you use one).
+To use this with a pytorch data loader, we need a custom collation function that merges all coordinates into a batched coordinates that are compatible with the MinkowskiEngine sparse tensor format.
 
 ```python
-import torch.nn.parallel as parallel
+def minkowski_collate_fn(list_data):
+    r"""
+    Collation function for MinkowskiEngine.SparseTensor that creates batched
+    cooordinates given a list of dictionaries.
+    """
+    coordinates_batch, features_batch, labels_batch = ME.utils.sparse_collate(
+        [d["coordinates"] for d in list_data],
+        [d["features"] for d in list_data],
+        [d["labels"] for d in list_data],
+        dtype=torch.float32,
+    )
+    return {
+        "coordinates": coordinates_batch,
+        "features": features_batch,
+        "labels": labels_batch,
+    }
 
-criterion = nn.CrossEntropyLoss()
-criterions = parallel.replicate(criterion, devices)
+...
+
+dataset = torch.utils.data.DataLoader(
+       DummyDataset("train", voxel_size=voxel_size),
+       batch_size=batch_size,
+       collate_fn=minkowski_collate_fn,
+       shuffle=True,
+    )
 ```
 
-Loading multiple batches
-------------------------
 
-During training, we need a set of mini batches for each training iteration. We used a function that returns one mini batch, but you do not need to follow this pattern.
+Network
+-------
+
+Next, we can define a simple dummy network for segmentation.
 
 ```python
-# Get new data
-inputs, labels = [], []
-for i in range(num_devices):
-    coords, feat, label = data_loader()  // parallel data loaders can be used
-    with torch.cuda.device(devices[i]):
-      inputs.append(ME.SparseTensor(feat, coords=coords).to(devices[i]))
-    labels.append(label.to(devices[i]))
+class DummyNetwork(nn.Module):
+    def __init__(self, in_channels, out_channels, D=3):
+        nn.Module.__init__(self)
+        self.net = nn.Sequential(
+            ME.MinkowskiConvolution(in_channels, 32, 3, dimension=D),
+            ME.MinkowskiBatchNorm(32),
+            ME.MinkowskiReLU(),
+            ME.MinkowskiConvolution(32, 64, 3, stride=2, dimension=D),
+            ME.MinkowskiBatchNorm(64),
+            ME.MinkowskiReLU(),
+            ME.MinkowskiConvolutionTranspose(64, 32, 3, stride=2, dimension=D),
+            ME.MinkowskiBatchNorm(32),
+            ME.MinkowskiReLU(),
+            ME.MinkowskiConvolution(32, out_channels, kernel_size=1, dimension=D),
+        )
+
+    def forward(self, x):
+        return self.net(x)
 ```
 
-Copying weights to devices
---------------------------
 
-First, we copy weights to all devices.
+Lightning Module
+----------------
 
-```
-replicas = parallel.replicate(net, devices)
-```
+[Pytorch lightning](https://www.pytorchlightning.ai/) is a high-level pytorch wrapper that simplifies a lot of boilerplate code. The core of the pytorch lightning is the `LightningModule` that provides a warpper for the training framework. In this section, we provide a segmentation training wrapper that extends the `LightningModule`.
 
-Applying replicas to all batches
---------------------------------
-
-Next, we feed all mini-batches to the corresponding replicas of the network on all devices. All outputs features are then fed into the loss layers.
 
 ```python
-outputs = parallel.parallel_apply(replicas, inputs, devices=devices)
+class MinkowskiSegmentationModule(LightningModule):
+    r"""
+    Segmentation Module for MinkowskiEngine.
+    """
 
-# Extract features from the sparse tensors to use a pytorch criterion
-out_features = [output.F for output in outputs]
-losses = parallel.parallel_apply(
-    criterions, tuple(zip(out_features, labels)), devices=devices)
+    def __init__(
+        self,
+        model,
+        optimizer_name="SGD",
+        lr=1e-3,
+        weight_decay=1e-5,
+        voxel_size=0.05,
+        batch_size=12,
+        val_batch_size=6,
+        train_num_workers=4,
+        val_num_workers=2,
+    ):
+        super().__init__()
+        for name, value in vars().items():
+            if name != "self":
+                setattr(self, name, value)
+
+        self.criterion = nn.CrossEntropyLoss()
+
+    def train_dataloader(self):
+        return DataLoader(
+            DummyDataset("train", voxel_size=self.voxel_size),
+            batch_size=self.batch_size,
+            collate_fn=minkowski_collate_fn,
+            shuffle=True,
+        )
+
+    def val_dataloader(self):
+        return DataLoader(
+            DummyDataset("val", voxel_size=self.voxel_size),
+            batch_size=self.val_batch_size,
+            collate_fn=minkowski_collate_fn,
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        stensor = ME.SparseTensor(
+            coordinates=batch["coordinates"], features=batch["features"]
+        )
+        # Must clear cache at regular interval
+        if self.global_step % 10 == 0:
+            torch.cuda.empty_cache()
+        return self.criterion(self(stensor).F, batch["labels"].long())
+
+    def validation_step(self, batch, batch_idx):
+        stensor = ME.SparseTensor(
+            coordinates=batch["coordinates"], features=batch["features"]
+        )
+        return self.criterion(self(stensor).F, batch["labels"].long())
+
+    def configure_optimizers(self):
+        return SGD(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
 ```
 
-Gathering all losses to the target device.
+Note that we clear cache at a regular interval. This is due to the fact that the input sparse tensors have different length at every iteration, which results in new memory allocation if the current batch is larger than the allocated memory. Such repeated memory allocation will result in Out-Of-Memory error and thus one must clear the GPU cache at a regular interval. If you have smaller GPU memory, try to clear cache at even shorter interval.
 
+```python
+def training_step(self, batch, batch_idx):
+    ...
+    # Must clear cache at a regular interval
+    if self.global_step % 10 == 0:
+        torch.cuda.empty_cache()
+    return self.criterion(self(stensor).F, batch["labels"].long())
 ```
-loss = parallel.gather(losses, target_device, dim=0).mean()
-```
-
-The rest of the training such as backward, and taking a step in an optimizer is similar to single-GPU training. Please refer to the [complete multi-gpu example](https://github.com/NVIDIA/MinkowskiEngine/blob/master/examples/multigpu.py) for more detail.
 
 
-Speedup Experiments
--------------------
-
-We use various batch sizes on 4x Titan XP's for the experiment and will divide the load to each gpu equally. For instance, with 1 GPU, each batch will have batch size 8. With 2 GPUs, we will have 4 batches for each GPU. With 4 GPUs, each GPU will have batch size 2.
-
-
-| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
-|:--------------:|:------------------:|:------------------:|:---------------:|
-| 1 GPU          | 8                  | 1.611 s            | x1      (x1)    |
-| 2 GPU          | 4                  | 0.916 s            | x1.76   (x2)    |
-| 4 GPU          | 2                  | 0.689 s            | x2.34   (x4)    |
-
-
-
-| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
-|:--------------:|:------------------:|:------------------:|:---------------:|
-| 1 GPU          | 12                 | 2.691 s            | x1      (x1)    |
-| 2 GPU          | 6                  | 1.413 s            | x1.90   (x2)    |
-| 3 GPU          | 4                  | 1.064 s            | x2.53   (x3)    |
-| 4 GPU          | 3                  | 1.006 s            | x2.67   (x4)    |
-
-
-
-| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
-|:--------------:|:------------------:|:------------------:|:---------------:|
-| 1 GPU          | 16                 | 3.543 s            | x1      (x1)    |
-| 2 GPU          | 8                  | 1.933 s            | x1.83   (x2)    |
-| 4 GPU          | 4                  | 1.322 s            | x2.68   (x4)    |
-
-
-
-| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
-|:--------------:|:------------------:|:------------------:|:---------------:|
-| 1 GPU          | 18                 | 4.391 s            | x1      (x1)    |
-| 2 GPU          | 9                  | 2.114 s            | x2.08   (x2)    |
-| 3 GPU          | 6                  | 1.660 s            | x2.65   (x3)    |
-
-
-
-| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
-|:--------------:|:------------------:|:------------------:|:---------------:|
-| 1 GPU          | 20                 | 4.639 s            | x1      (x1)    |
-| 2 GPU          | 10                 | 2.426 s            | x1.91   (x2)    |
-| 4 GPU          | 5                  | 1.707 s            | x2.72   (x4)    |
-
-
-| Number of GPUs | Batch size per GPU | Time per iteration | Speedup (Ideal) |
-|:--------------:|:------------------:|:------------------:|:---------------:|
-| 1 GPU          | 21                 | 4.894 s            | x1      (x1)    |
-| 3 GPU          | 7                  | 1.877 s            | x2.61   (x3)    |
-
-
-Analysis
+Training
 --------
 
-We observe that the speedup is pretty modest with smaller batch sizes. However, for large batch sizes (e.g. 18 and 20), the speedup increases as the thread initialization overhead gets amortized over the large job sizes.
+Once we created the segmentation module, we can train a network with the following code.
 
-Also, in all cases, using 4 GPUs is not efficient and the speed up seems very small (x2.65 for 3-GPU with total batch size 18 vs. x2.72 for 4-GPU with total batch size 20). Thus, it is recommended to use up to 3 GPUs with large batch sizes.
+```python
+pl_module = MinkowskiSegmentationModule(DummyNetwork(3, 20, D=3), lr=args.lr)
+trainer = Trainer(max_epochs=args.max_epochs, gpus=num_devices, accelerator="ddp")
+trainer.fit(pl_module)
+```
 
-| Number of GPUs | Average Speedup (Ideal) |
-|:--------------:|:-----------------------:|
-| 1 GPU          | x1      (x1)            |
-| 2 GPU          | x1.90   (x2)            |
-| 3 GPU          | x2.60   (x3)            |
-| 4 GPU          | x2.60   (x4)            |
-
-The reason for the modest speed-up is due to the heavy CPU usage. In Minkowski Engine, all sparse tensor coordinates are managed on CPU and the kernel in-out map requires significant CPU computation. Thus, for larger speed-up, it is recommended to use faster CPUs which could be a bottleneck for large point clouds.
+Here, if we set the `num_devices` to the number of GPUS available, the pytorch-lightning will automatically use the pytorch DistributedDataParallel to train the network on all GPUs.

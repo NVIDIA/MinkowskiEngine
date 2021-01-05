@@ -32,7 +32,7 @@ a min-batch.
                    kernel_size=3,
                    stride=2,
                    dilation=1,
-                   has_bias=False,
+                   bias=False,
                    dimension=D), ME.MinkowskiBatchNorm(64), ME.MinkowskiReLU(),
                ME.MinkowskiConvolution(
                    in_channels=64,
@@ -66,7 +66,7 @@ accessing the features of the sparse tensor
 
        # Get new data
        coords, feat, label = data_loader()
-       input = ME.SparseTensor(feat, coords=coords).to(device)
+       input = ME.SparseTensor(features=feat, coordinates=coords, device=device)
        label = label.to(device)
 
        # Forward

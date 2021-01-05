@@ -27,7 +27,6 @@ import torch.distributed as dist
 import MinkowskiEngine as ME
 from examples.minkunet import MinkUNet34C
 
-import torch.nn.parallel as parallel
 
 if not os.path.isfile("weights.pth"):
     urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", "1.ply")
@@ -62,7 +61,6 @@ def main():
     config = parser.parse_args()
     num_devices = torch.cuda.device_count()
     num_devices = min(config.max_ngpu, num_devices)
-    devices = list(range(num_devices))
     print(
         "Testing ",
         num_devices,

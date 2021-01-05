@@ -71,12 +71,16 @@ class TensorField(Tensor):
             associated to the features. If not provided, :attr:`coordinate_map_key`
             must be provided.
 
-            :attr:`coordinate_map_key`
+            :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
+            :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
+            of the current sparse tensor. By default, it is 1.
+
+            :attr:`coordinate_field_map_key`
             (:attr:`MinkowskiEngine.CoordinateMapKey`): When the coordinates
             are already cached in the MinkowskiEngine, we could reuse the same
             coordinate map by simply providing the coordinate map key. In most
             case, this process is done automatically. When you provide a
-            `coordinate_map_key`, `coordinates` will be be ignored.
+            `coordinate_field_map_key`, `coordinates` will be be ignored.
 
             :attr:`coordinate_manager`
             (:attr:`MinkowskiEngine.CoordinateManager`): The MinkowskiEngine
@@ -90,12 +94,22 @@ class TensorField(Tensor):
             continuous coordinates will be quantized to define a sparse tensor.
             Please refer to :attr:`SparseTensorQuantizationMode` for details.
 
+            :attr:`allocator_type`
+            (:attr:`MinkowskiEngine.GPUMemoryAllocatorType`): Defines the GPU
+            memory allocator type. By default, it uses the c10 allocator.
+
+            :attr:`minkowski_algorithm`
+            (:attr:`MinkowskiEngine.MinkowskiAlgorithm`): Controls the mode the
+            minkowski engine runs, Use
+            :attr:`MinkowskiAlgorithm.MEMORY_EFFICIENT` if you want to reduce
+            the memory footprint. Or use
+            :attr:`MinkowskiAlgorithm.SPEED_OPTIMIZED` if you want to make it
+            run fasterat the cost of more memory.
+
             :attr:`requires_grad` (:attr:`bool`): Set the requires_grad flag.
 
-            :attr:`tensor_stride` (:attr:`int`, :attr:`list`,
-            :attr:`numpy.array`, or :attr:`tensor.Tensor`): The tensor stride
-            of the current sparse tensor. By default, it is 1.
-
+            :attr:`device` (:attr:`torch.device`): Set the device the sparse
+            tensor is defined.
         """
         # Type checks
         assert isinstance(features, torch.Tensor), "Features must be a torch.Tensor"
