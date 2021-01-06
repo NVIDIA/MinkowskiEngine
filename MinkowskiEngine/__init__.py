@@ -197,3 +197,14 @@ import MinkowskiEngine.utils as utils
 import MinkowskiEngine.modules as modules
 
 from sparse_matrix_functions import spmm, MinkowskiSPMMFunction
+
+
+if not is_cuda_available():
+    warnings.warn(
+        " ".join(
+            [
+                "The MinkowskiEngine was compiled with CPU_ONLY flag.",
+                "If you want to compile with CUDA support, make sure `torch.cuda.is_available()` is True when you install MinkowskiEngine.",
+            ]
+        )
+    )

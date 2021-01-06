@@ -114,7 +114,9 @@ class MinkowskiChannelwiseConvolution(MinkowskiModuleBase):
         """
 
         super(MinkowskiChannelwiseConvolution, self).__init__()
-        assert dimension > 0, f"dimension must be a positive integer, {dimension}"
+        assert (
+            dimension > 0
+        ), f"Invalid dimension. Please provide a valid dimension argument. dimension={dimension}"
 
         if kernel_generator is None:
             kernel_generator = KernelGenerator(

@@ -133,6 +133,10 @@ class CoordinateManager:
         if coordinate_map_type == CoordinateMapType.CPU:
             postfix = "CPU"
         else:
+            assert (
+                _C.is_cuda_available()
+            ), "The MinkowskiEngine was compiled with CPU_ONLY flag. If you want to compile with CUDA support, make sure `torch.cuda.is_available()` is True when you install MinkowskiEngine."
+
             postfix = "GPU" + (
                 "_default" if allocator_type == GPUMemoryAllocatorType.CUDA else "_c10"
             )

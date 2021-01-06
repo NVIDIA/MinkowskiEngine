@@ -4,7 +4,9 @@
 
 ### Added
 
+- v0.5 documentation updates
 - Nonlinear functionals and modules
+- Warning when using cuda without ME cuda support
 
 ## [0.5.0a] - 2020-08-05
 
