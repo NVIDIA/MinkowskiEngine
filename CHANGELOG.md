@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.0]
+
+### Added
+
+- Nonlinear functionals and modules
+
 ## [0.5.0a] - 2020-08-05
 
 ### Changed

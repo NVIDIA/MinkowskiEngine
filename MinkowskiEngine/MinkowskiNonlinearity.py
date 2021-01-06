@@ -58,16 +58,48 @@ class MinkowskiNonlinearityBase(MinkowskiModuleBase):
         return self.__class__.__name__ + "()"
 
 
-class MinkowskiReLU(MinkowskiNonlinearityBase):
-    MODULE = torch.nn.ReLU
+class MinkowskiELU(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.ELU
+
+
+class MinkowskiHardshrink(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Hardshrink
+
+
+class MinkowskiHardsigmoid(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Hardsigmoid
+
+
+class MinkowskiHardtanh(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Hardtanh
+
+
+class MinkowskiHardswish(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Hardswish
+
+
+class MinkowskiLeakyReLU(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.LeakyReLU
+
+
+class MinkowskiLogSigmoid(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.LogSigmoid
 
 
 class MinkowskiPReLU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.PReLU
 
 
-class MinkowskiELU(MinkowskiNonlinearityBase):
-    MODULE = torch.nn.ELU
+class MinkowskiReLU(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.ReLU
+
+
+class MinkowskiReLU6(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.ReLU6
+
+
+class MinkowskiRReLU(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.RReLU
 
 
 class MinkowskiSELU(MinkowskiNonlinearityBase):
@@ -82,24 +114,62 @@ class MinkowskiGELU(MinkowskiNonlinearityBase):
     MODULE = torch.nn.GELU
 
 
-class MinkowskiDropout(MinkowskiNonlinearityBase):
-    MODULE = torch.nn.Dropout
-
-
-class MinkowskiThreshold(MinkowskiNonlinearityBase):
-    MODULE = torch.nn.Threshold
-
-
 class MinkowskiSigmoid(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Sigmoid
+
+
+class MinkowskiSiLU(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.SiLU
+
+
+class MinkowskiSoftplus(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Softplus
+
+
+class MinkowskiSoftshrink(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Softshrink
+
+
+class MinkowskiSoftsign(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Softsign
 
 
 class MinkowskiTanh(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Tanh
 
 
+class MinkowskiTanhshrink(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Tanhshrink
+
+
+class MinkowskiThreshold(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Threshold
+
+
+# Non-linear Activations (other)
+class MinkowskiSoftmin(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Softmin
+
+
 class MinkowskiSoftmax(MinkowskiNonlinearityBase):
     MODULE = torch.nn.Softmax
+
+
+class MinkowskiLogSoftmax(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.LogSoftmax
+
+
+class MinkowskiAdaptiveLogSoftmaxWithLoss(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.AdaptiveLogSoftmaxWithLoss
+
+
+# Dropouts
+class MinkowskiDropout(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.Dropout
+
+
+class MinkowskiAlphaDropout(MinkowskiNonlinearityBase):
+    MODULE = torch.nn.AlphaDropout
 
 
 class MinkowskiSinusoidal(MinkowskiModuleBase):
