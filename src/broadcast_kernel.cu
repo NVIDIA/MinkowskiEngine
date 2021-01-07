@@ -251,9 +251,9 @@ void BroadcastBackwardKernelGPU(
 #if defined(CUDART_VERSION) && (CUDART_VERSION < 10010)
   TORCH_CHECK(false, "spmm sparse-dense requires CUDA 10.1 or greater");
 #elif defined(CUDART_VERSION) && (CUDART_VERSION >= 10010) &&                  \
-    (CUDART_VERSION < 11010)
+    (CUDART_VERSION < 11000)
   mm_alg = CUSPARSE_MM_ALG_DEFAULT;
-#elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11010)
+#elif defined(CUDART_VERSION) && (CUDART_VERSION >= 11000)
   mm_alg = CUSPARSE_SPMM_ALG_DEFAULT;
 #endif
 
