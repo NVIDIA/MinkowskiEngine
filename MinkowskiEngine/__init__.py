@@ -48,6 +48,8 @@ if os.cpu_count() > 16 and "OMP_NUM_THREADS" not in os.environ:
 # Must be imported first to load all required shared libs
 import torch
 
+from diagnostics import print_diagnostics
+
 from MinkowskiEngineBackend._C import (
     MinkowskiAlgorithm,
     CoordinateMapKey,

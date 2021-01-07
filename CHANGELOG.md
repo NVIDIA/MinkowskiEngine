@@ -7,6 +7,7 @@
 - v0.5 documentation updates
 - Nonlinear functionals and modules
 - Warning when using cuda without ME cuda support
+- diagnostics test
 
 ## [0.5.0a] - 2020-08-05
 
@@ -14,6 +15,18 @@
 
 - Remove Makefile for installation as pytorch supports multithreaded compilation
 - GPU coordinate map support
+- Coordinate union
+- Sparse tensor binary operators
+- CUDA 11.1 support
+- quantization function updates
+- Multi GPU examples
+- Pytorch-lightning multi-gpu example
+- Transpose pooling layers
+- TensorField updates
+- Batch-wise decomposition
+- inverse_map when sparse() called (slice)
+- ChannelwiseConvolution
+- TensorField support for non-linearities
 
 ## [0.4.3] - 2020-05-29
 
