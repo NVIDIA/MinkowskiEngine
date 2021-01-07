@@ -14,10 +14,30 @@ MinkowskiConvolution
     .. automethod:: __init__
 
 
+MinkowskiChannelwiseConvolution
+-------------------------------
+
+.. autoclass:: MinkowskiEngine.MinkowskiChannelwiseConvolution
+    :members: cpu, cuda, double, float, to, type, forward
+    :undoc-members:
+
+    .. automethod:: __init__
+
+
 MinkowskiConvolutionTranspose
 -----------------------------
 
 .. autoclass:: MinkowskiEngine.MinkowskiConvolutionTranspose
+    :members: cpu, cuda, double, float, to, type, forward
+    :undoc-members:
+
+    .. automethod:: __init__
+
+
+MinkowskiGenerativeConvolutionTranspose
+---------------------------------------
+
+.. autoclass:: MinkowskiEngine.MinkowskiGenerativeConvolutionTranspose
     :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
 

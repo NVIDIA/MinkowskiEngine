@@ -1,6 +1,7 @@
 Utility Functions and Classes
 =============================
 
+
 sparse_quantize
 ---------------
 
@@ -25,6 +26,18 @@ batch_sparse_collate
 .. autofunction:: MinkowskiEngine.utils.batch_sparse_collate
 
 
+cat
+---
+
+.. autofunction:: MinkowskiEngine.cat
+
+
+to_sparse
+---------
+
+.. autofunction:: MinkowskiEngine.to_sparse
+
+
 SparseCollation
 ---------------
 
@@ -34,17 +47,6 @@ SparseCollation
 
     .. automethod:: __init__
 
-
-cat
-___
-
-.. autofunction:: MinkowskiEngine.cat
-
-
-to_sparse
----------
-
-.. autofunction:: MinkowskiEngine.to_sparse
 
 MinkowskiToSparseTensor
 -----------------------
