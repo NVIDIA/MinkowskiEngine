@@ -111,13 +111,14 @@
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor and TensorField</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interp.html">MinkowskiInterpolation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
@@ -269,14 +270,23 @@
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">API</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#id1">SparseTensor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#sparse-tensor-operation-mode">Sparse Tensor Operation Mode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor and TensorField</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#sparsetensor">SparseTensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#tensorfield">TensorField</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#sparsetensoroperationmode">SparseTensorOperationMode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#sparsetensorquantizationmode">SparseTensorQuantizationMode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#set-sparse-tensor-operation-mode">set_sparse_tensor_operation_mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#sparse-tensor-operation-mode">sparse_tensor_operation_mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#global-coordinate-manager">global_coordinate_manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#set-global-coordinate-manager">set_global_coordinate_manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse_tensor.html#clear-global-coordinate-manager">clear_global_coordinate_manager</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="convolution.html#id1">MinkowskiConvolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#minkowskichannelwiseconvolution">MinkowskiChannelwiseConvolution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convolution.html#minkowskiconvolutiontranspose">MinkowskiConvolutionTranspose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convolution.html#minkowskigenerativeconvolutiontranspose">MinkowskiGenerativeConvolutionTranspose</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a><ul>
@@ -317,6 +327,10 @@
 <li class="toctree-l2"><a class="reference internal" href="pruning.html#id1">MinkowskiPruning</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="interp.html">MinkowskiInterpolation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interp.html#id1">MinkowskiInterpolation</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="union.html#id1">MinkowskiUnion</a></li>
 </ul>
@@ -332,8 +346,9 @@
 <li class="toctree-l2"><a class="reference internal" href="utils.html#batched-coordinates">batched_coordinates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#sparse-collate">sparse_collate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#batch-sparse-collate">batch_sparse_collate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils.html#sparsecollation">SparseCollation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#cat">cat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#to-sparse">to_sparse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#sparsecollation">SparseCollation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#minkowskitosparsetensor">MinkowskiToSparseTensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#minkowskitodensetensor">MinkowskiToDenseTensor</a></li>
 </ul>
@@ -345,6 +360,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="misc.html">Miscellanea</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="misc.html#controlling-the-number-of-threads">Controlling the number of threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#is-cuda-available">is_cuda_available</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#cuda-version">cuda_version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#get-gpu-memory-info">get_gpu_memory_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html#set-memory-manager-backend">set_memory_manager_backend</a></li>
 <li class="toctree-l2"><a class="reference internal" href="misc.html#references">References</a></li>
 </ul>
 </li>

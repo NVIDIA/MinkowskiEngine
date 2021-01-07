@@ -112,19 +112,24 @@
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor and TensorField</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interp.html">MinkowskiInterpolation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Miscellanea</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#controlling-the-number-of-threads">Controlling the number of threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#is-cuda-available">is_cuda_available</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cuda-version">cuda_version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-gpu-memory-info">get_gpu_memory_info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-memory-manager-backend">set_memory_manager_backend</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
@@ -208,6 +213,39 @@
 <h2>Controlling the number of threads<a class="headerlink" href="#controlling-the-number-of-threads" title="Permalink to this headline">¶</a></h2>
 <p>The kernel map <a class="reference external" href="https://arxiv.org/abs/1904.08755">[1]</a> defines which row of an input feature matrix to which row of the output feature matrix. This however is an expensive operation as the dimension increases. Fortunately, some part of the operation can be parallelized and we provide a multi-threaded function to speed up this process.</p>
 <p>By default, we use all CPU threads available in the system. However, this might not be desirable in some cases. Simply define an environmental variable <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> to control the number of threads you want to use. For example, <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">OMP_NUM_THREADS=8;</span> <span class="pre">python</span> <span class="pre">your_program.py</span></code>. If you use SLURM, the environment variable <code class="docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code> will be automatically set.</p>
+</div>
+<div class="section" id="is-cuda-available">
+<h2>is_cuda_available<a class="headerlink" href="#is-cuda-available" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="MinkowskiEngine.is_cuda_available">
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">is_cuda_available</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#MinkowskiEngine.is_cuda_available" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="cuda-version">
+<h2>cuda_version<a class="headerlink" href="#cuda-version" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="MinkowskiEngine.cuda_version">
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">cuda_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#MinkowskiEngine.cuda_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="get-gpu-memory-info">
+<h2>get_gpu_memory_info<a class="headerlink" href="#get-gpu-memory-info" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="MinkowskiEngine.get_gpu_memory_info">
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">get_gpu_memory_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>int<span class="p">, </span>int<span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.get_gpu_memory_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="set-memory-manager-backend">
+<h2>set_memory_manager_backend<a class="headerlink" href="#set-memory-manager-backend" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="MinkowskiEngine.set_memory_manager_backend">
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">set_memory_manager_backend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">backend</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.GPUMemoryAllocatorType</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.set_memory_manager_backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for set_gpu_allocator. Deprecated and will be removed.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>

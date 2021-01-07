@@ -44,6 +44,7 @@ Table of Contents
    normalization
    nonlinearity
    pruning
+   interp
    union
    coords
    utils
