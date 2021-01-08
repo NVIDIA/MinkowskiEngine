@@ -186,6 +186,8 @@ class ResFieldNetBase(ResNetBase):
         ResNetBase.network_initialization(self, field_ch2, out_channels, D)
 
     def forward(self, x):
+        if not hasattr(x, '_inverse_mapping'):
+            _ = x.sparse()
         otensor = self.field_network(x)
         otensor2 = self.field_network2(otensor.cat_slice(x))
         return ResNetBase.forward(self, otensor2)
