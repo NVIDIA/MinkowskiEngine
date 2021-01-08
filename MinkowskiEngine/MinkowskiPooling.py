@@ -608,7 +608,6 @@ class MinkowskiGlobalPoolingFunction(Function):
             ctx.out_coords_key,
             ctx.coordinate_manager._manager,
         )
-
         ctx.num_nonzero = num_nonzero
 
         return out_feat
@@ -719,3 +718,28 @@ class MinkowskiGlobalMaxPooling(MinkowskiGlobalPooling):
 
         """
         MinkowskiGlobalPooling.__init__(self, mode=mode)
+
+    def forward(
+        self,
+        input: SparseTensor,
+        coordinates: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
+    ):
+        # Get a new coordinate map key or extract one from the coordinates
+        if input._manager.number_of_unique_batch_indices() == 1:
+            out_coordinate_map_key = input._manager.origin()
+            output, _ = input.F.max(0, True)
+        else:
+            out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
+            output = self.pooling.apply(
+                input.F,
+                self.pooling_mode,
+                input.coordinate_map_key,
+                out_coordinate_map_key,
+                input._manager,
+            )
+
+        return SparseTensor(
+            output,
+            coordinate_map_key=out_coordinate_map_key,
+            coordinate_manager=input.coordinate_manager,
+        )

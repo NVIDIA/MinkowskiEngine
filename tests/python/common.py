@@ -74,5 +74,5 @@ def data_loader(
     # features and labels
     N = len(coords)
     feats = torch.arange(N * nchannel).view(N, nchannel).to(dtype)
-    label = (torch.rand(2 if is_classification else N) * max_label).long()
+    label = (torch.rand(batch_size if is_classification else N) * max_label).long()
     return coords, feats, label

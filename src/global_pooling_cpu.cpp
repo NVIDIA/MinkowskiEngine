@@ -85,7 +85,7 @@ GlobalPoolingForwardCPU(at::Tensor const &in_feat,
     if (pooling_mode == PoolingMode::GLOBAL_MAX_POOLING_DEFAULT ||
         pooling_mode == PoolingMode::GLOBAL_MAX_POOLING_KERNEL ||
         pooling_mode == PoolingMode::GLOBAL_MAX_POOLING_PYTORCH_INDEX) {
-      return in_feat.max(0);
+      return in_feat.max(0, true);
     } else {
       auto out_feat = in_feat.sum(0, true);
       auto num_nonzero = torch::zeros({batch_size}, in_feat.options());
