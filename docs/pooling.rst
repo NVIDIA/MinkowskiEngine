@@ -45,10 +45,32 @@ MinkowskiPoolingTranspose
     .. automethod:: __init__
 
 
-MinkowskiGlobalPooling
-----------------------
+MinkowskiGlobalMaxPooling
+-------------------------
 
-.. autoclass:: MinkowskiEngine.MinkowskiGlobalPooling
+.. autoclass:: MinkowskiEngine.MinkowskiGlobalMaxPooling
+    :members: cpu, cuda, double, float, to, type, forward
+    :undoc-members:
+    :exclude-members:
+
+    .. automethod:: __init__
+
+
+MinkowskiGlobalAvgPooling
+-------------------------
+
+.. autoclass:: MinkowskiEngine.MinkowskiGlobalAvgPooling
+    :members: cpu, cuda, double, float, to, type, forward
+    :undoc-members:
+    :exclude-members:
+
+    .. automethod:: __init__
+
+
+MinkowskiGlobalSumPooling
+-------------------------
+
+.. autoclass:: MinkowskiEngine.MinkowskiGlobalSumPooling
     :members: cpu, cuda, double, float, to, type, forward
     :undoc-members:
     :exclude-members:

@@ -87,8 +87,9 @@ If you want to specify arguments for the setup script, please refer to the follo
 
 ```
 # Uncomment some options if things don't work
+# export CXX=c++; # set this if you want to use a different C++ compiler
 # export CUDA_HOME=/usr/local/cuda-11.1; # or select the correct cuda version on your system.
-pip install -U git+https://github.com/NVIDIA/MinkowskiEngine --no-deps \
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps \
 #                           \ # uncomment the following line if you want to force cuda installation
 #                           --install-option="--force_cuda" \
 #                           \ # uncomment the following line if you want to force no cuda installation. force_cuda supercedes cpu_only
@@ -107,7 +108,7 @@ sudo apt install libopenblas-dev
 conda create -n py3-mink python=3.8
 conda activate py3-mink
 conda install numpy mkl-include pytorch cudatoolkit=11.0 -c pytorch
-pip install -U git+https://github.com/NVIDIA/MinkowskiEngine --no-deps
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps
 ```
 
 ### System Python
@@ -129,8 +130,8 @@ git clone https://github.com/NVIDIA/MinkowskiEngine.git
 cd MinkowskiEngine
 
 python setup.py install
-# To specify blas, CUDA_HOME and force CUDA installation, use the following command
-# export CUDA_HOME=/usr/local/cuda-11.1; python setup.py install --blas=openblas --force_cuda
+# To specify blas, CXX, CUDA_HOME and force CUDA installation, use the following command
+# export CXX=c++; export CUDA_HOME=/usr/local/cuda-11.1; python setup.py install --blas=openblas --force_cuda
 ```
 
 

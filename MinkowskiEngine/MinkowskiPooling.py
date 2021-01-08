@@ -705,7 +705,7 @@ class MinkowskiGlobalMaxPooling(MinkowskiGlobalPooling):
 
     .. math::
 
-        \mathbf{y} = \frac{1}{|\mathcal{C}^\text{in}|} \max_{\mathbf{i} \in
+        \mathbf{y} = \max_{\mathbf{i} \in
         \mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}
 
     """
