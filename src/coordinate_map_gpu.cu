@@ -661,7 +661,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
       thrust::unique(thrust::device, d_batch_indices, d_batch_indices + N);
   size_type const N_unique = d_batch_indices_end - d_batch_indices;
 #ifdef DEBUG
-  size_t Nsize = std::min<int>(N, 100);
+  size_t Nsize = std::min<int>(N_unique, 100);
   std::vector<coordinate_type> tmp(Nsize);
   CUDA_CHECK(cudaMemcpy(tmp.data(), d_batch_indices,
                         Nsize * sizeof(coordinate_type),
@@ -1010,14 +1010,15 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::merge(
             num_threads * m_coordinate_size,                        //
             m_coordinate_size);
 
-    detail::insert_and_map_kernel_with_offset<coordinate_type, size_type, index_type,
-                                  map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
-        *(merged_map.m_map),
-        curr_coordinates,      //
-        row_offset,            //
-        curr_valid_map_offset, //
-        curr_valid_row_index,  //
-        num_threads, m_coordinate_size, unused_key);
+    detail::insert_and_map_kernel_with_offset<coordinate_type, size_type,
+                                              index_type, map_type>
+        <<<num_blocks, CUDA_NUM_THREADS>>>(*(merged_map.m_map),
+                                           curr_coordinates,      //
+                                           row_offset,            //
+                                           curr_valid_map_offset, //
+                                           curr_valid_row_index,  //
+                                           num_threads, m_coordinate_size,
+                                           unused_key);
     CUDA_CHECK(cudaStreamSynchronize(0));
 
     curr_coordinates += num_threads * m_coordinate_size;

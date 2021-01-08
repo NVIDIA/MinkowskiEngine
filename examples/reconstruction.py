@@ -30,11 +30,14 @@ import glob
 import numpy as np
 from time import time
 import urllib
+
 # Must be imported before large libs
 try:
     import open3d as o3d
 except ImportError:
-    raise ImportError('Please install open3d and scipy with `pip install open3d scipy`.')
+    raise ImportError(
+        "Please install open3d and scipy with `pip install open3d scipy`."
+    )
 
 import torch
 import torch.nn as nn
@@ -45,16 +48,20 @@ import MinkowskiEngine as ME
 
 from examples.modelnet40 import InfSampler, resample_mesh
 
-M = np.array([[0.80656762, -0.5868724, -0.07091862],
-              [0.3770505, 0.418344, 0.82632997],
-              [-0.45528188, -0.6932309, 0.55870326]])
+M = np.array(
+    [
+        [0.80656762, -0.5868724, -0.07091862],
+        [0.3770505, 0.418344, 0.82632997],
+        [-0.45528188, -0.6932309, 0.55870326],
+    ]
+)
 
-assert int(
-    o3d.__version__.split('.')[1]
-) >= 8, f'Requires open3d version >= 0.8, the current version is {o3d.__version__}'
+assert (
+    int(o3d.__version__.split(".")[1]) >= 8
+), f"Requires open3d version >= 0.8, the current version is {o3d.__version__}"
 
-if not os.path.exists('ModelNet40'):
-    logging.info('Downloading the fixed ModelNet40 dataset...')
+if not os.path.exists("ModelNet40"):
+    logging.info("Downloading the pruned ModelNet40 dataset...")
     subprocess.run(["sh", "./examples/download_modelnet40.sh"])
 
 
@@ -75,14 +82,13 @@ def collate_pointcloud_fn(list_data):
 
     # Concatenate all lists
     return {
-        'coords': coords,
-        'xyzs': [torch.from_numpy(feat).float() for feat in feats],
-        'labels': torch.LongTensor(labels),
+        "coords": coords,
+        "xyzs": [torch.from_numpy(feat).float() for feat in feats],
+        "labels": torch.LongTensor(labels),
     }
 
 
 class ModelNet40Dataset(torch.utils.data.Dataset):
-
     def __init__(self, phase, transform=None, config=None):
         self.phase = phase
         self.files = []
@@ -92,8 +98,8 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
         self.resolution = config.resolution
         self.last_cache_percent = 0
 
-        self.root = './ModelNet40'
-        fnames = glob.glob(os.path.join(self.root, 'chair/train/*.off'))
+        self.root = "./ModelNet40"
+        fnames = glob.glob(os.path.join(self.root, "chair/train/*.off"))
         fnames = sorted([os.path.relpath(fname, self.root) for fname in fnames])
         self.files = fnames
         assert len(self.files) > 0, "No file loaded"
@@ -121,13 +127,18 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
             vmax = vertices.max(0, keepdims=True)
             vmin = vertices.min(0, keepdims=True)
             pcd.vertices = o3d.utility.Vector3dVector(
-                (vertices - vmin) / (vmax - vmin).max())
+                (vertices - vmin) / (vmax - vmin).max()
+            )
 
             # Oversample points and copy
             xyz = resample_mesh(pcd, density=self.density)
             self.cache[idx] = xyz
             cache_percent = int((len(self.cache) / len(self)) * 100)
-            if cache_percent > 0 and cache_percent % 10 == 0 and cache_percent != self.last_cache_percent:
+            if (
+                cache_percent > 0
+                and cache_percent % 10 == 0
+                and cache_percent != self.last_cache_percent
+            ):
                 logging.info(
                     f"Cached {self.phase}: {len(self.cache)} / {len(self)}: {cache_percent}%"
                 )
@@ -147,28 +158,28 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
 
         # Get coords
         xyz = xyz * self.resolution
-        coords = np.floor(xyz)
-        inds = ME.utils.sparse_quantize(coords, return_index=True)
+        coords, inds = ME.utils.sparse_quantize(xyz, return_index=True)
 
-        return (coords[inds], xyz[inds], idx)
+        return (coords, xyz[inds], idx)
 
 
-def make_data_loader(phase, augment_data, batch_size, shuffle, num_workers,
-                     repeat, config):
+def make_data_loader(
+    phase, augment_data, batch_size, shuffle, num_workers, repeat, config
+):
     dset = ModelNet40Dataset(phase, config=config)
 
     args = {
-        'batch_size': batch_size,
-        'num_workers': num_workers,
-        'collate_fn': collate_pointcloud_fn,
-        'pin_memory': False,
-        'drop_last': False
+        "batch_size": batch_size,
+        "num_workers": num_workers,
+        "collate_fn": collate_pointcloud_fn,
+        "pin_memory": False,
+        "drop_last": False,
     }
 
     if repeat:
-        args['sampler'] = InfSampler(dset, shuffle)
+        args["sampler"] = InfSampler(dset, shuffle)
     else:
-        args['shuffle'] = shuffle
+        args["shuffle"] = shuffle
 
     loader = torch.utils.data.DataLoader(dset, **args)
 
@@ -178,25 +189,25 @@ def make_data_loader(phase, augment_data, batch_size, shuffle, num_workers,
 ch = logging.StreamHandler(sys.stdout)
 logging.getLogger().setLevel(logging.INFO)
 logging.basicConfig(
-    format=os.uname()[1].split('.')[0] + ' %(asctime)s %(message)s',
-    datefmt='%m/%d %H:%M:%S',
-    handlers=[ch])
+    format=os.uname()[1].split(".")[0] + " %(asctime)s %(message)s",
+    datefmt="%m/%d %H:%M:%S",
+    handlers=[ch],
+)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--resolution', type=int, default=128)
-parser.add_argument('--max_iter', type=int, default=30000)
-parser.add_argument('--val_freq', type=int, default=1000)
-parser.add_argument('--batch_size', default=16, type=int)
-parser.add_argument('--lr', default=1e-2, type=float)
-parser.add_argument('--momentum', type=float, default=0.9)
-parser.add_argument('--weight_decay', type=float, default=1e-4)
-parser.add_argument('--num_workers', type=int, default=1)
-parser.add_argument('--stat_freq', type=int, default=50)
-parser.add_argument(
-    '--weights', type=str, default='modelnet_reconstruction.pth')
-parser.add_argument('--load_optimizer', type=str, default='true')
-parser.add_argument('--train', action='store_true')
-parser.add_argument('--max_visualization', type=int, default=4)
+parser.add_argument("--resolution", type=int, default=128)
+parser.add_argument("--max_iter", type=int, default=30000)
+parser.add_argument("--val_freq", type=int, default=1000)
+parser.add_argument("--batch_size", default=16, type=int)
+parser.add_argument("--lr", default=1e-2, type=float)
+parser.add_argument("--momentum", type=float, default=0.9)
+parser.add_argument("--weight_decay", type=float, default=1e-4)
+parser.add_argument("--num_workers", type=int, default=1)
+parser.add_argument("--stat_freq", type=int, default=50)
+parser.add_argument("--weights", type=str, default="modelnet_reconstruction.pth")
+parser.add_argument("--load_optimizer", type=str, default="true")
+parser.add_argument("--eval", action="store_true")
+parser.add_argument("--max_visualization", type=int, default=4)
 
 ###############################################################################
 # End of utility functions
@@ -217,25 +228,17 @@ class GenerativeNet(nn.Module):
 
         # Block 1
         self.block1 = nn.Sequential(
-            ME.MinkowskiConvolutionTranspose(
-                in_nchannel,
-                ch[0],
-                kernel_size=2,
-                stride=2,
-                generate_new_coords=True,
-                dimension=3),
+            ME.MinkowskiGenerativeConvolutionTranspose(
+                in_nchannel, ch[0], kernel_size=2, stride=2, dimension=3
+            ),
             ME.MinkowskiBatchNorm(ch[0]),
             ME.MinkowskiELU(),
             ME.MinkowskiConvolution(ch[0], ch[0], kernel_size=3, dimension=3),
             ME.MinkowskiBatchNorm(ch[0]),
             ME.MinkowskiELU(),
-            ME.MinkowskiConvolutionTranspose(
-                ch[0],
-                ch[1],
-                kernel_size=2,
-                stride=2,
-                generate_new_coords=True,
-                dimension=3),
+            ME.MinkowskiGenerativeConvolutionTranspose(
+                ch[0], ch[1], kernel_size=2, stride=2, dimension=3
+            ),
             ME.MinkowskiBatchNorm(ch[1]),
             ME.MinkowskiELU(),
             ME.MinkowskiConvolution(ch[1], ch[1], kernel_size=3, dimension=3),
@@ -244,17 +247,14 @@ class GenerativeNet(nn.Module):
         )
 
         self.block1_cls = ME.MinkowskiConvolution(
-            ch[1], 1, kernel_size=1, has_bias=True, dimension=3)
+            ch[1], 1, kernel_size=1, bias=True, dimension=3
+        )
 
         # Block 2
         self.block2 = nn.Sequential(
-            ME.MinkowskiConvolutionTranspose(
-                ch[1],
-                ch[2],
-                kernel_size=2,
-                stride=2,
-                generate_new_coords=True,
-                dimension=3),
+            ME.MinkowskiGenerativeConvolutionTranspose(
+                ch[1], ch[2], kernel_size=2, stride=2, dimension=3
+            ),
             ME.MinkowskiBatchNorm(ch[2]),
             ME.MinkowskiELU(),
             ME.MinkowskiConvolution(ch[2], ch[2], kernel_size=3, dimension=3),
@@ -263,17 +263,14 @@ class GenerativeNet(nn.Module):
         )
 
         self.block2_cls = ME.MinkowskiConvolution(
-            ch[2], 1, kernel_size=1, has_bias=True, dimension=3)
+            ch[2], 1, kernel_size=1, bias=True, dimension=3
+        )
 
         # Block 3
         self.block3 = nn.Sequential(
-            ME.MinkowskiConvolutionTranspose(
-                ch[2],
-                ch[3],
-                kernel_size=2,
-                stride=2,
-                generate_new_coords=True,
-                dimension=3),
+            ME.MinkowskiGenerativeConvolutionTranspose(
+                ch[2], ch[3], kernel_size=2, stride=2, dimension=3
+            ),
             ME.MinkowskiBatchNorm(ch[3]),
             ME.MinkowskiELU(),
             ME.MinkowskiConvolution(ch[3], ch[3], kernel_size=3, dimension=3),
@@ -282,17 +279,14 @@ class GenerativeNet(nn.Module):
         )
 
         self.block3_cls = ME.MinkowskiConvolution(
-            ch[3], 1, kernel_size=1, has_bias=True, dimension=3)
+            ch[3], 1, kernel_size=1, bias=True, dimension=3
+        )
 
         # Block 4
         self.block4 = nn.Sequential(
-            ME.MinkowskiConvolutionTranspose(
-                ch[3],
-                ch[4],
-                kernel_size=2,
-                stride=2,
-                generate_new_coords=True,
-                dimension=3),
+            ME.MinkowskiGenerativeConvolutionTranspose(
+                ch[3], ch[4], kernel_size=2, stride=2, dimension=3
+            ),
             ME.MinkowskiBatchNorm(ch[4]),
             ME.MinkowskiELU(),
             ME.MinkowskiConvolution(ch[4], ch[4], kernel_size=3, dimension=3),
@@ -301,17 +295,14 @@ class GenerativeNet(nn.Module):
         )
 
         self.block4_cls = ME.MinkowskiConvolution(
-            ch[4], 1, kernel_size=1, has_bias=True, dimension=3)
+            ch[4], 1, kernel_size=1, bias=True, dimension=3
+        )
 
         # Block 5
         self.block5 = nn.Sequential(
-            ME.MinkowskiConvolutionTranspose(
-                ch[4],
-                ch[5],
-                kernel_size=2,
-                stride=2,
-                generate_new_coords=True,
-                dimension=3),
+            ME.MinkowskiGenerativeConvolutionTranspose(
+                ch[4], ch[5], kernel_size=2, stride=2, dimension=3
+            ),
             ME.MinkowskiBatchNorm(ch[5]),
             ME.MinkowskiELU(),
             ME.MinkowskiConvolution(ch[5], ch[5], kernel_size=3, dimension=3),
@@ -320,17 +311,14 @@ class GenerativeNet(nn.Module):
         )
 
         self.block5_cls = ME.MinkowskiConvolution(
-            ch[5], 1, kernel_size=1, has_bias=True, dimension=3)
+            ch[5], 1, kernel_size=1, bias=True, dimension=3
+        )
 
         # Block 6
         self.block6 = nn.Sequential(
-            ME.MinkowskiConvolutionTranspose(
-                ch[5],
-                ch[6],
-                kernel_size=2,
-                stride=2,
-                generate_new_coords=True,
-                dimension=3),
+            ME.MinkowskiGenerativeConvolutionTranspose(
+                ch[5], ch[6], kernel_size=2, stride=2, dimension=3
+            ),
             ME.MinkowskiBatchNorm(ch[6]),
             ME.MinkowskiELU(),
             ME.MinkowskiConvolution(ch[6], ch[6], kernel_size=3, dimension=3),
@@ -339,27 +327,28 @@ class GenerativeNet(nn.Module):
         )
 
         self.block6_cls = ME.MinkowskiConvolution(
-            ch[6], 1, kernel_size=1, has_bias=True, dimension=3)
+            ch[6], 1, kernel_size=1, bias=True, dimension=3
+        )
 
         # pruning
         self.pruning = ME.MinkowskiPruning()
 
-    def get_batch_indices(self, out):
-        return out.coords_man.get_row_indices_per_batch(out.coords_key)
-
     def get_target(self, out, target_key, kernel_size=1):
         with torch.no_grad():
-            target = torch.zeros(len(out), dtype=torch.bool)
-            cm = out.coords_man
+            target = torch.zeros(len(out), dtype=torch.bool, device=out.device)
+            cm = out.coordinate_manager
             strided_target_key = cm.stride(
-                target_key, out.tensor_stride[0], force_creation=True)
-            ins, outs = cm.get_kernel_map(
-                out.coords_key,
+                target_key,
+                out.tensor_stride[0],
+            )
+            kernel_map = cm.get_kernel_map(
+                out.coordinate_map_key,
                 strided_target_key,
                 kernel_size=kernel_size,
-                region_type=1)
-            for curr_in in ins:
-                target[curr_in] = 1
+                region_type=1,
+            )
+            for k, curr_in in kernel_map.items():
+                target[curr_in[0].long()] = 1
         return target
 
     def valid_batch_map(self, batch_map):
@@ -377,14 +366,14 @@ class GenerativeNet(nn.Module):
         target = self.get_target(out1, target_key)
         targets.append(target)
         out_cls.append(out1_cls)
-        keep1 = (out1_cls.F > 0).cpu().squeeze()
+        keep1 = (out1_cls.F > 0).squeeze()
 
         # If training, force target shape generation, use net.eval() to disable
         if self.training:
             keep1 += target
 
         # Remove voxels 32
-        out1 = self.pruning(out1, keep1.cpu())
+        out1 = self.pruning(out1, keep1)
 
         # Block 2
         out2 = self.block2(out1)
@@ -392,13 +381,13 @@ class GenerativeNet(nn.Module):
         target = self.get_target(out2, target_key)
         targets.append(target)
         out_cls.append(out2_cls)
-        keep2 = (out2_cls.F > 0).cpu().squeeze()
+        keep2 = (out2_cls.F > 0).squeeze()
 
         if self.training:
             keep2 += target
 
         # Remove voxels 16
-        out2 = self.pruning(out2, keep2.cpu())
+        out2 = self.pruning(out2, keep2)
 
         # Block 3
         out3 = self.block3(out2)
@@ -406,13 +395,13 @@ class GenerativeNet(nn.Module):
         target = self.get_target(out3, target_key)
         targets.append(target)
         out_cls.append(out3_cls)
-        keep3 = (out3_cls.F > 0).cpu().squeeze()
+        keep3 = (out3_cls.F > 0).squeeze()
 
         if self.training:
             keep3 += target
 
         # Remove voxels 8
-        out3 = self.pruning(out3, keep3.cpu())
+        out3 = self.pruning(out3, keep3)
 
         # Block 4
         out4 = self.block4(out3)
@@ -420,13 +409,13 @@ class GenerativeNet(nn.Module):
         target = self.get_target(out4, target_key)
         targets.append(target)
         out_cls.append(out4_cls)
-        keep4 = (out4_cls.F > 0).cpu().squeeze()
+        keep4 = (out4_cls.F > 0).squeeze()
 
         if self.training:
             keep4 += target
 
         # Remove voxels 4
-        out4 = self.pruning(out4, keep4.cpu())
+        out4 = self.pruning(out4, keep4)
 
         # Block 5
         out5 = self.block5(out4)
@@ -434,13 +423,13 @@ class GenerativeNet(nn.Module):
         target = self.get_target(out5, target_key)
         targets.append(target)
         out_cls.append(out5_cls)
-        keep5 = (out5_cls.F > 0).cpu().squeeze()
+        keep5 = (out5_cls.F > 0).squeeze()
 
         if self.training:
             keep5 += target
 
         # Remove voxels 2
-        out5 = self.pruning(out5, keep5.cpu())
+        out5 = self.pruning(out5, keep5)
 
         # Block 5
         out6 = self.block6(out5)
@@ -448,14 +437,14 @@ class GenerativeNet(nn.Module):
         target = self.get_target(out6, target_key)
         targets.append(target)
         out_cls.append(out6_cls)
-        keep6 = (out6_cls.F > 0).cpu().squeeze()
+        keep6 = (out6_cls.F > 0).squeeze()
 
         # Last layer does not require keep
         # if self.training:
         #   keep6 += target
 
         # Remove voxels 1
-        out6 = self.pruning(out6, keep6.cpu())
+        out6 = self.pruning(out6, keep6)
 
         return out_cls, targets, out6
 
@@ -467,7 +456,8 @@ def train(net, dataloader, device, config):
         net.parameters(),
         lr=config.lr,
         momentum=config.momentum,
-        weight_decay=config.weight_decay)
+        weight_decay=config.weight_decay,
+    )
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, 0.95)
 
     crit = nn.BCEWithLogitsLoss()
@@ -475,7 +465,7 @@ def train(net, dataloader, device, config):
     net.train()
     train_iter = iter(dataloader)
     # val_iter = iter(val_dataloader)
-    logging.info(f'LR: {scheduler.get_lr()}')
+    logging.info(f"LR: {scheduler.get_lr()}")
     for i in range(config.max_iter):
 
         s = time()
@@ -487,29 +477,27 @@ def train(net, dataloader, device, config):
         init_coords[:, 0] = torch.arange(config.batch_size)
 
         in_feat = torch.zeros((config.batch_size, in_nchannel))
-        in_feat[torch.arange(config.batch_size), data_dict['labels']] = 1
+        in_feat[torch.arange(config.batch_size), data_dict["labels"]] = 1
 
         sin = ME.SparseTensor(
-            feats=in_feat,
-            coords=init_coords,
-            allow_duplicate_coords=True,  # for classification, it doesn't matter
+            features=in_feat,
+            coordinates=init_coords,
             tensor_stride=config.resolution,
-        ).to(device)
+            device=device,
+        )
 
         # Generate target sparse tensor
-        cm = sin.coords_man
-        target_key = cm.create_coords_key(
-            ME.utils.batched_coordinates(data_dict['xyzs']),
-            force_creation=True,
-            allow_duplicate_coords=True)
-
+        cm = sin.coordinate_manager
+        target_key, _ = cm.insert_and_map(
+            ME.utils.batched_coordinates(data_dict["xyzs"]).to(device),
+            string_id="target",
+        )
         # Generate from a dense tensor
         out_cls, targets, sout = net(sin, target_key)
         num_layers, loss = len(out_cls), 0
         losses = []
         for out_cl, target in zip(out_cls, targets):
-            curr_loss = crit(out_cl.F.squeeze(),
-                             target.type(out_cl.F.dtype).to(device))
+            curr_loss = crit(out_cl.F.squeeze(), target.type(out_cl.F.dtype).to(device))
             losses.append(curr_loss.item())
             loss += curr_loss / num_layers
 
@@ -519,20 +507,22 @@ def train(net, dataloader, device, config):
 
         if i % config.stat_freq == 0:
             logging.info(
-                f'Iter: {i}, Loss: {loss.item():.3e}, Depths: {len(out_cls)} Data Loading Time: {d:.3e}, Tot Time: {t:.3e}'
+                f"Iter: {i}, Loss: {loss.item():.3e}, Depths: {len(out_cls)} Data Loading Time: {d:.3e}, Tot Time: {t:.3e}"
             )
 
         if i % config.val_freq == 0 and i > 0:
             torch.save(
                 {
-                    'state_dict': net.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'scheduler': scheduler.state_dict(),
-                    'curr_iter': i,
-                }, config.weights)
+                    "state_dict": net.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                    "scheduler": scheduler.state_dict(),
+                    "curr_iter": i,
+                },
+                config.weights,
+            )
 
             scheduler.step()
-            logging.info(f'LR: {scheduler.get_lr()}')
+            logging.info(f"LR: {scheduler.get_lr()}")
 
             net.train()
 
@@ -549,7 +539,7 @@ def visualize(net, dataloader, device, config):
         init_coords[:, 0] = torch.arange(config.batch_size)
 
         in_feat = torch.zeros((config.batch_size, in_nchannel))
-        in_feat[torch.arange(config.batch_size), data_dict['labels']] = 1
+        in_feat[torch.arange(config.batch_size), data_dict["labels"]] = 1
 
         sin = ME.SparseTensor(
             feats=in_feat,
@@ -561,16 +551,19 @@ def visualize(net, dataloader, device, config):
         # Generate target sparse tensor
         cm = sin.coords_man
         target_key = cm.create_coords_key(
-            ME.utils.batched_coordinates(data_dict['xyzs']),
+            ME.utils.batched_coordinates(data_dict["xyzs"]),
             force_creation=True,
-            allow_duplicate_coords=True)
+            allow_duplicate_coords=True,
+        )
 
         # Generate from a dense tensor
         out_cls, targets, sout = net(sin, target_key)
         num_layers, loss = len(out_cls), 0
         for out_cl, target in zip(out_cls, targets):
-            loss += crit(out_cl.F.squeeze(),
-                         target.type(out_cl.F.dtype).to(device)) / num_layers
+            loss += (
+                crit(out_cl.F.squeeze(), target.type(out_cl.F.dtype).to(device))
+                / num_layers
+            )
 
         batch_coords, batch_feats = sout.decomposed_coordinates_and_features
         for b, (coords, feats) in enumerate(zip(batch_coords, batch_feats)):
@@ -578,7 +571,7 @@ def visualize(net, dataloader, device, config):
             pcd.estimate_normals()
             pcd.translate([0.6 * config.resolution, 0, 0])
             pcd.rotate(M)
-            opcd = PointCloud(data_dict['xyzs'][b])
+            opcd = PointCloud(data_dict["xyzs"][b])
             opcd.translate([-0.6 * config.resolution, 0, 0])
             opcd.estimate_normals()
             opcd.rotate(M)
@@ -589,19 +582,20 @@ def visualize(net, dataloader, device, config):
                 return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     config = parser.parse_args()
     logging.info(config)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     dataloader = make_data_loader(
-        'val',
+        "val",
         augment_data=True,
         batch_size=config.batch_size,
         shuffle=True,
         num_workers=config.num_workers,
         repeat=True,
-        config=config)
+        config=config,
+    )
     in_nchannel = len(dataloader.dataset)
 
     net = GenerativeNet(config.resolution, in_nchannel=in_nchannel)
@@ -609,17 +603,17 @@ if __name__ == '__main__':
 
     logging.info(net)
 
-    if config.train:
+    if not config.eval:
         train(net, dataloader, device, config)
     else:
         if not os.path.exists(config.weights):
-            logging.info(
-                f'Downloaing pretrained weights. This might take a while...')
+            logging.info(f"Downloaing pretrained weights. This might take a while...")
             urllib.request.urlretrieve(
-                "https://bit.ly/36d9m1n", filename=config.weights)
+                "https://bit.ly/36d9m1n", filename=config.weights
+            )
 
-        logging.info(f'Loading weights from {config.weights}')
+        logging.info(f"Loading weights from {config.weights}")
         checkpoint = torch.load(config.weights)
-        net.load_state_dict(checkpoint['state_dict'])
+        net.load_state_dict(checkpoint["state_dict"])
 
         visualize(net, dataloader, device, config)
