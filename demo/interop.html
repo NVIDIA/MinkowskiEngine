@@ -115,13 +115,14 @@
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor.html">SparseTensor and TensorField</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pooling.html">MinkowskiPooling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interp.html">MinkowskiInterpolation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utils.html">Utility Functions and Classes</a></li>
@@ -242,7 +243,7 @@ a min-batch.</p>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">net</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that the above <a class="reference internal" href="../pooling.html#MinkowskiEngine.MinkowskiGlobalPooling" title="MinkowskiEngine.MinkowskiGlobalPooling"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiGlobalPooling</span></code></a> layer
+<p>Note that the above <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiGlobalPooling</span></code> layer
 averages all features in the input sparse tensor and generate <span class="math notranslate nohighlight">\(B \times
 D_F\)</span> when <span class="math notranslate nohighlight">\(B\)</span> is the batch size (adaptively changes accordingly) and
 <span class="math notranslate nohighlight">\(D_F\)</span> is the feature dimension of the input sparse tensor.</p>
