@@ -21,11 +21,11 @@ A clear and concise description of what you expected to happen.
 **Desktop (please complete the following information):**
 
  - OS: [e.g. Ubuntu 18.04]
+ - Python version: [e.g. 3.8.5]
  - CUDA version: [e.g. 11.1]
  - NVIDIA Driver version: [e.g. 450.11]
- - OS: [e.g. Ubuntu 18.04]
  - Minkowski Engine version [e.g. 0.5.0]
- - Please paste the output of the following command
+ - Output of the following command
 
 ```
 wget -q https://raw.githubusercontent.com/NVIDIA/MinkowskiEngine/master/MinkowskiEngine/diagnostics.py ; python diagnostics.py

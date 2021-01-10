@@ -727,6 +727,7 @@ void initialize_non_templated_classes(py::module &m) {
       .def(py::init<minkowski::default_types::size_type>())
       .def(py::init<minkowski::default_types::stride_type, std::string>())
       .def("__repr__", &minkowski::CoordinateMapKey::to_string)
+      .def("__hash__", &minkowski::CoordinateMapKey::hash)
       .def("is_key_set", &minkowski::CoordinateMapKey::is_key_set)
       .def("get_coordinate_size",
            &minkowski::CoordinateMapKey::get_coordinate_size)

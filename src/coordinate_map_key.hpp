@@ -44,6 +44,7 @@ namespace minkowski {
 class CoordinateMapKey {
 public:
   // clang-format off
+  using self_type     = CoordinateMapKey;
   using size_type     = default_types::size_type;
   using stride_type   = default_types::stride_type;
   using hash_key_type = default_types::coordinate_map_hash_type;
@@ -100,6 +101,8 @@ public:
     ASSERT(is_key_set(), "Key not set");
     return m_key;
   }
+
+  hash_key_type hash() const { return coordinate_map_key_hasher{}(m_key); }
 
   bool is_key_set() const noexcept { return m_key_set; }
 

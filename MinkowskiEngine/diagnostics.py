@@ -1,5 +1,6 @@
-import platform
+import sys
 import os
+import platform
 import subprocess
 
 
@@ -19,6 +20,7 @@ def print_diagnostics():
     print("==========System==========")
     print(platform.platform())
     os.system("cat /etc/lsb-release")
+    print(sys.version)
 
     print("==========Pytorch==========")
     try:
