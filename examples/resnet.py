@@ -124,7 +124,7 @@ class ResNetBase(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x: ME.SparseTensor):
         x = self.conv1(x)
         x = self.layer1(x)
         x = self.layer2(x)
@@ -185,7 +185,7 @@ class ResFieldNetBase(ResNetBase):
 
         ResNetBase.network_initialization(self, field_ch2, out_channels, D)
 
-    def forward(self, x):
+    def forward(self, x: ME.TensorField):
         otensor = self.field_network(x)
         otensor2 = self.field_network2(otensor.cat_slice(x))
         return ResNetBase.forward(self, otensor2)

@@ -99,6 +99,93 @@ insert_and_map_kernel(map_type __restrict__ map,                       //
 } // namespace detail
 
 /*
+ * Field Map
+ */
+namespace detail {
+
+template <typename coordinate_field_type, typename coordinate_int_type,
+          typename index_type, bool stride_one>
+__global__ void quantize_coordinates_kernel(
+    coordinate_field_type const *__restrict__ p_tfield, //
+    coordinate_int_type *__restrict__ p_stensor,        //
+    index_type const *__restrict__ p_tensor_stride,     //
+    index_type const num_threads, index_type const coordinate_size) {
+  // coordinate_size * sizeof(index_type) + coordinate_size * sizeof(float_type)
+  // + THREADS * coordinate_size * sizeof(coordinate_type)
+  extern __shared__ index_type sh_tensor_stride[];
+
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  if (stride_one) {
+    if (x < num_threads) {
+      if (x % coordinate_size == 0)
+        p_stensor[x] = lrint(p_tfield[x]);
+      else
+        p_stensor[x] = floor(p_tfield[x]);
+    }
+  } else {
+    for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x) {
+      sh_tensor_stride[i] = p_tensor_stride[i];
+    }
+
+    __syncthreads();
+
+    if (x < num_threads) {
+      // batch index
+      if (x % coordinate_size == 0)
+        p_stensor[x] = lrint(p_tfield[x]);
+      else {
+        index_type curr_tensor_stride =
+            sh_tensor_stride[((x - 1) % coordinate_size)];
+        p_stensor[x] =
+            floor(p_tfield[x] / curr_tensor_stride) * curr_tensor_stride;
+      }
+    }
+  }
+}
+} // namespace detail
+
+template <typename coordinate_field_type, typename coordinate_int_type,
+          template <typename T> class TemplatedAllocator>
+void CoordinateFieldMapGPU<coordinate_field_type, coordinate_int_type,
+                           TemplatedAllocator>::
+    quantize_coordinates(coordinate_int_type *d_dst_coordinates,
+                         stride_type const &tensor_stride) const {
+  int64_t const stride_prod = std::accumulate(
+      tensor_stride.begin(), tensor_stride.end(), 1, std::multiplies<>());
+
+  // Copy tensor_stride to device
+  index_type *d_tensor_stride = reinterpret_cast<index_type *>(
+      m_byte_allocator.allocate(m_coordinate_size * sizeof(index_type)));
+  CUDA_CHECK(cudaMemcpy(
+      d_tensor_stride,      // dst
+      tensor_stride.data(), // first element of the dereferenced iter.
+      sizeof(index_type) * m_coordinate_size, // bytes
+      cudaMemcpyHostToDevice));
+
+  size_type const num_threads = size() * m_coordinate_size;
+  auto const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
+
+  if (stride_prod == 1) {
+    detail::quantize_coordinates_kernel<coordinate_field_type,
+                                        coordinate_int_type, index_type, true>
+        <<<num_blocks, CUDA_NUM_THREADS,
+           m_coordinate_size * sizeof(index_type)>>>(
+            const_coordinate_data(), d_dst_coordinates, d_tensor_stride,
+            num_threads, m_coordinate_size);
+  } else {
+    detail::quantize_coordinates_kernel<coordinate_field_type,
+                                        coordinate_int_type, index_type, false>
+        <<<num_blocks, CUDA_NUM_THREADS,
+           m_coordinate_size * sizeof(index_type)>>>(
+            const_coordinate_data(), d_dst_coordinates, d_tensor_stride,
+            num_threads, m_coordinate_size);
+  }
+}
+
+/*
  * @brief Given a key iterator begin-end pair and a value iterator begin-end
  * pair, insert all elements.
  *
@@ -265,8 +352,10 @@ stride_copy(coordinate_type const *__restrict__ src_coordinates, //
   auto const bx = blockIdx.x;
   auto const x = blockDim.x * bx + tx;
 
-  if (tx < coordinate_size - 1)
-    sh_stride[tx] = stride[tx];
+  for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x)
+    sh_stride[i] = stride[i];
+
+  __syncthreads();
 
   if (x < num_threads) {
     const index_type src_start = src_valid_row_index[x] * coordinate_size;
@@ -2038,13 +2127,11 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::copy_coordinates(
 }
 
 // Template instantiation
-template class CoordinateFieldMapGPU<default_types::dcoordinate_type,
-                                     detail::default_allocator>;
-template class CoordinateFieldMapGPU<default_types::dcoordinate_type,
-                                     detail::c10_allocator>;
 template class CoordinateFieldMapGPU<default_types::ccoordinate_type,
+                                     default_types::dcoordinate_type,
                                      detail::default_allocator>;
 template class CoordinateFieldMapGPU<default_types::ccoordinate_type,
+                                     default_types::dcoordinate_type,
                                      detail::c10_allocator>;
 
 template class CoordinateMapGPU<default_types::dcoordinate_type,

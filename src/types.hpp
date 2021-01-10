@@ -83,7 +83,7 @@ struct coordinate_map_key_hasher {
   result_type operator()(coordinate_map_key_type const &key) const {
     auto hash = robin_hood::hash_bytes(
         key.first.data(), sizeof(default_types::size_type) * key.first.size());
-    hash += std::hash<std::string>{}(key.second);
+    hash ^= std::hash<std::string>{}(key.second);
     return hash;
   }
 };
@@ -169,7 +169,6 @@ enum Type {
 };
 }
 
-
 /* Key for KernelMap
  *
  * A tuple of (CoordinateMapKey (input),
@@ -225,6 +224,18 @@ struct kernel_map_key_hasher {
     hash ^= (result_type)std::get<5>(key);
     hash ^= (result_type)std::get<6>(key);
     hash ^= (result_type)std::get<7>(key);
+    return hash;
+  }
+};
+
+template <typename hasher = coordinate_map_key_hasher>
+struct field_to_sparse_map_key_hasher {
+  using result_type = size_t;
+
+  result_type operator()(std::pair<coordinate_map_key_type,
+                                   coordinate_map_key_type> const &key) const {
+    result_type hash = hasher{}(key.first);
+    hash ^= hasher{}(key.second);
     return hash;
   }
 };

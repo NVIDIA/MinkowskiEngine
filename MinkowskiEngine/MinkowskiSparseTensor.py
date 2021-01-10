@@ -564,7 +564,7 @@ class SparseTensor(Tensor):
 
         if isinstance(X, TensorField):
             return TensorField(
-                self.F[X.inverse_mapping],
+                self.F[X.inverse_mapping(self.coordinate_map_key)],
                 coordinate_field_map_key=X.coordinate_field_map_key,
                 coordinate_manager=X.coordinate_manager,
                 quantization_mode=X.quantization_mode,
@@ -616,7 +616,9 @@ class SparseTensor(Tensor):
 
         from MinkowskiTensorField import TensorField
 
-        features = torch.cat((self.F[X.inverse_mapping], X.F), dim=1)
+        features = torch.cat(
+            (self.F[X.inverse_mapping(self.coordinate_map_key)], X.F), dim=1
+        )
         if isinstance(X, TensorField):
             return TensorField(
                 features,
@@ -630,7 +632,7 @@ class SparseTensor(Tensor):
             ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
             return TensorField(
                 features,
-                coordinates=self.C[X.inverse_mapping],
+                coordinates=self.C[X.inverse_mapping(self.coordinate_map_key)],
                 coordinate_manager=self.coordinate_manager,
                 quantization_mode=self.quantization_mode,
             )

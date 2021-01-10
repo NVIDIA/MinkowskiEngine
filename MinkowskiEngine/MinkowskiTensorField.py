@@ -22,8 +22,11 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import os
-import torch
+import numpy as np
+from collections import Sequence
+from typing import Union, List, Tuple
 
+import torch
 from MinkowskiCommon import convert_to_int_list, StrideType
 from MinkowskiEngineBackend._C import (
     GPUMemoryAllocatorType,
@@ -41,6 +44,7 @@ from MinkowskiTensor import (
     set_global_coordinate_manager,
 )
 from MinkowskiSparseTensor import SparseTensor
+from sparse_matrix_functions import MinkowskiSPMMFunction
 
 
 class TensorField(Tensor):
@@ -212,6 +216,7 @@ class TensorField(Tensor):
         self._C = coordinates
         self.coordinate_field_map_key = coordinate_field_map_key
         self._batch_rows = None
+        self._inverse_mapping = {}
 
     @property
     def C(self):
@@ -243,29 +248,82 @@ class TensorField(Tensor):
     def _get_coordinate_field(self):
         return self._manager.get_coordinate_field(self.coordinate_field_map_key)
 
-    def sparse(self, quantization_mode=None):
+    def sparse(
+        self, tensor_stride: Union[int, Sequence, np.array] = 1, quantization_mode=None
+    ):
         r"""Converts the current sparse tensor field to a sparse tensor."""
         if quantization_mode is None:
             quantization_mode = self.quantization_mode
 
-        sparse_tensor = SparseTensor(
-            self._F,
-            coordinates=self.coordinates,
-            quantization_mode=quantization_mode,
-            coordinate_manager=self.coordinate_manager,
+        tensor_stride = convert_to_int_list(tensor_stride, self.D)
+
+        sparse_tensor_key, (
+            unique_index,
+            inverse_mapping,
+        ) = self._manager.field_to_sparse_insert_and_map(
+            self.coordinate_field_map_key,
+            tensor_stride,
         )
 
-        # Save the inverse mapping
-        self._inverse_mapping = sparse_tensor.inverse_mapping
+        self._inverse_mapping[sparse_tensor_key] = inverse_mapping
+
+        if self.quantization_mode in [
+            SparseTensorQuantizationMode.UNWEIGHTED_SUM,
+            SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
+        ]:
+            spmm = MinkowskiSPMMFunction()
+            N = len(self._F)
+            cols = torch.arange(
+                N,
+                dtype=inverse_mapping.dtype,
+                device=inverse_mapping.device,
+            )
+            vals = torch.ones(N, dtype=self._F.dtype, device=self._F.device)
+            size = torch.Size([len(unique_index), len(inverse_mapping)])
+            features = spmm.apply(inverse_mapping, cols, vals, size, self._F)
+            if (
+                self.quantization_mode
+                == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+            ):
+                nums = spmm.apply(
+                    inverse_mapping,
+                    cols,
+                    vals,
+                    size,
+                    vals.reshape(N, 1),
+                )
+                features /= nums
+        elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
+            features = self._F[unique_index]
+        else:
+            # No quantization
+            raise ValueError("Invalid quantization mode")
+
+        sparse_tensor = SparseTensor(
+            features,
+            coordinate_map_key=sparse_tensor_key,
+            coordinate_manager=self._manager,
+        )
+
         return sparse_tensor
 
-    @property
-    def inverse_mapping(self):
-        if not hasattr(self, "_inverse_mapping"):
-            raise ValueError(
-                "Did you run SparseTensor.slice? The slice must take a tensor field that returned TensorField.space."
-            )
-        return self._inverse_mapping
+    def inverse_mapping(self, sparse_tensor_map_key: CoordinateMapKey):
+        if sparse_tensor_map_key not in self._inverse_mapping:
+            if not self._manager.exists_field_to_sparse(
+                self.coordinate_field_map_key, sparse_tensor_map_key
+            ):
+                raise ValueError(
+                    f"The field to sparse tensor mapping does not exists for the key: {sparse_tensor_map_key}. Please run TensorField.sparse({sparse_tensor_map_key.get_tensor_stride()})"
+                )
+            else:
+                # Extract the mapping
+                (
+                    _,
+                    self._inverse_mapping[sparse_tensor_map_key],
+                ) = self._manager.get_field_to_sparse_map(
+                    self.coordinate_field_map_key, sparse_tensor_map_key
+                )
+        return self._inverse_mapping[sparse_tensor_map_key]
 
     def __repr__(self):
         return (

@@ -45,93 +45,6 @@ default_types::stride_type zeros(size_t const len) { return _fill_vec<0>(len); }
 default_types::stride_type ones(size_t const len) { return _fill_vec<1>(len); }
 
 } // namespace detail
-/*
-
-template <typename MapType>
-vector<at::Tensor>
-CoordsManager<MapType>::getCoordsMap(py::object py_in_coords_key,
-                                     py::object py_out_coords_key) const {
-  CoordsKey *p_in_coords_key = py_in_coords_key.cast<CoordsKey *>();
-  CoordsKey *p_out_coords_key = py_out_coords_key.cast<CoordsKey *>();
-  const uint64_t in_coords_key = p_in_coords_key->getKey();
-  const uint64_t out_coords_key = p_out_coords_key->getKey();
-
-  const auto in_map_iter = coords_maps.find(in_coords_key);
-  const auto out_map_iter = coords_maps.find(out_coords_key);
-
-  ASSERT(in_map_iter != coords_maps.end(), "Input coords not found at",
-         to_string(in_coords_key));
-  ASSERT(out_map_iter != coords_maps.end(), "Output coords not found at",
-         to_string(out_coords_key));
-
-  const auto &out_tensor_strides = p_out_coords_key->getTensorStride();
-  const auto in_out =
-      in_map_iter->second.stride_map(out_map_iter->second, out_tensor_strides);
-
-  const auto &ins = in_out.first;
-  const auto &outs = in_out.second;
-  // All size
-  const auto N = std::accumulate(ins.begin(), ins.end(), 0,
-                                 [](size_t curr_sum, const vector<int> &map) {
-                                   return curr_sum + map.size();
-                                 });
-
-  at::Tensor in_out_1 =
-      torch::empty({N}, torch::TensorOptions().dtype(torch::kInt64));
-  at::Tensor in_out_2 =
-      torch::empty({N}, torch::TensorOptions().dtype(torch::kInt64));
-
-  auto a_in_out_1 = in_out_1.accessor<long int, 1>();
-  auto a_in_out_2 = in_out_2.accessor<long int, 1>();
-
-  size_t curr_it = 0;
-  for (const auto &in : ins)
-    for (const auto i : in)
-      a_in_out_1[curr_it++] = i;
-
-  curr_it = 0;
-  for (const auto &out : outs)
-    for (const auto o : out)
-      a_in_out_2[curr_it++] = o;
-
-  return {in_out_1, in_out_2};
-}
-
-// Generate and return the ins -> out map.
-template <typename MapType>
-pair<vector<at::Tensor>, vector<at::Tensor>>
-CoordsManager<MapType>::getUnionMap(vector<py::object> py_in_coords_keys,
-                                    py::object py_out_coords_key) {
-
-  // all exception handling will be done inside the following
-  const InOutMapsRefPair<int> in_outs =
-      getUnionInOutMaps(py_in_coords_keys, py_out_coords_key);
-  const auto &ins = in_outs.first;
-  const auto &outs = in_outs.second;
-
-  // Size of the in out maps
-  const auto N = ins.size();
-
-  // Return torch tensor
-  vector<at::Tensor> th_ins;
-  vector<at::Tensor> th_outs;
-  for (size_t i = 0; i < N; ++i) {
-    at::Tensor th_in = torch::empty(
-        {(long)ins[i].size()}, torch::TensorOptions().dtype(torch::kInt64));
-    at::Tensor th_out = torch::empty(
-        {(long)outs[i].size()}, torch::TensorOptions().dtype(torch::kInt64));
-
-    copy_types(ins[i], th_in);
-    copy_types(outs[i], th_out);
-
-    th_ins.push_back(move(th_in));
-    th_outs.push_back(move(th_out));
-  }
-
-  return make_pair(th_ins, th_outs);
-}
-
-*/
 
 /*******************************
  * Initialization
@@ -189,7 +102,8 @@ struct insert_and_map_functor<coordinate_type, coordinate_field_type,
 template <typename coordinate_type, typename coordinate_field_type>
 struct insert_field_functor<
     coordinate_type, coordinate_field_type, std::allocator, CoordinateMapCPU,
-    CoordinateFieldMapCPU<coordinate_field_type, std::allocator>> {
+    CoordinateFieldMapCPU<coordinate_field_type, coordinate_type,
+                          std::allocator>> {
 
   void
   operator()(coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
@@ -200,8 +114,9 @@ struct insert_field_functor<
     uint32_t const coordinate_size = th_coordinate.size(1);
     coordinate_field_type *p_coordinate =
         th_coordinate.data_ptr<coordinate_field_type>();
-    auto map = CoordinateFieldMapCPU<coordinate_field_type, std::allocator>(
-        N, coordinate_size, map_key.first);
+    auto map = CoordinateFieldMapCPU<coordinate_field_type, coordinate_type,
+                                     std::allocator>(N, coordinate_size,
+                                                     map_key.first);
     map.insert(p_coordinate, p_coordinate + N * coordinate_size);
 
     LOG_DEBUG("insert map with tensor_stride", map_key.first);
@@ -270,15 +185,107 @@ py::object CoordinateMapManager<coordinate_type, coordinate_field_type,
   return py_key;
 }
 
+/* to_sparse_and_map */
 /*
  * coords: coordinates in IntTensor
- * mapping: output mapping in IntTensor
  * tensor_strides: current tensor strides this coords will be initializeds
- * force_creation: even when there's a duplicate coords with the same tensor
- *                 strides.
- * force_remap: if there's duplicate coords, remap
- * allow_duplicate_coords: create map when there are duplicates in the
- * coordinates
+ */
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<py::object, std::pair<at::Tensor, at::Tensor>>
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::
+    field_to_sparse_insert_and_map(
+        CoordinateMapKey const *p_in_field_map_key,
+        default_types::stride_type const sparse_tensor_stride,
+        std::string const sparse_tensor_string_id) {
+  auto const coordinate_size = p_in_field_map_key->get_coordinate_size();
+  // Basic assertions
+  ASSERT(coordinate_size - 1 == sparse_tensor_stride.size(),
+         "The coordinate dimension (coordinate_size - 1):", coordinate_size - 1,
+         " must match the size of tensor stride:",
+         ArrToString(sparse_tensor_stride));
+
+  // Find coordinate field
+  auto const it = m_field_coordinates.find(p_in_field_map_key->get_key());
+  ASSERT(it != m_field_coordinates.end(), ERROR_MAP_NOT_FOUND);
+  auto const &field_map = it->second;
+  auto const nrows = field_map.size();
+  auto const ncols = field_map.coordinate_size();
+
+  auto options = torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
+
+  if (!detail::is_cpu_coordinate_map<CoordinateMapType>::value) {
+#ifndef CPU_ONLY
+    auto device_id = at::cuda::current_device();
+    options = options.device(torch::kCUDA, device_id);
+#else
+    ASSERT(false, ERROR_CPU_ONLY);
+#endif
+  }
+
+  // generate the map_key
+  coordinate_map_key_type map_key =
+      std::make_pair(sparse_tensor_stride, sparse_tensor_string_id);
+  if (m_coordinate_maps.find(map_key) != m_coordinate_maps.end()) {
+    LOG_DEBUG("CoordinateMapKey collision detected:", map_key,
+              "generating new string id.");
+    map_key =
+        get_random_string_id(sparse_tensor_stride, sparse_tensor_string_id);
+  }
+
+  LOG_DEBUG("initializing a field map with tensor stride:", map_key.first,
+            "string id:", map_key.second);
+
+  // Quantize the field with tensor stride.
+  // The coordinate must be a tensor. Wrap a pointer with a tensor.
+  at::Tensor int_coordinates =
+      at::empty({field_map.size(), coordinate_size}, options);
+  field_map.quantize_coordinates(int_coordinates.data_ptr<coordinate_type>(),
+                                 sparse_tensor_stride);
+
+  auto const map_inverse_map =
+      detail::insert_and_map_functor<coordinate_type, coordinate_field_type,
+                                     TemplatedAllocator, CoordinateMapType>()(
+          map_key, int_coordinates, *this);
+
+  auto const field_to_sparse_map_key =
+      std::pair<coordinate_map_key_type, coordinate_map_key_type>{
+          p_in_field_map_key->get_key(), map_key};
+
+  auto result = m_field_to_sparse_maps.insert(
+      std::pair<
+          const std::pair<coordinate_map_key_type, coordinate_map_key_type>,
+          const std::pair<at::Tensor, at::Tensor>>{field_to_sparse_map_key,
+                                                   map_inverse_map});
+  LOG_DEBUG("field to sparse tensor map insertion", result.second);
+
+  py::object py_key = py::cast(new CoordinateMapKey(coordinate_size, map_key));
+
+  return std::make_pair(py_key, map_inverse_map);
+}
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<at::Tensor, at::Tensor>
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::
+    get_field_to_sparse_map(CoordinateMapKey const *p_field_key,
+                            CoordinateMapKey const *p_sparse_key) const {
+  auto key = std::pair<coordinate_map_key_type, coordinate_map_key_type>{
+      p_field_key->get_key(), p_sparse_key->get_key()};
+  auto it = m_field_to_sparse_maps.find(key);
+  ASSERT(it != m_field_to_sparse_maps.end(),
+         "Field To Sparse Map doesn't exist");
+  return it->second;
+}
+
+/*
+ * coords: coordinates in IntTensor
+ * tensor_strides: current tensor strides this coords will be initializeds
  */
 template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator,

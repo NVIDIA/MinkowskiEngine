@@ -93,11 +93,14 @@ public:
 #ifndef CPU_ONLY
   using field_map_type = typename std::conditional<
       detail::is_cpu_coordinate_map<CoordinateMapType>::value,
-      CoordinateFieldMapCPU<coordinate_field_type, TemplatedAllocator>,
-      CoordinateFieldMapGPU<coordinate_field_type, TemplatedAllocator>>::type;
+      CoordinateFieldMapCPU<coordinate_field_type, coordinate_type,
+                            TemplatedAllocator>,
+      CoordinateFieldMapGPU<coordinate_field_type, coordinate_type,
+                            TemplatedAllocator>>::type;
 #else
   using field_map_type =
-      CoordinateFieldMapCPU<coordinate_field_type, TemplatedAllocator>;
+      CoordinateFieldMapCPU<coordinate_field_type, coordinate_type,
+                            TemplatedAllocator>;
 #endif
   using self_type = CoordinateMapManager<coordinate_type, coordinate_field_type,
                                          TemplatedAllocator, CoordinateMapType>;
@@ -159,6 +162,16 @@ public:
   py::object insert_field(at::Tensor const &th_coordinate,
                           stride_type const tensor_stride,
                           std::string const string_id = "");
+
+  /*
+   * New coordinate map initialzation function.
+   *
+   * returns key and map, inverse map
+   */
+  std::pair<py::object, std::pair<at::Tensor, at::Tensor>>
+  field_to_sparse_insert_and_map(CoordinateMapKey const *p_in_field_map_key,
+                                 stride_type const sparse_tensor_stride,
+                                 std::string const sparse_string_id = "");
 
   /*
    * New coordinate map initialzation function.
@@ -261,6 +274,14 @@ public:
     return m_field_coordinates.find(key) != m_field_coordinates.end();
   }
 
+  inline bool exists_field_to_sparse(
+      coordinate_map_key_type const &field_key,
+      coordinate_map_key_type const &sparse_key) const noexcept {
+    auto key = std::pair<coordinate_map_key_type, coordinate_map_key_type>{
+        field_key, sparse_key};
+    return m_field_to_sparse_maps.find(key) != m_field_to_sparse_maps.end();
+  }
+
   // when the key is the python coordinate map key
   inline bool exists(CoordinateMapKey const *p_key) const {
     // key set exception
@@ -271,6 +292,14 @@ public:
   inline bool exists_field(CoordinateMapKey const *p_key) const {
     // key set exception
     return exists_field(p_key->get_key());
+  }
+
+  inline bool
+  exists_field_to_sparse(CoordinateMapKey const *p_field_key,
+                         CoordinateMapKey const *p_sparse_key) const {
+    // key set exception
+    return exists_field_to_sparse(p_field_key->get_key(),
+                                  p_sparse_key->get_key());
   }
 
   inline size_type size(coordinate_map_key_type const &key) const {
@@ -292,6 +321,10 @@ public:
   at::Tensor get_coordinates(CoordinateMapKey const *p_key) const;
 
   at::Tensor get_coordinate_field(CoordinateMapKey const *p_key) const;
+
+  std::pair<at::Tensor, at::Tensor>
+  get_field_to_sparse_map(CoordinateMapKey const *p_field_key,
+                          CoordinateMapKey const *p_sparse_key) const;
 
   std::vector<py::object>
   get_coordinate_map_keys(stride_type const tensor_stride) const {
@@ -461,6 +494,12 @@ private:
   std::unordered_map<kernel_map_key_type, kernel_map_type,
                      kernel_map_key_hasher<coordinate_map_key_hasher>>
       m_kernel_maps;
+
+  std::unordered_map<
+      const std::pair<coordinate_map_key_type, coordinate_map_key_type>,
+      const std::pair<at::Tensor, at::Tensor>,
+      field_to_sparse_map_key_hasher<coordinate_map_key_hasher>>
+      m_field_to_sparse_maps;
 
 #ifndef CPU_ONLY
   TemplatedAllocator<char> m_allocator;

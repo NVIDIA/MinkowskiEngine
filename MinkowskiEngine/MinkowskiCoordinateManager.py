@@ -162,6 +162,9 @@ class CoordinateManager:
         coordinate_map_type == `CoordinateMapType.GPU`) that defines the
         coordinates.
 
+        :attr:`tensor_stride` (`list`): a list of `D` elements that defines the
+        tensor stride for the new order-`D + 1` sparse tensor.
+
         Example::
 
            >>> manager = CoordinateManager(D=1)
@@ -178,13 +181,17 @@ class CoordinateManager:
     def insert_field(
         self,
         coordinates: torch.Tensor,
-        tensor_stride: Union[int, Sequence, np.ndarray],
+        tensor_stride: Sequence,
         string_id: str = "",
     ) -> Tuple[CoordinateMapKey, Tuple[torch.IntTensor, torch.IntTensor]]:
         r"""create a new coordinate map and returns
 
         :attr:`coordinates`: `torch.FloatTensor` (`CUDA` if coordinate_map_type
         == `CoordinateMapType.GPU`) that defines the coordinates.
+
+        :attr:`tensor_stride` (`list`): a list of `D` elements that defines the
+        tensor stride for the new order-`D + 1` sparse tensor.
+
 
         Example::
 
@@ -197,6 +204,44 @@ class CoordinateManager:
 
         """
         return self._manager.insert_field(coordinates, tensor_stride, string_id)
+
+    def field_to_sparse_insert_and_map(
+        self,
+        field_map_key: CoordinateMapKey,
+        sparse_tensor_stride: Union[int, Sequence, np.ndarray],
+        sparse_tensor_string_id: str = "",
+    ) -> Tuple[CoordinateMapKey, Tuple[torch.IntTensor, torch.IntTensor]]:
+
+        r"""Create a sparse tensor coordinate map with the tensor stride.
+
+        :attr:`field_map_key` (`CoordinateMapKey`): field map that a new sparse
+        tensor will be created from.
+
+        :attr:`tensor_stride` (`list`): a list of `D` elements that defines the
+        tensor stride for the new order-`D + 1` sparse tensor.
+
+        :attr:`string_id` (`str`): string id of the new sparse tensor coordinate map key.
+
+        Example::
+
+           >>> manager = CoordinateManager(D=1)
+           >>> coordinates = torch.FloatTensor([[0, 0.1], [0, 2.3], [0, 1.2], [0, 2.4]])
+           >>> key, (unique_map, inverse_map) = manager.insert(coordinates, [1])
+
+        """
+        return self._manager.field_to_sparse_insert_and_map(
+            field_map_key, sparse_tensor_stride, sparse_tensor_string_id
+        )
+
+    def exists_field_to_sparse(
+        self, field_map_key: CoordinateMapKey, sparse_map_key: CoordinateMapKey
+    ):
+        return self._manager.exists_field_to_sparse(field_map_key, sparse_map_key)
+
+    def get_field_to_sparse_map(
+        self, field_map_key: CoordinateMapKey, sparse_map_key: CoordinateMapKey
+    ):
+        return self._manager.get_field_to_sparse_map(field_map_key, sparse_map_key)
 
     def stride(
         self,
@@ -283,6 +328,9 @@ class CoordinateManager:
     ) -> CoordinateMapKey:
         """
         Returns a unique coordinate_map_key for a given tensor stride.
+
+        :attr:`tensor_stride` (`list`): a list of `D` elements that defines the
+        tensor stride for the new order-`D + 1` sparse tensor.
 
         """
         return self._manager.get_random_string_id(tensor_stride, "")

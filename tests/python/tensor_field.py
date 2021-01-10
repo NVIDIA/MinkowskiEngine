@@ -41,7 +41,7 @@ class TestTensorField(unittest.TestCase):
             [[0, 1], [0, 1], [0, 2], [0, 2], [1, 0], [1, 0], [1, 1]]
         )
         feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T
-        sfield = TensorField(feats, coords, device=feats.device)
+        sfield = TensorField(feats, coords)
 
         # Convert to a sparse tensor
         stensor = sfield.sparse(
@@ -50,6 +50,21 @@ class TestTensorField(unittest.TestCase):
         print(stensor)
         self.assertTrue(
             {0.5, 2.5, 5.5, 7} == {a for a in stensor.F.squeeze().detach().numpy()}
+        )
+
+        # device cuda
+        if not torch.cuda.is_available():
+            return
+
+        sfield = TensorField(feats, coords, device="cuda")
+
+        # Convert to a sparse tensor
+        stensor = sfield.sparse(
+            quantization_mode=SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
+        )
+        print(stensor)
+        self.assertTrue(
+            {0.5, 2.5, 5.5, 7} == {a for a in stensor.F.squeeze().detach().cpu().numpy()}
         )
 
     def test_pcd(self):

@@ -116,7 +116,8 @@ template <typename coordinate_type, typename coordinate_field_type,
 struct insert_field_functor<
     coordinate_type, coordinate_field_type, TemplatedAllocator,
     CoordinateMapGPU,
-    CoordinateFieldMapGPU<coordinate_field_type, TemplatedAllocator>> {
+    CoordinateFieldMapGPU<coordinate_field_type, coordinate_type,
+                          TemplatedAllocator>> {
 
   void operator()(
       coordinate_map_key_type &map_key, at::Tensor const &th_coordinate,
@@ -127,8 +128,9 @@ struct insert_field_functor<
     uint32_t const coordinate_size = th_coordinate.size(1);
     coordinate_field_type *p_coordinate =
         th_coordinate.data_ptr<coordinate_field_type>();
-    auto map = CoordinateFieldMapGPU<coordinate_field_type, TemplatedAllocator>(
-        N, coordinate_size, map_key.first);
+    auto map = CoordinateFieldMapGPU<coordinate_field_type, coordinate_type,
+                                     TemplatedAllocator>(N, coordinate_size,
+                                                         map_key.first);
     map.insert(p_coordinate, p_coordinate + N * coordinate_size);
 
     LOG_DEBUG("insert map with tensor_stride", map_key.first);

@@ -1,13 +1,21 @@
 # Change Log
 
-## [0.5.0]
-
-### Added
+## [0.5.1]
 
 - v0.5 documentation updates
 - Nonlinear functionals and modules
 - Warning when using cuda without ME cuda support
 - diagnostics test
+- TensorField slice
+    - Cache the unique map and inverse map pair in the coordinate manager
+- CoordinateManager
+    - `field_to_sparse_insert_and_map`
+    - `exists_field_to_sparse`
+    - `get_field_to_sparse_map`
+- CoordiateFieldMap
+    - `quantize_coordinates`
+
+## [0.5.0] - 2020-12-24
 
 ## [0.5.0a] - 2020-08-05
 
