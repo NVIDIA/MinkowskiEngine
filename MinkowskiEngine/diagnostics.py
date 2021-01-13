@@ -61,6 +61,7 @@ def print_diagnostics():
         print(ME.__version__)
         print(f"MinkowskiEngine compiled with CUDA Support: {ME.is_cuda_available()}")
         print(f"NVCC version MinkowskiEngine is compiled: {ME.cuda_version()}")
+        print(f"CUDART version MinkowskiEngine is compiled: {ME.cudart_version()}")
     except ImportError:
         print("MinkowskiEngine not installed")
 

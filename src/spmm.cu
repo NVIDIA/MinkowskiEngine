@@ -116,23 +116,29 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
                                        ? at::ScalarType::Int
                                        : at::ScalarType::Long;
 
-  TORCH_CHECK(rows.scalar_type() == int_scalar_type, "int type mismatch.");
+  ASSERT(rows.scalar_type() == int_scalar_type, "int type mismatch.");
 
-  TORCH_CHECK(rows.scalar_type() == cols.scalar_type(),
-              "rows and cols must have the same scalar type.");
-  TORCH_CHECK(rows.scalar_type() == cols.scalar_type(),
-              "rows and cols must have the same scalar type.");
-  TORCH_CHECK(vals.scalar_type() == mat2.scalar_type(),
-              "vals and mat2 must have the same scalar type.");
+  ASSERT(rows.scalar_type() == cols.scalar_type(),
+         "rows and cols must have the same scalar type.");
+  ASSERT(rows.scalar_type() == cols.scalar_type(),
+         "rows and cols must have the same scalar type.");
+  ASSERT(vals.scalar_type() == mat2.scalar_type(),
+         "vals and mat2 must have the same scalar type.");
 
-  TORCH_CHECK(rows.is_cuda(), "rows must be CUDA, but got CPU");
-  TORCH_CHECK(cols.is_cuda(), "cols must be CUDA, but got CPU");
-  TORCH_CHECK(vals.is_cuda(), "vals must be CUDA, but got CPU");
-  TORCH_CHECK(mat2.is_cuda(), "mat2 must be CUDA, but got CPU");
-  TORCH_CHECK(at::cuda::check_device({rows, cols, vals, mat2}));
+  ASSERT(rows.is_contiguous(), "rows must be contiguous");
+  ASSERT(cols.is_contiguous(), "cols must be contiguous");
+  ASSERT(vals.is_contiguous(), "vals must be contiguous");
+  ASSERT(mat2.is_contiguous(), "mat2 must be contiguous");
 
-  TORCH_CHECK(mat2.dim() == 2, "Tensor 'mat2' must have 2 dims, but has ",
-              mat2.dim());
+  ASSERT(rows.is_cuda(), "rows must be CUDA, but got CPU");
+  ASSERT(cols.is_cuda(), "cols must be CUDA, but got CPU");
+  ASSERT(vals.is_cuda(), "vals must be CUDA, but got CPU");
+  ASSERT(mat2.is_cuda(), "mat2 must be CUDA, but got CPU");
+  ASSERT(at::cuda::check_device({rows, cols, vals, mat2}),
+         "All inputs must be on the same device.");
+
+  ASSERT(mat2.dim() == 2, "Tensor 'mat2' must have 2 dims, but has ",
+         mat2.dim());
 
   // int64_t dim_i = self.size(0);
   // int64_t dim_j = self.size(1);

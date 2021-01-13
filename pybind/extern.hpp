@@ -35,6 +35,7 @@
 #ifndef CPU_ONLY
 #include "allocators.cuh"
 #include "coordinate_map_gpu.cuh"
+#include <cuda.h>
 #endif
 
 #include <torch/extension.h>
@@ -787,6 +788,14 @@ bool is_cuda_available() {
 }
 
 int cuda_version() {
+#if defined(CUDA_VERSION)
+  return CUDA_VERSION;
+#else
+  return -1;
+#endif
+}
+
+int cudart_version() {
 #if defined(CUDART_VERSION)
   return CUDART_VERSION;
 #else

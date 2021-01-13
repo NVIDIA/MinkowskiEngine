@@ -21,9 +21,6 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
-from typing import Union
-import unittest
-
 import torch
 from torch.autograd import Function
 
@@ -39,6 +36,8 @@ def spmm(
     cuda_spmm_alg: int = 1,
 ):
 
+    assert len(rows) == len(cols), "Invalid length"
+    assert len(rows) == len(vals), "Invalid length"
     assert vals.dtype == mat.dtype, "dtype mismatch"
     assert vals.device == mat.device, "device mismatch"
     if mat.is_cuda:

@@ -60,3 +60,27 @@ class TestSPMM(unittest.TestCase):
         loss.backward()
         print(mat.grad)
         self.assertTrue(gradcheck(spmm_fn, (rows, cols, vals, size, mat)))
+
+    def test_dtype(self):
+        rows = torch.Tensor([0, 0, 1, 1]).float()
+        cols = torch.Tensor([0, 1, 2, 3]).double()
+        vals = torch.ones(4).double()
+        size = [2, 4]
+        mat = torch.rand(4, 3).double()
+        mat.requires_grad_()
+        spmm_fn = MinkowskiSPMMFunction()
+        out = spmm_fn.apply(rows, cols, vals, size, mat)
+        print(out)
+
+        if not torch.cuda.is_available():
+            return
+
+        rows = torch.Tensor([0, 0, 1, 1]).float().to(0)
+        cols = torch.Tensor([0, 1, 2, 3]).double().to(0)
+        vals = torch.ones(4).float().to(0)
+        size = [2, 4]
+        mat = mat.to(0)
+        mat.requires_grad_()
+        spmm_fn = MinkowskiSPMMFunction()
+        out = spmm_fn.apply(rows, cols, vals, size, mat)
+        print(out)
