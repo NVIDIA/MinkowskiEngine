@@ -60,6 +60,7 @@ from MinkowskiEngineBackend._C import (
     BroadcastMode,
     is_cuda_available,
     cuda_version,
+    cudart_version,
     get_gpu_memory_info,
 )
 

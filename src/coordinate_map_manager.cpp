@@ -212,8 +212,6 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   auto const it = m_field_coordinates.find(p_in_field_map_key->get_key());
   ASSERT(it != m_field_coordinates.end(), ERROR_MAP_NOT_FOUND);
   auto const &field_map = it->second;
-  auto const nrows = field_map.size();
-  auto const ncols = field_map.coordinate_size();
 
   auto options = torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
 
