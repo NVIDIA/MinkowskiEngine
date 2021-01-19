@@ -152,6 +152,48 @@ class TestLocalSumPooling(unittest.TestCase):
             )
         )
 
+    def test_poolmap(self):
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords)
+        pool = MinkowskiSumPooling(kernel_size=2, stride=2, dimension=D)
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiLocalPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    pool.kernel_generator,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+        input = SparseTensor(feats, coords, device=0)
+        output = pool(input)
+        print(output)
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    pool.kernel_generator,
+                    input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+
 
 class TestLocalAvgPooling(unittest.TestCase):
     def test_gpu(self):
@@ -307,7 +349,6 @@ class TestPoolingTranspose(unittest.TestCase):
 
 
 class TestGlobalAvgPooling(unittest.TestCase):
-
     def test_batch_size1(self):
         if not torch.cuda.is_available():
             return
@@ -342,7 +383,6 @@ class TestGlobalAvgPooling(unittest.TestCase):
                 ),
             )
         )
-
 
     def test_gpu(self):
         if not torch.cuda.is_available():
@@ -406,7 +446,6 @@ class TestGlobalAvgPooling(unittest.TestCase):
 
 
 class TestGlobalMaxPooling(unittest.TestCase):
-
     def test_batch_size1(self):
         if not torch.cuda.is_available():
             return

@@ -171,7 +171,7 @@ class MinkowskiChannelwiseConvolution(MinkowskiModuleBase):
         N_out = cm.size(out_key)
         out_F = input._F.new(N_out, self.in_channels).zero_()
 
-        kernel_map = cm.get_kernel_map(
+        kernel_map = cm.kernel_map(
             in_key,
             out_key,
             self.kernel_generator.kernel_stride,

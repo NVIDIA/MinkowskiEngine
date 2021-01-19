@@ -264,6 +264,7 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
 
   return std::make_pair(py_key, map_inverse_map);
 }
+
 template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
@@ -788,6 +789,102 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   return m_kernel_maps[kernel_map_key];
 }
 
+namespace detail {
+
+template <typename coordinate_type>
+struct stride_map2tensor_functor<coordinate_type, std::allocator,
+                                 CoordinateMapCPU, cpu_kernel_map> {
+
+  std::pair<at::Tensor, at::Tensor>
+  operator()(cpu_kernel_map const &stride_kernel_map) {
+
+    ASSERT(stride_kernel_map.first.size() == 1, "Invalid kernel_map");
+    ASSERT(stride_kernel_map.first.size() == stride_kernel_map.second.size(),
+           "invalid kernel_map");
+
+    auto const &in_map = stride_kernel_map.first[0];
+    auto const &out_map = stride_kernel_map.second[0];
+
+    auto options =
+        torch::TensorOptions().dtype(torch::kLong).requires_grad(false);
+    int64_t const out_size = (int64_t)in_map.size();
+
+    at::Tensor th_in_map = torch::empty({out_size}, options);
+    at::Tensor th_out_map = torch::empty({out_size}, options);
+    int64_t *p_in_map = th_in_map.data_ptr<int64_t>();
+    int64_t *p_out_map = th_out_map.data_ptr<int64_t>();
+
+    // from int32_t to long type
+    for (uint32_t i = 0; i < out_size; ++i)
+      p_in_map[i] = in_map[i];
+    for (uint32_t i = 0; i < out_size; ++i)
+      p_out_map[i] = out_map[i];
+
+    return std::make_pair(std::move(th_in_map), std::move(th_out_map));
+  }
+};
+
+} // namespace detail
+
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<at::Tensor, at::Tensor>
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::stride_map_th(CoordinateMapKey const
+                                                           *p_in_map_key,
+                                                       CoordinateMapKey const
+                                                           *p_strided_map_key) {
+
+  ASSERT(exists(p_in_map_key), ERROR_MAP_NOT_FOUND);
+  ASSERT(exists(p_strided_map_key), ERROR_MAP_NOT_FOUND);
+
+  map_type const &in_map =
+      m_coordinate_maps.find(p_in_map_key->get_key())->second;
+  map_type const &strided_map =
+      m_coordinate_maps.find(p_strided_map_key->get_key())->second;
+
+  // Get tensor strides and find kernel stride size
+  // Check if the kernel map key exists
+  auto const &in_map_stride = in_map.get_tensor_stride();
+  auto const &strided_map_stride = strided_map.get_tensor_stride();
+
+  stride_type kernel_stride(in_map_stride.size());
+  for (index_type i = 0; i < kernel_stride.size(); ++i) {
+    ASSERT(strided_map_stride[i] % in_map_stride[i] == 0,
+           "The tensor stride of the strided map must be divisible by the "
+           "tensor stride of the input map. strided_map_stride:",
+           ArrToString(strided_map_stride),
+           " in_map_stride:", ArrToString(in_map_stride));
+    kernel_stride[i] = strided_map_stride[i] / in_map_stride[i];
+  }
+
+  auto const one_vec = detail::ones(in_map.coordinate_size() - 1);
+  kernel_map_key_type const kernel_map_key = std::make_tuple(
+      p_in_map_key->get_key(), p_strided_map_key->get_key(), // maps
+      kernel_stride, kernel_stride, one_vec,                 // kernels
+      RegionType::HYPER_CUBE /* region_type */, 0 /* is_transpose */,
+      true /* is_pool */);
+
+  if (m_kernel_maps.find(kernel_map_key) == m_kernel_maps.end()) {
+    LOG_DEBUG("Creating stride kernel map with kernel size:",
+              ArrToString(kernel_stride));
+    auto const stride_map =
+        detail::stride_map_functor<coordinate_type, TemplatedAllocator,
+                                   CoordinateMapType, kernel_map_type>()(
+            in_map, strided_map, kernel_stride);
+
+    m_kernel_maps[kernel_map_key] = std::move(stride_map);
+  }
+
+  // copy the kernel map to tensors
+  return detail::stride_map2tensor_functor<coordinate_type, TemplatedAllocator,
+                                           CoordinateMapType,
+                                           kernel_map_type>()(
+      m_kernel_maps[kernel_map_key]);
+}
+
 template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
@@ -1126,14 +1223,14 @@ template <typename coordinate_type, typename coordinate_field_type,
           class CoordinateMapType>
 std::unordered_map<int64_t, at::Tensor> CoordinateMapManager<
     coordinate_type, coordinate_field_type, TemplatedAllocator,
-    CoordinateMapType>::get_kernel_map(CoordinateMapKey const *p_in_map_key,
-                                       CoordinateMapKey const *p_out_map_key,
-                                       stride_type const &kernel_size, //
-                                       stride_type const &kernel_stride,
-                                       stride_type const &kernel_dilation,
-                                       RegionType::Type const region_type,
-                                       at::Tensor const &offset,
-                                       bool is_transpose, bool is_pool) {
+    CoordinateMapType>::kernel_map_th(CoordinateMapKey const *p_in_map_key,
+                                      CoordinateMapKey const *p_out_map_key,
+                                      stride_type const &kernel_size, //
+                                      stride_type const &kernel_stride,
+                                      stride_type const &kernel_dilation,
+                                      RegionType::Type const region_type,
+                                      at::Tensor const &offset,
+                                      bool is_transpose, bool is_pool) {
 
   auto const &curr_kernel_map =
       kernel_map(p_in_map_key, p_out_map_key,                 // maps

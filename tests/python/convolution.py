@@ -194,7 +194,7 @@ class TestConvolution(unittest.TestCase):
                 torch.allclose(output_gpu.F.mean(0).cpu(), output.F.mean(0))
             )
 
-        # kernel_map = input.coords_man.get_kernel_map(
+        # kernel_map = input.coords_man.kernel_map(
         #     1, 2, stride=2, kernel_size=3)
         # print(kernel_map)
 

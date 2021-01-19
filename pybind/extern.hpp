@@ -775,7 +775,8 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("origin_map_size", &manager_type::origin_map_size)
       .def("origin_map", &manager_type::origin_map_th)
       .def("union_map", &manager_type::union_map_th)
-      .def("get_kernel_map", &manager_type::get_kernel_map)
+      .def("stride_map", &manager_type::stride_map_th)
+      .def("kernel_map", &manager_type::kernel_map_th)
       .def("interpolation_map_weight", &manager_type::interpolation_map_weight);
 }
 

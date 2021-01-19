@@ -75,7 +75,7 @@ The MinkowskiEngine is distributed via [PyPI MinkowskiEngine][pypi-url] which ca
 First, install pytorch following the [instruction](https://pytorch.org). Next, install `openblas`.
 
 ```
-sudo apt install libopenblas-dev
+sudo apt install build-essential python3-dev libopenblas-dev
 pip install torch
 pip install -U MinkowskiEngine --install-option="--blas=openblas" -v --no-deps
 
@@ -104,10 +104,10 @@ We recommend `python>=3.6` for installation.
 First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
 
 ```
-sudo apt install libopenblas-dev
 conda create -n py3-mink python=3.8
 conda activate py3-mink
-conda install numpy mkl-include pytorch cudatoolkit=11.0 -c pytorch
+conda install openblas-devel numpy mkl-include mkl -c anaconda
+conda install pytorch -c pytorch
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps
 ```
 
@@ -117,7 +117,7 @@ Like the anaconda installation, make sure that you install pytorch with the same
 
 ```
 # install system requirements
-sudo apt install python3-dev libopenblas-dev
+sudo apt install build-essential python3-dev libopenblas-dev
 
 # Skip if you already have pip installed on your python3
 curl https://bootstrap.pypa.io/get-pip.py | python3

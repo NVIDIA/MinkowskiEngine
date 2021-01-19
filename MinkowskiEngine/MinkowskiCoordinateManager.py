@@ -347,6 +347,34 @@ class CoordinateManager:
         is_transpose=False,
         is_pool=False,
     ) -> dict:
+        r"""Alias of :attr:`CoordinateManager.kernel_map`. Will be deprecated in the next version."""
+        warnings.warn(
+            "`get_kernel_map` will be deprecated. Please use `kernel_map` instead."
+        )
+        return self.kernel_map(
+            in_key,
+            out_key,
+            stride,
+            kernel_size,
+            dilation,
+            region_type,
+            region_offset,
+            is_transpose,
+            is_pool,
+        )
+
+    def kernel_map(
+        self,
+        in_key: CoordinateMapKey,
+        out_key: CoordinateMapKey,
+        stride=1,
+        kernel_size=3,
+        dilation=1,
+        region_type=RegionType.HYPER_CUBE,
+        region_offset=None,
+        is_transpose=False,
+        is_pool=False,
+    ) -> dict:
         r"""Get kernel in-out maps for the specified coords keys or tensor strides.
 
         returns dict{kernel_index: in_out_tensor} where in_out_tensor[0] is the input row indices that correspond to in_out_tensor[1], which is the row indices for output.
@@ -367,7 +395,7 @@ class CoordinateManager:
         if region_offset is None:
             region_offset = torch.IntTensor()
 
-        kernel_map = self._manager.get_kernel_map(
+        kernel_map = self._manager.kernel_map(
             in_key,
             out_key,
             convert_to_int_list(stride, self.D),  #
@@ -383,6 +411,9 @@ class CoordinateManager:
 
     def origin_map(self, key: CoordinateMapKey):
         return self._manager.origin_map(key)
+
+    def stride_map(self, in_key: CoordinateMapKey, stride_key: CoordinateMapKey):
+        return self._manager.stride_map(in_key, stride_key)
 
     def union_map(self, in_keys: list, out_key):
         return self._manager.union_map(in_keys, out_key)

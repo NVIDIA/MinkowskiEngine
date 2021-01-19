@@ -66,7 +66,7 @@ class TestKernelMap(unittest.TestCase):
         oC = output.C.cpu().numpy()
         print(iC)
         print(oC)
-        kernel_maps = output.coordinate_manager.get_kernel_map(
+        kernel_maps = output.coordinate_manager.kernel_map(
             1,
             2,
             stride=2,
@@ -100,7 +100,7 @@ class TestKernelMap(unittest.TestCase):
         oC = output.C.numpy()
         print(iC)
         print(oC)
-        kernel_maps = output.coordinate_manager.get_kernel_map(
+        kernel_maps = output.coordinate_manager.kernel_map(
             1, 2, stride=2, kernel_size=3
         )
         for kernel_index, in_out_map in kernel_maps.items():

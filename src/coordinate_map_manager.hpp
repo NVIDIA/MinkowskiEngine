@@ -401,13 +401,13 @@ public:
   // return kernel map. for cpu it is {in maps, out maps}.
   // For gpu it could be {in maps, out maps}, or {kernel index, in map, out map}
   std::unordered_map<int64_t, at::Tensor>
-  get_kernel_map(CoordinateMapKey const *py_in_coords_key,  //
-                 CoordinateMapKey const *py_out_coords_key, //
-                 stride_type const &kernel_size,            //
-                 stride_type const &kernel_stride,          //
-                 stride_type const &kernel_dilation,        //
-                 RegionType::Type const region_type,        //
-                 at::Tensor const &offsets, bool is_transpose, bool is_pool);
+  kernel_map_th(CoordinateMapKey const *py_in_coords_key,  //
+                CoordinateMapKey const *py_out_coords_key, //
+                stride_type const &kernel_size,            //
+                stride_type const &kernel_stride,          //
+                stride_type const &kernel_dilation,        //
+                RegionType::Type const region_type,        //
+                at::Tensor const &offsets, bool is_transpose, bool is_pool);
 
   // interpolation map
   std::vector<at::Tensor>
@@ -416,6 +416,10 @@ public:
 
   std::pair<at::Tensor, std::vector<at::Tensor>>
   origin_map_th(CoordinateMapKey const *py_out_coords_key);
+
+  std::pair<at::Tensor, at::Tensor>
+  stride_map_th(CoordinateMapKey const *p_in_map_key,
+                CoordinateMapKey const *p_strided_map_key);
 
   size_t origin_map_size() {
     auto const key = origin().first;
@@ -585,6 +589,17 @@ struct origin_map_functor {
   operator()(CoordinateMapType<coordinate_type, TemplatedAllocator> const
                  &origin_coordinate_map,
              kernel_map_type const &origin_map);
+};
+
+// a partial specialization functor for stride map
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType,
+          typename kernel_map_type>
+struct stride_map2tensor_functor {
+  std::pair<at::Tensor, at::Tensor>
+  operator()(kernel_map_type const &origin_map);
 };
 
 template <typename coordinate_type,

@@ -111,6 +111,52 @@ struct insert_and_map_functor<coordinate_type, coordinate_field_type,
   }
 };
 
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator>
+struct stride_map2tensor_functor<
+    coordinate_type, TemplatedAllocator, CoordinateMapGPU,
+    gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>>> {
+
+  using gpu_kernel_map_type =
+      gpu_kernel_map<default_types::index_type, TemplatedAllocator<char>>;
+
+  std::pair<at::Tensor, at::Tensor>
+  operator()(gpu_kernel_map_type const &stride_kernel_map) {
+
+    ASSERT(stride_kernel_map.in_maps.size(0) ==
+               stride_kernel_map.out_maps.size(0),
+           "Invalid kernel map");
+
+    auto curr_device = at::cuda::current_device();
+    auto options = torch::TensorOptions({at::kCUDA, curr_device})
+                       .dtype(torch::kLong)
+                       .requires_grad(false);
+    auto const out_size = stride_kernel_map.size();
+
+    // return tensors
+    LOG_DEBUG("Reserve mapping torch output tensors with size:", out_size);
+    at::Tensor th_in_map = torch::empty({(int64_t)out_size}, options);
+    at::Tensor th_out_map = torch::empty({(int64_t)out_size}, options);
+
+    auto const num_blocks =
+        (out_size + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
+
+    LOG_DEBUG("cuda_copy_n with num_blocks:", num_blocks,
+              "mapping size:", out_size);
+    detail::cuda_copy_n<default_types::index_type, int64_t>
+        <<<num_blocks, CUDA_NUM_THREADS>>>(stride_kernel_map.in_maps.begin(),
+                                           out_size,
+                                           th_in_map.data_ptr<int64_t>());
+
+    detail::cuda_copy_n<default_types::index_type, int64_t>
+        <<<num_blocks, CUDA_NUM_THREADS>>>(stride_kernel_map.out_maps.begin(),
+                                           out_size,
+                                           th_out_map.data_ptr<int64_t>());
+
+    return std::make_pair(std::move(th_in_map), std::move(th_out_map));
+  }
+};
+
 template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator>
 struct insert_field_functor<

@@ -361,7 +361,7 @@ class CompletionNet(nn.Module):
             strided_target_key = cm.stride(
                 target_key, out.tensor_stride[0],
             )
-            kernel_map = cm.get_kernel_map(
+            kernel_map = cm.kernel_map(
                 out.coordinate_map_key,
                 strided_target_key,
                 kernel_size=kernel_size,

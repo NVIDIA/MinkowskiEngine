@@ -77,6 +77,66 @@ class CoordinateManagerTestCase(unittest.TestCase):
         # print("Reduction mapping: ", cm.get_row_indices_per_batch(stride_key))
         # print(cm)
 
+    def test_stride(self):
+
+        coordinates = torch.IntTensor(
+            [[0, 1], [0, 1], [0, 2], [0, 2], [1, 0], [1, 0], [1, 1]]
+        )
+
+        manager = ME.CoordinateManager(
+            D=1, coordinate_map_type=ME.CoordinateMapType.CPU
+        )
+        key, (unique_map, inverse_map) = manager.insert_and_map(coordinates, [1])
+
+        # Create a strided map
+        stride_key = manager.stride(key, [4])
+        print(manager.get_coordinates(key))
+        print(manager.get_coordinates(stride_key))
+        print(
+            manager.kernel_map(
+                key,
+                stride_key,
+                [4],
+                [4],
+                [1],
+                ME.RegionType.HYPER_CUBE,
+                torch.IntTensor(),
+                False,
+                True,
+            )
+        )
+        # print(manager.stride_map(key, stride_key))
+
+    def test_stride_cuda(self):
+
+        coordinates = torch.IntTensor(
+            [[0, 1], [0, 1], [0, 2], [0, 2], [1, 0], [1, 0], [1, 1]]
+        ).cuda()
+
+        manager = ME.CoordinateManager(
+            D=1, coordinate_map_type=ME.CoordinateMapType.CUDA
+        )
+        key, (unique_map, inverse_map) = manager.insert_and_map(coordinates, [1])
+
+        # Create a strided map
+        stride_key = manager.stride(key, [4])
+        print(manager.get_coordinates(key))
+        print(manager.get_coordinates(stride_key))
+        # print(
+        #     manager.kernel_map(
+        #         key,
+        #         stride_key,
+        #         [4],
+        #         [4],
+        #         [1],
+        #         ME.RegionType.HYPER_CUBE,
+        #         torch.IntTensor(),
+        #         False,
+        #         True,
+        #     )
+        # )
+        print(manager.stride_map(key, stride_key))
+
     def test_negative_coords(self):
         coords = torch.IntTensor(
             [[0, -3], [0, -2], [0, -1], [0, 0], [0, 1], [0, 2], [0, 3]]

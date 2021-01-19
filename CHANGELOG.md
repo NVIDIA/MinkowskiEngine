@@ -12,6 +12,7 @@
     - `field_to_sparse_insert_and_map`
     - `exists_field_to_sparse`
     - `get_field_to_sparse_map`
+    - `stride_map`
 - CoordiateFieldMap
     - `quantize_coordinates`
 

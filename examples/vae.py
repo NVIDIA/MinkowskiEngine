@@ -465,7 +465,7 @@ class Decoder(nn.Module):
             cm = out.coords_man
             strided_target_key = cm.stride(
                 target_key, out.tensor_stride[0], force_creation=True)
-            ins, outs = cm.get_kernel_map(
+            ins, outs = cm.kernel_map(
                 out.coords_key,
                 strided_target_key,
                 kernel_size=kernel_size,
