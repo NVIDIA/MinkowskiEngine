@@ -282,6 +282,19 @@ public:
     return m_field_to_sparse_maps.find(key) != m_field_to_sparse_maps.end();
   }
 
+  std::vector<py::object>
+  field_to_sparse_keys(coordinate_map_key_type const &field_key) const {
+    std::vector<py::object> return_keys;
+    for (auto const &elem : m_field_to_sparse_maps) {
+      if (elem.first.first == field_key) {
+        auto const &tensor_key = elem.first.second;
+        return_keys.push_back(py::cast(
+            new CoordinateMapKey(tensor_key.first.size() + 1, tensor_key)));
+      }
+    }
+    return return_keys;
+  }
+
   // when the key is the python coordinate map key
   inline bool exists(CoordinateMapKey const *p_key) const {
     // key set exception

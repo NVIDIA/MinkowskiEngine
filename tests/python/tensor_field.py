@@ -144,3 +144,20 @@ class TestTensorField(unittest.TestCase):
         ofield = otensor.cat_slice(tfield)
         self.assertEqual(len(tfield), len(ofield))
         self.assertEqual(ofield.F.size(1), (otensor.F.size(1) + tfield.F.size(1)))
+
+    def stride_slice(self):
+        coords, colors, pcd = load_file("1.ply")
+        voxel_size = 0.02
+        colors = torch.from_numpy(colors).float()
+        bcoords = batched_coordinates([coords / voxel_size], dtype=torch.float32)
+        tfield = TensorField(colors, bcoords)
+
+        network = nn.Sequential(
+            MinkowskiToSparseTensor(),
+            MinkowskiConvolution(3, 8, kernel_size=3, stride=4, dimension=3),
+            MinkowskiReLU(),
+            MinkowskiConvolution(8, 16, kernel_size=3, stride=4, dimension=3),
+        )
+
+        otensor = network(tfield)
+        ofield = otensor.slice(tfield)

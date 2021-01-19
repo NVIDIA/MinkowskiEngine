@@ -42,6 +42,8 @@ from MinkowskiTensor import (
     sparse_tensor_operation_mode,
     global_coordinate_manager,
     set_global_coordinate_manager,
+    COORDINATE_MANAGER_DIFFERENT_ERROR,
+    COORDINATE_KEY_DIFFERENT_ERROR,
 )
 from MinkowskiSparseTensor import SparseTensor
 from sparse_matrix_functions import MinkowskiSPMMFunction
@@ -312,9 +314,32 @@ class TensorField(Tensor):
             if not self._manager.exists_field_to_sparse(
                 self.coordinate_field_map_key, sparse_tensor_map_key
             ):
-                raise ValueError(
-                    f"The field to sparse tensor mapping does not exists for the key: {sparse_tensor_map_key}. Please run TensorField.sparse({sparse_tensor_map_key.get_tensor_stride()})"
+                sparse_keys = self.coordinate_manager.field_to_sparse_keys(
+                    self.coordinate_field_map_key
                 )
+                one_key = None
+                for key in sparse_keys:
+                    if np.prod(key.get_tensor_stride()) == 1:
+                        one_key = key
+
+                if one_key is not None:
+                    if one_key not in self._inverse_mapping:
+                        (
+                            _,
+                            self._inverse_mapping[one_key],
+                        ) = self._manager.get_field_to_sparse_map(
+                            self.coordinate_field_map_key, one_key
+                        )
+
+                    _, stride_map = self.coordinate_manager.stride_map(
+                        one_key, sparse_tensor_map_key
+                    )
+                    field_map = self._inverse_mapping[one_key]
+                    self._inverse_mapping[sparse_tensor_map_key] = stride_map[field_map]
+                else:
+                    raise ValueError(
+                        f"The field to sparse tensor mapping does not exists for the key: {sparse_tensor_map_key}. Please run TensorField.sparse() before you call slice."
+                    )
             else:
                 # Extract the mapping
                 (
@@ -324,6 +349,29 @@ class TensorField(Tensor):
                     self.coordinate_field_map_key, sparse_tensor_map_key
                 )
         return self._inverse_mapping[sparse_tensor_map_key]
+
+    def _is_same_key(self, other):
+        assert isinstance(other, self.__class__)
+        assert self._manager == other._manager, COORDINATE_MANAGER_DIFFERENT_ERROR
+        assert (
+            self.coordinate_field_map_key == other.coordinate_field_map_key
+        ), COORDINATE_KEY_DIFFERENT_ERROR
+
+    def _binary_functor(self, other, binary_fn):
+        assert isinstance(other, (self.__class__, torch.Tensor))
+        if isinstance(other, self.__class__):
+            self._is_same_key(other)
+            return self.__class__(
+                binary_fn(self._F, other.F),
+                coordinate_map_key=self.coordinate_map_key,
+                coordinate_manager=self._manager,
+            )
+        else:  # when it is a torch.Tensor
+            return self.__class__(
+                binary_fn(self._F, other),
+                coordinate_field_map_key=self.coordinate_map_key,
+                coordinate_manager=self._manager,
+            )
 
     def __repr__(self):
         return (

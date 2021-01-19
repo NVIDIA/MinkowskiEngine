@@ -8,13 +8,14 @@
 - diagnostics test
 - TensorField slice
     - Cache the unique map and inverse map pair in the coordinate manager
+    - generate inverse_mapping on the fly
 - CoordinateManager
     - `field_to_sparse_insert_and_map`
     - `exists_field_to_sparse`
     - `get_field_to_sparse_map`
-    - `stride_map`
 - CoordiateFieldMap
     - `quantize_coordinates`
+- TensorField binary ops fix
 
 ## [0.5.0] - 2020-12-24
 

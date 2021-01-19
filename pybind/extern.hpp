@@ -769,6 +769,7 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
       .def("get_coordinates", &manager_type::get_coordinates)
       .def("get_coordinate_field", &manager_type::get_coordinate_field)
       .def("get_coordinate_map_keys", &manager_type::get_coordinate_map_keys)
+      .def("field_to_sparse_keys", &manager_type::field_to_sparse_keys)
       .def("size", py::overload_cast<minkowski::CoordinateMapKey const *>(
                        &manager_type::size, py::const_))
       .def("get_random_string_id", &manager_type::get_random_string_id)
