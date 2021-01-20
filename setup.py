@@ -90,20 +90,32 @@ def run_command(*args):
     subprocess.check_call(args)
 
 
-def _argparse(pattern, argv, is_flag=True):
+def _argparse(pattern, argv, is_flag=True, is_list=False):
     if is_flag:
         found = pattern in argv
         if found:
             argv.remove(pattern)
         return found, argv
     else:
-        arr = [arg for arg in argv if pattern in arg]
-        if len(arr) == 0:  # not found
-            return False, argv
+        arr = [arg for arg in argv if pattern == arg.split("=")[0]]
+        if is_list:
+            if len(arr) == 0:  # not found
+                return False, argv
+            else:
+                assert "=" in arr[0], f"{arr[0]} requires a value."
+                argv.remove(arr[0])
+                val = arr[0].split("=")[1]
+                if ',' in val:
+                    return val.split(','), argv
+                else:
+                    return [val], argv
         else:
-            assert "=" in arr[0], f"{arr[0]} requires a value."
-            argv.remove(arr[0])
-            return arr[0].split("=")[1], argv
+            if len(arr) == 0:  # not found
+                return False, argv
+            else:
+                assert "=" in arr[0], f"{arr[0]} requires a value."
+                argv.remove(arr[0])
+                return arr[0].split("=")[1], argv
 
 
 run_command("rm", "-rf", "build")
@@ -124,8 +136,8 @@ if FORCE_CUDA:
 # args with return value
 CUDA_HOME, argv = _argparse("--cuda_home", argv, False)
 BLAS, argv = _argparse("--blas", argv, False)
-BLAS_INCLUDE_DIRS, argv = _argparse("--blas_include_dirs", argv, False)
-BLAS_LIBRARY_DIRS, argv = _argparse("--blas_library_dirs", argv, False)
+BLAS_INCLUDE_DIRS, argv = _argparse("--blas_include_dirs", argv, False, is_list=True)
+BLAS_LIBRARY_DIRS, argv = _argparse("--blas_library_dirs", argv, False, is_list=True)
 MAX_COMPILATION_THREADS = 12
 
 Extension = CUDAExtension
@@ -169,7 +181,7 @@ if FAST_MATH:
 
 BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise
-    assert BLAS in BLAS_LIST
+    assert BLAS in BLAS_LIST, f"Blas option {BLAS} not in valid options {BLAS_LIST}"
     if BLAS == "mkl":
         libraries.append("mkl_rt")
     else:

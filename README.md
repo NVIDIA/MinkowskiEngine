@@ -9,8 +9,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 ## News
 
-- 2020-12-24 v0.5 is now available!
-- 2020-08-18 v0.5 beta version is now available! [The speedup compared with v0.4.3 ranges from x2 to x5 depending on the network architectures](https://github.com/chrischoy/MinkowskiEngineBenchmark). Please install with the following command. The migration guide from v0.4 to v0.5 is available at [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Migration-Guide-from-v0.4.x-to-0.5.x). Feel free to update the wiki page to add and update any discrepancies you see.
+- 2020-12-24 v0.5 is now available! The new version provides CUDA accelerations for all coordinate management functions.
 
 ## Example Networks
 
@@ -106,9 +105,17 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 ```
 conda create -n py3-mink python=3.8
 conda activate py3-mink
-conda install openblas-devel numpy mkl-include mkl -c anaconda
+
 conda install pytorch -c pytorch
-pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps
+conda install openblas-devel -c anaconda
+
+# Install MinkowskiEngine
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option="--blas_include_dirs=${CONDA_PREFIX}/include" --install-option="--blas=openblas"
+
+# Or if you want local MinkowskiEngine
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
+cd MinkowskiEngine
+python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openblas
 ```
 
 ### System Python
