@@ -99,8 +99,7 @@ class MinkowskiBatchNorm(Module):
 
 
 class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
-    r"""A batch normalization layer with multi GPU synchronization.
-    """
+    r"""A batch normalization layer with multi GPU synchronization."""
 
     def __init__(
         self,
@@ -123,11 +122,19 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
 
     def forward(self, input):
         output = self.bn(input.F)
-        return SparseTensor(
-            output,
-            coordinate_map_key=input.coordinate_map_key,
-            coordinate_manager=input.coordinate_manager,
-        )
+        if isinstance(input, TensorField):
+            return TensorField(
+                output,
+                coordinate_field_map_key=input.coordinate_field_map_key,
+                coordinate_manager=input.coordinate_manager,
+                quantization_mode=input.quantization_mode,
+            )
+        else:
+            return SparseTensor(
+                output,
+                coordinate_map_key=input.coordinate_map_key,
+                coordinate_manager=input.coordinate_manager,
+            )
 
     @classmethod
     def convert_sync_batchnorm(cls, module, process_group=None):
@@ -146,10 +153,10 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
 
         Example::
 
-            >>> # Network with nn.BatchNorm layer
+            >>> # Network with MinkowskiBatchNorm layer
             >>> module = torch.nn.Sequential(
-            >>>            torch.nn.Linear(20, 100),
-            >>>            torch.nn.BatchNorm1d(100)
+            >>>            MinkowskiLinear(20, 100),
+            >>>            MinkowskiBatchNorm1d(100)
             >>>          ).cuda()
             >>> # creating process group (optional)
             >>> # process_ids is a list of int identifying rank ids.
@@ -168,14 +175,14 @@ class MinkowskiSyncBatchNorm(MinkowskiBatchNorm):
                 process_group,
             )
             if module.bn.affine:
-                module_output.bn.weight.data = module.bn.weight.data.clone().detach()
-                module_output.bn.bias.data = module.bn.bias.data.clone().detach()
-                # keep reuqires_grad unchanged
-                module_output.bn.weight.requires_grad = module.bn.weight.requires_grad
-                module_output.bn.bias.requires_grad = module.bn.bias.requires_grad
+                with torch.no_grad():
+                    module_output.bn.weight = module.bn.weight
+                    module_output.bn.bias = module.bn.bias
             module_output.bn.running_mean = module.bn.running_mean
             module_output.bn.running_var = module.bn.running_var
             module_output.bn.num_batches_tracked = module.bn.num_batches_tracked
+            if hasattr(module, "qconfig"):
+                module_output.bn.qconfig = module.bn.qconfig
         for name, child in module.named_children():
             module_output.add_module(
                 name, cls.convert_sync_batchnorm(child, process_group)
@@ -194,9 +201,7 @@ class MinkowskiInstanceNormFunction(Function):
         coords_manager: CoordinateManager = None,
     ):
         if glob_coords_key is None:
-            glob_coords_key = CoordinateMapKey(
-                in_coords_key.get_coordinate_size()
-            )
+            glob_coords_key = CoordinateMapKey(in_coords_key.get_coordinate_size())
 
         gpooling_mode = PoolingMode.GLOBAL_AVG_POOLING_KERNEL
         gpool_avg_forward = get_minkowski_function("GlobalPoolingForward", in_feat)
@@ -355,9 +360,7 @@ class MinkowskiStableInstanceNorm(MinkowskiModuleBase):
 
 
 class MinkowskiInstanceNorm(MinkowskiModuleBase):
-    r"""A instance normalization layer for a sparse tensor.
-
-    """
+    r"""A instance normalization layer for a sparse tensor."""
 
     def __init__(self, num_features):
         r"""
