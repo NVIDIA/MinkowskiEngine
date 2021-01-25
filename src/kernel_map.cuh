@@ -116,7 +116,9 @@ public:
   }; // end contiguous_memory
 
 public:
-  gpu_kernel_map() : kernels{*this}, in_maps{*this}, out_maps{*this} {
+  gpu_kernel_map()
+      : m_memory_size_byte{0},
+        m_capacity{0}, kernels{*this}, in_maps{*this}, out_maps{*this} {
     LOG_DEBUG("Initialized gpu_kernel_map");
   }
   gpu_kernel_map(self_type const &other)

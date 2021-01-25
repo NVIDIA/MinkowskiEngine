@@ -13,6 +13,7 @@
     - `field_to_sparse_insert_and_map`
     - `exists_field_to_sparse`
     - `get_field_to_sparse_map`
+    - fix `kernel_map` with empty coordinate maps
 - CoordiateFieldMap
     - `quantize_coordinates`
 - TensorField binary ops fix

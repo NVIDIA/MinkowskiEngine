@@ -573,6 +573,13 @@ template <> struct swap_in_out_map_functor<cpu_kernel_map> {
   }
 };
 
+template <typename coordinate_type>
+struct empty_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
+                         cpu_kernel_map> {
+
+  cpu_kernel_map operator()() { return cpu_kernel_map{}; }
+};
+
 } // namespace detail
 
 /*
@@ -665,6 +672,13 @@ CoordinateMapManager<
     // +1 for batch index
     ASSERT(kernel_dim + 1 == in_map.coordinate_size(), "kernel size mismatch");
     ASSERT(kernel_dim + 1 == out_map.coordinate_size(), "kernel size mismatch");
+
+    // If either coordinate map is empty
+    if (in_map.size() == 0 || out_map.size() == 0) {
+      return detail::empty_map_functor<coordinate_type, TemplatedAllocator,
+                                       CoordinateMapType, kernel_map_type>()();
+    }
+
     if (!is_transpose) {
       if (is_pool && (kernel_stride == kernel_size)) {
         LOG_DEBUG("generating stride_map");

@@ -589,6 +589,18 @@ struct stride_map_functor {
       stride_type const &kernel);
 };
 
+// a partial specialization functor for stride map generation
+template <typename coordinate_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType,
+          typename kernel_map_type>
+struct empty_map_functor {
+  using stride_type = default_types::stride_type;
+
+  kernel_map_type operator()();
+};
+
 // a partial specialization functor for kernel map in/out swap
 template <typename kernel_map_type> struct swap_in_out_map_functor {
 
