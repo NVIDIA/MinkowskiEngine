@@ -48,6 +48,94 @@ bool is_coordinate_aligned(coordinate<coordinate_type> const &point,
 }
 
 template <typename coordinate_type, typename Dtype, typename MapType>
+std::pair<at::Tensor, at::Tensor>
+field_map_kernel(uint32_t const num_tfield,      //
+                 uint32_t const coordinate_size, //
+                 Dtype const *const p_tfield,    //
+                 MapType const &in_map,          //
+                 default_types::stride_type const &tensor_stride) {
+  constexpr bool is_float32 = std::is_same<Dtype, float>::value;
+  at::ScalarType const float_type =
+      is_float32 ? at::ScalarType::Float : at::ScalarType::Double;
+
+  cpu_in_maps in_maps = initialize_maps<cpu_in_map>(1, num_tfield);
+  cpu_out_maps out_maps = initialize_maps<cpu_out_map>(1, num_tfield);
+
+  uint32_t num_used{0};
+
+  // OMP
+  // size_t stride = max((size_t)100, numElements / (2 *
+  // omp_get_max_threads())); size_t N = (numElements + stride - 1) /
+  // stride;
+
+  // compute the chunk size per thread.
+  // There's a trade-off between the thread initialization overhead and
+  // the job sizes. If some jobs finish earlier than others due to
+  // imbalance in hash distribution, these threads will be idle.
+  const size_t N = 2 * omp_get_max_threads();
+  const size_t stride = (num_tfield + N - 1) / N;
+  LOG_DEBUG("kernel map with", N, "chunks and", stride, "stride.");
+
+#pragma omp parallel for
+  for (uint32_t n = 0; n < N; n++) {
+    // temporary variables for each thread
+    std::vector<coordinate_type> curr_vec(coordinate_size);
+    coordinate<coordinate_type> curr_coordinate(curr_vec.data());
+    uint32_t curr_index_begin;
+
+    for (auto i = stride * n;
+         i < std::min((n + 1) * stride, uint64_t(num_tfield)); ++i) {
+
+      // batch index
+      curr_vec[0] = std::lroundf(p_tfield[i * coordinate_size]);
+      for (uint32_t j = 1; j < coordinate_size; ++j) {
+        auto const curr_tensor_stride = tensor_stride[j - 1];
+        curr_vec[j] =
+            curr_tensor_stride *
+            std::floor(p_tfield[coordinate_size * i + j] / curr_tensor_stride);
+      }
+
+      const auto iter_in = in_map.find(curr_coordinate);
+      // LOG_DEBUG(kernel_ind, ":",
+      //           PtrToString(iter_out->first.data(),
+      //           coordinate_size),
+      //           "->", PtrToString(point.data(),
+      //           coordinate_size));
+      if (iter_in != in_map.end()) {
+#pragma omp atomic capture
+        {
+          curr_index_begin = num_used;
+          num_used += 1;
+        }
+        // Ensure that in_maps and out_maps are resized accordingly
+        in_maps[0][curr_index_begin] = iter_in->second;
+        out_maps[0][curr_index_begin] = i;
+        // LOG_DEBUG(kernel_ind, ":",
+        //           PtrToString(iter_in->first.data(),
+        //           coordinate_size),
+        //           "->",
+        //           PtrToString(iter_out->first.data(),
+        //           coordinate_size));
+      }
+    }
+  }
+
+  auto final_in_map = torch::empty(
+      {num_used},
+      torch::TensorOptions().dtype(torch::kInt32).requires_grad(false));
+  auto final_out_map = torch::empty(
+      {num_used},
+      torch::TensorOptions().dtype(torch::kInt32).requires_grad(false));
+
+  std::copy_n(in_maps[0].data(), num_used,
+              final_in_map.template data_ptr<int>());
+  std::copy_n(out_maps[0].data(), num_used,
+              final_out_map.template data_ptr<int>());
+
+  return std::make_pair(final_in_map, final_out_map);
+}
+
+template <typename coordinate_type, typename Dtype, typename MapType>
 std::vector<at::Tensor> interpolation_map_weight_kernel(
     uint32_t const num_tfield,      //
     uint32_t const coordinate_size, //
@@ -839,6 +927,18 @@ public:
     default:
       ASSERT(false, "Unsupported float type");
     }
+  }
+
+  template <typename coordinate_field_type>
+  std::pair<at::Tensor, at::Tensor>
+  field_map(coordinate_field_type const *p_tfield,
+            size_type const num_tfield) const {
+    return detail::field_map_kernel<coordinate_type, coordinate_field_type,
+                                    map_type>(num_tfield,        //
+                                              m_coordinate_size, //
+                                              p_tfield,          //
+                                              m_map,             //
+                                              base_type::m_tensor_stride);
   }
 
   /*****************************************************************************

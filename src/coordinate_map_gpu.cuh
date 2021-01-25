@@ -91,8 +91,8 @@ public:
   void quantize_coordinates(coordinate_int_type *p_dst_coordinates,
                             stride_type const &tensor_stride) const;
 
-  using base_type::coordinate_data;
   using base_type::const_coordinate_data;
+  using base_type::coordinate_data;
 
   inline size_type size() const noexcept { return m_size; }
   std::string to_string() const {
@@ -239,6 +239,12 @@ public:
                              uint32_t thread_dim = CUDA_NUM_THREADS) const;
   std::vector<at::Tensor>
   interpolation_map_weight(at::Tensor const &tfield) const;
+
+  template <typename coordinate_field_type>
+  std::pair<at::Tensor, at::Tensor>
+  field_map(coordinate_field_type const *p_tfield,
+            size_type const num_tfield) const;
+
   std::vector<at::Tensor>
   union_map(std::vector<std::reference_wrapper<self_type>> const &maps,
             uint32_t thread_dim = CUDA_NUM_THREADS) const;

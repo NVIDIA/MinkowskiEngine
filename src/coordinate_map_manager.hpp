@@ -173,6 +173,10 @@ public:
                                  stride_type const sparse_tensor_stride,
                                  std::string const sparse_string_id = "");
 
+  std::pair<at::Tensor, at::Tensor>
+  field_to_sparse_map(CoordinateMapKey const *p_in_field_map_key,
+                      CoordinateMapKey const *p_out_sparse_map_key);
+
   /*
    * New coordinate map initialzation function.
    *

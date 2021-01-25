@@ -16,6 +16,10 @@
 - CoordiateFieldMap
     - `quantize_coordinates`
 - TensorField binary ops fix
+- MinkowskiSyncBatchNorm
+    - Support tfield
+    - conver sync batchnorm updates
+- TensorField to sparse with coordinate map key
 
 ## [0.5.0] - 2020-12-24
 

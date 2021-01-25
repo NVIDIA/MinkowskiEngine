@@ -757,6 +757,8 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
                &manager_type::to_string, py::const_))
       .def("insert_and_map", &manager_type::insert_and_map)
       .def("insert_field", &manager_type::insert_field)
+      .def("field_to_sparse_map",
+           &manager_type::field_to_sparse_map)
       .def("field_to_sparse_insert_and_map",
            &manager_type::field_to_sparse_insert_and_map)
       .def("exists_field_to_sparse",

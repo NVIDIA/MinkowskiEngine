@@ -144,7 +144,7 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
   // int64_t dim_j = self.size(1);
   int64_t dim_k = mat2.size(1);
 
-  torch::Tensor result = at::empty({dim_k, dim_i}, mat2.options());
+  torch::Tensor result = at::zeros({dim_k, dim_i}, mat2.options());
 
   if ((dim_j == 0) || (dim_k == 0)) {
     return result;

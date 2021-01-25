@@ -1884,6 +1884,65 @@ interpolation_kernel(map_type __restrict__ in_map,                   //
   }
 }
 
+template <typename coordinate_type,
+          typename index_type, //
+          typename float_type, //
+          typename map_type>
+__global__ void
+field_map_kernel(map_type __restrict__ in_map,                   //
+                 index_type const num_threads,                   //
+                 float_type const *__restrict__ p_tfield,        //
+                 index_type *__restrict__ p_in_maps,             //
+                 index_type *__restrict__ p_out_maps,            //
+                 index_type const *__restrict__ p_tensor_stride, //
+                 index_type const unused_map_value,
+                 index_type const coordinate_size) {
+  // coordinate_size * sizeof(index_type) + coordinate_size * sizeof(float_type)
+  // + THREADS * coordinate_size * sizeof(coordinate_type)
+  SharedMemory<float_type> shared;
+  float_type *sh_all = shared.getPointer();
+
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  coordinate_type *sh_coordinate = reinterpret_cast<coordinate_type *>(sh_all);
+  coordinate_type *sh_tmp = sh_coordinate + tx * coordinate_size;
+  index_type *sh_tensor_stride = reinterpret_cast<index_type *>(
+      sh_coordinate + CUDA_NUM_THREADS * coordinate_size);
+
+  auto const equal = in_map.get_key_equal();
+
+  for (index_type i = tx; i < coordinate_size - 1; i += blockDim.x) {
+    sh_tensor_stride[i] = p_tensor_stride[i];
+  }
+
+  __syncthreads();
+
+  index_type const offset = coordinate_size * x;
+
+  if (x < num_threads) {
+    // iterate over values
+    float_type const *curr_tfield = p_tfield + offset;
+
+    // batch index
+    sh_tmp[0] = lrint(curr_tfield[0]);
+    for (uint32_t j = coordinate_size - 1; j > 0; --j) {
+      index_type curr_tensor_stride = sh_tensor_stride[j - 1];
+      sh_tmp[j] =
+          floor(curr_tfield[j] / curr_tensor_stride) * curr_tensor_stride;
+    }
+
+    auto const &in_result = in_map.find(coordinate<coordinate_type>(sh_tmp));
+    if (in_result != in_map.end()) {
+      p_in_maps[x] = (*in_result).second;
+      p_out_maps[x] = x;
+    } else {
+      p_in_maps[x] = unused_map_value;
+    }
+  }
+}
+
 // interpolation map inst
 template <typename coordinate_type, typename index_type, typename size_type,
           typename field_type, typename map_type,
@@ -1972,6 +2031,79 @@ interpolation_map_weight_tfield_type(uint32_t const num_tfield,              //
   return {final_in_map, final_out_map, final_weights};
 }
 
+// interpolation map inst
+template <typename coordinate_type, typename index_type, typename size_type,
+          typename field_type, typename map_type, typename ByteAllocatorType>
+std::pair<at::Tensor, at::Tensor>
+field_map_type(uint32_t const num_tfield,              //
+               uint32_t const coordinate_size,         //
+               index_type const unused_key,            //
+               field_type const *const p_tfield,       //
+               map_type &map,                          //
+               size_type const *const p_tensor_stride, //
+               ByteAllocatorType const &byte_allocator) {
+  size_type num_threads = num_tfield;
+  LOG_DEBUG("num_threads:", num_threads);
+
+  index_type *d_in_map = reinterpret_cast<index_type *>(
+      byte_allocator.allocate(num_threads * sizeof(index_type)));
+  index_type *d_out_map = reinterpret_cast<index_type *>(
+      byte_allocator.allocate(num_threads * sizeof(index_type)));
+
+  size_type shared_memory_size_in_bytes =
+      coordinate_size * CUDA_NUM_THREADS * sizeof(coordinate_type) +
+      coordinate_size * sizeof(index_type);
+  LOG_DEBUG("Shared memory size:", shared_memory_size_in_bytes);
+  field_map_kernel<coordinate_type, index_type, field_type, map_type>
+      <<<GET_BLOCKS(num_threads, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
+         shared_memory_size_in_bytes>>>(map,             //
+                                        num_threads,     //
+                                        p_tfield,        //
+                                        d_in_map,        //
+                                        d_out_map,       //
+                                        p_tensor_stride, //
+                                        unused_key,      //
+                                        coordinate_size);
+
+  // remove unused_keys
+  auto valid_begin =
+      thrust::make_zip_iterator(thrust::make_tuple(d_in_map, d_out_map));
+  size_type const number_of_valid =
+      thrust::remove_if(thrust::device, //
+                        valid_begin,    //
+                        thrust::make_zip_iterator(
+                            thrust::make_tuple(d_in_map + num_threads, //
+                                               d_out_map + num_threads)),
+                        detail::is_first<index_type>(unused_key)) -
+      valid_begin;
+  LOG_DEBUG("number_of_valid:", number_of_valid);
+
+  auto curr_device = at::cuda::current_device();
+
+  auto tfield_options = torch::TensorOptions({at::kCUDA, curr_device})
+                            .dtype(torch::kInt32)
+                            .requires_grad(false);
+
+  auto final_in_map = torch::empty({number_of_valid}, tfield_options);
+  auto final_out_map = torch::empty({number_of_valid}, tfield_options);
+
+  if (number_of_valid > 0) {
+    CUDA_CHECK(cudaMemcpy(final_in_map.template data_ptr<int32_t>(), d_in_map,
+                          number_of_valid * sizeof(int32_t),
+                          cudaMemcpyHostToDevice));
+
+    CUDA_CHECK(cudaMemcpy(final_out_map.template data_ptr<int32_t>(), d_out_map,
+                          number_of_valid * sizeof(int32_t),
+                          cudaMemcpyHostToDevice));
+  }
+
+  byte_allocator.deallocate((char *)d_in_map, num_threads * sizeof(index_type));
+  byte_allocator.deallocate((char *)d_out_map,
+                            num_threads * sizeof(index_type));
+
+  return {final_in_map, final_out_map};
+}
+
 } // namespace detail
 
 template <typename coordinate_type,
@@ -2017,6 +2149,28 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::interpolation_map_weight(
   default:
     ASSERT(false, "Unsupported float type");
   }
+}
+
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+template <typename coordinate_field_type>
+std::pair<at::Tensor, at::Tensor>
+CoordinateMapGPU<coordinate_type, TemplatedAllocator>::field_map(
+    coordinate_field_type const *p_tfield, size_type const num_tfield) const {
+  index_type const unused_key = std::numeric_limits<index_type>::max();
+
+  LOG_DEBUG("map size", m_size);
+
+  return detail::field_map_type<coordinate_type, index_type, size_type,
+                                coordinate_field_type, map_type,
+                                TemplatedAllocator<char>>(
+      num_tfield,                                              //
+      m_coordinate_size,                                       //
+      unused_key,                                              //
+      p_tfield,                                                //
+      *m_map,                                                  //
+      thrust::raw_pointer_cast(m_device_tensor_stride.data()), //
+      m_byte_allocator);
 }
 
 /**
@@ -2162,5 +2316,15 @@ CoordinateMapGPU<default_types::dcoordinate_type, detail::c10_allocator>::
     insert_and_map<false>(
         coordinate_iterator<default_types::dcoordinate_type> key_first,
         coordinate_iterator<default_types::dcoordinate_type> key_last);
+
+template std::pair<at::Tensor, at::Tensor>
+CoordinateMapGPU<default_types::dcoordinate_type, detail::default_allocator>::
+    field_map<float>(float const *p_tfield,
+                     default_types::size_type const num_tfield) const;
+
+template std::pair<at::Tensor, at::Tensor>
+CoordinateMapGPU<default_types::dcoordinate_type, detail::c10_allocator>::
+    field_map<float>(float const *p_tfield,
+                     default_types::size_type const num_tfield) const;
 
 } // namespace minkowski

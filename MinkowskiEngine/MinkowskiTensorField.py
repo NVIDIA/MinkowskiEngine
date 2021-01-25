@@ -251,23 +251,34 @@ class TensorField(Tensor):
         return self._manager.get_coordinate_field(self.coordinate_field_map_key)
 
     def sparse(
-        self, tensor_stride: Union[int, Sequence, np.array] = 1, quantization_mode=None
+        self,
+        tensor_stride: Union[int, Sequence, np.array] = 1,
+        coordinate_map_key: CoordinateMapKey = None,
+        quantization_mode=None,
     ):
         r"""Converts the current sparse tensor field to a sparse tensor."""
         if quantization_mode is None:
             quantization_mode = self.quantization_mode
 
-        tensor_stride = convert_to_int_list(tensor_stride, self.D)
+        if coordinate_map_key is None:
+            tensor_stride = convert_to_int_list(tensor_stride, self.D)
 
-        sparse_tensor_key, (
-            unique_index,
-            inverse_mapping,
-        ) = self._manager.field_to_sparse_insert_and_map(
-            self.coordinate_field_map_key,
-            tensor_stride,
-        )
-
-        self._inverse_mapping[sparse_tensor_key] = inverse_mapping
+            coordinate_map_key, (
+                unique_index,
+                inverse_mapping,
+            ) = self._manager.field_to_sparse_insert_and_map(
+                self.coordinate_field_map_key,
+                tensor_stride,
+            )
+            N_rows = len(unique_index)
+        else:
+            # sparse index, field index
+            inverse_mapping, unique_index = self._manager.field_to_sparse_map(
+                self.coordinate_field_map_key,
+                coordinate_map_key,
+            )
+            N_rows = self._manager.size(coordinate_map_key)
+        self._inverse_mapping[coordinate_map_key] = inverse_mapping
 
         if self.quantization_mode in [
             SparseTensorQuantizationMode.UNWEIGHTED_SUM,
@@ -281,7 +292,7 @@ class TensorField(Tensor):
                 device=inverse_mapping.device,
             )
             vals = torch.ones(N, dtype=self._F.dtype, device=self._F.device)
-            size = torch.Size([len(unique_index), len(inverse_mapping)])
+            size = torch.Size([N_rows, len(inverse_mapping)])
             features = spmm.apply(inverse_mapping, cols, vals, size, self._F)
             if (
                 self.quantization_mode
@@ -303,7 +314,7 @@ class TensorField(Tensor):
 
         sparse_tensor = SparseTensor(
             features,
-            coordinate_map_key=sparse_tensor_key,
+            coordinate_map_key=coordinate_map_key,
             coordinate_manager=self._manager,
         )
 

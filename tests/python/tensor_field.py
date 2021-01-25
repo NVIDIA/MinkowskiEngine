@@ -64,7 +64,8 @@ class TestTensorField(unittest.TestCase):
         )
         print(stensor)
         self.assertTrue(
-            {0.5, 2.5, 5.5, 7} == {a for a in stensor.F.squeeze().detach().cpu().numpy()}
+            {0.5, 2.5, 5.5, 7}
+            == {a for a in stensor.F.squeeze().detach().cpu().numpy()}
         )
 
     def test_pcd(self):
@@ -161,3 +162,22 @@ class TestTensorField(unittest.TestCase):
 
         otensor = network(tfield)
         ofield = otensor.slice(tfield)
+        self.assertTrue(len(ofield) == len(tfield))
+
+    def field_to_sparse(self):
+        coords, colors, pcd = load_file("1.ply")
+        voxel_size = 0.02
+        colors = torch.from_numpy(colors).float()
+        bcoords = batched_coordinates([coords / voxel_size], dtype=torch.float32)
+        tfield = TensorField(colors, bcoords)
+
+        network = nn.Sequential(
+            MinkowskiToSparseTensor(),
+            MinkowskiConvolution(3, 8, kernel_size=3, stride=4, dimension=3),
+            MinkowskiReLU(),
+            MinkowskiConvolution(8, 16, kernel_size=3, stride=4, dimension=3),
+        )
+
+        otensor = network(tfield)
+        field_to_sparse = tfield.sparse(coordinate_map_key=otensor.coordinate_map_key)
+        self.assertTrue(len(field_to_sparse.F) == len(otensor))

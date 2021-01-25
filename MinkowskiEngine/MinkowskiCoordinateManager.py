@@ -246,6 +246,11 @@ class CoordinateManager:
     ):
         return self._manager.get_field_to_sparse_map(field_map_key, sparse_map_key)
 
+    def field_to_sparse_map(
+        self, field_map_key: CoordinateMapKey, sparse_map_key: CoordinateMapKey
+    ):
+        return self._manager.field_to_sparse_map(field_map_key, sparse_map_key)
+
     def stride(
         self,
         coordinate_map_key: CoordinateMapKey,

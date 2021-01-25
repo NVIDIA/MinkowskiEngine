@@ -265,6 +265,10 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   return std::make_pair(py_key, map_inverse_map);
 }
 
+/*
+ * Return existing field to sparse map. Raise an except if the map doesn't
+ * exist
+ */
 template <typename coordinate_type, typename coordinate_field_type,
           template <typename C> class TemplatedAllocator,
           template <typename T, template <typename Q> class A>
@@ -280,6 +284,65 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   ASSERT(it != m_field_to_sparse_maps.end(),
          "Field To Sparse Map doesn't exist");
   return it->second;
+}
+
+/*
+ * Create a field to sparse map if it doesn't exist.
+ */
+template <typename coordinate_type, typename coordinate_field_type,
+          template <typename C> class TemplatedAllocator,
+          template <typename T, template <typename Q> class A>
+          class CoordinateMapType>
+std::pair<at::Tensor, at::Tensor>
+CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
+                     CoordinateMapType>::
+    field_to_sparse_map(CoordinateMapKey const *p_in_field_map_key,
+                        CoordinateMapKey const *p_out_sparse_map_key) {
+
+  auto const coordinate_size = p_in_field_map_key->get_coordinate_size();
+  // Basic assertions
+  ASSERT(coordinate_size == p_out_sparse_map_key->get_coordinate_size(),
+         "The coordinate dimension mismatch.", coordinate_size,
+         "!=", p_out_sparse_map_key->get_coordinate_size());
+
+  // Find coordinate field
+  auto const it_field = m_field_coordinates.find(p_in_field_map_key->get_key());
+  ASSERT(it_field != m_field_coordinates.end(), ERROR_MAP_NOT_FOUND);
+  auto const &field_map = it_field->second;
+  auto const it_sparse =
+      m_coordinate_maps.find(p_out_sparse_map_key->get_key());
+  ASSERT(it_sparse != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
+  auto const &sparse_map = it_sparse->second;
+
+  auto options = torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
+
+  if (!detail::is_cpu_coordinate_map<CoordinateMapType>::value) {
+#ifndef CPU_ONLY
+    auto device_id = at::cuda::current_device();
+    options = options.device(torch::kCUDA, device_id);
+#else
+    ASSERT(false, ERROR_CPU_ONLY);
+#endif
+  }
+
+  LOG_DEBUG("initializing a field map with tensor stride:", map_key.first,
+            "string id:", map_key.second);
+
+  auto const map_inverse_map =
+      sparse_map.field_map(field_map.const_coordinate_data(), field_map.size());
+
+  auto const field_to_sparse_map_key =
+      std::pair<coordinate_map_key_type, coordinate_map_key_type>{
+          p_in_field_map_key->get_key(), p_out_sparse_map_key->get_key()};
+
+  auto result = m_field_to_sparse_maps.insert(
+      std::pair<
+          const std::pair<coordinate_map_key_type, coordinate_map_key_type>,
+          const std::pair<at::Tensor, at::Tensor>>{field_to_sparse_map_key,
+                                                   map_inverse_map});
+  LOG_DEBUG("field to sparse tensor map insertion", result.second);
+
+  return map_inverse_map;
 }
 
 /*
