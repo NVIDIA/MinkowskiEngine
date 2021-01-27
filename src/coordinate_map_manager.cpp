@@ -517,17 +517,14 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
                                                    &in_key,
                                                bool const *keep_begin,
                                                bool const *keep_end) {
-
-  ASSERT(exists(in_key), "In map doesn't exist");
-
-  // create a coordinate_map_key
-  coordinate_map_key_type map_key = std::make_pair(in_key.first, "");
-  if (m_coordinate_maps.find(map_key) != m_coordinate_maps.end()) {
-    map_key = get_random_string_id(map_key.first, "");
-  }
-
   auto const map_it = m_coordinate_maps.find(in_key);
   ASSERT(map_it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
+
+  // create a coordinate_map_key
+  coordinate_map_key_type map_key = std::make_pair(in_key.first, "pruned");
+  if (m_coordinate_maps.find(map_key) != m_coordinate_maps.end()) {
+    map_key = get_random_string_id(map_key.first, map_key.second);
+  }
 
   map_type pruned_map = map_it->second.prune(keep_begin, keep_end);
   LOG_DEBUG("pruned map with size:", pruned_map.size(), " inserted");

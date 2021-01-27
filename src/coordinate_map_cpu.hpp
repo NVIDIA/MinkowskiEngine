@@ -787,7 +787,6 @@ public:
     LOG_DEBUG("Generate stride_map with in NNZ:", in_size,
               "out NNZ:", out_coordinate_map.size(),
               "out_tensor_stride:", out_tensor_stride);
-    ASSERT(in_size > out_coordinate_map.size(), "Invalid out_coordinate_map");
     cpu_in_maps in_maps = initialize_maps<cpu_in_map>(1, in_size);
     cpu_out_maps out_maps = initialize_maps<cpu_out_map>(1, in_size);
 

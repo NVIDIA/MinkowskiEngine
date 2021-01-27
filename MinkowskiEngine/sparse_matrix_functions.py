@@ -80,6 +80,7 @@ class MinkowskiSPMMFunction(Function):
     ):
         ctx.save_for_backward(rows, cols, vals)
         ctx.misc_args = size, cuda_spmm_alg
+        mat = mat.contiguous()
         out = spmm(rows, cols, vals, size, mat, cuda_spmm_alg)
         return out
 
@@ -88,6 +89,7 @@ class MinkowskiSPMMFunction(Function):
         rows, cols, vals = ctx.saved_tensors
         size, cuda_spmm_alg = ctx.misc_args
         new_size = torch.Size([size[1], size[0]])
+        grad = grad.contiguous()
         grad = spmm(cols, rows, vals, new_size, grad, cuda_spmm_alg)
         return (
             None,

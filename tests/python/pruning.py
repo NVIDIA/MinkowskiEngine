@@ -66,6 +66,19 @@ class TestPruning(unittest.TestCase):
             )
         )
 
+    def test_device(self):
+        in_channels = 2
+        coords, feats, labels = data_loader(in_channels, batch_size=1)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = SparseTensor(feats, coords, device="cuda")
+        use_feat = torch.rand(feats.size(0)) < 0.5
+        pruning = MinkowskiPruning()
+        output = pruning(input, use_feat.cuda())
+        print(input)
+        print(use_feat)
+        print(output)
+
     def test_empty(self):
         in_channels = 2
         coords, feats, labels = data_loader(in_channels, batch_size=1)

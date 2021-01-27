@@ -21,6 +21,8 @@
     - Support tfield
     - conver sync batchnorm updates
 - TensorField to sparse with coordinate map key
+- Sparse matrix multiplication
+    - force contiguous matrix
 
 ## [0.5.0] - 2020-12-24
 
