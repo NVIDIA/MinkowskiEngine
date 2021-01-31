@@ -54,7 +54,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 - Ubuntu >= 14.04
 - CUDA >= 11.1 or 11.0 > CUDA >= 10.1.243, [No CUDA 11.0](https://github.com/NVIDIA/MinkowskiEngine/issues/290)
-- pytorch >= 1.5
+- pytorch >= 1.7
 - python >= 3.6
 - GCC >= 7
 
