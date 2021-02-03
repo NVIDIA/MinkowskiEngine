@@ -21,12 +21,32 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+import os
+from urllib.request import urlretrieve
+import numpy as np
+
 import torch
 import torch.nn as nn
 from torch.optim import SGD
 
+try:
+    import open3d as o3d
+except ImportError:
+    raise ImportError("Please install open3d with `pip install open3d`.")
+
 import MinkowskiEngine as ME
 from MinkowskiEngine.modules.resnet_block import BasicBlock, Bottleneck
+
+
+if not os.path.isfile("1.ply"):
+    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", "1.ply")
+
+
+def load_file(file_name):
+    pcd = o3d.io.read_point_cloud(file_name)
+    coords = np.array(pcd.points)
+    colors = np.array(pcd.colors)
+    return coords, colors, pcd
 
 
 class ResNetBase(nn.Module):
@@ -50,7 +70,7 @@ class ResNetBase(nn.Module):
             ME.MinkowskiConvolution(
                 in_channels, self.inplanes, kernel_size=3, stride=2, dimension=D
             ),
-            ME.MinkowskiBatchNorm(self.inplanes),
+            ME.MinkowskiInstanceNorm(self.inplanes),
             ME.MinkowskiReLU(inplace=True),
             ME.MinkowskiMaxPooling(kernel_size=2, stride=2, dimension=D),
         )
@@ -73,7 +93,7 @@ class ResNetBase(nn.Module):
             ME.MinkowskiConvolution(
                 self.inplanes, self.inplanes, kernel_size=3, stride=3, dimension=D
             ),
-            ME.MinkowskiBatchNorm(self.inplanes),
+            ME.MinkowskiInstanceNorm(self.inplanes),
             ME.MinkowskiGELU(),
         )
 
@@ -218,10 +238,11 @@ class ResFieldNet101(ResFieldNetBase):
 
 if __name__ == "__main__":
     # loss and network
-    from tests.python.common import data_loader
+    voxel_size = 0.02
+    N_labels = 10
 
     criterion = nn.CrossEntropyLoss()
-    net = ResNet14(in_channels=3, out_channels=5, D=2)
+    net = ResNet14(in_channels=3, out_channels=N_labels, D=3)
     print(net)
 
     # a data loader must return a tuple of coords, features, and labels.
@@ -230,19 +251,25 @@ if __name__ == "__main__":
     net = net.to(device)
     optimizer = SGD(net.parameters(), lr=1e-2)
 
+    coords, colors, pcd = load_file("1.ply")
+    coords = torch.from_numpy(coords)
+    # Get new data
+    coordinates = ME.utils.batched_coordinates(
+        [coords / voxel_size, coords / 2 / voxel_size, coords / 4 / voxel_size],
+        dtype=torch.float32,
+    )
+    features = torch.rand((len(coordinates), 3), device=device)
     for i in range(10):
         optimizer.zero_grad()
 
-        # Get new data
-        coords, feat, label = data_loader()
-        input = ME.SparseTensor(feat, coords, device=device)
-        label = label.to(device)
+        input = ME.SparseTensor(features, coordinates, device=device)
+        dummy_label = torch.randint(0, N_labels, (3,), device=device)
 
         # Forward
         output = net(input)
 
         # Loss
-        loss = criterion(output.F, label)
+        loss = criterion(output.F, dummy_label)
         print("Iteration: ", i, ", Loss: ", loss.item())
 
         # Gradient

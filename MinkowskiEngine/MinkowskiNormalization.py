@@ -199,11 +199,11 @@ class MinkowskiInstanceNormFunction(Function):
         in_coords_key: CoordinateMapKey,
         glob_coords_key: CoordinateMapKey = None,
         coords_manager: CoordinateManager = None,
+        gpooling_mode=PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX,
     ):
         if glob_coords_key is None:
             glob_coords_key = CoordinateMapKey(in_coords_key.get_coordinate_size())
 
-        gpooling_mode = PoolingMode.GLOBAL_AVG_POOLING_KERNEL
         gpool_avg_forward = get_minkowski_function("GlobalPoolingForward", in_feat)
         broadcast_forward = get_minkowski_function("BroadcastForward", in_feat)
 
@@ -245,7 +245,7 @@ class MinkowskiInstanceNormFunction(Function):
             coords_manager._manager,
         )
 
-        ctx.saved_vars = (in_coords_key, glob_coords_key, coords_manager)
+        ctx.saved_vars = (in_coords_key, glob_coords_key, coords_manager, gpooling_mode)
         # For GPU tensors, must use save_for_backward.
         ctx.save_for_backward(inv_std, norm_feat)
         return norm_feat
@@ -253,12 +253,11 @@ class MinkowskiInstanceNormFunction(Function):
     @staticmethod
     def backward(ctx, out_grad):
         # https://kevinzakka.github.io/2016/09/14/batch_normalization/
-        in_coords_key, glob_coords_key, coords_manager = ctx.saved_vars
+        in_coords_key, glob_coords_key, coords_manager, gpooling_mode = ctx.saved_vars
 
         # To prevent the memory leakage, compute the norm again
         inv_std, norm_feat = ctx.saved_tensors
 
-        gpooling_mode = PoolingMode.GLOBAL_AVG_POOLING_KERNEL
         gpool_avg_forward = get_minkowski_function("GlobalPoolingForward", out_grad)
         broadcast_forward = get_minkowski_function("BroadcastForward", out_grad)
 
