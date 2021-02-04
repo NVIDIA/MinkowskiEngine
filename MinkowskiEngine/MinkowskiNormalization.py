@@ -199,7 +199,7 @@ class MinkowskiInstanceNormFunction(Function):
         in_coords_key: CoordinateMapKey,
         glob_coords_key: CoordinateMapKey = None,
         coords_manager: CoordinateManager = None,
-        gpooling_mode=PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX,
+        gpooling_mode=PoolingMode.GLOBAL_AVG_POOLING_KERNEL,
     ):
         if glob_coords_key is None:
             glob_coords_key = CoordinateMapKey(in_coords_key.get_coordinate_size())

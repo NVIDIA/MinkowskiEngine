@@ -74,10 +74,10 @@ std::vector<at::Tensor> InterpolationForwardGPU(
   auto const &out_maps = map_weight[1];
   auto const &weights = map_weight[2];
 
-  auto out_feat = coo_spmm<int>(out_maps, in_maps, weights, tfield.size(0),
-                                in_feat.size(0), in_feat, 1);
+  auto out_feat_pair = coo_spmm<int>(out_maps, in_maps, weights, tfield.size(0),
+                                     in_feat.size(0), in_feat, 1, false);
   // to out_feats
-  map_weight.insert(map_weight.begin(), out_feat);
+  map_weight.insert(map_weight.begin(), out_feat_pair.first);
   return map_weight;
 }
 
@@ -102,8 +102,10 @@ at::Tensor InterpolationBackwardGPU(
   uint32_t const in_nrows = p_map_manager->size(in_key);
 
   LOG_DEBUG("InterpolationBackwardKernelGPU");
-  return coo_spmm<int>(in_maps, out_maps, weights, in_nrows,
-                       grad_out_feat.size(0), grad_out_feat, 1);
+  auto out_feat_pair =
+      coo_spmm<int>(in_maps, out_maps, weights, in_nrows, grad_out_feat.size(0),
+                    grad_out_feat, 1, false);
+  return out_feat_pair.first;
 }
 
 // Forward

@@ -30,7 +30,6 @@ from utils.gradcheck import gradcheck
 
 
 class TestSPMM(unittest.TestCase):
-
     def test(self):
         rows = torch.Tensor([0, 0, 1, 1]).int()
         cols = torch.Tensor([0, 1, 2, 3]).int()
@@ -75,9 +74,9 @@ class TestSPMM(unittest.TestCase):
         if not torch.cuda.is_available():
             return
 
-        rows = torch.Tensor([0, 0, 1, 1]).float().to(0)
-        cols = torch.Tensor([0, 1, 2, 3]).double().to(0)
-        vals = torch.ones(4).float().to(0)
+        rows = torch.cuda.IntTensor([0, 0, 1, 1])
+        cols = torch.cuda.IntTensor([0, 1, 2, 3])
+        vals = torch.ones(4).double().to(0)
         size = [2, 4]
         mat = mat.to(0)
         mat.requires_grad_()

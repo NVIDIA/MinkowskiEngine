@@ -33,6 +33,7 @@ def spmm(
     vals: torch.Tensor,
     size: torch.Size,
     mat: torch.Tensor,
+    return_num_nonzero: bool = False,
     cuda_spmm_alg: int = 1,
 ):
 
@@ -41,11 +42,13 @@ def spmm(
     assert vals.dtype == mat.dtype, "dtype mismatch"
     assert vals.device == mat.device, "device mismatch"
     if mat.is_cuda:
-        assert rows.is_cuda and cols.is_cuda and vals.is_cuda
+        assert (
+            rows.is_cuda and cols.is_cuda and vals.is_cuda
+        ), "All inputs must be on cuda"
         rows = rows.int()
         cols = cols.int()
-        return MEB.coo_spmm_int32(
-            rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
+        result, num_nonzero = MEB.coo_spmm_int32(
+            rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg, return_num_nonzero
         )
 
         # WARNING: TODO: not sorting the vals. Should not be used for generic SPMM
@@ -54,7 +57,10 @@ def spmm(
         #     rows, cols, vals, size[0], size[1], mat, cuda_spmm_alg
         # )
     else:
-        COO = torch.stack((rows, cols), 0,).long()
+        COO = torch.stack(
+            (rows, cols),
+            0,
+        ).long()
         torchSparseTensor = None
         if vals.dtype == torch.float64:
             torchSparseTensor = torch.sparse.DoubleTensor
@@ -64,7 +70,14 @@ def spmm(
             raise ValueError(f"Unsupported data type: {vals.dtype}")
 
         sp = torchSparseTensor(COO, vals, size)
-        return sp.matmul(mat)
+        result = sp.matmul(mat)
+        if return_num_nonzero:
+            num_nonzero = sp.matmul(torch.ones((size[1], 1), dtype=vals.dtype))
+
+    if return_num_nonzero:
+        return result, num_nonzero
+    else:
+        return result
 
 
 class MinkowskiSPMMFunction(Function):
@@ -78,19 +91,34 @@ class MinkowskiSPMMFunction(Function):
         mat: torch.Tensor,
         cuda_spmm_alg: int = 1,
     ):
-        ctx.save_for_backward(rows, cols, vals)
         ctx.misc_args = size, cuda_spmm_alg
+        ctx.save_for_backward(rows, cols, vals)
         mat = mat.contiguous()
-        out = spmm(rows, cols, vals, size, mat, cuda_spmm_alg)
-        return out
+        return spmm(
+            rows,
+            cols,
+            vals,
+            size,
+            mat,
+            return_num_nonzero=False,
+            cuda_spmm_alg=cuda_spmm_alg,
+        )
 
     @staticmethod
     def backward(ctx, grad: torch.Tensor):
-        rows, cols, vals = ctx.saved_tensors
         size, cuda_spmm_alg = ctx.misc_args
+        rows, cols, vals = ctx.saved_tensors
         new_size = torch.Size([size[1], size[0]])
         grad = grad.contiguous()
-        grad = spmm(cols, rows, vals, new_size, grad, cuda_spmm_alg)
+        grad = spmm(
+            cols,
+            rows,
+            vals,
+            new_size,
+            grad,
+            return_num_nonzero=False,
+            cuda_spmm_alg=cuda_spmm_alg,
+        )
         return (
             None,
             None,

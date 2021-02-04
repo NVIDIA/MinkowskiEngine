@@ -23,6 +23,7 @@
 - TensorField to sparse with coordinate map key
 - Sparse matrix multiplication
     - force contiguous matrix
+- Fix AveragePooling cudaErrorMisalignedAddress error for CUDA 10 (#246)
 
 ## [0.5.0] - 2020-12-24
 

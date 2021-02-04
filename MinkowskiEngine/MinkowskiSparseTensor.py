@@ -314,13 +314,14 @@ class SparseTensor(Tensor):
                 self.quantization_mode
                 == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
             ):
-                nums = spmm.apply(
-                    self.inverse_mapping,
-                    cols,
-                    vals,
-                    size,
-                    vals.reshape(N, 1),
-                )
+                with torch.no_grad():
+                    nums = spmm.apply(
+                        self.inverse_mapping,
+                        cols,
+                        vals,
+                        size,
+                        vals.reshape(N, 1),
+                    )
                 features /= nums
         elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
             features = features[self.unique_index]

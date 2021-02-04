@@ -37,6 +37,16 @@
 
 namespace minkowski {
 
+template <typename Itype, typename Dtype>
+__global__ void
+unique_row2num_nonzero(const int n, Dtype *__restrict__ d_num_nonzero,
+                       const Itype *__restrict__ unique_row_ptr,
+                       const Dtype *__restrict__ reduced_val_ptr) {
+  CUDA_KERNEL_LOOP(index, n) {
+    d_num_nonzero[unique_row_ptr[index]] = reduced_val_ptr[index];
+  }
+}
+
 cudaDataType getTensorCudaDataType(torch::Tensor const &self) {
   cudaDataType cuda_data_type;
   switch (self.scalar_type()) {
@@ -54,10 +64,11 @@ cudaDataType getTensorCudaDataType(torch::Tensor const &self) {
 }
 
 template <typename th_int_type>
-torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
-                       torch::Tensor const &vals, int64_t const dim_i,
-                       int64_t const dim_j, torch::Tensor const &mat2,
-                       int64_t spmm_algorithm_id) {
+std::pair<torch::Tensor, torch::Tensor>
+coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
+         torch::Tensor const &vals, int64_t const dim_i, int64_t const dim_j,
+         torch::Tensor const &mat2, int64_t const spmm_algorithm_id,
+         bool const return_num_nonzero) {
 #if defined __HIP_PLATFORM_HCC__
   TORCH_CHECK(false, "spmm sparse-dense is not supported on HIP");
 #elif defined(_WIN32) || defined(_WIN64)
@@ -145,9 +156,13 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
   int64_t dim_k = mat2.size(1);
 
   torch::Tensor result = at::zeros({dim_k, dim_i}, mat2.options());
+  torch::Tensor num_nonzero = at::zeros({0}, mat2.options());
 
-  if ((dim_j == 0) || (dim_k == 0)) {
-    return result;
+  // Create tensors to view just the current set of matrices
+  int64_t const nnz = rows.numel();
+
+  if ((dim_j == 0) || (dim_k == 0) || (nnz == 0)) {
+    return std::make_pair(result, num_nonzero);
   }
 
   // Dense matrices have to be contiguous for cusparseSpMM to work
@@ -156,15 +171,6 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
 
   torch::Scalar beta = 0;
   torch::Scalar alpha = 1;
-
-  // Create tensors to view just the current set of matrices
-  int64_t const nnz = rows.numel();
-
-  if (nnz == 0) {
-    result.transpose_(0, 1);
-    result.zero_();
-    return result;
-  }
 
   cudaDataType cuda_data_type = getTensorCudaDataType(mat2_contig);
   th_int_type *row_indices_ptr =
@@ -267,6 +273,43 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
     CUSPARSE_CHECK(cusparseDestroyDnMat(dense_descr));
     CUSPARSE_CHECK(cusparseDestroyDnMat(result_descr));
 
+    // Num nonzer
+    if (return_num_nonzero) {
+      th_int_type *unique_row_ptr =
+          (th_int_type *)c10::cuda::CUDACachingAllocator::raw_alloc(
+              nnz * sizeof(th_int_type));
+      scalar_t *reduced_val_ptr =
+          (scalar_t *)c10::cuda::CUDACachingAllocator::raw_alloc(
+              nnz * sizeof(scalar_t));
+      torch::Tensor ones = at::zeros({nnz}, mat2.options());
+
+      num_nonzero.resize_({dim_i, 1});
+      num_nonzero.zero_();
+
+      // reduce by key
+      auto end = thrust::reduce_by_key(
+          thrust::device,                                // policy
+          sorted_row_ptr,                                // key begin
+          sorted_row_ptr + nnz,                          // key end
+          reinterpret_cast<scalar_t *>(ones.data_ptr()), // value begin
+          unique_row_ptr,                                // key out begin
+          reduced_val_ptr                                // value out begin
+      );
+
+      int num_unique_keys = end.first - unique_row_ptr;
+      LOG_DEBUG("Num unique keys:", num_unique_keys);
+
+      // Copy the results to the correct output
+      unique_row2num_nonzero<th_int_type, scalar_t>
+          <<<GET_BLOCKS(num_unique_keys, 128), 128>>>(
+              num_unique_keys,
+              reinterpret_cast<scalar_t *>(num_nonzero.data_ptr()),
+              unique_row_ptr, reduced_val_ptr);
+
+      c10::cuda::CUDACachingAllocator::raw_delete((void *)unique_row_ptr);
+      c10::cuda::CUDACachingAllocator::raw_delete((void *)reduced_val_ptr);
+    }
+
     LOG_DEBUG("Dealloc");
     c10::cuda::CUDACachingAllocator::raw_delete((void *)sorted_row_ptr);
     c10::cuda::CUDACachingAllocator::raw_delete((void *)sorted_val_ptr);
@@ -282,14 +325,15 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
 
   CUDA_CHECK(cudaGetLastError());
 
-  return result;
+  return std::make_pair(result, num_nonzero);
 }
 
-template torch::Tensor
+template std::pair<torch::Tensor, torch::Tensor>
 coo_spmm<int32_t>(torch::Tensor const &rows, torch::Tensor const &cols,
                   torch::Tensor const &vals, int64_t const dim_i,
                   int64_t const dim_j, torch::Tensor const &mat2,
-                  int64_t spmm_algorithm_id);
+                  int64_t const spmm_algorithm_id,
+                  bool const return_num_nonzero);
 
 // template torch::Tensor
 // coo_spmm<int64_t>(torch::Tensor const &rows, torch::Tensor const &cols,

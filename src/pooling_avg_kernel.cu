@@ -71,11 +71,21 @@ __global__ void col2row_major_with_div(const int n, const int nrows,
   CUDA_KERNEL_LOOP(index, n) {
     i = index % nrows;
     j = index / nrows;
-    if (num_nonzero[i]) {
+    if (num_nonzero[i] >= 1) {
       rowA[i * ncols + j] = colA[index] / num_nonzero[i];
     } else {
       rowA[i * ncols + j] = colA[index];
     }
+  }
+}
+
+template <typename Itype, typename Dtype>
+__global__ void
+unique_row2num_nonzero(const int n, Dtype *__restrict__ d_num_nonzero,
+                       const Itype *__restrict__ unique_row_ptr,
+                       const Dtype *__restrict__ reduced_val_ptr) {
+  CUDA_KERNEL_LOOP(index, n) {
+    d_num_nonzero[unique_row_ptr[index]] = reduced_val_ptr[index];
   }
 }
 
@@ -109,7 +119,7 @@ set_gradient_nonzero_avg(const int n, const Dtype *d_grad_out, Dtype *d_grad_in,
     int nrow = index / nchannel;
     int ch = index % nchannel;
     int curr_num_nonzero = d_num_nonzero[out_map[nrow]];
-    if (curr_num_nonzero > 0)
+    if (curr_num_nonzero >= 1)
       atomicAdd(&d_grad_in[in_map[nrow] * nchannel + ch],
                 d_grad_out[out_map[nrow] * nchannel + ch] / curr_num_nonzero);
   }
@@ -153,31 +163,21 @@ void NonzeroAvgPoolingForwardKernelGPU(
   /* sparse mm prep */
   size_t const sparse_nnzs =
       kernel_map.in_maps.end() - kernel_map.in_maps.begin();
-  size_t one_vector_size = ((use_avg ? in_nrows : 0) // in_nrows vector
-                            + sparse_nnzs            // coo vals
-                            + nchannel * out_nrows   // out tmp
-                            ) *
-                           sizeof(Dtype);
   static_assert(is_int32, "sort_coo supports int32");
   sort_coo_gpu<ByteAllocator>(cushandle, out_nrows, in_nrows, sparse_nnzs,
                               (int *)kernel_map.out_maps.begin(),
                               (int *)kernel_map.in_maps.begin(), allocator);
 
-  // one vector.
-  d_ones = (Dtype *)allocator.allocate(one_vector_size);
-
+  // feature output
+  d_tmp_out_feat =
+      (Dtype *)allocator.allocate(nchannel * out_nrows * sizeof(Dtype));
+  d_coo_val = (Dtype *)allocator.allocate(sparse_nnzs * sizeof(Dtype));
+  fill<Dtype><<<GET_BLOCKS(sparse_nnzs, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0,
+                stream>>>(sparse_nnzs, d_coo_val, (Dtype)1.);
   if (use_avg) {
-    d_ones = d_ones;                          // in_nrows;
-    d_coo_val = d_ones + in_nrows;            // sparse_nnzs
-    d_tmp_out_feat = d_coo_val + sparse_nnzs; // nchannel * out_nrows
-    fill<Dtype><<<GET_BLOCKS(in_nrows + sparse_nnzs, CUDA_NUM_THREADS),
-                  CUDA_NUM_THREADS, 0, stream>>>(in_nrows + sparse_nnzs, d_ones,
-                                                 (Dtype)1.);
-  } else {
-    d_coo_val = d_ones;                       // sparse_nnzs
-    d_tmp_out_feat = d_coo_val + sparse_nnzs; // nchannel * out_nrows
+    d_ones = (Dtype *)allocator.allocate(sparse_nnzs * sizeof(Dtype));
     fill<Dtype><<<GET_BLOCKS(sparse_nnzs, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
-                  0, stream>>>(sparse_nnzs, d_coo_val, (Dtype)1.);
+                  0, stream>>>(sparse_nnzs, d_ones, (Dtype)1.);
   }
 
 #ifdef DEBUG
@@ -206,6 +206,20 @@ void NonzeroAvgPoolingForwardKernelGPU(
   std::cout << "done printing\n";
 #endif
 
+  Itype *sorted_row_ptr =
+      (Itype *)allocator.allocate(2 * (sparse_nnzs + 1) * sizeof(Itype));
+  Itype *sorted_col_ptr = sorted_row_ptr + sparse_nnzs + 1;
+
+  CUDA_CHECK(cudaMemcpy(sorted_row_ptr, kernel_map.out_maps.begin(),
+                        sparse_nnzs * sizeof(Itype), cudaMemcpyDeviceToDevice));
+  CUDA_CHECK(cudaMemcpy(sorted_col_ptr, kernel_map.in_maps.begin(),
+                        sparse_nnzs * sizeof(Itype), cudaMemcpyDeviceToDevice));
+
+  thrust::sort_by_key(thrust::device,               //
+                      sorted_row_ptr,               // key begin
+                      sorted_row_ptr + sparse_nnzs, // key end
+                      sorted_col_ptr);
+
   //  +---------+ +---+
   //  | spm     | | i |
   //  +---------+ | n |
@@ -219,11 +233,11 @@ void NonzeroAvgPoolingForwardKernelGPU(
   cusparseDnMatDescr_t dense_descr;
   cusparseDnMatDescr_t result_descr;
   CUSPARSE_CHECK(
-      cusparseCreateCoo(&sparse_descr,               //
-                        dim_i, dim_j, sparse_nnzs,   //
-                        kernel_map.out_maps.begin(), // rows
-                        kernel_map.in_maps.begin(),  // cols
-                        d_coo_val,                   // coo vals
+      cusparseCreateCoo(&sparse_descr,             //
+                        dim_i, dim_j, sparse_nnzs, //
+                        sorted_row_ptr,            // rows
+                        sorted_col_ptr,            // cols
+                        d_coo_val,                 // coo vals
                         is_int32 ? CUSPARSE_INDEX_32I : CUSPARSE_INDEX_64I,
                         CUSPARSE_INDEX_BASE_ZERO, cuda_data_type));
 
@@ -237,6 +251,12 @@ void NonzeroAvgPoolingForwardKernelGPU(
                                      (void *)d_tmp_out_feat, //
                                      cuda_data_type, CUSPARSE_ORDER_COL));
 
+  size_t buffer_size = 0;
+  CUSPARSE_CHECK(cusparseSpMM_bufferSize(
+      cushandle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_TRANSPOSE,
+      (void *)&alpha, sparse_descr, dense_descr, (void *)&beta, result_descr,
+      cuda_data_type, mm_alg, &buffer_size));
+
   // buffer size 0 for CUSPARSE_SPMM_COO_ALG1, CUSPARSE_SPMM_COO_ALG3,
   // CUSPARSE_SPMM_COO_ALG4, and CUSPARSE_SPMM_CSR_ALG1
 
@@ -248,31 +268,51 @@ void NonzeroAvgPoolingForwardKernelGPU(
                               (void *)&alpha,                   //
                               sparse_descr, dense_descr,        //
                               (void *)&beta, result_descr,      //
-                              cuda_data_type, mm_alg, 0));
+                              cuda_data_type, mm_alg, &buffer_size));
 #ifdef DEBUG
   CUDA_CHECK(cudaStreamSynchronize(0));
 #endif
   LOG_DEBUG("SPMM");
 
   if (use_avg) {
-    cusparseDnVecDescr_t vecX, vecY;
-    // Create dense vector X
-    CUSPARSE_CHECK(
-        cusparseCreateDnVec(&vecX, in_nrows, d_ones, cuda_data_type));
-    // Create dense vector y
-    CUSPARSE_CHECK(
-        cusparseCreateDnVec(&vecY, out_nrows, d_num_nonzero, cuda_data_type));
+    Itype *unique_row_ptr =
+        (Itype *)allocator.allocate(sparse_nnzs * sizeof(Itype));
+    Dtype *reduced_val_ptr =
+        (Dtype *)allocator.allocate(sparse_nnzs * sizeof(Dtype));
 
-    CUSPARSE_CHECK(cusparseSpMV(cushandle,                        //
-                                CUSPARSE_OPERATION_NON_TRANSPOSE, //
-                                (void *)&alpha,                   //
-                                sparse_descr, vecX,               //
-                                (void *)&beta, vecY,              //
-                                cuda_data_type, CUSPARSE_COOMV_ALG, nullptr));
+    // reduce by key
+    auto end = thrust::reduce_by_key(thrust::device,               // policy
+                                     sorted_row_ptr,               // key begin
+                                     sorted_row_ptr + sparse_nnzs, // key end
+                                     d_ones,         // value begin
+                                     unique_row_ptr, // key out begin
+                                     reduced_val_ptr // value out begin
+    );
+
+    int num_unique_keys = end.first - unique_row_ptr;
+    LOG_DEBUG("Num unique keys:", num_unique_keys);
+
 #ifdef DEBUG
-    CUDA_CHECK(cudaStreamSynchronize(0));
+    Itype *p_unique_row = (Itype *)std::malloc(num_unique_keys * sizeof(Itype));
+    CUDA_CHECK(cudaMemcpy(p_unique_row, unique_row_ptr,
+                          num_unique_keys * sizeof(Itype),
+                          cudaMemcpyDeviceToHost));
+    std::cout << "[" << PtrToString(p_unique_row, num_unique_keys) << "]\n";
+    std::free(p_unique_row);
+
+    Dtype *p_reduced_val =
+        (Dtype *)std::malloc(num_unique_keys * sizeof(Dtype));
+    CUDA_CHECK(cudaMemcpy(p_reduced_val, reduced_val_ptr,
+                          num_unique_keys * sizeof(Dtype),
+                          cudaMemcpyDeviceToHost));
+    std::cout << "[" << PtrToString(p_reduced_val, num_unique_keys) << "]\n";
+    std::free(p_reduced_val);
 #endif
-    LOG_DEBUG("SPMV");
+    // Copy the results to the correct output
+    unique_row2num_nonzero<Itype, Dtype>
+        <<<GET_BLOCKS(num_unique_keys, CUDA_NUM_THREADS), CUDA_NUM_THREADS, 0,
+           stream>>>(num_unique_keys, d_num_nonzero, unique_row_ptr,
+                     reduced_val_ptr);
 
     col2row_major_with_div<Dtype>
         <<<GET_BLOCKS(out_nrows * nchannel, CUDA_NUM_THREADS), CUDA_NUM_THREADS,
@@ -283,8 +323,9 @@ void NonzeroAvgPoolingForwardKernelGPU(
 #endif
     LOG_DEBUG("col2row");
 
-    CUSPARSE_CHECK(cusparseDestroyDnVec(vecX));
-    CUSPARSE_CHECK(cusparseDestroyDnVec(vecY));
+    // Delete tmp spaces
+    allocator.deallocate((char *)unique_row_ptr, sparse_nnzs * sizeof(Itype));
+    allocator.deallocate((char *)reduced_val_ptr, sparse_nnzs * sizeof(Dtype));
   } else {
     col2row_major<Dtype><<<GET_BLOCKS(out_nrows * nchannel, CUDA_NUM_THREADS),
                            CUDA_NUM_THREADS, 0, stream>>>(
@@ -295,7 +336,11 @@ void NonzeroAvgPoolingForwardKernelGPU(
   CUSPARSE_CHECK(cusparseDestroyDnMat(dense_descr));
   CUSPARSE_CHECK(cusparseDestroyDnMat(result_descr));
 
-  allocator.deallocate((char *)d_ones, one_vector_size);
+  allocator.deallocate((char *)d_coo_val, sparse_nnzs * sizeof(Dtype));
+  allocator.deallocate((char *)d_tmp_out_feat,
+                       nchannel * out_nrows * sizeof(Dtype));
+  if (use_avg)
+    allocator.deallocate((char *)d_ones, in_nrows * sizeof(Dtype));
   CUDA_CHECK(cudaStreamSynchronize(0));
 }
 

@@ -298,13 +298,14 @@ class TensorField(Tensor):
                 self.quantization_mode
                 == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
             ):
-                nums = spmm.apply(
-                    inverse_mapping,
-                    cols,
-                    vals,
-                    size,
-                    vals.reshape(N, 1),
-                )
+                with torch.no_grad():
+                    nums = spmm.apply(
+                        inverse_mapping,
+                        cols,
+                        vals,
+                        size,
+                        vals.reshape(N, 1),
+                    )
                 features /= nums
         elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
             features = self._F[unique_index]

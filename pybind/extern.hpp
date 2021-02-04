@@ -491,10 +491,11 @@ at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
 
 #ifndef CPU_ONLY
 template <typename th_int_type>
-torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
-                       torch::Tensor const &vals, int64_t const dim_i,
-                       int64_t const dim_j, torch::Tensor const &mat2,
-                       int64_t spmm_algorithm_id);
+std::pair<torch::Tensor, torch::Tensor>
+coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
+         torch::Tensor const &vals, int64_t const dim_i, int64_t const dim_j,
+         torch::Tensor const &mat2, int64_t const spmm_algorithm_id,
+         bool const return_num_nonzero);
 
 std::pair<size_t, size_t> get_memory_info();
 #endif
@@ -757,8 +758,7 @@ void instantiate_manager(py::module &m, const std::string &dtypestr) {
                &manager_type::to_string, py::const_))
       .def("insert_and_map", &manager_type::insert_and_map)
       .def("insert_field", &manager_type::insert_field)
-      .def("field_to_sparse_map",
-           &manager_type::field_to_sparse_map)
+      .def("field_to_sparse_map", &manager_type::field_to_sparse_map)
       .def("field_to_sparse_insert_and_map",
            &manager_type::field_to_sparse_insert_and_map)
       .def("exists_field_to_sparse",

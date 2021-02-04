@@ -179,5 +179,6 @@ class TestTensorField(unittest.TestCase):
         )
 
         otensor = network(tfield)
+        otensor.F.sum().backward()
         field_to_sparse = tfield.sparse(coordinate_map_key=otensor.coordinate_map_key)
         self.assertTrue(len(field_to_sparse.F) == len(otensor))

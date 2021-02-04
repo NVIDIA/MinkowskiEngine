@@ -325,9 +325,6 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
 #endif
   }
 
-  LOG_DEBUG("initializing a field map with tensor stride:", map_key.first,
-            "string id:", map_key.second);
-
   auto const map_inverse_map =
       sparse_map.field_map(field_map.const_coordinate_data(), field_map.size());
 

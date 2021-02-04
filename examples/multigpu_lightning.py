@@ -196,6 +196,9 @@ if __name__ == "__main__":
     print(f"Testing {num_devices} GPUs.")
 
     # Training
-    pl_module = MinkowskiSegmentationModule(DummyNetwork(3, 20, D=3), lr=args.lr)
+    model = DummyNetwork(3, 20, D=3)
+    if args.ngpus > 1:
+        model = ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm(model)
+    pl_module = MinkowskiSegmentationModule(model, lr=args.lr)
     trainer = Trainer(max_epochs=args.max_epochs, gpus=num_devices, accelerator="ddp")
     trainer.fit(pl_module)
