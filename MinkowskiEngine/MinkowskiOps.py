@@ -209,7 +209,7 @@ def to_sparse(dense_tensor: torch.Tensor, coordinates: torch.Tensor = None):
     return SparseTensor(
         feat_tensor.reshape(-1, dense_tensor.size(1)),
         coordinates,
-        device=dense_tensor.dtype,
+        device=dense_tensor.device,
     )
 
 
