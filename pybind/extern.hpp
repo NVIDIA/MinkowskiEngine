@@ -491,11 +491,16 @@ at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
 
 #ifndef CPU_ONLY
 template <typename th_int_type>
-std::pair<torch::Tensor, torch::Tensor>
-coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
-         torch::Tensor const &vals, int64_t const dim_i, int64_t const dim_j,
-         torch::Tensor const &mat2, int64_t const spmm_algorithm_id,
-         bool const return_num_nonzero);
+torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
+                       torch::Tensor const &vals, int64_t const dim_i,
+                       int64_t const dim_j, torch::Tensor const &mat2,
+                       int64_t const spmm_algorithm_id, bool const is_sorted);
+
+template <typename th_int_type>
+std::vector<torch::Tensor> // output, sorted rows, sorted cols, sorted vals.
+coo_spmm_average(torch::Tensor const &rows, torch::Tensor const &cols,
+                 int64_t const dim_i, int64_t const dim_j,
+                 torch::Tensor const &mat2, int64_t const spmm_algorithm_id);
 
 std::pair<size_t, size_t> get_memory_info();
 #endif
@@ -646,6 +651,8 @@ void non_templated_cpu_func(py::module &m) {
 #ifndef CPU_ONLY
 void non_templated_gpu_func(py::module &m) {
   m.def("coo_spmm_int32", &minkowski::coo_spmm<int32_t>,
+        py::call_guard<py::gil_scoped_release>());
+  m.def("coo_spmm_average_int32", &minkowski::coo_spmm_average<int32_t>,
         py::call_guard<py::gil_scoped_release>());
 }
 #endif

@@ -42,7 +42,7 @@ from MinkowskiTensor import (
     set_global_coordinate_manager,
 )
 from MinkowskiCoordinateManager import CoordinateManager
-from sparse_matrix_functions import MinkowskiSPMMFunction
+from sparse_matrix_functions import MinkowskiSPMMFunction, MinkowskiSPMMAverageFunction
 
 
 class SparseTensor(Tensor):
@@ -296,10 +296,7 @@ class SparseTensor(Tensor):
         self.unique_index = unique_index.long()
         coordinates = coordinates[self.unique_index]
 
-        if self.quantization_mode in [
-            SparseTensorQuantizationMode.UNWEIGHTED_SUM,
-            SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
-        ]:
+        if self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_SUM:
             spmm = MinkowskiSPMMFunction()
             N = len(features)
             cols = torch.arange(
@@ -310,19 +307,16 @@ class SparseTensor(Tensor):
             vals = torch.ones(N, dtype=features.dtype, device=features.device)
             size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
             features = spmm.apply(self.inverse_mapping, cols, vals, size, features)
-            if (
-                self.quantization_mode
-                == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
-            ):
-                with torch.no_grad():
-                    nums = spmm.apply(
-                        self.inverse_mapping,
-                        cols,
-                        vals,
-                        size,
-                        vals.reshape(N, 1),
-                    )
-                features /= nums
+        elif self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+            spmm_avg = MinkowskiSPMMAverageFunction()
+            N = len(features)
+            cols = torch.arange(
+                N,
+                dtype=self.inverse_mapping.dtype,
+                device=self.inverse_mapping.device,
+            )
+            size = torch.Size([len(self.unique_index), len(self.inverse_mapping)])
+            features = spmm_avg.apply(self.inverse_mapping, cols, size, features)
         elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
             features = features[self.unique_index]
         else:

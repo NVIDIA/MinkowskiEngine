@@ -46,7 +46,7 @@ from MinkowskiTensor import (
     COORDINATE_KEY_DIFFERENT_ERROR,
 )
 from MinkowskiSparseTensor import SparseTensor
-from sparse_matrix_functions import MinkowskiSPMMFunction
+from sparse_matrix_functions import MinkowskiSPMMFunction, MinkowskiSPMMAverageFunction
 
 
 class TensorField(Tensor):
@@ -280,10 +280,7 @@ class TensorField(Tensor):
             N_rows = self._manager.size(coordinate_map_key)
         self._inverse_mapping[coordinate_map_key] = inverse_mapping
 
-        if self.quantization_mode in [
-            SparseTensorQuantizationMode.UNWEIGHTED_SUM,
-            SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
-        ]:
+        if self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_SUM:
             spmm = MinkowskiSPMMFunction()
             N = len(self._F)
             cols = torch.arange(
@@ -294,19 +291,16 @@ class TensorField(Tensor):
             vals = torch.ones(N, dtype=self._F.dtype, device=self._F.device)
             size = torch.Size([N_rows, len(inverse_mapping)])
             features = spmm.apply(inverse_mapping, cols, vals, size, self._F)
-            if (
-                self.quantization_mode
-                == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE
-            ):
-                with torch.no_grad():
-                    nums = spmm.apply(
-                        inverse_mapping,
-                        cols,
-                        vals,
-                        size,
-                        vals.reshape(N, 1),
-                    )
-                features /= nums
+        elif self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+            spmm_avg = MinkowskiSPMMAverageFunction()
+            N = len(self._F)
+            cols = torch.arange(
+                N,
+                dtype=inverse_mapping.dtype,
+                device=inverse_mapping.device,
+            )
+            size = torch.Size([N_rows, len(inverse_mapping)])
+            features = spmm_avg.apply(inverse_mapping, cols, size, self._F)
         elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
             features = self._F[unique_index]
         else:

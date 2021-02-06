@@ -199,7 +199,11 @@ import MinkowskiEngine.utils as utils
 
 import MinkowskiEngine.modules as modules
 
-from sparse_matrix_functions import spmm, MinkowskiSPMMFunction
+from sparse_matrix_functions import (
+    spmm,
+    MinkowskiSPMMFunction,
+    MinkowskiSPMMAverageFunction,
+)
 
 
 if not is_cuda_available():

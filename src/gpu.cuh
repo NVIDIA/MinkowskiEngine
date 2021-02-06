@@ -73,6 +73,22 @@ namespace minkowski {
     }                                                                          \
   }
 
+// CUDA: various checks for different function calls.
+#ifdef DEBUG
+#define CUDA_CHECK_DEBUG(condition)                                            \
+  /* Code block avoids redefinition of cudaError_t error */                    \
+  {                                                                            \
+    cudaError_t error = condition;                                             \
+    if (error != cudaSuccess) {                                                \
+      throw std::runtime_error(Formatter()                                     \
+                               << " " << cudaGetErrorString(error) << " at "   \
+                               << __FILE__ << ":" << __LINE__);                \
+    }                                                                          \
+  }
+#else
+#define CUDA_CHECK_DEBUG(...) (void)0
+#endif
+
 #define CUDA_CHECK_ARGS(condition, ...)                                        \
   /* Code block avoids redefinition of cudaError_t error */                    \
   {                                                                            \
