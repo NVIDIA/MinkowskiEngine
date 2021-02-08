@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.5.2]
+
+- spmm average cuda function
+- SparseTensor list operators (cat, mean, sum, var)
+- MinkowskiStack containers
+
 ## [0.5.1]
 
 - v0.5 documentation updates

@@ -188,10 +188,18 @@ from MinkowskiOps import (
     MinkowskiLinear,
     MinkowskiToSparseTensor,
     MinkowskiToDenseTensor,
+    MinkowskiStackCat,
+    MinkowskiStackSum,
+    MinkowskiStackMean,
+    MinkowskiStackVar,
     cat,
+    mean,
+    var,
     to_sparse,
     dense_coordinates,
 )
+
+from MinkowskiOps import _sum as sum
 
 import MinkowskiFunctional
 

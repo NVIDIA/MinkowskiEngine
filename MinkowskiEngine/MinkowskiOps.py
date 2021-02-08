@@ -66,23 +66,11 @@ class MinkowskiLinear(Module):
         return self.__class__.__name__ + s
 
 
-def cat(*sparse_tensors):
-    r"""Concatenate sparse tensors
+def _tuple_operator(*sparse_tensors, operator):
+    if len(sparse_tensors) == 1:
+        assert isinstance(sparse_tensors[0], (tuple, list))
+        sparse_tensors = sparse_tensors[0]
 
-    Concatenate sparse tensor features. All sparse tensors must have the same
-    `coords_key` (the same coordinates). To concatenate sparse tensors with
-    different sparsity patterns, use SparseTensor binary operations, or
-    :attr:`MinkowskiEngine.MinkowskiUnion`.
-
-    Example::
-
-       >>> import MinkowskiEngine as ME
-       >>> sin = ME.SparseTensor(feats, coords)
-       >>> sin2 = ME.SparseTensor(feats2, coordinate_map_key=sin.coordinate_map_key, coords_man=sin.coordinate_manager)
-       >>> sout = UNet(sin)  # Returns an output sparse tensor on the same coordinates
-       >>> sout2 = ME.cat(sin, sin2, sout)  # Can concatenate multiple sparse tensors
-
-    """
     assert (
         len(sparse_tensors) > 1
     ), f"Invalid number of inputs. The input must be at least two len(sparse_tensors) > 1"
@@ -111,7 +99,7 @@ def cat(*sparse_tensors):
         for s in sparse_tensors:
             tens.append(s.F)
         return SparseTensor(
-            torch.cat(tens, dim=1),
+            operator(tens),
             coordinate_map_key=coordinate_map_key,
             coordinate_manager=coordinate_manager,
         )
@@ -139,7 +127,7 @@ def cat(*sparse_tensors):
         for s in sparse_tensors:
             tens.append(s.F)
         return TensorField(
-            torch.cat(tens, dim=1),
+            operator(tens),
             coordinate_field_map_key=coordinate_field_map_key,
             coordinate_manager=coordinate_manager,
         )
@@ -147,6 +135,111 @@ def cat(*sparse_tensors):
         raise ValueError(
             "Invalid data type. The input must be either a list of sparse tensors or a list of tensor fields."
         )
+
+
+def cat(*sparse_tensors):
+    r"""Concatenate sparse tensors
+
+    Concatenate sparse tensor features. All sparse tensors must have the same
+    `coordinate_map_key` (the same coordinates). To concatenate sparse tensors
+    with different sparsity patterns, use SparseTensor binary operations, or
+    :attr:`MinkowskiEngine.MinkowskiUnion`.
+
+    Example::
+
+       >>> import MinkowskiEngine as ME
+       >>> sin = ME.SparseTensor(feats, coords)
+       >>> sin2 = ME.SparseTensor(feats2, coordinate_map_key=sin.coordinate_map_key, coordinate_mananger=sin.coordinate_manager)
+       >>> sout = UNet(sin)  # Returns an output sparse tensor on the same coordinates
+       >>> sout2 = ME.cat(sin, sin2, sout)  # Can concatenate multiple sparse tensors
+
+    """
+    return _tuple_operator(*sparse_tensors, operator=lambda xs: torch.cat(xs, dim=-1))
+
+
+def _sum(*sparse_tensors):
+    r"""Sum sparse tensor features
+
+    Sum all sparse tensor features. All sparse tensors must have the same
+    `coordinate_map_key` (the same coordinates). To sum sparse tensors with
+    different sparsity patterns, use SparseTensor binary operations, or
+    :attr:`MinkowskiEngine.MinkowskiUnion`.
+
+    Example::
+
+       >>> import MinkowskiEngine as ME
+       >>> sin = ME.SparseTensor(feats, coords)
+       >>> sin2 = ME.SparseTensor(feats2, coordinate_map_key=sin.coordinate_map_key, coordinate_manager=sin.coordinate_manager)
+       >>> sout = UNet(sin)  # Returns an output sparse tensor on the same coordinates
+       >>> sout2 = ME.sum(sin, sin2, sout)  # Can concatenate multiple sparse tensors
+
+    """
+
+    def return_sum(xs):
+        tmp = xs[0] + xs[1]
+        for x in xs[2:]:
+            tmp += x
+        return tmp
+
+    return _tuple_operator(*sparse_tensors, operator=lambda xs: return_sum(xs))
+
+
+def mean(*sparse_tensors):
+    r"""Sum sparse tensor features
+
+    Sum all sparse tensor features. All sparse tensors must have the same
+    `coordinate_map_key` (the same coordinates). To sum sparse tensors with
+    different sparsity patterns, use SparseTensor binary operations, or
+    :attr:`MinkowskiEngine.MinkowskiUnion`.
+
+    Example::
+
+       >>> import MinkowskiEngine as ME
+       >>> sin = ME.SparseTensor(feats, coords)
+       >>> sin2 = ME.SparseTensor(feats2, coordinate_map_key=sin.coordinate_map_key, coordinate_manager=sin.coordinate_manager)
+       >>> sout = UNet(sin)  # Returns an output sparse tensor on the same coordinates
+       >>> sout2 = ME.mean(sin, sin2, sout)  # Can concatenate multiple sparse tensors
+
+    """
+
+    def return_mean(xs):
+        tmp = xs[0] + xs[1]
+        for x in xs[2:]:
+            tmp += x
+        return tmp / len(xs)
+
+    return _tuple_operator(*sparse_tensors, operator=lambda xs: return_mean(xs))
+
+
+def var(*sparse_tensors):
+    r"""Sum sparse tensor features
+
+    Sum all sparse tensor features. All sparse tensors must have the same
+    `coordinate_map_key` (the same coordinates). To sum sparse tensors with
+    different sparsity patterns, use SparseTensor binary operations, or
+    :attr:`MinkowskiEngine.MinkowskiUnion`.
+
+    Example::
+
+       >>> import MinkowskiEngine as ME
+       >>> sin = ME.SparseTensor(feats, coords)
+       >>> sin2 = ME.SparseTensor(feats2, coordinate_map_key=sin.coordinate_map_key, coordinate_manager=sin.coordinate_manager)
+       >>> sout = UNet(sin)  # Returns an output sparse tensor on the same coordinates
+       >>> sout2 = ME.var(sin, sin2, sout)  # Can concatenate multiple sparse tensors
+
+    """
+
+    def return_var(xs):
+        tmp = xs[0] + xs[1]
+        for x in xs[2:]:
+            tmp += x
+        mean = tmp / len(xs)
+        var = (xs[0] - mean) ** 2
+        for x in xs[1:]:
+            var += (x - mean) ** 2
+        return var / len(xs)
+
+    return _tuple_operator(*sparse_tensors, operator=lambda xs: return_var(xs))
 
 
 def dense_coordinates(shape: Union[list, torch.Size]):
@@ -310,3 +403,23 @@ class MinkowskiToDenseTensor(MinkowskiModuleBase):
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
+
+
+class MinkowskiStackCat(torch.nn.Sequential):
+    def forward(self, x):
+        return cat([module(x) for module in self])
+
+
+class MinkowskiStackSum(torch.nn.Sequential):
+    def forward(self, x):
+        return _sum([module(x) for module in self])
+
+
+class MinkowskiStackMean(torch.nn.Sequential):
+    def forward(self, x):
+        return mean([module(x) for module in self])
+
+
+class MinkowskiStackVar(torch.nn.Sequential):
+    def forward(self, x):
+        return var([module(x) for module in self])
