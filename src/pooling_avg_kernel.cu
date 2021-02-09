@@ -341,6 +341,9 @@ void NonzeroAvgPoolingForwardKernelGPU(
                        nchannel * out_nrows * sizeof(Dtype));
   if (use_avg)
     allocator.deallocate((char *)d_ones, in_nrows * sizeof(Dtype));
+
+  allocator.deallocate((char *)sorted_row_ptr,
+                       2 * (sparse_nnzs + 1) * sizeof(Itype));
   CUDA_CHECK(cudaStreamSynchronize(0));
 }
 
