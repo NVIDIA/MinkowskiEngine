@@ -115,6 +115,12 @@ const char *cusparseGetErrorString(cusparseStatus_t error) {
   return "<unknown>";
 }
 
+cusparseHandle_t getCurrentCUDASparseHandle() {
+  cusparseHandle_t handle;
+  CUSPARSE_CHECK(cusparseCreate(&handle));
+  return handle;
+}
+
 static std::string format_size(uint64_t size) {
   std::ostringstream os;
   os.precision(2);
