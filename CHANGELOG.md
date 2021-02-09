@@ -5,6 +5,7 @@
 - spmm average cuda function
 - SparseTensor list operators (cat, mean, sum, var)
 - MinkowskiStack containers
+- Replace all at::cuda::getCurrentCUDASparseHandle with custom getCurrentCUDASparseHandle (issue #308)
 
 ## [0.5.1]
 
