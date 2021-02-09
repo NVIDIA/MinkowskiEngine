@@ -135,7 +135,7 @@ std::tuple<at::Tensor, at::Tensor> GlobalPoolingForwardGPU(
       case PoolingMode::GLOBAL_AVG_POOLING_KERNEL: {
         const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
         cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
-        cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+        cusparseHandle_t handle = getCurrentCUDASparseHandle();
         cusparseSetStream(handle, stream);
 
         TemplatedAllocator<char> byte_allocator;

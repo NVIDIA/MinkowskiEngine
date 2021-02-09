@@ -88,7 +88,7 @@ at::Tensor BroadcastForwardGPU(
       torch::empty({in_feat.size(0), in_feat.size(1)}, in_feat.options());
 
   auto stream = at::cuda::getCurrentCUDAStream();
-  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+  cusparseHandle_t handle = getCurrentCUDASparseHandle();
   cusparseSetStream(handle, stream);
 
   AT_DISPATCH_FLOATING_TYPES(
@@ -158,7 +158,7 @@ std::pair<at::Tensor, at::Tensor> BroadcastBackwardGPU(
   const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
 
   auto stream = at::cuda::getCurrentCUDAStream();
-  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+  cusparseHandle_t handle = getCurrentCUDASparseHandle();
   cusparseSetStream(handle, stream);
 
   AT_DISPATCH_FLOATING_TYPES(

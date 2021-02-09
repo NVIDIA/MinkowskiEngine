@@ -186,8 +186,11 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
 
   // Dense matrices have to be contiguous for cusparseSpMM to work
   torch::Tensor const mat2_contig = mat2.contiguous();
+  // Issue 308
   // auto cusparse_handle = at::cuda::getCurrentCUDASparseHandle();
-  auto cusparse_handle = getCurrentCUDASparseHandle();
+  auto stream = at::cuda::getCurrentCUDAStream();
+  cusparseHandle_t cusparse_handle = getCurrentCUDASparseHandle();
+  cusparseSetStream(cusparse_handle, stream);
 
   torch::Scalar beta = 0;
   torch::Scalar alpha = 1;
@@ -443,8 +446,11 @@ coo_spmm_average(torch::Tensor const &rows, torch::Tensor const &cols,
 
   // Dense matrices have to be contiguous for cusparseSpMM to work
   torch::Tensor const mat2_contig = mat2.contiguous();
+  // Issue 308
   // auto cusparse_handle = at::cuda::getCurrentCUDASparseHandle();
-  auto cusparse_handle = getCurrentCUDASparseHandle();
+  auto stream = at::cuda::getCurrentCUDAStream();
+  cusparseHandle_t cusparse_handle = getCurrentCUDASparseHandle();
+  cusparseSetStream(cusparse_handle, stream);
 
   torch::Scalar beta = 0;
   torch::Scalar alpha = 1;

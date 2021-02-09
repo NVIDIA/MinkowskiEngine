@@ -111,7 +111,7 @@ std::pair<at::Tensor, at::Tensor> LocalPoolingTransposeForwardGPU(
   at::Tensor num_nonzero =
       torch::empty({0}, in_feat.options().requires_grad(false));
 
-  cusparseHandle_t handle = at::cuda::getCurrentCUDASparseHandle();
+  cusparseHandle_t handle = getCurrentCUDASparseHandle();
   cusparseSetStream(handle, stream);
 
   AT_DISPATCH_FLOATING_TYPES(
