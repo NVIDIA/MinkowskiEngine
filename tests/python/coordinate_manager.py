@@ -107,6 +107,36 @@ class CoordinateManagerTestCase(unittest.TestCase):
         )
         # print(manager.stride_map(key, stride_key))
 
+    def test_kernel_map(self):
+
+        coordinates = torch.IntTensor(
+            [[0, 1], [0, 1], [0, 2], [0, 2], [1, 0], [1, 0], [1, 1]]
+        )
+
+        manager = ME.CoordinateManager(
+            D=1, coordinate_map_type=ME.CoordinateMapType.CPU
+        )
+        key, (unique_map, inverse_map) = manager.insert_and_map(coordinates, [1])
+
+        # Create a strided map
+        stride_key = manager.stride(key, [4])
+        print(manager.get_coordinates(key))
+        print(manager.get_coordinates(stride_key))
+        print(
+            manager.kernel_map(
+                key,
+                stride_key,
+                [4],
+                [4],
+                [1],
+                ME.RegionType.HYPER_CUBE,
+                torch.IntTensor(),
+                False,
+                False,
+            )
+        )
+        # print(manager.stride_map(key, stride_key))
+
     def test_stride_cuda(self):
 
         coordinates = torch.IntTensor(
@@ -136,6 +166,19 @@ class CoordinateManagerTestCase(unittest.TestCase):
         #     )
         # )
         print(manager.stride_map(key, stride_key))
+        print(
+            manager.kernel_map(
+                key,
+                stride_key,
+                [4],
+                [4],
+                [1],
+                ME.RegionType.HYPER_CUBE,
+                torch.IntTensor(),
+                False,
+                False,
+            )
+        )
 
     def test_negative_coords(self):
         coords = torch.IntTensor(

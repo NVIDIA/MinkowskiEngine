@@ -406,8 +406,8 @@ class CoordinateManager:
         kernel_map = self._manager.kernel_map(
             in_key,
             out_key,
-            convert_to_int_list(stride, self.D),  #
             convert_to_int_list(kernel_size, self.D),  #
+            convert_to_int_list(stride, self.D),  #
             convert_to_int_list(dilation, self.D),  #
             region_type,
             region_offset,

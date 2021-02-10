@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2021 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -158,7 +159,7 @@ def cat(*sparse_tensors):
 
 
 def _sum(*sparse_tensors):
-    r"""Sum sparse tensor features
+    r"""Compute the sum of sparse tensor features
 
     Sum all sparse tensor features. All sparse tensors must have the same
     `coordinate_map_key` (the same coordinates). To sum sparse tensors with
@@ -185,7 +186,7 @@ def _sum(*sparse_tensors):
 
 
 def mean(*sparse_tensors):
-    r"""Sum sparse tensor features
+    r"""Compute the average of sparse tensor features
 
     Sum all sparse tensor features. All sparse tensors must have the same
     `coordinate_map_key` (the same coordinates). To sum sparse tensors with
@@ -212,7 +213,7 @@ def mean(*sparse_tensors):
 
 
 def var(*sparse_tensors):
-    r"""Sum sparse tensor features
+    r"""Compute the variance of sparse tensor features
 
     Sum all sparse tensor features. All sparse tensors must have the same
     `coordinate_map_key` (the same coordinates). To sum sparse tensors with

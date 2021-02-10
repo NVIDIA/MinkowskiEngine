@@ -687,6 +687,13 @@ CoordinateMapManager<
         LOG_DEBUG("generating kernel map");
 
         // Default kernel map
+        LOG_DEBUG(
+            "kernel region with kernel: ",
+            PtrToString(kernel_size.data(), in_map.coordinate_size() - 1));
+        LOG_DEBUG(
+            "kernel region with dilation: ",
+            PtrToString(kernel_dilation.data(), in_map.coordinate_size() - 1));
+
         auto kernel_region = cpu_kernel_region<coordinate_type>(
             region_type,                       //
             in_map.coordinate_size(),          //
