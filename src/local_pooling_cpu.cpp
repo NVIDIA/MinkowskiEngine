@@ -92,10 +92,12 @@ LocalPoolingForwardCPU(at::Tensor const &in_feat,
 
     AT_DISPATCH_FLOATING_TYPES(
         in_feat.scalar_type(), "local_pooling_forward_cpu", [&] {
-          MaxPoolingForwardKernelCPU<scalar_t, int>(
+          MaxPoolingForwardKernelCPU<scalar_t, int32_t,
+                                     default_types::index_type>(
               in_feat.template data_ptr<scalar_t>(),
-              out_feat.template data_ptr<scalar_t>(), max_index.data_ptr<int>(),
-              in_feat.size(1), in_out.first, in_out.second, out_nrows);
+              out_feat.template data_ptr<scalar_t>(),
+              max_index.data_ptr<int32_t>(), in_feat.size(1), in_out.first,
+              in_out.second, out_nrows);
         });
     return std::make_pair(out_feat, max_index);
   } else {
@@ -162,10 +164,10 @@ LocalPoolingBackwardCPU(at::Tensor const &in_feat,                         //
   if (pooling_mode == PoolingMode::LOCAL_MAX_POOLING) {
     AT_DISPATCH_FLOATING_TYPES(
         in_feat.scalar_type(), "local_pooling_backward_cpu", [&] {
-          MaxPoolingBackwardKernelCPU<scalar_t, default_types::index_type>(
+          MaxPoolingBackwardKernelCPU<scalar_t, int32_t>(
               grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
               grad_out_feat.template data_ptr<scalar_t>(),
-              grad_out_feat.size(0), num_nonzero.data_ptr<int>(),
+              grad_out_feat.size(0), num_nonzero.data_ptr<int32_t>(),
               in_feat.size(1));
         });
   } else {
@@ -181,6 +183,54 @@ LocalPoolingBackwardCPU(at::Tensor const &in_feat,                         //
   }
   return grad_in_feat;
 }
+
+// int32
+template void max_pooling_forward_pointer_kernel_cpu<float, int32_t, int32_t>(
+    float const *p_in_feat, float *p_out_feat, int32_t *p_mask_index,
+    size_t const nchannel,
+    int32_t const *const p_in_maps,  //
+    int32_t const *const p_out_maps, //
+    size_t const map_size);
+
+template void max_pooling_forward_pointer_kernel_cpu<double, int32_t, int32_t>(
+    double const *p_in_feat, double *p_out_feat, int32_t *p_mask_index,
+    size_t const nchannel,
+    int32_t const *const p_in_maps,  //
+    int32_t const *const p_out_maps, //
+    size_t const map_size);
+
+template void MaxPoolingBackwardKernelCPU<float, int32_t>(
+    float *p_grad_in_feat, size_t const in_nrows, float const *p_grad_out_feat,
+    size_t const out_nrows, int32_t const *p_mask_index, size_t const nchannel);
+
+template void MaxPoolingBackwardKernelCPU<double, int32_t>(
+    double *p_grad_in_feat, size_t const in_nrows,
+    double const *p_grad_out_feat, size_t const out_nrows,
+    int32_t const *p_mask_index, size_t const nchannel);
+
+// int64
+template void max_pooling_forward_pointer_kernel_cpu<float, int64_t, int64_t>(
+    float const *p_in_feat, float *p_out_feat, int64_t *p_mask_index,
+    size_t const nchannel,
+    int64_t const *const p_in_maps,  //
+    int64_t const *const p_out_maps, //
+    size_t const map_size);
+
+template void max_pooling_forward_pointer_kernel_cpu<double, int64_t, int64_t>(
+    double const *p_in_feat, double *p_out_feat, int64_t *p_mask_index,
+    size_t const nchannel,
+    int64_t const *const p_in_maps,  //
+    int64_t const *const p_out_maps, //
+    size_t const map_size);
+
+template void MaxPoolingBackwardKernelCPU<float, int64_t>(
+    float *p_grad_in_feat, size_t const in_nrows, float const *p_grad_out_feat,
+    size_t const out_nrows, int64_t const *p_mask_index, size_t const nchannel);
+
+template void MaxPoolingBackwardKernelCPU<double, int64_t>(
+    double *p_grad_in_feat, size_t const in_nrows,
+    double const *p_grad_out_feat, size_t const out_nrows,
+    int64_t const *p_mask_index, size_t const nchannel);
 
 template std::pair<at::Tensor, at::Tensor> LocalPoolingForwardCPU<int32_t>(
     at::Tensor const &in_feat,

@@ -489,6 +489,16 @@ at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
                                          int mode);
 */
 
+std::pair<torch::Tensor, torch::Tensor>
+max_pool_fw(torch::Tensor const &in_map,  //
+            torch::Tensor const &out_map, //
+            torch::Tensor const &in_feat, //
+            int const out_nrows, bool const is_sorted);
+
+torch::Tensor max_pool_bw(torch::Tensor const &grad_out_feat, //
+                          torch::Tensor const &mask_index,    //
+                          int const in_nrows);
+
 #ifndef CPU_ONLY
 template <typename th_int_type>
 torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
@@ -646,6 +656,10 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
 void non_templated_cpu_func(py::module &m) {
   m.def("quantize_np", &minkowski::quantize_np);
   m.def("quantize_th", &minkowski::quantize_th);
+  m.def("direct_max_pool_fw", &minkowski::max_pool_fw,
+        py::call_guard<py::gil_scoped_release>());
+  m.def("direct_max_pool_bw", &minkowski::max_pool_bw,
+        py::call_guard<py::gil_scoped_release>());
 }
 
 #ifndef CPU_ONLY

@@ -27,6 +27,7 @@ from typing import Union
 import torch
 from torch.autograd import Function
 
+import MinkowskiEngineBackend._C as _C
 from MinkowskiEngineBackend._C import CoordinateMapKey, PoolingMode
 from MinkowskiSparseTensor import SparseTensor, _get_coordinate_map_key
 from MinkowskiCoordinateManager import CoordinateManager
@@ -742,4 +743,35 @@ class MinkowskiGlobalMaxPooling(MinkowskiGlobalPooling):
             output,
             coordinate_map_key=out_coordinate_map_key,
             coordinate_manager=input.coordinate_manager,
+        )
+
+
+class MinkowskiDirectMaxPoolingFunction(Function):
+    @staticmethod
+    def forward(
+        ctx,
+        in_map: torch.Tensor,
+        out_map: torch.Tensor,
+        in_feat: torch.Tensor,
+        out_nrows: int,
+        is_sorted: bool = False,
+    ):
+        out_feat, max_mask = _C.direct_max_pool_fw(
+            in_map, out_map, in_feat, out_nrows, is_sorted
+        )
+        ctx.in_nrows = in_feat.size(0)
+        ctx.save_for_backward(max_mask)
+        return out_feat
+
+    @staticmethod
+    def backward(ctx, grad_out_feat):
+        grad_out_feat = grad_out_feat.contiguous()
+        max_mask = ctx.saved_tensors[0]
+        grad = _C.direct_max_pool_bw(grad_out_feat, max_mask, ctx.in_nrows)
+        return (
+            None,
+            None,
+            grad,
+            None,
+            None,
         )

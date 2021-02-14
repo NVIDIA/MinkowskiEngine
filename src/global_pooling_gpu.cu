@@ -283,7 +283,7 @@ at::Tensor GlobalPoolingBackwardGPU(
               grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
               grad_out_feat.template data_ptr<scalar_t>(),
               grad_out_feat.size(0), num_nonzero.template data_ptr<int>(),
-              in_feat.size(1), stream);
+              in_feat.size(1));
         });
   }
   return grad_in_feat;

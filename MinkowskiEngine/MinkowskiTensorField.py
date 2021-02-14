@@ -47,6 +47,7 @@ from MinkowskiTensor import (
 )
 from MinkowskiSparseTensor import SparseTensor
 from sparse_matrix_functions import MinkowskiSPMMFunction, MinkowskiSPMMAverageFunction
+from MinkowskiPooling import MinkowskiDirectMaxPoolingFunction
 
 
 class TensorField(Tensor):
@@ -127,6 +128,7 @@ class TensorField(Tensor):
             SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
             SparseTensorQuantizationMode.UNWEIGHTED_SUM,
             SparseTensorQuantizationMode.RANDOM_SUBSAMPLE,
+            SparseTensorQuantizationMode.MAX_POOL,
         ], "invalid quantization mode"
 
         self.quantization_mode = quantization_mode
@@ -280,7 +282,7 @@ class TensorField(Tensor):
             N_rows = self._manager.size(coordinate_map_key)
         self._inverse_mapping[coordinate_map_key] = inverse_mapping
 
-        if self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_SUM:
+        if quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_SUM:
             spmm = MinkowskiSPMMFunction()
             N = len(self._F)
             cols = torch.arange(
@@ -291,7 +293,7 @@ class TensorField(Tensor):
             vals = torch.ones(N, dtype=self._F.dtype, device=self._F.device)
             size = torch.Size([N_rows, len(inverse_mapping)])
             features = spmm.apply(inverse_mapping, cols, vals, size, self._F)
-        elif self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
+        elif quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE:
             spmm_avg = MinkowskiSPMMAverageFunction()
             N = len(self._F)
             cols = torch.arange(
@@ -301,8 +303,18 @@ class TensorField(Tensor):
             )
             size = torch.Size([N_rows, len(inverse_mapping)])
             features = spmm_avg.apply(inverse_mapping, cols, size, self._F)
-        elif self.quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
+        elif quantization_mode == SparseTensorQuantizationMode.RANDOM_SUBSAMPLE:
             features = self._F[unique_index]
+        elif quantization_mode == SparseTensorQuantizationMode.MAX_POOL:
+            N = len(self._F)
+            in_map = torch.arange(
+                N,
+                dtype=inverse_mapping.dtype,
+                device=inverse_mapping.device,
+            )
+            features = MinkowskiDirectMaxPoolingFunction().apply(
+                in_map, inverse_mapping, self._F, N_rows
+            )
         else:
             # No quantization
             raise ValueError("Invalid quantization mode")

@@ -7,6 +7,8 @@
 - MinkowskiStack containers
 - Replace all at::cuda::getCurrentCUDASparseHandle with custom getCurrentCUDASparseHandle (issue #308)
 - fix coordinate manager kernel map python function
+- direct max pool
+    - SparseTensorQuantizationMode.MAX_POOL
 
 ## [0.5.1]
 

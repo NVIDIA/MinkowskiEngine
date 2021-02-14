@@ -158,10 +158,11 @@ GlobalPoolingForwardCPU(at::Tensor const &in_feat,
         const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
         AT_DISPATCH_FLOATING_TYPES(
             in_feat.scalar_type(), "global_pooling_forward_cpu", [&] {
-              MaxPoolingForwardKernelCPU<scalar_t, int>(
+              MaxPoolingForwardKernelCPU<scalar_t, int32_t,
+                                         default_types::index_type>(
                   in_feat.template data_ptr<scalar_t>(),
                   out_feat.template data_ptr<scalar_t>(),
-                  max_index.template data_ptr<int>(), in_feat.size(1),
+                  max_index.template data_ptr<int32_t>(), in_feat.size(1),
                   in_outs.first, in_outs.second, batch_size);
             });
       } break;
@@ -255,10 +256,10 @@ GlobalPoolingBackwardCPU(at::Tensor const &in_feat, at::Tensor &grad_out_feat,
     grad_in_feat.zero_();
     AT_DISPATCH_FLOATING_TYPES(
         in_feat.scalar_type(), "global_pooling_backward_cpu", [&] {
-          MaxPoolingBackwardKernelCPU<scalar_t, int>(
+          MaxPoolingBackwardKernelCPU<scalar_t, int32_t>(
               grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
               grad_out_feat.template data_ptr<scalar_t>(),
-              grad_out_feat.size(0), num_nonzero.template data_ptr<int>(),
+              grad_out_feat.size(0), num_nonzero.template data_ptr<int32_t>(),
               in_feat.size(1));
         });
   }

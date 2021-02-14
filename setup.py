@@ -105,8 +105,8 @@ def _argparse(pattern, argv, is_flag=True, is_list=False):
                 assert "=" in arr[0], f"{arr[0]} requires a value."
                 argv.remove(arr[0])
                 val = arr[0].split("=")[1]
-                if ',' in val:
-                    return val.split(','), argv
+                if "," in val:
+                    return val.split(","), argv
                 else:
                     return [val], argv
         else:
@@ -229,6 +229,7 @@ SOURCE_SETS = {
             "pruning_cpu.cpp",
             "interpolation_cpu.cpp",
             "quantization.cpp",
+            "direct_max_pool.cpp",
         ],
         ["pybind/minkowski.cpp"],
         ["-DCPU_ONLY"],
@@ -255,6 +256,7 @@ SOURCE_SETS = {
             "spmm.cu",
             "gpu.cu",
             "quantization.cpp",
+            "direct_max_pool.cpp",
         ],
         ["pybind/minkowski.cu"],
         [],
@@ -335,7 +337,7 @@ setup(
     ],
     zip_safe=False,
     classifiers=[
-        # https://pypi.org/classifiers/
+        # https: // pypi.org/classifiers/
         "Environment :: Console",
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

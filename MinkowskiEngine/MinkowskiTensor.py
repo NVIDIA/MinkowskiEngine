@@ -55,6 +55,7 @@ class SparseTensorQuantizationMode(Enum):
     UNWEIGHTED_AVERAGE = 1
     UNWEIGHTED_SUM = 2
     NO_QUANTIZATION = 3
+    MAX_POOL = 4
 
 
 _sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER

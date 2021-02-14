@@ -120,6 +120,7 @@ from MinkowskiPooling import (
     MinkowskiGlobalSumPooling,
     MinkowskiGlobalAvgPooling,
     MinkowskiGlobalMaxPooling,
+    MinkowskiDirectMaxPoolingFunction,
 )
 
 from MinkowskiBroadcast import (
