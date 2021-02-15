@@ -559,7 +559,7 @@ class SparseTensor(Tensor):
 
         if isinstance(X, TensorField):
             return TensorField(
-                self.F[X.inverse_mapping(self.coordinate_map_key)],
+                self.F[X.inverse_mapping(self.coordinate_map_key).long()],
                 coordinate_field_map_key=X.coordinate_field_map_key,
                 coordinate_manager=X.coordinate_manager,
                 quantization_mode=X.quantization_mode,

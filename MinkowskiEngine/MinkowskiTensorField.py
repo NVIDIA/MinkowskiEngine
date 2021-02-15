@@ -361,8 +361,8 @@ class TensorField(Tensor):
             else:
                 # Extract the mapping
                 (
-                    _,
                     self._inverse_mapping[sparse_tensor_map_key],
+                    _,
                 ) = self._manager.get_field_to_sparse_map(
                     self.coordinate_field_map_key, sparse_tensor_map_key
                 )
