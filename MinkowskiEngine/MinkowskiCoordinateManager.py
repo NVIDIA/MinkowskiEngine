@@ -270,6 +270,9 @@ class CoordinateManager:
     def origin(self) -> CoordinateMapKey:
         return self._manager.origin()
 
+    def origin_field(self) -> CoordinateMapKey:
+        return self._manager.origin_field()
+
     def size(self, coordinate_map_key: CoordinateMapKey) -> int:
         return self._manager.size(coordinate_map_key)
 
@@ -419,6 +422,9 @@ class CoordinateManager:
 
     def origin_map(self, key: CoordinateMapKey):
         return self._manager.origin_map(key)
+
+    def origin_field_map(self, key: CoordinateMapKey):
+        return self._manager.origin_field_map(key)
 
     def stride_map(self, in_key: CoordinateMapKey, stride_key: CoordinateMapKey):
         return self._manager.stride_map(in_key, stride_key)

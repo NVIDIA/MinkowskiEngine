@@ -38,75 +38,6 @@
 
 namespace minkowski {
 
-template <typename coordinate_field_type, typename coordinate_int_type,
-          template <typename T> class TemplatedAllocator =
-              detail::c10_allocator>
-class CoordinateFieldMapGPU
-    : public CoordinateMap<coordinate_field_type, TemplatedAllocator> {
-  // Coordinate wrapper
-public:
-  using base_type = CoordinateMap<coordinate_field_type, TemplatedAllocator>;
-  using self_type =
-      CoordinateFieldMapGPU<coordinate_field_type, coordinate_int_type,
-                            TemplatedAllocator>;
-  using size_type = typename base_type::size_type;
-  using index_type = typename base_type::index_type;
-  using stride_type = typename base_type::stride_type;
-  using byte_allocator_type = TemplatedAllocator<char>;
-
-public:
-  CoordinateFieldMapGPU() = delete;
-  CoordinateFieldMapGPU(size_type const number_of_coordinates,
-                        size_type const coordinate_size,
-                        stride_type const &stride = {1},
-                        byte_allocator_type alloc = byte_allocator_type())
-      : base_type(number_of_coordinates, coordinate_size, stride, alloc),
-        m_size(number_of_coordinates) {
-    base_type::reserve(number_of_coordinates);
-  }
-
-  /*
-   * @brief given a key iterator begin-end pair and a value iterator begin-end
-   * pair, insert all elements.
-   *
-   * @return none
-   */
-  void insert(coordinate_field_type const *coordinate_begin,
-              coordinate_field_type const *coordinate_end) {
-    size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
-    base_type::allocate(N);
-    // copy data directly to the ptr
-    CUDA_CHECK(cudaMemcpy(base_type::coordinate_data(), coordinate_begin,
-                          N * m_coordinate_size * sizeof(coordinate_field_type),
-                          cudaMemcpyDeviceToDevice));
-  }
-
-  void copy_coordinates(coordinate_field_type *dst_coordinate) const {
-    CUDA_CHECK(
-        cudaMemcpy(dst_coordinate, base_type::const_coordinate_data(),
-                   size() * m_coordinate_size * sizeof(coordinate_field_type),
-                   cudaMemcpyDeviceToDevice));
-  }
-
-  void quantize_coordinates(coordinate_int_type *p_dst_coordinates,
-                            stride_type const &tensor_stride) const;
-
-  using base_type::const_coordinate_data;
-  using base_type::coordinate_data;
-
-  inline size_type size() const noexcept { return m_size; }
-  std::string to_string() const {
-    Formatter o;
-    o << "CoordinateFieldMapGPU:" << size() << "x" << m_coordinate_size;
-    return o.str();
-  }
-
-private:
-  using base_type::m_byte_allocator;
-  using base_type::m_coordinate_size;
-  size_type m_size;
-};
-
 /*
  * Inherit from the CoordinateMap for a concurrent coordinate unordered map.
  */
@@ -257,6 +188,10 @@ public:
     o << "CoordinateMapGPU:" << size() << "x" << m_coordinate_size;
     return o.str();
   }
+  inline map_type const const_hash_map() const { return *m_map.get(); };
+
+  // Insert indices given initialized coordinates
+  void initialize_valid_indices(size_t const N_unique);
 
   // access the coordinate data pointer
   using base_type::const_coordinate_data;
@@ -286,6 +221,96 @@ private:
   thrust::device_vector<size_type> m_device_tensor_stride;
   map_allocator_type m_map_allocator;
   std::shared_ptr<map_type> m_map;
+};
+
+template <typename coordinate_field_type, typename coordinate_int_type,
+          template <typename T> class TemplatedAllocator =
+              detail::c10_allocator>
+class CoordinateFieldMapGPU
+    : public CoordinateMap<coordinate_field_type, TemplatedAllocator> {
+  // Coordinate wrapper
+public:
+  using base_type = CoordinateMap<coordinate_field_type, TemplatedAllocator>;
+  using coordinate_map_type =
+      CoordinateMapGPU<coordinate_int_type, TemplatedAllocator>;
+  using self_type =
+      CoordinateFieldMapGPU<coordinate_field_type, coordinate_int_type,
+                            TemplatedAllocator>;
+  using size_type = typename base_type::size_type;
+  using index_type = typename base_type::index_type;
+  using stride_type = typename base_type::stride_type;
+  using byte_allocator_type = TemplatedAllocator<char>;
+  using map_allocator_type = TemplatedAllocator<
+      thrust::pair<coordinate<coordinate_int_type>, index_type>>;
+  using kernel_map_type = gpu_kernel_map<index_type, byte_allocator_type>;
+
+  // Map types
+  using key_type = coordinate<coordinate_int_type>;
+  using mapped_type = index_type;
+  using hasher_type = detail::coordinate_murmur3<coordinate_int_type>;
+  using key_equal_type = detail::coordinate_equal_to<coordinate_int_type>;
+  using int_hash_map_type =
+      concurrent_unordered_map<key_type,            // key
+                               mapped_type,         // mapped_type
+                               hasher_type,         // hasher
+                               key_equal_type,      // equality
+                               map_allocator_type>; // allocator
+public:
+  CoordinateFieldMapGPU() = delete;
+  CoordinateFieldMapGPU(size_type const number_of_coordinates,
+                        size_type const coordinate_size,
+                        stride_type const &stride = {1},
+                        byte_allocator_type alloc = byte_allocator_type())
+      : base_type(number_of_coordinates, coordinate_size, stride, alloc),
+        m_size(number_of_coordinates) {
+    base_type::reserve(number_of_coordinates);
+  }
+
+  /*
+   * @brief given a key iterator begin-end pair and a value iterator begin-end
+   * pair, insert all elements.
+   *
+   * @return none
+   */
+  void insert(coordinate_field_type const *coordinate_begin,
+              coordinate_field_type const *coordinate_end) {
+    size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
+    base_type::allocate(N);
+    // copy data directly to the ptr
+    CUDA_CHECK(cudaMemcpy(base_type::coordinate_data(), coordinate_begin,
+                          N * m_coordinate_size * sizeof(coordinate_field_type),
+                          cudaMemcpyDeviceToDevice));
+  }
+
+  void copy_coordinates(coordinate_field_type *dst_coordinate) const {
+    CUDA_CHECK(
+        cudaMemcpy(dst_coordinate, base_type::const_coordinate_data(),
+                   size() * m_coordinate_size * sizeof(coordinate_field_type),
+                   cudaMemcpyDeviceToDevice));
+  }
+
+  void quantize_coordinates(coordinate_int_type *p_dst_coordinates,
+                            stride_type const &tensor_stride) const;
+
+  using base_type::const_coordinate_data;
+  using base_type::coordinate_data;
+
+  coordinate_map_type origin() const;
+
+  kernel_map_type origin_map(coordinate_map_type const &origin_coordinate_map,
+                             uint32_t thread_dim = CUDA_NUM_THREADS) const;
+
+  inline size_type size() const noexcept { return m_size; }
+  std::string to_string() const {
+    Formatter o;
+    o << "CoordinateFieldMapGPU:" << size() << "x" << m_coordinate_size;
+    return o.str();
+  }
+
+private:
+  using base_type::m_byte_allocator;
+  using base_type::m_coordinate_size;
+  size_type m_size;
 };
 
 } // namespace minkowski

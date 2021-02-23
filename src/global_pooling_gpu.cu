@@ -55,7 +55,8 @@ std::tuple<at::Tensor, at::Tensor> GlobalPoolingForwardGPU(
   ASSERT(in_feat.dim() == 2, "Invalid in_feat.dim():", in_feat.dim());
 
   coordinate_map_key_type in_key = p_in_map_key->get_key();
-  ASSERT(p_map_manager->exists(in_key), ERROR_MAP_NOT_FOUND);
+  ASSERT(p_map_manager->exists(in_key) || p_map_manager->exists_field(in_key),
+         ERROR_MAP_NOT_FOUND);
 
   ASSERT(in_feat.size(0) == p_map_manager->size(in_key), "Invalid in_feat size",
          in_feat.size(0), "!=", p_map_manager->size(in_key));
@@ -70,10 +71,17 @@ std::tuple<at::Tensor, at::Tensor> GlobalPoolingForwardGPU(
              pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_PYTORCH_INDEX ||
              pooling_mode == PoolingMode::GLOBAL_MAX_POOLING_PYTORCH_INDEX,
          "Invalid pooling mode");
+  bool const is_field = p_map_manager->exists_field(in_key);
 
   if (!p_out_map_key->is_key_set()) {
-    coordinate_map_key_type out_key = std::get<0>(p_map_manager->origin());
-    p_out_map_key->set_key(out_key);
+    if (is_field) {
+      coordinate_map_key_type out_key =
+          std::get<0>(p_map_manager->origin_field());
+      p_out_map_key->set_key(out_key);
+    } else {
+      coordinate_map_key_type out_key = std::get<0>(p_map_manager->origin());
+      p_out_map_key->set_key(out_key);
+    }
   }
 
   int64_t const batch_size = p_map_manager->origin_map_size();
@@ -133,24 +141,37 @@ std::tuple<at::Tensor, at::Tensor> GlobalPoolingForwardGPU(
       case PoolingMode::GLOBAL_AVG_POOLING_DEFAULT:
       case PoolingMode::GLOBAL_SUM_POOLING_KERNEL:
       case PoolingMode::GLOBAL_AVG_POOLING_KERNEL: {
-        const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
         cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
         cusparseHandle_t handle = getCurrentCUDASparseHandle();
         cusparseSetStream(handle, stream);
 
         TemplatedAllocator<char> byte_allocator;
 
-        AT_DISPATCH_FLOATING_TYPES(
-            in_feat.scalar_type(), "global_pooling_forward_gpu", [&] {
-              NonzeroAvgPoolingForwardKernelGPU<scalar_t,
-                                                default_types::index_type,
-                                                TemplatedAllocator<char>>(
-                  in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
-                  out_feat.template data_ptr<scalar_t>(), batch_size,
-                  num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
-                  in_outs, use_avg, byte_allocator, handle, stream);
-            });
-
+        if (is_field) {
+          const auto &in_outs = p_map_manager->origin_field_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_gpu", [&] {
+                NonzeroAvgPoolingForwardKernelGPU<scalar_t,
+                                                  default_types::index_type,
+                                                  TemplatedAllocator<char>>(
+                    in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+                    out_feat.template data_ptr<scalar_t>(), batch_size,
+                    num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                    in_outs, use_avg, byte_allocator, handle, stream);
+              });
+        } else {
+          const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_gpu", [&] {
+                NonzeroAvgPoolingForwardKernelGPU<scalar_t,
+                                                  default_types::index_type,
+                                                  TemplatedAllocator<char>>(
+                    in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+                    out_feat.template data_ptr<scalar_t>(), batch_size,
+                    num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                    in_outs, use_avg, byte_allocator, handle, stream);
+              });
+        }
       } break;
       }
       return {out_feat, num_nonzero};
@@ -168,18 +189,31 @@ std::tuple<at::Tensor, at::Tensor> GlobalPoolingForwardGPU(
       case PoolingMode::GLOBAL_MAX_POOLING_KERNEL:
         // TODO
       case PoolingMode::GLOBAL_MAX_POOLING_PYTORCH_INDEX: {
-        const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
         cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
         TemplatedAllocator<char> byte_allocator;
-        AT_DISPATCH_FLOATING_TYPES(
-            in_feat.scalar_type(), "global_pooling_forward_gpu", [&] {
-              MaxPoolingForwardKernelGPU<scalar_t, default_types::index_type,
-                                         TemplatedAllocator<char>>(
-                  in_feat.template data_ptr<scalar_t>(),
-                  out_feat.template data_ptr<scalar_t>(), batch_size,
-                  max_index.data_ptr<int>(), in_feat.size(1), in_outs,
-                  byte_allocator, stream);
-            });
+        if (is_field) {
+          const auto &in_outs = p_map_manager->origin_field_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_gpu", [&] {
+                MaxPoolingForwardKernelGPU<scalar_t, default_types::index_type,
+                                           TemplatedAllocator<char>>(
+                    in_feat.template data_ptr<scalar_t>(),
+                    out_feat.template data_ptr<scalar_t>(), batch_size,
+                    max_index.data_ptr<int>(), in_feat.size(1), in_outs,
+                    byte_allocator, stream);
+              });
+        } else {
+          const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_gpu", [&] {
+                MaxPoolingForwardKernelGPU<scalar_t, default_types::index_type,
+                                           TemplatedAllocator<char>>(
+                    in_feat.template data_ptr<scalar_t>(),
+                    out_feat.template data_ptr<scalar_t>(), batch_size,
+                    max_index.data_ptr<int>(), in_feat.size(1), in_outs,
+                    byte_allocator, stream);
+              });
+        }
       } break;
       default:
         ASSERT(false, "Invalid pooling mode");
@@ -211,7 +245,8 @@ at::Tensor GlobalPoolingBackwardGPU(
   ASSERT(in_feat.scalar_type() == grad_out_feat.scalar_type(), "type mismatch");
 
   coordinate_map_key_type in_key = p_in_map_key->get_key();
-  ASSERT(p_map_manager->exists(in_key), ERROR_MAP_NOT_FOUND);
+  ASSERT(p_map_manager->exists(in_key) || p_map_manager->exists_field(in_key),
+         ERROR_MAP_NOT_FOUND);
   coordinate_map_key_type out_key = p_out_map_key->get_key();
   ASSERT(p_map_manager->exists(out_key), ERROR_MAP_NOT_FOUND);
 
@@ -232,7 +267,7 @@ at::Tensor GlobalPoolingBackwardGPU(
              pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_PYTORCH_INDEX ||
              pooling_mode == PoolingMode::GLOBAL_MAX_POOLING_PYTORCH_INDEX,
          "Invalid pooling mode");
-
+  bool const is_field = p_map_manager->exists_field(in_key);
   int64_t const batch_size = p_map_manager->size(out_key);
   bool const use_avg =
       pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_DEFAULT ||
@@ -261,18 +296,35 @@ at::Tensor GlobalPoolingBackwardGPU(
       } else
         grad_in_feat.copy_(grad_out_feat);
     } else {
-      const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
-      grad_in_feat.zero_();
-      AT_DISPATCH_FLOATING_TYPES(
-          in_feat.scalar_type(), "global_pooling_backward_gpu", [&] {
-            NonzeroAvgPoolingBackwardKernelGPU<
-                scalar_t, default_types::index_type, TemplatedAllocator<char>>(
-                grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
-                grad_out_feat.template data_ptr<scalar_t>(),
-                grad_out_feat.size(0),
-                num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
-                in_outs, use_avg, stream);
-          });
+      if (is_field) {
+        const auto &in_outs = p_map_manager->origin_field_map(p_in_map_key);
+        grad_in_feat.zero_();
+        AT_DISPATCH_FLOATING_TYPES(
+            in_feat.scalar_type(), "global_pooling_backward_gpu", [&] {
+              NonzeroAvgPoolingBackwardKernelGPU<scalar_t,
+                                                 default_types::index_type,
+                                                 TemplatedAllocator<char>>(
+                  grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+                  grad_out_feat.template data_ptr<scalar_t>(),
+                  grad_out_feat.size(0),
+                  num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                  in_outs, use_avg, stream);
+            });
+      } else {
+        const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
+        grad_in_feat.zero_();
+        AT_DISPATCH_FLOATING_TYPES(
+            in_feat.scalar_type(), "global_pooling_backward_gpu", [&] {
+              NonzeroAvgPoolingBackwardKernelGPU<scalar_t,
+                                                 default_types::index_type,
+                                                 TemplatedAllocator<char>>(
+                  grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+                  grad_out_feat.template data_ptr<scalar_t>(),
+                  grad_out_feat.size(0),
+                  num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                  in_outs, use_avg, stream);
+            });
+      }
     }
   } else {
     // MAX Pooling

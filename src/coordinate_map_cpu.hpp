@@ -276,114 +276,6 @@ std::vector<at::Tensor> interpolation_map_weight_kernel(
 
 } // namespace detail
 
-template <typename coordinate_field_type, typename coordinate_int_type,
-          template <typename T> class TemplatedAllocator = std::allocator>
-class CoordinateFieldMapCPU
-    : public CoordinateMap<coordinate_field_type, TemplatedAllocator> {
-  // Coordinate wrapper
-public:
-  using base_type = CoordinateMap<coordinate_field_type, TemplatedAllocator>;
-  using self_type =
-      CoordinateFieldMapCPU<coordinate_field_type, coordinate_int_type,
-                            TemplatedAllocator>;
-  using size_type = typename base_type::size_type;
-  using index_type = typename base_type::index_type;
-  using stride_type = typename base_type::stride_type;
-  using byte_allocator_type = TemplatedAllocator<char>;
-
-public:
-  CoordinateFieldMapCPU() = delete;
-  CoordinateFieldMapCPU(size_type const number_of_coordinates,
-                        size_type const coordinate_size,
-                        stride_type const &stride = {1},
-                        byte_allocator_type alloc = byte_allocator_type())
-      : base_type(number_of_coordinates, coordinate_size, stride, alloc),
-        m_size(number_of_coordinates) {
-    base_type::reserve(number_of_coordinates);
-  }
-
-  /*
-   * @brief given a key iterator begin-end pair and a value iterator begin-end
-   * pair, insert all elements.
-   *
-   * @return none
-   */
-  void insert(coordinate_field_type const *coordinate_begin,
-              coordinate_field_type const *coordinate_end) {
-    size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
-    base_type::allocate(N);
-    // copy data directly to the ptr
-    std::copy_n(coordinate_begin, N * m_coordinate_size,
-                base_type::coordinate_data());
-  }
-
-  using base_type::const_coordinate_data;
-  using base_type::coordinate_data;
-
-  void copy_coordinates(coordinate_field_type *dst_coordinate) const {
-    std::copy_n(base_type::const_coordinate_data(), size() * m_coordinate_size,
-                dst_coordinate);
-  }
-
-  void quantize_coordinates(coordinate_int_type *p_dst_coordinates,
-                            stride_type const &tensor_stride) const {
-    coordinate_field_type const *const p_tfield = const_coordinate_data();
-    int64_t const stride_prod = std::accumulate(
-        tensor_stride.begin(), tensor_stride.end(), 1, std::multiplies<>());
-    ASSERT(stride_prod > 0, "Invalid stride");
-
-    const size_t N = omp_get_max_threads();
-    const size_t stride = (size() + N - 1) / N;
-    LOG_DEBUG("kernel map with", N, "chunks and", stride, "stride.");
-
-    if (stride_prod == 1) {
-#pragma omp parallel for
-      for (uint32_t n = 0; n < N; n++) {
-        for (auto i = stride * n;
-             i < std::min((n + 1) * stride, uint64_t(size())); ++i) {
-
-          // batch index
-          coordinate_int_type *p_curr_dst =
-              &p_dst_coordinates[i * m_coordinate_size];
-          p_curr_dst[0] = std::lroundf(p_tfield[i * m_coordinate_size]);
-          for (uint32_t j = 1; j < m_coordinate_size; ++j) {
-            p_curr_dst[j] = std::floor(p_tfield[m_coordinate_size * i + j]);
-          }
-        }
-      }
-    } else {
-#pragma omp parallel for
-      for (uint32_t n = 0; n < N; n++) {
-        for (auto i = stride * n;
-             i < std::min((n + 1) * stride, uint64_t(size())); ++i) {
-
-          // batch index
-          coordinate_int_type *p_curr_dst =
-              &p_dst_coordinates[i * m_coordinate_size];
-          p_curr_dst[0] = std::lroundf(p_tfield[i * m_coordinate_size]);
-          for (uint32_t j = 1; j < m_coordinate_size; ++j) {
-            auto const curr_tensor_stride = tensor_stride[j - 1];
-            p_curr_dst[j] = curr_tensor_stride *
-                            std::floor(p_tfield[m_coordinate_size * i + j] /
-                                       curr_tensor_stride);
-          }
-        }
-      }
-    }
-  }
-
-  inline size_type size() const noexcept { return m_size; }
-  std::string to_string() const {
-    Formatter o;
-    o << "CoordinateFieldMapCPU:" << size() << "x" << m_coordinate_size;
-    return o.str();
-  }
-
-private:
-  using base_type::m_coordinate_size;
-  size_type m_size;
-};
-
 /*
  * Inherit from the CoordinateMap for a specific map type.
  */
@@ -1027,7 +919,6 @@ public:
     return indices;
   }
 
-private:
   std::pair<iterator, bool> insert(key_type const &key,
                                    mapped_type const &val) {
     ASSERT(val < base_type::m_capacity, "Invalid mapped value: ", val,
@@ -1041,10 +932,217 @@ private:
   inline const_iterator find(key_type const &key) const {
     return m_map.find(key);
   }
+  inline const_iterator cend() const { return m_map.cend(); }
 
 private:
   using base_type::m_coordinate_size;
   map_type m_map;
+};
+
+// Field map
+template <typename coordinate_field_type, typename coordinate_int_type,
+          template <typename T> class TemplatedAllocator = std::allocator>
+class CoordinateFieldMapCPU
+    : public CoordinateMap<coordinate_field_type, TemplatedAllocator> {
+  // Coordinate wrapper
+public:
+  using base_type = CoordinateMap<coordinate_field_type, TemplatedAllocator>;
+  using coordinate_map_type =
+      CoordinateMapCPU<coordinate_int_type, TemplatedAllocator>;
+  using self_type =
+      CoordinateFieldMapCPU<coordinate_field_type, coordinate_int_type,
+                            TemplatedAllocator>;
+  using size_type = typename base_type::size_type;
+  using index_type = typename base_type::index_type;
+  using stride_type = typename base_type::stride_type;
+  using byte_allocator_type = TemplatedAllocator<char>;
+
+public:
+  CoordinateFieldMapCPU() = delete;
+  CoordinateFieldMapCPU(size_type const number_of_coordinates,
+                        size_type const coordinate_size,
+                        stride_type const &stride = {1},
+                        byte_allocator_type alloc = byte_allocator_type())
+      : base_type(number_of_coordinates, coordinate_size, stride, alloc),
+        m_size(number_of_coordinates) {
+    base_type::reserve(number_of_coordinates);
+  }
+
+  /*
+   * @brief given a key iterator begin-end pair and a value iterator begin-end
+   * pair, insert all elements.
+   *
+   * @return none
+   */
+  void insert(coordinate_field_type const *coordinate_begin,
+              coordinate_field_type const *coordinate_end) {
+    size_type N = (coordinate_end - coordinate_begin) / m_coordinate_size;
+    base_type::allocate(N);
+    // copy data directly to the ptr
+    std::copy_n(coordinate_begin, N * m_coordinate_size,
+                base_type::coordinate_data());
+  }
+
+  using base_type::const_coordinate_data;
+  using base_type::coordinate_data;
+
+  void copy_coordinates(coordinate_field_type *dst_coordinate) const {
+    std::copy_n(base_type::const_coordinate_data(), size() * m_coordinate_size,
+                dst_coordinate);
+  }
+
+  void quantize_coordinates(coordinate_int_type *p_dst_coordinates,
+                            stride_type const &tensor_stride) const {
+    coordinate_field_type const *const p_tfield = const_coordinate_data();
+    int64_t const stride_prod = std::accumulate(
+        tensor_stride.begin(), tensor_stride.end(), 1, std::multiplies<>());
+    ASSERT(stride_prod > 0, "Invalid stride");
+
+    const size_t N = omp_get_max_threads();
+    const size_t stride = (size() + N - 1) / N;
+    LOG_DEBUG("kernel map with", N, "chunks and", stride, "stride.");
+
+    if (stride_prod == 1) {
+#pragma omp parallel for
+      for (uint32_t n = 0; n < N; n++) {
+        for (auto i = stride * n;
+             i < std::min((n + 1) * stride, uint64_t(size())); ++i) {
+
+          // batch index
+          coordinate_int_type *p_curr_dst =
+              &p_dst_coordinates[i * m_coordinate_size];
+          p_curr_dst[0] = std::lroundf(p_tfield[i * m_coordinate_size]);
+          for (uint32_t j = 1; j < m_coordinate_size; ++j) {
+            p_curr_dst[j] = std::floor(p_tfield[m_coordinate_size * i + j]);
+          }
+        }
+      }
+    } else {
+#pragma omp parallel for
+      for (uint32_t n = 0; n < N; n++) {
+        for (auto i = stride * n;
+             i < std::min((n + 1) * stride, uint64_t(size())); ++i) {
+
+          // batch index
+          coordinate_int_type *p_curr_dst =
+              &p_dst_coordinates[i * m_coordinate_size];
+          p_curr_dst[0] = std::lroundf(p_tfield[i * m_coordinate_size]);
+          for (uint32_t j = 1; j < m_coordinate_size; ++j) {
+            auto const curr_tensor_stride = tensor_stride[j - 1];
+            p_curr_dst[j] = curr_tensor_stride *
+                            std::floor(p_tfield[m_coordinate_size * i + j] /
+                                       curr_tensor_stride);
+          }
+        }
+      }
+    }
+  }
+
+  coordinate_map_type origin() const {
+    // tensor stride is set to {0,..., 0} for the origin map.
+    stride_type origin_tensor_stride(m_coordinate_size - 1);
+    std::for_each(origin_tensor_stride.begin(), origin_tensor_stride.end(),
+                  [](auto &i) { i = 0; });
+
+    // Over estimate the reserve size to be size();
+    CoordinateMapCPU<coordinate_int_type, TemplatedAllocator> origin_map(
+        size(), m_coordinate_size, origin_tensor_stride,
+        base_type::m_byte_allocator);
+
+    coordinate_field_type const *const p_tfield = const_coordinate_data();
+
+    std::vector<coordinate_int_type> dst(m_coordinate_size);
+    std::for_each(dst.begin(), dst.end(), [](auto &i) { i = 0; });
+    coordinate<coordinate_int_type> tmp_coordinate(&dst[0]);
+
+    index_type c = 0;
+    for (size_t i = 0; i < size(); ++i) {
+      dst[0] = coordinate_int_type(p_tfield[i * m_coordinate_size]);
+      auto result = origin_map.insert(tmp_coordinate, c);
+      c += result.second;
+    }
+    return origin_map;
+  }
+
+  cpu_kernel_map
+  origin_map(coordinate_map_type const &origin_coordinate_map) const {
+    // generate an in-out (kernel) map that maps all input points in the same
+    // voxel to strided output voxel.
+    ASSERT(std::all_of(origin_coordinate_map.get_tensor_stride().begin(),
+                       origin_coordinate_map.get_tensor_stride().end(),
+                       [](auto const &i) { return i == 0; }),
+           "Invalid origin tensor stride",
+           origin_coordinate_map.get_tensor_stride());
+
+    size_type const in_size = size();
+    size_type const out_size = origin_coordinate_map.size();
+    LOG_DEBUG("Generate origin_map with in NNZ:", in_size,
+              "out NNZ:", out_size);
+    ASSERT(in_size > out_size, "Invalid out_coordinate_map");
+
+    std::vector<std::pair<index_type, index_type>> in_out(in_size);
+
+    // compute the chunk size per thread.
+    // There's a trade-off between the thread initialization overhead and the
+    // job sizes. If some jobs finish earlier than others due to imbalance in
+    // hash distribution, these threads will be idle.
+    size_t const in_map_num_elements = size();
+    size_t N = 2 * omp_get_max_threads();
+    size_t const stride = (in_map_num_elements + N - 1) / N;
+    N = (in_map_num_elements + stride - 1) / stride;
+    LOG_DEBUG("kernel map with", N, "chunks", stride, "stride");
+    coordinate_field_type const *const p_tfield = const_coordinate_data();
+    size_type num_used = 0;
+#pragma omp parallel for
+    for (index_type n = 0; n < N; ++n) {
+      index_type curr_index_begin;
+      std::vector<coordinate_int_type> dst(m_coordinate_size);
+      std::for_each(dst.begin(), dst.end(), [](auto &i) { i = 0; });
+      // LOG_DEBUG(n, "th chunk contains",
+      //           std::min((n + 1) * stride, in_map_num_elements) - n * stride,
+      //           "elements");
+
+      for (size_t i = stride * n;
+           i < std::min((n + 1) * stride, in_map_num_elements); ++i) {
+        dst[0] = p_tfield[i * m_coordinate_size];
+        // LOG_DEBUG(i, "th row batch index", dst[0]);
+        const auto iter_origin = origin_coordinate_map.find(
+            coordinate<coordinate_int_type>(dst.data()));
+        ASSERT(iter_origin != origin_coordinate_map.cend(),
+               "Invalid origin_coordinate_map");
+        index_type origin_row_index = iter_origin->second;
+
+#pragma omp atomic capture
+        {
+          curr_index_begin = num_used;
+          num_used += 1;
+        }
+
+        in_out[curr_index_begin] = std::make_pair(i, origin_row_index);
+      }
+    }
+
+    // #ifdef DEBUG
+    //     LOG_DEBUG("Kernel map");
+    //     for (auto iter : in_out) {
+    //       std::cout << iter.first << ":" << iter.second << "\n";
+    //     }
+    // #endif
+    // Decomposed kernel map
+    auto batch_indices = origin_coordinate_map.batch_indices();
+    return cpu_kernel_map(in_out, batch_indices);
+  }
+
+  inline size_type size() const noexcept { return m_size; }
+  std::string to_string() const {
+    Formatter o;
+    o << "CoordinateFieldMapCPU:" << size() << "x" << m_coordinate_size;
+    return o.str();
+  }
+
+private:
+  using base_type::m_coordinate_size;
+  size_type m_size;
 };
 
 } // namespace minkowski

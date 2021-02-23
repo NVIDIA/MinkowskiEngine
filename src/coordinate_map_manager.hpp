@@ -213,6 +213,7 @@ public:
 
   // origin coordinate map creation
   std::pair<coordinate_map_key_type, bool> origin();
+  std::pair<coordinate_map_key_type, bool> origin_field();
 
   // pruning
   coordinate_map_key_type prune(coordinate_map_key_type const &in_key,
@@ -221,6 +222,14 @@ public:
   // python-side stride function
   py::object py_origin() {
     auto map_key_bool = origin();
+    LOG_DEBUG("Return origin map key");
+    return py::cast(new CoordinateMapKey(map_key_bool.first.first.size() + 1,
+                                         map_key_bool.first));
+  }
+
+  // python-side stride function
+  py::object py_origin_field() {
+    auto map_key_bool = origin_field();
     LOG_DEBUG("Return origin map key");
     return py::cast(new CoordinateMapKey(map_key_bool.first.first.size() + 1,
                                          map_key_bool.first));
@@ -320,9 +329,15 @@ public:
   }
 
   inline size_type size(coordinate_map_key_type const &key) const {
-    auto it = m_coordinate_maps.find(key);
-    ASSERT(it != m_coordinate_maps.end(), ERROR_MAP_NOT_FOUND);
-    return it->second.size();
+    auto const it = m_coordinate_maps.find(key);
+    auto const field_it = m_field_coordinates.find(key);
+    ASSERT(it != m_coordinate_maps.end() ||
+               field_it != m_field_coordinates.end(),
+           ERROR_MAP_NOT_FOUND);
+    if (it != m_coordinate_maps.end())
+      return it->second.size();
+    else
+      return field_it->second.size();
   }
 
   inline size_type size(CoordinateMapKey const *p_key) const {
@@ -414,6 +429,8 @@ public:
                                     CoordinateMapKey const *py_out_coords_key);
 
   kernel_map_type const &origin_map(CoordinateMapKey const *py_out_coords_key);
+  kernel_map_type const &
+  origin_field_map(CoordinateMapKey const *py_out_coords_key);
 
   // return kernel map. for cpu it is {in maps, out maps}.
   // For gpu it could be {in maps, out maps}, or {kernel index, in map, out map}
@@ -434,13 +451,23 @@ public:
   std::pair<at::Tensor, std::vector<at::Tensor>>
   origin_map_th(CoordinateMapKey const *py_out_coords_key);
 
+  std::pair<at::Tensor, std::vector<at::Tensor>>
+  origin_field_map_th(CoordinateMapKey const *py_out_coords_key);
+
   std::pair<at::Tensor, at::Tensor>
   stride_map_th(CoordinateMapKey const *p_in_map_key,
                 CoordinateMapKey const *p_strided_map_key);
 
   size_t origin_map_size() {
-    auto const key = origin().first;
-    return m_coordinate_maps.find(key)->second.size();
+    ASSERT(m_coordinate_maps.size() > 0 or m_field_coordinates.size() > 0,
+           "No coordinate map found.");
+    if (m_coordinate_maps.size() > 0) {
+      auto const key = origin().first;
+      return m_coordinate_maps.find(key)->second.size();
+    } else {
+      auto const key = origin_field().first;
+      return m_coordinate_maps.find(key)->second.size();
+    }
   }
 
   coordinate_map_key_type get_random_string_id(stride_type const &tensor_stride,
@@ -515,6 +542,10 @@ private:
   std::unordered_map<kernel_map_key_type, kernel_map_type,
                      kernel_map_key_hasher<coordinate_map_key_hasher>>
       m_kernel_maps;
+
+  std::unordered_map<kernel_map_key_type, kernel_map_type,
+                     kernel_map_key_hasher<coordinate_map_key_hasher>>
+      m_field_kernel_maps;
 
   std::unordered_map<
       const std::pair<coordinate_map_key_type, coordinate_map_key_type>,

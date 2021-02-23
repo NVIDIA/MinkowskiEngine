@@ -36,6 +36,7 @@ from MinkowskiCommon import (
     MinkowskiModuleBase,
     get_minkowski_function,
 )
+import MinkowskiEngine as ME
 
 
 class MinkowskiLocalPoolingFunction(Function):
@@ -722,22 +723,25 @@ class MinkowskiGlobalMaxPooling(MinkowskiGlobalPooling):
 
     def forward(
         self,
-        input: SparseTensor,
+        input,
         coordinates: Union[torch.IntTensor, CoordinateMapKey, SparseTensor] = None,
     ):
         # Get a new coordinate map key or extract one from the coordinates
-        if input._manager.number_of_unique_batch_indices() == 1:
-            out_coordinate_map_key = input._manager.origin()
-            output, _ = input.F.max(0, True)
-        else:
-            out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
-            output = self.pooling.apply(
-                input.F,
-                self.pooling_mode,
-                input.coordinate_map_key,
-                out_coordinate_map_key,
-                input._manager,
+        if isinstance(input, ME.TensorField):
+            in_coordinate_map_key = input.coordinate_field_map_key
+            out_coordinate_map_key = CoordinateMapKey(
+                input.coordinate_field_map_key.get_coordinate_size()
             )
+        else:
+            in_coordinate_map_key = input.coordinate_map_key
+            out_coordinate_map_key = _get_coordinate_map_key(input, coordinates)
+        output = self.pooling.apply(
+            input.F,
+            self.pooling_mode,
+            in_coordinate_map_key,
+            out_coordinate_map_key,
+            input._manager,
+        )
 
         return SparseTensor(
             output,

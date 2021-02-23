@@ -9,6 +9,10 @@
 - fix coordinate manager kernel map python function
 - direct max pool
     - SparseTensorQuantizationMode.MAX_POOL
+- TensorField global max pool
+    - origin field
+    - origin field map
+    - MinkowskiGlobalMaxPool CPU/GPU updates for a field input
 
 ## [0.5.1]
 

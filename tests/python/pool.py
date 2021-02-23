@@ -27,6 +27,7 @@ import unittest
 
 from MinkowskiEngine import (
     SparseTensor,
+    TensorField,
     MinkowskiConvolution,
     MinkowskiLocalPoolingFunction,
     MinkowskiSumPooling,
@@ -446,7 +447,7 @@ class TestGlobalAvgPooling(unittest.TestCase):
 
 
 class TestGlobalMaxPooling(unittest.TestCase):
-    def test_batch_size1(self):
+    def test_batch_size(self):
         if not torch.cuda.is_available():
             return
 
@@ -522,6 +523,52 @@ class TestGlobalMaxPooling(unittest.TestCase):
                     input.F,
                     pool.pooling_mode,
                     input.coordinate_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+
+    def test_field(self):
+        in_channels, D = 2, 2
+        coords, feats, labels = data_loader(in_channels)
+        feats = feats.double()
+        feats.requires_grad_()
+        input = TensorField(feats, coords)
+        pool = MinkowskiGlobalMaxPooling()
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        fn = MinkowskiGlobalPoolingFunction()
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    input.coordinate_field_map_key,
+                    output.coordinate_map_key,
+                    input._manager,
+                ),
+            )
+        )
+
+        if not torch.cuda.is_available():
+            return
+
+        input = TensorField(feats, coords, device="cuda")
+        output = pool(input)
+        print(output)
+
+        # Check backward
+        self.assertTrue(
+            gradcheck(
+                fn,
+                (
+                    input.F,
+                    pool.pooling_mode,
+                    input.coordinate_field_map_key,
                     output.coordinate_map_key,
                     input._manager,
                 ),

@@ -289,6 +289,27 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert_and_map(
   return std::make_pair(m_valid_row_index, m_inverse_row_index);
 }
 
+template <typename coordinate_type,
+          template <typename T> class TemplatedAllocator>
+void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::
+    initialize_valid_indices(size_t const N_unique) {
+  m_valid_row_index.resize(N_unique);
+  m_valid_map_index.resize(N_unique);
+  m_size = N_unique;
+
+  // Insert coordinates
+  auto insert = detail::insert_coordinate<coordinate_type, map_type,
+                                          index_type *>{
+      *m_map,                                             // map
+      const_coordinate_data(),                            // coordinates,
+      thrust::raw_pointer_cast(m_valid_row_index.data()), // valid row
+      thrust::raw_pointer_cast(m_valid_map_index.data()), // iter offset
+      m_coordinate_size};
+
+  thrust::counting_iterator<uint32_t> count_begin{0};
+  thrust::for_each(thrust::device, count_begin, count_begin + N_unique, insert);
+}
+
 /*
  * @brief given a key iterator begin-end pair find all valid keys and its
  * index.
@@ -672,14 +693,14 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_region(
 
 namespace detail {
 
-template <typename coordinate_type, typename size_type, typename index_type,
-          bool stride_src>
-__global__ void
-copy_column_with_valid(coordinate_type *__restrict__ dst_coordinates,       //
-                       size_type const num_threads,                         //
-                       coordinate_type const *__restrict__ src_coordinates, //
-                       index_type const *__restrict__ src_valid_row_index,  //
-                       size_type const coordinate_size) {
+template <typename dst_coordinate_type, typename src_coordinate_type,
+          typename size_type, typename index_type, bool stride_src>
+__global__ void copy_column_with_valid(
+    dst_coordinate_type *__restrict__ dst_coordinates,       //
+    size_type const num_threads,                             //
+    src_coordinate_type const *__restrict__ src_coordinates, //
+    index_type const *__restrict__ src_valid_row_index,      //
+    size_type const coordinate_size) {
   auto const tx = threadIdx.x;
   auto const bx = blockIdx.x;
   auto const x = blockDim.x * bx + tx;
@@ -694,11 +715,12 @@ copy_column_with_valid(coordinate_type *__restrict__ dst_coordinates,       //
   }
 }
 
-template <typename coordinate_type, typename size_type, bool stride_src>
+template <typename dst_coordinate_type, typename src_coordinate_type,
+          typename size_type, bool stride_src>
 __global__ void
-copy_column(coordinate_type *__restrict__ dst_coordinates,       //
-            size_type const num_threads,                         //
-            coordinate_type const *__restrict__ src_coordinates, //
+copy_column(dst_coordinate_type *__restrict__ dst_coordinates,       //
+            size_type const num_threads,                             //
+            src_coordinate_type const *__restrict__ src_coordinates, //
             size_type const coordinate_size) {
   auto const tx = threadIdx.x;
   auto const bx = blockIdx.x;
@@ -729,7 +751,8 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
   // thrust unique for unique batch index
   coordinate_type *d_batch_indices = reinterpret_cast<coordinate_type *>(
       m_byte_allocator.allocate(N * sizeof(coordinate_type)));
-  detail::copy_column_with_valid<coordinate_type, size_type, index_type, true>
+  detail::copy_column_with_valid<coordinate_type, coordinate_type, size_type,
+                                 index_type, true>
       <<<GET_BLOCKS(N, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
           d_batch_indices, N, const_coordinate_data(),
           thrust::raw_pointer_cast(m_valid_row_index.data()),
@@ -770,7 +793,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
       cudaMemset(origin_map.coordinate_data(), 0,
                  N_unique * m_coordinate_size * sizeof(coordinate_type)));
 
-  detail::copy_column<coordinate_type, size_type, false>
+  detail::copy_column<coordinate_type, coordinate_type, size_type, false>
       <<<GET_BLOCKS(N_unique, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
           origin_map.coordinate_data(), N_unique, d_batch_indices,
           m_coordinate_size);
@@ -808,6 +831,153 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::origin() const {
                               N * sizeof(coordinate_type));
 
   return origin_map;
+}
+
+template <typename coordinate_type, typename coordinate_int_type,
+          template <typename T> class TemplatedAllocator>
+CoordinateMapGPU<coordinate_int_type, TemplatedAllocator>
+CoordinateFieldMapGPU<coordinate_type, coordinate_int_type,
+                      TemplatedAllocator>::origin() const {
+  size_type const N = size();
+  LOG_DEBUG("Origin map from in map size:", N);
+
+  // tensor stride is set to {0,..., 0} for the origin map.
+  stride_type origin_tensor_stride(m_coordinate_size - 1);
+  std::for_each(origin_tensor_stride.begin(), origin_tensor_stride.end(),
+                [](auto &i) { i = 0; });
+
+  // thrust unique for unique batch index
+  coordinate_int_type *d_batch_indices =
+      reinterpret_cast<coordinate_int_type *>(
+          m_byte_allocator.allocate(N * sizeof(coordinate_int_type)));
+
+  detail::copy_column<coordinate_int_type, coordinate_type, size_type, true>
+      <<<GET_BLOCKS(N, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
+          d_batch_indices, N, const_coordinate_data(), m_coordinate_size);
+
+  // Sort and unique
+  thrust::sort(thrust::device, d_batch_indices, d_batch_indices + N);
+  auto d_batch_indices_end =
+      thrust::unique(thrust::device, d_batch_indices, d_batch_indices + N);
+  size_type const N_unique = d_batch_indices_end - d_batch_indices;
+
+  // Create origin map
+  LOG_DEBUG("Origin map with size:", N_unique,
+            " tensor stride:", origin_tensor_stride);
+  CoordinateMapGPU<coordinate_int_type, TemplatedAllocator> origin_map(
+      N_unique, m_coordinate_size, 50, origin_tensor_stride);
+
+  CUDA_CHECK(
+      cudaMemset(origin_map.coordinate_data(), 0,
+                 N_unique * m_coordinate_size * sizeof(coordinate_int_type)));
+
+  detail::copy_column<coordinate_int_type, coordinate_int_type, size_type,
+                      false>
+      <<<GET_BLOCKS(N_unique, CUDA_NUM_THREADS), CUDA_NUM_THREADS>>>(
+          origin_map.coordinate_data(), N_unique, d_batch_indices,
+          m_coordinate_size);
+
+  m_byte_allocator.deallocate((char *)d_batch_indices,
+                              N * sizeof(coordinate_type));
+
+  origin_map.initialize_valid_indices(N_unique);
+
+  return origin_map;
+}
+
+namespace detail {
+
+template <typename coordinate_field_type, //
+          typename coordinate_int_type,   //
+          typename size_type,             //
+          typename index_type,            //
+          typename map_type>
+__global__ void origin_field_map_kernel(
+    size_type const num_threads,                              //
+    coordinate_field_type const *__restrict__ d_field_coords, //
+    map_type const __restrict__ origin_map,                   //
+    index_type *__restrict__ p_in_maps,                       //
+    index_type *__restrict__ p_out_maps,                      //
+    index_type *__restrict__ p_kernels,                       //
+    size_type const coordinate_size) {
+  extern __shared__ coordinate_int_type sh_all[];
+
+  auto const tx = threadIdx.x;
+  auto const bx = blockIdx.x;
+  auto const x = blockDim.x * bx + tx;
+
+  // clang-format off
+  coordinate_int_type *sh_tmp = sh_all + tx * coordinate_size;
+  // clang-format on
+
+  if (x < num_threads)
+    for (index_type i = 0; i < coordinate_size; ++i)
+      sh_tmp[i] = 0;
+
+  __syncthreads();
+
+  if (x < num_threads) {
+    sh_tmp[0] =
+        coordinate_int_type(lroundf(d_field_coords[x * coordinate_size]));
+    auto origin_iter = origin_map.find(coordinate<coordinate_int_type>(sh_tmp));
+    auto out_index = origin_iter->second;
+    p_in_maps[x] = x;
+    p_out_maps[x] = out_index; // origin_map row index
+    // For kernel_map decompose()
+    p_kernels[x] = out_index;
+  }
+}
+
+} // namespace detail
+
+template <typename coordinate_field_type, typename coordinate_int_type,
+          template <typename T> class TemplatedAllocator>
+CoordinateFieldMapGPU<coordinate_field_type, coordinate_int_type,
+                      TemplatedAllocator>::kernel_map_type
+CoordinateFieldMapGPU<coordinate_field_type, coordinate_int_type,
+                      TemplatedAllocator>::
+    origin_map(CoordinateMapGPU<coordinate_int_type, TemplatedAllocator> const
+                   &origin_map,
+               uint32_t thread_dim) const {
+  ASSERT(std::all_of(origin_map.get_tensor_stride().begin(),
+                     origin_map.get_tensor_stride().end(),
+                     [](auto const &i) { return i == 0; }),
+         "Invalid origin tensor stride", origin_map.get_tensor_stride());
+
+  // reserve size();
+  size_type const in_size = size();
+  LOG_DEBUG("in_map size:", in_size, "origin_map size:", origin_map.size());
+  // (THREAD * D) * 4
+  uint32_t const shared_memory_size_in_bytes =
+      thread_dim * m_coordinate_size * sizeof(coordinate_int_type); // tmp
+  size_type const num_threads = in_size;
+  auto const num_blocks = GET_BLOCKS(num_threads, thread_dim);
+
+  LOG_DEBUG("origin_map num block", num_blocks);
+  LOG_DEBUG("origin_map shared_memory size", shared_memory_size_in_bytes);
+  LOG_DEBUG("origin_map threads dim", thread_dim);
+  LOG_DEBUG("origin_map num threads", num_threads);
+
+  kernel_map_type kernel_map(in_size, base_type::m_byte_allocator);
+  CUDA_CHECK(cudaStreamSynchronize(0));
+  LOG_DEBUG("Allocated kernel_map.");
+
+  detail::origin_field_map_kernel<coordinate_field_type, coordinate_int_type,
+                                  size_type, index_type, int_hash_map_type>
+      <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
+          num_threads,                 //
+          const_coordinate_data(),     //
+          origin_map.const_hash_map(), //
+          kernel_map.in_maps.begin(),  //
+          kernel_map.out_maps.begin(), //
+          kernel_map.kernels.begin(),  //
+          m_coordinate_size);
+
+  CUDA_CHECK(cudaStreamSynchronize(0));
+  kernel_map.decompose();
+  LOG_DEBUG("origin map decomposed");
+
+  return kernel_map;
 }
 
 namespace detail {

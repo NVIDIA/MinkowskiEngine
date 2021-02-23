@@ -53,7 +53,8 @@ GlobalPoolingForwardCPU(at::Tensor const &in_feat,
   ASSERT(in_feat.dim() == 2, "Invalid in_feat.dim():", in_feat.dim());
 
   coordinate_map_key_type in_key = p_in_map_key->get_key();
-  ASSERT(p_map_manager->exists(in_key), ERROR_MAP_NOT_FOUND);
+  ASSERT(p_map_manager->exists(in_key) || p_map_manager->exists_field(in_key),
+         ERROR_MAP_NOT_FOUND);
 
   ASSERT(in_feat.size(0) == p_map_manager->size(in_key), "Invalid in_feat size",
          in_feat.size(0), "!=", p_map_manager->size(in_key));
@@ -68,10 +69,20 @@ GlobalPoolingForwardCPU(at::Tensor const &in_feat,
              pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_PYTORCH_INDEX ||
              pooling_mode == PoolingMode::GLOBAL_MAX_POOLING_PYTORCH_INDEX,
          "Invalid pooling mode");
+  bool const is_field = p_map_manager->exists_field(in_key);
 
   if (!p_out_map_key->is_key_set()) {
-    coordinate_map_key_type out_key = std::get<0>(p_map_manager->origin());
-    p_out_map_key->set_key(out_key);
+    LOG_DEBUG("Setting the output key");
+    if (is_field) {
+      coordinate_map_key_type out_key =
+          std::get<0>(p_map_manager->origin_field());
+      p_out_map_key->set_key(out_key);
+      LOG_DEBUG("out_key", out_key);
+    } else {
+      coordinate_map_key_type out_key = std::get<0>(p_map_manager->origin());
+      p_out_map_key->set_key(out_key);
+      LOG_DEBUG("out_key", out_key);
+    }
   }
 
   int64_t const batch_size = p_map_manager->origin_map_size();
@@ -115,27 +126,55 @@ GlobalPoolingForwardCPU(at::Tensor const &in_feat,
       switch (pooling_mode) {
       case PoolingMode::GLOBAL_SUM_POOLING_PYTORCH_INDEX:
       case PoolingMode::GLOBAL_AVG_POOLING_PYTORCH_INDEX: {
-        std::vector<at::Tensor> const vec_maps =
-            p_map_manager->origin_map_th(p_in_map_key).second;
+        std::vector<at::Tensor> vec_maps;
+        at::Tensor batch_index;
+        LOG_DEBUG("get origin_map_th");
+        if (is_field) {
+          auto batch_map_pair =
+              p_map_manager->origin_field_map_th(p_in_map_key);
+          batch_index = batch_map_pair.first;
+          vec_maps = batch_map_pair.second;
+        } else {
+          auto batch_map_pair = p_map_manager->origin_map_th(p_in_map_key);
+          batch_index = batch_map_pair.first;
+          vec_maps = batch_map_pair.second;
+        }
+        ASSERT(batch_index.numel() == batch_size, "Invalid batch_size");
+        LOG_DEBUG("batch wise avg.", vec_maps.size());
         for (int b = 0; b < batch_size; ++b) {
+          LOG_DEBUG("batch ", b, "size", vec_maps[b].numel());
           if (use_avg)
-            out_feat[b] = in_feat.index_select(0, vec_maps[b]).mean(0);
+            out_feat[batch_index[b]] =
+                in_feat.index_select(0, vec_maps[b]).mean(0);
           else
-            out_feat[b] = in_feat.index_select(0, vec_maps[b]).sum(0);
-          num_nonzero[b] = vec_maps[b].numel();
+            out_feat[batch_index[b]] =
+                in_feat.index_select(0, vec_maps[b]).sum(0);
+          num_nonzero[batch_index[b]] = vec_maps[b].numel();
         }
       } break;
       case PoolingMode::GLOBAL_SUM_POOLING_KERNEL:
       case PoolingMode::GLOBAL_AVG_POOLING_KERNEL: {
-        const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
-        AT_DISPATCH_FLOATING_TYPES(
-            in_feat.scalar_type(), "global_pooling_forward_cpu", [&] {
-              NonzeroAvgPoolingForwardKernelCPU<scalar_t, int>(
-                  in_feat.template data_ptr<scalar_t>(),
-                  out_feat.template data_ptr<scalar_t>(),
-                  num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
-                  in_outs.first, in_outs.second, batch_size, use_avg);
-            });
+        if (is_field) {
+          const auto &in_outs = p_map_manager->origin_field_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_cpu", [&] {
+                NonzeroAvgPoolingForwardKernelCPU<scalar_t, int>(
+                    in_feat.template data_ptr<scalar_t>(),
+                    out_feat.template data_ptr<scalar_t>(),
+                    num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                    in_outs.first, in_outs.second, batch_size, use_avg);
+              });
+        } else {
+          const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_cpu", [&] {
+                NonzeroAvgPoolingForwardKernelCPU<scalar_t, int>(
+                    in_feat.template data_ptr<scalar_t>(),
+                    out_feat.template data_ptr<scalar_t>(),
+                    num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                    in_outs.first, in_outs.second, batch_size, use_avg);
+              });
+        }
       } break;
       default:
         ASSERT(false, "Invalid pooling mode");
@@ -155,16 +194,29 @@ GlobalPoolingForwardCPU(at::Tensor const &in_feat,
       case PoolingMode::GLOBAL_MAX_POOLING_KERNEL:
         // TODO
       case PoolingMode::GLOBAL_MAX_POOLING_PYTORCH_INDEX: {
-        const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
-        AT_DISPATCH_FLOATING_TYPES(
-            in_feat.scalar_type(), "global_pooling_forward_cpu", [&] {
-              MaxPoolingForwardKernelCPU<scalar_t, int32_t,
-                                         default_types::index_type>(
-                  in_feat.template data_ptr<scalar_t>(),
-                  out_feat.template data_ptr<scalar_t>(),
-                  max_index.template data_ptr<int32_t>(), in_feat.size(1),
-                  in_outs.first, in_outs.second, batch_size);
-            });
+        if (is_field) {
+          const auto &in_outs = p_map_manager->origin_field_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_cpu", [&] {
+                MaxPoolingForwardKernelCPU<scalar_t, int32_t,
+                                           default_types::index_type>(
+                    in_feat.template data_ptr<scalar_t>(),
+                    out_feat.template data_ptr<scalar_t>(),
+                    max_index.template data_ptr<int32_t>(), in_feat.size(1),
+                    in_outs.first, in_outs.second, batch_size);
+              });
+        } else {
+          const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
+          AT_DISPATCH_FLOATING_TYPES(
+              in_feat.scalar_type(), "global_pooling_forward_cpu", [&] {
+                MaxPoolingForwardKernelCPU<scalar_t, int32_t,
+                                           default_types::index_type>(
+                    in_feat.template data_ptr<scalar_t>(),
+                    out_feat.template data_ptr<scalar_t>(),
+                    max_index.template data_ptr<int32_t>(), in_feat.size(1),
+                    in_outs.first, in_outs.second, batch_size);
+              });
+        }
       } break;
       default:
         ASSERT(false, "Invalid pooling mode");
@@ -192,7 +244,8 @@ GlobalPoolingBackwardCPU(at::Tensor const &in_feat, at::Tensor &grad_out_feat,
   ASSERT(in_feat.scalar_type() == grad_out_feat.scalar_type(), "type mismatch");
 
   coordinate_map_key_type in_key = p_in_map_key->get_key();
-  ASSERT(p_map_manager->exists(in_key), ERROR_MAP_NOT_FOUND);
+  ASSERT(p_map_manager->exists(in_key) || p_map_manager->exists_field(in_key),
+         ERROR_MAP_NOT_FOUND);
   coordinate_map_key_type out_key = p_out_map_key->get_key();
   ASSERT(p_map_manager->exists(out_key), ERROR_MAP_NOT_FOUND);
 
@@ -213,6 +266,8 @@ GlobalPoolingBackwardCPU(at::Tensor const &in_feat, at::Tensor &grad_out_feat,
              pooling_mode == PoolingMode::GLOBAL_AVG_POOLING_PYTORCH_INDEX ||
              pooling_mode == PoolingMode::GLOBAL_MAX_POOLING_PYTORCH_INDEX,
          "Invalid pooling mode");
+
+  bool const is_field = p_map_manager->exists_field(in_key);
 
   const auto batch_size = p_map_manager->size(out_key);
   bool const use_avg =
@@ -241,16 +296,30 @@ GlobalPoolingBackwardCPU(at::Tensor const &in_feat, at::Tensor &grad_out_feat,
       } else
         grad_in_feat.copy_(grad_out_feat);
     } else {
-      const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
-      grad_in_feat.zero_();
-      AT_DISPATCH_FLOATING_TYPES(
-          in_feat.scalar_type(), "global_pooling_backward_cpu", [&] {
-            NonzeroAvgPoolingBackwardKernelCPU<scalar_t, int>(
-                grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
-                grad_out_feat.template data_ptr<scalar_t>(),
-                num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
-                in_outs.first, in_outs.second, use_avg);
-          });
+      if (is_field) {
+        const auto &in_outs = p_map_manager->origin_field_map(p_in_map_key);
+        grad_in_feat.zero_();
+        AT_DISPATCH_FLOATING_TYPES(
+            in_feat.scalar_type(), "global_pooling_backward_cpu", [&] {
+              NonzeroAvgPoolingBackwardKernelCPU<scalar_t, int>(
+                  grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+                  grad_out_feat.template data_ptr<scalar_t>(),
+                  num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                  in_outs.first, in_outs.second, use_avg);
+            });
+
+      } else {
+        const auto &in_outs = p_map_manager->origin_map(p_in_map_key);
+        grad_in_feat.zero_();
+        AT_DISPATCH_FLOATING_TYPES(
+            in_feat.scalar_type(), "global_pooling_backward_cpu", [&] {
+              NonzeroAvgPoolingBackwardKernelCPU<scalar_t, int>(
+                  grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(0),
+                  grad_out_feat.template data_ptr<scalar_t>(),
+                  num_nonzero.template data_ptr<scalar_t>(), in_feat.size(1),
+                  in_outs.first, in_outs.second, use_avg);
+            });
+      }
     }
   } else {
     grad_in_feat.zero_();
