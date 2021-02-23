@@ -98,6 +98,11 @@ class PointNet(nn.Module):
         return x
 
 
+# MinkowskiNet implementation of a pointnet.
+#
+# This network allows the number of points per batch to be arbitrary. For
+# instance batch index 0 could have 500 points, batch index 1 could have 1000
+# points.
 class MinkowskiPointNet(ME.MinkowskiNetwork):
     def __init__(self, in_channel, out_channel, embedding_channel=1024, dimension=3):
         ME.MinkowskiNetwork.__init__(self, dimension)
@@ -145,7 +150,34 @@ class MinkowskiPointNet(ME.MinkowskiNetwork):
         x = self.max_pool(x)
         x = self.linear1(x)
         x = self.dp1(x)
-        return self.linear2(x)
+        return self.linear2(x).F
+
+
+class CoordinateTransformation:
+    def __init__(self, trans=0.25, jitter=0.05):
+        self.trans = trans
+        self.jitter = jitter
+
+    def __call__(self, coords):
+        coords += np.random.uniform(low=-self.trans, high=self.trans, size=[1, 3])
+        coords += self.jitter * (np.random.rand(len(coords), 3) - 0.5)
+        return coords
+
+    def __repr__(self):
+        return f"Transformation(translation={self.trans}, jitter={self.jitter})"
+
+
+def download_modelnet40_dataset():
+    if not os.path.exists("modelnet40_ply_hdf5_2048.zip"):
+        print("Downloading the 2k downsampled ModelNet40 dataset...")
+        subprocess.run(
+            [
+                "wget",
+                "--no-check-certificate",
+                "https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip",
+            ]
+        )
+        subprocess.run(["unzip", "modelnet40_ply_hdf5_2048.zip"])
 
 
 class ModelNet40H5(Dataset):
@@ -153,11 +185,14 @@ class ModelNet40H5(Dataset):
         self,
         phase: str,
         data_root: str = "modelnet40h5",
+        translation_max: float = 0.25,
         num_points=2048,
     ):
         Dataset.__init__(self)
+        download_modelnet40_dataset()
         phase = "test" if phase in ["val", "test"] else "train"
         self.data, self.label = self.load_data(data_root, phase)
+        self.transform = CoordinateTransformation(trans=translation_max)
         self.phase = phase
         self.num_points = num_points
 
@@ -180,6 +215,7 @@ class ModelNet40H5(Dataset):
             np.random.shuffle(xyz)
         if len(xyz) > self.num_points:
             xyz = xyz[: self.num_points]
+        xyz = self.transform(xyz)
         label = self.label[i]
         xyz = torch.from_numpy(xyz)
         label = torch.from_numpy(label)
@@ -192,19 +228,11 @@ class ModelNet40H5(Dataset):
     def __len__(self):
         return self.data.shape[0]
 
+    def __repr__(self):
+        return f"ModelNet40H5(phase={self.phase}, length={len(self)}, transform={self.transform})"
+
 
 if __name__ == "__main__":
-    if not os.path.exists("modelnet40_ply_hdf5_2048.zip"):
-        print("Downloading the 2k downsampled ModelNet40 dataset...")
-        subprocess.run(
-            [
-                "wget",
-                "--no-check-certificate",
-                "https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip",
-            ]
-        )
-        subprocess.run(["unzip", "modelnet40_ply_hdf5_2048.zip"])
-
     dataset = ModelNet40H5(phase="train", data_root="modelnet40_ply_hdf5_2048")
     # Use stack_collate_fn for pointnet
     pointnet_data_loader = DataLoader(
