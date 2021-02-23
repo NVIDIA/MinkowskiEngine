@@ -197,6 +197,7 @@ from MinkowskiOps import (
     mean,
     var,
     to_sparse,
+    to_sparse_all,
     dense_coordinates,
 )
 

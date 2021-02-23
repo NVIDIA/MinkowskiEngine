@@ -38,6 +38,12 @@ to_sparse
 .. autofunction:: MinkowskiEngine.to_sparse
 
 
+to_sparse_all
+-------------
+
+.. autofunction:: MinkowskiEngine.to_sparse_all
+
+
 SparseCollation
 ---------------
 

@@ -21,6 +21,8 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+import torch
+
 from MinkowskiSparseTensor import SparseTensor
 
 
@@ -55,5 +57,7 @@ def get_coords_map(x, y):
     """
     assert isinstance(x, SparseTensor)
     assert isinstance(y, SparseTensor)
-    assert x.coords_man == y.coords_man, "X and Y are using different CoordinateManagers. Y must be derived from X through strided conv/pool/etc."
+    assert (
+        x.coords_man == y.coords_man
+    ), "X and Y are using different CoordinateManagers. Y must be derived from X through strided conv/pool/etc."
     return x.coords_man.get_coords_map(x.coords_key, y.coords_key)

@@ -486,7 +486,11 @@ class SparseTensor(Tensor):
         if min_coordinate is None:
             min_coordinate, _ = self.C.min(0, keepdim=True)
             min_coordinate = min_coordinate[:, 1:]
-            coords = self.C[:, 1:] - min_coordinate
+            if not torch.all(min_coordinate >= 0):
+                raise ValueError(
+                    f"Coordinate has a negative value: {min_coordinate}. Please provide min_coordinate argument"
+                )
+            coords = self.C[:, 1:]
         elif isinstance(min_coordinate, int) and min_coordinate == 0:
             coords = self.C[:, 1:]
         else:

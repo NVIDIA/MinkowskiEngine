@@ -102,6 +102,12 @@ class TestDenseToSparse(unittest.TestCase):
         self.assertEqual(len(sparse_tensor), 3 * 5 * 6)
         self.assertEqual(sparse_tensor.F.size(1), 4)
 
+    def test_format(self):
+        dense_tensor = torch.rand(3, 4, 5, 6)
+        sparse_tensor = to_sparse(dense_tensor, format="BXXC")
+        self.assertEqual(len(sparse_tensor), 3 * 4 * 5)
+        self.assertEqual(sparse_tensor.F.size(1), 6)
+
     def test_network(self):
         dense_tensor = torch.rand(3, 4, 11, 11, 11, 11)  # BxCxD1xD2x....xDN
         dense_tensor.requires_grad = True
@@ -112,7 +118,7 @@ class TestDenseToSparse(unittest.TestCase):
         network = nn.Sequential(
             # Add layers that can be applied on a regular pytorch tensor
             nn.ReLU(),
-            MinkowskiToSparseTensor(coordinates=coordinates),
+            MinkowskiToSparseTensor(remove_zeros=False, coordinates=coordinates),
             MinkowskiConvolution(4, 5, stride=2, kernel_size=3, dimension=4),
             MinkowskiBatchNorm(5),
             MinkowskiReLU(),

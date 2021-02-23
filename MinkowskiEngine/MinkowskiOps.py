@@ -276,8 +276,49 @@ def dense_coordinates(shape: Union[list, torch.Size]):
     return coordinates
 
 
-def to_sparse(dense_tensor: torch.Tensor, coordinates: torch.Tensor = None):
-    r"""Converts a (differentiable) dense tensor to a sparse tensor.
+def to_sparse(x: torch.Tensor, format: str = None, coordinates=None, device=None):
+    r"""Convert a batched tensor (dimension 0 is the batch dimension) to a SparseTensor
+
+    :attr:`x` (:attr:`torch.Tensor`): a batched tensor. The first dimension is the batch dimension.
+
+    :attr:`format` (:attr:`str`): Format of the tensor. It must include 'B' and 'C' indicating the batch and channel dimension respectively. The rest of the dimensions must be 'X'. .e.g. format="BCXX" if image data with BCHW format is used. If a 3D data with the channel at the last dimension, use format="BXXXC" indicating Batch X Height X Width X Depth X Channel. If not provided, the format will be "BCX...X".
+
+    :attr:`device`: Device the sparse tensor will be generated on. If not provided, the device of the input tensor will be used.
+
+    """
+    assert x.ndim > 2, "Input has 0 spatial dimension."
+    assert isinstance(x, torch.Tensor)
+    if format is None:
+        format = [
+            "X",
+        ] * x.ndim
+        format[0] = "B"
+        format[1] = "C"
+        format = "".join(format)
+    assert x.ndim == len(format), f"Invalid format: {format}. len(format) != x.ndim"
+    assert (
+        "B" in format and "B" == format[0] and format.count("B") == 1
+    ), "The input must have the batch axis and the format must include 'B' indicating the batch axis."
+    assert (
+        "C" in format and format.count("C") == 1
+    ), "The format must indicate the channel axis"
+    if device is None:
+        device = x.device
+    ch_dim = format.find("C")
+    reduced_x = torch.abs(x).sum(ch_dim)
+    bcoords = torch.where(reduced_x != 0)
+    stacked_bcoords = torch.stack(bcoords, dim=1).int()
+    indexing = [f"bcoords[{i}]" for i in range(len(bcoords))]
+    indexing.insert(ch_dim, ":")
+    features = torch.zeros(
+        (len(stacked_bcoords), x.size(ch_dim)), dtype=x.dtype, device=x.device
+    )
+    exec("features[:] = x[" + ", ".join(indexing) + "]")
+    return SparseTensor(features=features, coordinates=stacked_bcoords, device=device)
+
+
+def to_sparse_all(dense_tensor: torch.Tensor, coordinates: torch.Tensor = None):
+    r"""Converts a (differentiable) dense tensor to a sparse tensor with all coordinates.
 
     Assume the input to have BxCxD1xD2x....xDN format.
 
@@ -312,6 +353,9 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
 
     For dense tensor, the input must have the BxCxD1xD2x....xDN format.
 
+    :attr:`remove_zeros` (bool): if True, removes zero valued coordinates. If
+    False, use all coordinates to populate a sparse tensor. True by default.
+
     If the shape of the tensor do not change, use `dense_coordinates` to cache the coordinates.
     Please refer to tests/python/dense.py for usage.
 
@@ -327,7 +371,7 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
        >>> network = nn.Sequential(
        >>>     # Add layers that can be applied on a regular pytorch tensor
        >>>     nn.ReLU(),
-       >>>     MinkowskiToSparseTensor(coordinates=coordinates),
+       >>>     MinkowskiToSparseTensor(remove_zeros=False, coordinates=coordinates),
        >>>     MinkowskiConvolution(4, 5, kernel_size=3, dimension=4),
        >>>     MinkowskiBatchNorm(5),
        >>>     MinkowskiReLU(),
@@ -341,8 +385,12 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
 
     """
 
-    def __init__(self, coordinates: torch.Tensor = None):
+    def __init__(self, remove_zeros=True, coordinates: torch.Tensor = None):
         MinkowskiModuleBase.__init__(self)
+        assert (
+            remove_zeros and coordinates is None
+        ), "The coordinates argument cannot be used with remove_zeros=True. If you want to use the coordinates argument, provide remove_zeros=False."
+        self.remove_zeros = remove_zeros
         self.coordinates = coordinates
 
     def forward(self, input: Union[TensorField, torch.Tensor]):
@@ -350,7 +398,10 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
             return input.sparse()
         elif isinstance(input, torch.Tensor):
             # dense tensor to sparse tensor conversion
-            return to_sparse(input, self.coordinates)
+            if self.remove_zeros:
+                return to_sparse(input)
+            else:
+                return to_sparse_all(input, self.coordinates)
         else:
             raise ValueError(
                 "Unsupported type. Only TensorField and torch.Tensor are supported"
