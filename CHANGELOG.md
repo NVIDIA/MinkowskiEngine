@@ -13,8 +13,8 @@
     - origin field
     - origin field map
     - MinkowskiGlobalMaxPool CPU/GPU updates for a field input
-- SparseTensor.dense() raises a value error when a coordinate is negative rather than subtracting the minimum coordinate from a sparse tensor.
-- Added `to_sparse()` that removes zeros.
+- SparseTensor.dense() raises a value error when a coordinate is negative rather than subtracting the minimum coordinate from a sparse tensor. (issue #316)
+- Added `to_sparse()` that removes zeros. (issue #317)
     - Previous `to_sparse()` was renamed to `to_sparse_all()`
     - `MinkowskiToSparseTensor` takes an optional `remove_zeros` boolean argument.
 
