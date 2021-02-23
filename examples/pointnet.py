@@ -23,262 +23,223 @@
 # of the code.
 import os
 import numpy as np
-from urllib.request import urlretrieve
+import glob
+
 try:
-    import open3d as o3d
-except ImportError:
-    raise ImportError('Please install open3d with `pip install open3d`.')
+    import h5py
+except:
+    print("Install h5py with `pip install h5py`")
+import subprocess
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
+
 import MinkowskiEngine as ME
 
 
-class STN3d(nn.Module):
-    r"""Given a sparse tensor, generate a 3x3 transformation matrix per
-    instance.
-    """
-    CONV_CHANNELS = [64, 128, 1024, 512, 256]
-    FC_CHANNELS = [512, 256]
-    KERNEL_SIZES = [1, 1, 1]
-    STRIDES = [1, 1, 1]
-
-    def __init__(self, D=3):
-        super(STN3d, self).__init__()
-
-        k = self.KERNEL_SIZES
-        s = self.STRIDES
-        c = self.CONV_CHANNELS
-
-        self.block1 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                3,
-                c[0],
-                kernel_size=k[0],
-                stride=s[0],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[0]),
-            ME.MinkowskiReLU())
-        self.block2 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[0],
-                c[1],
-                kernel_size=k[1],
-                stride=s[1],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[1]),
-            ME.MinkowskiReLU())
-        self.block3 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[1],
-                c[2],
-                kernel_size=k[2],
-                stride=s[2],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[2]),
-            ME.MinkowskiReLU())
-
-        # Use the kernelsize 1 convolution for linear layers. If kernel size ==
-        # 1, minkowski engine internally uses a linear function.
-        self.block4 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[2], c[3], kernel_size=1, has_bias=False, dimension=3),
-            ME.MinkowskiInstanceNorm(c[3]), ME.MinkowskiReLU())
-        self.block5 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[3], c[4], kernel_size=1, has_bias=False, dimension=3),
-            ME.MinkowskiInstanceNorm(c[4]), ME.MinkowskiReLU())
-        self.fc6 = ME.MinkowskiConvolution(
-            c[4], 9, kernel_size=1, has_bias=True, dimension=3)
-
-        self.avgpool = ME.MinkowskiGlobalPooling()
-        self.broadcast = ME.MinkowskiBroadcast()
-
-    def forward(self, in_x):
-        x = self.block1(in_x)
-        x = self.block2(x)
-        x = self.block3(x)
-
-        # batch size x channel
-        x = self.avgpool(x)
-
-        x = self.block4(x)
-        x = self.block5(x)
-
-        # get the features batch-wise
-        x = self.fc6(x)
-
-        # Add identity transformation
-        x._F += torch.tensor([[1, 0, 0, 0, 1, 0, 0, 0, 1]],
-                             dtype=x.dtype,
-                             device=x.device).repeat(len(x), 1)
-        # Broadcast the transformation back to the right coordinates of x
-        return self.broadcast(in_x, x)
+def minkowski_collate_fn(list_data):
+    coordinates_batch, features_batch, labels_batch = ME.utils.sparse_collate(
+        [d["coordinates"] for d in list_data],
+        [d["features"] for d in list_data],
+        [d["label"] for d in list_data],
+        dtype=torch.float32,
+    )
+    return {
+        "coordinates": coordinates_batch,
+        "features": features_batch,
+        "labels": labels_batch,
+    }
 
 
-class PointNetFeature(nn.Module):
-    r"""
-    You can think of a PointNet as a specialization of a convolutional neural
-    network with kernel_size == 1, and stride == 1 that processes a sparse
-    tensor where features are normalized coordinates.
+def stack_collate_fn(list_data):
+    coordinates_batch, features_batch, labels_batch = (
+        torch.stack([d["coordinates"] for d in list_data]),
+        torch.stack([d["features"] for d in list_data]),
+        torch.cat([d["label"] for d in list_data]),
+    )
 
-    This generalization allows the network to process an arbitrary number of
-    points.
-    """
-    CONV_CHANNELS = [256, 512, 1024]
-    KERNEL_SIZES = [1, 1, 1]
-    STRIDES = [1, 1, 1]
-
-    def __init__(self):
-        super(PointNetFeature, self).__init__()
-
-        k = self.KERNEL_SIZES
-        s = self.STRIDES
-        c = self.CONV_CHANNELS
-
-        self.stn = STN3d(D=3)
-        self.block1 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                6,
-                c[0],
-                kernel_size=k[0],
-                stride=s[0],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[0]),
-            ME.MinkowskiReLU())
-        self.block2 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[0],
-                c[1],
-                kernel_size=k[1],
-                stride=s[1],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[1]),
-            ME.MinkowskiReLU())
-        self.block3 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[1],
-                c[2],
-                kernel_size=k[2],
-                stride=s[2],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[2]),
-            ME.MinkowskiReLU())
-
-        self.avgpool = ME.MinkowskiGlobalPooling()
-        self.concat = ME.MinkowskiBroadcastConcatenation()
-
-    def forward(self, x):
-        """
-        Input is a spare tensor with features as centered coordinates N x 3
-        """
-        assert isinstance(x, ME.SparseTensor)
-        assert x.F.shape[1] == 3
-
-        # Get the transformation
-        T = self.stn(x)
-
-        # Apply the transformation
-        coords_feat_stn = torch.squeeze(
-            torch.bmm(x.F.view(-1, 1, 3), T.F.view(-1, 3, 3)))
-        x = ME.SparseTensor(
-            torch.cat((coords_feat_stn, x.F), 1),
-            coords_key=x.coords_key,
-            coords_manager=x.coords_man)
-
-        point_feat = self.block1(x)
-        x = self.block2(point_feat)
-        x = self.block3(x)
-        glob_feat = self.avgpool(x)
-        return self.concat(point_feat, glob_feat)
+    return {
+        "coordinates": coordinates_batch,
+        "features": features_batch,
+        "labels": labels_batch,
+    }
 
 
 class PointNet(nn.Module):
-    r"""
-    You can think of a PointNet as a specialization of a convolutional neural
-    network with kernel_size == 1, and stride == 1 that processes a sparse
-    tensor where features are normalized coordinates.
-
-    This generalization allows the network to process an arbitrary number of
-    points.
-    """
-    CONV_CHANNELS = [512, 256, 128]
-    KERNEL_SIZES = [1, 1, 1]
-    STRIDES = [1, 1, 1]
-
-    def __init__(self, out_channels, D=3):
+    def __init__(self, in_channel, out_channel, embedding_channel=1024):
         super(PointNet, self).__init__()
-        k = self.KERNEL_SIZES
-        s = self.STRIDES
-        c = self.CONV_CHANNELS
+        self.conv1 = nn.Conv1d(3, 64, kernel_size=1, bias=False)
+        self.conv2 = nn.Conv1d(64, 64, kernel_size=1, bias=False)
+        self.conv3 = nn.Conv1d(64, 64, kernel_size=1, bias=False)
+        self.conv4 = nn.Conv1d(64, 128, kernel_size=1, bias=False)
+        self.conv5 = nn.Conv1d(128, embedding_channel, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm1d(64)
+        self.bn2 = nn.BatchNorm1d(64)
+        self.bn3 = nn.BatchNorm1d(64)
+        self.bn4 = nn.BatchNorm1d(128)
+        self.bn5 = nn.BatchNorm1d(embedding_channel)
+        self.linear1 = nn.Linear(embedding_channel, 512, bias=False)
+        self.bn6 = nn.BatchNorm1d(512)
+        self.dp1 = nn.Dropout()
+        self.linear2 = nn.Linear(512, out_channel)
 
-        self.feat = PointNetFeature()
-        self.block1 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                1280,
-                c[0],
-                kernel_size=k[0],
-                stride=s[0],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[0]),
-            ME.MinkowskiReLU())
-        self.block2 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[0],
-                c[1],
-                kernel_size=k[1],
-                stride=s[1],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[1]),
-            ME.MinkowskiReLU())
-        self.block3 = nn.Sequential(
-            ME.MinkowskiConvolution(
-                c[1],
-                c[2],
-                kernel_size=k[2],
-                stride=s[2],
-                has_bias=False,
-                dimension=3), ME.MinkowskiInstanceNorm(c[2]),
-            ME.MinkowskiReLU())
-
-        # Last FC layer. Note that kernel_size 1 == linear layer
-        self.conv4 = ME.MinkowskiConvolution(
-            c[2], out_channels, kernel_size=1, has_bias=True, dimension=3)
-
-    def forward(self, x):
-        """
-        Assume that x.F (features) are normalized coordinates or centered coordinates
-        """
-        assert isinstance(x, ME.SparseTensor)
-        x = self.feat(x)
-        x = self.block1(x)
-        x = self.block2(x)
-        x = self.block3(x)
-        return self.conv4(x)
+    def forward(self, x: torch.Tensor):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        x = F.relu(self.bn4(self.conv4(x)))
+        x = F.relu(self.bn5(self.conv5(x)))
+        x = F.adaptive_max_pool1d(x, 1).squeeze()
+        x = F.relu(self.bn6(self.linear1(x)))
+        x = self.dp1(x)
+        x = self.linear2(x)
+        return x
 
 
-bunny_file = "bunny.ply"
-if not os.path.isfile(bunny_file):
-    urlretrieve(
-        "https://raw.githubusercontent.com/naucoin/VTKData/master/Data/bunny.ply",
-        bunny_file)
+class MinkowskiPointNet(ME.MinkowskiNetwork):
+    def __init__(self, in_channel, out_channel, embedding_channel=1024, dimension=3):
+        ME.MinkowskiNetwork.__init__(self, dimension)
+        self.conv1 = nn.Sequential(
+            ME.MinkowskiLinear(3, 64, bias=False),
+            ME.MinkowskiBatchNorm(64),
+            ME.MinkowskiReLU(),
+        )
+        self.conv2 = nn.Sequential(
+            ME.MinkowskiLinear(64, 64, bias=False),
+            ME.MinkowskiBatchNorm(64),
+            ME.MinkowskiReLU(),
+        )
+        self.conv3 = nn.Sequential(
+            ME.MinkowskiLinear(64, 64, bias=False),
+            ME.MinkowskiBatchNorm(64),
+            ME.MinkowskiReLU(),
+        )
+        self.conv4 = nn.Sequential(
+            ME.MinkowskiLinear(64, 128, bias=False),
+            ME.MinkowskiBatchNorm(128),
+            ME.MinkowskiReLU(),
+        )
+        self.conv5 = nn.Sequential(
+            ME.MinkowskiLinear(128, embedding_channel, bias=False),
+            ME.MinkowskiBatchNorm(embedding_channel),
+            ME.MinkowskiReLU(),
+        )
+        self.max_pool = ME.MinkowskiGlobalMaxPooling()
 
-if __name__ == '__main__':
-    voxel_size = 2e-3  # High resolution grid works better just like high-res image is better for 2D classification
-    pointnet = PointNet(20).float()
+        self.linear1 = nn.Sequential(
+            ME.MinkowskiLinear(embedding_channel, 512, bias=False),
+            ME.MinkowskiBatchNorm(512),
+            ME.MinkowskiReLU(),
+        )
+        self.dp1 = ME.MinkowskiDropout()
+        self.linear2 = ME.MinkowskiLinear(512, out_channel)
 
-    pcd = o3d.io.read_point_cloud(bunny_file)
+    def forward(self, x: ME.TensorField):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.conv5(x)
+        x = self.max_pool(x)
+        x = self.linear1(x)
+        x = self.dp1(x)
+        return self.linear2(x)
 
-    # If you need a high-resolution point cloud, sample points using
-    # https://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/
 
-    # Convert to a voxel grid
-    coords = np.array(pcd.points)
-    feats = coords - coords.mean(0)  # Coordinates are features for pointnet
-    quantized_coords = np.floor(coords / voxel_size)
-    inds = ME.utils.sparse_quantize(quantized_coords, return_index=True)
-    quantized_coords, feats = ME.utils.sparse_collate([quantized_coords[inds]],
-                                                      [feats[inds]])
-    sinput = ME.SparseTensor(feats.float(), quantized_coords)
+class ModelNet40H5(Dataset):
+    def __init__(
+        self,
+        phase: str,
+        data_root: str = "modelnet40h5",
+        num_points=2048,
+    ):
+        Dataset.__init__(self)
+        phase = "test" if phase in ["val", "test"] else "train"
+        self.data, self.label = self.load_data(data_root, phase)
+        self.phase = phase
+        self.num_points = num_points
 
-    print(pointnet(sinput))
+    def load_data(self, data_root, phase):
+        data, labels = [], []
+        assert os.path.exists(data_root), f"{data_root} does not exist"
+        files = glob.glob(os.path.join(data_root, "ply_data_%s*.h5" % phase))
+        assert len(files) > 0, "No files found"
+        for h5_name in files:
+            with h5py.File(h5_name) as f:
+                data.extend(f["data"][:].astype("float32"))
+                labels.extend(f["label"][:].astype("int64"))
+        data = np.stack(data, axis=0)
+        labels = np.stack(labels, axis=0)
+        return data, labels
+
+    def __getitem__(self, i: int) -> dict:
+        xyz = self.data[i]
+        if self.phase == "train":
+            np.random.shuffle(xyz)
+        if len(xyz) > self.num_points:
+            xyz = xyz[: self.num_points]
+        label = self.label[i]
+        xyz = torch.from_numpy(xyz)
+        label = torch.from_numpy(label)
+        return {
+            "coordinates": xyz.to(torch.float32),
+            "features": xyz.to(torch.float32),
+            "label": label,
+        }
+
+    def __len__(self):
+        return self.data.shape[0]
+
+
+if __name__ == "__main__":
+    if not os.path.exists("modelnet40_ply_hdf5_2048.zip"):
+        print("Downloading the 2k downsampled ModelNet40 dataset...")
+        subprocess.run(
+            [
+                "wget",
+                "--no-check-certificate",
+                "https://shapenet.cs.stanford.edu/media/modelnet40_ply_hdf5_2048.zip",
+            ]
+        )
+        subprocess.run(["unzip", "modelnet40_ply_hdf5_2048.zip"])
+
+    dataset = ModelNet40H5(phase="train", data_root="modelnet40_ply_hdf5_2048")
+    # Use stack_collate_fn for pointnet
+    pointnet_data_loader = DataLoader(
+        dataset,
+        num_workers=4,
+        collate_fn=stack_collate_fn,
+        batch_size=16,
+    )
+
+    # Use minkowski_collate_fn for pointnet
+    minknet_data_loader = DataLoader(
+        dataset,
+        num_workers=4,
+        collate_fn=minkowski_collate_fn,
+        batch_size=16,
+    )
+
+    # Network
+    pointnet = PointNet(in_channel=3, out_channel=20, embedding_channel=1024)
+    minkpointnet = MinkowskiPointNet(
+        in_channel=3, out_channel=20, embedding_channel=1024, dimension=3
+    )
+
+    for i, (pointnet_batch, minknet_batch) in enumerate(
+        zip(pointnet_data_loader, minknet_data_loader)
+    ):
+        # PointNet.
+        # WARNING: PointNet inputs must have the same number of points.
+        pointnet_input = pointnet_batch["coordinates"].permute(0, 2, 1)
+        pred = pointnet(pointnet_input)
+
+        # MinkNet
+        # Unlike pointnet, number of points for each point cloud do not need to be the same.
+        minknet_input = ME.TensorField(
+            coordinates=minknet_batch["coordinates"], features=minknet_batch["features"]
+        )
+        minkpointnet(minknet_input)
+        print(f"Processed batch {i}")
