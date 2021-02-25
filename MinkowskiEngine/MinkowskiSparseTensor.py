@@ -477,7 +477,7 @@ class SparseTensor(Tensor):
                 shape = torch.Size([shape[0], self._F.size(1), *[s for s in shape[2:]]])
 
         # Use int tensor for all operations
-        tensor_stride = torch.IntTensor(self.tensor_stride)
+        tensor_stride = torch.IntTensor(self.tensor_stride).to(self.device)
 
         # New coordinates
         batch_indices = self.C[:, 0]
@@ -512,7 +512,7 @@ class SparseTensor(Tensor):
         nchannels = self.F.size(1)
         if shape is None:
             size = coords.max(0)[0] + 1
-            shape = torch.Size([batch_indices.max() + 1, nchannels, *size.numpy()])
+            shape = torch.Size([batch_indices.max() + 1, nchannels, *size.cpu().numpy()])
 
         dense_F = torch.zeros(shape, dtype=self.F.dtype, device=self.F.device)
 
