@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -22,6 +23,7 @@
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
 import os
+import random
 import numpy as np
 import glob
 
@@ -83,7 +85,7 @@ class PointNet(nn.Module):
         self.linear1 = nn.Linear(embedding_channel, 512, bias=False)
         self.bn6 = nn.BatchNorm1d(512)
         self.dp1 = nn.Dropout()
-        self.linear2 = nn.Linear(512, out_channel)
+        self.linear2 = nn.Linear(512, out_channel, bias=True)
 
     def forward(self, x: torch.Tensor):
         x = F.relu(self.bn1(self.conv1(x)))
@@ -139,7 +141,7 @@ class MinkowskiPointNet(ME.MinkowskiNetwork):
             ME.MinkowskiReLU(),
         )
         self.dp1 = ME.MinkowskiDropout()
-        self.linear2 = ME.MinkowskiLinear(512, out_channel)
+        self.linear2 = ME.MinkowskiLinear(512, out_channel, bias=True)
 
     def forward(self, x: ME.TensorField):
         x = self.conv1(x)
@@ -154,17 +156,29 @@ class MinkowskiPointNet(ME.MinkowskiNetwork):
 
 
 class CoordinateTransformation:
-    def __init__(self, trans=0.25, jitter=0.05):
+    def __init__(self, scale_range=(0.9, 1.1), trans=0.25, jitter=0.025, clip=0.05):
+        self.scale_range = scale_range
         self.trans = trans
         self.jitter = jitter
+        self.clip = clip
 
     def __call__(self, coords):
-        coords += np.random.uniform(low=-self.trans, high=self.trans, size=[1, 3])
-        coords += self.jitter * (np.random.rand(len(coords), 3) - 0.5)
+        if random.random() < 0.9:
+            coords *= np.random.uniform(
+                low=self.scale_range[0], high=self.scale_range[1], size=[1, 3]
+            )
+        if random.random() < 0.9:
+            coords += np.random.uniform(low=-self.trans, high=self.trans, size=[1, 3])
+        if random.random() < 0.7:
+            coords += np.clip(
+                self.jitter * (np.random.rand(len(coords), 3) - 0.5),
+                -self.clip,
+                self.clip,
+            )
         return coords
 
     def __repr__(self):
-        return f"Transformation(translation={self.trans}, jitter={self.jitter})"
+        return f"Transformation(scale={self.scale_range}, translation={self.trans}, jitter={self.jitter})"
 
 
 def download_modelnet40_dataset():
@@ -185,14 +199,14 @@ class ModelNet40H5(Dataset):
         self,
         phase: str,
         data_root: str = "modelnet40h5",
-        translation_max: float = 0.25,
+        transform=None,
         num_points=2048,
     ):
         Dataset.__init__(self)
         download_modelnet40_dataset()
         phase = "test" if phase in ["val", "test"] else "train"
         self.data, self.label = self.load_data(data_root, phase)
-        self.transform = CoordinateTransformation(trans=translation_max)
+        self.transform = transform
         self.phase = phase
         self.num_points = num_points
 
@@ -215,7 +229,8 @@ class ModelNet40H5(Dataset):
             np.random.shuffle(xyz)
         if len(xyz) > self.num_points:
             xyz = xyz[: self.num_points]
-        xyz = self.transform(xyz)
+        if self.transform is not None:
+            xyz = self.transform(xyz)
         label = self.label[i]
         xyz = torch.from_numpy(xyz)
         label = torch.from_numpy(label)
@@ -236,18 +251,12 @@ if __name__ == "__main__":
     dataset = ModelNet40H5(phase="train", data_root="modelnet40_ply_hdf5_2048")
     # Use stack_collate_fn for pointnet
     pointnet_data_loader = DataLoader(
-        dataset,
-        num_workers=4,
-        collate_fn=stack_collate_fn,
-        batch_size=16,
+        dataset, num_workers=4, collate_fn=stack_collate_fn, batch_size=16,
     )
 
     # Use minkowski_collate_fn for pointnet
     minknet_data_loader = DataLoader(
-        dataset,
-        num_workers=4,
-        collate_fn=minkowski_collate_fn,
-        batch_size=16,
+        dataset, num_workers=4, collate_fn=minkowski_collate_fn, batch_size=16,
     )
 
     # Network

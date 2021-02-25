@@ -9,6 +9,10 @@ python -m examples.classification_modelnet40 --network minkpointnet  # Minkowski
 python -m examples.classification_modelnet40 --network minkfcnn  # MinkowskiEngine FCNN
 ```
 
+### Training Logs
+
+- training log for MinkowskiFCNN: [https://pastebin.pl/view/30f0a0c8](https://pastebin.pl/view/30f0a0c8)
+
 ## ScanNet Semantic Segmentation
 
 ```

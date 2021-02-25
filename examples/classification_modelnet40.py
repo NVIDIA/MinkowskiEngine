@@ -1,4 +1,5 @@
-# Copyright (c) Chris Choy (chrischoy@ai.stanford.edu).
+# Copyright (c) 2020 NVIDIA CORPORATION.
+# Copyright (c) 2018-2020 Chris Choy (chrischoy@ai.stanford.edu).
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -30,30 +31,32 @@ import torch.nn as nn
 import torch.utils.data
 from torch.utils.data import DataLoader
 import torch.optim as optim
+import torch.nn.functional as F
 
 import MinkowskiEngine as ME
 from examples.pointnet import (
     PointNet,
     MinkowskiPointNet,
+    CoordinateTransformation,
     ModelNet40H5,
     stack_collate_fn,
     minkowski_collate_fn,
 )
-from examples.common import InfSampler
+from examples.common import seed_all
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--voxel_size", type=float, default=0.05)
 parser.add_argument("--max_steps", type=int, default=100000)
 parser.add_argument("--val_freq", type=int, default=1000)
 parser.add_argument("--batch_size", default=32, type=int)
-parser.add_argument("--lr", default=1e-3, type=float)
-parser.add_argument("--momentum", type=float, default=0.9)
+parser.add_argument("--lr", default=1e-1, type=float)
 parser.add_argument("--weight_decay", type=float, default=1e-4)
-parser.add_argument("--num_workers", type=int, default=1)
-parser.add_argument("--stat_freq", type=int, default=50)
+parser.add_argument("--num_workers", type=int, default=2)
+parser.add_argument("--stat_freq", type=int, default=100)
 parser.add_argument("--weights", type=str, default="modelnet.pth")
-parser.add_argument("--load_optimizer", type=str, default="true")
-parser.add_argument("--translation", type=float, default=0.25)
+parser.add_argument("--seed", type=int, default=777)
+parser.add_argument("--translation", type=float, default=0.2)
+parser.add_argument("--test_translation", type=float, default=0.0)
 parser.add_argument(
     "--network",
     type=str,
@@ -104,40 +107,22 @@ class MinkowskiFCNN(ME.MinkowskiNetwork):
         )
 
     def network_initialization(
-        self,
-        in_channel,
-        out_channel,
-        channels,
-        embedding_channel,
-        kernel_size,
-        D=3,
+        self, in_channel, out_channel, channels, embedding_channel, kernel_size, D=3,
     ):
         self.mlp1 = self.get_mlp_block(in_channel, channels[0])
         self.conv1 = self.get_conv_block(
-            channels[0],
-            channels[1],
-            kernel_size=kernel_size,
-            stride=1,
+            channels[0], channels[1], kernel_size=kernel_size, stride=1,
         )
         self.conv2 = self.get_conv_block(
-            channels[1],
-            channels[2],
-            kernel_size=kernel_size,
-            stride=2,
+            channels[1], channels[2], kernel_size=kernel_size, stride=2,
         )
 
         self.conv3 = self.get_conv_block(
-            channels[2],
-            channels[3],
-            kernel_size=kernel_size,
-            stride=2,
+            channels[2], channels[3], kernel_size=kernel_size, stride=2,
         )
 
         self.conv4 = self.get_conv_block(
-            channels[3],
-            channels[4],
-            kernel_size=kernel_size,
-            stride=2,
+            channels[3], channels[4], kernel_size=kernel_size, stride=2,
         )
         self.conv5 = nn.Sequential(
             self.get_conv_block(
@@ -147,16 +132,10 @@ class MinkowskiFCNN(ME.MinkowskiNetwork):
                 stride=2,
             ),
             self.get_conv_block(
-                embedding_channel // 4,
-                embedding_channel // 2,
-                kernel_size=3,
-                stride=2,
+                embedding_channel // 4, embedding_channel // 2, kernel_size=3, stride=2,
             ),
             self.get_conv_block(
-                embedding_channel // 2,
-                embedding_channel,
-                kernel_size=3,
-                stride=2,
+                embedding_channel // 2, embedding_channel, kernel_size=3, stride=2,
             ),
         )
 
@@ -168,10 +147,11 @@ class MinkowskiFCNN(ME.MinkowskiNetwork):
         self.final = nn.Sequential(
             self.get_mlp_block(embedding_channel * 2, 512),
             ME.MinkowskiDropout(),
-            self.get_mlp_block(512, 256),
-            ME.MinkowskiLinear(256, out_channel),
+            self.get_mlp_block(512, 512),
+            ME.MinkowskiLinear(512, out_channel, bias=True),
         )
 
+        # No, Dropout, last 256 linear, AVG_POOLING 92%
     def weight_initialization(self):
         for m in self.modules():
             if isinstance(m, ME.MinkowskiConvolution):
@@ -217,61 +197,54 @@ STR2NETWORK = dict(
 
 
 def create_input_batch(batch, is_minknet, device="cuda", quantization_size=0.05):
-    with torch.no_grad():
-        if is_minknet:
-            batch["coordinates"][:, 1:] = (
-                batch["coordinates"][:, 1:] / quantization_size
-            )
-            return ME.TensorField(
-                coordinates=batch["coordinates"],
-                features=batch["features"],
-                device=device,
-            )
-        else:
-            return batch["coordinates"].permute(0, 2, 1).to(device)
+    if is_minknet:
+        batch["coordinates"][:, 1:] = batch["coordinates"][:, 1:] / quantization_size
+        return ME.TensorField(
+            coordinates=batch["coordinates"], features=batch["features"], device=device,
+        )
+    else:
+        return batch["coordinates"].permute(0, 2, 1).to(device)
+
+
+class CoordinateTranslation:
+    def __init__(self, translation):
+        self.trans = translation
+
+    def __call__(self, coords):
+        if self.trans > 0:
+            coords += np.random.uniform(low=-self.trans, high=self.trans, size=[1, 3])
+        return coords
 
 
 def make_data_loader(phase, is_minknet, config):
     assert phase in ["train", "val", "test"]
+    is_train = phase == "train"
     dataset = ModelNet40H5(
         phase=phase,
-        translation_max=config.translation,  # PointNets are sensitive to translation
+        transform=CoordinateTransformation(trans=config.translation)
+        if is_train
+        else CoordinateTranslation(config.test_translation),
         data_root="modelnet40_ply_hdf5_2048",
     )
-    if phase == "train":
-        return DataLoader(
-            dataset,
-            num_workers=2,
-            sampler=InfSampler(dataset, shuffle=phase == "train"),
-            collate_fn=minkowski_collate_fn if is_minknet else stack_collate_fn,
-            batch_size=config.batch_size,
-        )
-    else:
-        return DataLoader(
-            dataset,
-            num_workers=2,
-            collate_fn=minkowski_collate_fn if is_minknet else stack_collate_fn,
-            batch_size=config.batch_size,
-        )
+    return DataLoader(
+        dataset,
+        num_workers=config.num_workers,
+        shuffle=is_train,
+        collate_fn=minkowski_collate_fn if is_minknet else stack_collate_fn,
+        batch_size=config.batch_size,
+    )
 
 
 def test(net, device, config, phase="val"):
     is_minknet = isinstance(net, ME.MinkowskiNetwork)
-    data_loader = make_data_loader(
-        "test",
-        is_minknet,
-        config=config,
-    )
+    data_loader = make_data_loader("test", is_minknet, config=config,)
 
     net.eval()
     labels, preds = [], []
     with torch.no_grad():
         for batch in data_loader:
             input = create_input_batch(
-                batch,
-                is_minknet,
-                device=device,
-                quantization_size=config.voxel_size,
+                batch, is_minknet, device=device, quantization_size=config.voxel_size,
             )
             logit = net(input)
             pred = torch.argmax(logit, 1)
@@ -281,32 +254,49 @@ def test(net, device, config, phase="val"):
     return metrics.accuracy_score(np.concatenate(labels), np.concatenate(preds))
 
 
+def criterion(pred, labels, smoothing=True):
+    """ Calculate cross entropy loss, apply label smoothing if needed. """
+
+    labels = labels.contiguous().view(-1)
+    if smoothing:
+        eps = 0.2
+        n_class = pred.size(1)
+
+        one_hot = torch.zeros_like(pred).scatter(1, labels.view(-1, 1), 1)
+        one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
+        log_prb = F.log_softmax(pred, dim=1)
+
+        loss = -(one_hot * log_prb).sum(dim=1).mean()
+    else:
+        loss = F.cross_entropy(pred, labels, reduction="mean")
+
+    return loss
+
+
 def train(net, device, config):
     is_minknet = isinstance(net, ME.MinkowskiNetwork)
-    optimizer = optim.Adam(
-        net.parameters(),
-        lr=config.lr,
-        weight_decay=config.weight_decay,
+    optimizer = optim.SGD(
+        net.parameters(), lr=config.lr, momentum=0.9, weight_decay=config.weight_decay,
     )
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(
-        optimizer,
-        T_max=config.max_steps,
-    )
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.max_steps,)
+    print(optimizer)
+    print(scheduler)
 
-    crit = torch.nn.CrossEntropyLoss()
-
-    train_dataloader = make_data_loader("train", is_minknet, config)
-
+    train_iter = iter(make_data_loader("train", is_minknet, config))
+    best_metric = 0
     net.train()
-    train_iter = iter(train_dataloader)
     for i in range(config.max_steps):
-        data_dict = train_iter.next()
         optimizer.zero_grad()
+        try:
+            data_dict = train_iter.next()
+        except StopIteration:
+            train_iter = iter(make_data_loader("train", is_minknet, config))
+            data_dict = train_iter.next()
         input = create_input_batch(
             data_dict, is_minknet, device=device, quantization_size=config.voxel_size
         )
         logit = net(input)
-        loss = crit(logit, data_dict["labels"].to(device))
+        loss = criterion(logit, data_dict["labels"].to(device))
         loss.backward()
         optimizer.step()
         scheduler.step()
@@ -325,29 +315,20 @@ def train(net, device, config):
                 },
                 config.weights,
             )
-
-            # Validation
             accuracy = test(net, device, config, phase="val")
-            print(f"Validation accuracy: {accuracy}")
-
+            if best_metric < accuracy:
+                best_metric = accuracy
+            print(f"Validation accuracy: {accuracy}. Best accuracy: {best_metric}")
             net.train()
 
 
 if __name__ == "__main__":
     config = parser.parse_args()
-
+    seed_all(config.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    dataset = ModelNet40H5(
-        phase="train",
-        translation_max=config.translation,  # PointNets are sensitive to translation
-        data_root="modelnet40_ply_hdf5_2048",
-    )
-    print("===================Dataset===================")
-    print(dataset)
-    print("The PointNet is very sensitive to the translation of points.")
-    print(
-        "FCNN is robust to such translation since convolution is the most generic translation invariant operator."
-    )
+    print("===================ModelNet40 Dataset===================")
+    print(f"Training with translation {config.translation}")
+    print(f"Evaluating with translation {config.test_translation}")
     print("=============================================\n\n")
 
     net = STR2NETWORK[config.network](
