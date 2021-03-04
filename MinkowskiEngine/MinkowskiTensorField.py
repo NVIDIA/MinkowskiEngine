@@ -245,8 +245,7 @@ class TensorField(Tensor):
     @property
     def _batchwise_row_indices(self):
         if self._batch_rows is None:
-            batch_inds = torch.unique(self._C[:, 0])
-            self._batch_rows = [self._C[:, 0] == b for b in batch_inds]
+            _, self._batch_rows = self._manager.origin_field_map(self.coordinate_field_map_key)
         return self._batch_rows
 
     def _get_coordinate_field(self):
