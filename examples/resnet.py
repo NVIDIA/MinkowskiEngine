@@ -39,7 +39,8 @@ from MinkowskiEngine.modules.resnet_block import BasicBlock, Bottleneck
 
 
 if not os.path.isfile("1.ply"):
-    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", "1.ply")
+    print('Downloading an example pointcloud...')
+    urlretrieve("https://bit.ly/3c2iLhg", "1.ply")
 
 
 def load_file(file_name):

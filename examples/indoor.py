@@ -25,6 +25,7 @@ import os
 import argparse
 import numpy as np
 from urllib.request import urlretrieve
+
 try:
     import open3d as o3d
 except ImportError:
@@ -33,14 +34,14 @@ except ImportError:
 import torch
 import MinkowskiEngine as ME
 from examples.minkunet import MinkUNet34C
-from examples.common import Timer
 
 # Check if the weights and file exist and download
 if not os.path.isfile('weights.pth'):
-    print('Downloading weights and a room ply file...')
-    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/weights.pth",
-                'weights.pth')
-    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", '1.ply')
+    print('Downloading weights...')
+    urlretrieve("https://bit.ly/2O4dZrz", "weights.pth")
+if not os.path.isfile("1.ply"):
+    print('Downloading an example pointcloud...')
+    urlretrieve("https://bit.ly/3c2iLhg", "1.ply")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_name', type=str, default='1.ply')
