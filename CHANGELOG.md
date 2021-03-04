@@ -17,6 +17,8 @@
 - Added `to_sparse()` that removes zeros. (issue #317)
     - Previous `to_sparse()` was renamed to `to_sparse_all()`
     - `MinkowskiToSparseTensor` takes an optional `remove_zeros` boolean argument.
+- Fix global max pool with batch size 1
+- Use separate memory chunks for in, out map, and kernel indices for `gpu_kernel_map` for gpu memory misaligned error
 
 
 ## [0.5.1]

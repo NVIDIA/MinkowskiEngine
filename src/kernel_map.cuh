@@ -122,17 +122,25 @@ public:
     LOG_DEBUG("Initialized gpu_kernel_map");
   }
   gpu_kernel_map(self_type const &other)
-      : m_decomposed(other.m_decomposed),
-        m_memory_size_byte(other.m_memory_size_byte),
-        m_capacity{other.m_capacity}, m_memory{other.m_memory},
-        m_allocator{other.m_allocator},
-        m_kernel_size_map{other.m_kernel_size_map},
-        m_kernel_offset_map{other.m_kernel_offset_map}, kernels{*this},
-        in_maps{*this}, out_maps{*this} {
+      : m_decomposed(other.m_decomposed),                       //
+        m_requires_kernel_index(other.m_requires_kernel_index), //
+        m_memory_size_byte(other.m_memory_size_byte),           //
+        m_capacity{other.m_capacity},                           //
+        m_in_map_memory{other.m_in_map_memory},                 //
+        m_out_map_memory{other.m_out_map_memory},               //
+        m_allocator{other.m_allocator},                         //
+        m_kernel_size_map{other.m_kernel_size_map},             //
+        m_kernel_offset_map{other.m_kernel_offset_map},         //
+        kernels{*this},                                         //
+        in_maps{*this},                                         //
+        out_maps{*this} {
     LOG_DEBUG("gpu_kernel_map copy constructor");
     in_maps.data(other.in_maps.begin());
     out_maps.data(other.out_maps.begin());
-    kernels.data(other.kernels.begin());
+    if (m_requires_kernel_index) {
+      m_kernel_index_memory = other.m_kernel_index_memory;
+      kernels.data(other.kernels.begin());
+    }
   }
 
   gpu_kernel_map(size_type capacity,
@@ -141,10 +149,12 @@ public:
       : m_requires_kernel_index(requires_kernel_index), m_capacity{capacity},
         m_allocator{alloc}, kernels{*this}, in_maps{*this}, out_maps{*this} {
     // kernel map without kernel index
-    m_memory_size_byte =
-        (requires_kernel_index ? 3 : 2) * capacity * sizeof(index_type);
-    index_type *ptr = reinterpret_cast<index_type *>(
+    m_memory_size_byte = capacity * sizeof(index_type);
+    index_type *ptr_in_map = reinterpret_cast<index_type *>(
         m_allocator.allocate(m_memory_size_byte));
+    index_type *ptr_out_map = reinterpret_cast<index_type *>(
+        m_allocator.allocate(m_memory_size_byte));
+    index_type *ptr_kernel = nullptr;
 
     auto deleter = [](index_type *p, byte_allocator_type alloc,
                       size_type size) {
@@ -152,16 +162,24 @@ public:
       LOG_DEBUG("Deallocate kernel map");
     };
 
-    m_memory = std::shared_ptr<index_type[]>{
-        ptr, std::bind(deleter, std::placeholders::_1, m_allocator,
-                       m_memory_size_byte)};
-
+    m_in_map_memory = std::shared_ptr<index_type[]>{
+        ptr_in_map, std::bind(deleter, std::placeholders::_1, m_allocator,
+                              m_memory_size_byte)};
+    m_out_map_memory = std::shared_ptr<index_type[]>{
+        ptr_out_map, std::bind(deleter, std::placeholders::_1, m_allocator,
+                               m_memory_size_byte)};
     // kernel maps
-    in_maps.data(m_memory.get() + 0 * m_capacity);
-    out_maps.data(m_memory.get() + 1 * m_capacity);
-    kernels.data(m_memory.get() + 2 * m_capacity);
+    in_maps.data(m_in_map_memory.get());
+    out_maps.data(m_out_map_memory.get());
 
-    if (!requires_kernel_index) {
+    if (requires_kernel_index) {
+      ptr_kernel = reinterpret_cast<index_type *>(
+          m_allocator.allocate(m_memory_size_byte));
+      m_kernel_index_memory = std::shared_ptr<index_type[]>{
+          ptr_kernel, std::bind(deleter, std::placeholders::_1, m_allocator,
+                                m_memory_size_byte)};
+      kernels.data(m_kernel_index_memory.get());
+    } else {
       m_kernel_offset_map[0] = 0;
       m_kernel_size_map[0] = capacity;
       // Initialize the decomposed begins and sizes
@@ -171,10 +189,10 @@ public:
 
   self_type swap() const {
     self_type swapped_gpu_kernel_map(*this);
-    swapped_gpu_kernel_map.in_maps.data(swapped_gpu_kernel_map.m_memory.get() +
-                                        1 * m_capacity);
-    swapped_gpu_kernel_map.out_maps.data(swapped_gpu_kernel_map.m_memory.get() +
-                                         0 * m_capacity);
+    swapped_gpu_kernel_map.in_maps.data(
+        swapped_gpu_kernel_map.m_out_map_memory.get());
+    swapped_gpu_kernel_map.out_maps.data(
+        swapped_gpu_kernel_map.m_in_map_memory.get());
 
 #ifdef DEBUG
     size_type map_size = std::min<size_type>(in_maps.size(0), 100);
@@ -217,7 +235,6 @@ public:
     CUDA_CHECK(cudaDeviceSynchronize());
     std::free(p_kernel_map);
 #endif
-
     return swapped_gpu_kernel_map;
   }
 
@@ -228,7 +245,9 @@ public:
     m_memory_size_byte = other.m_memory_size_byte;
     m_capacity = other.m_capacity;
 
-    m_memory = other.m_memory;
+    m_kernel_index_memory = other.m_kernel_index_memory;
+    m_in_map_memory = other.m_in_map_memory;
+    m_out_map_memory = other.m_out_map_memory;
     m_allocator = other.m_allocator;
 
     m_kernel_size_map = other.m_kernel_size_map;
@@ -242,8 +261,6 @@ public:
   }
 
   // functions
-  inline index_type *data() { return m_memory.get(); }
-
   inline typename std::map<index_type, index_type>::const_iterator
   key_cbegin() const {
     return m_kernel_offset_map.cbegin();
@@ -306,14 +323,23 @@ public:
                             ));
 
 #ifdef DEBUG
+    size_type map_size = std::min<size_type>(in_maps.size(0), 100);
     index_type *p_kernel_map =
-        (index_type *)std::malloc(m_capacity * 3 * sizeof(index_type));
-    CUDA_CHECK(cudaMemcpy(p_kernel_map, data(), m_memory_size_byte,
+        (index_type *)std::malloc(map_size * 3 * sizeof(index_type));
+    CUDA_CHECK(cudaMemcpy(p_kernel_map, m_kernel_index_memory.get(),
+                          map_size * sizeof(index_type),
                           cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(p_kernel_map + map_size, m_in_map_memory.get(),
+                          map_size * sizeof(index_type),
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(p_kernel_map + 2 * map_size, m_out_map_memory.get(),
+                          map_size * sizeof(index_type),
+                          cudaMemcpyDeviceToHost));
+
     for (index_type i = 0; i < std::min<size_type>(m_capacity, 100); ++i) {
-      std::cout << p_kernel_map[i + 2 * m_capacity] << ":"
-                << p_kernel_map[i + 0 * m_capacity] << "->"
-                << p_kernel_map[i + 1 * m_capacity] << "\n";
+      std::cout << p_kernel_map[i + 0 * map_size] << ":"
+                << p_kernel_map[i + 1 * map_size] << "->"
+                << p_kernel_map[i + 2 * map_size] << "\n";
     }
     std::free(p_kernel_map);
 #endif
@@ -376,7 +402,9 @@ private:
   bool m_decomposed{false};
   bool m_requires_kernel_index;
   size_type m_memory_size_byte, m_capacity;
-  std::shared_ptr<index_type[]> m_memory;
+  std::shared_ptr<index_type[]> m_kernel_index_memory;
+  std::shared_ptr<index_type[]> m_in_map_memory;
+  std::shared_ptr<index_type[]> m_out_map_memory;
   byte_allocator_type m_allocator;
 
   std::map<index_type, index_type> m_kernel_size_map;

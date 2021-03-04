@@ -45,7 +45,7 @@ from MinkowskiEngine.utils import batched_coordinates
 from tests.python.common import data_loader, load_file
 from utils.gradcheck import gradcheck
 
-LEAK_TEST_ITER = 10000000
+LEAK_TEST_ITER = 100000
 
 
 class TestConvolution(unittest.TestCase):
@@ -220,6 +220,8 @@ class TestConvolution(unittest.TestCase):
         for i in range(LEAK_TEST_ITER):
             input = SparseTensor(feats, coordinates=coords)
             conv(input).F.sum().backward()
+            if i % 1000 == 0:
+                print(i)
 
     def test_analytic(self):
         print(f"{self.__class__.__name__}: test")
