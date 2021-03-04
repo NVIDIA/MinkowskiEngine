@@ -464,7 +464,7 @@ class TestGlobalMaxPooling(unittest.TestCase):
         if not torch.cuda.is_available():
             return
 
-        input = SparseTensor(feats, coordinates=coords, device=0)
+        input = SparseTensor(feats, coordinates=coords, device="cuda")
         output = pool(input)
         print(output)
         output.F.sum().backward()

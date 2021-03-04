@@ -611,7 +611,6 @@ class MinkowskiGlobalPoolingFunction(Function):
             ctx.coordinate_manager._manager,
         )
         ctx.num_nonzero = num_nonzero
-
         return out_feat
 
     @staticmethod
