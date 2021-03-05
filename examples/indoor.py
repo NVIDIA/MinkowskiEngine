@@ -107,6 +107,20 @@ def load_file(file_name):
     return coords, colors, pcd
 
 
+def normalize_color(color: torch.Tensor, is_color_in_range_0_255: bool = False) -> torch.Tensor:
+    r"""
+    Convert color in range [0, 1] to [-0.5, 0.5]. If the color is in range [0,
+    255], use the argument `is_color_in_range_0_255=True`.
+
+    `color` (torch.Tensor): Nx3 color feature matrix
+    `is_color_in_range_0_255` (bool): If the color is in range [0, 255] not [0, 1], normalize the color to [0, 1].
+    """
+    if is_color_in_range_0_255:
+        color /= 255
+    color -= 0.5
+    return color.float()
+
+
 if __name__ == '__main__':
     config = parser.parse_args()
     device = torch.device('cuda' if (
@@ -124,7 +138,7 @@ if __name__ == '__main__':
         voxel_size = 0.02
         # Feed-forward pass and get the prediction
         in_field = ME.TensorField(
-            features=torch.from_numpy(colors).float(),
+            features=normalize_color(torch.from_numpy(colors)),
             coordinates=ME.utils.batched_coordinates([coords / voxel_size], dtype=torch.float32),
             quantization_mode=ME.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE,
             minkowski_algorithm=ME.MinkowskiAlgorithm.SPEED_OPTIMIZED,
