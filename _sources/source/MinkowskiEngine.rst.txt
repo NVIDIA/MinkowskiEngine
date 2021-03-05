@@ -13,14 +13,6 @@ Subpackages
 Submodules
 ----------
 
-MinkowskiEngine.Common module
------------------------------
-
-.. automodule:: MinkowskiEngine.Common
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 MinkowskiEngine.MinkowskiBroadcast module
 -----------------------------------------
 
@@ -37,6 +29,14 @@ MinkowskiEngine.MinkowskiChannelwiseConvolution module
    :undoc-members:
    :show-inheritance:
 
+MinkowskiEngine.MinkowskiCommon module
+--------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiCommon
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 MinkowskiEngine.MinkowskiConvolution module
 -------------------------------------------
 
@@ -45,10 +45,10 @@ MinkowskiEngine.MinkowskiConvolution module
    :undoc-members:
    :show-inheritance:
 
-MinkowskiEngine.MinkowskiCoords module
---------------------------------------
+MinkowskiEngine.MinkowskiCoordinateManager module
+-------------------------------------------------
 
-.. automodule:: MinkowskiEngine.MinkowskiCoords
+.. automodule:: MinkowskiEngine.MinkowskiCoordinateManager
    :members:
    :undoc-members:
    :show-inheritance:
@@ -57,6 +57,22 @@ MinkowskiEngine.MinkowskiFunctional module
 ------------------------------------------
 
 .. automodule:: MinkowskiEngine.MinkowskiFunctional
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+MinkowskiEngine.MinkowskiInterpolation module
+---------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiInterpolation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+MinkowskiEngine.MinkowskiKernelGenerator module
+-----------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiKernelGenerator
    :members:
    :undoc-members:
    :show-inheritance:
@@ -109,6 +125,30 @@ MinkowskiEngine.MinkowskiPruning module
    :undoc-members:
    :show-inheritance:
 
+MinkowskiEngine.MinkowskiSparseTensor module
+--------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiSparseTensor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+MinkowskiEngine.MinkowskiTensor module
+--------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiTensor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+MinkowskiEngine.MinkowskiTensorField module
+-------------------------------------------
+
+.. automodule:: MinkowskiEngine.MinkowskiTensorField
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 MinkowskiEngine.MinkowskiUnion module
 -------------------------------------
 
@@ -117,10 +157,18 @@ MinkowskiEngine.MinkowskiUnion module
    :undoc-members:
    :show-inheritance:
 
-MinkowskiEngine.SparseTensor module
------------------------------------
+MinkowskiEngine.diagnostics module
+----------------------------------
 
-.. automodule:: MinkowskiEngine.SparseTensor
+.. automodule:: MinkowskiEngine.diagnostics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+MinkowskiEngine.sparse\_matrix\_functions module
+------------------------------------------------
+
+.. automodule:: MinkowskiEngine.sparse_matrix_functions
    :members:
    :undoc-members:
    :show-inheritance:

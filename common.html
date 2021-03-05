@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Miscellaneous Classes &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>Miscellaneous Classes &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -209,10 +209,10 @@
 <h2>Kernel Generator<a class="headerlink" href="#kernel-generator" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.KernelGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">KernelGenerator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kernel_size</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">stride</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">is_transpose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">region_type</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.RegionType</span> <span class="o">=</span> <span class="default_value">RegionType.HYPER_CUBE</span></em>, <em class="sig-param"><span class="n">region_offsets</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand_coordinates</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">axis_types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">KernelGenerator</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">is_transpose: bool = False</em>, <em class="sig-param">region_type: MinkowskiEngineBackend._C.RegionType = &lt;RegionType.HYPER_CUBE: 0&gt;</em>, <em class="sig-param">region_offsets: Optional[torch.Tensor] = None</em>, <em class="sig-param">expand_coordinates: bool = False</em>, <em class="sig-param">axis_types=None</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt id="MinkowskiEngine.KernelGenerator.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kernel_size</span><span class="o">=</span><span class="default_value">- 1</span></em>, <em class="sig-param"><span class="n">stride</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">is_transpose</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">region_type</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.RegionType</span> <span class="o">=</span> <span class="default_value">RegionType.HYPER_CUBE</span></em>, <em class="sig-param"><span class="n">region_offsets</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expand_coordinates</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">axis_types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dimension</span><span class="o">=</span><span class="default_value">- 1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">kernel_size=-1</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">is_transpose: bool = False</em>, <em class="sig-param">region_type: MinkowskiEngineBackend._C.RegionType = &lt;RegionType.HYPER_CUBE: 0&gt;</em>, <em class="sig-param">region_offsets: Optional[torch.Tensor] = None</em>, <em class="sig-param">expand_coordinates: bool = False</em>, <em class="sig-param">axis_types=None</em>, <em class="sig-param">dimension=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.KernelGenerator.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#MinkowskiEngine.KernelGenerator.region_type" title="MinkowskiEngine.KernelGenerator.region_type"><code class="xref py py-attr docutils literal notranslate"><span class="pre">region_type</span></code></a> (RegionType, optional): defines the kernel
 shape. Please refer to MinkowskiEngine.Comon for details.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">region_offset</span></code> (torch.IntTensor, optional): when the
@@ -302,24 +302,23 @@ first two dimensions and cross shaped for the thrid dimension.</p>
 <p>CUSTOM</p>
 <dl class="py attribute">
 <dt id="MinkowskiEngine.RegionType.CUSTOM">
-<code class="sig-name descname">CUSTOM</code><em class="property"> = RegionType.CUSTOM</em><a class="headerlink" href="#MinkowskiEngine.RegionType.CUSTOM" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">CUSTOM</code><em class="property"> = &lt;RegionType.CUSTOM: 2&gt;</em><a class="headerlink" href="#MinkowskiEngine.RegionType.CUSTOM" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="MinkowskiEngine.RegionType.HYPER_CROSS">
-<code class="sig-name descname">HYPER_CROSS</code><em class="property"> = RegionType.HYPER_CROSS</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPER_CROSS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">HYPER_CROSS</code><em class="property"> = &lt;RegionType.HYPER_CROSS: 1&gt;</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPER_CROSS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt id="MinkowskiEngine.RegionType.HYPER_CUBE">
-<code class="sig-name descname">HYPER_CUBE</code><em class="property"> = RegionType.HYPER_CUBE</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPER_CUBE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">HYPER_CUBE</code><em class="property"> = &lt;RegionType.HYPER_CUBE: 0&gt;</em><a class="headerlink" href="#MinkowskiEngine.RegionType.HYPER_CUBE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.RegionType.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#MinkowskiEngine.RegionType.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 

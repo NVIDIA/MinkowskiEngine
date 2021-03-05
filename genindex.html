@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Index &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>Index &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -128,6 +128,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_05.html">Migration Guide from v0.4.x to v0.5.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -210,14 +211,17 @@
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -296,8 +300,6 @@
 </li>
         <li><a href="utils.html#MinkowskiEngine.MinkowskiToSparseTensor.__init__">(MinkowskiEngine.MinkowskiToSparseTensor method)</a>
 </li>
-        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion.__init__">(MinkowskiEngine.MinkowskiUnion method)</a>
-</li>
         <li><a href="utils.html#MinkowskiEngine.utils.SparseCollation.__init__">(MinkowskiEngine.utils.SparseCollation method)</a>
 </li>
       </ul></li>
@@ -307,19 +309,85 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="common.html#MinkowskiEngine.KernelGenerator.axis_types">axis_types (MinkowskiEngine.KernelGenerator attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.alpha_dropout">alpha_dropout() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator.axis_types">axis_types (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.axis_types">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="utils.html#MinkowskiEngine.utils.batch_sparse_collate">batch_sparse_collate() (in module MinkowskiEngine.utils)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.backward">backward() (MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction static method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.backward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction static method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.backward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolationFunction.backward">(MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolationFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.backward">(MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiDirectMaxPoolingFunction.backward">(MinkowskiEngine.MinkowskiPooling.MinkowskiDirectMaxPoolingFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.backward">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingFunction.backward">(MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingTransposeFunction.backward">(MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingTransposeFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.backward">(MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.backward">(MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMAverageFunction.backward">(MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMAverageFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMFunction.backward">(MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMFunction static method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.BasicBlock">BasicBlock (class in MinkowskiEngine.modules.resnet_block)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.batch_norm">batch_norm() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="utils.html#MinkowskiEngine.utils.batch_sparse_collate">batch_sparse_collate() (in module MinkowskiEngine.utils)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.collation.batch_sparse_collate">(in module MinkowskiEngine.utils.collation)</a>
+</li>
+      </ul></li>
       <li><a href="utils.html#MinkowskiEngine.utils.batched_coordinates">batched_coordinates() (in module MinkowskiEngine.utils)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.collation.batched_coordinates">(in module MinkowskiEngine.utils.collation)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.bias">bias (MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.bias">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.bias">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.bias">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.bias">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.binary_cross_entropy">binary_cross_entropy() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.binary_cross_entropy_with_logits">binary_cross_entropy_with_logits() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.Bottleneck">Bottleneck (class in MinkowskiEngine.modules.resnet_block)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -327,25 +395,79 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.C">C() (MinkowskiEngine.MinkowskiTensorField.TensorField property)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.C">C() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensorField.TensorField.C">(MinkowskiEngine.MinkowskiTensorField.TensorField property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.C">[1]</a>
 </li>
+      </ul></li>
       <li><a href="common.html#MinkowskiEngine.KernelGenerator.cache">cache (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.cache">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
 </li>
+      </ul></li>
       <li><a href="utils.html#MinkowskiEngine.cat">cat() (in module MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.cat">(in module MinkowskiEngine.MinkowskiOps)</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.cat_slice">cat_slice() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.cat_slice">cat_slice() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.cat_slice">[1]</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.clear_global_coordinate_manager">clear_global_coordinate_manager() (in module MinkowskiEngine.MinkowskiTensor)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.celu">celu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.coordinate_field_map_key">coordinate_field_map_key (MinkowskiEngine.MinkowskiTensorField.TensorField attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.clear_global_coordinate_manager">clear_global_coordinate_manager() (in module MinkowskiEngine.MinkowskiTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.clear_global_coordinate_manager">[1]</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key">coordinate_map_key (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.conv">conv (MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.conv">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.conv">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.conv">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.conv">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.convert_region_type">convert_region_type() (in module MinkowskiEngine.MinkowskiKernelGenerator)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm.convert_sync_batchnorm">convert_sync_batchnorm() (MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm class method)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.convert_to_int_list">convert_to_int_list() (in module MinkowskiEngine.MinkowskiCommon)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.convert_to_int_tensor">convert_to_int_tensor() (in module MinkowskiEngine.MinkowskiCommon)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensorField.TensorField.coordinate_field_map_key">coordinate_field_map_key (MinkowskiEngine.MinkowskiTensorField.TensorField attribute)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.coordinate_field_map_key">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.coordinate_manager">coordinate_manager() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key">coordinate_map_key (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.coordinate_map_key">[1]</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.coordinate_map_key">(MinkowskiEngine.MinkowskiTensor.Tensor attribute)</a>
+</li>
+      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager">CoordinateManager (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager">(class in MinkowskiEngine.MinkowskiCoordinateManager)</a>
 </li>
+      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateMapKey">CoordinateMapKey (class in MinkowskiEngine)</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.coordinates">coordinates() (MinkowskiEngine.MinkowskiTensorField.TensorField property)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.coordinates">coordinates() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensorField.TensorField.coordinates">(MinkowskiEngine.MinkowskiTensorField.TensorField property)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.coordinates">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.coordinates_and_features_at">coordinates_and_features_at() (MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.coordinates_at">coordinates_at() (MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordsManager">CoordsManager (class in MinkowskiEngine.MinkowskiCoordinateManager)</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling.cpu">cpu() (MinkowskiEngine.MinkowskiAvgPooling method)</a>
 
@@ -381,6 +503,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.cross_entropy">cross_entropy() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling.cuda">cuda() (MinkowskiEngine.MinkowskiAvgPooling method)</a>
 
       <ul>
@@ -423,9 +547,53 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.dense">dense() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.D">D() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.decomposed_coordinates">decomposed_coordinates() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.decomposed_coordinates_and_features">decomposed_coordinates_and_features() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.decomposed_features">decomposed_features() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.decomposition_permutations">decomposition_permutations() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.dense">dense() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.dense">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.dense_coordinates">dense_coordinates() (in module MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.detach">detach() (MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.device">device() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
 </li>
       <li><a href="common.html#MinkowskiEngine.KernelGenerator.dimension">dimension (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.dimension">(MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.dimension">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.dimension">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.dimension">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.dimension">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.dimension">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling.dimension">(MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.dimension">(MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.dimension">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.dimension">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling.dimension">(MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.dimension">dimension() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling.double">double() (MinkowskiEngine.MinkowskiAvgPooling method)</a>
 
@@ -458,23 +626,73 @@
 </li>
         <li><a href="normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm.double">(MinkowskiEngine.MinkowskiSyncBatchNorm method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.double">(MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
       </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.dropout">dropout() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.dtype">dtype() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="common.html#MinkowskiEngine.KernelGenerator.expand_coordinates">expand_coordinates (MinkowskiEngine.KernelGenerator attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.elu">elu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.exists_field_to_sparse">exists_field_to_sparse() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.exists_field_to_sparse">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator.expand_coordinates">expand_coordinates (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.expand_coordinates">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.BasicBlock.expansion">expansion (MinkowskiEngine.modules.resnet_block.BasicBlock attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.Bottleneck.expansion">(MinkowskiEngine.modules.resnet_block.Bottleneck attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.features_at_coordinates">features_at_coordinates() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.F">F() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.features">features() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.features_at">features_at() (MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.features_at_coordinates">features_at_coordinates() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.features_at_coordinates">[1]</a>
+</li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.field_to_sparse_insert_and_map">field_to_sparse_insert_and_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.field_to_sparse_insert_and_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.field_to_sparse_keys">field_to_sparse_keys() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.field_to_sparse_keys">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.field_to_sparse_map">field_to_sparse_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.field_to_sparse_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling.float">float() (MinkowskiEngine.MinkowskiAvgPooling method)</a>
 
       <ul>
@@ -506,13 +724,25 @@
 </li>
         <li><a href="normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm.float">(MinkowskiEngine.MinkowskiSyncBatchNorm method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.float">(MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
       </ul></li>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.quantization.fnv_hash_vec">fnv_hash_vec() (in module MinkowskiEngine.utils.quantization)</a>
+</li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling.forward">forward() (MinkowskiEngine.MinkowskiAvgPooling method)</a>
 
       <ul>
         <li><a href="normalization.html#MinkowskiEngine.MinkowskiBatchNorm.forward">(MinkowskiEngine.MinkowskiBatchNorm method)</a>
 </li>
         <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcast.forward">(MinkowskiEngine.MinkowskiBroadcast method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastBase.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastBase method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction.forward">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction static method)</a>
 </li>
         <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastAddition.forward">(MinkowskiEngine.MinkowskiBroadcastAddition method)</a>
 </li>
@@ -522,7 +752,15 @@
 </li>
         <li><a href="convolution.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.forward">(MinkowskiEngine.MinkowskiChannelwiseConvolution method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.forward">(MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution method)</a>
+</li>
         <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolution.forward">(MinkowskiEngine.MinkowskiConvolution method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.forward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction.forward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction.forward">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction static method)</a>
 </li>
         <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose.forward">(MinkowskiEngine.MinkowskiConvolutionTranspose method)</a>
 </li>
@@ -538,17 +776,85 @@
 </li>
         <li><a href="interp.html#MinkowskiEngine.MinkowskiInterpolation.forward">(MinkowskiEngine.MinkowskiInterpolation method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolation.forward">(MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolation method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolationFunction.forward">(MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolationFunction static method)</a>
+</li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiMaxPooling.forward">(MinkowskiEngine.MinkowskiMaxPooling method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.forward">(MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiNonlinearityBase.forward">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiNonlinearityBase method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSinusoidal.forward">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSinusoidal method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm.forward">(MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.forward">(MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction.forward">(MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.forward">(MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm.forward">(MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiLinear.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiLinear method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackCat.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiStackCat method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackMean.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiStackMean method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackSum.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiStackSum method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackVar.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiStackVar method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiDirectMaxPoolingFunction.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiDirectMaxPoolingFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingFunction.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingTransposeFunction.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingTransposeFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase method)</a>
 </li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiPoolingTranspose.forward">(MinkowskiEngine.MinkowskiPoolingTranspose method)</a>
 </li>
         <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning.forward">(MinkowskiEngine.MinkowskiPruning method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning.forward">(MinkowskiEngine.MinkowskiPruning.MinkowskiPruning method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward">(MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction static method)</a>
+</li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiSumPooling.forward">(MinkowskiEngine.MinkowskiSumPooling method)</a>
 </li>
         <li><a href="normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm.forward">(MinkowskiEngine.MinkowskiSyncBatchNorm method)</a>
 </li>
-        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion.forward">(MinkowskiEngine.MinkowskiUnion method)</a>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion.forward">(MinkowskiEngine.MinkowskiUnion.MinkowskiUnion method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward">(MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.BasicBlock.forward">(MinkowskiEngine.modules.resnet_block.BasicBlock method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.Bottleneck.forward">(MinkowskiEngine.modules.resnet_block.Bottleneck method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SEBasicBlock.forward">(MinkowskiEngine.modules.senet_block.SEBasicBlock method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SEBottleneck.forward">(MinkowskiEngine.modules.senet_block.SEBottleneck method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SELayer.forward">(MinkowskiEngine.modules.senet_block.SELayer method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMAverageFunction.forward">(MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMAverageFunction static method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMFunction.forward">(MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMFunction static method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -557,29 +863,73 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.get_coordinate_field">get_coordinate_field() (MinkowskiEngine.CoordinateManager method)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.gelu">gelu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.get_coordinate_field">get_coordinate_field() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.get_coordinate_field">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateMapKey.get_coordinate_size">get_coordinate_size() (MinkowskiEngine.CoordinateMapKey method)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.get_coordinates">get_coordinates() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.get_coordinates">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.coords.get_coords_map">get_coords_map() (in module MinkowskiEngine.utils.coords)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.get_device">get_device() (MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.get_field_to_sparse_map">get_field_to_sparse_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.get_field_to_sparse_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
       <li><a href="misc.html#MinkowskiEngine.get_gpu_memory_info">get_gpu_memory_info() (in module MinkowskiEngine)</a>
 </li>
       <li><a href="common.html#MinkowskiEngine.KernelGenerator.get_kernel">get_kernel() (MinkowskiEngine.KernelGenerator method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.get_kernel">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.get_kernel_map">get_kernel_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.get_kernel_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.get_kernel_volume">get_kernel_volume() (in module MinkowskiEngine.MinkowskiKernelGenerator)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateMapKey.get_key">get_key() (MinkowskiEngine.CoordinateMapKey method)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.get_minkowski_function">get_minkowski_function() (in module MinkowskiEngine.MinkowskiCommon)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.get_postfix">get_postfix() (in module MinkowskiEngine.MinkowskiCommon)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateMapKey.get_tensor_stride">get_tensor_stride() (MinkowskiEngine.CoordinateMapKey method)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.get_unique_coordinate_map_key">get_unique_coordinate_map_key() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.get_unique_coordinate_map_key">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.global_coordinate_manager">global_coordinate_manager() (in module MinkowskiEngine.MinkowskiTensor)</a>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.global_coordinate_manager">global_coordinate_manager() (in module MinkowskiEngine.MinkowskiTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.global_coordinate_manager">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.glu">glu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.GPUMemoryAllocatorType">GPUMemoryAllocatorType (class in MinkowskiEngine)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.gradcheck.gradcheck">gradcheck() (in module MinkowskiEngine.utils.gradcheck)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.gumbel_softmax">gumbel_softmax() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -587,10 +937,20 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="common.html#MinkowskiEngine.RegionType.HYPER_CROSS">HYPER_CROSS (MinkowskiEngine.RegionType attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.hardshrink">hardshrink() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.hardsigmoid">hardsigmoid() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.hardswish">hardswish() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.hardtanh">hardtanh() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.hinge_embedding_loss">hinge_embedding_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="common.html#MinkowskiEngine.RegionType.HYPER_CROSS">HYPER_CROSS (MinkowskiEngine.RegionType attribute)</a>
+</li>
       <li><a href="common.html#MinkowskiEngine.RegionType.HYPER_CUBE">HYPER_CUBE (MinkowskiEngine.RegionType attribute)</a>
 </li>
   </ul></td>
@@ -599,41 +959,175 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.initialize_coordinates">initialize_coordinates() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.in_channels">in_channels (MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.in_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.in_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.in_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.in_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.init">init() (MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork method)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.initialize_coordinates">initialize_coordinates() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.initialize_coordinates">[1]</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.insert_and_map">insert_and_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.insert_and_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
+      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.insert_field">insert_field() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.insert_field">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
+      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.interpolation_map_weight">interpolation_map_weight() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.interpolation_map_weight">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.inverse_mapping">inverse_mapping (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.inverse_mapping">inverse_mapping (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.inverse_mapping">[1]</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.inverse_mapping">(MinkowskiEngine.MinkowskiTensor.Tensor attribute)</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.inverse_mapping">inverse_mapping() (MinkowskiEngine.MinkowskiTensorField.TensorField property)</a>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensorField.TensorField.inverse_mapping">inverse_mapping() (MinkowskiEngine.MinkowskiTensorField.TensorField method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.inverse_mapping">[1]</a>
 </li>
       <li><a href="misc.html#MinkowskiEngine.is_cuda_available">is_cuda_available() (in module MinkowskiEngine)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateMapKey.is_key_set">is_key_set() (MinkowskiEngine.CoordinateMapKey method)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.is_transpose">is_transpose (MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.is_transpose">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.is_transpose">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.is_transpose">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling.is_transpose">(MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.is_transpose">(MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.is_transpose">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.is_transpose">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling.is_transpose">(MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="common.html#MinkowskiEngine.KernelGenerator.kernel_dilation">kernel_dilation (MinkowskiEngine.KernelGenerator attribute)</a>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.init.kaiming_normal_">kaiming_normal_() (in module MinkowskiEngine.utils.init)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.kernel">kernel (MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.kernel">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.kernel">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.kernel">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.kernel">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator.kernel_dilation">kernel_dilation (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.kernel_dilation">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.kernel_generator">kernel_generator (MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.kernel_generator">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.kernel_generator">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.kernel_generator">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.kernel_generator">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling.kernel_generator">(MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.kernel_generator">(MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.kernel_generator">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.kernel_generator">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling.kernel_generator">(MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.kernel_map">kernel_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.kernel_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
       <li><a href="common.html#MinkowskiEngine.KernelGenerator.kernel_size">kernel_size (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.kernel_size">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator.kernel_stride">kernel_stride (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.kernel_stride">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator.kernel_volume">kernel_volume (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.kernel_volume">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator">KernelGenerator (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator">(class in MinkowskiEngine.MinkowskiKernelGenerator)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelRegion">KernelRegion (class in MinkowskiEngine.MinkowskiKernelGenerator)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.kl_div">kl_div() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.l1_loss">l1_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.leaky_relu">leaky_relu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="common.html#MinkowskiEngine.KernelGenerator.kernel_stride">kernel_stride (MinkowskiEngine.KernelGenerator attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.linear">linear() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
-      <li><a href="common.html#MinkowskiEngine.KernelGenerator.kernel_volume">kernel_volume (MinkowskiEngine.KernelGenerator attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.log_softmax">log_softmax() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
-      <li><a href="common.html#MinkowskiEngine.KernelGenerator">KernelGenerator (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.logsigmoid">logsigmoid() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -641,106 +1135,665 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling">MinkowskiAvgPooling (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode.MAX_POOL">MAX_POOL (MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode attribute)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.mean">mean() (in module MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAdaptiveLogSoftmaxWithLoss">MinkowskiAdaptiveLogSoftmaxWithLoss (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAlphaDropout">MinkowskiAlphaDropout (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling">MinkowskiAvgPooling (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling">(class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      </ul></li>
       <li><a href="pooling.html#id4">MinkowskiAvgPooling.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id5">[1]</a>, <a href="pooling.html#id6">[2]</a>, <a href="pooling.html#id7">[3]</a>
 </li>
       <li><a href="normalization.html#MinkowskiEngine.MinkowskiBatchNorm">MinkowskiBatchNorm (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm">(class in MinkowskiEngine.MinkowskiNormalization)</a>
 </li>
+      </ul></li>
       <li><a href="normalization.html#id0">MinkowskiBatchNorm.to() (in module MinkowskiEngine)</a>, <a href="normalization.html#id1">[1]</a>, <a href="normalization.html#id2">[2]</a>, <a href="normalization.html#id3">[3]</a>
 </li>
       <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcast">MinkowskiBroadcast (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast">(class in MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
+      </ul></li>
       <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastAddition">MinkowskiBroadcastAddition (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition">(class in MinkowskiEngine.MinkowskiBroadcast)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastBase">MinkowskiBroadcastBase (class in MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
       <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastConcatenation">MinkowskiBroadcastConcatenation (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation">(class in MinkowskiEngine.MinkowskiBroadcast)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastFunction">MinkowskiBroadcastFunction (class in MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
       <li><a href="broadcast.html#MinkowskiEngine.MinkowskiBroadcastMultiplication">MinkowskiBroadcastMultiplication (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication">(class in MinkowskiEngine.MinkowskiBroadcast)</a>
 </li>
+      </ul></li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiCELU">MinkowskiCELU (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
+      </ul></li>
       <li><a href="convolution.html#MinkowskiEngine.MinkowskiChannelwiseConvolution">MinkowskiChannelwiseConvolution (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution">(class in MinkowskiEngine.MinkowskiChannelwiseConvolution)</a>
 </li>
+      </ul></li>
       <li><a href="convolution.html#id5">MinkowskiChannelwiseConvolution.to() (in module MinkowskiEngine)</a>, <a href="convolution.html#id6">[1]</a>, <a href="convolution.html#id7">[2]</a>, <a href="convolution.html#id8">[3]</a>
 </li>
       <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolution">MinkowskiConvolution (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution">(class in MinkowskiEngine.MinkowskiConvolution)</a>
 </li>
+      </ul></li>
       <li><a href="convolution.html#id0">MinkowskiConvolution.to() (in module MinkowskiEngine)</a>, <a href="convolution.html#id2">[1]</a>, <a href="convolution.html#id3">[2]</a>, <a href="convolution.html#id4">[3]</a>
 </li>
-      <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose">MinkowskiConvolutionTranspose (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase">MinkowskiConvolutionBase (class in MinkowskiEngine.MinkowskiConvolution)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionFunction">MinkowskiConvolutionFunction (class in MinkowskiEngine.MinkowskiConvolution)</a>
+</li>
+      <li><a href="convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose">MinkowskiConvolutionTranspose (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose">(class in MinkowskiEngine.MinkowskiConvolution)</a>
+</li>
+      </ul></li>
       <li><a href="convolution.html#id10">MinkowskiConvolutionTranspose.to() (in module MinkowskiEngine)</a>, <a href="convolution.html#id11">[1]</a>, <a href="convolution.html#id12">[2]</a>, <a href="convolution.html#id9">[3]</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTransposeFunction">MinkowskiConvolutionTransposeFunction (class in MinkowskiEngine.MinkowskiConvolution)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiDirectMaxPoolingFunction">MinkowskiDirectMaxPoolingFunction (class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiDropout">MinkowskiDropout (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU">MinkowskiELU (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li>
+    MinkowskiEngine
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.diagnostics
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.diagnostics">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiBroadcast
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiBroadcast">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiChannelwiseConvolution
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiChannelwiseConvolution">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiCommon
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCommon">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiConvolution
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiConvolution">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiCoordinateManager
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCoordinateManager">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiFunctional
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiFunctional">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiInterpolation
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiInterpolation">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiKernelGenerator
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiKernelGenerator">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiNetwork
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNetwork">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiNonlinearity
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNonlinearity">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiNormalization
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNormalization">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiOps
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiOps">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiPooling
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPooling">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiPruning
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPruning">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiSparseTensor
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiSparseTensor">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiTensor
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiTensor">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiTensorField
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiTensorField">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.MinkowskiUnion
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiUnion">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.modules
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.modules.html#module-MinkowskiEngine.modules">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.modules.resnet_block
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.resnet_block">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.modules.senet_block
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.senet_block">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.sparse_matrix_functions
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.sparse_matrix_functions">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.utils
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.utils.collation
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.utils.coords
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.utils.gradcheck
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.utils.init
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.init">module</a>
+</li>
+      </ul></li>
+      <li>
+    MinkowskiEngine.utils.quantization
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.quantization">module</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiGELU">MinkowskiGELU (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
       <li><a href="convolution.html#MinkowskiEngine.MinkowskiGenerativeConvolutionTranspose">MinkowskiGenerativeConvolutionTranspose (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose">(class in MinkowskiEngine.MinkowskiConvolution)</a>
 </li>
+      </ul></li>
       <li><a href="convolution.html#id13">MinkowskiGenerativeConvolutionTranspose.to() (in module MinkowskiEngine)</a>, <a href="convolution.html#id14">[1]</a>, <a href="convolution.html#id15">[2]</a>, <a href="convolution.html#id16">[3]</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiGlobalAvgPooling">MinkowskiGlobalAvgPooling (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalAvgPooling">(class in MinkowskiEngine.MinkowskiPooling)</a>
 </li>
+      </ul></li>
       <li><a href="pooling.html#id20">MinkowskiGlobalAvgPooling.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id21">[1]</a>, <a href="pooling.html#id22">[2]</a>, <a href="pooling.html#id23">[3]</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiGlobalMaxPooling">MinkowskiGlobalMaxPooling (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling">(class in MinkowskiEngine.MinkowskiPooling)</a>
 </li>
+      </ul></li>
       <li><a href="pooling.html#id16">MinkowskiGlobalMaxPooling.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id17">[1]</a>, <a href="pooling.html#id18">[2]</a>, <a href="pooling.html#id19">[3]</a>
 </li>
-      <li><a href="pooling.html#MinkowskiEngine.MinkowskiGlobalSumPooling">MinkowskiGlobalSumPooling (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling">MinkowskiGlobalPooling (class in MinkowskiEngine.MinkowskiPooling)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPoolingFunction">MinkowskiGlobalPoolingFunction (class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      <li><a href="pooling.html#MinkowskiEngine.MinkowskiGlobalSumPooling">MinkowskiGlobalSumPooling (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalSumPooling">(class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      </ul></li>
       <li><a href="pooling.html#id24">MinkowskiGlobalSumPooling.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id25">[1]</a>, <a href="pooling.html#id26">[2]</a>, <a href="pooling.html#id27">[3]</a>
 </li>
-      <li><a href="normalization.html#MinkowskiEngine.MinkowskiInstanceNorm">MinkowskiInstanceNorm (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardshrink">MinkowskiHardshrink (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardsigmoid">MinkowskiHardsigmoid (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardswish">MinkowskiHardswish (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardtanh">MinkowskiHardtanh (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="normalization.html#MinkowskiEngine.MinkowskiInstanceNorm">MinkowskiInstanceNorm (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm">(class in MinkowskiEngine.MinkowskiNormalization)</a>
+</li>
+      </ul></li>
       <li><a href="normalization.html#id10">MinkowskiInstanceNorm.to() (in module MinkowskiEngine)</a>, <a href="normalization.html#id11">[1]</a>, <a href="normalization.html#id8">[2]</a>, <a href="normalization.html#id9">[3]</a>
 </li>
-      <li><a href="interp.html#MinkowskiEngine.MinkowskiInterpolation">MinkowskiInterpolation (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNormFunction">MinkowskiInstanceNormFunction (class in MinkowskiEngine.MinkowskiNormalization)</a>
 </li>
+      <li><a href="interp.html#MinkowskiEngine.MinkowskiInterpolation">MinkowskiInterpolation (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolation">(class in MinkowskiEngine.MinkowskiInterpolation)</a>
+</li>
+      </ul></li>
       <li><a href="interp.html#id0">MinkowskiInterpolation.to() (in module MinkowskiEngine)</a>, <a href="interp.html#id2">[1]</a>, <a href="interp.html#id3">[2]</a>, <a href="interp.html#id4">[3]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolationFunction">MinkowskiInterpolationFunction (class in MinkowskiEngine.MinkowskiInterpolation)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLeakyReLU">MinkowskiLeakyReLU (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiLinear">MinkowskiLinear (class in MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingFunction">MinkowskiLocalPoolingFunction (class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiLocalPoolingTransposeFunction">MinkowskiLocalPoolingTransposeFunction (class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSigmoid">MinkowskiLogSigmoid (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="pooling.html#MinkowskiEngine.MinkowskiMaxPooling">MinkowskiMaxPooling (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSoftmax">MinkowskiLogSoftmax (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
+      <li><a href="pooling.html#MinkowskiEngine.MinkowskiMaxPooling">MinkowskiMaxPooling (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling">(class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      </ul></li>
       <li><a href="pooling.html#id0">MinkowskiMaxPooling.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id1">[1]</a>, <a href="pooling.html#id2">[2]</a>, <a href="pooling.html#id3">[3]</a>
 </li>
-      <li><a href="pooling.html#MinkowskiEngine.MinkowskiPoolingTranspose">MinkowskiPoolingTranspose (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.MinkowskiModuleBase">MinkowskiModuleBase (class in MinkowskiEngine.MinkowskiCommon)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork">MinkowskiNetwork (class in MinkowskiEngine.MinkowskiNetwork)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiNonlinearityBase">MinkowskiNonlinearityBase (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase">MinkowskiPoolingBase (class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      <li><a href="pooling.html#MinkowskiEngine.MinkowskiPoolingTranspose">MinkowskiPoolingTranspose (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose">(class in MinkowskiEngine.MinkowskiPooling)</a>
+</li>
+      </ul></li>
       <li><a href="pooling.html#id12">MinkowskiPoolingTranspose.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id13">[1]</a>, <a href="pooling.html#id14">[2]</a>, <a href="pooling.html#id15">[3]</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU">MinkowskiPReLU (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
+      </ul></li>
       <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning">MinkowskiPruning (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning">(class in MinkowskiEngine.MinkowskiPruning)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction">MinkowskiPruningFunction (class in MinkowskiEngine.MinkowskiPruning)</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiReLU">MinkowskiReLU (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU6">MinkowskiReLU6 (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiRReLU">MinkowskiRReLU (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiSELU">MinkowskiSELU (class in MinkowskiEngine)</a>, <a href="nonlinearity.html#id0">[1]</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
+      </ul></li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiSigmoid">MinkowskiSigmoid (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSiLU">MinkowskiSiLU (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSinusoidal">MinkowskiSinusoidal (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiSoftmax">MinkowskiSoftmax (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmin">MinkowskiSoftmin (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftplus">MinkowskiSoftplus (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftshrink">MinkowskiSoftshrink (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftsign">MinkowskiSoftsign (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMAverageFunction">MinkowskiSPMMAverageFunction (class in MinkowskiEngine.sparse_matrix_functions)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.MinkowskiSPMMFunction">MinkowskiSPMMFunction (class in MinkowskiEngine.sparse_matrix_functions)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm">MinkowskiStableInstanceNorm (class in MinkowskiEngine.MinkowskiNormalization)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackCat">MinkowskiStackCat (class in MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackMean">MinkowskiStackMean (class in MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackSum">MinkowskiStackSum (class in MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackVar">MinkowskiStackVar (class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiSumPooling">MinkowskiSumPooling (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling">(class in MinkowskiEngine.MinkowskiPooling)</a>
 </li>
+      </ul></li>
       <li><a href="pooling.html#id10">MinkowskiSumPooling.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id11">[1]</a>, <a href="pooling.html#id8">[2]</a>, <a href="pooling.html#id9">[3]</a>
 </li>
       <li><a href="normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm">MinkowskiSyncBatchNorm (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm">(class in MinkowskiEngine.MinkowskiNormalization)</a>
 </li>
+      </ul></li>
       <li><a href="normalization.html#id4">MinkowskiSyncBatchNorm.to() (in module MinkowskiEngine)</a>, <a href="normalization.html#id5">[1]</a>, <a href="normalization.html#id6">[2]</a>, <a href="normalization.html#id7">[3]</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiTanh">MinkowskiTanh (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanhshrink">MinkowskiTanhshrink (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiThreshold">MinkowskiThreshold (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold">(class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
+      </ul></li>
       <li><a href="utils.html#MinkowskiEngine.MinkowskiToDenseTensor">MinkowskiToDenseTensor (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
+      </ul></li>
       <li><a href="utils.html#MinkowskiEngine.MinkowskiToSparseTensor">MinkowskiToSparseTensor (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
-      <li><a href="union.html#MinkowskiEngine.MinkowskiUnion">MinkowskiUnion (class in MinkowskiEngine)</a>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion">MinkowskiUnion (class in MinkowskiEngine.MinkowskiUnion)</a>
+
+      <ul>
+        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion">(in module MinkowskiEngine)</a>
 </li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction">MinkowskiUnionFunction (class in MinkowskiEngine.MinkowskiUnion)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine">MinkowskiEngine</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.diagnostics">MinkowskiEngine.diagnostics</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiBroadcast">MinkowskiEngine.MinkowskiBroadcast</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiChannelwiseConvolution">MinkowskiEngine.MinkowskiChannelwiseConvolution</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCommon">MinkowskiEngine.MinkowskiCommon</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiConvolution">MinkowskiEngine.MinkowskiConvolution</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCoordinateManager">MinkowskiEngine.MinkowskiCoordinateManager</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiFunctional">MinkowskiEngine.MinkowskiFunctional</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiInterpolation">MinkowskiEngine.MinkowskiInterpolation</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiKernelGenerator">MinkowskiEngine.MinkowskiKernelGenerator</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNetwork">MinkowskiEngine.MinkowskiNetwork</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNonlinearity">MinkowskiEngine.MinkowskiNonlinearity</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiNormalization">MinkowskiEngine.MinkowskiNormalization</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiOps">MinkowskiEngine.MinkowskiOps</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPooling">MinkowskiEngine.MinkowskiPooling</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPruning">MinkowskiEngine.MinkowskiPruning</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiSparseTensor">MinkowskiEngine.MinkowskiSparseTensor</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiTensor">MinkowskiEngine.MinkowskiTensor</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiTensorField">MinkowskiEngine.MinkowskiTensorField</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiUnion">MinkowskiEngine.MinkowskiUnion</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#module-MinkowskiEngine.modules">MinkowskiEngine.modules</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.resnet_block">MinkowskiEngine.modules.resnet_block</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#module-MinkowskiEngine.modules.senet_block">MinkowskiEngine.modules.senet_block</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#module-MinkowskiEngine.sparse_matrix_functions">MinkowskiEngine.sparse_matrix_functions</a>
+</li>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils">MinkowskiEngine.utils</a>
+</li>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.collation">MinkowskiEngine.utils.collation</a>
+</li>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords">MinkowskiEngine.utils.coords</a>
+</li>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.gradcheck">MinkowskiEngine.utils.gradcheck</a>
+</li>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.init">MinkowskiEngine.utils.init</a>
+</li>
+        <li><a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.quantization">MinkowskiEngine.utils.quantization</a>
+</li>
+        <li><a href="source/test.html#module-test">test</a>
+</li>
+      </ul></li>
       <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiCELU.MODULE">MODULE (MinkowskiEngine.MinkowskiCELU attribute)</a>
 
       <ul>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiDropout.MODULE">(MinkowskiEngine.MinkowskiDropout attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAdaptiveLogSoftmaxWithLoss.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAdaptiveLogSoftmaxWithLoss attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAlphaDropout.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAlphaDropout attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiGELU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiGELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardshrink.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardshrink attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardsigmoid.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardsigmoid attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardswish.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardswish attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardtanh.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardtanh attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLeakyReLU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLeakyReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSigmoid.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSigmoid attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSoftmax.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSoftmax attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiNonlinearityBase.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiNonlinearityBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU6.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU6 attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiRReLU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiRReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSiLU.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSiLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmin.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmin attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftplus.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftplus attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftshrink.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftshrink attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftsign.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftsign attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanhshrink.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanhshrink attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold.MODULE">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold attribute)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU.MODULE">(MinkowskiEngine.MinkowskiPReLU attribute)</a>
 </li>
@@ -757,6 +1810,14 @@
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiThreshold.MODULE">(MinkowskiEngine.MinkowskiThreshold attribute)</a>
 </li>
       </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.mse_loss">mse_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.multi_margin_loss">multi_margin_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.multilabel_margin_loss">multilabel_margin_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.multilabel_soft_margin_loss">multilabel_soft_margin_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -769,10 +1830,20 @@
         <li><a href="common.html#MinkowskiEngine.RegionType.name">(MinkowskiEngine.RegionType property)</a>
 </li>
       </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.nll_loss">nll_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.number_of_unique_batch_indices">number_of_unique_batch_indices() (MinkowskiEngine.CoordinateManager method)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode.NO_QUANTIZATION">NO_QUANTIZATION (MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode attribute)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.normalize">normalize() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.number_of_unique_batch_indices">number_of_unique_batch_indices() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.number_of_unique_batch_indices">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -780,10 +1851,84 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.origin">origin() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.origin">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
+      </ul></li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.origin_field">origin_field() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.origin_field">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.origin_field_map">origin_field_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.origin_field_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.origin_map">origin_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.origin_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.out_channels">out_channels (MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.out_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.out_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.out_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.out_channels">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.diagnostics.parse_nvidia_smi">parse_nvidia_smi() (in module MinkowskiEngine.diagnostics)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.poisson_nll_loss">poisson_nll_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling.pooling">pooling (MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.pooling">(MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.pooling">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.pooling">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling.pooling">(MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling.pooling_mode">pooling_mode (MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.pooling_mode">(MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.pooling_mode">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.pooling_mode">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling.pooling_mode">(MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.prelu">prelu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.prep_args">prep_args() (in module MinkowskiEngine.MinkowskiCommon)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.diagnostics.print_diagnostics">print_diagnostics() (in module MinkowskiEngine.diagnostics)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -791,27 +1936,71 @@
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.quantization_mode">quantization_mode (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.quantization_mode">quantization_mode (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.quantization_mode">[1]</a>
 
       <ul>
-        <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.quantization_mode">(MinkowskiEngine.MinkowskiTensorField.TensorField attribute)</a>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.quantization_mode">(MinkowskiEngine.MinkowskiTensor.Tensor attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensorField.TensorField.quantization_mode">(MinkowskiEngine.MinkowskiTensorField.TensorField attribute)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.quantization_mode">[1]</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.quantization.quantize">quantize() (in module MinkowskiEngine.utils.quantization)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.quantization.quantize_label">quantize_label() (in module MinkowskiEngine.utils.quantization)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="common.html#MinkowskiEngine.KernelGenerator.region_offsets">region_offsets (MinkowskiEngine.KernelGenerator attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode.RANDOM_SUBSAMPLE">RANDOM_SUBSAMPLE (MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode attribute)</a>
 </li>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.quantization.ravel_hash_vec">ravel_hash_vec() (in module MinkowskiEngine.utils.quantization)</a>
+</li>
+      <li><a href="common.html#MinkowskiEngine.KernelGenerator.region_offsets">region_offsets (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.region_offsets">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
       <li><a href="common.html#MinkowskiEngine.KernelGenerator.region_type">region_type (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.region_type">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="common.html#MinkowskiEngine.RegionType">RegionType (class in MinkowskiEngine)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.relu">relu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.relu6">relu6() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="common.html#MinkowskiEngine.RegionType">RegionType (class in MinkowskiEngine)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.requires_grad">requires_grad() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.requires_grad_">requires_grad_() (MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
 </li>
       <li><a href="common.html#MinkowskiEngine.KernelGenerator.requires_strided_coordinates">requires_strided_coordinates (MinkowskiEngine.KernelGenerator attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator.requires_strided_coordinates">(MinkowskiEngine.MinkowskiKernelGenerator.KernelGenerator attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.reset_parameters">reset_parameters() (MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.reset_parameters">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.reset_parameters">(MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.reset_parameters">(MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm method)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.rrelu">rrelu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -819,51 +2008,144 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.set_global_coordinate_manager">set_global_coordinate_manager() (in module MinkowskiEngine.MinkowskiTensor)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiKernelGenerator.save_ctx">save_ctx() (in module MinkowskiEngine.MinkowskiKernelGenerator)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SEBasicBlock">SEBasicBlock (class in MinkowskiEngine.modules.senet_block)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SEBottleneck">SEBottleneck (class in MinkowskiEngine.modules.senet_block)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SELayer">SELayer (class in MinkowskiEngine.modules.senet_block)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.selu">selu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER">SEPARATE_COORDINATE_MANAGER (MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode attribute)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.set_coordinate_map_type">set_coordinate_map_type() (in module MinkowskiEngine.MinkowskiCoordinateManager)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.set_global_coordinate_manager">set_global_coordinate_manager() (in module MinkowskiEngine.MinkowskiTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.set_global_coordinate_manager">[1]</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.set_gpu_allocator">set_gpu_allocator() (in module MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.set_gpu_allocator">(in module MinkowskiEngine.MinkowskiCoordinateManager)</a>
 </li>
+      </ul></li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateMapKey.set_key">set_key() (MinkowskiEngine.CoordinateMapKey method)</a>
 </li>
       <li><a href="misc.html#MinkowskiEngine.set_memory_manager_backend">set_memory_manager_backend() (in module MinkowskiEngine)</a>
-</li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.set_sparse_tensor_operation_mode">set_sparse_tensor_operation_mode() (in module MinkowskiEngine.MinkowskiTensor)</a>
-</li>
-      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.size">size() (MinkowskiEngine.CoordinateManager method)</a>
-</li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.slice">slice() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>
-</li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.sparse">sparse() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>
 
       <ul>
-        <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.sparse">(MinkowskiEngine.MinkowskiTensorField.TensorField method)</a>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.set_memory_manager_backend">(in module MinkowskiEngine.MinkowskiCoordinateManager)</a>
 </li>
       </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.set_sparse_tensor_operation_mode">set_sparse_tensor_operation_mode() (in module MinkowskiEngine.MinkowskiTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.set_sparse_tensor_operation_mode">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.shape">shape() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER">SHARE_COORDINATE_MANAGER (MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode attribute)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.sigmoid">sigmoid() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.silu">silu() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.size">size() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.size">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.size">(MinkowskiEngine.MinkowskiTensor.Tensor method)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.slice">slice() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.slice">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.smooth_l1_loss">smooth_l1_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.soft_margin_loss">soft_margin_loss() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.softmax">softmax() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.softmin">softmin() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.softplus">softplus() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.softshrink">softshrink() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.softsign">softsign() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.sparse">sparse() (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.sparse">[1]</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensorField.TensorField.sparse">(MinkowskiEngine.MinkowskiTensorField.TensorField method)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField.sparse">[1]</a>
+</li>
+      </ul></li>
       <li><a href="utils.html#MinkowskiEngine.utils.sparse_collate">sparse_collate() (in module MinkowskiEngine.utils)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.collation.sparse_collate">(in module MinkowskiEngine.utils.collation)</a>
 </li>
+      </ul></li>
       <li><a href="utils.html#MinkowskiEngine.utils.sparse_quantize">sparse_quantize() (in module MinkowskiEngine.utils)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.quantization.sparse_quantize">(in module MinkowskiEngine.utils.quantization)</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.sparse_tensor_operation_mode">sparse_tensor_operation_mode() (in module MinkowskiEngine.MinkowskiTensor)</a>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.sparse_tensor_operation_mode">sparse_tensor_operation_mode() (in module MinkowskiEngine.MinkowskiTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.sparse_tensor_operation_mode">[1]</a>
 </li>
       <li><a href="utils.html#MinkowskiEngine.utils.SparseCollation">SparseCollation (class in MinkowskiEngine.utils)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.collation.SparseCollation">(class in MinkowskiEngine.utils.collation)</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">SparseTensor (class in MinkowskiEngine.MinkowskiSparseTensor)</a>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">SparseTensor (class in MinkowskiEngine.MinkowskiSparseTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">[1]</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode">SparseTensorOperationMode (class in MinkowskiEngine.MinkowskiTensor)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode">SparseTensorOperationMode (class in MinkowskiEngine.MinkowskiTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode">[1]</a>
 </li>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode">SparseTensorQuantizationMode (class in MinkowskiEngine.MinkowskiTensor)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode">SparseTensorQuantizationMode (class in MinkowskiEngine.MinkowskiTensor)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode">[1]</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.spmm">spmm() (in module MinkowskiEngine.sparse_matrix_functions)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.sparse_matrix_functions.spmm_average">spmm_average() (in module MinkowskiEngine.sparse_matrix_functions)</a>
 </li>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.stride">stride() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.stride">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
+      </ul></li>
+      <li><a href="coords.html#MinkowskiEngine.CoordinateManager.stride_map">stride_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.stride_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField">TensorField (class in MinkowskiEngine.MinkowskiTensorField)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.tanh">tanh() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.tanhshrink">tanhshrink() (in module MinkowskiEngine.MinkowskiFunctional)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor">Tensor (class in MinkowskiEngine.MinkowskiTensor)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.tensor_stride">tensor_stride() (MinkowskiEngine.MinkowskiTensor.Tensor property)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensorField.TensorField">TensorField (class in MinkowskiEngine.MinkowskiTensorField)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiTensorField.TensorField">[1]</a>
+</li>
+      <li>
+    test
+
+      <ul>
+        <li><a href="source/test.html#module-test">module</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiFunctional.threshold">threshold() (in module MinkowskiEngine.MinkowskiFunctional)</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiAvgPooling.to">to() (MinkowskiEngine.MinkowskiAvgPooling method)</a>
 
@@ -898,15 +2180,153 @@
 </li>
       </ul></li>
       <li><a href="utils.html#MinkowskiEngine.to_sparse">to_sparse() (in module MinkowskiEngine)</a>
-</li>
-      <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiCELU.training">training (MinkowskiEngine.MinkowskiCELU attribute)</a>
 
       <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.to_sparse">(in module MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      </ul></li>
+      <li><a href="utils.html#MinkowskiEngine.to_sparse_all">to_sparse_all() (in module MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.to_sparse_all">(in module MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast.training">training (MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcast attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition.training">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastAddition attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastBase.training">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation.training">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastConcatenation attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication.training">(MinkowskiEngine.MinkowskiBroadcast.MinkowskiBroadcastMultiplication attribute)</a>
+</li>
+        <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiCELU.training">(MinkowskiEngine.MinkowskiCELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution.training">(MinkowskiEngine.MinkowskiChannelwiseConvolution.MinkowskiChannelwiseConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.MinkowskiModuleBase.training">(MinkowskiEngine.MinkowskiCommon.MinkowskiModuleBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.training">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.training">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.training">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.training">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiDropout.training">(MinkowskiEngine.MinkowskiDropout attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolation.training">(MinkowskiEngine.MinkowskiInterpolation.MinkowskiInterpolation attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork.training">(MinkowskiEngine.MinkowskiNetwork.MinkowskiNetwork attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAdaptiveLogSoftmaxWithLoss.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAdaptiveLogSoftmaxWithLoss attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAlphaDropout.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiAlphaDropout attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiCELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiDropout attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiGELU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiGELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardshrink.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardshrink attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardsigmoid.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardsigmoid attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardswish.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardswish attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardtanh.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiHardtanh attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLeakyReLU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLeakyReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSigmoid.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSigmoid attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSoftmax.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSoftmax attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiNonlinearityBase.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiNonlinearityBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiPReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU6.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiReLU6 attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiRReLU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiRReLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSELU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSigmoid attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSiLU.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSiLU attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSinusoidal.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSinusoidal attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmax attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmin.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftmin attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftplus.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftplus attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftshrink.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftshrink attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftsign.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiSoftsign attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanh attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanhshrink.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiTanhshrink attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold.training">(MinkowskiEngine.MinkowskiNonlinearity.MinkowskiThreshold attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm.training">(MinkowskiEngine.MinkowskiNormalization.MinkowskiBatchNorm attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm.training">(MinkowskiEngine.MinkowskiNormalization.MinkowskiInstanceNorm attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm.training">(MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm.training">(MinkowskiEngine.MinkowskiNormalization.MinkowskiSyncBatchNorm attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiLinear.training">(MinkowskiEngine.MinkowskiOps.MinkowskiLinear attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackCat.training">(MinkowskiEngine.MinkowskiOps.MinkowskiStackCat attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackMean.training">(MinkowskiEngine.MinkowskiOps.MinkowskiStackMean attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackSum.training">(MinkowskiEngine.MinkowskiOps.MinkowskiStackSum attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackVar.training">(MinkowskiEngine.MinkowskiOps.MinkowskiStackVar attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor.training">(MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor.training">(MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiAvgPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalAvgPooling.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalAvgPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalMaxPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalSumPooling.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiGlobalSumPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiPoolingTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling.training">(MinkowskiEngine.MinkowskiPooling.MinkowskiSumPooling attribute)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiPReLU.training">(MinkowskiEngine.MinkowskiPReLU attribute)</a>
 </li>
         <li><a href="pruning.html#MinkowskiEngine.MinkowskiPruning.training">(MinkowskiEngine.MinkowskiPruning attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPruning.MinkowskiPruning.training">(MinkowskiEngine.MinkowskiPruning.MinkowskiPruning attribute)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiReLU.training">(MinkowskiEngine.MinkowskiReLU attribute)</a>
 </li>
@@ -919,6 +2339,18 @@
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiTanh.training">(MinkowskiEngine.MinkowskiTanh attribute)</a>
 </li>
         <li><a href="nonlinearity.html#MinkowskiEngine.MinkowskiThreshold.training">(MinkowskiEngine.MinkowskiThreshold attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion.training">(MinkowskiEngine.MinkowskiUnion.MinkowskiUnion attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.BasicBlock.training">(MinkowskiEngine.modules.resnet_block.BasicBlock attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.resnet_block.Bottleneck.training">(MinkowskiEngine.modules.resnet_block.Bottleneck attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SEBasicBlock.training">(MinkowskiEngine.modules.senet_block.SEBasicBlock attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SEBottleneck.training">(MinkowskiEngine.modules.senet_block.SEBottleneck attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.modules.html#MinkowskiEngine.modules.senet_block.SELayer.training">(MinkowskiEngine.modules.senet_block.SELayer attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -962,10 +2394,42 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coords.html#MinkowskiEngine.CoordinateManager.union_map">union_map() (MinkowskiEngine.CoordinateManager method)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager.union_map">(MinkowskiEngine.MinkowskiCoordinateManager.CoordinateManager method)</a>
 </li>
+      </ul></li>
+      <li><a href="source/MinkowskiEngine.utils.html#MinkowskiEngine.utils.quantization.unique_coordinate_map">unique_coordinate_map() (in module MinkowskiEngine.utils.quantization)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.unique_index">unique_index (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>, <a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.unique_index">[1]</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.Tensor.unique_index">(MinkowskiEngine.MinkowskiTensor.Tensor attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.unique_index">unique_index (MinkowskiEngine.MinkowskiSparseTensor.SparseTensor attribute)</a>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode.UNWEIGHTED_AVERAGE">UNWEIGHTED_AVERAGE (MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode attribute)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode.UNWEIGHTED_SUM">UNWEIGHTED_SUM (MinkowskiEngine.MinkowskiTensor.SparseTensorQuantizationMode attribute)</a>
+</li>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution.use_mm">use_mm (MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolution attribute)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase.use_mm">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionBase attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose.use_mm">(MinkowskiEngine.MinkowskiConvolution.MinkowskiConvolutionTranspose attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose.use_mm">(MinkowskiEngine.MinkowskiConvolution.MinkowskiGenerativeConvolutionTranspose attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.var">var() (in module MinkowskiEngine.MinkowskiOps)</a>
 </li>
   </ul></td>
 </tr></table>

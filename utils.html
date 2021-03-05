@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -129,6 +129,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#batch-sparse-collate">batch_sparse_collate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cat">cat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#to-sparse">to_sparse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#to-sparse-all">to_sparse_all</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sparsecollation">SparseCollation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskitosparsetensor">MinkowskiToSparseTensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskitodensetensor">MinkowskiToDenseTensor</a></li>
@@ -290,7 +291,7 @@ hyperrectangle of of the grid cell.</p>
 <p>Given a list of either numpy or pytorch tensor coordinates, return the
 batched coordinates suitable for <cite>ME.SparseTensor</cite>.</p>
 <dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (a sequence of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a
+<dt>Args:</dt><dd><p><a class="reference internal" href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords" title="MinkowskiEngine.utils.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> (a sequence of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a
 list of coordinates.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">dtype</span></code>: torch data type of the return tensor. torch.int32 by default.</p>
 </dd>
@@ -313,7 +314,7 @@ list of coordinates.</p>
 <p>Convert a set of coordinates and features into the batch coordinates and
 batch features.</p>
 <dl>
-<dt>Args:</dt><dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
+<dt>Args:</dt><dd><p><a class="reference internal" href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.coords" title="MinkowskiEngine.utils.coords"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coords</span></code></a> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of coordinates.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">feats</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of features.</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">labels</span></code> (set of <cite>torch.Tensor</cite> or <cite>numpy.ndarray</cite>): a set of labels
 associated to the inputs.</p>
@@ -345,13 +346,13 @@ usage.</p>
 <code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">cat</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">sparse_tensors</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.cat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Concatenate sparse tensors</p>
 <p>Concatenate sparse tensor features. All sparse tensors must have the same
-<cite>coords_key</cite> (the same coordinates). To concatenate sparse tensors with
-different sparsity patterns, use SparseTensor binary operations, or
+<cite>coordinate_map_key</cite> (the same coordinates). To concatenate sparse tensors
+with different sparsity patterns, use SparseTensor binary operations, or
 <a class="reference internal" href="union.html#MinkowskiEngine.MinkowskiUnion" title="MinkowskiEngine.MinkowskiUnion"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiUnion</span></code></a>.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">MinkowskiEngine</span> <span class="k">as</span> <span class="nn">ME</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats</span><span class="p">,</span> <span class="n">coords</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sin2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats2</span><span class="p">,</span> <span class="n">coordinate_map_key</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coordinate_map_key</span><span class="p">,</span> <span class="n">coords_man</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coordinate_manager</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">(</span><span class="n">feats2</span><span class="p">,</span> <span class="n">coordinate_map_key</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coordinate_map_key</span><span class="p">,</span> <span class="n">coordinate_mananger</span><span class="o">=</span><span class="n">sin</span><span class="o">.</span><span class="n">coordinate_manager</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sout</span> <span class="o">=</span> <span class="n">UNet</span><span class="p">(</span><span class="n">sin</span><span class="p">)</span>  <span class="c1"># Returns an output sparse tensor on the same coordinates</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sout2</span> <span class="o">=</span> <span class="n">ME</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="n">sin2</span><span class="p">,</span> <span class="n">sout</span><span class="p">)</span>  <span class="c1"># Can concatenate multiple sparse tensors</span>
 </pre></div>
@@ -363,8 +364,20 @@ different sparsity patterns, use SparseTensor binary operations, or
 <h2>to_sparse<a class="headerlink" href="#to-sparse" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="MinkowskiEngine.to_sparse">
-<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">to_sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dense_tensor</span><span class="p">:</span> <span class="n">torch.Tensor</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.to_sparse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts a (differentiable) dense tensor to a sparse tensor.</p>
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">to_sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">torch.Tensor</span></em>, <em class="sig-param"><span class="n">format</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">device</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.to_sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a batched tensor (dimension 0 is the batch dimension) to a SparseTensor</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">x</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">torch.Tensor</span></code>): a batched tensor. The first dimension is the batch dimension.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">format</span></code> (<code class="xref py py-attr docutils literal notranslate"><span class="pre">str</span></code>): Format of the tensor. It must include ‘B’ and ‘C’ indicating the batch and channel dimension respectively. The rest of the dimensions must be ‘X’. .e.g. format=”BCXX” if image data with BCHW format is used. If a 3D data with the channel at the last dimension, use format=”BXXXC” indicating Batch X Height X Width X Depth X Channel. If not provided, the format will be “BCX…X”.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">device</span></code>: Device the sparse tensor will be generated on. If not provided, the device of the input tensor will be used.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="to-sparse-all">
+<h2>to_sparse_all<a class="headerlink" href="#to-sparse-all" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="MinkowskiEngine.to_sparse_all">
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">to_sparse_all</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dense_tensor</span><span class="p">:</span> <span class="n">torch.Tensor</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.to_sparse_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a (differentiable) dense tensor to a sparse tensor with all coordinates.</p>
 <p>Assume the input to have BxCxD1xD2x….xDN format.</p>
 <p>If the shape of the tensor do not change, use <cite>dense_coordinates</cite> to cache the coordinates.
 Please refer to tests/python/dense.py for usage</p>
@@ -413,9 +426,11 @@ or False, concatenate all points. -1 by default.</p>
 <h2>MinkowskiToSparseTensor<a class="headerlink" href="#minkowskitosparsetensor" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiToSparseTensor">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiToSparseTensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiToSparseTensor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiToSparseTensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">remove_zeros</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiToSparseTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts a (differentiable) dense tensor or a <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.TensorField</span></code> to a <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>.</p>
 <p>For dense tensor, the input must have the BxCxD1xD2x….xDN format.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">remove_zeros</span></code> (bool): if True, removes zero valued coordinates. If
+False, use all coordinates to populate a sparse tensor. True by default.</p>
 <p>If the shape of the tensor do not change, use <cite>dense_coordinates</cite> to cache the coordinates.
 Please refer to tests/python/dense.py for usage.</p>
 <p>Example:</p>
@@ -429,7 +444,7 @@ Please refer to tests/python/dense.py for usage.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">network</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="c1"># Add layers that can be applied on a regular pytorch tensor</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">MinkowskiToSparseTensor</span><span class="p">(</span><span class="n">coordinates</span><span class="o">=</span><span class="n">coordinates</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">MinkowskiToSparseTensor</span><span class="p">(</span><span class="n">remove_zeros</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">=</span><span class="n">coordinates</span><span class="p">),</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">MinkowskiConvolution</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">MinkowskiBatchNorm</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="n">MinkowskiReLU</span><span class="p">(),</span>
@@ -444,7 +459,7 @@ Please refer to tests/python/dense.py for usage.</p>
 </div>
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiToSparseTensor.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiToSparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">remove_zeros</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiToSparseTensor.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 

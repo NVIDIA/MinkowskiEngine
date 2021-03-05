@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Coordinate Management &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>Coordinate Management &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -266,6 +266,38 @@
 </dd></dl>
 
 <dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.exists_field_to_sparse">
+<code class="sig-name descname">exists_field_to_sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">sparse_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.exists_field_to_sparse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.field_to_sparse_insert_and_map">
+<code class="sig-name descname">field_to_sparse_insert_and_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">sparse_tensor_stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">sparse_tensor_string_id</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span>Tuple<span class="p">[</span>torch.IntTensor<span class="p">, </span>torch.IntTensor<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.field_to_sparse_insert_and_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sparse tensor coordinate map with the tensor stride.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">field_map_key</span></code> (<cite>CoordinateMapKey</cite>): field map that a new sparse
+tensor will be created from.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> (<cite>list</cite>): a list of <cite>D</cite> elements that defines the
+tensor stride for the new order-<cite>D + 1</cite> sparse tensor.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">string_id</span></code> (<cite>str</cite>): string id of the new sparse tensor coordinate map key.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">CoordinateManager</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">unique_map</span><span class="p">,</span> <span class="n">inverse_map</span><span class="p">)</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.field_to_sparse_keys">
+<code class="sig-name descname">field_to_sparse_keys</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.field_to_sparse_keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.field_to_sparse_map">
+<code class="sig-name descname">field_to_sparse_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">sparse_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.field_to_sparse_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="MinkowskiEngine.CoordinateManager.get_coordinate_field">
 <code class="sig-name descname">get_coordinate_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords_key_or_tensor_strides</span></em><span class="sig-paren">)</span> &#x2192; torch.Tensor<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_coordinate_field" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -276,16 +308,22 @@
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.get_field_to_sparse_map">
+<code class="sig-name descname">get_field_to_sparse_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">field_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">sparse_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_field_to_sparse_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="MinkowskiEngine.CoordinateManager.get_kernel_map">
-<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">out_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">stride</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">kernel_size</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">dilation</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">region_type</span><span class="o">=</span><span class="default_value">RegionType.HYPER_CUBE</span></em>, <em class="sig-param"><span class="n">region_offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_transpose</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">is_pool</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get kernel in-out maps for the specified coords keys or tensor strides.</p>
-<p>returns dict{kernel_index: in_out_tensor} where in_out_tensor[0] is the input row indices that correspond to in_out_tensor[1], which is the row indices for output.</p>
+<code class="sig-name descname">get_kernel_map</code><span class="sig-paren">(</span><em class="sig-param">in_key: MinkowskiEngineBackend._C.CoordinateMapKey</em>, <em class="sig-param">out_key: MinkowskiEngineBackend._C.CoordinateMapKey</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=&lt;RegionType.HYPER_CUBE: 0&gt;</em>, <em class="sig-param">region_offset=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">is_pool=False</em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_kernel_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias of <a class="reference internal" href="#MinkowskiEngine.CoordinateManager.kernel_map" title="MinkowskiEngine.CoordinateManager.kernel_map"><code class="xref py py-attr docutils literal notranslate"><span class="pre">CoordinateManager.kernel_map</span></code></a>. Will be deprecated in the next version.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordinateManager.get_unique_coordinate_map_key">
 <code class="sig-name descname">get_unique_coordinate_map_key</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>list<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; MinkowskiEngineBackend._C.CoordinateMapKey<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.get_unique_coordinate_map_key" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a unique coordinate_map_key for a given tensor stride.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> (<cite>list</cite>): a list of <cite>D</cite> elements that defines the
+tensor stride for the new order-<cite>D + 1</cite> sparse tensor.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -295,6 +333,8 @@
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code>: <cite>torch.Tensor</cite> (Int tensor. <cite>CUDA</cite> if
 coordinate_map_type == <cite>CoordinateMapType.GPU</cite>) that defines the
 coordinates.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> (<cite>list</cite>): a list of <cite>D</cite> elements that defines the
+tensor stride for the new order-<cite>D + 1</cite> sparse tensor.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">CoordinateManager</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
@@ -308,10 +348,12 @@ coordinates.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordinateManager.insert_field">
-<code class="sig-name descname">insert_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">torch.Tensor</span></em>, <em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.ndarray<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">string_id</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span>Tuple<span class="p">[</span>torch.IntTensor<span class="p">, </span>torch.IntTensor<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.insert_field" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">insert_field</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">torch.Tensor</span></em>, <em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">collections.abc.Sequence</span></em>, <em class="sig-param"><span class="n">string_id</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span>Tuple<span class="p">[</span>torch.IntTensor<span class="p">, </span>torch.IntTensor<span class="p">]</span><span class="p">]</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.insert_field" title="Permalink to this definition">¶</a></dt>
 <dd><p>create a new coordinate map and returns</p>
 <p><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code>: <cite>torch.FloatTensor</cite> (<cite>CUDA</cite> if coordinate_map_type
 == <cite>CoordinateMapType.GPU</cite>) that defines the coordinates.</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">tensor_stride</span></code> (<cite>list</cite>): a list of <cite>D</cite> elements that defines the
+tensor stride for the new order-<cite>D + 1</cite> sparse tensor.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">CoordinateManager</span><span class="p">(</span><span class="n">D</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.4</span><span class="p">]])</span>
@@ -329,6 +371,13 @@ coordinates.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.kernel_map">
+<code class="sig-name descname">kernel_map</code><span class="sig-paren">(</span><em class="sig-param">in_key: MinkowskiEngineBackend._C.CoordinateMapKey</em>, <em class="sig-param">out_key: MinkowskiEngineBackend._C.CoordinateMapKey</em>, <em class="sig-param">stride=1</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">dilation=1</em>, <em class="sig-param">region_type=&lt;RegionType.HYPER_CUBE: 0&gt;</em>, <em class="sig-param">region_offset=None</em>, <em class="sig-param">is_transpose=False</em>, <em class="sig-param">is_pool=False</em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.kernel_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get kernel in-out maps for the specified coords keys or tensor strides.</p>
+<p>returns dict{kernel_index: in_out_tensor} where in_out_tensor[0] is the input row indices that correspond to in_out_tensor[1], which is the row indices for output.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="MinkowskiEngine.CoordinateManager.number_of_unique_batch_indices">
 <code class="sig-name descname">number_of_unique_batch_indices</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.number_of_unique_batch_indices" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -336,6 +385,16 @@ coordinates.</p>
 <dl class="py method">
 <dt id="MinkowskiEngine.CoordinateManager.origin">
 <code class="sig-name descname">origin</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; MinkowskiEngineBackend._C.CoordinateMapKey<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.origin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.origin_field">
+<code class="sig-name descname">origin_field</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; MinkowskiEngineBackend._C.CoordinateMapKey<a class="headerlink" href="#MinkowskiEngine.CoordinateManager.origin_field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.origin_field_map">
+<code class="sig-name descname">origin_field_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.origin_field_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -358,6 +417,11 @@ input map to generate the strided map from.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="MinkowskiEngine.CoordinateManager.stride_map">
+<code class="sig-name descname">stride_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em>, <em class="sig-param"><span class="n">stride_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.stride_map" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="MinkowskiEngine.CoordinateManager.union_map">
 <code class="sig-name descname">union_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">in_keys</span><span class="p">:</span> <span class="n">list</span></em>, <em class="sig-param"><span class="n">out_key</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.CoordinateManager.union_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -376,8 +440,7 @@ input map to generate the strided map from.</p>
 <dl class="py method">
 <dt id="MinkowskiEngine.GPUMemoryAllocatorType.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#MinkowskiEngine.GPUMemoryAllocatorType.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>(self: handle) -&gt; str</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 

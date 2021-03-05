@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>3D Sparsity Pattern Reconstruction &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>3D Sparsity Pattern Reconstruction &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -210,7 +210,7 @@ convolutional neural network that reconstructs a 3D sparsity pattern from an
 one-hot vector. This is similar to the <a class="reference external" href="https://arxiv.org/abs/1703.09438">Octree Generating Networks, ICCV’17</a>. The input one-hot vector indicates a 3D
 Computer Aided Design (CAD) chair index from the ModelNet40 dataset.</p>
 <p>We use <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose" title="MinkowskiEngine.MinkowskiConvolutionTranspose"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolutionTranspose</span></code></a> along with
-<a class="reference internal" href="../pruning.html#MinkowskiEngine.MinkowskiPruning" title="MinkowskiEngine.MinkowskiPruning"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPruning</span></code></a> to sequentially upsample a voxel by a
+<a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPruning" title="MinkowskiEngine.MinkowskiPruning"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPruning</span></code></a> to sequentially upsample a voxel by a
 factor of 2 and then remove some of the upsampled voxels to generate target
 shapes.  The general network architecture looks similar to the following
 diagram, but the details might differ.</p>
@@ -218,7 +218,7 @@ diagram, but the details might differ.</p>
 <p>Before we proceed, please go over <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/demo/training.html">the training and data loading tutorial</a> first.</p>
 <div class="section" id="making-a-sparsity-pattern-reconstruction-network">
 <h2>Making a Sparsity Pattern Reconstruction Network<a class="headerlink" href="#making-a-sparsity-pattern-reconstruction-network" title="Permalink to this headline">¶</a></h2>
-<p>To create a sparse tensor defined in a 3D grid world from a vector, we need to upsample sequentially from a <span class="math notranslate nohighlight">\(1 \times 1 \times 1\)</span> resolution voxel. Here, we use a block that consists of <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose" title="MinkowskiEngine.MinkowskiConvolutionTranspose"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolutionTranspose</span></code></a>, <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolution" title="MinkowskiEngine.MinkowskiConvolution"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution</span></code></a>, and <a class="reference internal" href="../pruning.html#MinkowskiEngine.MinkowskiPruning" title="MinkowskiEngine.MinkowskiPruning"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPruning</span></code></a>.</p>
+<p>To create a sparse tensor defined in a 3D grid world from a vector, we need to upsample sequentially from a <span class="math notranslate nohighlight">\(1 \times 1 \times 1\)</span> resolution voxel. Here, we use a block that consists of <a class="reference internal" href="../convolution.html#MinkowskiEngine.MinkowskiConvolutionTranspose" title="MinkowskiEngine.MinkowskiConvolutionTranspose"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolutionTranspose</span></code></a>, <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiConvolution" title="MinkowskiEngine.MinkowskiConvolution"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiConvolution</span></code></a>, and <a class="reference internal" href="../source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiPruning" title="MinkowskiEngine.MinkowskiPruning"><code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.MinkowskiPruning</span></code></a>.</p>
 <p>During a forward pass, we create two paths for 1) the main features and 2) a sparse voxel classification to remove unnecessary voxels.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">upsample_block</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
 <span class="n">out_cls</span> <span class="o">=</span> <span class="n">classification</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="o">.</span><span class="n">F</span>

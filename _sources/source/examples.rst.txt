@@ -4,6 +4,22 @@ examples package
 Submodules
 ----------
 
+examples.classification module
+------------------------------
+
+.. automodule:: examples.classification
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.classification\_modelnet40 module
+------------------------------------------
+
+.. automodule:: examples.classification_modelnet40
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 examples.common module
 ----------------------
 
@@ -36,6 +52,14 @@ examples.example module
    :undoc-members:
    :show-inheritance:
 
+examples.functional module
+--------------------------
+
+.. automodule:: examples.functional
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 examples.indoor module
 ----------------------
 
@@ -52,18 +76,26 @@ examples.minkunet module
    :undoc-members:
    :show-inheritance:
 
-examples.modelnet40 module
---------------------------
-
-.. automodule:: examples.modelnet40
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 examples.multigpu module
 ------------------------
 
 .. automodule:: examples.multigpu
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.multigpu\_ddp module
+-----------------------------
+
+.. automodule:: examples.multigpu_ddp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+examples.multigpu\_lightning module
+-----------------------------------
+
+.. automodule:: examples.multigpu_lightning
    :members:
    :undoc-members:
    :show-inheritance:

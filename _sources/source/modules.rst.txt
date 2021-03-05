@@ -5,7 +5,12 @@ MinkowskiEngine
    :maxdepth: 4
 
    MinkowskiEngine
+   dense_test
    examples
-   ratio
+   factory
+   fcgf
    setup
-   tests
+   test
+   test_308
+   test_interp
+   test_union

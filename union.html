@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>MinkowskiUnion &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>MinkowskiUnion &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -206,53 +206,10 @@
 <h1>MinkowskiUnion<a class="headerlink" href="#minkowskiunion" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
 <h2>MinkowskiUnion<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="py attribute">
 <dt id="MinkowskiEngine.MinkowskiUnion">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiUnion</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a union of all sparse tensors and add overlapping features.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><p>None</p>
-</dd>
-</dl>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This function is experimental and the usage can be changed in the future updates.</p>
-</div>
-<dl class="py method">
-<dt id="MinkowskiEngine.MinkowskiUnion.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="MinkowskiEngine.MinkowskiUnion.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">inputs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion.forward" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Args:</dt><dd><p>A variable number of <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code>’s.</p>
-</dd>
-<dt>Returns:</dt><dd><p>A <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor</span></code> with coordinates = union of all
-input coordinates, and features = sum of all features corresponding to the
-coordinate.</p>
-</dd>
-</dl>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define inputs</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">input1</span> <span class="o">=</span> <span class="n">SparseTensor</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">double</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># All inputs must share the same coordinate manager</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">input2</span> <span class="o">=</span> <span class="n">SparseTensor</span><span class="p">(</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">double</span><span class="p">),</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">coords</span><span class="o">=</span><span class="n">coords</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">coords_manager</span><span class="o">=</span><span class="n">input1</span><span class="o">.</span><span class="n">coordinate_manager</span><span class="p">,</span>  <span class="c1"># Must use same coords manager</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">force_creation</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># The tensor stride [1, 1] already exists.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">union</span> <span class="o">=</span> <span class="n">MinkowskiUnion</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span> <span class="o">=</span> <span class="n">union</span><span class="p">(</span><span class="n">input1</span><span class="p">,</span> <span class="n">iput2</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</dd></dl>
+<code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiUnion</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiUnion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>

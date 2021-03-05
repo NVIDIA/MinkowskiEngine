@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>MinkowskiPooling &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -1064,14 +1064,14 @@ only argument)</p>
 <h2>MinkowskiGlobalMaxPooling<a class="headerlink" href="#minkowskiglobalmaxpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiGlobalMaxPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalMaxPooling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">PoolingMode.GLOBAL_MAX_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalMaxPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalMaxPooling</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;PoolingMode.GLOBAL_MAX_POOLING_PYTORCH_INDEX: 11&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalMaxPooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Max pool all input features to one output feature at the origin.</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{y} = \max_{\mathbf{i} \in
 \mathcal{C}^\text{in}} \mathbf{x}_{\mathbf{i}}\]</div>
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalMaxPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">PoolingMode.GLOBAL_MAX_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalMaxPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;PoolingMode.GLOBAL_MAX_POOLING_PYTORCH_INDEX: 11&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalMaxPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reduces sparse coords into points at origin, i.e. reduce each point
 cloud into a point at the origin, returning batch_size number of points
 [[0, 0, …, 0], [0, 0, …, 1],, [0, 0, …, 2]] where the last elem
@@ -1128,7 +1128,7 @@ live on GPU while being optimized.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalMaxPooling.forward">
-<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span><span class="p">:</span> <span class="n"><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a></span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>torch.IntTensor<span class="p">, </span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">, </span><a class="reference internal" href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor" title="MinkowskiEngine.MinkowskiSparseTensor.SparseTensor">MinkowskiSparseTensor.SparseTensor</a><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalMaxPooling.forward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Defines the computation performed at every call.</p>
 <p>Should be overridden by all subclasses.</p>
 <div class="admonition note">
@@ -1243,10 +1243,10 @@ only argument)</p>
 <h2>MinkowskiGlobalAvgPooling<a class="headerlink" href="#minkowskiglobalavgpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiGlobalAvgPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalAvgPooling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalAvgPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalAvgPooling</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX: 10&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalAvgPooling" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalAvgPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalAvgPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;PoolingMode.GLOBAL_AVG_POOLING_PYTORCH_INDEX: 10&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalAvgPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reduces sparse coords into points at origin, i.e. reduce each point
 cloud into a point at the origin, returning batch_size number of points
 [[0, 0, …, 0], [0, 0, …, 1],, [0, 0, …, 2]] where the last elem
@@ -1418,10 +1418,10 @@ only argument)</p>
 <h2>MinkowskiGlobalSumPooling<a class="headerlink" href="#minkowskiglobalsumpooling" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiGlobalSumPooling">
-<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalSumPooling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">PoolingMode.GLOBAL_SUM_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalSumPooling" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiGlobalSumPooling</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;PoolingMode.GLOBAL_SUM_POOLING_PYTORCH_INDEX: 9&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalSumPooling" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiGlobalSumPooling.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mode</span><span class="o">=</span><span class="default_value">PoolingMode.GLOBAL_SUM_POOLING_PYTORCH_INDEX</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalSumPooling.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mode=&lt;PoolingMode.GLOBAL_SUM_POOLING_PYTORCH_INDEX: 9&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiGlobalSumPooling.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reduces sparse coords into points at origin, i.e. reduce each point
 cloud into a point at the origin, returning batch_size number of points
 [[0, 0, …, 0], [0, 0, …, 1],, [0, 0, …, 2]] where the last elem

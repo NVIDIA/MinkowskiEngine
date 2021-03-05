@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Python Module Index &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>Python Module Index &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
@@ -53,7 +55,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -63,7 +65,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.2
               </div>
             
           
@@ -106,18 +108,19 @@
 <li class="toctree-l1"><a class="reference internal" href="demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sparse_tensor.html">SparseTensor and TensorField</a></li>
 <li class="toctree-l1"><a class="reference internal" href="convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pooling.html">MinkowskiPooling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interp.html">MinkowskiInterpolation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Utility Functions and Classes</a></li>
@@ -128,6 +131,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_05.html">Migration Guide from v0.4.x to v0.5.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -169,6 +173,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -195,7 +201,8 @@
    <h1>Python Module Index</h1>
 
    <div class="modindex-jumpbox">
-   <a href="#cap-m"><strong>m</strong></a>
+   <a href="#cap-m"><strong>m</strong></a> | 
+   <a href="#cap-t"><strong>t</strong></a>
    </div>
 
    <table class="indextable modindextable">
@@ -211,7 +218,7 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.Common"><code class="xref">MinkowskiEngine.Common</code></a></td><td>
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.diagnostics"><code class="xref">MinkowskiEngine.diagnostics</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -226,17 +233,32 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCommon"><code class="xref">MinkowskiEngine.MinkowskiCommon</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
        <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiConvolution"><code class="xref">MinkowskiEngine.MinkowskiConvolution</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCoords"><code class="xref">MinkowskiEngine.MinkowskiCoords</code></a></td><td>
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiCoordinateManager"><code class="xref">MinkowskiEngine.MinkowskiCoordinateManager</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
        <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiFunctional"><code class="xref">MinkowskiEngine.MinkowskiFunctional</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiInterpolation"><code class="xref">MinkowskiEngine.MinkowskiInterpolation</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiKernelGenerator"><code class="xref">MinkowskiEngine.MinkowskiKernelGenerator</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -271,6 +293,21 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiSparseTensor"><code class="xref">MinkowskiEngine.MinkowskiSparseTensor</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiTensor"><code class="xref">MinkowskiEngine.MinkowskiTensor</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiTensorField"><code class="xref">MinkowskiEngine.MinkowskiTensorField</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
        <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.MinkowskiUnion"><code class="xref">MinkowskiEngine.MinkowskiUnion</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
@@ -291,7 +328,7 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.SparseTensor"><code class="xref">MinkowskiEngine.SparseTensor</code></a></td><td>
+       <a href="source/MinkowskiEngine.html#module-MinkowskiEngine.sparse_matrix_functions"><code class="xref">MinkowskiEngine.sparse_matrix_functions</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -323,6 +360,14 @@
        <td>&#160;&#160;&#160;
        <a href="source/MinkowskiEngine.utils.html#module-MinkowskiEngine.utils.quantization"><code class="xref">MinkowskiEngine.utils.quantization</code></a></td><td>
        <em></em></td></tr>
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-t"><td></td><td>
+       <strong>t</strong></td><td></td></tr>
+     <tr>
+       <td></td>
+       <td>
+       <a href="source/test.html#module-test"><code class="xref">test</code></a></td><td>
+       <em></em></td></tr>
    </table>
 
 
@@ -344,28 +389,25 @@
 
 
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

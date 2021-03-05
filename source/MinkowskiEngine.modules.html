@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>MinkowskiEngine.modules package &mdash; MinkowskiEngine 0.4.3 documentation</title>
+  <title>MinkowskiEngine.modules package &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -29,7 +32,6 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
@@ -50,7 +52,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> MinkowskiEngine
+            <a href="../index.html" class="icon icon-home"> MinkowskiEngine
           
 
           
@@ -60,7 +62,7 @@
             
             
               <div class="version">
-                0.4.3
+                0.5.2
               </div>
             
           
@@ -103,18 +105,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../demo/segmentation.html">Semantic Segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/sparse_tensor_reconstruction.html">3D Sparsity Pattern Reconstruction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/interop.html">Working with Pytorch Layers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../demo/multigpu.html">Multi-GPU with Pytorch-Lightning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../demo/pointnet.html">PointNet</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor.html">SparseTensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sparse_tensor.html">SparseTensor and TensorField</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../convolution.html">MinkowskiConvolution</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pooling.html">MinkowskiPooling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../broadcast.html">MinkowskiBroadcast</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../normalization.html">MinkowskiNormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nonlinearity.html">MinkowskiNonlinearities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pruning.html">MinkowskiPruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interp.html">MinkowskiInterpolation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../union.html">MinkowskiUnion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../coords.html">Coordinate Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utils.html">Utility Functions and Classes</a></li>
@@ -166,6 +169,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -177,7 +182,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/source/MinkowskiEngine.modules.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -211,7 +216,16 @@
 <dl class="py method">
 <dt id="MinkowskiEngine.modules.resnet_block.BasicBlock.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.modules.resnet_block.BasicBlock.forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
 
 <dl class="py attribute">
 <dt id="MinkowskiEngine.modules.resnet_block.BasicBlock.training">
@@ -232,7 +246,16 @@
 <dl class="py method">
 <dt id="MinkowskiEngine.modules.resnet_block.Bottleneck.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.modules.resnet_block.Bottleneck.forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
 
 <dl class="py attribute">
 <dt id="MinkowskiEngine.modules.resnet_block.Bottleneck.training">
@@ -251,7 +274,16 @@
 <dl class="py method">
 <dt id="MinkowskiEngine.modules.senet_block.SEBasicBlock.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.modules.senet_block.SEBasicBlock.forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
 
 <dl class="py attribute">
 <dt id="MinkowskiEngine.modules.senet_block.SEBasicBlock.training">
@@ -267,7 +299,16 @@
 <dl class="py method">
 <dt id="MinkowskiEngine.modules.senet_block.SEBottleneck.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.modules.senet_block.SEBottleneck.forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
 
 <dl class="py attribute">
 <dt id="MinkowskiEngine.modules.senet_block.SEBottleneck.training">
@@ -283,7 +324,16 @@
 <dl class="py method">
 <dt id="MinkowskiEngine.modules.senet_block.SELayer.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.modules.senet_block.SELayer.forward" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
 
 <dl class="py attribute">
 <dt id="MinkowskiEngine.modules.senet_block.SELayer.training">
@@ -317,28 +367,25 @@
 
 
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2020, Chris Choy
+        &#169; Copyright 2020, Chris Choy.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

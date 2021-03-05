@@ -9,8 +9,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 ## News
 
-- 2020-12-24 v0.5 is now available!
-- 2020-08-18 v0.5 beta version is now available! [The speedup compared with v0.4.3 ranges from x2 to x5 depending on the network architectures](https://github.com/chrischoy/MinkowskiEngineBenchmark). Please install with the following command. The migration guide from v0.4 to v0.5 is available at [the wiki page](https://github.com/NVIDIA/MinkowskiEngine/wiki/Migration-Guide-from-v0.4.x-to-0.5.x). Feel free to update the wiki page to add and update any discrepancies you see.
+- 2020-12-24 v0.5 is now available! The new version provides CUDA accelerations for all coordinate management functions.
 
 ## Example Networks
 
@@ -55,7 +54,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 - Ubuntu >= 14.04
 - CUDA >= 11.1 or 11.0 > CUDA >= 10.1.243, [No CUDA 11.0](https://github.com/NVIDIA/MinkowskiEngine/issues/290)
-- pytorch >= 1.5
+- pytorch >= 1.7
 - python >= 3.6
 - GCC >= 7
 
@@ -75,7 +74,7 @@ The MinkowskiEngine is distributed via [PyPI MinkowskiEngine][pypi-url] which ca
 First, install pytorch following the [instruction](https://pytorch.org). Next, install `openblas`.
 
 ```
-sudo apt install libopenblas-dev
+sudo apt install build-essential python3-dev libopenblas-dev
 pip install torch
 pip install -U MinkowskiEngine --install-option="--blas=openblas" -v --no-deps
 
@@ -104,11 +103,19 @@ We recommend `python>=3.6` for installation.
 First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
 
 ```
-sudo apt install libopenblas-dev
 conda create -n py3-mink python=3.8
 conda activate py3-mink
-conda install numpy mkl-include pytorch cudatoolkit=11.0 -c pytorch
-pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps
+
+conda install pytorch -c pytorch
+conda install openblas-devel -c anaconda
+
+# Install MinkowskiEngine
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option="--blas_include_dirs=${CONDA_PREFIX}/include" --install-option="--blas=openblas"
+
+# Or if you want local MinkowskiEngine
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
+cd MinkowskiEngine
+python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openblas
 ```
 
 ### System Python
@@ -117,7 +124,7 @@ Like the anaconda installation, make sure that you install pytorch with the same
 
 ```
 # install system requirements
-sudo apt install python3-dev libopenblas-dev
+sudo apt install build-essential python3-dev libopenblas-dev
 
 # Skip if you already have pip installed on your python3
 curl https://bootstrap.pypa.io/get-pip.py | python3

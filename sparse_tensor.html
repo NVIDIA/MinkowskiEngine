@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>SparseTensor and TensorField &mdash; MinkowskiEngine 0.5.0 documentation</title>
+  <title>SparseTensor and TensorField &mdash; MinkowskiEngine 0.5.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.0
+                0.5.2
               </div>
             
           
@@ -559,7 +559,7 @@ different instances in a batch.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiTensorField.TensorField.inverse_mapping">
-<em class="property">property </em><code class="sig-name descname">inverse_mapping</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensorField.TensorField.inverse_mapping" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">inverse_mapping</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sparse_tensor_map_key</span><span class="p">:</span> <span class="n">MinkowskiEngineBackend._C.CoordinateMapKey</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensorField.TensorField.inverse_mapping" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -569,7 +569,7 @@ different instances in a batch.</p>
 
 <dl class="py method">
 <dt id="MinkowskiEngine.MinkowskiTensorField.TensorField.sparse">
-<code class="sig-name descname">sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">quantization_mode</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensorField.TensorField.sparse" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sparse</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tensor_stride</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>collections.abc.Sequence<span class="p">, </span>numpy.array<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">coordinate_map_key</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>MinkowskiEngineBackend._C.CoordinateMapKey<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">quantization_mode</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensorField.TensorField.sparse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts the current sparse tensor field to a sparse tensor.</p>
 </dd></dl>
 
@@ -582,8 +582,8 @@ different instances in a batch.</p>
 <dt id="MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiTensor.</code><code class="sig-name descname">SparseTensorOperationMode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enum class for SparseTensor internal instantiation modes.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">SEPARATE_COORDINATE_MANAGER</span></code>: always create a new coordinate manager.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">SHARE_COORDINATE_MANAGER</span></code>: always use the globally defined coordinate
+<p><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER" title="MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SEPARATE_COORDINATE_MANAGER</span></code></a>: always create a new coordinate manager.</p>
+<p><a class="reference internal" href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER" title="MinkowskiEngine.MinkowskiTensor.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SHARE_COORDINATE_MANAGER</span></code></a>: always use the globally defined coordinate
 manager. Must clear the coordinate manager manually by
 <code class="xref py py-attr docutils literal notranslate"><span class="pre">MinkowskiEngine.SparseTensor.clear_global_coordinate_manager</span></code>.</p>
 </dd></dl>
