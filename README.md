@@ -54,7 +54,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 - Ubuntu >= 14.04
 - CUDA >= 11.1 or 11.0 > CUDA >= 10.1.243, [No CUDA 11.0](https://github.com/NVIDIA/MinkowskiEngine/issues/290)
-- 1.8 > pytorch >= 1.7 [Pytorch 1.8 is unstable](https://github.com/NVIDIA/MinkowskiEngine/issues/324)
+- pytorch >= 1.8.1, 1.8 > pytorch >= 1.7 (if you use conda, install with `conda install -y -c conda-forge -c pytorch pytorch cudatoolkit=11.1`)
 - python >= 3.6
 - GCC >= 7
 
@@ -106,8 +106,8 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 conda create -n py3-mink python=3.8
 conda activate py3-mink
 
-conda install pytorch -c pytorch
 conda install openblas-devel -c anaconda
+conda install -y -c conda-forge -c pytorch pytorch cudatoolkit=11.1
 
 # Install MinkowskiEngine
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option="--blas_include_dirs=${CONDA_PREFIX}/include" --install-option="--blas=openblas"
