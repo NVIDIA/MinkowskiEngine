@@ -10,33 +10,10 @@
 #include <c10/util/complex.h>
 #include <c10/util/string_view.h>
 
-#ifdef XPLAT_MOBILE_BUILD
-#include <ATen/selected_mobile_ops.h>
-#else
-namespace at {
-/**
- * The method should_include_kernel_dtype() returns true/false
- * based on whether the switching code for a specific dtype should be
- * included based on build time constants generated from tracing model
- * execution. This method will be implmeneted via code-generation and
- * included in this file when code-gen is ready.
- */
-inline constexpr bool should_include_kernel_dtype(const char *kernel_tag_str,
-                                                  at::ScalarType scalar_type) {
-  return true;
-}
-} // namespace at
-#endif
-
 namespace minkowski {
 
 #define MINK_PRIVATE_CASE_TYPE_USING_HINT(NAME, enum_type, type, HINT, ...)    \
   case enum_type: {                                                            \
-    at::guts::if_constexpr<(                                                   \
-        !at::should_include_kernel_dtype(NAME, enum_type))>([&] {              \
-      AT_ERROR("dtype '", toString(enum_type),                                 \
-               "' not selected for kernel tag ", #NAME);                       \
-    });                                                                        \
     using HINT = type;                                                         \
     return __VA_ARGS__();                                                      \
   }
