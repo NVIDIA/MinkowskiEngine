@@ -43,10 +43,102 @@ import torch
 import torch.nn as nn
 import torch.utils.data
 import torch.optim as optim
+from torch.utils.data.sampler import Sampler
 
 import MinkowskiEngine as ME
 
-from examples.modelnet40 import InfSampler, resample_mesh
+
+class InfSampler(Sampler):
+    """Samples elements randomly, without replacement.
+
+    Arguments:
+        data_source (Dataset): dataset to sample from
+    """
+
+    def __init__(self, data_source, shuffle=False):
+        self.data_source = data_source
+        self.shuffle = shuffle
+        self.reset_permutation()
+
+    def reset_permutation(self):
+        perm = len(self.data_source)
+        if self.shuffle:
+            perm = torch.randperm(perm)
+        self._perm = perm.tolist()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if len(self._perm) == 0:
+            self.reset_permutation()
+        return self._perm.pop()
+
+    def __len__(self):
+        return len(self.data_source)
+
+
+def resample_mesh(mesh_cad, density=1):
+    """
+    https://chrischoy.github.io/research/barycentric-coordinate-for-mesh-sampling/
+    Samples point cloud on the surface of the model defined as vectices and
+    faces. This function uses vectorized operations so fast at the cost of some
+    memory.
+
+    param mesh_cad: low-polygon triangle mesh in o3d.geometry.TriangleMesh
+    param density: density of the point cloud per unit area
+    param return_numpy: return numpy format or open3d pointcloud format
+    return resampled point cloud
+
+    Reference :
+      [1] Barycentric coordinate system
+      \begin{align}
+        P = (1 - \sqrt{r_1})A + \sqrt{r_1} (1 - r_2) B + \sqrt{r_1} r_2 C
+      \end{align}
+    """
+    faces = np.array(mesh_cad.triangles).astype(int)
+    vertices = np.array(mesh_cad.vertices)
+
+    vec_cross = np.cross(
+        vertices[faces[:, 0], :] - vertices[faces[:, 2], :],
+        vertices[faces[:, 1], :] - vertices[faces[:, 2], :],
+    )
+    face_areas = np.sqrt(np.sum(vec_cross ** 2, 1))
+
+    n_samples = (np.sum(face_areas) * density).astype(int)
+    # face_areas = face_areas / np.sum(face_areas)
+
+    # Sample exactly n_samples. First, oversample points and remove redundant
+    # Bug fix by Yangyan (yangyan.lee@gmail.com)
+    n_samples_per_face = np.ceil(density * face_areas).astype(int)
+    floor_num = np.sum(n_samples_per_face) - n_samples
+    if floor_num > 0:
+        indices = np.where(n_samples_per_face > 0)[0]
+        floor_indices = np.random.choice(indices, floor_num, replace=True)
+        n_samples_per_face[floor_indices] -= 1
+
+    n_samples = np.sum(n_samples_per_face)
+
+    # Create a vector that contains the face indices
+    sample_face_idx = np.zeros((n_samples,), dtype=int)
+    acc = 0
+    for face_idx, _n_sample in enumerate(n_samples_per_face):
+        sample_face_idx[acc: acc + _n_sample] = face_idx
+        acc += _n_sample
+
+    r = np.random.rand(n_samples, 2)
+    A = vertices[faces[sample_face_idx, 0], :]
+    B = vertices[faces[sample_face_idx, 1], :]
+    C = vertices[faces[sample_face_idx, 2], :]
+
+    P = (
+        (1 - np.sqrt(r[:, 0:1])) * A
+        + np.sqrt(r[:, 0:1]) * (1 - r[:, 1:]) * B
+        + np.sqrt(r[:, 0:1]) * r[:, 1:] * C
+    )
+
+    return P
+
 
 M = np.array(
     [
@@ -100,7 +192,8 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
 
         self.root = "./ModelNet40"
         fnames = glob.glob(os.path.join(self.root, "chair/train/*.off"))
-        fnames = sorted([os.path.relpath(fname, self.root) for fname in fnames])
+        fnames = sorted([os.path.relpath(fname, self.root)
+                         for fname in fnames])
         self.files = fnames
         assert len(self.files) > 0, "No file loaded"
         logging.info(
@@ -204,7 +297,8 @@ parser.add_argument("--momentum", type=float, default=0.9)
 parser.add_argument("--weight_decay", type=float, default=1e-4)
 parser.add_argument("--num_workers", type=int, default=1)
 parser.add_argument("--stat_freq", type=int, default=50)
-parser.add_argument("--weights", type=str, default="modelnet_reconstruction.pth")
+parser.add_argument("--weights", type=str,
+                    default="modelnet_reconstruction.pth")
 parser.add_argument("--load_optimizer", type=str, default="true")
 parser.add_argument("--eval", action="store_true")
 parser.add_argument("--max_visualization", type=int, default=4)
@@ -497,7 +591,8 @@ def train(net, dataloader, device, config):
         num_layers, loss = len(out_cls), 0
         losses = []
         for out_cl, target in zip(out_cls, targets):
-            curr_loss = crit(out_cl.F.squeeze(), target.type(out_cl.F.dtype).to(device))
+            curr_loss = crit(out_cl.F.squeeze(), target.type(
+                out_cl.F.dtype).to(device))
             losses.append(curr_loss.item())
             loss += curr_loss / num_layers
 
@@ -607,7 +702,8 @@ if __name__ == "__main__":
         train(net, dataloader, device, config)
     else:
         if not os.path.exists(config.weights):
-            logging.info(f"Downloaing pretrained weights. This might take a while...")
+            logging.info(
+                f"Downloaing pretrained weights. This might take a while...")
             urllib.request.urlretrieve(
                 "https://bit.ly/36d9m1n", filename=config.weights
             )
