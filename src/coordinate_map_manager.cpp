@@ -596,8 +596,8 @@ struct stride_map_functor<coordinate_type, std::allocator, CoordinateMapCPU,
   cpu_kernel_map
   operator()(CoordinateMapCPU<coordinate_type, std::allocator> const &in_map,
              CoordinateMapCPU<coordinate_type, std::allocator> const &out_map,
-             default_types::stride_type const &stride) {
-    return in_map.stride_map(out_map, stride);
+             default_types::stride_type const &out_tensor_stride) {
+    return in_map.stride_map(out_map, out_tensor_stride);
   }
 };
 
@@ -777,7 +777,7 @@ CoordinateMapManager<
           auto const stride_map =
               detail::stride_map_functor<coordinate_type, TemplatedAllocator,
                                          CoordinateMapType, kernel_map_type>()(
-                  out_map, in_map, kernel_stride);
+                  out_map, in_map, in_map.get_tensor_stride());
 
           // TODO Replace the kernel_map values to shared pointers.
           m_kernel_maps[kernel_map_key] =
@@ -1018,7 +1018,7 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
     auto const stride_map =
         detail::stride_map_functor<coordinate_type, TemplatedAllocator,
                                    CoordinateMapType, kernel_map_type>()(
-            in_map, strided_map, kernel_stride);
+            in_map, strided_map, strided_map.get_tensor_stride());
 
     m_kernel_maps[kernel_map_key] = std::move(stride_map);
   }

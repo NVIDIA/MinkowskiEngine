@@ -199,36 +199,36 @@ public:
 
     index_type *p_kernel_map =
         (index_type *)std::malloc(map_size * 3 * sizeof(index_type));
-    CUDA_CHECK(cudaMemcpy(p_kernel_map, kernels.begin(0),
+    // CUDA_CHECK(cudaMemcpy(p_kernel_map, kernels.begin(),
+    //                       map_size * sizeof(index_type),
+    //                       cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(p_kernel_map + 1 * map_size, in_maps.begin(),
                           map_size * sizeof(index_type),
                           cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(p_kernel_map + 1 * map_size, in_maps.begin(0),
-                          map_size * sizeof(index_type),
-                          cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(p_kernel_map + 2 * map_size, out_maps.begin(0),
+    CUDA_CHECK(cudaMemcpy(p_kernel_map + 2 * map_size, out_maps.begin(),
                           map_size * sizeof(index_type),
                           cudaMemcpyDeviceToHost));
 
     for (index_type i = 0; i < map_size; ++i) {
-      std::cout << p_kernel_map[i + 0 * map_size] << ":"
+      std::cout // << p_kernel_map[i + 0 * map_size] << ":"
                 << p_kernel_map[i + 1 * map_size] << "->"
                 << p_kernel_map[i + 2 * map_size] << "\n";
     }
 
     std::cout << "Swapped kernel map\n";
 
-    CUDA_CHECK(cudaMemcpy(p_kernel_map, swapped_gpu_kernel_map.kernels.begin(0),
-                          map_size * sizeof(index_type),
-                          cudaMemcpyDeviceToHost));
+    // CUDA_CHECK(cudaMemcpy(p_kernel_map, swapped_gpu_kernel_map.kernels.begin(),
+    //                       map_size * sizeof(index_type),
+    //                       cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(
-        p_kernel_map + 1 * map_size, swapped_gpu_kernel_map.in_maps.begin(0),
+        p_kernel_map + 1 * map_size, swapped_gpu_kernel_map.in_maps.begin(),
         map_size * sizeof(index_type), cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(
-        p_kernel_map + 2 * map_size, swapped_gpu_kernel_map.out_maps.begin(0),
+        p_kernel_map + 2 * map_size, swapped_gpu_kernel_map.out_maps.begin(),
         map_size * sizeof(index_type), cudaMemcpyDeviceToHost));
 
     for (index_type i = 0; i < map_size; ++i) {
-      std::cout << p_kernel_map[i + 0 * map_size] << ":"
+      std::cout // << p_kernel_map[i + 0 * map_size] << ":"
                 << p_kernel_map[i + 1 * map_size] << "->"
                 << p_kernel_map[i + 2 * map_size] << "\n";
     }

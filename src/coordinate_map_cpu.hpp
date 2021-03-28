@@ -682,6 +682,8 @@ public:
     cpu_in_maps in_maps = initialize_maps<cpu_in_map>(1, in_size);
     cpu_out_maps out_maps = initialize_maps<cpu_out_map>(1, in_size);
 
+    LOG_DEBUG("stride map in_maps.size():", in_size);
+    LOG_DEBUG("stride map out_maps.size():", out_coordinate_map.size());
     // compute the chunk size per thread.
     // There's a trade-off between the thread initialization overhead and the
     // job sizes. If some jobs finish earlier than others due to imbalance in
