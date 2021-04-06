@@ -40,6 +40,9 @@ public:
   gpu_storage(uint64_t const num_elements) { allocate(num_elements); }
   gpu_storage(self_type const &other_storage) {
     LOG_DEBUG("copy storage constructor");
+    if (other_storage.size() == 0)
+      return;
+
     allocate(other_storage.size());
     CUDA_CHECK(cudaMemcpy(m_data, other_storage.cdata(),
                           other_storage.size() * sizeof(data_type),
@@ -64,6 +67,8 @@ public:
   ~gpu_storage() { deallocate(); }
 
   data_type *allocate(uint64_t const num_elements) {
+    if (num_elements == 0)
+      return nullptr;
     m_num_elements = num_elements;
     m_data =
         (data_type *)m_allocator.allocate(m_num_elements * sizeof(data_type));

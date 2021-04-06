@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.5.3]
+
+- Use custom `gpu_storage` instead of thrust vector for faster constructors
+
 ## [0.5.2]
 
 - spmm average cuda function

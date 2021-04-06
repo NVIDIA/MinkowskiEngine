@@ -432,7 +432,6 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
           num_threads, m_coordinate_size);
 
   LOG_DEBUG("Stride copy done.");
-  gpu_storage<bool, byte_allocator_type> success(N);
   auto &stride_valid_row_index = stride_map.m_valid_row_index;
   auto &stride_valid_map_index = stride_map.m_valid_map_index;
 
@@ -440,30 +439,30 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
   stride_valid_map_index.resize(N); // map offset
 
   // Insert coordinates
-  auto insert = detail::insert_coordinate<coordinate_type, map_type,
-                                          index_type *>{
-      *stride_map.m_map,                  // map
-      stride_map.const_coordinate_data(), // coordinates,
-      stride_valid_row_index.data(),      // valid row
-      stride_valid_map_index.data(),      // iter offset
-      m_coordinate_size};
-  thrust::counting_iterator<uint32_t> count_begin{0};
-  thrust::transform(count_begin, count_begin + N, success.begin(), insert);
-  LOG_DEBUG("Stride insertion done.");
+  index_type const unused_key = std::numeric_limits<index_type>::max();
+  LOG_DEBUG("unused_key", unused_key);
+
+  detail::insert_and_map_kernel<coordinate_type, size_type, index_type,
+                                map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
+      *stride_map.m_map,                   //
+      stride_map.const_coordinate_data(),  //
+      stride_valid_map_index.data(), //
+      stride_valid_row_index.data(), //
+      num_threads, m_coordinate_size, unused_key);
+  CUDA_CHECK(cudaStreamSynchronize(0));
+  LOG_DEBUG("Stride map size:", m_map->size());
 
   // Valid row index
   auto valid_begin = thrust::make_zip_iterator(
-      thrust::make_tuple(success.begin(),                //
-                         stride_valid_row_index.begin(), //
-                         stride_valid_map_index.begin()));
+      thrust::make_tuple(stride_valid_map_index.begin(), //
+                         stride_valid_row_index.begin()));
   size_type const number_of_valid =
       thrust::remove_if(thrust::device, //
                         valid_begin,    //
                         thrust::make_zip_iterator(
-                            thrust::make_tuple(success.end(),                //
-                                               stride_valid_row_index.end(), //
-                                               stride_valid_map_index.end())),
-                        detail::is_first<bool>(false)) -
+                            thrust::make_tuple(stride_valid_map_index.end(), //
+                                               stride_valid_row_index.end())),
+                        detail::is_first<index_type>(unused_key)) -
       valid_begin;
   stride_valid_row_index.resize(number_of_valid);
   stride_valid_map_index.resize(number_of_valid);
@@ -471,6 +470,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
   LOG_DEBUG("Reduced to", number_of_valid);
 
   // remap values
+  thrust::counting_iterator<uint32_t> count_begin{0};
   thrust::for_each(count_begin, count_begin + number_of_valid,
                    detail::update_value_with_offset<index_type, map_type>{
                        *stride_map.m_map, stride_map.m_valid_map_index.data()});
