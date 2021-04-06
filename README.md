@@ -53,8 +53,8 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 ## Requirements
 
 - Ubuntu >= 14.04
-- CUDA >= 10.1.243 and **the same CUDA version used for pytorch** (e.g. if you use conda cudatoolkit=11.0, use CUDA=11.0 for MinkowskiEngine compilation)
-- pytorch >= 1.7 (if you use conda, install with `conda install -y -c conda-forge -c pytorch pytorch=1.7.1 cudatoolkit=11.0`)
+- CUDA >= 10.1.243 and **the same CUDA version used for pytorch** (e.g. if you use conda cudatoolkit=11.1, use CUDA=11.1 for MinkowskiEngine compilation)
+- pytorch >= 1.7 (if you use conda, install with `conda install -y -c conda-forge -c pytorch pytorch=1.8.1 cudatoolkit=11.1`)
 - python >= 3.6
 - GCC >= 7
 
@@ -87,7 +87,7 @@ If you want to specify arguments for the setup script, please refer to the follo
 ```
 # Uncomment some options if things don't work
 # export CXX=c++; # set this if you want to use a different C++ compiler
-# export CUDA_HOME=/usr/local/cuda-11.0; # or select the correct cuda version on your system.
+# export CUDA_HOME=/usr/local/cuda-11.1; # or select the correct cuda version on your system.
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps \
 #                           \ # uncomment the following line if you want to force cuda installation
 #                           --install-option="--force_cuda" \
@@ -107,7 +107,7 @@ conda create -n py3-mink python=3.8
 conda activate py3-mink
 
 conda install openblas-devel -c anaconda
-conda install -y -c conda-forge -c pytorch pytorch=1.7.1 cudatoolkit=11.0
+conda install pytorch=1.8.1 torchvision cudatoolkit=11.1 -c pytorch -c conda-forge
 
 # Install MinkowskiEngine
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option="--blas_include_dirs=${CONDA_PREFIX}/include" --install-option="--blas=openblas"
@@ -138,7 +138,7 @@ cd MinkowskiEngine
 
 python setup.py install
 # To specify blas, CXX, CUDA_HOME and force CUDA installation, use the following command
-# export CXX=c++; export CUDA_HOME=/usr/local/cuda-11.0; python setup.py install --blas=openblas --force_cuda
+# export CXX=c++; export CUDA_HOME=/usr/local/cuda-11.1; python setup.py install --blas=openblas --force_cuda
 ```
 
 
@@ -240,14 +240,14 @@ Specifically, pytorch caches chunks of memory spaces to speed up allocation used
 
 **To prevent this, you must clear the cache at regular interval with `torch.cuda.empty_cache()`.**
 
-### CUDA 11.0 Installation
+### CUDA 11.1 Installation
 
 ```
-wget http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run
-sudo sh cuda_11.0.2_450.51.05_linux.run --toolkit --silent --override
+wget https://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_455.32.00_linux.run
+sudo sh cuda_11.1.1_455.32.00_linux.run --toolkit --silent --override
 
-# Install MinkowskiEngine with CUDA 11.0
-export CUDA_HOME=/usr/local/cuda-11.0; pip install MinkowskiEngine -v --no-deps
+# Install MinkowskiEngine with CUDA 11.1
+export CUDA_HOME=/usr/local/cuda-11.1; pip install MinkowskiEngine -v --no-deps
 ```
 
 ### Running the MinkowskiEngine on nodes with a large number of CPUs
