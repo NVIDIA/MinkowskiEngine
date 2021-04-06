@@ -224,7 +224,7 @@ void CoordinateMapGPU<coordinate_type, TemplatedAllocator>::insert(
   size_type const num_threads = N;
   LOG_DEBUG("nm_threads", num_threads);
   size_type const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
-  LOG_DEBUG("nm_threads", num_blocks);
+  LOG_DEBUG("nm_blocks", num_blocks);
   index_type const unused_key = std::numeric_limits<index_type>::max();
   LOG_DEBUG("unused_key", unused_key);
 

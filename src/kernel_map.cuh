@@ -29,8 +29,8 @@
 
 #include "3rdparty/hash/hash_allocator.cuh"
 
-#include "storage.cuh"
 #include "coordinate_map_functors.cuh"
+#include "storage.cuh"
 #include "types.hpp"
 
 #include <functional>
@@ -212,13 +212,14 @@ public:
 
     for (index_type i = 0; i < map_size; ++i) {
       std::cout // << p_kernel_map[i + 0 * map_size] << ":"
-                << p_kernel_map[i + 1 * map_size] << "->"
-                << p_kernel_map[i + 2 * map_size] << "\n";
+          << p_kernel_map[i + 1 * map_size] << "->"
+          << p_kernel_map[i + 2 * map_size] << "\n";
     }
 
     std::cout << "Swapped kernel map\n";
 
-    // CUDA_CHECK(cudaMemcpy(p_kernel_map, swapped_gpu_kernel_map.kernels.begin(),
+    // CUDA_CHECK(cudaMemcpy(p_kernel_map,
+    // swapped_gpu_kernel_map.kernels.begin(),
     //                       map_size * sizeof(index_type),
     //                       cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(
@@ -230,8 +231,8 @@ public:
 
     for (index_type i = 0; i < map_size; ++i) {
       std::cout // << p_kernel_map[i + 0 * map_size] << ":"
-                << p_kernel_map[i + 1 * map_size] << "->"
-                << p_kernel_map[i + 2 * map_size] << "\n";
+          << p_kernel_map[i + 1 * map_size] << "->"
+          << p_kernel_map[i + 2 * map_size] << "\n";
     }
     CUDA_CHECK(cudaDeviceSynchronize());
     std::free(p_kernel_map);
@@ -310,8 +311,8 @@ public:
   }
 
   void decompose() {
+    LOG_DEBUG("Decomposing", kernels.end() - kernels.begin(), "elements");
     // the memory space must be initialized first!
-
     // sort
     thrust::sort_by_key(thrust::device,            //
                         kernels.begin(),           // key begin
@@ -324,7 +325,9 @@ public:
                             ));
 
 #ifdef DEBUG
-    size_type map_size = std::min<size_type>(in_maps.size(0), 100);
+    size_type map_size =
+        std::min<size_type>(in_maps.end() - in_maps.begin(), 100);
+    LOG_DEBUG("printing", map_size, "kernel maps");
     index_type *p_kernel_map =
         (index_type *)std::malloc(map_size * 3 * sizeof(index_type));
     CUDA_CHECK(cudaMemcpy(p_kernel_map, m_kernel_index_memory.get(),
@@ -337,7 +340,7 @@ public:
                           map_size * sizeof(index_type),
                           cudaMemcpyDeviceToHost));
 
-    for (index_type i = 0; i < std::min<size_type>(m_capacity, 100); ++i) {
+    for (index_type i = 0; i < map_size; ++i) {
       std::cout << p_kernel_map[i + 0 * map_size] << ":"
                 << p_kernel_map[i + 1 * map_size] << "->"
                 << p_kernel_map[i + 2 * map_size] << "\n";
@@ -370,14 +373,18 @@ public:
     size_type num_unique_keys = end.first - out_key.begin();
     LOG_DEBUG(num_unique_keys, "unique kernel map keys found");
 
-    thrust::host_vector<index_type> cpu_out_keys(
-        out_key.begin(), out_key.begin() + num_unique_keys);
-    thrust::host_vector<index_type> cpu_out_offset(
-        out_key_min.begin(), out_key_min.begin() + num_unique_keys);
-    thrust::host_vector<index_type> cpu_out_size(
-        out_key_size.begin(), out_key_size.begin() + num_unique_keys);
+    auto const cpu_out_keys = out_key.to_vector(num_unique_keys);
+    auto const cpu_out_offset = out_key_min.to_vector(num_unique_keys);
+    auto const cpu_out_size = out_key_size.to_vector(num_unique_keys);
+    // thrust::host_vector<index_type> cpu_out_keys(
+    //     out_key.begin(), out_key.begin() + num_unique_keys);
+    // thrust::host_vector<index_type> cpu_out_offset(
+    //     out_key_min.begin(), out_key_min.begin() + num_unique_keys);
+    // thrust::host_vector<index_type> cpu_out_size(
+    //     out_key_size.begin(), out_key_size.begin() + num_unique_keys);
 
 #ifdef DEBUG
+    LOG_DEBUG("Printing cpu keys");
     LOG_DEBUG("Keys:", cpu_out_keys);
     LOG_DEBUG("Mins:", cpu_out_offset);
     LOG_DEBUG("Size:", cpu_out_size);

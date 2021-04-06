@@ -46,7 +46,8 @@ public:
                           cudaMemcpyDeviceToDevice));
   }
   gpu_storage(self_type &&other_storage) {
-    LOG_DEBUG("move storage constructor at", m_data);
+    LOG_DEBUG("move storage constructor from", other_storage.m_data,
+              "with size", other_storage.m_num_elements);
     if (other_storage.size() == 0)
       return;
     m_num_elements = other_storage.size();
@@ -111,11 +112,13 @@ public:
     check_pointer("cend");
     return m_data + m_num_elements;
   }
-  std::vector<data_type> to_vector() {
-    std::vector<data_type> cpu_storage(size());
-    if (size() > 0)
+
+  std::vector<data_type> to_vector() { return to_vector(size()); }
+  std::vector<data_type> to_vector(uint64_t const num_elements) {
+    std::vector<data_type> cpu_storage(num_elements);
+    if (num_elements > 0)
       CUDA_CHECK(cudaMemcpy(cpu_storage.data(), m_data,
-                            size() * sizeof(data_type),
+                            num_elements * sizeof(data_type),
                             cudaMemcpyDeviceToHost));
     return cpu_storage;
   }
