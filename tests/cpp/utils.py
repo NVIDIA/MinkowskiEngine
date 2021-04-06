@@ -25,6 +25,7 @@
 
 import os
 import numpy as np
+import collections
 from urllib.request import urlretrieve
 
 import torch
@@ -35,7 +36,7 @@ except ImportError:
     raise ImportError("Please install open3d with `pip install open3d`.")
 
 if not os.path.isfile("1.ply"):
-    urlretrieve("http://cvgl.stanford.edu/data2/minkowskiengine/1.ply", "1.ply")
+    urlretrieve("https://bit.ly/3c2iLhg", "1.ply")
 
 
 def load_file(file_name):
@@ -43,3 +44,69 @@ def load_file(file_name):
     coords = np.array(pcd.points)
     colors = np.array(pcd.colors)
     return coords, colors, pcd
+
+
+def batched_coordinates(coords, dtype=torch.int32, device=None):
+    r"""Create a `ME.SparseTensor` coordinates from a sequence of coordinates
+
+    Given a list of either numpy or pytorch tensor coordinates, return the
+    batched coordinates suitable for `ME.SparseTensor`.
+
+    Args:
+        :attr:`coords` (a sequence of `torch.Tensor` or `numpy.ndarray`): a
+        list of coordinates.
+
+        :attr:`dtype`: torch data type of the return tensor. torch.int32 by default.
+
+    Returns:
+        :attr:`batched_coordindates` (`torch.Tensor`): a batched coordinates.
+
+    .. warning::
+
+       From v0.4, the batch index will be prepended before all coordinates.
+
+    """
+    assert isinstance(
+        coords, collections.abc.Sequence
+    ), "The coordinates must be a sequence."
+    assert np.array(
+        [cs.ndim == 2 for cs in coords]
+    ).all(), "All coordinates must be in a 2D array."
+    D = np.unique(np.array([cs.shape[1] for cs in coords]))
+    assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
+    D = D[0]
+    if device is None:
+        if isinstance(coords, torch.Tensor):
+            device = coords[0].device
+        else:
+            device = "cpu"
+    assert dtype in [
+        torch.int32,
+        torch.float32,
+    ], "Only torch.int32, torch.float32 supported for coordinates."
+
+    # Create a batched coordinates
+    N = np.array([len(cs) for cs in coords]).sum()
+    bcoords = torch.zeros((N, D + 1), dtype=dtype, device=device)  # uninitialized
+
+    s = 0
+    for b, cs in enumerate(coords):
+        if dtype == torch.int32:
+            if isinstance(cs, np.ndarray):
+                cs = torch.from_numpy(np.floor(cs))
+            elif not (
+                isinstance(cs, torch.IntTensor) or isinstance(cs, torch.LongTensor)
+            ):
+                cs = cs.floor()
+
+            cs = cs.int()
+        else:
+            if isinstance(cs, np.ndarray):
+                cs = torch.from_numpy(cs)
+
+        cn = len(cs)
+        # BATCH_FIRST:
+        bcoords[s : s + cn, 1:] = cs
+        bcoords[s : s + cn, 0] = b
+        s += cn
+    return bcoords

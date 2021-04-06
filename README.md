@@ -53,8 +53,8 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 ## Requirements
 
 - Ubuntu >= 14.04
-- CUDA >= 11.1 or 11.0 > CUDA >= 10.1.243, [No CUDA 11.0](https://github.com/NVIDIA/MinkowskiEngine/issues/290)
-- 1.8 > pytorch >= 1.7 (if you use conda, install with `conda install -y -c conda-forge -c pytorch pytorch=1.7.1 cudatoolkit=11.0`)
+- CUDA >= 10.1.243 and **the same CUDA version used for pytorch** (e.g. if you use conda cudatoolkit=11.0, use CUDA=11.0 for MinkowskiEngine compilation)
+- pytorch >= 1.7 (if you use conda, install with `conda install -y -c conda-forge -c pytorch pytorch=1.7.1 cudatoolkit=11.0`)
 - python >= 3.6
 - GCC >= 7
 
@@ -87,7 +87,7 @@ If you want to specify arguments for the setup script, please refer to the follo
 ```
 # Uncomment some options if things don't work
 # export CXX=c++; # set this if you want to use a different C++ compiler
-# export CUDA_HOME=/usr/local/cuda-11.1; # or select the correct cuda version on your system.
+# export CUDA_HOME=/usr/local/cuda-11.0; # or select the correct cuda version on your system.
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps \
 #                           \ # uncomment the following line if you want to force cuda installation
 #                           --install-option="--force_cuda" \
@@ -138,7 +138,7 @@ cd MinkowskiEngine
 
 python setup.py install
 # To specify blas, CXX, CUDA_HOME and force CUDA installation, use the following command
-# export CXX=c++; export CUDA_HOME=/usr/local/cuda-11.1; python setup.py install --blas=openblas --force_cuda
+# export CXX=c++; export CUDA_HOME=/usr/local/cuda-11.0; python setup.py install --blas=openblas --force_cuda
 ```
 
 
@@ -240,16 +240,14 @@ Specifically, pytorch caches chunks of memory spaces to speed up allocation used
 
 **To prevent this, you must clear the cache at regular interval with `torch.cuda.empty_cache()`.**
 
-2. CUDA 11.0
-
-There is a known CUDA issues that force torch to allocate exorbitant memory when used with MinkowskiEngine. For more detail please refer to [the issue #290](https://github.com/NVIDIA/MinkowskiEngine/issues/290). To fix, please install CUDA toolkit 11.1 and compile MinkowskiEngine.
+### CUDA 11.0 Installation
 
 ```
-wget https://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_455.32.00_linux.run
-sudo sh cuda_11.1.1_455.32.00_linux.run --toolkit --silent --override
+wget http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run
+sudo sh cuda_11.0.2_450.51.05_linux.run --toolkit --silent --override
 
-# Install MinkowskiEngine with CUDA 11.1
-export CUDA_HOME=/usr/local/cuda-11.1; pip install MinkowskiEngine -v --no-deps
+# Install MinkowskiEngine with CUDA 11.0
+export CUDA_HOME=/usr/local/cuda-11.0; pip install MinkowskiEngine -v --no-deps
 ```
 
 ### Running the MinkowskiEngine on nodes with a large number of CPUs

@@ -32,7 +32,6 @@
 #include <vector>
 
 #ifndef CPU_ONLY
-#include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #endif
 
@@ -69,11 +68,6 @@ std::ostream &print_vector(std::ostream &out, const T &v) {
 #ifndef CPU_ONLY
 template <typename T>
 std::ostream &operator<<(std::ostream &out, const thrust::host_vector<T> &v) {
-  return print_vector(out, v);
-}
-
-template <typename T>
-std::ostream &operator<<(std::ostream &out, const thrust::device_vector<T> &v) {
   return print_vector(out, v);
 }
 #endif

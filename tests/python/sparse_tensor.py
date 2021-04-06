@@ -82,7 +82,6 @@ class SparseTensorTestCase(unittest.TestCase):
         )
         feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T
 
-        SparseTensor(feats, coords)
         SparseTensor(feats.to(0), coords.to(0))
         feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T.to(0)
         st = SparseTensor(feats, coords, device=feats.device)

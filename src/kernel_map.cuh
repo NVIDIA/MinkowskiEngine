@@ -28,6 +28,8 @@
 #define KERNEL_MAP_CUH
 
 #include "3rdparty/hash/hash_allocator.cuh"
+
+#include "storage.cuh"
 #include "coordinate_map_functors.cuh"
 #include "types.hpp"
 
@@ -36,7 +38,6 @@
 #include <memory>
 
 #include <thrust/copy.h>
-#include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/iterator/counting_iterator.h>
@@ -349,9 +350,9 @@ public:
     thrust::counting_iterator<index_type> min_begin{0};
     thrust::constant_iterator<index_type> size_begin{1};
 
-    thrust::device_vector<index_type> out_key(m_capacity);
-    thrust::device_vector<index_type> out_key_min(m_capacity);
-    thrust::device_vector<index_type> out_key_size(m_capacity);
+    gpu_storage<index_type, byte_allocator_type> out_key(m_capacity);
+    gpu_storage<index_type, byte_allocator_type> out_key_min(m_capacity);
+    gpu_storage<index_type, byte_allocator_type> out_key_size(m_capacity);
 
     auto end = thrust::reduce_by_key(
         thrust::device,  // policy

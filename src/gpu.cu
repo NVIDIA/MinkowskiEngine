@@ -32,26 +32,6 @@
 
 namespace minkowski {
 
-template <typename Dtype> void print(const thrust::device_vector<Dtype> &v) {
-  for (size_t i = 0; i < v.size(); i++)
-    std::cout << " " << std::fixed << std::setprecision(3) << v[i];
-  std::cout << "\n";
-}
-
-template void print(const thrust::device_vector<float> &v);
-template void print(const thrust::device_vector<int32_t> &v);
-
-template <typename Dtype1, typename Dtype2>
-void print(const thrust::device_vector<Dtype1> &v1,
-           const thrust::device_vector<Dtype2> &v2) {
-  for (size_t i = 0; i < v1.size(); i++)
-    std::cout << " (" << v1[i] << "," << std::setw(2) << v2[i] << ")";
-  std::cout << "\n";
-}
-
-template void print(const thrust::device_vector<int32_t> &v1,
-                    const thrust::device_vector<int32_t> &v2);
-
 const char *cublasGetErrorString(cublasStatus_t error) {
   switch (error) {
   case CUBLAS_STATUS_SUCCESS:

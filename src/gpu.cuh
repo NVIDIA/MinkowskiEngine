@@ -32,8 +32,6 @@
 #include <cusparse.h>
 #include <driver_types.h> // cuda driver types
 
-#include <thrust/device_vector.h>
-
 #include <exception>
 #include <iostream>
 #include <vector>
@@ -174,11 +172,6 @@ constexpr uint32_t MAX_GRID = 65535;
 inline int GET_BLOCKS(const uint32_t N, const uint32_t THREADS) {
   return std::max((N + THREADS - 1) / THREADS, uint32_t(1));
 }
-
-template <typename Dtype> void print(const thrust::device_vector<Dtype> &v);
-template <typename Dtype1, typename Dtype2>
-void print(const thrust::device_vector<Dtype1> &v1,
-           const thrust::device_vector<Dtype2> &v2);
 
 std::pair<size_t, size_t> get_memory_info();
 

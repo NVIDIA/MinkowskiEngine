@@ -92,9 +92,8 @@ struct insert_and_map_functor<coordinate_type, coordinate_field_type,
     LOG_DEBUG("cuda_copy_n with num_blocks:", num_blocks,
               "mapping.size():", mapping.size());
     detail::cuda_copy_n<default_types::index_type, int64_t>
-        <<<num_blocks, CUDA_NUM_THREADS>>>(
-            thrust::raw_pointer_cast(mapping.data()), mapping.size(),
-            th_mapping.data_ptr<int64_t>());
+        <<<num_blocks, CUDA_NUM_THREADS>>>(mapping.cbegin(), mapping.size(),
+                                           th_mapping.data_ptr<int64_t>());
 
     auto const num_inv_blocks =
         (inverse_mapping.size() + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;
@@ -103,11 +102,14 @@ struct insert_and_map_functor<coordinate_type, coordinate_field_type,
               "inverse_mapping.size():", inverse_mapping.size());
     detail::cuda_copy_n<default_types::index_type, int64_t>
         <<<num_inv_blocks, CUDA_NUM_THREADS>>>(
-            thrust::raw_pointer_cast(inverse_mapping.data()),
-            inverse_mapping.size(), th_inverse_mapping.data_ptr<int64_t>());
+            inverse_mapping.cbegin(), inverse_mapping.size(),
+            th_inverse_mapping.data_ptr<int64_t>());
     CUDA_CHECK(cudaStreamSynchronize(0));
 
-    return std::make_pair(std::move(th_mapping), std::move(th_inverse_mapping));
+    LOG_DEBUG("End of insert_map_functor");
+    // return std::make_pair(std::move(th_mapping),
+    // std::move(th_inverse_mapping));
+    return std::make_pair(th_mapping, th_inverse_mapping);
   }
 };
 

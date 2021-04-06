@@ -46,7 +46,6 @@
 #include <driver_types.h> // cuda driver types
 
 #include <ATen/cuda/CUDAContext.h>
-#include <thrust/device_vector.h>
 
 #include "gpu.cuh"
 #include "types.cuh"

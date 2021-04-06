@@ -288,7 +288,6 @@ class SparseTensor(Tensor):
                 + "coords into an torch.IntTensor"
             )
             coordinates = torch.floor(coordinates).int()
-
         (
             coordinate_map_key,
             (unique_index, self.inverse_mapping),

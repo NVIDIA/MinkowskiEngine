@@ -99,10 +99,9 @@ coordinate_map_inverse_map_test(const torch::Tensor &coordinates) {
 
   LOG_DEBUG("Insert coordinates");
 
-  std::pair<thrust::device_vector<uint32_t>, thrust::device_vector<uint32_t>>
-      mapping_inverse_mapping =
-          map.insert_and_map<true>(input_coordinates.begin(), // key begin
-                                   input_coordinates.end());  // key end
+  auto mapping_inverse_mapping =
+      map.insert_and_map<true>(input_coordinates.begin(), // key begin
+                               input_coordinates.end());  // key end
   auto const &mapping = mapping_inverse_mapping.first;
   auto const &inverse_mapping = mapping_inverse_mapping.second;
   long const NM = mapping.size();
@@ -117,11 +116,11 @@ coordinate_map_inverse_map_test(const torch::Tensor &coordinates) {
 
   // IMPORTANT: assuming int32_t overflow does not occur.
   CUDA_CHECK(cudaMemcpy(th_mapping.data_ptr<int32_t>(),
-                        thrust::raw_pointer_cast(mapping.data()),
+                        mapping.cdata(),
                         NM * sizeof(int32_t), cudaMemcpyDeviceToDevice));
 
   CUDA_CHECK(cudaMemcpy(th_inverse_mapping.data_ptr<int32_t>(),
-                        thrust::raw_pointer_cast(inverse_mapping.data()),
+                        inverse_mapping.cdata(),
                         NI * sizeof(int32_t), cudaMemcpyDeviceToDevice));
 
   return std::make_pair<at::Tensor, at::Tensor>(std::move(th_mapping),
@@ -179,8 +178,8 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   std::vector<index_type> cpu_firsts(NR);
   std::vector<index_type> cpu_seconds(NR);
 
-  thrust::copy(firsts.begin(), firsts.end(), cpu_firsts.begin());
-  thrust::copy(seconds.begin(), seconds.end(), cpu_seconds.begin());
+  thrust::copy(firsts.cbegin(), firsts.cend(), cpu_firsts.begin());
+  thrust::copy(seconds.cbegin(), seconds.cend(), cpu_seconds.begin());
   return std::make_pair(cpu_firsts, cpu_seconds);
 }
 

@@ -391,9 +391,11 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
                                      TemplatedAllocator, CoordinateMapType>()(
           map_key, coordinate, *this);
 
+  LOG_DEBUG("map_inverse_map initialized");
   py::object py_key = py::cast(new CoordinateMapKey(coordinate_size, map_key));
+  LOG_DEBUG("py key initialized");
 
-  return std::make_pair(py_key, std::move(map_inverse_map));
+  return std::make_pair(py_key, map_inverse_map);
 }
 
 // stride
@@ -500,6 +502,7 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
     }
   }
 
+  LOG_DEBUG("return origin()");
   // (key, new map generated flag)
   return std::make_pair(origin_map_key, !exists_origin_map);
 }
@@ -1327,6 +1330,7 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   auto const &map = it->second;
   auto const nrows = map.size();
   auto const ncols = map.coordinate_size();
+  LOG_DEBUG("coordinate map nrows:", nrows, "ncols:", ncols);
 
   // CPU torch.IntTensor
   auto options = torch::TensorOptions().dtype(torch::kInt).requires_grad(false);
@@ -1340,8 +1344,10 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   }
   at::Tensor coordinates = torch::empty({(long)nrows, (long)ncols}, options);
 
+  LOG_DEBUG("Initialized coordinates");
   // copy to the out coords
   map.copy_coordinates(coordinates.template data_ptr<coordinate_type>());
+  LOG_DEBUG("Copied coordinates");
   return coordinates;
 }
 

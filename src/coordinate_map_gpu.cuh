@@ -32,8 +32,8 @@
 #include "coordinate_map.hpp"
 #include "coordinate_map_functors.cuh"
 #include "kernel_map.cuh"
+#include "storage.cuh"
 
-#include <thrust/device_vector.h>
 #include <torch/extension.h>
 
 namespace minkowski {
@@ -77,12 +77,11 @@ public:
   using const_iterator      = typename map_type::const_iterator;
 
   // index vectors
-  using index_vector_type   = typename base_type::index_vector_type;
+  using index_storage_type  = gpu_storage<default_types::index_type, byte_allocator_type>;
   // clang-format on
 
   // return types
   // using the QueryResultAllocator gives segfault!
-  using device_index_vector_type = thrust::device_vector<index_type>;
 
 public:
   CoordinateMapGPU() = delete;
@@ -103,8 +102,10 @@ public:
     // reserve coordinates
     reserve(number_of_coordinates);
     // copy the tensor_stride
-    m_device_tensor_stride = base_type::m_tensor_stride;
-    LOG_DEBUG("device tensor_stride:", m_device_tensor_stride);
+    LOG_DEBUG("tensor_stride", base_type::m_tensor_stride);
+    m_device_tensor_stride.from_vector(base_type::m_tensor_stride);
+    // m_device_tensor_stride = base_type::m_tensor_stride;
+    LOG_DEBUG("device tensor_stride set");
     static_assert(
         sizeof(index_type) == sizeof(size_type),
         "kernel_map shared memory requires the type sizes to be the same");
@@ -118,13 +119,11 @@ public:
               coordinate_iterator<coordinate_type> key_last);
 
   template <bool remap>
-  std::pair<thrust::device_vector<default_types::index_type>,
-            thrust::device_vector<default_types::index_type>>
+  std::pair<index_storage_type, index_storage_type>
   insert_and_map(coordinate_iterator<coordinate_type> key_first,
                  coordinate_iterator<coordinate_type> key_last);
 
-  std::pair<thrust::device_vector<default_types::index_type>,
-            thrust::device_vector<default_types::index_type>>
+  std::pair<index_storage_type, index_storage_type>
   find(coordinate_iterator<coordinate_type> key_first,
        coordinate_iterator<coordinate_type> key_last) const;
 
@@ -214,11 +213,10 @@ private:
   key_equal_type const m_equal;
   key_type const m_unused_key;
   mapped_type const m_unused_element;
-  device_index_vector_type m_valid_row_index;
-  device_index_vector_type m_valid_map_index;
-  device_index_vector_type m_inverse_row_index;
-
-  thrust::device_vector<size_type> m_device_tensor_stride;
+  index_storage_type m_valid_row_index;
+  index_storage_type m_valid_map_index;
+  index_storage_type m_inverse_row_index;
+  index_storage_type m_device_tensor_stride;
   map_allocator_type m_map_allocator;
   std::shared_ptr<map_type> m_map;
 };
