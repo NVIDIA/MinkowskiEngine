@@ -265,7 +265,6 @@ SOURCE_SETS = {
 
 debug, argv = _argparse("--debug", argv)
 
-USE_NINJA = os.getenv("USE_NINJA") == "0"
 HERE = Path(os.path.dirname(__file__)).absolute()
 SRC_PATH = HERE / "src"
 
@@ -320,7 +319,7 @@ setup(
     package_dir={"MinkowskiEngine": "./MinkowskiEngine"},
     ext_modules=ext_modules,
     include_dirs=[str(SRC_PATH), str(SRC_PATH / "3rdparty"), *include_dirs],
-    cmdclass={"build_ext": BuildExtension},
+    cmdclass={"build_ext": BuildExtension.with_options(use_ninja=True)},
     author="Christopher Choy",
     author_email="chrischoy@ai.stanford.edu",
     description="a convolutional neural network library for sparse tensors",

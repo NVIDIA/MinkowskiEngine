@@ -56,6 +56,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 - CUDA >= 10.1.243 and **the same CUDA version used for pytorch** (e.g. if you use conda cudatoolkit=11.1, use CUDA=11.1 for MinkowskiEngine compilation)
 - pytorch >= 1.7 (if you use conda, install with `conda install -y -c conda-forge -c pytorch pytorch=1.8.1 cudatoolkit=11.1`)
 - python >= 3.6
+- ninja (for installation)
 - GCC >= 7
 
 
@@ -75,7 +76,7 @@ First, install pytorch following the [instruction](https://pytorch.org). Next, i
 
 ```
 sudo apt install build-essential python3-dev libopenblas-dev
-pip install torch
+pip install torch ninja
 pip install -U MinkowskiEngine --install-option="--blas=openblas" -v --no-deps
 
 # For pip installation from the latest source
@@ -130,7 +131,7 @@ sudo apt install build-essential python3-dev libopenblas-dev
 curl https://bootstrap.pypa.io/get-pip.py | python3
 
 # Get pip and install python requirements
-python3 -m pip install torch numpy
+python3 -m pip install torch numpy ninja
 
 git clone https://github.com/NVIDIA/MinkowskiEngine.git
 
