@@ -9,6 +9,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 ## News
 
+- 2021-04-08 Due to recent errors in [pytorch 1.8 + CUDA 11](https://github.com/NVIDIA/MinkowskiEngine/issues/330), it is recommended to use [anaconda for installation](#anaconda).
 - 2020-12-24 v0.5 is now available! The new version provides CUDA accelerations for all coordinate management functions.
 
 ## Example Networks
@@ -54,7 +55,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 - Ubuntu >= 14.04
 - CUDA >= 10.1.243 and **the same CUDA version used for pytorch** (e.g. if you use conda cudatoolkit=11.1, use CUDA=11.1 for MinkowskiEngine compilation)
-- pytorch >= 1.7 (if you use conda, install with `conda install -y -c conda-forge -c pytorch pytorch=1.8.1 cudatoolkit=11.1`)
+- pytorch >= 1.7 (pytorch 1.8.1 + CUDA 11.X is [unstable](https://github.com/NVIDIA/MinkowskiEngine/issues/330). To specify CUDA version, please use conda for installation. `conda install -y -c conda-forge -c pytorch pytorch=1.8.1 cudatoolkit=10.2`)
 - python >= 3.6
 - ninja (for installation)
 - GCC >= 7
@@ -100,6 +101,35 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps \
 
 ### Anaconda
 
+Due to [errors in pytorch](https://github.com/NVIDIA/MinkowskiEngine/issues/330), pytorch 1.8.1 can only work with CUDA 10.2. To use CUDA 11.1, use pytorch 1.7.1 instead.
+#### CUDA 10.2
+
+We recommend `python>=3.6` for installation.
+First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
+
+```
+sudo apt install g++-7  # For CUDA 10.2, must use GCC < 8
+conda create -n py3-mink python=3.8
+conda activate py3-mink
+
+conda install openblas-devel -c anaconda
+conda install pytorch=1.8.1 torchvision cudatoolkit=10.2 -c pytorch -c conda-forge
+
+# Install MinkowskiEngine
+export CXX=g++-7
+# Uncomment the following line to specify the cuda home. Make sure `$CUDA_HOME/nvcc --version` is 10.2
+# export CUDA_HOME=/usr/local/cuda-10.2
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option="--blas_include_dirs=${CONDA_PREFIX}/include" --install-option="--blas=openblas"
+
+# Or if you want local MinkowskiEngine
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
+cd MinkowskiEngine
+export CXX=g++-7
+python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openblas
+```
+
+#### CUDA 11.X
+
 We recommend `python>=3.6` for installation.
 First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/install/) to install anaconda on your computer.
 
@@ -108,9 +138,12 @@ conda create -n py3-mink python=3.8
 conda activate py3-mink
 
 conda install openblas-devel -c anaconda
-conda install pytorch=1.8.1 torchvision cudatoolkit=11.1 -c pytorch -c conda-forge
+conda install pytorch=1.7.1 torchvision cudatoolkit=11.0 -c pytorch -c conda-forge
 
 # Install MinkowskiEngine
+
+# Uncomment the following line to specify the cuda home. Make sure `$CUDA_HOME/nvcc --version` is 11.X
+# export CUDA_HOME=/usr/local/cuda-11.1
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option="--blas_include_dirs=${CONDA_PREFIX}/include" --install-option="--blas=openblas"
 
 # Or if you want local MinkowskiEngine

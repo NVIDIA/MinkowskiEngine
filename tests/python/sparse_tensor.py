@@ -35,7 +35,7 @@ from MinkowskiEngine import (
     is_cuda_available,
 )
 
-from MinkowskiEngine.utils import batched_coordinates
+from MinkowskiEngine.utils import batched_coordinates, sparse_quantize, sparse_collate
 from tests.python.common import data_loader, load_file
 
 
@@ -77,6 +77,7 @@ class SparseTensorTestCase(unittest.TestCase):
         print(f"{self.__class__.__name__}: test_device SparseTensor")
         if not is_cuda_available():
             return
+
         coords = torch.IntTensor(
             [[0, 1], [0, 1], [0, 2], [0, 2], [1, 0], [1, 0], [1, 1]]
         )
@@ -86,6 +87,18 @@ class SparseTensorTestCase(unittest.TestCase):
         feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T.to(0)
         st = SparseTensor(feats, coords, device=feats.device)
         print(st)
+
+    def test_device2(self):
+        print(f"{self.__class__.__name__}: test_device SparseTensor")
+        if not is_cuda_available():
+            return
+
+        coordinates = np.random.rand(8192,3) * 200
+        quant_coordinates, quant_features = sparse_quantize(coordinates, coordinates)
+        bcoords, bfeats = sparse_collate([quant_coordinates], [quant_features])
+        bcoords, bfeats = bcoords.cuda(), bfeats.cuda()
+        print(bcoords, bfeats)
+        SparseTensor(bfeats, bcoords)
 
     def test_quantization(self):
         print(f"{self.__class__.__name__}: test_quantization")
