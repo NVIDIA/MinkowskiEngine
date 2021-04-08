@@ -347,7 +347,6 @@ class TensorField(Tensor):
                         ) = self._manager.get_field_to_sparse_map(
                             self.coordinate_field_map_key, one_key
                         )
-
                     _, stride_map = self.coordinate_manager.stride_map(
                         one_key, sparse_tensor_map_key
                     )

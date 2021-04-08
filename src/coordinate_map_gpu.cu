@@ -419,6 +419,8 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
       detail::stride_tensor_stride(base_type::m_tensor_stride, stride),
       m_map_allocator, base_type::m_byte_allocator);
 
+  index_storage_type out_device_tensor_stride(stride_map.get_tensor_stride());
+
   // stride coordinates
   size_type const num_threads = N;
   auto const num_blocks = GET_BLOCKS(num_threads, CUDA_NUM_THREADS);
@@ -427,7 +429,7 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
       <<<num_blocks, CUDA_NUM_THREADS, m_coordinate_size * sizeof(size_type)>>>(
           const_coordinate_data(),         //
           m_valid_row_index.cbegin(),      //
-          m_device_tensor_stride.cbegin(), //
+          out_device_tensor_stride.cbegin(), //
           stride_map.coordinate_data(),    //
           num_threads, m_coordinate_size);
 
@@ -444,13 +446,13 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride(
 
   detail::insert_and_map_kernel<coordinate_type, size_type, index_type,
                                 map_type><<<num_blocks, CUDA_NUM_THREADS>>>(
-      *stride_map.m_map,                   //
-      stride_map.const_coordinate_data(),  //
-      stride_valid_map_index.data(), //
-      stride_valid_row_index.data(), //
+      *stride_map.m_map,                  //
+      stride_map.const_coordinate_data(), //
+      stride_valid_map_index.data(),      //
+      stride_valid_row_index.data(),      //
       num_threads, m_coordinate_size, unused_key);
   CUDA_CHECK(cudaStreamSynchronize(0));
-  LOG_DEBUG("Stride map size:", m_map->size());
+  LOG_DEBUG("Stride map insertion complete");
 
   // Valid row index
   auto valid_begin = thrust::make_zip_iterator(
@@ -1809,6 +1811,8 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::kernel_map_type
 CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_map(
     self_type const &out_map, stride_type const &out_tensor_stride,
     uint32_t thread_dim) const {
+  LOG_DEBUG("generating stride_map from stride", base_type::m_tensor_stride,
+            "to", out_map.get_tensor_stride());
   // Over estimate the reserve size to be size();
   size_type const in_size = size();
   index_storage_type d_out_tensor_stride(out_tensor_stride);
@@ -1833,7 +1837,9 @@ CoordinateMapGPU<coordinate_type, TemplatedAllocator>::stride_map(
       in_out_map + in_size + 1; // for __restrict__ collision prevention
 
   LOG_DEBUG("Allocated temporary memory");
-
+  LOG_DEBUG("out_map size", out_map.size(),
+            "out tensor stride:", out_map.get_tensor_stride(),
+            "coordinate_size", m_coordinate_size);
   detail::stride_map_kernel<coordinate_type, size_type, index_type, map_type>
       <<<num_blocks, thread_dim, shared_memory_size_in_bytes>>>(
           *m_map,                       //

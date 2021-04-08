@@ -454,6 +454,7 @@ void ConvolutionForwardKernelGPU(
           n_active_in_volume * in_nchannel, in_nchannel);
 
 #ifdef DEBUG
+      /*
       size_t map_size = std::min((size_t)n_active_in_volume, (size_t)100);
       Dtype *p_tmp =
           (Dtype *)std::malloc(map_size * in_nchannel * sizeof(Dtype));
@@ -467,6 +468,7 @@ void ConvolutionForwardKernelGPU(
 
       CUDA_CHECK(cudaDeviceSynchronize());
       std::free(p_tmp);
+      */
 #endif
 
       gpu_gemm<Dtype>(cuhandle, CblasNoTrans, CblasNoTrans,

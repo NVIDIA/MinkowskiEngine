@@ -77,7 +77,8 @@ public:
   using const_iterator      = typename map_type::const_iterator;
 
   // index vectors
-  using index_storage_type  = gpu_storage<default_types::index_type, byte_allocator_type>;
+  using index_storage_type     = gpu_storage<default_types::index_type, byte_allocator_type>;
+  using coordnate_storage_type = gpu_storage<coordinate_type, byte_allocator_type>;
   // clang-format on
 
   // return types

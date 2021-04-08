@@ -26,6 +26,8 @@
 #ifndef STORAGE_CUH
 #define STORAGE_CUH
 
+#include "utils.hpp"
+
 #include <vector>
 
 namespace minkowski {
@@ -85,7 +87,7 @@ public:
   }
 
   void from_vector(std::vector<Dtype> const &vec) {
-    allocate(vec.size());
+    resize(vec.size());
     if (m_num_elements > 0) {
       CUDA_CHECK(cudaMemcpy(m_data, vec.data(),
                             m_num_elements * sizeof(data_type),
@@ -147,6 +149,14 @@ public:
     }
     m_data = new_data;
     m_num_elements = new_num_elements;
+  }
+
+  void print_by_vector(uint64_t const num_vec, uint64_t const vec_size) {
+    auto const print_n = std::min(num_vec, size() / vec_size);
+    auto const cpu_storage = to_vector(vec_size * print_n);
+    for (int i = 0; i < print_n; ++i) {
+      std::cout << PtrToString(&cpu_storage[i * vec_size], vec_size) << "\n";
+    }
   }
 
 private:

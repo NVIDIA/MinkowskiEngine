@@ -37,7 +37,7 @@ A clear and concise description of what you expected to happen.
  - CUDA version: [e.g. 11.1]
  - NVIDIA Driver version: [e.g. 450.11]
  - Minkowski Engine version [e.g. 0.5.0]
- - Output of the following command. (If you installed the latest MinkowskiEngine, paste the output of `python -c "import MinkowskiEngine as ME; ME.print_diagnostics()`. Otherwise, paste the output of the following command.)
+ - Output of the following command. (If you installed the latest MinkowskiEngine, paste the output of `python -c "import MinkowskiEngine as ME; ME.print_diagnostics()"`. Otherwise, paste the output of the following command.)
 
 ```
 wget -q https://raw.githubusercontent.com/NVIDIA/MinkowskiEngine/master/MinkowskiEngine/diagnostics.py ; python diagnostics.py
