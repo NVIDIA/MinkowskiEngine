@@ -4,6 +4,7 @@
 
 - Updated README for pytorch 1.8.1 support
 - Use custom `gpu_storage` instead of thrust vector for faster constructors
+- pytorch installation instruction updates
 
 ## [0.5.2]
 

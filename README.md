@@ -58,7 +58,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 - pytorch >= 1.7 (pytorch 1.8.1 + CUDA 11.X is [unstable](https://github.com/NVIDIA/MinkowskiEngine/issues/330). To specify CUDA version, please use conda for installation. `conda install -y -c conda-forge -c pytorch pytorch=1.8.1 cudatoolkit=10.2`)
 - python >= 3.6
 - ninja (for installation)
-- GCC >= 7
+- GCC >= 7.4.0
 
 
 ## Installation
@@ -109,6 +109,7 @@ First, follow [the anaconda documentation](https://docs.anaconda.com/anaconda/in
 
 ```
 sudo apt install g++-7  # For CUDA 10.2, must use GCC < 8
+# Make sure `g++-7 --version` is at least 7.4.0
 conda create -n py3-mink python=3.8
 conda activate py3-mink
 
