@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>MinkowskiEngine package &mdash; MinkowskiEngine 0.5.2 documentation</title>
+  <title>MinkowskiEngine package &mdash; MinkowskiEngine 0.5.3 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.5.2
+                0.5.3
               </div>
             
           
@@ -128,6 +128,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../issues.html">Common Issues</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../guides.html">Guidelines for Faster Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../migration_05.html">Migration Guide from v0.4.x to v0.5.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -2397,6 +2398,38 @@ registered hooks while the latter silently ignores them.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt id="MinkowskiEngine.MinkowskiOps.MinkowskiToFeature">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiOps.</code><code class="sig-name descname">MinkowskiToFeature</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.MinkowskiToFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiCommon.MinkowskiModuleBase</span></code></p>
+<p>Extract features from a sparse tensor and returns a pytorch tensor.</p>
+<p>Can be used to to make a network construction simpler.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">MinkowskiConvolution</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="n">MinkowskiGlobalMaxPooling</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="n">MinkowskiToFeature</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">torch_tensor</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">sparse_tensor</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiOps.MinkowskiToFeature.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span><span class="p">:</span> <span class="n">MinkowskiSparseTensor.SparseTensor</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.MinkowskiToFeature.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="MinkowskiEngine.MinkowskiOps.MinkowskiToFeature.training">
+<code class="sig-name descname">training</code><em class="property">: bool</em><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.MinkowskiToFeature.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor">
 <em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.MinkowskiOps.</code><code class="sig-name descname">MinkowskiToSparseTensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">remove_zeros</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">coordinates</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Tensor<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MinkowskiCommon.MinkowskiModuleBase</span></code></p>
@@ -3862,15 +3895,15 @@ coordinate.</p>
 <dd><p>Defines a formula for differentiating the operation.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
+as many outputs did <a class="reference internal" href="../union.html#MinkowskiEngine.MinkowskiUnion.forward" title="MinkowskiEngine.MinkowskiUnion.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
+tensors, as there were inputs to <a class="reference internal" href="../union.html#MinkowskiEngine.MinkowskiUnion.forward" title="MinkowskiEngine.MinkowskiUnion.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
 gradient w.r.t the given output, and each returned value should be the
 gradient w.r.t. the corresponding input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
 <a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.backward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.backward"><code class="xref py py-func docutils literal notranslate"><span class="pre">backward()</span></code></a> will have <code class="docutils literal notranslate"><span class="pre">ctx.needs_input_grad[0]</span> <span class="pre">=</span> <span class="pre">True</span></code> if the
-first input to <a class="reference internal" href="#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward" title="MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
+first input to <a class="reference internal" href="../union.html#MinkowskiEngine.MinkowskiUnion.forward" title="MinkowskiEngine.MinkowskiUnion.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> needs gradient computated w.r.t. the
 output.</p>
 </dd></dl>
 

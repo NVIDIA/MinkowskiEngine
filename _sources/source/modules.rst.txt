@@ -5,12 +5,17 @@ MinkowskiEngine
    :maxdepth: 4
 
    MinkowskiEngine
+   compare_torch_sparse
    dense_test
    examples
    factory
    fcgf
+   issue_328
+   issue_330
    setup
    test
+   test330
    test_308
    test_interp
+   test_transpose_expansion
    test_union

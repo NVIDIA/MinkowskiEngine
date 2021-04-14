@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.5.2 documentation</title>
+  <title>Utility Functions and Classes &mdash; MinkowskiEngine 0.5.3 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.2
+                0.5.3
               </div>
             
           
@@ -133,6 +133,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#sparsecollation">SparseCollation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskitosparsetensor">MinkowskiToSparseTensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#minkowskitodensetensor">MinkowskiToDenseTensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskitofeature">MinkowskiToFeature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskistackcat">MinkowskiStackCat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskistacksum">MinkowskiStackSum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskistackmean">MinkowskiStackMean</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minkowskistackvar">MinkowskiStackVar</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="common.html">Miscellaneous Classes</a></li>
@@ -142,6 +147,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_05.html">Migration Guide from v0.4.x to v0.5.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -503,6 +509,147 @@ Please refer to tests/python/dense.py for usage.</p>
 <dt id="MinkowskiEngine.MinkowskiToDenseTensor.__init__">
 <code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>torch.Size<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiToDenseTensor.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskitofeature">
+<h2>MinkowskiToFeature<a class="headerlink" href="#minkowskitofeature" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="MinkowskiEngine.MinkowskiToFeature">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiToFeature</code><a class="headerlink" href="#MinkowskiEngine.MinkowskiToFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract features from a sparse tensor and returns a pytorch tensor.</p>
+<p>Can be used to to make a network construction simpler.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">net</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">MinkowskiConvolution</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="n">MinkowskiGlobalMaxPooling</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="n">MinkowskiToFeature</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="o">...</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">torch_tensor</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">sparse_tensor</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiToFeature.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiToFeature.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskistackcat">
+<h2>MinkowskiStackCat<a class="headerlink" href="#minkowskistackcat" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="MinkowskiEngine.MinkowskiStackCat">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackCat</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">torch.nn.modules.module.Module</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackCat" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackCat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg</span><span class="p">:</span> <span class="n">OrderedDict<span class="p">[</span>str<span class="p">, </span>Module<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackCat.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackCat.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackCat.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackCat.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskistacksum">
+<h2>MinkowskiStackSum<a class="headerlink" href="#minkowskistacksum" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="MinkowskiEngine.MinkowskiStackSum">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackSum</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">torch.nn.modules.module.Module</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackSum" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackSum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg</span><span class="p">:</span> <span class="n">OrderedDict<span class="p">[</span>str<span class="p">, </span>Module<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackSum.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackSum.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackSum.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackSum.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskistackmean">
+<h2>MinkowskiStackMean<a class="headerlink" href="#minkowskistackmean" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="MinkowskiEngine.MinkowskiStackMean">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackMean</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">torch.nn.modules.module.Module</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackMean" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackMean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg</span><span class="p">:</span> <span class="n">OrderedDict<span class="p">[</span>str<span class="p">, </span>Module<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackMean.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackMean.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackMean.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackMean.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="minkowskistackvar">
+<h2>MinkowskiStackVar<a class="headerlink" href="#minkowskistackvar" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="MinkowskiEngine.MinkowskiStackVar">
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">torch.nn.modules.module.Module</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackVar" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">class </em><code class="sig-prename descclassname">MinkowskiEngine.</code><code class="sig-name descname">MinkowskiStackVar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg</span><span class="p">:</span> <span class="n">OrderedDict<span class="p">[</span>str<span class="p">, </span>Module<span class="p">]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackVar.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackVar.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="MinkowskiEngine.MinkowskiStackVar.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#MinkowskiEngine.MinkowskiStackVar.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
 </dd></dl>
 
 </dd></dl>

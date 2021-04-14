@@ -132,6 +132,14 @@ examples.sparse\_tensor\_basic module
    :undoc-members:
    :show-inheritance:
 
+examples.stack\_unet module
+---------------------------
+
+.. automodule:: examples.stack_unet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 examples.training module
 ------------------------
 

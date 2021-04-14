@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Index &mdash; MinkowskiEngine 0.5.2 documentation</title>
+  <title>Index &mdash; MinkowskiEngine 0.5.3 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.5.2
+                0.5.3
               </div>
             
           
@@ -286,6 +286,14 @@
 </li>
         <li><a href="sparse_tensor.html#MinkowskiEngine.MinkowskiSparseTensor.SparseTensor.__init__">(MinkowskiEngine.MinkowskiSparseTensor.SparseTensor method)</a>
 </li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackCat.__init__">(MinkowskiEngine.MinkowskiStackCat method)</a>
+</li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackMean.__init__">(MinkowskiEngine.MinkowskiStackMean method)</a>
+</li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackSum.__init__">(MinkowskiEngine.MinkowskiStackSum method)</a>
+</li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackVar.__init__">(MinkowskiEngine.MinkowskiStackVar method)</a>
+</li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiSumPooling.__init__">(MinkowskiEngine.MinkowskiSumPooling method)</a>
 </li>
         <li><a href="normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm.__init__">(MinkowskiEngine.MinkowskiSyncBatchNorm method)</a>
@@ -298,7 +306,11 @@
 </li>
         <li><a href="utils.html#MinkowskiEngine.MinkowskiToDenseTensor.__init__">(MinkowskiEngine.MinkowskiToDenseTensor method)</a>
 </li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiToFeature.__init__">(MinkowskiEngine.MinkowskiToFeature method)</a>
+</li>
         <li><a href="utils.html#MinkowskiEngine.MinkowskiToSparseTensor.__init__">(MinkowskiEngine.MinkowskiToSparseTensor method)</a>
+</li>
+        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion.__init__">(MinkowskiEngine.MinkowskiUnion method)</a>
 </li>
         <li><a href="utils.html#MinkowskiEngine.utils.SparseCollation.__init__">(MinkowskiEngine.utils.SparseCollation method)</a>
 </li>
@@ -810,6 +822,8 @@
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor method)</a>
 </li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToFeature.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiToFeature method)</a>
+</li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor.forward">(MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor method)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiDirectMaxPoolingFunction.forward">(MinkowskiEngine.MinkowskiPooling.MinkowskiDirectMaxPoolingFunction static method)</a>
@@ -834,9 +848,19 @@
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction.forward">(MinkowskiEngine.MinkowskiPruning.MinkowskiPruningFunction static method)</a>
 </li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackCat.forward">(MinkowskiEngine.MinkowskiStackCat method)</a>
+</li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackMean.forward">(MinkowskiEngine.MinkowskiStackMean method)</a>
+</li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackSum.forward">(MinkowskiEngine.MinkowskiStackSum method)</a>
+</li>
+        <li><a href="utils.html#MinkowskiEngine.MinkowskiStackVar.forward">(MinkowskiEngine.MinkowskiStackVar method)</a>
+</li>
         <li><a href="pooling.html#MinkowskiEngine.MinkowskiSumPooling.forward">(MinkowskiEngine.MinkowskiSumPooling method)</a>
 </li>
         <li><a href="normalization.html#MinkowskiEngine.MinkowskiSyncBatchNorm.forward">(MinkowskiEngine.MinkowskiSyncBatchNorm method)</a>
+</li>
+        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion.forward">(MinkowskiEngine.MinkowskiUnion method)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion.forward">(MinkowskiEngine.MinkowskiUnion.MinkowskiUnion method)</a>
 </li>
@@ -1519,8 +1543,6 @@
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSigmoid">MinkowskiLogSigmoid (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNonlinearity.MinkowskiLogSoftmax">MinkowskiLogSoftmax (class in MinkowskiEngine.MinkowskiNonlinearity)</a>
 </li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiMaxPooling">MinkowskiMaxPooling (class in MinkowskiEngine)</a>
@@ -1529,6 +1551,8 @@
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiPooling.MinkowskiMaxPooling">(class in MinkowskiEngine.MinkowskiPooling)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="pooling.html#id0">MinkowskiMaxPooling.to() (in module MinkowskiEngine)</a>, <a href="pooling.html#id1">[1]</a>, <a href="pooling.html#id2">[2]</a>, <a href="pooling.html#id3">[3]</a>
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiCommon.MinkowskiModuleBase">MinkowskiModuleBase (class in MinkowskiEngine.MinkowskiCommon)</a>
@@ -1607,14 +1631,30 @@
 </li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiNormalization.MinkowskiStableInstanceNorm">MinkowskiStableInstanceNorm (class in MinkowskiEngine.MinkowskiNormalization)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackCat">MinkowskiStackCat (class in MinkowskiEngine.MinkowskiOps)</a>
+      <li><a href="utils.html#MinkowskiEngine.MinkowskiStackCat">MinkowskiStackCat (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackCat">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackMean">MinkowskiStackMean (class in MinkowskiEngine.MinkowskiOps)</a>
+      </ul></li>
+      <li><a href="utils.html#MinkowskiEngine.MinkowskiStackMean">MinkowskiStackMean (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackMean">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackSum">MinkowskiStackSum (class in MinkowskiEngine.MinkowskiOps)</a>
+      </ul></li>
+      <li><a href="utils.html#MinkowskiEngine.MinkowskiStackSum">MinkowskiStackSum (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackSum">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackVar">MinkowskiStackVar (class in MinkowskiEngine.MinkowskiOps)</a>
+      </ul></li>
+      <li><a href="utils.html#MinkowskiEngine.MinkowskiStackVar">MinkowskiStackVar (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackVar">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
+      </ul></li>
       <li><a href="pooling.html#MinkowskiEngine.MinkowskiSumPooling">MinkowskiSumPooling (class in MinkowskiEngine)</a>
 
       <ul>
@@ -1651,16 +1691,22 @@
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
       </ul></li>
+      <li><a href="utils.html#MinkowskiEngine.MinkowskiToFeature">MinkowskiToFeature (class in MinkowskiEngine)</a>
+
+      <ul>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToFeature">(class in MinkowskiEngine.MinkowskiOps)</a>
+</li>
+      </ul></li>
       <li><a href="utils.html#MinkowskiEngine.MinkowskiToSparseTensor">MinkowskiToSparseTensor (class in MinkowskiEngine)</a>
 
       <ul>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor">(class in MinkowskiEngine.MinkowskiOps)</a>
 </li>
       </ul></li>
-      <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion">MinkowskiUnion (class in MinkowskiEngine.MinkowskiUnion)</a>
+      <li><a href="union.html#MinkowskiEngine.MinkowskiUnion">MinkowskiUnion (class in MinkowskiEngine)</a>
 
       <ul>
-        <li><a href="union.html#MinkowskiEngine.MinkowskiUnion">(in module MinkowskiEngine)</a>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnion">(class in MinkowskiEngine.MinkowskiUnion)</a>
 </li>
       </ul></li>
       <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiUnion.MinkowskiUnionFunction">MinkowskiUnionFunction (class in MinkowskiEngine.MinkowskiUnion)</a>
@@ -2301,6 +2347,8 @@
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiStackVar.training">(MinkowskiEngine.MinkowskiOps.MinkowskiStackVar attribute)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor.training">(MinkowskiEngine.MinkowskiOps.MinkowskiToDenseTensor attribute)</a>
+</li>
+        <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToFeature.training">(MinkowskiEngine.MinkowskiOps.MinkowskiToFeature attribute)</a>
 </li>
         <li><a href="source/MinkowskiEngine.html#MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor.training">(MinkowskiEngine.MinkowskiOps.MinkowskiToSparseTensor attribute)</a>
 </li>

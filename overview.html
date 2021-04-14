@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Minkowski Engine &mdash; MinkowskiEngine 0.5.2 documentation</title>
+  <title>Minkowski Engine &mdash; MinkowskiEngine 0.5.3 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.5.2
+                0.5.3
               </div>
             
           
@@ -99,7 +99,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pip">Pip</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#anaconda">Anaconda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#anaconda">Anaconda</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cuda-10-2">CUDA 10.2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cuda-11-x">CUDA 11.X</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#system-python">System Python</a></li>
 </ul>
 </li>
@@ -112,6 +116,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#discussion-and-documentation">Discussion and Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#known-issues">Known Issues</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#too-much-gpu-memory-usage-or-frequent-out-of-memory">Too much GPU memory usage or Frequent Out of Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cuda-11-1-installation">CUDA 11.1 Installation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#running-the-minkowskiengine-on-nodes-with-a-large-number-of-cpus">Running the MinkowskiEngine on nodes with a large number of CPUs</a></li>
 </ul>
 </li>
@@ -158,6 +163,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Common Issues</a></li>
 <li class="toctree-l1"><a class="reference internal" href="guides.html">Guidelines for Faster Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration_05.html">Migration Guide from v0.4.x to v0.5.0</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">Benchmark</a></li>
 </ul>
 
@@ -234,6 +240,7 @@
 <div class="section" id="news">
 <h2>News<a class="headerlink" href="#news" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li><p>2021-04-08 Due to recent errors in <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/issues/330">pytorch 1.8 + CUDA 11</a>, it is recommended to use <a class="reference external" href="#anaconda">anaconda for installation</a>.</p></li>
 <li><p>2020-12-24 v0.5 is now available! The new version provides CUDA accelerations for all coordinate management functions.</p></li>
 </ul>
 </div>
@@ -254,7 +261,7 @@
 </tr>
 <tr>
 <td align="center">Classification</td>
-<td align="center"><img alt="" src="https://nvidia.github.io/MinkowskiEngine/_images/classification_3d_net.png" /> <br /> <code>python -m examples.modelnet40</code></td>
+<td align="center"><img alt="" src="https://nvidia.github.io/MinkowskiEngine/_images/classification_3d_net.png" /> <br /> <code>python -m examples.classification_modelnet40</code></td>
 </tr>
 <tr>
 <td align="center">Reconstruction</td>
@@ -273,7 +280,7 @@
 <div class="section" id="sparse-tensor-networks-neural-networks-for-spatially-sparse-tensors">
 <h2>Sparse Tensor Networks: Neural Networks for Spatially Sparse Tensors<a class="headerlink" href="#sparse-tensor-networks-neural-networks-for-spatially-sparse-tensors" title="Permalink to this headline">¶</a></h2>
 <p>Compressing a neural network to speedup inference and minimize memory footprint has been studied widely. One of the popular techniques for model compression is pruning the weights in convnets, is also known as <a class="reference external" href="https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Liu_Sparse_Convolutional_Neural_2015_CVPR_paper.pdf"><em>sparse convolutional networks</em></a>. Such parameter-space sparsity used for model compression compresses networks that operate on dense tensors and all intermediate activations of these networks are also dense tensors.</p>
-<p>However, in this work, we focus on <a class="reference external" href="https://arxiv.org/abs/1409.6070"><em>spatially</em> sparse data</a>, in particular, spatially sparse high-dimensional inputs. We can also represent these data as sparse tensors, and these sparse tensors are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs as <em>sparse tensor networks</em>  and these sparse tensor networks process and generate sparse tensors as outputs. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define them on a dense tensor and implemented in the Minkowski Engine.</p>
+<p>However, in this work, we focus on <a class="reference external" href="https://arxiv.org/abs/1409.6070"><em>spatially</em> sparse data</a>, in particular, spatially sparse high-dimensional inputs and 3D data and convolution on the surface of 3D objects, first proposed in <a class="reference external" href="https://wang-ps.github.io/O-CNN.html">Siggraph’17</a>. We can also represent these data as sparse tensors, and these sparse tensors are commonplace in high-dimensional problems such as 3D perception, registration, and statistical data. We define neural networks specialized for these inputs as <em>sparse tensor networks</em>  and these sparse tensor networks process and generate sparse tensors as outputs. To construct a sparse tensor network, we build all standard neural network layers such as MLPs, non-linearities, convolution, normalizations, pooling operations as the same way we define them on a dense tensor and implemented in the Minkowski Engine.</p>
 <p>We visualized a sparse tensor network operation on a sparse tensor, convolution, below. The convolution layer on a sparse tensor works similarly to that on a dense tensor. However, on a sparse tensor, we compute convolution outputs on a few specified points which we can control in the <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/sparse_tensor_network.html">generalized convolution</a>. For more information, please visit <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/sparse_tensor_network.html">the documentation page on sparse tensor networks</a> and <a class="reference external" href="https://nvidia.github.io/MinkowskiEngine/terminology.html">the terminology page</a>.</p>
 <table border="1" class="docutils">
 <thead>
@@ -307,10 +314,11 @@
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Ubuntu &gt;= 14.04</p></li>
-<li><p>CUDA &gt;= 11.1 or 11.0 &gt; CUDA &gt;= 10.1.243, <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/issues/290">No CUDA 11.0</a></p></li>
-<li><p>pytorch &gt;= 1.7</p></li>
+<li><p>CUDA &gt;= 10.1.243 and <strong>the same CUDA version used for pytorch</strong> (e.g. if you use conda cudatoolkit=11.1, use CUDA=11.1 for MinkowskiEngine compilation)</p></li>
+<li><p>pytorch &gt;= 1.7 (pytorch 1.8.1 + CUDA 11.X is <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/issues/330">unstable</a>. To specify CUDA version, please use conda for installation. <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">-c</span> <span class="pre">conda-forge</span> <span class="pre">-c</span> <span class="pre">pytorch</span> <span class="pre">pytorch=1.8.1</span> <span class="pre">cudatoolkit=10.2</span></code>)</p></li>
 <li><p>python &gt;= 3.6</p></li>
-<li><p>GCC &gt;= 7</p></li>
+<li><p>ninja (for installation)</p></li>
+<li><p>GCC &gt;= 7.4.0</p></li>
 </ul>
 </div>
 <div class="section" id="installation">
@@ -327,7 +335,7 @@ If you cannot find a relevant problem, please report the issue on <a class="refe
 <p>The MinkowskiEngine is distributed via <a class="reference external" href="https://pypi.org/project/MinkowskiEngine/">PyPI MinkowskiEngine</a> which can be installed simply with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.
 First, install pytorch following the <a class="reference external" href="https://pytorch.org">instruction</a>. Next, install <code class="docutils literal notranslate"><span class="pre">openblas</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="n">build</span><span class="o">-</span><span class="n">essential</span> <span class="n">python3</span><span class="o">-</span><span class="n">dev</span> <span class="n">libopenblas</span><span class="o">-</span><span class="n">dev</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">ninja</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">MinkowskiEngine</span> <span class="o">--</span><span class="n">install</span><span class="o">-</span><span class="n">option</span><span class="o">=</span><span class="s2">&quot;--blas=openblas&quot;</span> <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">deps</span>
 
 <span class="c1"># For pip installation from the latest source</span>
@@ -350,15 +358,47 @@ First, install pytorch following the <a class="reference external" href="https:/
 </div>
 <div class="section" id="anaconda">
 <h3>Anaconda<a class="headerlink" href="#anaconda" title="Permalink to this headline">¶</a></h3>
+<p>Due to <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/issues/330">errors in pytorch</a>, pytorch 1.8.1 can only work with CUDA 10.2. To use CUDA 11.1, use pytorch 1.7.1 instead.</p>
+<div class="section" id="cuda-10-2">
+<h4>CUDA 10.2<a class="headerlink" href="#cuda-10-2" title="Permalink to this headline">¶</a></h4>
+<p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation.
+First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sudo apt install g++-7  # For CUDA 10.2, must use GCC &lt; 8
+# Make sure `g++-7 --version` is at least 7.4.0
+conda create -n py3-mink python=3.8
+conda activate py3-mink
+
+conda install openblas-devel -c anaconda
+conda install pytorch=1.8.1 torchvision cudatoolkit=10.2 -c pytorch -c conda-forge
+
+# Install MinkowskiEngine
+export CXX=g++-7
+# Uncomment the following line to specify the cuda home. Make sure `$CUDA_HOME/nvcc --version` is 10.2
+# export CUDA_HOME=/usr/local/cuda-10.2
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option=&quot;--blas_include_dirs=${CONDA_PREFIX}/include&quot; --install-option=&quot;--blas=openblas&quot;
+
+# Or if you want local MinkowskiEngine
+git clone https://github.com/NVIDIA/MinkowskiEngine.git
+cd MinkowskiEngine
+export CXX=g++-7
+python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openblas
+</pre></div>
+</div>
+</div>
+<div class="section" id="cuda-11-x">
+<h4>CUDA 11.X<a class="headerlink" href="#cuda-11-x" title="Permalink to this headline">¶</a></h4>
 <p>We recommend <code class="docutils literal notranslate"><span class="pre">python&gt;=3.6</span></code> for installation.
 First, follow <a class="reference external" href="https://docs.anaconda.com/anaconda/install/">the anaconda documentation</a> to install anaconda on your computer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>conda create -n py3-mink python=3.8
 conda activate py3-mink
 
-conda install pytorch -c pytorch
 conda install openblas-devel -c anaconda
+conda install pytorch=1.7.1 torchvision cudatoolkit=11.0 -c pytorch -c conda-forge
 
 # Install MinkowskiEngine
+
+# Uncomment the following line to specify the cuda home. Make sure `$CUDA_HOME/nvcc --version` is 11.X
+# export CUDA_HOME=/usr/local/cuda-11.1
 pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps --install-option=&quot;--blas_include_dirs=${CONDA_PREFIX}/include&quot; --install-option=&quot;--blas=openblas&quot;
 
 # Or if you want local MinkowskiEngine
@@ -366,6 +406,7 @@ git clone https://github.com/NVIDIA/MinkowskiEngine.git
 cd MinkowskiEngine
 python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openblas
 </pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="system-python">
@@ -378,7 +419,7 @@ python setup.py install --blas_include_dirs=${CONDA_PREFIX}/include --blas=openb
 <span class="n">curl</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">bootstrap</span><span class="o">.</span><span class="n">pypa</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">get</span><span class="o">-</span><span class="n">pip</span><span class="o">.</span><span class="n">py</span> <span class="o">|</span> <span class="n">python3</span>
 
 <span class="c1"># Get pip and install python requirements</span>
-<span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">numpy</span>
+<span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">torch</span> <span class="n">numpy</span> <span class="n">ninja</span>
 
 <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">NVIDIA</span><span class="o">/</span><span class="n">MinkowskiEngine</span><span class="o">.</span><span class="n">git</span>
 
@@ -482,10 +523,9 @@ page</a>.</p>
 However, pytorch is implemented assuming that the number of point, or size of the activations do not change at every iteration. Thus, the GPU memory caching used by pytorch can result in unnecessarily large memory consumption.</p>
 <p>Specifically, pytorch caches chunks of memory spaces to speed up allocation used in every tensor creation. If it fails to find the memory space, it splits an existing cached memory or allocate new space if there’s no cached memory large enough for the requested size. Thus, every time we use different number of point (number of non-zero elements) with pytorch, it either split existing cache or reserve new memory. If the cache is too fragmented and allocated all GPU space, it will raise out of memory error.</p>
 <p><strong>To prevent this, you must clear the cache at regular interval with <code class="docutils literal notranslate"><span class="pre">torch.cuda.empty_cache()</span></code>.</strong></p>
-<ol class="simple">
-<li><p>CUDA 11.0</p></li>
-</ol>
-<p>There is a known CUDA issues that force torch to allocate exorbitant memory when used with MinkowskiEngine. For more detail please refer to <a class="reference external" href="https://github.com/NVIDIA/MinkowskiEngine/issues/290">the issue #290</a>. To fix, please install CUDA toolkit 11.1 and compile MinkowskiEngine.</p>
+</div>
+<div class="section" id="cuda-11-1-installation">
+<h3>CUDA 11.1 Installation<a class="headerlink" href="#cuda-11-1-installation" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">developer</span><span class="o">.</span><span class="n">download</span><span class="o">.</span><span class="n">nvidia</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">compute</span><span class="o">/</span><span class="n">cuda</span><span class="o">/</span><span class="mf">11.1</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">local_installers</span><span class="o">/</span><span class="n">cuda_11</span><span class="o">.</span><span class="mf">1.1_455</span><span class="o">.</span><span class="mf">32.00</span><span class="n">_linux</span><span class="o">.</span><span class="n">run</span>
 <span class="n">sudo</span> <span class="n">sh</span> <span class="n">cuda_11</span><span class="o">.</span><span class="mf">1.1_455</span><span class="o">.</span><span class="mf">32.00</span><span class="n">_linux</span><span class="o">.</span><span class="n">run</span> <span class="o">--</span><span class="n">toolkit</span> <span class="o">--</span><span class="n">silent</span> <span class="o">--</span><span class="n">override</span>
 
