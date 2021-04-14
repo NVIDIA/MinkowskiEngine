@@ -457,6 +457,26 @@ class MinkowskiToDenseTensor(MinkowskiModuleBase):
         return self.__class__.__name__ + "()"
 
 
+class MinkowskiToFeature(MinkowskiModuleBase):
+    r"""
+    Extract features from a sparse tensor and returns a pytorch tensor.
+
+    Can be used to to make a network construction simpler.
+
+    Example::
+
+       >>> net = nn.Sequential(MinkowskiConvolution(...), MinkowskiGlobalMaxPooling(...), MinkowskiToFeature(), nn.Linear(...))
+       >>> torch_tensor = net(sparse_tensor)
+
+    """
+
+    def forward(self, x: SparseTensor):
+        assert isinstance(
+            x, (SparseTensor, TensorField)
+        ), "Invalid input type for MinkowskiToFeature"
+        return x.F
+
+
 class MinkowskiStackCat(torch.nn.Sequential):
     def forward(self, x):
         return cat([module(x) for module in self])

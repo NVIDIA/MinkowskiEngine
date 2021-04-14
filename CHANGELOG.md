@@ -5,6 +5,10 @@
 - Updated README for pytorch 1.8.1 support
 - Use custom `gpu_storage` instead of thrust vector for faster constructors
 - pytorch installation instruction updates
+- fix transpose kernel map with `kernel_size == stride_size`
+- Update reconstruction and vae examples for v0.5 API
+- `stack_unet.py` example, API updates
+- `MinkowskiToFeature` layer
 
 ## [0.5.2]
 

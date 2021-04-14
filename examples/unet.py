@@ -26,7 +26,7 @@ import torch
 import MinkowskiEngine as ME
 import MinkowskiEngine.MinkowskiFunctional as MF
 
-from tests.common import data_loader
+from tests.python.common import data_loader
 
 
 class UNet(ME.MinkowskiNetwork):
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     net = net.to(device)
-    input = ME.SparseTensor(feat, coords=coords).to(device)
+    input = ME.SparseTensor(feat, coords, device=device)
 
     # Forward
     output = net(input)
