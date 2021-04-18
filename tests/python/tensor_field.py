@@ -26,7 +26,7 @@ import unittest
 import torch.nn as nn
 
 from tests.python.common import load_file
-from MinkowskiEngine.utils import batched_coordinates
+from MinkowskiEngine.utils import batched_coordinates, sparse_quantize
 from MinkowskiTensor import SparseTensorQuantizationMode
 from MinkowskiTensorField import TensorField
 from MinkowskiOps import MinkowskiLinear, MinkowskiToSparseTensor
@@ -147,10 +147,40 @@ class TestTensorField(unittest.TestCase):
         print(network(tfield))
 
     def slice(self):
+        device = "cuda"
         coords, colors, pcd = load_file("1.ply")
         voxel_size = 0.02
         colors = torch.from_numpy(colors).float()
         bcoords = batched_coordinates([coords / voxel_size], dtype=torch.float32)
+        tfield = TensorField(colors, bcoords, device=device)
+
+        network = nn.Sequential(
+            MinkowskiLinear(3, 16),
+            MinkowskiBatchNorm(16),
+            MinkowskiReLU(),
+            MinkowskiLinear(16, 32),
+            MinkowskiBatchNorm(32),
+            MinkowskiReLU(),
+            MinkowskiToSparseTensor(),
+            MinkowskiConvolution(32, 64, kernel_size=3, stride=2, dimension=3),
+            MinkowskiConvolutionTranspose(64, 32, kernel_size=3, stride=2, dimension=3),
+        ).to(device)
+
+        otensor = network(tfield)
+        ofield = otensor.slice(tfield)
+        self.assertEqual(len(tfield), len(ofield))
+        self.assertEqual(ofield.F.size(1), otensor.F.size(1))
+        ofield = otensor.cat_slice(tfield)
+        self.assertEqual(len(tfield), len(ofield))
+        self.assertEqual(ofield.F.size(1), (otensor.F.size(1) + tfield.F.size(1)))
+
+    def slice_no_duplicate(self):
+        coords, colors, pcd = load_file("1.ply")
+        voxel_size = 0.02
+        # Extract unique coords
+        coords, colors = sparse_quantize(coords / voxel_size, colors)
+        bcoords = batched_coordinates([coords], dtype=torch.float32)
+        colors = torch.from_numpy(colors).float()
         tfield = TensorField(colors, bcoords)
 
         network = nn.Sequential(

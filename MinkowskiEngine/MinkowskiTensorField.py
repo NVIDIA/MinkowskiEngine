@@ -245,7 +245,9 @@ class TensorField(Tensor):
     @property
     def _batchwise_row_indices(self):
         if self._batch_rows is None:
-            _, self._batch_rows = self._manager.origin_field_map(self.coordinate_field_map_key)
+            _, self._batch_rows = self._manager.origin_field_map(
+                self.coordinate_field_map_key
+            )
         return self._batch_rows
 
     def _get_coordinate_field(self):
@@ -279,6 +281,20 @@ class TensorField(Tensor):
                 coordinate_map_key,
             )
             N_rows = self._manager.size(coordinate_map_key)
+
+        if len(inverse_mapping) == 0:
+            # When the input has the same shape as the output
+            self._inverse_mapping[coordinate_map_key] = torch.arange(
+                len(self._F),
+                dtype=inverse_mapping.dtype,
+                device=inverse_mapping.device,
+            )
+            return SparseTensor(
+                self._F,
+                coordinate_map_key=coordinate_map_key,
+                coordinate_manager=self._manager,
+            )
+
         self._inverse_mapping[coordinate_map_key] = inverse_mapping
 
         if quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_SUM:
@@ -318,13 +334,11 @@ class TensorField(Tensor):
             # No quantization
             raise ValueError("Invalid quantization mode")
 
-        sparse_tensor = SparseTensor(
+        return SparseTensor(
             features,
             coordinate_map_key=coordinate_map_key,
             coordinate_manager=self._manager,
         )
-
-        return sparse_tensor
 
     def inverse_mapping(self, sparse_tensor_map_key: CoordinateMapKey):
         if sparse_tensor_map_key not in self._inverse_mapping:
@@ -359,8 +373,8 @@ class TensorField(Tensor):
             else:
                 # Extract the mapping
                 (
-                    self._inverse_mapping[sparse_tensor_map_key],
                     _,
+                    self._inverse_mapping[sparse_tensor_map_key],
                 ) = self._manager.get_field_to_sparse_map(
                     self.coordinate_field_map_key, sparse_tensor_map_key
                 )

@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.5.4]
+
+- Fix `TensorField.sparse()` for no duplicate coordinates
+- Skip unnecessary spmm if `SparseTensor.initialize_coordinates()` has no duplicate coordinates
+
 ## [0.5.3]
 
 - Updated README for pytorch 1.8.1 support

@@ -88,8 +88,22 @@ class SparseTensorTestCase(unittest.TestCase):
         st = SparseTensor(feats, coords, device=feats.device)
         print(st)
 
+    def test_device_unique(self):
+        print(f"{self.__class__.__name__}: test_device_unique SparseTensor")
+        if not is_cuda_available():
+            return
+
+        coords = torch.IntTensor(
+            [[0, 1], [0, 2], [0, 3], [0, 4], [1, 0], [1, 1], [1, 2]]
+        )
+        feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T
+        SparseTensor(feats.to(0), coords.to(0))
+        feats = torch.FloatTensor([[0, 1, 2, 3, 5, 6, 7]]).T.to(0)
+        st = SparseTensor(feats, coords, device=feats.device)
+        print(st)
+
     def test_device2(self):
-        print(f"{self.__class__.__name__}: test_device SparseTensor")
+        print(f"{self.__class__.__name__}: test_device2 SparseTensor")
         if not is_cuda_available():
             return
 

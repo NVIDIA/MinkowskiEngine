@@ -290,11 +290,21 @@ class SparseTensor(Tensor):
             coordinates = torch.floor(coordinates).int()
         (
             coordinate_map_key,
-            (unique_index, self.inverse_mapping),
+            (unique_index, inverse_mapping),
         ) = self._manager.insert_and_map(coordinates, *coordinate_map_key.get_key())
         self.unique_index = unique_index.long()
         coordinates = coordinates[self.unique_index]
 
+        if len(inverse_mapping) == 0:
+            # When the input has the same shape as the output
+            self.inverse_mapping = torch.arange(
+                len(features),
+                dtype=inverse_mapping.dtype,
+                device=inverse_mapping.device,
+            )
+            return coordinates, features, coordinate_map_key
+
+        self.inverse_mapping = inverse_mapping
         if self.quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_SUM:
             spmm = MinkowskiSPMMFunction()
             N = len(features)
@@ -568,12 +578,13 @@ class SparseTensor(Tensor):
                 quantization_mode=X.quantization_mode,
             )
         elif isinstance(X, SparseTensor):
+            inv_map = X.inverse_mapping
             assert (
                 X.coordinate_map_key == self.coordinate_map_key
             ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
             return TensorField(
-                self.F[X.inverse_mapping],
-                coordinates=self.C[X.inverse_mapping],
+                self.F[inv_map],
+                coordinates=self.C[inv_map],
                 coordinate_manager=self.coordinate_manager,
                 quantization_mode=self.quantization_mode,
             )
@@ -613,9 +624,9 @@ class SparseTensor(Tensor):
         ], "slice only available for sparse tensors with quantization RANDOM_SUBSAMPLE or UNWEIGHTED_AVERAGE"
 
         from MinkowskiTensorField import TensorField
-
+        inv_map = X.inverse_mapping(self.coordinate_map_key)
         features = torch.cat(
-            (self.F[X.inverse_mapping(self.coordinate_map_key)], X.F), dim=1
+            (self.F[inv_map], X.F), dim=1
         )
         if isinstance(X, TensorField):
             return TensorField(
@@ -630,7 +641,7 @@ class SparseTensor(Tensor):
             ), "Slice can only be applied on the same coordinates (coordinate_map_key)"
             return TensorField(
                 features,
-                coordinates=self.C[X.inverse_mapping(self.coordinate_map_key)],
+                coordinates=self.C[inv_map],
                 coordinate_manager=self.coordinate_manager,
                 quantization_mode=self.quantization_mode,
             )
