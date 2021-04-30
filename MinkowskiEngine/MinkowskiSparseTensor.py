@@ -536,6 +536,24 @@ class SparseTensor(Tensor):
         tensor_stride = torch.IntTensor(self.tensor_stride)
         return dense_F, min_coordinate, tensor_stride
 
+    def interpolate(self, X):
+        from MinkowskiTensorField import TensorField
+
+        assert isinstance(X, TensorField)
+        if self.coordinate_map_key in X._splat:
+            tensor_map, field_map, weights, size = X._splat[self.coordinate_map_key]
+            size = torch.Size([size[1], size[0]])  # transpose
+            features = MinkowskiSPMMFunction().apply(
+                field_map, tensor_map, weights, size, self._F
+            )
+        else:
+            features = self.features_at_coordinates(X.C)
+        return TensorField(
+            features=features,
+            coordinate_field_map_key=X.coordinate_field_map_key,
+            coordinate_manager=X.coordinate_manager,
+        )
+
     def slice(self, X):
         r"""
 

@@ -60,7 +60,7 @@ parser.add_argument("--test_translation", type=float, default=0.0)
 parser.add_argument(
     "--network",
     type=str,
-    choices=["pointnet", "minkpointnet", "minkfcnn"],
+    choices=["pointnet", "minkpointnet", "minkfcnn", "minksplatfcnn"],
     default="minkfcnn",
 )
 
@@ -107,22 +107,40 @@ class MinkowskiFCNN(ME.MinkowskiNetwork):
         )
 
     def network_initialization(
-        self, in_channel, out_channel, channels, embedding_channel, kernel_size, D=3,
+        self,
+        in_channel,
+        out_channel,
+        channels,
+        embedding_channel,
+        kernel_size,
+        D=3,
     ):
         self.mlp1 = self.get_mlp_block(in_channel, channels[0])
         self.conv1 = self.get_conv_block(
-            channels[0], channels[1], kernel_size=kernel_size, stride=1,
+            channels[0],
+            channels[1],
+            kernel_size=kernel_size,
+            stride=1,
         )
         self.conv2 = self.get_conv_block(
-            channels[1], channels[2], kernel_size=kernel_size, stride=2,
+            channels[1],
+            channels[2],
+            kernel_size=kernel_size,
+            stride=2,
         )
 
         self.conv3 = self.get_conv_block(
-            channels[2], channels[3], kernel_size=kernel_size, stride=2,
+            channels[2],
+            channels[3],
+            kernel_size=kernel_size,
+            stride=2,
         )
 
         self.conv4 = self.get_conv_block(
-            channels[3], channels[4], kernel_size=kernel_size, stride=2,
+            channels[3],
+            channels[4],
+            kernel_size=kernel_size,
+            stride=2,
         )
         self.conv5 = nn.Sequential(
             self.get_conv_block(
@@ -132,10 +150,16 @@ class MinkowskiFCNN(ME.MinkowskiNetwork):
                 stride=2,
             ),
             self.get_conv_block(
-                embedding_channel // 4, embedding_channel // 2, kernel_size=3, stride=2,
+                embedding_channel // 4,
+                embedding_channel // 2,
+                kernel_size=3,
+                stride=2,
             ),
             self.get_conv_block(
-                embedding_channel // 2, embedding_channel, kernel_size=3, stride=2,
+                embedding_channel // 2,
+                embedding_channel,
+                kernel_size=3,
+                stride=2,
             ),
         )
 
@@ -152,6 +176,7 @@ class MinkowskiFCNN(ME.MinkowskiNetwork):
         )
 
         # No, Dropout, last 256 linear, AVG_POOLING 92%
+
     def weight_initialization(self):
         for m in self.modules():
             if isinstance(m, ME.MinkowskiConvolution):
@@ -191,8 +216,66 @@ class MinkowskiFCNN(ME.MinkowskiNetwork):
         return self.final(ME.cat(x1, x2)).F
 
 
+class GlobalMaxAvgPool(torch.nn.Module):
+    def __init__(self):
+        torch.nn.Module.__init__(self)
+        self.global_max_pool = ME.MinkowskiGlobalMaxPooling()
+        self.global_avg_pool = ME.MinkowskiGlobalAvgPooling()
+
+    def forward(self, tensor):
+        x = self.global_max_pool(tensor)
+        y = self.global_avg_pool(tensor)
+        return ME.cat(x, y)
+
+
+class MinkowskiSplatFCNN(MinkowskiFCNN):
+    def __init__(
+        self,
+        in_channel,
+        out_channel,
+        embedding_channel=1024,
+        channels=(32, 48, 64, 96, 128),
+        D=3,
+    ):
+        MinkowskiFCNN.__init__(
+            self, in_channel, out_channel, embedding_channel, channels, D
+        )
+
+    def forward(self, x: ME.TensorField):
+        x = self.mlp1(x)
+        y = x.splat()
+
+        y = self.conv1(y)
+        y1 = self.pool(y)
+
+        y = self.conv2(y1)
+        y2 = self.pool(y)
+
+        y = self.conv3(y2)
+        y3 = self.pool(y)
+
+        y = self.conv4(y3)
+        y4 = self.pool(y)
+
+        x1 = y1.interpolate(x)
+        x2 = y2.interpolate(x)
+        x3 = y3.interpolate(x)
+        x4 = y4.interpolate(x)
+
+        x = ME.cat(x1, x2, x3, x4)
+        y = self.conv5(x.sparse())
+
+        x1 = self.global_max_pool(y)
+        x2 = self.global_avg_pool(y)
+
+        return self.final(ME.cat(x1, x2)).F
+
+
 STR2NETWORK = dict(
-    pointnet=PointNet, minkpointnet=MinkowskiPointNet, minkfcnn=MinkowskiFCNN
+    pointnet=PointNet,
+    minkpointnet=MinkowskiPointNet,
+    minkfcnn=MinkowskiFCNN,
+    minksplatfcnn=MinkowskiSplatFCNN,
 )
 
 
@@ -200,7 +283,9 @@ def create_input_batch(batch, is_minknet, device="cuda", quantization_size=0.05)
     if is_minknet:
         batch["coordinates"][:, 1:] = batch["coordinates"][:, 1:] / quantization_size
         return ME.TensorField(
-            coordinates=batch["coordinates"], features=batch["features"], device=device,
+            coordinates=batch["coordinates"],
+            features=batch["features"],
+            device=device,
         )
     else:
         return batch["coordinates"].permute(0, 2, 1).to(device)
@@ -237,14 +322,21 @@ def make_data_loader(phase, is_minknet, config):
 
 def test(net, device, config, phase="val"):
     is_minknet = isinstance(net, ME.MinkowskiNetwork)
-    data_loader = make_data_loader("test", is_minknet, config=config,)
+    data_loader = make_data_loader(
+        "test",
+        is_minknet,
+        config=config,
+    )
 
     net.eval()
     labels, preds = [], []
     with torch.no_grad():
         for batch in data_loader:
             input = create_input_batch(
-                batch, is_minknet, device=device, quantization_size=config.voxel_size,
+                batch,
+                is_minknet,
+                device=device,
+                quantization_size=config.voxel_size,
             )
             logit = net(input)
             pred = torch.argmax(logit, 1)
@@ -255,7 +347,7 @@ def test(net, device, config, phase="val"):
 
 
 def criterion(pred, labels, smoothing=True):
-    """ Calculate cross entropy loss, apply label smoothing if needed. """
+    """Calculate cross entropy loss, apply label smoothing if needed."""
 
     labels = labels.contiguous().view(-1)
     if smoothing:
@@ -276,9 +368,15 @@ def criterion(pred, labels, smoothing=True):
 def train(net, device, config):
     is_minknet = isinstance(net, ME.MinkowskiNetwork)
     optimizer = optim.SGD(
-        net.parameters(), lr=config.lr, momentum=0.9, weight_decay=config.weight_decay,
+        net.parameters(),
+        lr=config.lr,
+        momentum=0.9,
+        weight_decay=config.weight_decay,
     )
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.max_steps,)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=config.max_steps,
+    )
     print(optimizer)
     print(scheduler)
 

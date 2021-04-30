@@ -259,6 +259,7 @@ class TestTensorFieldSplat(unittest.TestCase):
         tensor = tfield.splat()
         print(tfield)
         print(tensor)
+        print(tensor.interpolate(tfield))
 
     def test_small2(self):
         coords = torch.FloatTensor([[0, 0.1, 0.1], [0, 1.1, 1.1]])
@@ -267,3 +268,4 @@ class TestTensorFieldSplat(unittest.TestCase):
         tensor = tfield.splat()
         print(tfield)
         print(tensor)
+        print(tensor.interpolate(tfield))
