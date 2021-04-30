@@ -239,3 +239,31 @@ class TestTensorField(unittest.TestCase):
         otensor.F.sum().backward()
         field_to_sparse = tfield.sparse(coordinate_map_key=otensor.coordinate_map_key)
         self.assertTrue(len(field_to_sparse.F) == len(otensor))
+
+
+class TestTensorFieldSplat(unittest.TestCase):
+    def setUp(self):
+        coords, colors, pcd = load_file("1.ply")
+        voxel_size = 0.02
+        colors = torch.from_numpy(colors).float()
+        bcoords = batched_coordinates([coords / voxel_size], dtype=torch.float32)
+        self.tensor_field = TensorField(coordinates=bcoords, features=colors)
+
+    def test_splat(self):
+        self.tensor_field.splat()
+
+    def test_small(self):
+        coords = torch.FloatTensor([[0, 0.1], [0, 1.1]])
+        feats = torch.FloatTensor([[1], [2]])
+        tfield = TensorField(coordinates=coords, features=feats)
+        tensor = tfield.splat()
+        print(tfield)
+        print(tensor)
+
+    def test_small2(self):
+        coords = torch.FloatTensor([[0, 0.1, 0.1], [0, 1.1, 1.1]])
+        feats = torch.FloatTensor([[1], [2]])
+        tfield = TensorField(coordinates=coords, features=feats)
+        tensor = tfield.splat()
+        print(tfield)
+        print(tensor)

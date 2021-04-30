@@ -4,6 +4,8 @@
 
 - Fix `TensorField.sparse()` for no duplicate coordinates
 - Skip unnecessary spmm if `SparseTensor.initialize_coordinates()` has no duplicate coordinates
+- Model summary utility function added
+- TensorField.splat function for interpolated features
 
 ## [0.5.3]
 

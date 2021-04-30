@@ -624,10 +624,9 @@ class SparseTensor(Tensor):
         ], "slice only available for sparse tensors with quantization RANDOM_SUBSAMPLE or UNWEIGHTED_AVERAGE"
 
         from MinkowskiTensorField import TensorField
+
         inv_map = X.inverse_mapping(self.coordinate_map_key)
-        features = torch.cat(
-            (self.F[inv_map], X.F), dim=1
-        )
+        features = torch.cat((self.F[inv_map], X.F), dim=1)
         if isinstance(X, TensorField):
             return TensorField(
                 features,

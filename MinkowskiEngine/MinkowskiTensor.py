@@ -50,12 +50,15 @@ class SparseTensorQuantizationMode(Enum):
     `UNWEIGHTED_AVERAGE`: average all features within a quantization block equally.
     `UNWEIGHTED_SUM`: sum all features within a quantization block equally.
     `NO_QUANTIZATION`: No quantization is applied. Should not be used for normal operation.
+    `MAX_POOL`: Voxel-wise max pooling is applied.
+    `SPLAT_LINEAR_INTERPOLATION`: Splat features using N-dimensional linear interpolation to 2^N neighbors.
     """
     RANDOM_SUBSAMPLE = 0
     UNWEIGHTED_AVERAGE = 1
     UNWEIGHTED_SUM = 2
     NO_QUANTIZATION = 3
     MAX_POOL = 4
+    SPLAT_LINEAR_INTERPOLATION = 5
 
 
 _sparse_tensor_operation_mode = SparseTensorOperationMode.SEPARATE_COORDINATE_MANAGER
@@ -101,15 +104,13 @@ def set_sparse_tensor_operation_mode(operation_mode: SparseTensorOperationMode):
 
 
 def sparse_tensor_operation_mode() -> SparseTensorOperationMode:
-    r"""Return the current sparse tensor operation mode.
-    """
+    r"""Return the current sparse tensor operation mode."""
     global _sparse_tensor_operation_mode
     return copy.deepcopy(_sparse_tensor_operation_mode)
 
 
 def global_coordinate_manager():
-    r"""Return the current global coordinate manager
-    """
+    r"""Return the current global coordinate manager"""
     global _global_coordinate_manager
     return _global_coordinate_manager
 

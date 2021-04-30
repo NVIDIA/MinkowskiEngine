@@ -50,6 +50,29 @@ from sparse_matrix_functions import MinkowskiSPMMFunction, MinkowskiSPMMAverageF
 from MinkowskiPooling import MinkowskiDirectMaxPoolingFunction
 
 
+def create_splat_coordinates(coordinates: torch.Tensor) -> torch.Tensor:
+    r"""Create splat coordinates. splat coordinates could have duplicate coordinates."""
+    dimension = coordinates.shape[1] - 1
+    region_offset = [
+        [
+            0,
+        ]
+        * (dimension + 1)
+    ]
+    for d in reversed(range(1, dimension + 1)):
+        new_offset = []
+        for offset in region_offset:
+            offset = offset.copy()  # Do not modify the original
+            offset[d] = 1
+            new_offset.append(offset)
+        region_offset.extend(new_offset)
+    region_offset = torch.IntTensor(region_offset)
+    coordinates = torch.floor(coordinates).int().unsqueeze(1) + region_offset.unsqueeze(
+        0
+    )
+    return coordinates.reshape(-1, dimension + 1)
+
+
 class TensorField(Tensor):
     def __init__(
         self,
@@ -257,11 +280,14 @@ class TensorField(Tensor):
         self,
         tensor_stride: Union[int, Sequence, np.array] = 1,
         coordinate_map_key: CoordinateMapKey = None,
-        quantization_mode=None,
+        quantization_mode: SparseTensorQuantizationMode = None,
     ):
         r"""Converts the current sparse tensor field to a sparse tensor."""
         if quantization_mode is None:
             quantization_mode = self.quantization_mode
+        assert (
+            quantization_mode != SparseTensorQuantizationMode.SPLAT_LINEAR_INTERPOLATION
+        ), "Please use .splat() for splat quantization."
 
         if coordinate_map_key is None:
             tensor_stride = convert_to_int_list(tensor_stride, self.D)
@@ -282,6 +308,8 @@ class TensorField(Tensor):
             )
             N_rows = self._manager.size(coordinate_map_key)
 
+        assert N_rows > 0, f"Invalid out coordinate map key. Found {N_row} elements."
+
         if len(inverse_mapping) == 0:
             # When the input has the same shape as the output
             self._inverse_mapping[coordinate_map_key] = torch.arange(
@@ -295,8 +323,7 @@ class TensorField(Tensor):
                 coordinate_manager=self._manager,
             )
 
-        self._inverse_mapping[coordinate_map_key] = inverse_mapping
-
+        # Create features
         if quantization_mode == SparseTensorQuantizationMode.UNWEIGHTED_SUM:
             spmm = MinkowskiSPMMFunction()
             N = len(self._F)
@@ -334,6 +361,30 @@ class TensorField(Tensor):
             # No quantization
             raise ValueError("Invalid quantization mode")
 
+        self._inverse_mapping[coordinate_map_key] = inverse_mapping
+
+        return SparseTensor(
+            features,
+            coordinate_map_key=coordinate_map_key,
+            coordinate_manager=self._manager,
+        )
+
+    def splat(self):
+        splat_coordinates = create_splat_coordinates(self._C)
+        (coordinate_map_key, (unique_index, _)) = self._manager.insert_and_map(
+            splat_coordinates
+        )
+        N_rows = self._manager.size(coordinate_map_key)
+
+        tensor_map, field_map, weights = self._manager.interpolation_map_weight(
+            coordinate_map_key, self._C
+        )
+        # features
+        spmm = MinkowskiSPMMFunction()
+        N = len(self._F)
+        assert weights.dtype == self._F.dtype
+        size = torch.Size([N_rows, N])
+        features = spmm.apply(tensor_map, field_map, weights, size, self._F)
         return SparseTensor(
             features,
             coordinate_map_key=coordinate_map_key,

@@ -269,9 +269,7 @@ std::vector<at::Tensor> interpolation_map_weight_kernel(
 
     final_begin += max_num;
   }
-  std::vector<at::Tensor> return_list = {final_in_map, final_out_map,
-                                         final_weights};
-  return return_list;
+  return {final_in_map, final_out_map, final_weights};
 }
 
 } // namespace detail
