@@ -247,6 +247,10 @@ class TensorField(Tensor):
         self._splat = {}
 
     @property
+    def coordinate_key(self):
+        return self.coordinate_field_map_key
+
+    @property
     def C(self):
         r"""The alias of :attr:`coords`."""
         return self.coordinates

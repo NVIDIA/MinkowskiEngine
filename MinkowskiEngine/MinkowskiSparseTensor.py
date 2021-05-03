@@ -280,6 +280,10 @@ class SparseTensor(Tensor):
         self.coordinate_map_key = coordinate_map_key
         self._batch_rows = None
 
+    @property
+    def coordinate_key(self):
+        return self.coordinate_map_key
+
     def initialize_coordinates(self, coordinates, features, coordinate_map_key):
         if not isinstance(coordinates, (torch.IntTensor, torch.cuda.IntTensor)):
             warnings.warn(

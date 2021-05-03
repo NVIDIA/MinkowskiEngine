@@ -246,6 +246,10 @@ class Tensor:
             self._C = self._get_coordinates()
         return self._C
 
+    @property
+    def coordinate_key(self):
+        raise NotImplementedError("Tensor interface does not have coordinate_key")
+
     @C.setter
     def C(self):
         raise SyntaxError("Direct modification of coordinates is not permitted")

@@ -7,6 +7,7 @@
 - Model summary utility function added
 - TensorField.splat function for splat features to a sparse tensor
 - SparseTensor.interpolate function for extracting interpolated features
+- `coordinate_key` property function for `SparseTensor` and `TensorField`
 
 ## [0.5.3]
 
