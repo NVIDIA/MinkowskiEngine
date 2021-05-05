@@ -160,6 +160,8 @@ class TensorField(Tensor):
             assert isinstance(coordinates, torch.Tensor)
         if coordinate_field_map_key is not None:
             assert isinstance(coordinate_field_map_key, CoordinateMapKey)
+            assert coordinate_manager is not None, "Must provide coordinate_manager if coordinate_field_map_key is provided"
+            assert coordinates is None, "Must not provide coordinates if coordinate_field_map_key is provided"
         if coordinate_manager is not None:
             assert isinstance(coordinate_manager, CoordinateManager)
         if coordinates is None and (
