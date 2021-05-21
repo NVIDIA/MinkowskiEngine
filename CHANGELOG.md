@@ -8,6 +8,7 @@
 - TensorField.splat function for splat features to a sparse tensor
 - SparseTensor.interpolate function for extracting interpolated features
 - `coordinate_key` property function for `SparseTensor` and `TensorField`
+- Fix .dense() for GPU tensors. (PR #319)
 
 ## [0.5.3]
 
