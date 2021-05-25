@@ -56,7 +56,7 @@ def conv():
         out_channels,
         kernel_size=3,
         stride=2,
-        has_bias=False,
+        bias=False,
         dimension=D)
 
     output = conv(input)
@@ -79,7 +79,7 @@ def conv():
         out_channels,
         kernel_size=3,
         stride=2,
-        has_bias=False,
+        bias=False,
         dimension=D)
     output = conv_tr(input)
 
@@ -109,7 +109,7 @@ def conv_on_coords():
         out_channels,
         kernel_size=3,
         stride=2,
-        has_bias=False,
+        bias=False,
         dimension=D)
 
     pool_tr = ME.MinkowskiPoolingTranspose(
