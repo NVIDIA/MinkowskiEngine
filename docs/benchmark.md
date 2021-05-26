@@ -19,7 +19,7 @@ conv = ME.MinkowskiConvolution(
     kernel_size=7,
     stride=1,
     dilation=1,
-    has_bias=False,
+    bias=False,
     dimension=3)
 ```
 
@@ -53,7 +53,7 @@ net = nn.Sequential(
         kernel_size=5,
         stride=1,
         dilation=1,
-        has_bias=False,
+        bias=False,
         dimension=3),
     ME.MinkowskiConvolution(
         in_channels=32,
@@ -61,7 +61,7 @@ net = nn.Sequential(
         kernel_size=2,
         stride=2,
         dilation=1,
-        has_bias=False,
+        bias=False,
         dimension=3),
     ME.MinkowskiConvolutionTranspose
         in_channels=32,
@@ -69,7 +69,7 @@ net = nn.Sequential(
         kernel_size=2,
         stride=2,
         dilation=1,
-        has_bias=False,
+        bias=False,
         dimension=3))
 ```
 

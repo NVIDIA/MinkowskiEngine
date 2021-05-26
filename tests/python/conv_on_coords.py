@@ -65,7 +65,7 @@ class TestConvolution(unittest.TestCase):
             out_channels,
             kernel_size=3,
             stride=1,
-            has_bias=False,
+            bias=False,
             dimension=D).double()
 
         print('Initial input: ', input)
@@ -103,7 +103,7 @@ class TestConvolution(unittest.TestCase):
             out_channels,
             kernel_size=3,
             stride=2,
-            has_bias=False,
+            bias=False,
             dimension=D).double()
         print('Initial input: ', input)
         print('Specified output coords: ', out_coords)
