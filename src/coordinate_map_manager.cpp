@@ -71,7 +71,7 @@ struct insert_and_map_functor<coordinate_type, coordinate_field_type,
     LOG_DEBUG("mapping size:", map_inverse_map.first.size());
 
     // insert moves map
-    manager.insert(map_key, map);
+    THRUST_CHECK(manager.insert(map_key, map));
 
     auto const &mapping = map_inverse_map.first;
     auto const &inverse_mapping = map_inverse_map.second;
@@ -117,7 +117,7 @@ struct insert_field_functor<
     auto map = CoordinateFieldMapCPU<coordinate_field_type, coordinate_type,
                                      std::allocator>(N, coordinate_size,
                                                      map_key.first);
-    map.insert(p_coordinate, p_coordinate + N * coordinate_size);
+    THRUST_CHECK(map.insert(p_coordinate, p_coordinate + N * coordinate_size));
 
     LOG_DEBUG("insert map with tensor_stride", map_key.first);
     manager.insert_field_map(map_key, map);
