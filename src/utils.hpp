@@ -166,6 +166,7 @@ private:
 #else
 #define MINK_CUDA_HOST_DEVICE
 #define MINK_CUDA_DEVICE
+#define THRUST_CHECK(condition) condition;
 #endif
 
 #define COLOR "\033[31;1m"
