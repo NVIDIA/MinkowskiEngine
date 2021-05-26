@@ -184,6 +184,8 @@ if not (BLAS is False):  # False only when not set, str otherwise
     assert BLAS in BLAS_LIST, f"Blas option {BLAS} not in valid options {BLAS_LIST}"
     if BLAS == "mkl":
         libraries.append("mkl_rt")
+        CC_FLAGS.append("-DUSE_MKL")
+        NVCC_FLAGS.append("-DUSE_MKL")
     else:
         libraries.append(BLAS)
     if not (BLAS_INCLUDE_DIRS is False):
