@@ -147,7 +147,7 @@ void max_pool_forward_pointer_kernel_gpu(
   MapItype *d_reduced_out_map = d_scr + 2 * nmap + 2; // reduced output maps
 
   // create number of in_feat per out, and starting index
-  thrust::sequence(thrust::device, d_index, d_index + nmap);
+  THRUST_CHECK(thrust::sequence(thrust::device, d_index, d_index + nmap));
 
   ////////////////////////////////
   // Reduction
@@ -155,23 +155,26 @@ void max_pool_forward_pointer_kernel_gpu(
   // sort d_out_map and d_in_map with the d_out_map so that in_feat are
   // placed adjacent according to out_map
   if (!is_sorted)
-    thrust::sort_by_key(thrust::device, d_out_map, d_out_map + nmap, d_in_map);
+    THRUST_CHECK(thrust::sort_by_key(thrust::device, d_out_map,
+                                     d_out_map + nmap, d_in_map));
 
   thrust::equal_to<MapItype> equal_pred;
   thrust::minimum<MapItype> min_op;
+  size_t num_unique_out_map;
 
-  auto reduction_pair =
-      thrust::reduce_by_key(thrust::device,    // execution policy
-                            d_out_map,         // key begin
-                            d_out_map + nmap,  // key end
-                            d_index,           // val begin
-                            d_reduced_out_map, // key out begin
-                            d_in_map_min,      // val out begin
-                            equal_pred,        // binary pred
-                            min_op);           // binary op
-  CUDA_CHECK(cudaStreamSynchronize(0));
-
-  size_t num_unique_out_map = reduction_pair.first - d_reduced_out_map;
+  try {
+    auto reduction_pair =
+        thrust::reduce_by_key(thrust::device,    // execution policy
+                              d_out_map,         // key begin
+                              d_out_map + nmap,  // key end
+                              d_index,           // val begin
+                              d_reduced_out_map, // key out begin
+                              d_in_map_min,      // val out begin
+                              equal_pred,        // binary pred
+                              min_op);           // binary op
+    CUDA_CHECK(cudaStreamSynchronize(0));
+    num_unique_out_map = reduction_pair.first - d_reduced_out_map;
+  } THRUST_CATCH;
 
 #ifdef DEBUG
   std::cout << "num_unique_out_map: " << num_unique_out_map << "\n";

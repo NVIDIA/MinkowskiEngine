@@ -235,15 +235,15 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
       CUDA_CHECK(cudaMemcpy(sorted_val_ptr, values_ptr, nnz * sizeof(scalar_t),
                             cudaMemcpyDeviceToDevice));
 
-      thrust::sort_by_key(thrust::device,            //
-                          sorted_row_ptr,            // key begin
-                          sorted_row_ptr + nnz,      // key end
-                          thrust::make_zip_iterator( // value begin
-                              thrust::make_tuple(    //
-                                  sorted_col_ptr,    //
-                                  sorted_val_ptr     //
-                                  )                  //
-                              ));
+      THRUST_CHECK(thrust::sort_by_key(thrust::device,            //
+                                       sorted_row_ptr,            // key begin
+                                       sorted_row_ptr + nnz,      // key end
+                                       thrust::make_zip_iterator( // value begin
+                                           thrust::make_tuple(    //
+                                               sorted_col_ptr,    //
+                                               sorted_val_ptr     //
+                                               )                  //
+                                           )));
       LOG_DEBUG("sorted row", cudaDeviceSynchronize());
     } else {
       sorted_row_ptr = row_indices_ptr;
@@ -481,10 +481,10 @@ coo_spmm_average(torch::Tensor const &rows, torch::Tensor const &cols,
     CUDA_CHECK(cudaMemcpy(sorted_col_ptr, col_indices_ptr,
                           nnz * sizeof(th_int_type), cudaMemcpyDeviceToDevice));
 
-    thrust::sort_by_key(thrust::device,       //
-                        sorted_row_ptr,       // key begin
-                        sorted_row_ptr + nnz, // key end
-                        sorted_col_ptr);
+    THRUST_CHECK(thrust::sort_by_key(thrust::device,       //
+                                     sorted_row_ptr,       // key begin
+                                     sorted_row_ptr + nnz, // key end
+                                     sorted_col_ptr));
 
     /////////////////////////////////////////////////////////////////////////
     // Create vals
@@ -496,21 +496,20 @@ coo_spmm_average(torch::Tensor const &rows, torch::Tensor const &cols,
         (scalar_t *)c10::cuda::CUDACachingAllocator::raw_alloc(
             nnz * sizeof(scalar_t));
     torch::Tensor ones = at::ones({nnz}, mat2.options());
-
-    // reduce by key
-    auto end = thrust::reduce_by_key(
-        thrust::device,                                // policy
-        sorted_row_ptr,                                // key begin
-        sorted_row_ptr + nnz,                          // key end
-        reinterpret_cast<scalar_t *>(ones.data_ptr()), // value begin
-        unique_row_ptr,                                // key out begin
-        reduced_val_ptr                                // value out begin
-    );
-
-    int num_unique_keys = end.first - unique_row_ptr;
-    LOG_DEBUG("Num unique keys:", num_unique_keys);
-
-    // Create values
+    int num_unique_keys;
+    try {
+      // reduce by key
+      auto end = thrust::reduce_by_key(
+          thrust::device,                                // policy
+          sorted_row_ptr,                                // key begin
+          sorted_row_ptr + nnz,                          // key end
+          reinterpret_cast<scalar_t *>(ones.data_ptr()), // value begin
+          unique_row_ptr,                                // key out begin
+          reduced_val_ptr                                // value out begin
+      );
+      num_unique_keys = end.first - unique_row_ptr;
+      LOG_DEBUG("Num unique keys:", num_unique_keys);
+    } THRUST_CATCH;
 
     // Copy the results to the correct output
     inverse_val<th_int_type, scalar_t>

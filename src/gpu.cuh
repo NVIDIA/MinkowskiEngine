@@ -155,6 +155,13 @@ namespace minkowski {
                              << __FILE__ << ":" << __LINE__);                  \
   }
 
+#define THRUST_CATCH                                                           \
+  catch (thrust::system_error e) {                                             \
+    throw std::runtime_error(Formatter()                                       \
+                             << "Thrust error: " << e.what() << " at "         \
+                             << __FILE__ << ":" << __LINE__);                  \
+  }
+
 // CUDA: library error reporting.
 const char *cublasGetErrorString(cublasStatus_t error);
 

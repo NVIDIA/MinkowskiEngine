@@ -214,10 +214,10 @@ void NonzeroAvgPoolingForwardKernelGPU(
   CUDA_CHECK(cudaMemcpy(sorted_col_ptr, kernel_map.in_maps.begin(),
                         sparse_nnzs * sizeof(Itype), cudaMemcpyDeviceToDevice));
 
-  thrust::sort_by_key(thrust::device,               //
-                      sorted_row_ptr,               // key begin
-                      sorted_row_ptr + sparse_nnzs, // key end
-                      sorted_col_ptr);
+  THRUST_CHECK(thrust::sort_by_key(thrust::device,               //
+                                   sorted_row_ptr,               // key begin
+                                   sorted_row_ptr + sparse_nnzs, // key end
+                                   sorted_col_ptr));
 
   //  +---------+ +---+
   //  | spm     | | i |
@@ -280,16 +280,18 @@ void NonzeroAvgPoolingForwardKernelGPU(
         (Dtype *)allocator.allocate(sparse_nnzs * sizeof(Dtype));
 
     // reduce by key
-    auto end = thrust::reduce_by_key(thrust::device,               // policy
-                                     sorted_row_ptr,               // key begin
-                                     sorted_row_ptr + sparse_nnzs, // key end
-                                     d_ones,         // value begin
-                                     unique_row_ptr, // key out begin
-                                     reduced_val_ptr // value out begin
-    );
-
-    int num_unique_keys = end.first - unique_row_ptr;
-    LOG_DEBUG("Num unique keys:", num_unique_keys);
+    int num_unique_keys;
+    try {
+      auto end = thrust::reduce_by_key(thrust::device, // policy
+                                       sorted_row_ptr, // key begin
+                                       sorted_row_ptr + sparse_nnzs, // key end
+                                       d_ones,         // value begin
+                                       unique_row_ptr, // key out begin
+                                       reduced_val_ptr // value out begin
+      );
+      num_unique_keys = end.first - unique_row_ptr;
+      LOG_DEBUG("Num unique keys:", num_unique_keys);
+    } THRUST_CATCH;
 
 #ifdef DEBUG
     Itype *p_unique_row = (Itype *)std::malloc(num_unique_keys * sizeof(Itype));

@@ -178,8 +178,8 @@ coordinate_map_batch_find_test(const torch::Tensor &coordinates,
   std::vector<index_type> cpu_firsts(NR);
   std::vector<index_type> cpu_seconds(NR);
 
-  thrust::copy(firsts.cbegin(), firsts.cend(), cpu_firsts.begin());
-  thrust::copy(seconds.cbegin(), seconds.cend(), cpu_seconds.begin());
+  THRUST_CHECK(thrust::copy(firsts.cbegin(), firsts.cend(), cpu_firsts.begin()));
+  THRUST_CHECK(thrust::copy(seconds.cbegin(), seconds.cend(), cpu_seconds.begin()));
   return std::make_pair(cpu_firsts, cpu_seconds);
 }
 
