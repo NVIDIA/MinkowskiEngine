@@ -265,6 +265,10 @@ page](https://github.com/NVIDIA/MinkowskiEngine/issues).
 
 ## Known Issues
 
+### Unhandled Out-Of-Memory thrust::system exception
+
+There is [a known issue](https://github.com/NVIDIA/thrust/issues/1448) in thrust with CUDA 10 that leads to an unhandled thrust exception. Please refer to the [issue](https://github.com/NVIDIA/MinkowskiEngine/issues/357) for detail.
+
 ### Too much GPU memory usage or Frequent Out of Memory
 
 There are a few causes for this error.
