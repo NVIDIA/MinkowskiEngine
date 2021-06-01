@@ -509,6 +509,7 @@ class SparseTensor(Tensor):
         elif isinstance(min_coordinate, int) and min_coordinate == 0:
             coords = self.C[:, 1:]
         else:
+            min_coordinate = min_coordinate.to(self.device)
             if min_coordinate.ndim == 1:
                 min_coordinate = min_coordinate.unsqueeze(0)
             coords = self.C[:, 1:] - min_coordinate

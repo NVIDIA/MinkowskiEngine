@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.5.5]
+
+- MKL compilation fix (#358)
+- Example updates for `has_bias` (PR #356)
+- Add thrust exception handling (issue #357)
+- `min_coordinate` to device in `dense()`
+
 ## [0.5.4]
 
 - Fix `TensorField.sparse()` for no duplicate coordinates
