@@ -474,20 +474,13 @@ std::vector<py::array> quantize_np(
 
 std::vector<at::Tensor> quantize_th(at::Tensor &coords);
 
-/*
-vector<py::array> quantize_label_np(
+std::vector<py::array> quantize_label_np(
     py::array_t<int, py::array::c_style | py::array::forcecast> coords,
     py::array_t<int, py::array::c_style | py::array::forcecast> labels,
     int invalid_label);
 
-
-vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
-                                     int invalid_label);
-
-at::Tensor quantization_average_features(at::Tensor in_feat, at::Tensor in_map,
-                                         at::Tensor out_map, int out_nrows,
-                                         int mode);
-*/
+std::vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
+                                          int invalid_label);
 
 std::pair<torch::Tensor, torch::Tensor>
 max_pool_fw(torch::Tensor const &in_map,  //
@@ -656,6 +649,8 @@ void instantiate_gpu_func(py::module &m, const std::string &dtypestr) {
 void non_templated_cpu_func(py::module &m) {
   m.def("quantize_np", &minkowski::quantize_np);
   m.def("quantize_th", &minkowski::quantize_th);
+  m.def("quantize_label_np", &minkowski::quantize_label_np);
+  m.def("quantize_label_th", &minkowski::quantize_label_th);
   m.def("direct_max_pool_fw", &minkowski::max_pool_fw,
         py::call_guard<py::gil_scoped_release>());
   m.def("direct_max_pool_bw", &minkowski::max_pool_bw,

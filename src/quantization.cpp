@@ -138,7 +138,65 @@ std::vector<at::Tensor> quantize_th(at::Tensor &coords) {
   return {th_mapping, th_inverse_mapping};
 }
 
-/*
+std::vector<std::vector<int>> quantize_label(int const *const p_coords,
+                                             int const *const p_labels,
+                                             int const nrows, int const ncols,
+                                             int const invalid_label) {
+  // Create coords map
+  LOG_DEBUG("coordinate map generation");
+  std::vector<default_types::size_type> tensor_stride(ncols - 1);
+  std::for_each(tensor_stride.begin(), tensor_stride.end(),
+                [](auto &i) { i = 1; });
+
+  // Create coords map
+  using coordinate_type = int32_t;
+  using key_type = coordinate<coordinate_type>;
+  using mapped_type = std::pair<int, int>; // row index and label
+  using hasher = detail::coordinate_murmur3<coordinate_type>;
+  using key_equal = detail::coordinate_equal_to<coordinate_type>;
+  using map_type = robin_hood::unordered_flat_map<key_type,    // key
+                                                  mapped_type, // mapped_type
+                                                  hasher,      // hasher
+                                                  key_equal    // equality
+                                                  >;
+  using value_type = map_type::value_type;
+
+  auto map = map_type{nrows, hasher{ncols}, key_equal{ncols}};
+
+  LOG_DEBUG("Map nrows:", nrows, "ncols:", ncols);
+  // insert_row
+  std::vector<int> mapping;  // N unique
+  std::vector<int> colabels; // N unique
+  mapping.reserve(nrows);
+  colabels.reserve(nrows);
+  std::vector<int> inverse_mapping(nrows); // N rows
+  int n_unique{0};
+  for (int row = 0; row < nrows; ++row) {
+    auto key = coordinate<coordinate_type>(p_coords + ncols * row);
+    const auto it = map.find(key);
+    auto iter_success =
+        map.insert(value_type(key, mapped_type(n_unique, p_labels[row])));
+    if (iter_success.second) {
+      // success
+      mapping.push_back(row);
+      colabels.push_back(p_labels[row]);
+      inverse_mapping[row] = n_unique++;
+    } else {
+      auto &keyval = *(iter_success.first);
+      auto &val = keyval.second;
+      // Set the label
+      if (val.second != p_labels[row] && val.second != invalid_label) {
+        // When the labels differ
+        val.second = invalid_label;
+        colabels[inverse_mapping[val.first]] = invalid_label;
+      }
+      inverse_mapping[row] = val.first; // row
+    }
+  }
+
+  return {mapping, inverse_mapping, colabels};
+}
+
 std::vector<py::array> quantize_label_np(
     py::array_t<int, py::array::c_style | py::array::forcecast> coords,
     py::array_t<int, py::array::c_style | py::array::forcecast> labels,
@@ -157,41 +215,37 @@ std::vector<py::array> quantize_label_np(
   int *p_labels = (int *)labels_info.ptr;
   int nrows = shape[0], ncols = shape[1];
 
-  // Create coords map
-  cpu_map_type map;
-  map.reserve(nrows);
-  for (int i = 0; i < nrows; i++) {
-    std::vector<int> coord(ncols);
-    std::copy_n(p_coords + i * ncols, ncols, coord.data());
-    auto map_iter = map.find(coord);
-    if (map_iter == map.end()) {
-      map[move(coord)] = IndexLabel(i, p_labels[i]);
-    } else if (map_iter->second.label != p_labels[i]) {
-      map_iter->second.label = invalid_label;
-    }
-  }
+  auto const &results =
+      quantize_label(p_coords, p_labels, nrows, ncols, invalid_label);
+  auto const &mapping = results[0];
+  auto const &inverse_mapping = results[1];
+  auto const &colabels = results[2];
 
   // Copy the concurrent vector to std vector
-  py::array_t<int> py_mapping = py::array_t<int>(map.size());
-  py::array_t<int> py_colabels = py::array_t<int>(map.size());
+  py::array_t<int32_t> py_mapping = py::array_t<int32_t>(mapping.size());
+  py::array_t<int32_t> py_inverse_mapping =
+      py::array_t<int32_t>(inverse_mapping.size());
+  py::array_t<int32_t> py_colabel = py::array_t<int32_t>(colabels.size());
 
   py::buffer_info py_mapping_info = py_mapping.request();
-  py::buffer_info py_colabels_info = py_colabels.request();
-  int *p_py_mapping = (int *)py_mapping_info.ptr;
-  int *p_py_colabels = (int *)py_colabels_info.ptr;
+  py::buffer_info py_inverse_mapping_info = py_inverse_mapping.request();
+  py::buffer_info py_colabel_info = py_colabel.request();
 
-  int c = 0;
-  for (const auto &kv : map) {
-    p_py_mapping[c] = kv.second.index;
-    p_py_colabels[c] = kv.second.label;
-    c++;
-  }
+  int32_t *p_py_mapping = (int32_t *)py_mapping_info.ptr;
+  int32_t *p_py_inverse_mapping = (int32_t *)py_inverse_mapping_info.ptr;
+  int32_t *p_py_colabel = (int32_t *)py_colabel_info.ptr;
 
-  return {py_mapping, py_colabels};
+  std::copy_n(mapping.data(), mapping.size(), p_py_mapping);
+  std::copy_n(colabels.data(), colabels.size(), p_py_colabel);
+  std::copy_n(inverse_mapping.data(), inverse_mapping.size(),
+              p_py_inverse_mapping);
+
+  // mapping is empty when coords are all unique
+  return {py_mapping, py_inverse_mapping, py_colabel};
 }
 
 std::vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
-                                     int invalid_label) {
+                                          int invalid_label) {
   ASSERT(coords.dtype() == torch::kInt32,
          "Coordinates must be an int type tensor.");
   ASSERT(labels.dtype() == torch::kInt32, "Labels must be an int type tensor.");
@@ -201,71 +255,43 @@ std::vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
   ASSERT(coords.size(0) == labels.size(0),
          "Coords nrows must be equal to label size.");
 
-  int *p_coords = coords.template data<int>();
-  int *p_labels = labels.template data<int>();
+  int *p_coords = coords.data_ptr<int>();
+  int *p_labels = labels.data_ptr<int>();
   int nrows = coords.size(0), ncols = coords.size(1);
 
-  // Create coords map
-  cpu_map_type map;
-  map.reserve(nrows);
-  for (int i = 0; i < nrows; i++) {
-    std::vector<int> coord(ncols);
-    std::copy_n(p_coords + i * ncols, ncols, coord.data());
-    auto map_iter = map.find(coord);
-    if (map_iter == map.end()) {
-      map[move(coord)] = IndexLabel(i, p_labels[i]);
-    } else if (map_iter->second.label != p_labels[i]) {
-      map_iter->second.label = invalid_label;
-    }
-  }
+  auto const &results =
+      quantize_label(p_coords, p_labels, nrows, ncols, invalid_label);
+  auto const &mapping = results[0];
+  auto const &inverse_mapping = results[1];
+  auto const &colabels = results[2];
 
   // Copy the concurrent vector to std vector
   //
   // Long tensor for for easier indexing
-  auto th_mapping = torch::empty({(long)map.size()},
+  auto th_mapping = torch::empty({(long)mapping.size()},
                                  torch::TensorOptions().dtype(torch::kInt64));
   auto a_th_mapping = th_mapping.accessor<long int, 1>();
-  auto th_colabels = torch::empty({(long)map.size()},
+
+  auto th_inverse_mapping =
+      torch::empty({(long)inverse_mapping.size()},
+                   torch::TensorOptions().dtype(torch::kInt64));
+  auto a_th_inverse_mapping = th_inverse_mapping.accessor<long int, 1>();
+
+  auto th_colabels = torch::empty({(long)colabels.size()},
                                   torch::TensorOptions().dtype(torch::kInt64));
   auto a_th_colabels = th_colabels.accessor<long int, 1>();
 
-  int c = 0;
-  for (const auto &kv : map) {
-    a_th_mapping[c] = kv.second.index;
-    a_th_colabels[c] = kv.second.label;
-    c++;
-  }
+  // Copy the output
+  for (size_t i = 0; i < mapping.size(); ++i)
+    a_th_mapping[i] = mapping[i];
+  for (size_t i = 0; i < inverse_mapping.size(); ++i)
+    a_th_inverse_mapping[i] = inverse_mapping[i];
+  for (size_t i = 0; i < colabels.size(); ++i)
+    a_th_colabels[i] = colabels[i];
 
-  return {th_mapping, th_colabels};
+  return {th_mapping, th_inverse_mapping, th_colabels};
 }
 
-template std::vector<py::array> quantize_np<CoordsToIndexMap>(
-    py::array_t<int, py::array::c_style | py::array::forcecast> coords);
-
-template std::vector<at::Tensor> quantize_th<CoordsToIndexMap>(at::Tensor
-coords);
-
-template <typename Dtype> InOutMaps<Dtype> CopyToInOutMap(at::Tensor th_map) {
-  InOutMaps<Dtype> vec_map(1);
-  vec_map[0].resize(th_map.size(0));
-  std::copy_n(th_map.data<Dtype>(), th_map.size(0), vec_map[0].begin());
-  return vec_map;
-}
-#ifndef CPU_ONLY
-template <typename Dtype>
-pInOutMaps<Dtype> CopyToInOutMapGPU(at::Tensor th_map) {
-  pInOutMaps<Dtype> vec_map;
-
-  Dtype *d_scr;
-  CUDA_CHECK(cudaMalloc(&d_scr, th_map.size(0) * sizeof(Dtype)));
-  CUDA_CHECK(cudaMemcpy(d_scr, th_map.template data<Dtype>(),
-                        th_map.size(0) * sizeof(Dtype),
-                        cudaMemcpyHostToDevice));
-  vec_map.push_back(pVector<Dtype>(d_scr, th_map.size(0)));
-  return vec_map;
-}
-#endif
-*/
 /**
  * A collection of feature averaging methods
  * mode == 0: non-weighted average
@@ -337,12 +363,7 @@ pInOutMaps<Dtype> CopyToInOutMapGPU(at::Tensor th_map) {
         NonzeroAvgPoolingForwardKernelCPU<double, long>(
             th_in_feat.template data<double>(),
             th_out_feat.template data<double>(),
-            th_num_nonzero.template data<double>(), nchannel, vec_in_map,
-            vec_out_map, out_nrows, true);
-      } else {
-        throw std::runtime_error("Dtype not supported.");
-      }
-    }
+            th_num_nonzero.template da>
   } else if (th_in_map.dtype() == torch::kInt32) {
     if (th_in_feat.is_cuda()) {
 #ifndef CPU_ONLY

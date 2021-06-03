@@ -83,23 +83,19 @@ class TestQuantization(unittest.TestCase):
         )
         self.assertTrue((coords == coords[index[reverse_index]]).all())
 
-    def test_label(self):
+    def test_label_np(self):
         N = 16575
 
         coords = (np.random.rand(N, 3) * 100).astype(np.int32)
-        feats = np.random.rand(N, 4)
-        labels = np.floor(np.random.rand(N) * 3)
-
-        labels = labels.astype(np.int32)
+        labels = np.floor(np.random.rand(N) * 3).astype(np.int32)
 
         # Make duplicates
         coords[:3] = 0
         labels[:3] = 2
 
-        qcoords, qfeats, qlabels, mapping, inverse_mapping = sparse_quantize(
-            coords, feats, labels, return_index=True, return_inverse=True
-        )
-        self.assertTrue(len(mapping) == len(qcoords))
+        mapping, inverse_mapping, colabel = MEB.quantize_label_np(coords, labels, -1)
+        self.assertTrue(np.sum(np.abs(coords[mapping][inverse_mapping] - coords)) == 0)
+        self.assertTrue(np.sum(colabel < 0) > 3)
 
     def test_collision(self):
         coords = np.array([[0, 0], [0, 0], [0, 0], [0, 1]], dtype=np.int32)
@@ -108,16 +104,13 @@ class TestQuantization(unittest.TestCase):
         unique_coords, colabels = sparse_quantize(
             coords, labels=labels, ignore_label=255
         )
+        print(unique_coords)
+        print(colabels)
         self.assertTrue(len(unique_coords) == 2)
-        self.assertTrue(torch.IntTensor([0, 0]) in unique_coords)
-        self.assertTrue(torch.IntTensor([0, 1]) in unique_coords)
+        self.assertTrue(np.array([0, 0]) in unique_coords)
+        self.assertTrue(np.array([0, 1]) in unique_coords)
         self.assertTrue(len(colabels) == 2)
-
-        coords = np.array([[0, 0], [0, 1]], dtype=np.int32)
-        discrete_coords = sparse_quantize(coords)
-        self.assertTrue((discrete_coords == unique_coords).all())
-        discrete_coords = sparse_quantize(torch.from_numpy(coords))
-        self.assertTrue((discrete_coords == unique_coords).all())
+        self.assertTrue(255 in colabels)
 
     def test_quantization_size(self):
         coords = torch.randn((1000, 3), dtype=torch.float)

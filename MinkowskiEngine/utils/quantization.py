@@ -266,31 +266,24 @@ def sparse_quantize(
 
     # Return values accordingly
     if use_label:
-        # unique_map, colabels = quantize_label(discrete_coordinates, labels, ignore_label)
-        tensor_stride = [1 for i in range(discrete_coordinates.shape[1] - 1)]
-        discrete_coordinates = (
-            discrete_coordinates.to(device)
-            if isinstance(discrete_coordinates, torch.Tensor)
-            else torch.from_numpy(discrete_coordinates).to(device)
-        )
-        _, (unique_map, inverse_map) = manager.insert_and_map(
-            discrete_coordinates, tensor_stride, ""
-        )
-
-        # assert (
-        #     device == "cpu"
-        # ), "CUDA accelerated quantization with labels not supported currently"
-
-        if return_maps_only:
-            if return_inverse:
-                return unique_map, inverse_map
-            else:
-                return unique_map
-
+        if isinstance(coordinates, np.ndarray):
+            unique_map, inverse_map, colabels = MEB.quantize_label_np(
+                discrete_coordinates, labels, ignore_label
+            )
+        else:
+            assert (
+                not discrete_coordinates.is_cuda()
+            ), "Quantization with label requires cpu tensors."
+            assert not labels.is_cuda(), "Quantization with label requires cpu tensors."
+            unique_map, inverse_map, colabels = MEB.quantize_label_th(
+                discrete_coordinates, labels, ignore_label
+            )
         return_args = [discrete_coordinates[unique_map]]
         if use_feat:
             return_args.append(features[unique_map])
-        return_args.append(labels[unique_map])
+        # Labels
+        return_args.append(colabels)
+        # Additional return args
         if return_index:
             return_args.append(unique_map)
         if return_inverse:
