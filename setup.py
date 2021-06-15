@@ -285,10 +285,10 @@ else:
 
 if debug:
     CC_FLAGS += ["-g", "-DDEBUG"]
-    NVCC_FLAGS += ["-g", "-DDEBUG"]
+    NVCC_FLAGS += ["-g", "-DDEBUG", "-Xcompiler=-fno-gnu-unique"]
 else:
     CC_FLAGS += ["-O3"]
-    NVCC_FLAGS += ["-O3"]
+    NVCC_FLAGS += ["-O3", "-Xcompiler=-fno-gnu-unique"]
 
 if "MAX_JOBS" not in os.environ and os.cpu_count() > MAX_COMPILATION_THREADS:
     # Clip the num compilation thread to 8
