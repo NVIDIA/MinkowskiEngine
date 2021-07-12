@@ -47,7 +47,7 @@ def get_coords_map(x, y):
 
         .. code-block:: python
 
-           sp_tensor = ME.SparseTensor(features, coords=coordinates)
+           sp_tensor = ME.SparseTensor(features, coordinates=coordinates)
            out_sp_tensor = stride_2_conv(sp_tensor)
 
            ins, outs = get_coords_map(sp_tensor, out_sp_tensor)

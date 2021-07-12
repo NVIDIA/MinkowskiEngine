@@ -244,7 +244,7 @@ class ExampleNetwork(ME.MinkowskiNetwork):
 
     # a data loader must return a tuple of coords, features, and labels.
     coords, feat, label = data_loader()
-    input = ME.SparseTensor(feat, coords=coords)
+    input = ME.SparseTensor(feat, coordinates=coords)
     # Forward
     output = net(input)
 
