@@ -634,18 +634,17 @@ def visualize(net, dataloader, device, config):
         in_feat[torch.arange(config.batch_size), data_dict["labels"]] = 1
 
         sin = ME.SparseTensor(
-            feats=in_feat,
-            coords=init_coords,
-            allow_duplicate_coords=True,  # for classification, it doesn't matter
+            features=in_feat,
+            coordinates=init_coords,
             tensor_stride=config.resolution,
-        ).to(device)
+            device=device,
+        )
 
         # Generate target sparse tensor
-        cm = sin.coords_man
-        target_key = cm.create_coords_key(
-            ME.utils.batched_coordinates(data_dict["xyzs"]),
-            force_creation=True,
-            allow_duplicate_coords=True,
+        cm = sin.coordinate_manager
+        target_key, _ = cm.insert_and_map(
+            ME.utils.batched_coordinates(data_dict["xyzs"]).to(device),
+            string_id="target",
         )
 
         # Generate from a dense tensor
@@ -659,7 +658,7 @@ def visualize(net, dataloader, device, config):
 
         batch_coords, batch_feats = sout.decomposed_coordinates_and_features
         for b, (coords, feats) in enumerate(zip(batch_coords, batch_feats)):
-            pcd = PointCloud(coords)
+            pcd = PointCloud(coords.cpu())
             pcd.estimate_normals()
             pcd.translate([0.6 * config.resolution, 0, 0])
             pcd.rotate(M)

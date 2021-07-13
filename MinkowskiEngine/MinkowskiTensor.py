@@ -201,7 +201,7 @@ class Tensor:
        Example::
 
            >>> coords, feats = ME.utils.sparse_collate([coords_batch0, coords_batch1], [feats_batch0, feats_batch1])
-           >>> A = ME.SparseTensor(feats=feats, coords=coords)
+           >>> A = ME.SparseTensor(features=feats, coordinates=coords)
            >>> coords_batch0 = A.coordinates_at(batch_index=0)
            >>> feats_batch1 = A.features_at(batch_index=1)
            >>> list_of_coords, list_of_featurs = A.decomposed_coordinates_and_features

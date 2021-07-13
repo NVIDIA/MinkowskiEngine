@@ -25,7 +25,7 @@ import torch
 
 import MinkowskiEngine as ME
 
-from tests.common import data_loader
+from tests.python.common import data_loader
 
 
 def get_random_coords(dimension=2, tensor_stride=2):
@@ -50,7 +50,7 @@ def conv():
     coords, feats, labels = data_loader(in_channels, batch_size=1)
 
     # Convolution
-    input = ME.SparseTensor(feats=feats, coords=coords)
+    input = ME.SparseTensor(features=feats, coordinates=coords)
     conv = ME.MinkowskiConvolution(
         in_channels,
         out_channels,
@@ -71,8 +71,8 @@ def conv():
     strided_coords, tensor_stride = get_random_coords()
 
     input = ME.SparseTensor(
-        feats=torch.rand(len(strided_coords), in_channels),  #
-        coords=strided_coords,
+        features=torch.rand(len(strided_coords), in_channels),  #
+        coordinates=strided_coords,
         tensor_stride=tensor_stride)
     conv_tr = ME.MinkowskiConvolutionTranspose(
         in_channels,
@@ -98,10 +98,10 @@ def conv_on_coords():
     strided_coords4, tensor_stride4 = get_random_coords(tensor_stride=4)
     strided_coords2, tensor_stride2 = get_random_coords(tensor_stride=2)
     input = ME.SparseTensor(
-        feats=torch.rand(len(strided_coords4), in_channels),  #
-        coords=strided_coords4,
+        features=torch.rand(len(strided_coords4), in_channels),  #
+        coordinates=strided_coords4,
         tensor_stride=tensor_stride4)
-    cm = input.coords_man
+    cm = input.coordinate_manager
 
     # Convolution transpose and generate new coordinates
     conv_tr = ME.MinkowskiConvolutionTranspose(
@@ -127,7 +127,7 @@ def conv_on_coords():
     # output2 = pool_tr(input, coords)
 
     # convolution on the specified coords with tensor stride == 2
-    coords_key = cm.create_coords_key(strided_coords2, tensor_stride=2)
+    coords_key, _ = cm.insert_and_map(strided_coords2, tensor_stride=2)
     output3 = conv_tr(input, coords_key)
     # output3 = pool_tr(input, coords_key)
 

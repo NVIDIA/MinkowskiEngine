@@ -53,7 +53,7 @@ def sparse_tensor_initialization():
     # collate sparse tensor data to augment batch indices
     # Note that it is wrapped inside a list!!
     coords, feats = ME.utils.sparse_collate(coords=[coords], feats=[feats])
-    sparse_tensor = ME.SparseTensor(coords=coords, feats=feats)
+    sparse_tensor = ME.SparseTensor(coordinates=coords, features=feats)
 
 
 def sparse_tensor_arithmetics():
@@ -64,8 +64,8 @@ def sparse_tensor_arithmetics():
     coords1, feats1 = ME.utils.sparse_collate(coords=[coords1], feats=[feats1])
 
     # sparse tensors
-    A = ME.SparseTensor(coords=coords0, feats=feats0)
-    B = ME.SparseTensor(coords=coords1, feats=feats1)
+    A = ME.SparseTensor(coordinates=coords0, features=feats0)
+    B = ME.SparseTensor(coordinates=coords1, features=feats1)
 
     # The following fails
     try:
@@ -74,10 +74,9 @@ def sparse_tensor_arithmetics():
         pass
 
     B = ME.SparseTensor(
-        coords=coords1,
-        feats=feats1,
-        coords_manager=A.coords_man,  # must share the same coordinate manager
-        force_creation=True  # must force creation since tensor stride [1] exists
+        coordinates=coords1,
+        features=feats1,
+        coordinate_manager=A.coordinate_manager  # must share the same coordinate manager
     )
 
     C = A + B
@@ -89,9 +88,9 @@ def sparse_tensor_arithmetics():
     # Note that it requires the same coords_key (no need to feed coords)
     D = ME.SparseTensor(
         # coords=coords,  not required
-        feats=feats0,
-        coords_manager=A.coords_man,  # must share the same coordinate manager
-        coords_key=A.coords_key  # For inplace, must share the same coords key
+        features=feats0,
+        coordinate_manager=A.coordinate_manager,  # must share the same coordinate manager
+        coordinate_map_key=A.coordinate_map_key  # For inplace, must share the same coords key
     )
 
     A += D
@@ -104,9 +103,9 @@ def sparse_tensor_arithmetics():
 
 
 def operation_mode():
-    # Set to share the coords_man by default
+    # Set to share the coordinate_manager by default
     ME.set_sparse_tensor_operation_mode(
-        ME.SparseTensorOperationMode.SHARE_COORDS_MANAGER)
+        ME.SparseTensorOperationMode.SHARE_COORDINATE_MANAGER)
     print(ME.sparse_tensor_operation_mode())
 
     coords0, feats0 = to_sparse_coo(data_batch_0)
@@ -117,17 +116,17 @@ def operation_mode():
 
     for _ in range(2):
         # sparse tensors
-        A = ME.SparseTensor(coords=coords0, feats=feats0)
+        A = ME.SparseTensor(coordinates=coords0, features=feats0)
         B = ME.SparseTensor(
-            coords=coords1,
-            feats=feats1,
-            # coords_manager=A.coords_man,  No need to feed the coords_man
-            force_creation=True)
+            coordinates=coords1,
+            features=feats1,
+            # coords_manager=A.coordinate_manager,  No need to feed the coordinate_manager
+            )
 
         C = A + B
 
         # When done using it for forward and backward, you must cleanup the coords man
-        ME.clear_global_coords_man()
+        ME.clear_global_coordinate_manager()
 
 
 def decomposition():
@@ -137,7 +136,7 @@ def decomposition():
         coords=[coords0, coords1], feats=[feats0, feats1])
 
     # sparse tensors
-    A = ME.SparseTensor(coords=coords, feats=feats)
+    A = ME.SparseTensor(coordinates=coords, features=feats)
     conv = ME.MinkowskiConvolution(
         in_channels=1, out_channels=2, kernel_size=3, stride=2, dimension=2)
     B = conv(A)
