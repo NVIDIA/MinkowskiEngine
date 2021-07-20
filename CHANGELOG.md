@@ -6,6 +6,7 @@
 - Example updates for `has_bias` (PR #356)
 - Add thrust exception handling (issue #357)
 - `min_coordinate` to device in `dense()`
+- `cpu_kernel_region` `to_gpu` now uses `shared_ptr` allocator for gpu memory
 
 ## [0.5.4]
 
