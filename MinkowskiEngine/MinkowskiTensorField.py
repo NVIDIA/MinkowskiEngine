@@ -468,7 +468,7 @@ class TensorField(Tensor):
         else:  # when it is a torch.Tensor
             return self.__class__(
                 binary_fn(self._F, other),
-                coordinate_field_map_key=self.coordinate_map_key,
+                coordinate_field_map_key=self.coordinate_field_map_key,
                 coordinate_manager=self._manager,
             )
 
