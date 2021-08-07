@@ -12,6 +12,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 ## News
 
+- 2021-08-06 All installation errors with pytorch 1.8 and 1.9 have been resolved.
 - 2021-04-08 Due to recent errors in [pytorch 1.8 + CUDA 11](https://github.com/NVIDIA/MinkowskiEngine/issues/330), it is recommended to use [anaconda for installation](#anaconda).
 - 2020-12-24 v0.5 is now available! The new version provides CUDA accelerations for all coordinate management functions.
 
@@ -58,7 +59,7 @@ We visualized a sparse tensor network operation on a sparse tensor, convolution,
 
 - Ubuntu >= 14.04
 - CUDA >= 10.1.243 and **the same CUDA version used for pytorch** (e.g. if you use conda cudatoolkit=11.1, use CUDA=11.1 for MinkowskiEngine compilation)
-- pytorch >= 1.7 (pytorch 1.8.1 + CUDA 11.X is [unstable](https://github.com/NVIDIA/MinkowskiEngine/issues/330). To specify CUDA version, please use conda for installation. `conda install -y -c conda-forge -c pytorch pytorch=1.8.1 cudatoolkit=10.2`)
+- pytorch >= 1.7 To specify CUDA version, please use conda for installation. You must match the CUDA version pytorch uses and CUDA version used for Minkowski Engine installation. `conda install -y -c nvidia -c pytorch pytorch=1.8.1 cudatoolkit=10.2`)
 - python >= 3.6
 - ninja (for installation)
 - GCC >= 7.4.0
@@ -104,7 +105,7 @@ pip install -U git+https://github.com/NVIDIA/MinkowskiEngine -v --no-deps \
 
 ### Anaconda
 
-Due to [errors in pytorch](https://github.com/NVIDIA/MinkowskiEngine/issues/330), pytorch 1.8.1 can only work with CUDA 10.2. To use CUDA 11.1, use pytorch 1.7.1 instead.
+MinkowskiEngine supports both CUDA 10.2 and cuda 11.1, which work for most of latest pytorch versions.
 #### CUDA 10.2
 
 We recommend `python>=3.6` for installation.
@@ -117,7 +118,7 @@ conda create -n py3-mink python=3.8
 conda activate py3-mink
 
 conda install openblas-devel -c anaconda
-conda install pytorch=1.8.1 torchvision cudatoolkit=10.2 -c pytorch -c conda-forge
+conda install pytorch=1.9.0 torchvision cudatoolkit=10.2 -c pytorch -c nvidia
 
 # Install MinkowskiEngine
 export CXX=g++-7
@@ -142,7 +143,7 @@ conda create -n py3-mink python=3.8
 conda activate py3-mink
 
 conda install openblas-devel -c anaconda
-conda install pytorch=1.7.1 torchvision cudatoolkit=11.0 -c pytorch -c conda-forge
+conda install pytorch=1.9.0 torchvision cudatoolkit=11.1 -c pytorch -c nvidia
 
 # Install MinkowskiEngine
 
