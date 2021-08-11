@@ -12,6 +12,7 @@ The Minkowski Engine is an auto-differentiation library for sparse tensors. It s
 
 ## News
 
+- 2021-08-11 Docker installation instruction added
 - 2021-08-06 All installation errors with pytorch 1.8 and 1.9 have been resolved.
 - 2021-04-08 Due to recent errors in [pytorch 1.8 + CUDA 11](https://github.com/NVIDIA/MinkowskiEngine/issues/330), it is recommended to use [anaconda for installation](#anaconda).
 - 2020-12-24 v0.5 is now available! The new version provides CUDA accelerations for all coordinate management functions.
@@ -73,6 +74,8 @@ If you cannot find a relevant problem, please report the issue on [the github is
 - [PIP](https://github.com/NVIDIA/MinkowskiEngine#pip) installation
 - [Conda](https://github.com/NVIDIA/MinkowskiEngine#anaconda) installation
 - [Python](https://github.com/NVIDIA/MinkowskiEngine#system-python) installation
+- [Docker](https://github.com/NVIDIA/MinkowskiEngine#docker) installation
+
 
 ### Pip
 
@@ -180,6 +183,19 @@ python setup.py install
 # export CXX=c++; export CUDA_HOME=/usr/local/cuda-11.1; python setup.py install --blas=openblas --force_cuda
 ```
 
+### Docker
+
+```
+git clone https://github.com/NVIDIA/MinkowskiEngine
+cd MinkowskiEngine
+docker build -t MinkowskiEngine docker
+```
+
+Once the docker is built, check it loads MinkowskiEngine correctly.
+
+```
+docker run MinkowskiEngine python3 -c "import MinkowskiEngine; print(MinkowskiEngine.__version__)"
+```
 
 ## CPU only build and BLAS configuration (MKL)
 
