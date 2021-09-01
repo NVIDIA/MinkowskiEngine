@@ -10,6 +10,7 @@
 - Docker installation instruction added
 - Fix for GPU `coo_spmm` when nnz == 0
     - Fix MinkowskiInterpolationGPU for invalid samples (issue #383)
+- gradcheck wrap func 1.9
 
 ## [0.5.4]
 
