@@ -94,6 +94,16 @@ class TestDense(unittest.TestCase):
 
         print(feats.grad)
 
+    def test_empty(self):
+        x = torch.zeros(4, 1, 34, 34)
+        to_dense = ME.MinkowskiToDenseTensor(x.shape)
+
+        # Convert to sparse data
+        sparse_data = ME.to_sparse(x)
+        dense_data = to_dense(sparse_data)
+
+        self.assertEqual(dense_data.shape, x.shape)
+
 
 class TestDenseToSparse(unittest.TestCase):
     def test(self):
