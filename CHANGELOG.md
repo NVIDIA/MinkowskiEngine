@@ -8,6 +8,8 @@
 - `min_coordinate` to device in `dense()`
 - `cpu_kernel_region` `to_gpu` now uses `shared_ptr` allocator for gpu memory
 - Docker installation instruction added
+- Fix for GPU `coo_spmm` when nnz == 0
+    - Fix MinkowskiInterpolationGPU for invalid samples (issue #383)
 
 ## [0.5.4]
 

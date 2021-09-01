@@ -129,6 +129,31 @@ class TestInterpolation(unittest.TestCase):
             output = interp(input, tfield)
             output.sum().backward()
 
+    def test_zero(self):
+        # Issue #383 https://github.com/NVIDIA/MinkowskiEngine/issues/383
+        #
+        # create point and features, all with batch 0
+        pc = torch.randint(-10, 10, size=(32, 4), dtype=torch.float32, device='cuda')
+        pc[:, 0] = 0
+        feat = torch.randn(32, 3, dtype=torch.float32, device='cuda', requires_grad=True)
+    
+        # feature to interpolate
+        x = SparseTensor(feat, pc, device='cuda')
+        interp = MinkowskiInterpolation()
+ 
+        # samples with original coordinates, OK for now
+        samples = pc
+        y = interp(x, samples)
+        print(y.shape, y.stride())
+        torch.sum(y).backward()
+
+        # samples with all zeros, shape is inconsistent and backward gives error
+        samples = torch.zeros_like(pc)
+        samples[:, 0] = 0
+        y = interp(x, samples)
+        print(y.shape, y.stride())
+        torch.sum(y).backward()
+
     def test_strided_tensor(self):
         in_channels, D = 2, 2
         tfield = torch.Tensor(

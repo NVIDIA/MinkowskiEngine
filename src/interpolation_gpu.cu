@@ -74,8 +74,10 @@ std::vector<at::Tensor> InterpolationForwardGPU(
   auto const &out_maps = map_weight[1];
   auto const &weights = map_weight[2];
 
+  LOG_DEBUG("InterpolationForwardKernelGPU");
   auto out_feat = coo_spmm<int>(out_maps, in_maps, weights, tfield.size(0),
                                 in_feat.size(0), in_feat, 1, false);
+  LOG_DEBUG("out_feat shape: (", out_feat.size(0), ",", out_feat.size(1), ")");
   // to out_feats
   map_weight.insert(map_weight.begin(), out_feat);
   return map_weight;
