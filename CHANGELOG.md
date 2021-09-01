@@ -11,7 +11,9 @@
 - Fix for GPU `coo_spmm` when nnz == 0
     - Fix MinkowskiInterpolationGPU for invalid samples (issue #383)
 - gradcheck wrap func 1.9
-- Handle `dense` for an empty tensor (issue #384)
+- Handles `dense` for an empty tensor (issue #384)
+- Handles an emtpy tensor for convolution (issue #384)
+- When `coordinates` is provided in `MinkowskiToSparseTensor`, `remove_zeros` will be ignored (issue #387)
 
 ## [0.5.4]
 

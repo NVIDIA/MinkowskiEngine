@@ -356,6 +356,9 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
     :attr:`remove_zeros` (bool): if True, removes zero valued coordinates. If
     False, use all coordinates to populate a sparse tensor. True by default.
 
+    :attr:`coordinates` (torch.Tensor): if set, use the provided coordinates
+    only for sparse tensor generation. Will ignore `remove_zeros`.
+    
     If the shape of the tensor do not change, use `dense_coordinates` to cache the coordinates.
     Please refer to tests/python/dense.py for usage.
 
@@ -371,7 +374,7 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
        >>> network = nn.Sequential(
        >>>     # Add layers that can be applied on a regular pytorch tensor
        >>>     nn.ReLU(),
-       >>>     MinkowskiToSparseTensor(remove_zeros=False, coordinates=coordinates),
+       >>>     MinkowskiToSparseTensor(coordinates=coordinates),
        >>>     MinkowskiConvolution(4, 5, kernel_size=3, dimension=4),
        >>>     MinkowskiBatchNorm(5),
        >>>     MinkowskiReLU(),
@@ -387,9 +390,6 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
 
     def __init__(self, remove_zeros=True, coordinates: torch.Tensor = None):
         MinkowskiModuleBase.__init__(self)
-        assert (
-            remove_zeros and coordinates is None
-        ), "The coordinates argument cannot be used with remove_zeros=True. If you want to use the coordinates argument, provide remove_zeros=False."
         self.remove_zeros = remove_zeros
         self.coordinates = coordinates
 
@@ -398,7 +398,7 @@ class MinkowskiToSparseTensor(MinkowskiModuleBase):
             return input.sparse()
         elif isinstance(input, torch.Tensor):
             # dense tensor to sparse tensor conversion
-            if self.remove_zeros:
+            if self.remove_zeros and self.coordinates is not None:
                 return to_sparse(input)
             else:
                 return to_sparse_all(input, self.coordinates)
