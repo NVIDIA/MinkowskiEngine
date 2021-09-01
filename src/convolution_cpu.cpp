@@ -121,13 +121,15 @@ ConvolutionForwardCPU(at::Tensor const &in_feat,                         //
       torch::zeros({out_nrows, kernel.size(2)}, in_feat.options());
   LOG_DEBUG("Allocated", out_nrows, "x", kernel.size(2), "out_features.");
 
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "convolution_forward_cpu", [&] {
-        ConvolutionForwardKernelCPU<scalar_t, coordinate_type>(
-            in_feat.template data_ptr<scalar_t>(), in_feat.size(1),
-            out_feat.template data_ptr<scalar_t>(), out_feat.size(1),
-            kernel.template data_ptr<scalar_t>(), in_out.first, in_out.second);
-      });
+  if (out_nrows > 0)
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "convolution_forward_cpu", [&] {
+          ConvolutionForwardKernelCPU<scalar_t, coordinate_type>(
+              in_feat.template data_ptr<scalar_t>(), in_feat.size(1),
+              out_feat.template data_ptr<scalar_t>(), out_feat.size(1),
+              kernel.template data_ptr<scalar_t>(), in_out.first,
+              in_out.second);
+        });
 
   return out_feat;
 }
@@ -185,16 +187,17 @@ ConvolutionBackwardCPU(at::Tensor const &in_feat,                         //
   at::Tensor grad_kernel = torch::zeros(
       {kernel.size(0), kernel.size(1), kernel.size(2)}, kernel.options());
 
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "convolution_backward_cpu", [&] {
-        ConvolutionBackwardKernelCPU<scalar_t, coordinate_type>(
-            in_feat.template data_ptr<scalar_t>(),
-            grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(1),
-            grad_out_feat.template data_ptr<scalar_t>(), grad_out_feat.size(1),
-            kernel.template data_ptr<scalar_t>(),
-            grad_kernel.template data_ptr<scalar_t>(), in_out.first,
-            in_out.second);
-      });
+  if (in_feat.size(0) > 0)
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "convolution_backward_cpu", [&] {
+          ConvolutionBackwardKernelCPU<scalar_t, coordinate_type>(
+              in_feat.template data_ptr<scalar_t>(),
+              grad_in_feat.template data_ptr<scalar_t>(), in_feat.size(1),
+              grad_out_feat.template data_ptr<scalar_t>(),
+              grad_out_feat.size(1), kernel.template data_ptr<scalar_t>(),
+              grad_kernel.template data_ptr<scalar_t>(), in_out.first,
+              in_out.second);
+        });
 
   return std::make_pair(grad_in_feat, grad_kernel);
 }

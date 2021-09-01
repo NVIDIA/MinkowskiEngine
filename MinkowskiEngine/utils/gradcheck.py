@@ -44,7 +44,7 @@ def gradcheck(
     check_grad_dtypes: bool = False,
 ) -> bool:
     return _gradcheck(
-        lambda x: func.apply(x),
+        lambda *x: func.apply(*x),
         inputs,
         eps=eps,
         atol=atol,

@@ -128,30 +128,32 @@ at::Tensor ConvolutionForwardGPU(
       torch::zeros({out_nrows, kernel.size(2)}, in_feat.options());
   LOG_DEBUG("Allocated", out_nrows, "x", kernel.size(2), "out_features.");
 
-  cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
-  cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
-  cublasSetStream(handle, stream);
-
   LOG_DEBUG("Convolution on", out_nrows, "x", kernel.size(2));
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "convolution_forward_gpu", [&] {
-        LOG_DEBUG("ConvolutionForwardKernelGPU with",
-                  std::is_same<float, scalar_t>::value ? "float" : "double");
-        TemplatedAllocator<char> byte_allocator;
-        ConvolutionForwardKernelGPU<scalar_t, default_types::index_type,
-                                    TemplatedAllocator<char>>(
-            in_feat.template data_ptr<scalar_t>(),  //
-            in_feat.size(1),                        //
-            out_feat.template data_ptr<scalar_t>(), //
-            out_feat.size(1),                       //
-            kernel.template data_ptr<scalar_t>(),   //
-            in_out,                                 //
-            in_feat.size(0),                        //
-            out_nrows,                              //
-            byte_allocator,                         //
-            p_map_manager->algorithm(),             //
-            convolution_mode, handle, stream);
-      });
+  if (out_nrows > 0) {
+    cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
+    cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
+    cublasSetStream(handle, stream);
+
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "convolution_forward_gpu", [&] {
+          LOG_DEBUG("ConvolutionForwardKernelGPU with",
+                    std::is_same<float, scalar_t>::value ? "float" : "double");
+          TemplatedAllocator<char> byte_allocator;
+          ConvolutionForwardKernelGPU<scalar_t, default_types::index_type,
+                                      TemplatedAllocator<char>>(
+              in_feat.template data_ptr<scalar_t>(),  //
+              in_feat.size(1),                        //
+              out_feat.template data_ptr<scalar_t>(), //
+              out_feat.size(1),                       //
+              kernel.template data_ptr<scalar_t>(),   //
+              in_out,                                 //
+              in_feat.size(0),                        //
+              out_nrows,                              //
+              byte_allocator,                         //
+              p_map_manager->algorithm(),             //
+              convolution_mode, handle, stream);
+        });
+  }
 
   return out_feat;
 }
@@ -211,30 +213,32 @@ std::pair<at::Tensor, at::Tensor> ConvolutionBackwardGPU(
   at::Tensor grad_kernel = torch::zeros(
       {kernel.size(0), kernel.size(1), kernel.size(2)}, kernel.options());
 
-  cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
-  cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
-  cublasSetStream(handle, stream);
+  if (in_feat.size(0) > 0) {
+    cublasHandle_t handle = at::cuda::getCurrentCUDABlasHandle();
+    cudaStream_t stream = at::cuda::getCurrentCUDAStream().stream();
+    cublasSetStream(handle, stream);
 
-  AT_DISPATCH_FLOATING_TYPES(
-      in_feat.scalar_type(), "convolution_backward_gpu", [&] {
-        TemplatedAllocator<char> byte_allocator;
-        ConvolutionBackwardKernelGPU<scalar_t, default_types::index_type,
-                                     TemplatedAllocator<char>>(
-            in_feat.template data_ptr<scalar_t>(),       //
-            grad_in_feat.template data_ptr<scalar_t>(),  //
-            in_feat.size(1),                             //
-            grad_out_feat.template data_ptr<scalar_t>(), //
-            grad_out_feat.size(1),                       //
-            kernel.template data_ptr<scalar_t>(),        //
-            grad_kernel.template data_ptr<scalar_t>(),   //
-            in_out,                                      //
-            in_feat.size(0),                             //
-            grad_out_feat.size(0),                       //
-            byte_allocator,                              //
-            p_map_manager->algorithm(),                  //
-            convolution_mode,                            //
-            handle, stream);
-      });
+    AT_DISPATCH_FLOATING_TYPES(
+        in_feat.scalar_type(), "convolution_backward_gpu", [&] {
+          TemplatedAllocator<char> byte_allocator;
+          ConvolutionBackwardKernelGPU<scalar_t, default_types::index_type,
+                                       TemplatedAllocator<char>>(
+              in_feat.template data_ptr<scalar_t>(),       //
+              grad_in_feat.template data_ptr<scalar_t>(),  //
+              in_feat.size(1),                             //
+              grad_out_feat.template data_ptr<scalar_t>(), //
+              grad_out_feat.size(1),                       //
+              kernel.template data_ptr<scalar_t>(),        //
+              grad_kernel.template data_ptr<scalar_t>(),   //
+              in_out,                                      //
+              in_feat.size(0),                             //
+              grad_out_feat.size(0),                       //
+              byte_allocator,                              //
+              p_map_manager->algorithm(),                  //
+              convolution_mode,                            //
+              handle, stream);
+        });
+  }
 
   return std::make_pair(grad_in_feat, grad_kernel);
 }
