@@ -435,10 +435,10 @@ class SparseTensor(Tensor):
 
         # return the contracted tensor
         if contract_coords:
-            coords = coords // tensor_stride
+            coords = torch.div(coords, tensor_stride, rounding_mode='trunc')
             if max_coords is not None:
-                max_coords = max_coords // tensor_stride
-            min_coords = min_coords // tensor_stride
+                max_coords = torch.div(max_coords, tensor_stride, rounding_mode='trunc')
+            min_coords = torch.div(min_coords, tensor_stride, rounding_mode='trunc')
 
         new_coords = torch.cat((batch_indices, coords), dim=1).long()
 
@@ -534,7 +534,7 @@ class SparseTensor(Tensor):
 
         # return the contracted tensor
         if contract_stride:
-            coords = coords // tensor_stride
+            coords = torch.div(coords, tensor_stride, rounding_mode='trunc')
 
         nchannels = self.F.size(1)
         if shape is None:
