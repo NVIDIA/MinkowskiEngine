@@ -14,6 +14,7 @@
 - Handles `dense` for an empty tensor (issue #384)
 - Handles an emtpy tensor for convolution (issue #384)
 - When `coordinates` is provided in `MinkowskiToSparseTensor`, `remove_zeros` will be ignored (issue #387)
+- Pybind equality error from the package (issue #414)
 
 ## [0.5.4]
 

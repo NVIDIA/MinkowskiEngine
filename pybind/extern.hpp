@@ -757,7 +757,11 @@ void initialize_non_templated_classes(py::module &m) {
                           minkowski::coordinate_map_key_type const &)) &
                           minkowski::CoordinateMapKey::set_key)
       .def("get_tensor_stride", &minkowski::CoordinateMapKey::get_tensor_stride)
-      .def(py::self == py::self);
+      .def("__eq__", [](const minkowski::CoordinateMapKey &self, const minkowski::CoordinateMapKey &other)
+                     {
+                       return self == other;
+                     });
+      //.def(py::self == py::self);
 }
 
 template <typename manager_type>
