@@ -147,6 +147,8 @@ libraries = []
 CC_FLAGS = []
 NVCC_FLAGS = []
 
+TORCH_VERSION = [int(v) for v in torch.__version__.split('.')]
+
 if CPU_ONLY:
     print("--------------------------------")
     print("| WARNING: CPU_ONLY build set  |")

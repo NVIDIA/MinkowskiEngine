@@ -282,6 +282,14 @@ page](https://github.com/NVIDIA/MinkowskiEngine/issues).
 
 ## Known Issues
 
+### Specifying CUDA architecture list
+
+In some cases, you need to explicitly specify which compute capability your GPU uses. The default list might not contain your architecture.
+
+```bash
+export TORCH_CUDA_ARCH_LIST="5.2 6.0 6.1 7.0 7.5 8.0 8.6+PTX"; python setup.py install --force_cuda
+```
+
 ### Unhandled Out-Of-Memory thrust::system exception
 
 There is [a known issue](https://github.com/NVIDIA/thrust/issues/1448) in thrust with CUDA 10 that leads to an unhandled thrust exception. Please refer to the [issue](https://github.com/NVIDIA/MinkowskiEngine/issues/357) for detail.
