@@ -179,7 +179,7 @@ FAST_MATH, argv = _argparse("--fast_math", argv)
 if FAST_MATH:
     NVCC_FLAGS.append("--use_fast_math")
 
-BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
+BLAS_LIST = ["flexiblas", "openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise
     assert BLAS in BLAS_LIST, f"Blas option {BLAS} not in valid options {BLAS_LIST}"
     if BLAS == "mkl":
