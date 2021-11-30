@@ -121,7 +121,7 @@ def sparse_collate(coords, feats, labels=None, dtype=torch.int32, device=None):
     assert len(D) == 1, f"Dimension of the array mismatch. All dimensions: {D}"
     D = D[0]
     if device is None:
-        if isinstance(coords, torch.Tensor):
+        if isinstance(coords[0], torch.Tensor):
             device = coords[0].device
         else:
             device = "cpu"
