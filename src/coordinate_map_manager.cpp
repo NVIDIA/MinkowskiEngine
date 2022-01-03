@@ -1265,7 +1265,8 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
   }
 
   // Create a merged map with the smallest tensor stride
-  coordinate_map_key_type merged_map_key(merged_map_tensor_stride, "merge");
+  coordinate_map_key_type merged_map_key =
+      get_random_string_id(merged_map_tensor_stride, "merge");
   map_type const &map = m_coordinate_maps.find(map_keys[0])->second;
   map_type merged_map = map.merge(maps);
   insert(merged_map_key, merged_map);
