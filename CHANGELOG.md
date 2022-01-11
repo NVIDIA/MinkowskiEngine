@@ -16,6 +16,7 @@
 - When `coordinates` is provided in `MinkowskiToSparseTensor`, `remove_zeros` will be ignored (issue #387)
 - Pybind equality error from the package (issue #414)
 - Fix undefined coordinate merge for multiple coordinate unions
+- Add cross-shaped kernel support (issue #436)
 
 ## [0.5.4]
 
