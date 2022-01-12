@@ -161,7 +161,8 @@ std::vector<std::vector<int>> quantize_label(int const *const p_coords,
                                                   >;
   using value_type = map_type::value_type;
 
-  auto map = map_type{nrows, hasher{ncols}, key_equal{ncols}};
+  auto map = map_type{(size_t)nrows, hasher{(uint32_t)ncols},
+                      key_equal{(size_t)ncols}};
 
   LOG_DEBUG("Map nrows:", nrows, "ncols:", ncols);
   // insert_row

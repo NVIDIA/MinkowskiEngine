@@ -84,7 +84,7 @@ field_map_kernel(uint32_t const num_tfield,      //
     uint32_t curr_index_begin;
 
     for (auto i = stride * n;
-         i < std::min((n + 1) * stride, uint64_t(num_tfield)); ++i) {
+         i < std::min<uint64_t>((n + 1) * stride, uint64_t(num_tfield)); ++i) {
 
       // batch index
       curr_vec[0] = std::lroundf(p_tfield[i * coordinate_size]);
@@ -181,7 +181,7 @@ std::vector<at::Tensor> interpolation_map_weight_kernel(
     uint32_t curr_index_begin;
 
     for (auto i = stride * n;
-         i < std::min((n + 1) * stride, uint64_t(num_tfield)); ++i) {
+         i < std::min<uint64_t>((n + 1) * stride, uint64_t(num_tfield)); ++i) {
 
       // batch index
       curr_vec[0] = std::lroundf(p_tfield[i * coordinate_size]);
@@ -1006,7 +1006,7 @@ public:
 #pragma omp parallel for
       for (uint32_t n = 0; n < N; n++) {
         for (auto i = stride * n;
-             i < std::min((n + 1) * stride, uint64_t(size())); ++i) {
+             i < std::min<uint64_t>((n + 1) * stride, uint64_t(size())); ++i) {
 
           // batch index
           coordinate_int_type *p_curr_dst =
@@ -1021,7 +1021,7 @@ public:
 #pragma omp parallel for
       for (uint32_t n = 0; n < N; n++) {
         for (auto i = stride * n;
-             i < std::min((n + 1) * stride, uint64_t(size())); ++i) {
+             i < std::min<uint64_t>((n + 1) * stride, uint64_t(size())); ++i) {
 
           // batch index
           coordinate_int_type *p_curr_dst =
