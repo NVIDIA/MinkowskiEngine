@@ -156,7 +156,7 @@ template void NonzeroAvgPoolingForwardKernelCPU<float, int>(
     cpu_out_maps const &out_maps, //
     int const out_nrows, bool const use_avg);
 
-template void NonzeroAvgPoolingForwardKernelCPU<float, long>(
+template void NonzeroAvgPoolingForwardKernelCPU<float, int64_t>(
     float const *p_in_feat, float *p_out_feat, float *p_num_nonzero,
     int const nchannel,
     cpu_in_maps const &in_maps,   //
@@ -169,7 +169,7 @@ template void NonzeroAvgPoolingForwardKernelCPU<double, int>(
     cpu_out_maps const &out_maps, //
     int const out_nrows, bool const use_avg);
 
-template void NonzeroAvgPoolingForwardKernelCPU<double, long>(
+template void NonzeroAvgPoolingForwardKernelCPU<double, int64_t>(
     double const *p_in_feat, double *p_out_feat, double *p_num_nonzero,
     int const nchannel,
     cpu_in_maps const &in_maps,   //

@@ -1343,7 +1343,8 @@ CoordinateMapManager<coordinate_type, coordinate_field_type, TemplatedAllocator,
     ASSERT(false, ERROR_CPU_ONLY);
 #endif
   }
-  at::Tensor coordinates = torch::empty({(long)nrows, (long)ncols}, options);
+  at::Tensor coordinates =
+      torch::empty({(int64_t)nrows, (int64_t)ncols}, options);
 
   LOG_DEBUG("Initialized coordinates");
   // copy to the out coords
@@ -1371,7 +1372,7 @@ struct kernel_map_to_tensors<coordinate_type, std::allocator, CoordinateMapCPU,
     for (auto k = 0; k < in_maps.size(); ++k) {
       const auto &in_map = in_maps[k];
       const auto &out_map = out_maps[k];
-      const long N = in_map.size();
+      const int64_t N = in_map.size();
       if (N > 0) {
         at::Tensor kernel_map = torch::empty({2, N}, options);
         int32_t *p_kernel_map = kernel_map.data_ptr<int32_t>();
@@ -1439,7 +1440,8 @@ at::Tensor CoordinateMapManager<coordinate_type, coordinate_field_type,
     ASSERT(false, ERROR_CPU_ONLY);
 #endif
   }
-  at::Tensor coordinates = torch::empty({(long)nrows, (long)ncols}, options);
+  at::Tensor coordinates =
+      torch::empty({(int64_t)nrows, (int64_t)ncols}, options);
 
   // copy to the out coords
   map.copy_coordinates(coordinates.template data_ptr<coordinate_field_type>());

@@ -269,18 +269,18 @@ std::vector<at::Tensor> quantize_label_th(at::Tensor coords, at::Tensor labels,
   // Copy the concurrent vector to std vector
   //
   // Long tensor for for easier indexing
-  auto th_mapping = torch::empty({(long)mapping.size()},
+  auto th_mapping = torch::empty({(int64_t)mapping.size()},
                                  torch::TensorOptions().dtype(torch::kInt64));
-  auto a_th_mapping = th_mapping.accessor<long int, 1>();
+  auto a_th_mapping = th_mapping.accessor<int64_t, 1>();
 
   auto th_inverse_mapping =
-      torch::empty({(long)inverse_mapping.size()},
+      torch::empty({(int64_t)inverse_mapping.size()},
                    torch::TensorOptions().dtype(torch::kInt64));
-  auto a_th_inverse_mapping = th_inverse_mapping.accessor<long int, 1>();
+  auto a_th_inverse_mapping = th_inverse_mapping.accessor<int64_t, 1>();
 
-  auto th_colabels = torch::empty({(long)colabels.size()},
+  auto th_colabels = torch::empty({(int64_t)colabels.size()},
                                   torch::TensorOptions().dtype(torch::kInt64));
-  auto a_th_colabels = th_colabels.accessor<long int, 1>();
+  auto a_th_colabels = th_colabels.accessor<int64_t, 1>();
 
   // Copy the output
   for (size_t i = 0; i < mapping.size(); ++i)
