@@ -53,15 +53,16 @@ try:
 except ImportError:
     raise ImportError("Pytorch not found. Please install pytorch first.")
 
-import warnings
 import codecs
 import os
 import re
 import subprocess
-from sys import argv, platform
-from setuptools import setup
-from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
+import warnings
 from pathlib import Path
+from sys import argv, platform
+
+from setuptools import setup
+from torch.utils.cpp_extension import BuildExtension, CppExtension, CUDAExtension
 
 if platform == "win32":
     raise ImportError("Windows is currently not supported.")
@@ -172,7 +173,7 @@ else:
     CC_FLAGS += ["-fopenmp"]
 
 if "darwin" in platform:
-    CC_FLAGS += ["-stdlib=libc++"]
+    CC_FLAGS += ["-stdlib=libc++", "-std=c++17"]
 
 NVCC_FLAGS += ["--expt-relaxed-constexpr", "--expt-extended-lambda"]
 FAST_MATH, argv = _argparse("--fast_math", argv)
