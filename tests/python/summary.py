@@ -21,10 +21,12 @@
 # Please cite "4D Spatio-Temporal ConvNets: Minkowski Convolutional Neural
 # Networks", CVPR'19 (https://arxiv.org/abs/1904.08755) if you use any part
 # of the code.
+
 import unittest
 import open3d as o3d
 import numpy as np
 import os
+from urllib.request import urlretrieve
 
 import torch
 import torch.nn as nn
