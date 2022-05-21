@@ -281,7 +281,7 @@ def sparse_quantize(
             )
         else:
             assert (
-                not discrete_coordinates.is_cuda()
+                not discrete_coordinates.is_cuda
             ), "Quantization with label requires cpu tensors."
             assert not labels.is_cuda(), "Quantization with label requires cpu tensors."
             unique_map, inverse_map, colabels = MEB.quantize_label_th(
