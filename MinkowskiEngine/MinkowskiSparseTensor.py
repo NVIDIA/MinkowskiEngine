@@ -402,7 +402,7 @@ class SparseTensor(Tensor):
                     raise ValueError("Feature type not supported.")
 
         # Use int tensor for all operations
-        tensor_stride = torch.IntTensor(self.tensor_stride)
+        tensor_stride = torch.IntTensor(self.tensor_stride).to(self.C.device)
 
         # New coordinates
         coords = self.C
