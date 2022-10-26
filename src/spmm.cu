@@ -41,16 +41,6 @@ namespace minkowski {
 #define BLOCK_SIZE 128
 
 template <typename Itype, typename Dtype>
-__global__ void
-unique_row2num_nonzero(const int n, Dtype *__restrict__ d_num_nonzero,
-                       const Itype *__restrict__ unique_row_ptr,
-                       const Dtype *__restrict__ reduced_val_ptr) {
-  CUDA_KERNEL_LOOP(index, n) {
-    d_num_nonzero[unique_row_ptr[index]] = reduced_val_ptr[index];
-  }
-}
-
-template <typename Itype, typename Dtype>
 __global__ void inverse_val(const int n, Dtype *__restrict__ d_sorted_val,
                             const Itype *__restrict__ sorted_row,
                             const Dtype *__restrict__ reduced_val) {
