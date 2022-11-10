@@ -53,15 +53,16 @@ try:
 except ImportError:
     raise ImportError("Pytorch not found. Please install pytorch first.")
 
-import warnings
 import codecs
 import os
 import re
 import subprocess
-from sys import argv, platform
-from setuptools import setup
-from torch.utils.cpp_extension import CppExtension, CUDAExtension, BuildExtension
+import warnings
 from pathlib import Path
+from sys import argv, platform
+
+from setuptools import setup
+from torch.utils.cpp_extension import BuildExtension, CppExtension, CUDAExtension
 
 if platform == "win32":
     raise ImportError("Windows is currently not supported.")
@@ -131,6 +132,9 @@ if not torch.cuda.is_available() and not FORCE_CUDA:
 
 CPU_ONLY = CPU_ONLY or not torch.cuda.is_available()
 if FORCE_CUDA:
+    print("--------------------------------")
+    print("| FORCE_CUDA set                |")
+    print("--------------------------------")
     CPU_ONLY = False
 
 # args with return value
@@ -172,14 +176,14 @@ else:
     CC_FLAGS += ["-fopenmp"]
 
 if "darwin" in platform:
-    CC_FLAGS += ["-stdlib=libc++"]
+    CC_FLAGS += ["-stdlib=libc++", "-std=c++17"]
 
 NVCC_FLAGS += ["--expt-relaxed-constexpr", "--expt-extended-lambda"]
 FAST_MATH, argv = _argparse("--fast_math", argv)
 if FAST_MATH:
     NVCC_FLAGS.append("--use_fast_math")
 
-BLAS_LIST = ["openblas", "mkl", "atlas", "blas"]
+BLAS_LIST = ["flexiblas", "openblas", "mkl", "atlas", "blas"]
 if not (BLAS is False):  # False only when not set, str otherwise
     assert BLAS in BLAS_LIST, f"Blas option {BLAS} not in valid options {BLAS_LIST}"
     if BLAS == "mkl":

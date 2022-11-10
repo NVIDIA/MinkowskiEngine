@@ -29,6 +29,7 @@
 
 #include <cusparse.h>
 
+#include <ATen/core/Tensor.h>
 #include <ATen/cuda/CUDAContext.h>
 #include <ATen/cuda/CUDAUtils.h>
 #include <c10/cuda/CUDACachingAllocator.h>
@@ -38,16 +39,6 @@
 namespace minkowski {
 
 #define BLOCK_SIZE 128
-
-template <typename Itype, typename Dtype>
-__global__ void
-unique_row2num_nonzero(const int n, Dtype *__restrict__ d_num_nonzero,
-                       const Itype *__restrict__ unique_row_ptr,
-                       const Dtype *__restrict__ reduced_val_ptr) {
-  CUDA_KERNEL_LOOP(index, n) {
-    d_num_nonzero[unique_row_ptr[index]] = reduced_val_ptr[index];
-  }
-}
 
 template <typename Itype, typename Dtype>
 __global__ void inverse_val(const int n, Dtype *__restrict__ d_sorted_val,
@@ -175,12 +166,18 @@ torch::Tensor coo_spmm(torch::Tensor const &rows, torch::Tensor const &cols,
   // int64_t dim_j = self.size(1);
   int64_t dim_k = mat2.size(1);
 
-  torch::Tensor result = at::zeros({dim_k, dim_i}, mat2.options());
-
   // Create tensors to view just the current set of matrices
   int64_t const nnz = rows.numel();
 
+  LOG_DEBUG("COO_SPMM with dim_i:", dim_i, ", dim_j:", dim_j,
+            ", mat2.size(0):", mat2.size(0), ", mat2.size(1):", mat2.size(1),
+            "nnz:", nnz);
+  LOG_DEBUG("Creating a result mat shaped (", dim_k, ",", dim_i, ")");
+  torch::Tensor result = at::zeros({dim_k, dim_i}, mat2.options());
+
   if ((dim_j == 0) || (dim_k == 0) || (nnz == 0)) {
+    LOG_DEBUG("Skipping matmul dim_j:", dim_j, "dim_k:", dim_k, "nnz:", nnz);
+    result.transpose_(0, 1);
     return result;
   }
 
@@ -441,6 +438,8 @@ coo_spmm_average(torch::Tensor const &rows, torch::Tensor const &cols,
   torch::Tensor sorted_val = at::zeros({nnz}, mat2.options());
 
   if ((dim_j == 0) || (dim_k == 0) || (nnz == 0)) {
+    LOG_DEBUG("Skipping matmul dim_j:", dim_j, "dim_k:", dim_k, "nnz:", nnz);
+    result.transpose_(0, 1);
     return {result, sorted_row_col, sorted_val};
   }
 
@@ -509,7 +508,8 @@ coo_spmm_average(torch::Tensor const &rows, torch::Tensor const &cols,
       );
       num_unique_keys = end.first - unique_row_ptr;
       LOG_DEBUG("Num unique keys:", num_unique_keys);
-    } THRUST_CATCH;
+    }
+    THRUST_CATCH;
 
     // Copy the results to the correct output
     inverse_val<th_int_type, scalar_t>

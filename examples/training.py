@@ -137,8 +137,8 @@ class RandomLineDataset(Dataset):
 
         # Quantize the input
         discrete_coords, unique_feats, unique_labels = ME.utils.sparse_quantize(
-            coords=input,
-            feats=feats,
+            coordinates=input,
+            features=feats,
             labels=labels,
             quantization_size=self.quantization_size,
             ignore_label=-100)

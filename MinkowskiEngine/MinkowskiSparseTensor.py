@@ -199,8 +199,12 @@ class SparseTensor(Tensor):
             assert isinstance(coordinates, torch.Tensor)
         if coordinate_map_key is not None:
             assert isinstance(coordinate_map_key, CoordinateMapKey)
-            assert coordinate_manager is not None, "Must provide coordinate_manager if coordinate_map_key is provided"
-            assert coordinates is None, "Must not provide coordinates if coordinate_map_key is provided"
+            assert (
+                coordinate_manager is not None
+            ), "Must provide coordinate_manager if coordinate_map_key is provided"
+            assert (
+                coordinates is None
+            ), "Must not provide coordinates if coordinate_map_key is provided"
         if coordinate_manager is not None:
             assert isinstance(coordinate_manager, CoordinateManager)
         if coordinates is None and (
@@ -404,7 +408,6 @@ class SparseTensor(Tensor):
         coords = self.C
         coords, batch_indices = coords[:, 1:], coords[:, 0]
 
-        # TODO, batch first
         if min_coords is None:
             min_coords, _ = coords.min(0, keepdim=True)
         elif min_coords.ndim == 1:
@@ -491,13 +494,21 @@ class SparseTensor(Tensor):
             if shape[1] != self._F.size(1):
                 shape = torch.Size([shape[0], self._F.size(1), *[s for s in shape[2:]]])
 
+        # Exception handling for empty tensor
+        if self.__len__() == 0:
+            assert shape is not None, "shape is required to densify an empty tensor"
+            return (
+                torch.zeros(shape, dtype=self.dtype, device=self.device),
+                torch.zeros(self._D, dtype=torch.int32, device=self.device),
+                self.tensor_stride,
+            )
+
         # Use int tensor for all operations
         tensor_stride = torch.IntTensor(self.tensor_stride).to(self.device)
 
         # New coordinates
         batch_indices = self.C[:, 0]
 
-        # TODO, batch first
         if min_coordinate is None:
             min_coordinate, _ = self.C.min(0, keepdim=True)
             min_coordinate = min_coordinate[:, 1:]
@@ -528,9 +539,11 @@ class SparseTensor(Tensor):
         nchannels = self.F.size(1)
         if shape is None:
             size = coords.max(0)[0] + 1
-            shape = torch.Size([batch_indices.max() + 1, nchannels, *size.cpu().numpy()])
+            shape = torch.Size(
+                [batch_indices.max() + 1, nchannels, *size.cpu().numpy()]
+            )
 
-        dense_F = torch.zeros(shape, dtype=self.F.dtype, device=self.F.device)
+        dense_F = torch.zeros(shape, dtype=self.dtype, device=self.device)
 
         tcoords = coords.t().long()
         batch_indices = batch_indices.long()

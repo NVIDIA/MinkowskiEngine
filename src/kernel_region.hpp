@@ -198,23 +198,51 @@ public:
   MINK_CUDA_HOST_DEVICE void
   coordinate_at(index_type kernel_index, coordinate_type const *src_coordinate,
                 coordinate_type *dst_coordinate) const {
-    // only for hypercube
     dst_coordinate[0] = src_coordinate[0];
-    for (index_type i = 0; i < m_coordinate_size - 1; ++i) {
-      auto const curr_kernel_size = m_kernel_size[i];
-      auto const curr_kernel_index = kernel_index % curr_kernel_size;
+    switch (m_region_type) {
+    case RegionType::HYPER_CUBE: {
+      for (index_type i = 0; i < m_coordinate_size - 1; ++i) {
+        auto const curr_kernel_size = m_kernel_size[i];
+        auto const curr_kernel_index = kernel_index % curr_kernel_size;
 
-      if (m_kernel_size[i] % 2 == 0) {
-        dst_coordinate[i + 1] =
-            src_coordinate[i + 1] +
-            m_dilation[i] * m_tensor_stride[i] * curr_kernel_index;
-      } else {
-        dst_coordinate[i + 1] =
-            src_coordinate[i + 1] +
-            (curr_kernel_index - int(curr_kernel_size / 2)) * m_dilation[i] *
-                m_tensor_stride[i];
+        if (m_kernel_size[i] % 2 == 0) {
+          dst_coordinate[i + 1] =
+              src_coordinate[i + 1] +
+              m_dilation[i] * m_tensor_stride[i] * curr_kernel_index;
+        } else {
+          dst_coordinate[i + 1] =
+              src_coordinate[i + 1] +
+              (curr_kernel_index - int(curr_kernel_size / 2)) * m_dilation[i] *
+                  m_tensor_stride[i];
+        }
+        kernel_index /= curr_kernel_size;
       }
-      kernel_index /= curr_kernel_size;
+    }
+    break;
+
+    case RegionType::HYPER_CROSS: { // can only be an odd kernel size
+      for (index_type i = 1; i < m_coordinate_size; ++i) {
+          dst_coordinate[i] = src_coordinate[i];
+      }
+      if (kernel_index == 0) break;
+      auto ind = kernel_index - 1;
+      index_type axis = 0;
+      while (axis < m_coordinate_size - 1)
+      {
+        if (ind < m_kernel_size[axis] - 1) break;
+        ind -= m_kernel_size[axis] - 1;
+        axis += 1;
+      }
+      auto const r = (m_kernel_size[axis] - 1) / 2;
+      coordinate_type coord_offset = (ind < r) ? (ind + 1) : (ind - 2 * r);
+      dst_coordinate[axis + 1] += coord_offset * m_dilation[axis] * 
+                  m_tensor_stride[axis];
+    }
+    break;
+    
+    case RegionType::CUSTOM:
+      // TODO
+      break;
     }
   }
 

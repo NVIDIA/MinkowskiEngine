@@ -7,6 +7,16 @@
 - Add thrust exception handling (issue #357)
 - `min_coordinate` to device in `dense()`
 - `cpu_kernel_region` `to_gpu` now uses `shared_ptr` allocator for gpu memory
+- Docker installation instruction added
+- Fix for GPU `coo_spmm` when nnz == 0
+    - Fix MinkowskiInterpolationGPU for invalid samples (issue #383)
+- gradcheck wrap func 1.9
+- Handles `dense` for an empty tensor (issue #384)
+- Handles an emtpy tensor for convolution (issue #384)
+- When `coordinates` is provided in `MinkowskiToSparseTensor`, `remove_zeros` will be ignored (issue #387)
+- Pybind equality error from the package (issue #414)
+- Fix undefined coordinate merge for multiple coordinate unions
+- Add cross-shaped kernel support (issue #436)
 
 ## [0.5.4]
 
