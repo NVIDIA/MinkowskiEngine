@@ -27,4 +27,4 @@ RUN rm -rf /var/lib/apt/lists/*
 # For faster build, use more jobs.
 ENV MAX_JOBS=4
 RUN git clone --recursive "https://github.com/NVIDIA/MinkowskiEngine"
-RUN cd MinkowskiEngine; python setup.py install --force_cuda --blas=openblas
+RUN cd MinkowskiEngine; python setup.py install --cpu_only --blas=openblas
