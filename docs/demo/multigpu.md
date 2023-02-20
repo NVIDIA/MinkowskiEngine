@@ -95,7 +95,7 @@ class DummyNetwork(nn.Module):
 Lightning Module
 ----------------
 
-[Pytorch lightning](https://www.pytorchlightning.ai/) is a high-level pytorch wrapper that simplifies a lot of boilerplate code. The core of the pytorch lightning is the `LightningModule` that provides a warpper for the training framework. In this section, we provide a segmentation training wrapper that extends the `LightningModule`.
+[Pytorch lightning](https://www.pytorchlightning.ai/) is a high-level pytorch wrapper that simplifies a lot of boilerplate code. The core of the pytorch lightning is the `LightningModule` that provides a wrapper for the training framework. In this section, we provide a segmentation training wrapper that extends the `LightningModule`.
 
 
 ```python
