@@ -130,6 +130,8 @@ def _auto_floor(array):
     if isinstance(array, np.ndarray):
         return np.floor(array)
     else:
+        if array.dtype == torch.int32 or array.dtype == torch.int64:
+            return array
         return torch.floor(array)
 
 
