@@ -28,3 +28,4 @@ RUN rm -rf /var/lib/apt/lists/*
 ENV MAX_JOBS=4
 RUN git clone --recursive "https://github.com/NVIDIA/MinkowskiEngine"
 RUN cd MinkowskiEngine; python setup.py install --force_cuda --blas=openblas
+ENV OMP_NUM_THREADS=16
