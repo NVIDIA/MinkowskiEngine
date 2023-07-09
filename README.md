@@ -194,7 +194,7 @@ docker build -t minkowski_engine docker
 Once the docker is built, check it loads MinkowskiEngine correctly.
 
 ```
-docker run MinkowskiEngine python3 -c "import MinkowskiEngine; print(MinkowskiEngine.__version__)"
+docker run minkowski_engine python3 -c "import MinkowskiEngine; print(MinkowskiEngine.__version__)"
 ```
 
 ## CPU only build and BLAS configuration (MKL)
