@@ -132,6 +132,9 @@ if not torch.cuda.is_available() and not FORCE_CUDA:
 
 CPU_ONLY = CPU_ONLY or not torch.cuda.is_available()
 if FORCE_CUDA:
+    print("--------------------------------")
+    print("| FORCE_CUDA set                |")
+    print("--------------------------------")
     CPU_ONLY = False
 
 # args with return value

@@ -188,7 +188,7 @@ python setup.py install
 ```
 git clone https://github.com/NVIDIA/MinkowskiEngine
 cd MinkowskiEngine
-docker build -t MinkowskiEngine docker
+docker build -t minkowski_engine docker
 ```
 
 Once the docker is built, check it loads MinkowskiEngine correctly.

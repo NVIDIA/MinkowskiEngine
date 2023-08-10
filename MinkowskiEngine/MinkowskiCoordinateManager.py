@@ -24,7 +24,7 @@
 # of the code.
 import os
 import numpy as np
-from collections import Sequence
+from collections.abc import Sequence
 from typing import Union, List, Tuple
 import warnings
 
