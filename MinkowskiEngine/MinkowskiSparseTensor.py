@@ -72,7 +72,7 @@ class SparseTensor(Tensor):
     where :math:`\mathbf{x}_i \in \mathcal{Z}^D` is a :math:`D`-dimensional
     coordinate and :math:`b_i \in \mathcal{Z}_+` denotes the corresponding
     batch index. :math:`N` is the number of non-zero elements in the sparse
-    tensor, each with the coordinate :math:`(b_i, x_i^1, x_i^1, \cdots,
+    tensor, each with the coordinate :math:`(b_i, x_i^1, x_i^2, \cdots,
     x_i^D)`, and the associated feature :math:`\mathbf{f}_i`. Internally, we
     handle the batch index as an additional spatial dimension.
 
