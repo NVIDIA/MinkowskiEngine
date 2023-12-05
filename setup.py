@@ -120,7 +120,7 @@ def _argparse(pattern, argv, is_flag=True, is_list=False):
 
 
 run_command("rm", "-rf", "build")
-run_command("pip", "uninstall", "MinkowskiEngine", "-y")
+run_command(sys.executable, "-m", "pip", "uninstall", "MinkowskiEngine", "-y")
 
 # For cpu only build
 CPU_ONLY, argv = _argparse("--cpu_only", argv)
