@@ -315,7 +315,7 @@ class TensorField(Tensor):
             )
             N_rows = self._manager.size(coordinate_map_key)
 
-        assert N_rows > 0, f"Invalid out coordinate map key. Found {N_row} elements."
+        assert N_rows > 0, f"Invalid out coordinate map key. Found {N_rows} elements."
 
         if len(inverse_mapping) == 0:
             # When the input has the same shape as the output
